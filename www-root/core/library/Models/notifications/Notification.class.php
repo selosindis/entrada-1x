@@ -176,7 +176,7 @@ class Notification {
 		$notification_user = NotificationUser::getByID($nuser_id);
 		if ($notification_user) {
 			if ($notification_user->getDigestMode()) {
-				$notification_body = $notification_user->getContentBody();
+				$notification_body = $notification_user->getContentBody($record_id);
 				$sent = false;
 				
 				$new_notification = array(	"nuser_id" => $nuser_id,
@@ -224,6 +224,7 @@ class Notification {
 										"%CONTENT_BODY%",
 										"%URL%",
 										"%UNSUBSCRIBE_URL%",
+										"%DIGEST_URL%",
 										"%APPLICATION_NAME%",
 										"%ENTRADA_URL%");
 										
@@ -234,6 +235,7 @@ class Notification {
 											html_encode($notification_user->getContentBody($record_id)),
 											html_encode($notification_user->getContentURL()),
 											html_encode(ENTRADA_URL."/profile?section=notifications&id=".$nuser_id."&action=unsubscribe"),
+											html_encode(ENTRADA_URL."/profile?section=notifications&id=".$nuser_id."&action=digest-mode"),
 											html_encode(APPLICATION_NAME),
 											html_encode(ENTRADA_URL));
 						$notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-default.xml");

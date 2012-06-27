@@ -30,7 +30,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => "", "title" => "Create New Draft Schedule");
 	
@@ -52,22 +52,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 			}
 			
-			if (isset($_POST["draft_start_date"]) && !empty($_POST["draft_start_date"])) {
-				$PROCESSED["draft_start_date"] = (int) strtotime($_POST["draft_start_date"]);
+			/**
+			 * Non-required field "draft_start_date" / Draft Start (validated through validate_calendars function).
+			 * Non-required field "draft_finish_date" / Draft Finish (validated through validate_calendars function).
+			 */
+			$draft_date = validate_calendars("copy", true, true, false);
+			if ((isset($draft_date["start"])) && ((int) $draft_date["start"])) {
+				$PROCESSED["draft_start_date"] = (int) $draft_date["start"];
 			} else {
-				add_error("A start date is required.");
+				$PROCESSED["draft_start_date"] = 0;
+			}
+			if ((isset($draft_date["finish"])) && ((int) $draft_date["finish"])) {
+				$PROCESSED["draft_finish_date"] = (int) $draft_date["finish"];
+			} else {
+				$PROCESSED["draft_finish_date"] = 0;
 			}
 			
-			if (isset($_POST["draft_finish_date"]) && !empty($_POST["draft_finish_date"])) {
-				$PROCESSED["draft_finish_date"] = (int) strtotime($_POST["draft_finish_date"]);
-			} else {
-				add_error("A finish date is required.");
-			}
-			
-			if (isset($_POST["new_start_day"]) && !empty($_POST["new_start_day"])) {
-				$PROCESSED["new_start_day"] = (int) strtotime($_POST["new_start_day"]);
-			} else {
-				$PROCESSED["new_start_day"] = $PROCESSED["draft_start_date"] + 31556926;
+			/**
+			 * Required field "new_start" / Event Date & Time Start (validated through validate_calendars function).
+			 */
+			$start_date = validate_calendars("new", true, false, false);
+			if ((isset($start_date["start"])) && ((int) $start_date["start"])) {
+				$PROCESSED["new_start_day"] = (int) $start_date["start"];
 			}
 			
 			if (has_error()) {
@@ -82,7 +88,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				
 				// grant the active user permission to work on the draft
 				$query = "	INSERT INTO `draft_creators` (`draft_id`, `proxy_id`) 
-							VALUES (".$db->qstr($draft_id).", ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]).")";
+							VALUES (".$db->qstr($draft_id).", ".$db->qstr($ENTRADA_USER->getActiveId()).")";
 				$result = $db->Execute($query);
 				
 				if ($PROCESSED["course_ids"]) {
@@ -197,8 +203,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			if (has_notice()) {
 				echo display_notice();
 			}
-			
-			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_timestamp.js\"></script>\n";
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 			$HEAD[]		= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/picklist.js\"></script>\n";
 			$ONLOAD[]	= "$('courses_list').style.display = 'none'";
@@ -213,23 +217,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 			}
 			?>
-			<script type="text/javascript">
-			jQuery(function(){
-				jQuery("#draft_start_date, #draft_finish_date, #new_start_day").datepicker({
-					dateFormat: "yy-mm-dd",
-					beforeShow: function(input, inst){
-						jQuery('#ui-datepicker-div').addClass(this.id);
-					},
-					onClose: function(dateText, inst) {
-						jQuery('#ui-datepicker-div').removeClass(this.id);
-					}
-				});
-				jQuery(".showcal").click(function(){
-					jQuery(this).siblings("input").datepicker("show");
-					return false;
-				})
-			});
-			</script>
 			<style type="text/css">
 				.new_start_day .ui-datepicker-calendar tbody tr:hover td a {background: url("images/ui-bg_flat_55_fbec88_40x100.png") repeat-x scroll 50% 50% #FBEC88;border: 1px solid #FAD42E;color: #363636;}
 			</style>
@@ -319,27 +306,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<tr>
 								<td colspan="3">&nbsp;</td>
 							</tr>
+							<?php echo generate_calendars("copy", "", true, true, ((isset($PROCESSED["draft_start"])) ? $PROCESSED["draft_start"] : strtotime("September 1st, ".(date("o") - 1))), true, true, ((isset($PROCESSED["draft_finish"])) ? $PROCESSED["draft_finish"] : time()), false); ?>
 							<tr>
-								<td style="vertical-align: top"><input type="checkbox" style="vertical-align: middle" onclick="this.checked = true" readonly="readonly" checked="checked" value="1" id="draft_start" name="draft_start"></td>
-								<td style="vertical-align: top; padding-top: 4px"><label class="form-required" for="days_offset" id="days_offset_text">Draft Start</label></td>
-								<td style="vertical-align: top">
-									<input style="width: 170px; vertical-align: middle;" type="text" name="draft_start_date" id="draft_start_date" value="<?= date("Y-m-d", strtotime("September 1st, ".(date("o") - 1))); ?>">&nbsp;&nbsp;<a href="#" class="showcal"><img width="23" height="23" border="0" style="vertical-align: middle" title="Show Calendar" alt="Show Calendar" src="<?= ENTRADA_URL; ?>/images/cal-calendar.gif"></a>
-								</td>
+								<td colspan="2">&nbsp;</td>
+								<td><span class="content-small"><strong>NOTE:</strong> All events in the included courses between these two dates will be copied into this draft.</span></td>
 							</tr>
 							<tr>
-								<td style="vertical-align: top"><input type="checkbox" style="vertical-align: middle" onclick="this.checked = true" readonly="readonly" checked="checked" value="1" id="draft_start" name="draft_start"></td>
-								<td style="vertical-align: top; padding-top: 4px"><label class="form-required" for="days_offset" id="days_offset_text">Draft Finish</label></td>
-								<td style="vertical-align: top">
-									<input style="width: 170px; vertical-align: middle;" type="text" name="draft_finish_date" id="draft_finish_date" value="<?= date("Y-m-d", time()); ?>">&nbsp;&nbsp;<a href="#" class="showcal"><img width="23" height="23" border="0" style="vertical-align: middle" title="Show Calendar" alt="Show Calendar" src="<?= ENTRADA_URL; ?>/images/cal-calendar.gif"></a>
-								</td>
+								<td colspan="3">&nbsp;</td>
 							</tr>
-							<tr>
-								<td style="vertical-align: top"></td>
-								<td style="vertical-align: top; padding-top: 4px"><label class="form-nrequired" for="days_offset" id="days_offset_text">New Week</label></td>
-								<td style="vertical-align: top">
-									<input style="width: 170px; vertical-align: middle;" type="text" name="new_start_day" id="new_start_day" value=""/>&nbsp;&nbsp;<a href="#" class="showcal"><img width="23" height="23" border="0" style="vertical-align: middle" title="Show Calendar" alt="Show Calendar" src="<?= ENTRADA_URL; ?>/images/cal-calendar.gif"></a>&nbsp;&nbsp;<span class="content-small"><strong>NOTE:</strong> If an offset is not set the draft will default to 1 year.</span>
-								</td>
-							</tr>
+							<?php echo generate_calendars("new", "", true, true, ((isset($PROCESSED["new_start_day"])) ? $PROCESSED["new_start_day"] : ((isset($PROCESSED["draft_start"])) ? strtotime(date("Y-m-d", strtotime($PROCESSED["draft_start"])) . " +1 year") : strtotime("September 1st, ".(date("o"))))), false, false, 0, false); ?>
 							<tr>
 								<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="button" value="Create" /></td>
 							</tr>

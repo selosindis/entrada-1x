@@ -34,7 +34,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$DISPLAY_DURATION		= array();
 	$notice_where_clause	= "";
@@ -79,7 +79,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					FROM `community_members` AS a
 					LEFT JOIN `communities` AS b
 					ON b.`community_id` = a.`community_id`
-					WHERE a.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 					AND a.`member_active` = '1'
 					AND b.`community_active` = '1'
 					AND b.`community_template` <> 'course'
@@ -126,39 +126,39 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	switch ($_SESSION["details"]["group"]) {
 		case "alumni" :
 			$rss_feed_name = "alumni";
-			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'alumni' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'alumni' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'alumni')";;
 			$corrected_role = "students";
 		break;
 		case "faculty" :
 			$rss_feed_name = "faculty";
-			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'faculty' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'faculty' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'faculty')";;
 			$corrected_role = "faculty";
 		break;
 		case "medtech" :
 			$rss_feed_name = "medtech";
-			$notice_where_clause = "(a.`target` NOT LIKE 'proxy_id:%' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$notice_where_clause = "(a.`target` NOT LIKE 'proxy_id:%' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
 			$corrected_role = "medtech";
 		break;
 		case "resident" :
 			$rss_feed_name = "resident";
-			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'resident' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'resident' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'resident')";;
 			$corrected_role = "resident";
 		break;
 		case "staff" :
 			$rss_feed_name = "staff";
-			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'staff' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'staff' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
 			$corrected_role = "staff";
 		break;
 		case "student" :
 		default :
-			$cohort = groups_get_cohort($_SESSION["details"]["id"]);
+			$cohort = groups_get_cohort($ENTRADA_USER->getID());
 			$rss_feed_name = clean_input((isset($_SESSION["details"]["grad_year"]) && $_SESSION["details"]["grad_year"] ? $_SESSION["details"]["grad_year"] : "default"), "alphanumeric");
-			$notice_where_clause = "(a.`target`='cohort:".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $_SESSION["details"]["id"])).")";
+			$notice_where_clause = "(a.`target`='cohort:".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target_type` = 'cohort' AND a.`poll_target`='".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`poll_target` = 'all' OR a.`poll_target` = 'students')";
 			$corrected_role = "students";
 		break;
@@ -170,7 +170,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					FROM `poll_questions` AS a
 					LEFT JOIN `poll_results` AS b
 					ON b.`poll_id` = a.`poll_id`
-					AND b.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 					WHERE b.`result_id` IS NULL
 					AND (`poll_from` = '0' OR `poll_from` <= '".time()."')
 					AND (`poll_until` = '0' OR `poll_until` >= '".time()."')
@@ -209,7 +209,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					FROM `notices` AS a
 					LEFT JOIN `statistics` AS b
 					ON b.`module` = 'notices'
-					AND b.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 					AND b.`action` = 'read'
 					AND b.`action_field` = 'notice_id'
 					AND b.`action_value` = a.`notice_id`
@@ -223,7 +223,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							c.`audience_type` = 'students' 
 							OR c.`audience_type` = 'faculty' 
 							OR c.`audience_type` = 'staff') 
-							AND c.`audience_value` = ".$db->qstr($_SESSION["details"]["id"])."
+							AND c.`audience_value` = ".$db->qstr($ENTRADA_USER->getID())."
 						) 
 						OR ((
 							c.`audience_type` = 'cohorts' 
@@ -231,7 +231,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							AND c.`audience_value` IN (
 								SELECT `group_id` 
 								FROM `group_members` 
-								WHERE `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]).")
+								WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID()).")
 						)
 					) 
 					AND (a.`organisation_id` IS NULL 
@@ -292,7 +292,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		}
 	}
 
-	switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]) {
+	switch ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 		case "medtech" :
 		case "student" :
 			$BREADCRUMB[] = array("url" => ENTRADA_URL, "title" => "Student Dashboard");
@@ -325,14 +325,14 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							ON c.`region_id` = a.`region_id`
 							LEFT JOIN `".CLERKSHIP_DATABASE."`.`apartment_schedule` AS d
 							ON d.`event_id` = a.`event_id`
-							AND d.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							AND d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 							AND d.`aschedule_status` = 'published'
 							LEFT JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS e
 							ON e.`rotation_id` = a.`rotation_id`
 							WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00"))."
 							AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 							AND b.`econtact_type` = 'student'
-							AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							AND b.`etype_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 							ORDER BY a.`event_start` ASC";
 				$clerkship_schedule	= $db->GetAll($query);
 				if ($clerkship_schedule) {
@@ -642,7 +642,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		break;
 		case "resident" :
 		case "faculty" :
-			$BREADCRUMB[] = array("url" => ENTRADA_URL, "title" => ucwords($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"])." Dashboard");
+			$BREADCRUMB[] = array("url" => ENTRADA_URL, "title" => ucwords($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"])." Dashboard");
 
 			/**
 			 * Update requested timestamp to display.
@@ -701,14 +701,14 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							ON c.`id` = b.`proxy_id`
 							LEFT JOIN `statistics` AS d
 							ON d.`module` = 'events'
-							AND d.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							AND d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 							AND d.`action` = 'view'
 							AND d.`action_field` = 'event_id'
 							AND d.`action_value` = a.`event_id`
 							JOIN `courses` AS e
 							ON e.`course_id` = a.`course_id`
 							WHERE (a.`event_start` BETWEEN ".$db->qstr($DISPLAY_DURATION["start"])." AND ".$db->qstr($DISPLAY_DURATION["end"]).")
-							AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 							GROUP BY a.`event_id`
 							ORDER BY a.`event_start` ASC";
 			$results	= $db->GetAll($query);

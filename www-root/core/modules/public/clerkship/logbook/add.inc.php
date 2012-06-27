@@ -37,7 +37,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/clerkship/logbook", "title" => "Manage Logbook");
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/clerkship/logbook?section=add", "title" => "Adding Patient Encounter");
@@ -193,7 +193,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 		
 		if (!$ERROR && (!isset($_POST["allow_save"]) || $_POST["allow_save"])) {
 			
-			$PROCESSED["proxy_id"] = $_SESSION["details"]["id"];
+			$PROCESSED["proxy_id"] = $ENTRADA_USER->getID();
 			$PROCESSED["updated_date"] = time();
 			
 			if ($db->AutoExecute("`".CLERKSHIP_DATABASE."`.`logbook_entries`", $PROCESSED, "INSERT")) {
@@ -348,7 +348,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						$query	= "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`events` AS a 
 									LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b 
 									ON a.`event_id` = b.`event_id` 
-									WHERE b.`etype_id` = ".$db->qstr($_SESSION["details"]["id"])." 
+									WHERE b.`etype_id` = ".$db->qstr($ENTRADA_USER->getID())." 
 									AND a.`event_id` = ".$db->qstr(((int)$PROCESSED["event_id"]))." 
 									AND a.`event_type` = 'clinical'";
 						$found	= ($db->GetRow($query) ? true : false);
@@ -359,7 +359,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						$query		= "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`events` AS a 
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b 
 										ON a.`event_id` = b.`event_id` 
-										WHERE b.`etype_id` = ".$db->qstr($_SESSION["details"]["id"])." 
+										WHERE b.`etype_id` = ".$db->qstr($ENTRADA_USER->getID())." 
 										AND a.`event_type` = 'clinical'";
 						$results	= $db->GetAll($query);
 						if ($results) {
@@ -515,7 +515,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` AS c
 										ON a.`category_id` = c.`category_id`
 										WHERE b.`econtact_type` = 'student'
-										AND b.`etype_id` = ".$db->qstr($_SESSION["details"]["id"])."
+										AND b.`etype_id` = ".$db->qstr($ENTRADA_USER->getID())."
 										AND a.`event_finish` < ".$db->qstr(time())."
 										GROUP BY c.`rotation_id`";
 						$rotations = $db->GetAll($query);
@@ -544,7 +544,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							if ($required_objectives) {
 								$query = "SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
 											WHERE `entry_active` = '1' 
-											AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
+											AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 								$entry_ids = $db->GetAll($query);
 							    $entry_ids_string = "";
 							    foreach ($entry_ids as $entry_id) {
@@ -583,13 +583,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							$query = "SELECT `lprocedure_id`, MAX(`number_required`) AS `required`
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures`
 										WHERE `rotation_id` IN (".$past_rotations.")
-										AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $_SESSION["details"]["id"]))."
+										AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $ENTRADA_USER->getID()))."
 										GROUP BY `lprocedure_id`";
 							$required_procedures = $db->GetAll($query);
 							if ($required_procedures) {
 								$query = "SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
 											WHERE `entry_active` = '1' 
-											AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
+											AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 								$entry_ids = $db->GetAll($query);
 							    $entry_ids_string = "";
 							    foreach ($entry_ids as $entry_id) {
@@ -821,14 +821,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 											LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS b
 											ON b.`lprocedure_id` = a.`lprocedure_id`
 											WHERE a.`lprocedure_id` IN (".$procedure_ids.")
-											AND b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $_SESSION["details"]["id"]));
+											AND b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $ENTRADA_USER->getID()));
 								$deficient_procedures = $db->GetAll($query);
 								if ($rotation) {
 									$query = "SELECT DISTINCT a.* FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS a
 												LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS b
 												ON b.`lprocedure_id` = a.`lprocedure_id`
 												WHERE b.`rotation_id` = ".$db->qstr($rotation_id)."
-												AND b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $_SESSION["details"]["id"]));
+												AND b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $ENTRADA_USER->getID()));
 									$preferred_procedures = $db->GetAll($query);
 									if ($preferred_procedures) {
 										?>
@@ -874,7 +874,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							$query = "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS a
 										LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS b
 										ON b.`lprocedure_id` = a.`lprocedure_id`
-										WHERE b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $_SESSION["details"]["id"]))."
+										WHERE b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $ENTRADA_USER->getID()))."
 										GROUP BY a.`lprocedure_id`
 										ORDER BY a.`procedure`";
 							$results = $db->GetAll($query);

@@ -32,7 +32,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/organisations/manage/eventtypes?".replace_query(array("section" => "edit"))."&amp;org=".$ORGANISATION_ID, "title" => "Edit Event Type");
@@ -91,7 +91,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					$where = "`eventtype_id` = ".$db->qstr($PROCESSED["eventtype_id"]);
 				}
 				
-				$params = array("eventtype_title" => $PROCESSED["eventtype_title"],"eventtype_description"=>$PROCESSED["eventtype_description"], "updated_date"=>time(),"updated_by"=>$_SESSION["details"]["id"]);
+				$params = array("eventtype_title" => $PROCESSED["eventtype_title"],"eventtype_description"=>$PROCESSED["eventtype_description"], "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getID());
 				
 				if ($db->AutoExecute("`events_lu_eventtypes`", $params, $action, $where)) {
 					

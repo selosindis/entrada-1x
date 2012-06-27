@@ -229,7 +229,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						<tr>
 							<td colspan="2">
 								<div class="display-notice">
-									<?php if($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == "student") : ?>
+									<?php if($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] == "student") : ?>
 									<strong>Notice:</strong> Keeping the Undergrad office informed of clerkship schedule changes or inconsistencies is very important as this information is used to ensure you can graduate. If you see a problem with your schedule, please let us know immediately using this form.
 									<?php else : ?>
 									<strong>Notice:</strong> If you see an issue with the Clerkship schedule that needs our attention, please use this form to contact the Undergraduate office. Please be as specific as possible when sending in this request.

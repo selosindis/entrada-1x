@@ -41,7 +41,7 @@ $clerkship_evaluations = trim(ob_get_clean());
 
 echo $clerkship_evaluations;
 
-$cohort = groups_get_cohort($_SESSION["details"]["id"]);
+$cohort = groups_get_cohort($ENTRADA_USER->getID());
 
 $query = "	SELECT * FROM `evaluations` AS a
 			JOIN `evaluation_evaluators` AS b
@@ -50,7 +50,7 @@ $query = "	SELECT * FROM `evaluations` AS a
 			(
 				(
 					b.`evaluator_type` = 'proxy_id'
-					AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getID())."
 				)
 				OR
 				(
@@ -109,14 +109,14 @@ if ($results) {
 					LEFT JOIN `evaluation_responses` AS b
 					ON a.`eprogress_id` = b.`eprogress_id`
 					WHERE a.`evaluation_id` = ".$db->qstr($result["evaluation_id"])."
-					AND a.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 					GROUP BY b.`eprogress_id`
 					ORDER BY `responses` ASC";
 		$evaluation_progress = $db->GetRow($query);
 		
 		$query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
 					WHERE `evaluation_id` = ".$db->qstr($result["evaluation_id"])."
-					AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 					AND `progress_value` = 'complete'";
 		$completed_attempts = $db->GetOne($query);
 		

@@ -216,7 +216,7 @@ function check_sidebar($buffer) {
 }
 
 function load_system_navigator() {
-	global $db, $HEAD, $ONLOAD, $USER_ACCESS;
+	global $db, $HEAD, $ONLOAD, $USER_ACCESS, $ENTRADA_USER;
 
 	$output = "";
 
@@ -257,7 +257,7 @@ function load_system_navigator() {
 					FROM `community_members` AS a
 					LEFT JOIN `communities` AS b
 					ON b.`community_id` = a.`community_id`
-					WHERE a.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 					AND a.`member_active` = '1'
 					AND b.`community_active` = '1'
 					AND b.`community_template` <> 'course'
@@ -287,7 +287,7 @@ function load_system_navigator() {
 						FROM `community_members` AS a
 						LEFT JOIN `communities` AS b
 						ON a.`community_id` = b.`community_id`
-						WHERE a.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						AND a.`member_active` = '1'";
 		$results	= $db->CacheGetAll(CACHE_TIMEOUT, $query);
 		if($results) {
@@ -303,7 +303,7 @@ function load_system_navigator() {
 						ON a.`community_id` = b.`community_id`
 						JOIN `community_members` AS c
 						ON b.`community_id` = c.`community_id`
-						AND c.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						AND c.`member_active` = '1'
 						WHERE (a.`allow_member_view` = '1')
 						OR (c.`member_acl` = '1')";
@@ -389,8 +389,8 @@ function load_system_navigator() {
 		$output .= "					</td>\n";
 		$output .= "					<td>\n";
 		$output .= "						<h3>My Profile</h3>\n";
-		$uploaded_file_active = $db->GetOne("SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = 1 AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]));
-		$output .= "						<img src=\"".webservice_url("photo", array($_SESSION["details"]["id"], (isset($uploaded_file_active) && $uploaded_file_active ? "upload" : (!file_exists(STORAGE_USER_PHOTOS."/".$_SESSION["details"]["id"]."-official") && file_exists(STORAGE_USER_PHOTOS."/".$_SESSION["details"]["id"]."-upload") ? "upload" : "official"))))."\" width=\"72\" height=\"100\" alt=\"".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."\" title=\"".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."\" style=\"margin-top: 8px; background-color: #FFFFFF; border: 1px #EEEEEE solid\" />\n";
+		$uploaded_file_active = $db->GetOne("SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = 1 AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID()));
+		$output .= "						<img src=\"".webservice_url("photo", array($ENTRADA_USER->getID(), (isset($uploaded_file_active) && $uploaded_file_active ? "upload" : (!file_exists(STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-official") && file_exists(STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-upload") ? "upload" : "official"))))."\" width=\"72\" height=\"100\" alt=\"".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."\" title=\"".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."\" style=\"margin-top: 8px; background-color: #FFFFFF; border: 1px #EEEEEE solid\" />\n";
 		$output .= "						<ul>\n";
 		$output .= "							<li>".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."</li>\n";
 		$output .= "							<li><a href=\"mailto:".html_encode($_SESSION["details"]["email"])."\">".html_encode($_SESSION["details"]["email"])."</a></li>\n";
@@ -1936,7 +1936,7 @@ function clerkship_categories_name($category_id = 0) {
  * @global object $db
  */
 function clerkship_display_available_evaluations() {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	/**
 	 * Display Clerkship Evaluation Information to Student.
@@ -1949,7 +1949,7 @@ function clerkship_display_available_evaluations() {
 				ON c.`item_id` = a.`item_id`
 				LEFT JOIN `".CLERKSHIP_DATABASE."`.`eval_forms` AS d
 				ON d.`form_id` = c.`form_id`
-				WHERE a.`user_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+				WHERE a.`user_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 				AND a.`item_maxinstances` > '0'
 				AND (
 					a.`notification_status` <> 'complete'
@@ -2101,10 +2101,10 @@ function clerkship_fetch_specific_school($schools_id) {
  * @return array
  */
 function preferences_load($module) {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	if(!isset($_SESSION[APPLICATION_IDENTIFIER][$module])) {
-		$query	= "SELECT `preferences` FROM `".AUTH_DATABASE."`.`user_preferences` WHERE `app_id`=".$db->qstr(AUTH_APP_ID)." AND `proxy_id`=".$db->qstr($_SESSION["details"]["id"])." AND `module`=".$db->qstr($module);
+		$query	= "SELECT `preferences` FROM `".AUTH_DATABASE."`.`user_preferences` WHERE `app_id`=".$db->qstr(AUTH_APP_ID)." AND `proxy_id`=".$db->qstr($ENTRADA_USER->getID())." AND `module`=".$db->qstr($module);
 		$result	= $db->GetRow($query);
 		if($result) {
 			if($result["preferences"]) {
@@ -2126,10 +2126,25 @@ function preferences_load($module) {
  * @return array
  */
 function permissions_load() {
-	global $db;
+	global $db, $ENTRADA_USER;
 	$permissions	= array();
-	$permissions[$_SESSION["details"]["id"]] = array("permission_id" => 0, "group" => $_SESSION["details"]["group"], "role" => $_SESSION["details"]["role"], "organisation_id"=>$_SESSION["details"]["organisation_id"], "starts" => $_SESSION["details"]["access_starts"], "expires" => $_SESSION["details"]["access_expires"], "fullname" => ($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]), "firstname" => $_SESSION["details"]["firstname"], "lastname" => $_SESSION["details"]["lastname"]);
-	$query = "	SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, b.`organisation_id`, c.`role`, c.`group`
+	$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`firstname`, a.`lastname`, b.`organisation_id`, b.`role`, b.`group`, b.`id` AS `access_id`
+				FROM `".AUTH_DATABASE."`.`user_data` AS a
+				RIGHT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+				ON b.`user_id` = a.`id` 
+				AND b.`app_id`=".$db->qstr(AUTH_APP_ID)."
+				AND b.`account_active`='true'
+				AND (b.`access_starts`='0' OR b.`access_starts`<=".$db->qstr(time()).")
+				AND (b.`access_expires`='0' OR b.`access_expires`>=".$db->qstr(time()).")
+				WHERE a.`id` = ".$db->qstr($ENTRADA_USER->getID())."
+				ORDER BY b.`id` ASC";
+	$results = $db->GetAll($query);
+	if($results) {
+		foreach ($results as $result) {
+			$permissions[$result["access_id"]] = array("id" => $result["proxy_id"], "access_id" => $result["access_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result["organisation_id"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+		}
+	}
+	$query = "	SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, c.`organisation_id`, c.`role`, c.`group`, c.`id` AS `access_id`
 				FROM `permissions` AS a
 				LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 				ON b.`id` = a.`assigned_by`
@@ -2138,12 +2153,12 @@ function permissions_load() {
 				AND c.`account_active`='true'
 				AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
 				AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")
-				WHERE a.`assigned_to`=".$db->qstr($_SESSION["details"]["id"])." AND a.`valid_from`<=".$db->qstr(time())." AND a.`valid_until`>=".$db->qstr(time())."
+				WHERE a.`assigned_to`=".$db->qstr($ENTRADA_USER->getID())." AND a.`valid_from`<=".$db->qstr(time())." AND a.`valid_until`>=".$db->qstr(time())."
 				ORDER BY `fullname` ASC";
 	$results = $db->GetAll($query);
 	if($results) {
 		foreach ($results as $result) {
-			$permissions[$result["proxy_id"]] = array("permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+			$permissions[$result["access_id"]] = array("id" => $result["proxy_id"], "access_id" => $result["access_id"], "permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"], "mask" => true);
 		}
 	}
 	return $permissions;
@@ -2156,11 +2171,9 @@ function permissions_load() {
  *
  * @return array
  */
-function load_org_group_role($assumed_proxy_id, $ua_id) {
+function load_org_group_role($proxy_id, $ua_id) {
 	global $db;
 	$permissions	= array();
-	$pieces = explode("-", $assumed_proxy_id);
-	$proxy_id = $pieces[0];
 	$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, c.`organisation_id`, c.`role`, c.`group`, c.`access_starts`, c.`access_expires`
 				FROM `".AUTH_DATABASE."`.`user_data` AS b
 				JOIN `".AUTH_DATABASE."`.`user_access` AS c
@@ -2169,11 +2182,11 @@ function load_org_group_role($assumed_proxy_id, $ua_id) {
 				AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
 				AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")
 				WHERE c.`id` = " . $db->qstr($ua_id) . "
-				AND b.`id` = $db->qstr($proxy_id)";
+				AND b.`id` = ".$db->qstr($proxy_id);
 
 	$result = $db->GetRow($query);
 	if($result) {
-		$permissions[$assumed_proxy_id] = array("group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["access_starts"], "expires" => $result["access_expires"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+		$permissions[$ua_id] = array("group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["access_starts"], "expires" => $result["access_expires"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
 	}
 	return $permissions;
 }
@@ -2188,7 +2201,8 @@ function load_org_group_role($assumed_proxy_id, $ua_id) {
  * @example permissions_check(array("medtech" => "*", "faculty => array("faculty", "admin"), "staff" => "admin"));
  */
 function permissions_check($requirements = array()) {
-	if((is_array($requirements)) && (count($requirements)) && (is_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]))) {
+	global $ENTRADA_USER;
+	if((is_array($requirements)) && (count($requirements)) && (is_array($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]))) {
 		foreach ($requirements as $group => $roles) {
 			if($group == "*") {
 				if($roles == "*") {
@@ -2198,12 +2212,12 @@ function permissions_check($requirements = array()) {
 						$roles = array($roles);
 					}
 
-					if(@in_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"], $roles)) {
+					if(@in_array($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"], $roles)) {
 						return true;
 					}
 				}
 			} else {
-				if($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == $group) {
+				if($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] == $group) {
 					if($roles == "*") {
 						return true;
 					} else {
@@ -2211,7 +2225,7 @@ function permissions_check($requirements = array()) {
 							$roles = array($roles);
 						}
 
-						if(@in_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"], $roles)) {
+						if(@in_array($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"], $roles)) {
 							return true;
 						}
 					}
@@ -2312,41 +2326,56 @@ function permissions_mask() {
 
 	if(isset($_GET["mask"])) {
 		if(trim($_GET["mask"]) == "close") {
-			unset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+			$ENTRADA_USER->setAccessId($ENTRADA_USER->getDefaultAccessId());
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $ENTRADA_USER->getAccessId();
 		} elseif((int) trim($_GET["mask"])) {
 			$query	= "SELECT * FROM `permissions` WHERE `permission_id` = ".$db->qstr((int) trim($_GET["mask"]));
 			$result	= $db->GetRow($query);
 			if($result) {
-				if($result["assigned_to"] == $_SESSION["details"]["id"]) {
+				if($result["assigned_to"] == $ENTRADA_USER->getID()) {
 					if($result["valid_from"] <= time()) {
 						if($result["valid_until"] >= time()) {
-							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = (int) trim($result["assigned_by"]);
-							$_SESSION["details"]["clinical_member"] = getClinicalFromProxy($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+							$query = "SELECT `id` FROM `".AUTH_DATABASE."`.`user_access`
+										WHERE `user_id` = ".$db->qstr($result["assigned_by"])."
+										AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND `account_active` = 'true'
+										AND (`access_starts` = '0' OR `access_starts` <= ".$db->qstr(time()).")
+										AND (`access_expires` = '0' OR `access_expires` >= ".$db->qstr(time()).")
+										AND `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+							$access_id = $db->getOne($query);
+							if ($access_id) {
+								$ENTRADA_USER->setAccessId($access_id);
+								$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $access_id;
+								$ENTRADA_USER->setClinical(getClinicalFromProxy($ENTRADA_USER->getActiveId()));
+							} else {
+								$query = "SELECT `id` FROM `".AUTH_DATABASE."`.`user_access`
+											WHERE `user_id` = ".$db->qstr($result["assigned_by"])."
+											AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
+											AND `account_active` = 'true'
+											AND (`access_starts` = '0' OR `access_starts` <= ".$db->qstr(time()).")
+											AND (`access_expires` = '0' OR `access_expires` >= ".$db->qstr(time()).")";
+								$access_id = $db->getOne($query);
+								if ($access_id) {
+									$ENTRADA_USER->setAccessId($access_id);
+									$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $access_id;
+									$ENTRADA_USER->setClinical(getClinicalFromProxy($ENTRADA_USER->getActiveId()));
+								}
+							}
 						} else {
-							application_log("notice", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$_SESSION["details"]["id"]."] tried to masquerade as proxy id [".$result["assigned_by"]."], but their permission to this account has expired.");
+							application_log("notice", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$ENTRADA_USER->getID()."] tried to masquerade as proxy id [".$result["assigned_by"]."], but their permission to this account has expired.");
 						}
 					} else {
-						application_log("notice", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$_SESSION["details"]["id"]."] tried to masquerade as proxy id [".$result["assigned_by"]."], but their permission to this account has not yet begun.");
+						application_log("notice", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$ENTRADA_USER->getID()."] tried to masquerade as proxy id [".$result["assigned_by"]."], but their permission to this account has not yet begun.");
 					}
 				} else {
-					application_log("error", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$_SESSION["details"]["id"]."] tried to masquerade as proxy id [".$result["assigned_by"]."], but they do not have permission_id [".$result["permission_id"]."] does not belong to them. Oooo. Bad news.");
+					application_log("error", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$ENTRADA_USER->getID()."] tried to masquerade as proxy id [".$result["assigned_by"]."], but they do not have permission_id [".$result["permission_id"]."] does not belong to them. Oooo. Bad news.");
 				}
 			} else {
-				application_log("error", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$_SESSION["details"]["id"]."] tried to masquerade as proxy id [".$result["assigned_by"]."], but the provided permission_id [".$result["permission_id"]."] does not exist in the database.");
+				application_log("error", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." [".$ENTRADA_USER->getID()."] tried to masquerade as proxy id [".$result["assigned_by"]."], but the provided permission_id [".$result["permission_id"]."] does not exist in the database.");
 			}
 		}
 
 		$_SERVER["QUERY_STRING"] = replace_query(array("mask" => false));
-	}
-
-	if(($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] != $_SESSION["details"]["id"]) && ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["expires"] <= time())) {
-		if ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] != $_SESSION["details"]["id"] . "-" . $ENTRADA_USER->getActiveGroupRole()) {
-			unset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
-		}
-	}
-
-	if(!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
-		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $_SESSION["details"]["id"];
 	}
 
 	return true;
@@ -2386,10 +2415,10 @@ function permissions_by_module($module_name = "") {
  * @return bool
  */
 function preferences_update($module, $preferences = array()) {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	if(!isset($_SESSION[APPLICATION_IDENTIFIER][$module]) || $_SESSION[APPLICATION_IDENTIFIER][$module] != $preferences) {
-		$query	= "SELECT `preference_id` FROM `".AUTH_DATABASE."`.`user_preferences` WHERE `app_id`=".$db->qstr(AUTH_APP_ID)." AND `proxy_id`=".$db->qstr($_SESSION["details"]["id"])." AND `module`=".$db->qstr($module);
+		$query	= "SELECT `preference_id` FROM `".AUTH_DATABASE."`.`user_preferences` WHERE `app_id`=".$db->qstr(AUTH_APP_ID)." AND `proxy_id`=".$db->qstr($ENTRADA_USER->getID())." AND `module`=".$db->qstr($module);
 
 		$result	= $db->GetRow($query);
 		if($result) {
@@ -2399,7 +2428,7 @@ function preferences_update($module, $preferences = array()) {
 				return false;
 			}
 		} else {
-			if(!$db->AutoExecute(AUTH_DATABASE.".user_preferences", array("app_id" => AUTH_APP_ID, "proxy_id" => $_SESSION["details"]["id"], "module" => $module, "preferences" => @serialize($_SESSION[APPLICATION_IDENTIFIER][$module]), "updated" => time()), "INSERT")) {
+			if(!$db->AutoExecute(AUTH_DATABASE.".user_preferences", array("app_id" => AUTH_APP_ID, "proxy_id" => $ENTRADA_USER->getID(), "module" => $module, "preferences" => @serialize($_SESSION[APPLICATION_IDENTIFIER][$module]), "updated" => time()), "INSERT")) {
 				application_log("error", "Unable to insert the users database preferences for this module. Database said: ".$db->ErrorMsg());
 
 				return false;
@@ -2420,7 +2449,7 @@ function preferences_update($module, $preferences = array()) {
  * @return bool
  */
 function application_log($type, $message) {
-	global $AGENT_CONTACTS;
+	global $AGENT_CONTACTS, $ENTRADA_USER;
 	$page_url = 'http';
 	if ((isset($_SERVER["HTTPS"])) && $_SERVER["HTTPS"] == "on") {
 		$page_url .= "s";
@@ -2429,7 +2458,7 @@ function application_log($type, $message) {
 	$page_url .= $_SERVER["SERVER_NAME"].$_SERVER["REQUEST_URI"];
 
 	$search		= array("\t", "\r", "\n");
-	$log_entry	= date("r", time())."\t".str_replace($search, " ", $message)."\t".((isset($_SESSION["details"]["id"])) ? str_replace($search, " ", $_SESSION["details"]["id"]) : 0)."\t".((isset($page_url)) ? clean_input($page_url, array("nows")) : "")."\t".((isset($_SERVER["REMOTE_ADDR"])) ? str_replace($search, " ", $_SERVER["REMOTE_ADDR"]) : 0)."\t".((isset($_SERVER["HTTP_USER_AGENT"])) ? str_replace($search, " ", $_SERVER["HTTP_USER_AGENT"]) : false)."\n";
+	$log_entry	= date("r", time())."\t".str_replace($search, " ", $message)."\t".((isset($ENTRADA_USER)) && $ENTRADA_USER ? $ENTRADA_USER->getID() : 0)."\t".((isset($page_url)) ? clean_input($page_url, array("nows")) : "")."\t".((isset($_SERVER["REMOTE_ADDR"])) ? str_replace($search, " ", $_SERVER["REMOTE_ADDR"]) : 0)."\t".((isset($_SERVER["HTTP_USER_AGENT"])) ? str_replace($search, " ", $_SERVER["HTTP_USER_AGENT"]) : false)."\n";
 
 	switch($type) {
 		case "access" :
@@ -3028,13 +3057,13 @@ function check_proxy($location = "default") {
  * @return bool
  */
 function last_updated($type = "event", $event_id = 0) {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	if($event_id = (int) $event_id) {
 		switch($type) {
 			case "lecture" :
 			case "event" :
-				if($db->AutoExecute("events", array("updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "event_id = ".$db->qstr($event_id))) {
+				if($db->AutoExecute("events", array("updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "event_id = ".$db->qstr($event_id))) {
 					return true;
 				}
 				break;
@@ -3055,13 +3084,13 @@ function last_updated($type = "event", $event_id = 0) {
  * @return <type> array
  */
 function dashboard_fetch_feeds($default = false) {
-	global $translate;
+	global $translate, $ENTRADA_USER;
 
 	if (!$default && isset($_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["feeds"]) && is_array($_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["feeds"])) {
 		return $_SESSION[APPLICATION_IDENTIFIER]["dashboard"]["feeds"];
 	} else {
 		$feeds = $translate->_("public_dashboard_feeds");
-		$group = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"];
+		$group = $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"];
 
 		if (is_array($feeds[$group])) {
 			$feeds = array_merge($feeds["global"], $feeds[$group]);
@@ -3080,10 +3109,10 @@ function dashboard_fetch_feeds($default = false) {
  * @return <type> array
  */
 function dashboard_fetch_links() {
-	global $translate;
+	global $translate, $ENTRADA_USER;
 
 	$links = $translate->_("public_dashboard_links");
-	$group = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"];
+	$group = $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"];
 
 	if (is_array($links[$group])) {
 		return array_merge($links["global"], $links[$group]);
@@ -3175,13 +3204,13 @@ function poll_answer_responses($poll_id = 0, $answer_id = 0) {
  * @return bool
  */
 function poll_prevote_check($poll_id = 0) {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	if($poll_id = (int) $poll_id) {
 		$query = "	SELECT *
 					FROM `poll_results`
 					WHERE `poll_id` = ".$db->qstr($poll_id)."
-					AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
+					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 		$result	= $db->GetRow($query);
 		if($result) {
 			return false;
@@ -3692,7 +3721,7 @@ function search_description($description = "") {
  * @return bool
  */
 function add_statistic($module_name = "", $action = "", $action_field = "", $action_value = "", $proxy_id = 0) {
-	global $MODULE, $db;
+	global $MODULE, $db, $ENTRADA_USER;
 
 	if(!$module_name) {
 		if(!$MODULE) {
@@ -3702,8 +3731,8 @@ function add_statistic($module_name = "", $action = "", $action_field = "", $act
 		}
 	}
 
-	if (((int) $proxy_id == 0) && isset($_SESSION["details"]["id"])) {
-		$proxy_id = (int) $_SESSION["details"]["id"];
+	if (((int) $proxy_id == 0) && isset($ENTRADA_USER)) {
+		$proxy_id = (int) $ENTRADA_USER->getID();
 	}
 
 	$stat					= array();
@@ -4029,19 +4058,19 @@ function communities_load_rte($buttons = array(), $plugins = array(), $other_opt
  * @param string $action
  */
 function users_online($action = "default") {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	switch($action) {
 		case "logout" :
-			if((isset($_SESSION["details"]["id"])) && ((int) $_SESSION["details"]["id"])) {
+			if((isset($ENTRADA_USER)) && ((int) $ENTRADA_USER->getID())) {
 			/**
 			 * This query will delete only the exact session information, but it's probably better to delete
 			 * everthing about this user is it not? I don't know.
-			 * $query = "DELETE FROM `users_online` WHERE `session_id` = ".$db->qstr(session_id())." AND `proxy_id` = ".$db->qstr((int) $_SESSION["details"]["id"])." LIMIT 1";
+			 * $query = "DELETE FROM `users_online` WHERE `session_id` = ".$db->qstr(session_id())." AND `proxy_id` = ".$db->qstr((int) $ENTRADA_USER->getID())." LIMIT 1";
 			 */
-				$query = "DELETE FROM `users_online` WHERE `proxy_id` = ".$db->qstr((int) $_SESSION["details"]["id"]);
+				$query = "DELETE FROM `users_online` WHERE `proxy_id` = ".$db->qstr((int) $ENTRADA_USER->getID());
 				if(!$db->Execute($query)) {
-					application_log("error", "Loggout: Failed to delete users_online entry for proxy id ".$_SESSION["details"]["id"].". Database said: ".$db->ErrorMsg());
+					application_log("error", "Loggout: Failed to delete users_online entry for proxy id ".$ENTRADA_USER->getID().". Database said: ".$db->ErrorMsg());
 				}
 			}
 			break;
@@ -4056,7 +4085,7 @@ function users_online($action = "default") {
 						application_log("error", "Unable to update the users_online timestamp. Database said: ".$db->ErrorMsg());
 					}
 				} else {
-					$query = "INSERT INTO `users_online` (`session_id`, `ip_address`, `proxy_id`, `username`, `firstname`, `lastname`, `timestamp`) VALUES (".$db->qstr(session_id()).", ".$db->qstr($_SERVER["REMOTE_ADDR"]).", ".$db->qstr($_SESSION["details"]["id"]).", ".$db->qstr($_SESSION["details"]["username"]).", ".$db->qstr($_SESSION["details"]["firstname"]).", ".$db->qstr($_SESSION["details"]["lastname"]).", ".$db->qstr(time()).")";
+					$query = "INSERT INTO `users_online` (`session_id`, `ip_address`, `proxy_id`, `username`, `firstname`, `lastname`, `timestamp`) VALUES (".$db->qstr(session_id()).", ".$db->qstr($_SERVER["REMOTE_ADDR"]).", ".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($_SESSION["details"]["username"]).", ".$db->qstr($_SESSION["details"]["firstname"]).", ".$db->qstr($_SESSION["details"]["lastname"]).", ".$db->qstr(time()).")";
 					if(!$db->Execute($query)) {
 						application_log("error", "Unable to insert a users_online record. Database said: ".$db->ErrorMsg());
 					}
@@ -4249,7 +4278,7 @@ function communities_log_history($community_id = 0, $page_id = 0, $record_id = 0
 		$record_id			= (int) $record_id;
 		$display_message	= (((int) $display_message) ? 1 : 0);
 
-		$query = "INSERT INTO `community_history` (`community_id`, `cpage_id`, `record_id`, `record_parent`, `proxy_id`, `history_key`, `history_display`, `history_timestamp`) VALUES (".$db->qstr($community_id).", ".$db->qstr($page_id).", ".$db->qstr($record_id).", ".$db->qstr($parent_id).", ".$db->qstr((int) $_SESSION["details"]["id"]).", ".$db->qstr($history_message).", ".$db->qstr($display_message).", ".$db->qstr(time()).")";
+		$query = "INSERT INTO `community_history` (`community_id`, `cpage_id`, `record_id`, `record_parent`, `proxy_id`, `history_key`, `history_display`, `history_timestamp`) VALUES (".$db->qstr($community_id).", ".$db->qstr($page_id).", ".$db->qstr($record_id).", ".$db->qstr($parent_id).", ".$db->qstr((int) $ENTRADA_USER->getID()).", ".$db->qstr($history_message).", ".$db->qstr($display_message).", ".$db->qstr(time()).")";
 		if($db->Execute($query)) {
 			return true;
 		} else {
@@ -4854,7 +4883,7 @@ function communities_module_activate($community_id = 0, $module_id = 0) {
 					$page_order = 0;
 				}
 
-				if(($db->AutoExecute("community_pages", array("community_id" => $community_id, "page_order" => $page_order, "page_type" => $module_info["module_shortname"], "menu_title" => $module_info["module_title"], "page_title" => $module_info["module_title"], "page_url" => $module_info["module_shortname"], "page_content" => "", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) && ($cpage_id = $db->Insert_Id())) {
+				if(($db->AutoExecute("community_pages", array("community_id" => $community_id, "page_order" => $page_order, "page_type" => $module_info["module_shortname"], "menu_title" => $module_info["module_title"], "page_title" => $module_info["module_title"], "page_url" => $module_info["module_shortname"], "page_content" => "", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) && ($cpage_id = $db->Insert_Id())) {
 
 					communities_log_history($community_id, $cpage_id, 0, "community_history_add_page", 1);
 
@@ -6502,7 +6531,7 @@ function fetch_mime_type($filename) {
  * @return bool
  */
 function process_user_photo($original_file, $photo_id = 0) {
-	global $VALID_MAX_DIMENSIONS, $_SESSION;
+	global $VALID_MAX_DIMENSIONS, $_SESSION, $ENTRADA_USER;
 
 	if(!@function_exists("gd_info")) {
 		return false;
@@ -6516,7 +6545,7 @@ function process_user_photo($original_file, $photo_id = 0) {
 		return false;
 	}
 
-	$new_file = STORAGE_USER_PHOTOS."/".$_SESSION["details"]["id"]."-upload";
+	$new_file = STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-upload";
 	$img_quality = 85;
 
 	if($original_file_details = @getimagesize($original_file)) {
@@ -6759,14 +6788,14 @@ function google_generate_id($firstname = "", $lastname = "") {
 }
 
 function google_create_id() {
-	global $db, $GOOGLE_APPS, $AGENT_CONTACTS, $ERROR, $ERRORSTR;
+	global $db, $GOOGLE_APPS, $AGENT_CONTACTS, $ERROR, $ERRORSTR, $ENTRADA_USER;
 
 	if ((isset($GOOGLE_APPS)) && (is_array($GOOGLE_APPS)) && (isset($GOOGLE_APPS["active"])) && ((bool) $GOOGLE_APPS["active"])) {
 		$query	= "	SELECT a.*, b.`group`, b.`role`
 					FROM `".AUTH_DATABASE."`.`user_data` AS a
 					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 					ON a.`id` = b.`user_id`
-					WHERE a.`id` = ".$db->qstr($_SESSION["details"]["id"]);
+					WHERE a.`id` = ".$db->qstr($ENTRADA_USER->getID());
 		$result	= $db->GetRow($query);
 		if ($result) {
 			if ((isset($GOOGLE_APPS["groups"])) && (is_array($GOOGLE_APPS["groups"])) && (in_array($_SESSION["details"]["group"], $GOOGLE_APPS["groups"]))) {
@@ -6792,7 +6821,7 @@ function google_create_id() {
 							$subject	= str_replace($search, $replace, $GOOGLE_APPS["new_account_subject"]);
 							$message	= str_replace($search, $replace, $GOOGLE_APPS["new_account_msg"]);
 
-							$query = "UPDATE `".AUTH_DATABASE."`.`user_data` SET `google_id` = ".$db->qstr($google_id)." WHERE `id` = ".$db->qstr($_SESSION["details"]["id"]);
+							$query = "UPDATE `".AUTH_DATABASE."`.`user_data` SET `google_id` = ".$db->qstr($google_id)." WHERE `id` = ".$db->qstr($ENTRADA_USER->getID());
 							if ($db->Execute($query)) {
 								if(@mail($_SESSION["details"]["email"], $subject, $message, "From: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">\nReply-To: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">")) {
 									$_SESSION["details"]["google_id"] = $google_id;
@@ -6806,7 +6835,7 @@ function google_create_id() {
 									throw new Exception();
 								}
 							} else {
-								application_log("error", "Unable to update the google_id [".$google_id."] field for proxy_id [".$_SESSION["details"]["id"]."].");
+								application_log("error", "Unable to update the google_id [".$google_id."] field for proxy_id [".$ENTRADA_USER->getID()."].");
 
 								throw new Exception();
 							}
@@ -6825,7 +6854,7 @@ function google_create_id() {
 				application_log("error", "google_create_id() failed because users group [".$_SESSION["details"]["group"]."] was not in the GOOGLE_APPS[groups].");
 			}
 		} else {
-			application_log("error", "google_create_id() failed because we were unable to generate information on proxy_id [".$_SESSION["details"]["id"]."]. Database said: ".$db->ErrorMsg());
+			application_log("error", "google_create_id() failed because we were unable to generate information on proxy_id [".$ENTRADA_USER->getID()."]. Database said: ".$db->ErrorMsg());
 		}
 	}
 
@@ -6836,14 +6865,14 @@ function google_create_id() {
 }
 
 function google_reset_password($password = "") {
-	global $db, $GOOGLE_APPS;
+	global $db, $GOOGLE_APPS, $ENTRADA_USER;
 
 	if ((isset($GOOGLE_APPS)) && (is_array($GOOGLE_APPS)) && (isset($GOOGLE_APPS["active"])) && ((bool) $GOOGLE_APPS["active"]) && ($password)) {
 		$query = "	SELECT a.*, b.`group`, b.`role`
 					FROM `".AUTH_DATABASE."`.`user_data` AS a
 					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 					ON a.`id` = b.`user_id`
-					WHERE a.`id` = ".$db->qstr($_SESSION["details"]["id"])."
+					WHERE a.`id` = ".$db->qstr($ENTRADA_USER->getID())."
 					AND b.`app_id` = ".$db->qstr(AUTH_APP_ID);
 		$result	= $db->GetRow($query);
 		if ($result) {
@@ -6856,20 +6885,20 @@ function google_reset_password($password = "") {
 					$account->login->password = $password;
 					$account->save();
 
-					application_log("success", "Successfully updated Google account password for google_id [".$result["google_id"]."] and proxy_id [".$_SESSION["details"]["id"]."].");
+					application_log("success", "Successfully updated Google account password for google_id [".$result["google_id"]."] and proxy_id [".$ENTRADA_USER->getID()."].");
 
 					return true;
 				} catch (Zend_Gdata_Gapps_ServiceException $e) {
-					application_log("error", "Unable to change password for google_id [".$google_id."] for proxy_id [".$_SESSION["details"]["id"]."]. Error details: [".$error->getErrorCode()."] ".$error->getReason().".");
+					application_log("error", "Unable to change password for google_id [".$google_id."] for proxy_id [".$ENTRADA_USER->getID()."]. Error details: [".$error->getErrorCode()."] ".$error->getReason().".");
 					if (is_array($e->getErrors())) {
 						foreach ($e->getErrors() as $error) {
-							application_log("error", "Unable to change password for google_id [".$google_id."] for proxy_id [".$_SESSION["details"]["id"]."]. Error details: [".$error->getErrorCode()."] ".$error->getReason().".");
+							application_log("error", "Unable to change password for google_id [".$google_id."] for proxy_id [".$ENTRADA_USER->getID()."]. Error details: [".$error->getErrorCode()."] ".$error->getReason().".");
 						}
 					}
 				}
 			}
 		} else {
-			application_log("error", "google_reset_password() failed because we were unable to fetch information on proxy_id [".$_SESSION["details"]["id"]."]. Database said: ".$db->ErrorMsg());
+			application_log("error", "google_reset_password() failed because we were unable to fetch information on proxy_id [".$ENTRADA_USER->getID()."]. Database said: ".$db->ErrorMsg());
 		}
 	}
 
@@ -6998,7 +7027,7 @@ function delete_notifications($types) {
  * @return boolean
  */
 function community_notify($community_id, $record_id, $content_type, $url, $permission_id = 0, $release_time = 0) {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	/**
 	 * Select the user permission level required to access the content which
@@ -7388,7 +7417,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 				break;
 		}
 		$message = "community-".$content_type."-notification.txt";
-		post_notify($proxy_ids, $community_title, $content_type, $subject, $message, $url, $release_time, $record_id, $_SESSION["details"]["id"]);
+		post_notify($proxy_ids, $community_title, $content_type, $subject, $message, $url, $release_time, $record_id, $ENTRADA_USER->getID());
 	} else {
 		return false;
 	}
@@ -7469,7 +7498,7 @@ function quiz_load_progress($qprogress_id = 0) {
 }
 
 function quiz_save_response($qprogress_id, $aquiz_id, $content_id, $quiz_id, $qquestion_id, $qqresponse_id, $quiz_type = "event") {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	/**
 	 * Check to ensure that this response is associated with this question.
@@ -7488,7 +7517,7 @@ function quiz_save_response($qprogress_id, $aquiz_id, $content_id, $quiz_id, $qq
 					AND `content_type` = ".$db->qstr($quiz_type)."
 					AND `content_id` = ".$db->qstr($content_id)."
 					AND `quiz_id` = ".$db->qstr($quiz_id)."
-					AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 					AND `qquestion_id` = ".$db->qstr($qquestion_id);
 		$result	= $db->GetRow($query);
 		if ($result) {
@@ -7500,7 +7529,7 @@ function quiz_save_response($qprogress_id, $aquiz_id, $content_id, $quiz_id, $qq
 				$quiz_response_array	= array (
 					"qqresponse_id" => $qqresponse_id,
 					"updated_date" => time(),
-					"updated_by" => $_SESSION["details"]["id"]
+					"updated_by" => $ENTRADA_USER->getID()
 				);
 
 				if ($db->AutoExecute("quiz_progress_responses", $quiz_response_array, "UPDATE", "`qpresponse_id` = ".$db->qstr($result["qpresponse_id"]))) {
@@ -7518,11 +7547,11 @@ function quiz_save_response($qprogress_id, $aquiz_id, $content_id, $quiz_id, $qq
 				"content_type" => $quiz_type,
 				"content_id" => $content_id,
 				"quiz_id" => $quiz_id,
-				"proxy_id" => $_SESSION["details"]["id"],
+				"proxy_id" => $ENTRADA_USER->getID(),
 				"qquestion_id" => $qquestion_id,
 				"qqresponse_id" => $qqresponse_id,
 				"updated_date" => time(),
-				"updated_by" => $_SESSION["details"]["id"]
+				"updated_by" => $ENTRADA_USER->getID()
 			);
 
 			if ($db->AutoExecute("quiz_progress_responses", $quiz_response_array, "INSERT")) {
@@ -7739,13 +7768,13 @@ function lp_multiple_select_category_select($id, $checkboxes, $options) {
  * @return int
  */
 function quiz_fetch_attempts($aquiz_id = 0) {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	if ($aquiz_id = (int) $aquiz_id) {
 		$query		= "	SELECT COUNT(*) AS `total`
 						FROM `quiz_progress`
 						WHERE `aquiz_id` = ".$db->qstr($aquiz_id)."
-						AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+						AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 						AND `progress_value` <> 'inprogress'";
 		$attempts	= $db->GetRow($query);
 		if ($attempts) {
@@ -7764,13 +7793,13 @@ function quiz_fetch_attempts($aquiz_id = 0) {
  * @return int
  */
 function quiz_completed_attempts($aquiz_id = 0) {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	if ($aquiz_id = (int) $aquiz_id) {
 		$query		= "	SELECT COUNT(*) AS `total`
 						FROM `quiz_progress`
 						WHERE `aquiz_id` = ".$db->qstr($aquiz_id)."
-						AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+						AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 						AND `progress_value` = 'complete'";
 		$completed	= $db->GetRow($query);
 		if ($completed) {
@@ -7915,14 +7944,14 @@ function clerkship_student_name($event_id = 0) {
  * @return array
  */
 function clerkship_get_rotation_overview($rotation_id, $proxy_id = 0) {
-    global $db;
+    global $db, $ENTRADA_USER;
 
     if (!$rotation_id) {
 		$rotation_id = MAX_ROTATION;
     }
 
     if (!$proxy_id) {
-		$proxy_id = $_SESSION["details"]["id"];
+		$proxy_id = $ENTRADA_USER->getID();
     }
 
     // Count of entries entered in this rotation
@@ -8015,10 +8044,10 @@ function clerkship_get_rotation_overview($rotation_id, $proxy_id = 0) {
  */
 
 function clerkship_get_rotation($rotation_id, $proxy_id = 0) {
-    global $db;
+    global $db, $ENTRADA_USER;
 
     if (!$proxy_id) {
-		$proxy_id = $_SESSION["details"]["id"];
+		$proxy_id = $ENTRADA_USER->getID();
     }
 
     if (!$rotation_id) {  // Get current rotation
@@ -8031,7 +8060,7 @@ function clerkship_get_rotation($rotation_id, $proxy_id = 0) {
 					WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00", time()))."
 					AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
 					AND b.`econtact_type` = 'student'
-					AND b.`etype_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					AND b.`etype_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 					ORDER BY a.`event_start` ASC";
 		if ($clerkship_schedule	= $db->GetAll($query)) {
 			$rotation_id =  (isset($clerkship_schedule["rotation_id"]) && $clerkship_schedule["rotation_id"]) ? $clerkship_schedule["rotation_id"] : (MAX_ROTATION - 1); // Select Overview / Elective if not a mandatory rotation
@@ -8054,10 +8083,10 @@ function clerkship_get_rotation($rotation_id, $proxy_id = 0) {
  */
 
 function clerkship_get_rotation_schedule ($rotation, $proxy_id = 0) {
-    global $db;
+    global $db, $ENTRADA_USER;
 
    if (!$proxy_id) {
-	$proxy_id = $_SESSION["details"]["id"];
+	$proxy_id = $ENTRADA_USER->getID();
     }
 
     if ($rotation && $rotation < MAX_ROTATION) {
@@ -8861,10 +8890,10 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 
 	if ($ENTRADA_USER->getGroup() == "student") {
 		$query .="	AND (
-						d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getProxyId())."
+						d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 						OR a.`permission` = 'open'
 						OR (
-							b.`audience_type` = 'proxy_id' AND b.`audience_value` = ".$db->qstr($ENTRADA_USER->getProxyId())."
+							b.`audience_type` = 'proxy_id' AND b.`audience_value` = ".$db->qstr($ENTRADA_USER->getID())."
 						)
 					)";
 	}
@@ -8879,7 +8908,7 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	$results = $db->GetAll($query);
 	if ($results) {
 		foreach ($results as $result) {
-				if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $ENTRADA_USER->getOrganisationID()), "read")) {
+				if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $ENTRADA_USER->getOrganisationId()), "read")) {
 					$output[] = $result;
 				}
 		}
@@ -10092,6 +10121,7 @@ function events_filters_defaults($proxy_id = 0, $group = "", $role = "") {
  * Function used by public events and admin events index to process the provided filter settings.
  */
 function events_process_filters($action = "", $module_type = "") {
+	global $ENTRADA_USER;
 	/**
 	 * Determine whether or not this is being called from the admin section.
 	 */
@@ -10117,7 +10147,7 @@ function events_process_filters($action = "", $module_type = "") {
 						/**
 						 * Check to see if this is a student attempting to view the calendar of another student.
 						 */
-						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $ENTRADA_USER->getActiveId())) {
 							$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"][$filter_key][] = $filter_value;
 
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]);
@@ -10139,7 +10169,7 @@ function events_process_filters($action = "", $module_type = "") {
 					foreach ($filters as $filter) {
 						$pieces = explode("_", $filter);
 						$filter_value = $pieces[1];
-						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $ENTRADA_USER->getActiveId())) {
 							$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"][$filter_key][] = $filter_value;
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]);
 						}
@@ -10150,7 +10180,7 @@ function events_process_filters($action = "", $module_type = "") {
 					$filter_value = $pieces[1];
 					if ($filter_value && $filter_key) {
 						//This is an actual filter, cool dude. Erase everything else since we only got one and add this one if its not a student looking at another student
-						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $ENTRADA_USER->getActiveId())) {
 							unset($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"][$filter_key]);
 							$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"][$filter_key][] = $filter_value;
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]);
@@ -10211,9 +10241,9 @@ function events_process_filters($action = "", $module_type = "") {
 			}
 
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"] = events_filters_defaults(
-				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
-				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],
-				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]
+				$ENTRADA_USER->getActiveId(),
+				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"],
+				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]
 			);
 
 			$_SERVER["QUERY_STRING"] = replace_query(array("action" => false, "filter" => false));
@@ -10236,7 +10266,7 @@ function events_process_filters($action = "", $module_type = "") {
  * Function used by community tracking to process the provided filter settings.
  */
 function tracking_process_filters($action = "", $module_type = "") {
-	global $COMMUNITY_ID;
+	global $COMMUNITY_ID, $ENTRADA_USER;
 	/**
 	 * Determine whether or not this is being called from the admin section.
 	 */
@@ -10262,7 +10292,7 @@ function tracking_process_filters($action = "", $module_type = "") {
 						/**
 						 * Check to see if this is a student attempting to view the calendar of another student.
 						 */
-						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $ENTRADA_USER->getActiveId())) {
 							$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key][] = $filter_value;
 
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
@@ -10284,7 +10314,7 @@ function tracking_process_filters($action = "", $module_type = "") {
 					foreach ($filters as $filter) {
 						$pieces = explode("_", $filter);
 						$filter_value = $pieces[1];
-						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $ENTRADA_USER->getActiveId())) {
 							$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key][] = $filter_value;
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
 						}
@@ -10295,7 +10325,7 @@ function tracking_process_filters($action = "", $module_type = "") {
 					$filter_value = $pieces[1];
 					if ($filter_value && $filter_key) {
 						//This is an actual filter, cool dude. Erase everything else since we only got one and add this one if its not a student looking at another student
-						if (($filter_key != "student") || ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] != "student") || ($filter_value == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])) {
+						if (($filter_key != "student") || ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] != "student") || ($filter_value == $ENTRADA_USER->getActiveId())) {
 							unset($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key]);
 							$_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"][$filter_key][] = $filter_value;
 							ksort($_SESSION[APPLICATION_IDENTIFIER]["tracking"]["filters"]);
@@ -11429,7 +11459,7 @@ function audience_sort($a,$b){
  * @return array
  */
 function events_fetch_event_resources($event_id = 0, $options = array(), $exclude = array()) {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	$fetch_files = false;
 	$fetch_links = false;
@@ -11518,7 +11548,7 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 						FROM `event_files` AS a
 						LEFT JOIN `statistics` AS b
 						ON b.`module` = 'events'
-						AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						AND b.`action` = 'file_download'
 						AND b.`action_field` = 'file_id'
 						AND b.`action_value` = a.`efile_id`
@@ -11536,7 +11566,7 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 						FROM `event_links` AS a
 						LEFT JOIN `statistics` AS b
 						ON b.`module` = 'events'
-						AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						AND b.`action` = 'link_access'
 						AND b.`action_field` = 'link_id'
 						AND b.`action_value` = a.`elink_id`
@@ -11557,7 +11587,7 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 						ON b.`quiztype_id` = a.`quiztype_id`
 						LEFT JOIN `statistics` AS c
 						ON c.`module` = 'events'
-						AND c.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						AND c.`action` = 'quiz_complete'
 						AND c.`action_field` = 'aquiz_id'
 						AND c.`action_value` = a.`aquiz_id`
@@ -12184,7 +12214,7 @@ function get_region_name($region_id = 0) {
  * @return bool $success
  */
 function notify_regional_education($action, $event_id) {
-	global $db, $AGENT_CONTACTS, $event_info;
+	global $db, $AGENT_CONTACTS, $event_info, $ENTRADA_USER;
 
 	$query	= "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 				LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS b
@@ -12229,7 +12259,7 @@ function notify_regional_education($action, $event_id) {
 							}
 							$message .= "=======================================================\n\n";
 							$message .= "Deletion Date:\t".date("r", time())."\n";
-							$message .= "Deleted By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$_SESSION["details"]["id"].")\n";
+							$message .= "Deleted By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$ENTRADA_USER->getID().")\n";
 						break;
 						case "change-critical" :
 							$message  = "Attention ".$AGENT_CONTACTS["agent-regionaled"]["name"].",\n\n";
@@ -12264,7 +12294,7 @@ function notify_regional_education($action, $event_id) {
 							}
 							$message .= "=======================================================\n\n";
 							$message .= "Deletion Date:\t".date("r", time())."\n";
-							$message .= "Deleted By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$_SESSION["details"]["id"].")\n";
+							$message .= "Deleted By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$ENTRADA_USER->getID().")\n";
 						break;
 						case "change-non-critical" :
 						case "updated" :
@@ -12296,7 +12326,7 @@ function notify_regional_education($action, $event_id) {
 							}
 							$message .= "=======================================================\n\n";
 							$message .= "Updated Date:\t".date("r", time())."\n";
-							$message .= "Update By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$_SESSION["details"]["id"].")\n";
+							$message .= "Update By:\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]." (".$ENTRADA_USER->getID().")\n";
 						break;
 					}
 					$mail = new Zend_Mail();
@@ -14102,9 +14132,9 @@ function displayARYearReported($year_reported, $AR_CUR_YEAR, $AR_PAST_YEARS, $AR
 function add_task_sidebar () {
 	require_once("Models/users/User.class.php");
 	require_once("Models/tasks/TaskCompletions.class.php");
-	global $ENTRADA_ACL;
+	global $ENTRADA_ACL, $ENTRADA_USER;
 
-	$proxy_id = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
+	$proxy_id = $ENTRADA_USER->getActiveId();
 	$user = User::get($proxy_id);
 
 
@@ -14355,13 +14385,13 @@ function fetch_evaluation_target_title($evaluation_target = array(), $number_of_
  * @return int
  */
 function evaluations_fetch_attempts($evaluation_id = 0) {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	if ($evaluation_id = (int) $evaluation_id) {
 		$query		= "	SELECT COUNT(*) AS `total`
 						FROM `evaluation_progress`
 						WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
-						AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+						AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 						AND `progress_value` <> 'inprogress'";
 		$attempts	= $db->GetRow($query);
 		if ($attempts) {
@@ -14373,7 +14403,7 @@ function evaluations_fetch_attempts($evaluation_id = 0) {
 }
 
 function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efresponse_id, $comments) {
-	global $db;
+	global $db, $ENTRADA_USER;
 	/**
 	 * Check to ensure that this response is associated with this question.
 	 */
@@ -14388,7 +14418,7 @@ function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efr
 					FROM `evaluation_responses`
 					WHERE `eprogress_id` = ".$db->qstr($eprogress_id)."
 					AND `eform_id` = ".$db->qstr($eform_id)."
-					AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 					AND `efquestion_id` = ".$db->qstr($efquestion_id);
 		$result	= $db->GetRow($query);
 		if ($result) {
@@ -14401,7 +14431,7 @@ function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efr
 					"efresponse_id" => $efresponse_id,
 					"comments" => $comments,
 					"updated_date" => time(),
-					"updated_by" => $_SESSION["details"]["id"]
+					"updated_by" => $ENTRADA_USER->getID()
 				);
 				if ($db->AutoExecute("evaluation_responses", $evaluation_response_array, "UPDATE", "`eresponse_id` = ".$db->qstr($result["eresponse_id"]))) {
 					return true;
@@ -14415,12 +14445,12 @@ function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efr
 			$evaluation_response_array	= array (
 				"eprogress_id" => $eprogress_id,
 				"eform_id" => $eform_id,
-				"proxy_id" => $_SESSION["details"]["id"],
+				"proxy_id" => $ENTRADA_USER->getID(),
 				"efquestion_id" => $efquestion_id,
 				"efresponse_id" => $efresponse_id,
 				"comments" => $comments,
 				"updated_date" => time(),
-				"updated_by" => $_SESSION["details"]["id"]
+				"updated_by" => $ENTRADA_USER->getID()
 			);
 
 			if ($db->AutoExecute("evaluation_responses", $evaluation_response_array, "INSERT")) {
@@ -15273,17 +15303,17 @@ function categories_inarray($parent_id, $indent = 0) {
  * @return null
  */
 function history_log($event, $message, $updater=0, $time=0) {
-	global $db;
+	global $db, $ENTRADA_USER;
 	if (!$updater) { // Ignore noting updates if made by the sole author.
 	 $result = $db->GetOne("SELECT count(*) FROM `event_history` WHERE `event_id` = ".$db->qstr($event));
 	 if (!$result) {
 	  $result = $db->GetOne("SELECT `updated_by` FROM `events` WHERE `event_id` = ".$db->qstr($event));
-	  if ($result==$_SESSION["details"]["id"]) {
+	  if ($result==$ENTRADA_USER->getID()) {
 	   return ;
 	  }
 	 }
 	}
-	if (!$db->AutoExecute("event_history", array("event_id" => $event, "proxy_id" => ($updater ? $updater : $_SESSION["details"]["id"]), "history_message" => $message, "history_timestamp" => ($time ? $time : time())), "INSERT")) {
+	if (!$db->AutoExecute("event_history", array("event_id" => $event, "proxy_id" => ($updater ? $updater : $ENTRADA_USER->getID()), "history_message" => $message, "history_timestamp" => ($time ? $time : time())), "INSERT")) {
 		$ERROR++;
 		$ERRORSTR[] = "There was an error while trying to save the selected <strong>Event content update</strong> for this event.<br /><br />The system administrator was informed of this error; please try again later.";
 

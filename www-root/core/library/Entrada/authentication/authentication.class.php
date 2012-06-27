@@ -279,8 +279,8 @@ class AuthSystem {
 		xml_parser_free($parser);
 
 		for ($n = 0; $n <= count($vals)-1; $n++) {
-			if (trim($vals[$n]["value"])) {
-				$element[$vals[$n]["tag"]][count($element[$vals[$n]["tag"]])] = $vals[$n]["value"];
+			if (isset($vals[$n]["value"]) && trim($vals[$n]["value"])) {
+				$element[$vals[$n]["tag"]][(isset($element[$vals[$n]["tag"]]) && is_array($element[$vals[$n]["tag"]]) ? count($element[$vals[$n]["tag"]]) : 0)] = $vals[$n]["value"];
 			}
 		}
 

@@ -37,7 +37,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	
 	if (isset($_GET["id"]) && ($id = clean_input($_GET["id"], array("notags", "trim")))) {
@@ -133,7 +133,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 
 					if (!$ERROR) {
 						$PROCESSED["updated_date"] = time();
-						$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+						$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 						
 						if ($db->AutoExecute("global_lu_objectives", $PROCESSED, "UPDATE", "`objective_id` = ".$db->qstr($OBJECTIVE_ID))) {
 							$url = ENTRADA_URL . "/admin/settings/organisations/manage/objectives?org=".$ORGANISATION_ID;

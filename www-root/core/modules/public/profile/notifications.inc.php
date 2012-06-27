@@ -23,10 +23,10 @@ if (!defined("IN_PROFILE")) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
-	$PROXY_ID					= $_SESSION["details"]["id"];
+	$PROXY_ID					= $ENTRADA_USER->getID();
 	
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/profile?section=notifications", "title" => "Community Notifications");
 
@@ -35,8 +35,8 @@ if (!defined("IN_PROFILE")) {
 	if ((is_array($_SESSION["permissions"])) && ($total_permissions = count($_SESSION["permissions"]) > 1)) {
 		$sidebar_html  = "The following individual".((($total_permissions - 1) != 1) ? "s have" : " has")." given you access to their ".APPLICATION_NAME." permission levels:";
 		$sidebar_html .= "<ul class=\"menu\">\n";
-		foreach ($_SESSION["permissions"] as $proxy_id => $result) {
-			if ($proxy_id != $_SESSION["details"]["id"]) {
+		foreach ($_SESSION["permissions"] as $access_id => $result) {
+			if ($access_id != $ENTRADA_USER->getDefaultAccessId()) {
 				$sidebar_html .= "<li class=\"checkmark\"><strong>".html_encode($result["fullname"])."</strong><br /><span class=\"content-small\">Exp: ".(($result["expires"]) ? date("D M d/y", $result["expires"]) : "Unknown")."</span></li>\n";
 			}
 		}
@@ -67,7 +67,7 @@ if (!defined("IN_PROFILE")) {
 	}
 	require_once("Models/notifications/NotificationUser.class.php");
 	echo "<h1>Your ".APPLICATION_NAME." Notifications</h1>";
-	$query = "SELECT `nuser_id` FROM `notification_users` WHERE `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
+	$query = "SELECT `nuser_id` FROM `notification_users` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 	$notification_user_ids = $db->GetAll($query);
 	if ($notification_user_ids) {
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";
@@ -96,6 +96,12 @@ if (!defined("IN_PROFILE")) {
 			if (isset($_GET["id"]) && ($RECORD_ID = (int)$_GET["id"])) {
 				$notification_user = NotificationUser::getByID($RECORD_ID);
 				$HEAD[] = "<script type=\"text/javascript\">jQuery(document).ready(function() { promptNotifications(0, ".$RECORD_ID.", '".$notification_user->getContentTypeName()."'); });</script>";
+			}
+		}
+		if (isset($_GET["action"]) && ($_GET["action"] == "digest-mode")) {
+			if (isset($_GET["id"]) && ($RECORD_ID = (int)$_GET["id"])) {
+				$notification_user = NotificationUser::getByID($RECORD_ID);
+				$HEAD[] = "<script type=\"text/javascript\">jQuery(document).ready(function() { promptNotificationsDigest(1, ".$RECORD_ID.", '".$notification_user->getContentTypeName()."'); });</script>";
 			}
 		}
 		?>
@@ -142,7 +148,7 @@ if (!defined("IN_PROFILE")) {
 		}
 		
 		function promptNotificationsDigest(enabled, nuser_id, content_type) {
-			Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications once per day at most when new comments or changes are made on this '+content_type+'?',
+			Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "begin" : "stop") +' receiving notifications once per day at most when new comments or changes are made on this '+content_type+'?',
 				{
 					id:				'requestDigestDialog',
 					width:			350,
@@ -169,7 +175,7 @@ if (!defined("IN_PROFILE")) {
 														maximizable:	false,
 														recenterAuto:	true,
 														destroyOnClose:	true,
-														url:			'<?php echo ENTRADA_URL; ?>/api/notifications.api.php?nuser_id='+nuser_id+'&action=edit-digest&active='+(enabled == 1 ? '0' : '1'),
+														url:			'<?php echo ENTRADA_URL; ?>/api/notifications.api.php?nuser_id='+nuser_id+'&action=edit-digest&active='+enabled,
 														onClose:			function () {
 																			new Ajax.Updater('notification_user_'+nuser_id+'_digest_mode', '<?php echo ENTRADA_URL; ?>/api/notifications.api.php?nuser_id='+nuser_id+'&action=view-digest');
 																		}
@@ -202,7 +208,7 @@ if (!defined("IN_PROFILE")) {
 					echo "	<td class=\"modified\">&nbsp;</td>\n";
 					echo "	<td class=\"title\"><a href=\"".$url."\">".html_encode($notification_user->getContentTitle())."</a></td>\n";
 					echo "	<td class=\"date\">".ucwords($notification_user->getContentTypeName())."</td>\n";
-					echo "	<td class=\"date-smallest\" id=\"notification_user_".$nuser_id."_digest_mode\">".($notification_user->getContentType() != "logbook_rotation" ? "<span style=\"cursor: pointer;\" onclick=\"promptNotificationsDigest(".($notification_user->getDigestMode() ? "'1'" : "'0'").", ".$nuser_id.", '".$notification_user->getContentTypeName()."')\"><img src=\"".ENTRADA_URL."/images/btn-".($notification_user->getDigestMode() ? "approve.gif\" alt=\"Active\" />" : "unapprove.gif\" alt=\"Disabled\" />")."</span>" : "<span alt=\"N/A\">N/A</span>")."</td>\n";
+					echo "	<td class=\"date-smallest\" id=\"notification_user_".$nuser_id."_digest_mode\">".($notification_user->getContentType() != "logbook_rotation" ? "<span style=\"cursor: pointer;\" onclick=\"promptNotificationsDigest(".($notification_user->getDigestMode() ? "'0'" : "'1'").", ".$nuser_id.", '".$notification_user->getContentTypeName()."')\"><img src=\"".ENTRADA_URL."/images/btn-".($notification_user->getDigestMode() ? "approve.gif\" alt=\"Active\" />" : "unapprove.gif\" alt=\"Disabled\" />")."</span>" : "<span alt=\"N/A\">N/A</span>")."</td>\n";
 					echo "	<td class=\"date-smallest\" id=\"notification_user_".$nuser_id."_active\"><span style=\"cursor: pointer;\" onclick=\"promptNotifications(".($notification_user->getNotifyActive() ? "'0'" : "'1'").", ".$nuser_id.", '".$notification_user->getContentTypeName()."')\"><img src=\"".ENTRADA_URL."/images/btn-".($notification_user->getNotifyActive() ? "approve.gif\" alt=\"Active\" />" : "unapprove.gif\" alt=\"Disabled\" />")."</span>"."</td>\n";
 					echo "</tr>\n";
 				}
@@ -221,7 +227,7 @@ if (!defined("IN_PROFILE")) {
 		?>
 		<h1>Community Notifications</h1>
 		<?php
-		$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `".AUTH_DATABASE."`.`user_data`.`id`=".$db->qstr($_SESSION["details"]["id"]);
+		$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `".AUTH_DATABASE."`.`user_data`.`id`=".$db->qstr($ENTRADA_USER->getID());
 		$result	= $db->GetRow($query);
 		if ($result) {
 			?>

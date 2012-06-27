@@ -37,7 +37,7 @@ if ($RECORD_ID) {
 					ON a.`cdtopic_id` = d.`record_id`
 					AND d.`community_id` = a.`community_id`
 					AND d.`notify_type` = 'reply'
-					AND d.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					AND d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 					WHERE a.`proxy_id` = c.`id`
 					AND a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
 					AND b.`cpage_id` = ".$db->qstr($PAGE_ID)." 
@@ -89,20 +89,20 @@ if ($RECORD_ID) {
 						$PROCESSED["cdtopic_parent"]	= $RECORD_ID;
 						$PROCESSED["cdiscussion_id"]	= $topic_record["cdiscussion_id"];
 						$PROCESSED["community_id"]		= $COMMUNITY_ID;
-						$PROCESSED["proxy_id"]			= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
+						$PROCESSED["proxy_id"]			= $ENTRADA_USER->getActiveId();
 						$PROCESSED["topic_title"]		= "";
 						$PROCESSED["topic_active"]		= 1;
 						$PROCESSED["release_date"]		= time();
 						$PROCESSED["release_until"]		= 0;
 						$PROCESSED["updated_date"]		= time();
-						$PROCESSED["updated_by"]		= $_SESSION["details"]["id"];
+						$PROCESSED["updated_by"]		= $ENTRADA_USER->getID();
 
 						if ($db->AutoExecute("community_discussion_topics", $PROCESSED, "INSERT")) {
 							if ($TOPIC_ID = $db->Insert_Id()) {
 								if ($_SESSION["details"]["notifications"] && COMMUNITY_NOTIFICATIONS_ACTIVE && isset($notifications) && $notify_record_exists) {
-									$db->Execute("UPDATE `community_notify_members` SET `notify_active` = '".($notifications ? "1" : "0")."' WHERE `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])." AND `record_id` = ".$db->qstr($RECORD_ID)." AND `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `notify_type` = 'reply'");
+									$db->Execute("UPDATE `community_notify_members` SET `notify_active` = '".($notifications ? "1" : "0")."' WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `record_id` = ".$db->qstr($RECORD_ID)." AND `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `notify_type` = 'reply'");
 								} elseif (isset($notifications) && !$notify_record_exists && COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) {
-									$db->Execute("INSERT INTO `community_notify_members` (`proxy_id`, `record_id`, `community_id`, `notify_type`, `notify_active`) VALUES (".$db->qstr($_SESSION["details"]["id"]).", ".$db->qstr($RECORD_ID).", ".$db->qstr($COMMUNITY_ID).", 'reply', '".($notifications ? "1" : "0")."')");
+									$db->Execute("INSERT INTO `community_notify_members` (`proxy_id`, `record_id`, `community_id`, `notify_type`, `notify_active`) VALUES (".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($RECORD_ID).", ".$db->qstr($COMMUNITY_ID).", 'reply', '".($notifications ? "1" : "0")."')");
 								}
 								$url			= COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$RECORD_ID."#post-".$TOPIC_ID;
 								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";

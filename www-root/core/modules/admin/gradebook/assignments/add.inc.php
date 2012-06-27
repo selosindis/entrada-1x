@@ -35,7 +35,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($COURSE_ID) {
 		$query = "	SELECT * FROM `courses`
@@ -237,7 +237,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						
 							$PROCESSED["order"]			= $order;
 							$PROCESSED["updated_date"]	= time();
-							$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 							$PROCESSED["course_id"]		= $COURSE_ID;
 
 							if ($db->AutoExecute("assessments", $PROCESSED, "INSERT")) {		
@@ -336,7 +336,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					if(!$ERROR){
 						
 						$PROCESSED["updated_date"]	= time();
-						$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 						$PROCESSED["course_id"]		= $COURSE_ID;
 						$PROCESSED["assignment_active"] = 1;
 
@@ -344,17 +344,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							if($ASSIGNMENT_ID = $db->Insert_Id()) {
 								
 								$PROCESSED["assignment_id"] = $ASSIGNMENT_ID;
-								$PROCESSED["proxy_id"] = $ENTRADA_USER->getProxyId();
+								$PROCESSED["proxy_id"] = $ENTRADA_USER->getID();
 								$PROCESSED["contact_order"] = 0;
 								$PROCESSED["updated_date"]	= time();
-								$PROCESSED["updated_by"] = $ENTRADA_USER->getProxyId();
+								$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 								if ($db->AutoExecute("assignment_contacts", $PROCESSED, "INSERT")) {
 									if ((isset($_POST["associated_director"])) && ($associated_directors = explode(",", $_POST["associated_director"])) && (@is_array($associated_directors)) && (@count($associated_directors))) {
 										$order = 0;
 										foreach($associated_directors as $proxy_id) {
 											if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
-												if($proxy_id !== $ENTRADA_USER->getProxyId()){
-													if (!$db->AutoExecute("assignment_contacts", array("assignment_id" => $ASSIGNMENT_ID, "proxy_id" => $proxy_id, "contact_order" => $order+1, "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getProxyId()), "INSERT")) {
+												if($proxy_id !== $ENTRADA_USER->getID()){
+													if (!$db->AutoExecute("assignment_contacts", array("assignment_id" => $ASSIGNMENT_ID, "proxy_id" => $proxy_id, "contact_order" => $order+1, "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getID()), "INSERT")) {
 														add_error("There was an error when trying to insert a &quot;" . $module_singular_name . " Director&quot; into the system. The system administrator was informed of this error; please try again later.");
 
 														application_log("error", "Unable to insert a new course_contact to the database when updating an event. Database said: ".$db->ErrorMsg());

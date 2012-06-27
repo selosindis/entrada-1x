@@ -30,7 +30,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else { 
 	$BREADCRUMB[]	= array("url" => "", "title" => "Draft Schedule Preview");
 	$draft_id = (int) $_GET["draft_id"];
@@ -116,12 +116,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			},
 			eventClick : function(calEvent, $event) {
 				console.log(calEvent.id);
-				window.location = "<?= ENTRADA_RELATIVE; ?>/admin/events?section=edit&mode=draft&id="+calEvent.id;
+				window.location = "<?php echo ENTRADA_RELATIVE; ?>/admin/events?section=edit&mode=draft&id="+calEvent.id;
 			},
 			externalDates : function (calendar) {
 				jQuery('#currentDateInfo').html(calendar.find('.wc-day-1').html() + ' - ' + calendar.find('.wc-day-5').html());
 			},
-			data : '<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts/preview?mode=calendar-data&draft_id=<?= $draft_id; ?>'
+			data : '<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts/preview?mode=calendar-data&draft_id=<?php echo $draft_id; ?>'
 		});
 	});
 

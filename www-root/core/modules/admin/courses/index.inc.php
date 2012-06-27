@@ -35,7 +35,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	/**
 	 * Update requested column to sort by.
@@ -147,17 +147,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					FROM `courses` AS a
 					LEFT JOIN `course_contacts` AS b
 					ON b.`course_id` = a.`course_id`
-					AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 					AND b.`contact_type` = 'director'
 					LEFT JOIN `community_courses` AS c
 					ON c.`course_id` = a.`course_id`
 					LEFT JOIN `community_members` AS d
 					ON d.`community_id` = c.`community_id`
-					AND d.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					AND d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 					WHERE 
 					(
-						a.`pcoord_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-						OR b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						a.`pcoord_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
+						OR b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						OR d.`member_acl` = '1'
 					)
 					".(isset($organisation_where) ? ' AND `a`.'.$organisation_where : '')."
@@ -277,11 +277,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					ON `community_courses`.`course_id` = `courses`.`course_id`
 					LEFT JOIN `community_members`
 					ON `community_members`.`community_id` = `community_courses`.`community_id`
-					AND `community_members`.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+					AND `community_members`.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 					WHERE 
 					(
-						`courses`.`pcoord_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
-						OR `course_contacts`.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+						`courses`.`pcoord_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
+						OR `course_contacts`.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						OR `community_members`.`member_acl` = '1'
 					)
 					AND `courses`.`course_active` = '1'
@@ -342,7 +342,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			$administrator	= false;
 
 			if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), 'update')) {
-				$allowed_ids	= array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+				$allowed_ids	= array($ENTRADA_USER->getActiveId());
 				$administrator	= true;
 				$url			= ENTRADA_URL."/admin/".$MODULE."?section=edit&amp;id=".$result["course_id"];
 			} else if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), 'update')) {

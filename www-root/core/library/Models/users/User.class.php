@@ -36,6 +36,7 @@ require_once("Models/users/Cohort.class.php");
  */
 class User {
 	private $id,
+			$active_id,
 			$username,
 			$firstname,
 			$lastname,
@@ -68,11 +69,10 @@ class User {
 			$clinical,
 			$active_organisation,
 			$all_organisations,
-			$organisation_group_role,
-			$active_group_role;
+			$organisation_group_role;
 
 	
-	private $group, $role;
+	private $default_access_id, $access_id, $group, $role;
 
 	/**
 	 * lookup array for formatting user information
@@ -113,7 +113,38 @@ class User {
 	 * @return int
 	 */
 	public function getID() {
-		return $this->getProxyId();
+		return $this->id;
+	}
+
+	/**
+	 * Returns the active proxy_id of the user
+	 * @return int
+	 */
+	public function getActiveId() {
+		if ($this->active_id) {
+			return $this->active_id;
+		} elseif ($this->access_id) {
+			setActiveId($this->access_id);
+			return $this->active_id;
+		} else {
+			return $this->id;
+		}
+	}
+
+	/**
+	 * Sets the active proxy_id of the user
+	 * @return int
+	 */
+	public function setActiveId($value) {
+		global $db;
+		
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($value);
+		$active_id = $db->GetOne($query);
+		if ($active_id) {
+			$this->active_id = $active_id;
+		}
+		
 	}
 		
 	/**
@@ -261,7 +292,7 @@ class User {
 	 * Returns the ID of the organisation to which the user belongs
 	 * @return int
 	 */
-	function getOrganisationID() {
+	function getOrganisationId() {
 		return $this->organisation_id;
 	}
 	
@@ -284,8 +315,8 @@ class User {
 		if ($this->active_organisation) {
 			return $this->active_organisation;
 		}
-		else if ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"]) {
-			return $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+		else if ($_SESSION["permissions"][$this->getAccessId()]["organisation_id"]) {
+			return $_SESSION["permissions"][$this->getAccessId()]["organisation_id"];
 		}
 		else {
 			return $this->organisation_id;
@@ -319,6 +350,24 @@ class User {
 	function setAllOrganisations($value) {
 		$this->all_organisations = $value;
 	}
+	
+	/**
+	 * Returns the int/boolean of the user's "clinical" status.
+	 *
+	 * @return int
+	 */
+	function getClinical() {
+		return $this->clinical;
+	}
+
+	/**
+	 * Sets the int/boolean for the user's "clinical" status.
+	 *
+	 * @param int $value
+	 */
+	function setClinical($value) {
+		$this->clinical = $value;
+	}
 
 
 	function setOrganisationGroupRole($value) {
@@ -330,16 +379,71 @@ class User {
 		return $this->organisation_group_role;
 	}
 
-	function setActiveGroupRole($value) {
-		$this->active_group_role = $value;		
+	function setAccessId($value) {
+		global $db;
+		if ((!isset($value) || !$value) && isset($this->default_access_id) && $this->default_access_id) {
+			$value = $this->default_access_id;
+		} elseif ((!isset($value) || !$value) && (!isset($this->default_access_id) || !$this->default_access_id)) {
+			$query = "SELECT `id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `user_id` = ".$db->qstr($this->getID())."
+						AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
+						AND `account_active` = 'true'
+						AND (`access_starts` = '0' OR `access_starts` <= ".$db->qstr(time()).")
+						AND (`access_expires` = '0' OR `access_expires` >= ".$db->qstr(time()).")
+						AND `organisation_id` = ".$db->qstr(($this->getActiveOrganisation() ? $this->getActiveOrganisation() : $this->getOrganisationID()));
+			$value = $db->getOne();
+			$this->default_access_id = $value;
+		}
+		$this->access_id = $value;
+		$this->setActiveId($value);
+		
+		//get all of the users orgs
+		$query = "SELECT b.`organisation_id`, b.`organisation_title`
+					  FROM `" . AUTH_DATABASE . "`.`user_access` a
+					  JOIN `" . AUTH_DATABASE . "`.`organisations` b
+					  ON a.`organisation_id` = b.`organisation_id`
+					  WHERE a.`user_id` = ?";
+		$results = $db->getAll($query, array($this->getActiveId()));
+
+		//every user should have at least one org.
+		if ($results) {
+			$organisation_list = array();
+			foreach ($results as $result) {
+				$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
+			}
+			$this->setAllOrganisations($organisation_list);
+		}
+
+		//get all of the users groups and roles for each organisation
+		$query = "SELECT b.`organisation_id`, b.`organisation_title`, a.`group`, a.`role`, a.`id`, c.`organisation_id` AS `default_organisation_id`
+					  FROM `" . AUTH_DATABASE . "`.`user_access` a
+					  JOIN `" . AUTH_DATABASE . "`.`organisations` b
+					  ON a.`organisation_id` = b.`organisation_id`
+					  JOIN `" . AUTH_DATABASE . "`.`user_data` c
+					  ON a.`user_id` = c.`id`
+					  WHERE a.`user_id` = ?
+					  ORDER BY a.`id` ASC";
+
+		$results = $db->getAll($query, array($this->getActiveId()));
+		if ($results) {
+			$org_group_role = array();
+			foreach ($results as $result) {
+				$org_group_role[$result["organisation_id"]][] = array("group" => html_encode($result["group"]), "role" => html_encode($result["role"]), "access_id" => $result["id"]);
+			}
+			$this->setOrganisationGroupRole($org_group_role);
+		}
 	}
 
-	function getActiveGroupRole() {
-		if ($this->active_group_role) {
-			return $this->active_group_role;
-		} else {
-			return $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"];
-		}
+	function getAccessId() {
+		return $this->access_id;
+	}
+
+	function getDefaultAccessId() {
+		return $this->default_access_id;
+	}
+
+	function setDefaultAccessId($value) {
+		$this->default_access_id = $value;
 	}
 
 	/**
@@ -361,6 +465,36 @@ class User {
 			$user = self::fromArray($result, $user);
 		}
 		
+		if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]) {
+			$query = "SELECT `id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ?
+						AND `account_active` = 'true'
+						AND (`access_starts` = '0' OR `access_starts` < ?)
+						AND (`access_expires` = '0' OR `access_expires` >= ?)
+						AND `app_id` = ?
+						AND `user_id` = ?";
+			$available = $db->getRow($query, array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"], time(), time(), AUTH_APP_ID, $user->getID()));
+			if ($available) {
+				$user->setAccessId($available["id"]);
+			} else {
+				$query = "SELECT b.`id` FROM `permissions` AS a
+							JOIN `".AUTH_DATABASE."`.`user_access` AS b
+							ON a.`assigned_by` = b.`user_id`
+							WHERE b.`id` = ?
+							AND b.`account_active` = 'true'
+							AND (b.`access_starts` = '0' OR b.`access_starts` < ?)
+							AND (b.`access_expires` = '0' OR b.`access_expires` >= ?)
+							AND b.`app_id` = ?
+							AND a.`assigned_to` = ? 
+							AND a.`valid_from` <= ?
+							AND a.`valid_until` >= ?";
+				$mask_available = $db->getRow($query, array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"], time(), time(), AUTH_APP_ID, $user->getID(), time(), time()));
+				if ($mask_available) {
+					$user->setAccessId($available["id"]);
+				}
+			}
+		}
+		
 		$query = "SELECT a.`group_id` FROM `groups` AS a
 					JOIN `group_members` AS b
 					ON a.`group_id` = b.`group_id`
@@ -373,10 +507,10 @@ class User {
 
 		//get all of the users orgs
 		$query = "SELECT b.`organisation_id`, b.`organisation_title`
-					  FROM `" . AUTH_DATABASE . "`.`user_organisations` a
+					  FROM `" . AUTH_DATABASE . "`.`user_access` a
 					  JOIN `" . AUTH_DATABASE . "`.`organisations` b
 					  ON a.`organisation_id` = b.`organisation_id`
-					  WHERE a.`proxy_id` = ?";
+					  WHERE a.`user_id` = ?";
 		$results = $db->getAll($query, array($proxy_id));
 
 		//every user should have at least one org.
@@ -390,20 +524,32 @@ class User {
 
 		//get all of the users groups and roles for each organisation
 		$query = "SELECT b.`organisation_id`, b.`organisation_title`, a.`group`, a.`role`, a.`id`
-					  FROM `" . AUTH_DATABASE . "`.`user_access` a
-					  JOIN `" . AUTH_DATABASE . "`.`organisations` b
-					  ON a.`organisation_id` = b.`organisation_id`
-					  WHERE a.`user_id` = ?
-					  ORDER BY a.`id` ASC";
+					FROM `" . AUTH_DATABASE . "`.`user_access` a
+					JOIN `" . AUTH_DATABASE . "`.`organisations` b
+					ON a.`organisation_id` = b.`organisation_id`
+					WHERE a.`user_id` = ?
+					AND a.`account_active` = 'true'
+					AND (a.`access_starts` = '0' OR a.`access_starts` < ?)
+					AND (a.`access_expires` = '0' OR a.`access_expires` >= ?)
+					AND a.`app_id` = ?
+					ORDER BY a.`id` ASC";
 
-		$results = $db->getAll($query, array($proxy_id));
+
+		$results = $db->getAll($query, array($proxy_id, time(), time(), AUTH_APP_ID));
 
 		if ($results) {
 			$org_group_role = array();
 			foreach ($results as $result) {
+				if ((!isset($user->default_access_id) || !$user->default_access_id) && $result["organisation_id"] == $user->getOrganisationId()) {
+					if (!isset($_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) || !$_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) {
+						$_SESSION["permissions"][$user->getAccessId()]["organisation_id"] = $result["organisation_id"];
+						$user->setActiveOrganisation($result["organisation_id"]);
+					}
+					$user->setDefaultAccessId($result["id"]);
+				}
 				$org_group_role[$result["organisation_id"]][html_encode($result["group"])] = array(html_encode($result["role"]), $result["id"]);
 			}
-			$user->setOrganisationGroupRole($org_group_role);			
+			$user->setOrganisationGroupRole($org_group_role);
 		}
 
 		return $user;
@@ -416,6 +562,7 @@ class User {
 	 */
 	public static function fromArray(array $arr, User $user) {
 		$user->id = $arr['id'];
+		$user->active_id = $arr['id'];
 		$user->username = $arr['username'];
 		$user->firstname = $arr['firstname'];
 		$user->lastname = $arr['lastname'];
@@ -444,7 +591,7 @@ class User {
 		$user->office_hours = $arr['office_hours'];
 		$user->clinical = $arr['clinical'];
 		$user->group = $arr['group'];
-		$user->role = $arr['role'];		
+		$user->role = $arr['role'];
 
 		return $user;
 	}

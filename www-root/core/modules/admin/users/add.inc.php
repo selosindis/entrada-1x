@@ -35,7 +35,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users?".replace_query(array("section" => "add")), "title" => "Adding User");
 
@@ -93,6 +93,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								$PROCESSED_ACCESS["org_id"][] = $row[0];
 								$PROCESSED_ACCESS["group_id"][] = $row[1];
 								$PROCESSED_ACCESS["role_id"][] = $row[2];
+								$query = "SELECT a.`group_name`, b.`role_name` FROM `".AUTH_DATABASE."`.`system_groups` AS a
+											JOIN `".AUTH_DATABASE."`.`system_roles` AS b
+											WHERE a.`id` = ".$db->qstr($row[1])."
+											AND b.`id` = ".$db->qstr($row[2]);
+								$group_role = $db->GetRow($query);
+								if (($group_role && $group_role["group_name"] == "student" && ($grad_year = clean_input($group_role["role_name"], "int"))) ||
+										($group_role && $group_role["group_name"] == "alumni" && !isset($PROCESSED["grad_year"]) && ($grad_year = clean_input($group_role["role_name"], "int")))) {
+									$PROCESSED["grad_year"] = $grad_year;
+								}
 							}
 						}
 				}
@@ -440,7 +449,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "You do not have permission to add a user within the selected organisation. This error has been logged and will be investigated.";
-								application_log("Proxy id [" . $_SESSION['details']['proxy_id'] . "] tried to create a user within an organisation [" . $organisation_id . "] they didn't have permissions on. ");
+								application_log("Proxy id [" . $ENTRADA_USER->getID() . "] tried to create a user within an organisation [" . $organisation_id . "] they didn't have permissions on. ");
 							}
 						} else {
 							$ERROR++;
@@ -507,7 +516,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									'member_active' => 1,
 									'entrada_only' => 1,
 									'updated_date' => time(),
-									'updated_by' => $ENTRADA_USER->getProxyId()
+									'updated_by' => $ENTRADA_USER->getID()
 								);
 
 								$db->AutoExecute("group_members", $gmember, "INSERT");
@@ -537,19 +546,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$PROCESSED["password"] = md5($PROCESSED["password"]);
 						$PROCESSED["email_updated"] = time();
 						if (($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "INSERT")) && ($PROCESSED_ACCESS["user_id"] = $db->Insert_Id())) {
-
-							//Add the user's organisations to the user_organisation table.
-							foreach ($organisation_ids as $org_id) {
-								$row = array();
-								$row["organisation_id"] = $org_id;
-								$row["proxy_id"] = $PROCESSED_ACCESS["user_id"];
-								if (!$db->AutoExecute(AUTH_DATABASE.".user_organisations", $row, "INSERT")) {
-									$ERROR++;
-									$ERRORSTR[] = "Unable to add all of this user's organisations to the database. The MEdTech Unit has been informed of this error, please try again later.";
-
-									application_log("error", "Unable to add all of the user's (" . $PROCESSED_ACCESS["user_id"] . ") Database said: ".$db->ErrorMsg());
-								}
-							}
 							$index = 0;
 							foreach ($PROCESSED_ACCESS["org_id"] as $org_id) {								
 								$query = "SELECT g.`group_name`, r.`role_name`
@@ -584,7 +580,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												'member_active' => 1,
 												'entrada_only' => 1,
 												'updated_date' => time(),
-												'updated_by' => $ENTRADA_USER->getProxyId()
+												'updated_by' => $ENTRADA_USER->getID()
 											);
 
 											$db->AutoExecute("group_members", $gmember, "INSERT");
@@ -758,6 +754,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						LEFT JOIN `".AUTH_DATABASE."`.`entity_type` AS b
 						ON a.`entity_id` = b.`entity_id`
 						ORDER BY a.`department_title`";
+
 			$results = $db->GetAll($query);
 			if ($results) {
 				foreach($results as $key => $result) {
@@ -1226,8 +1223,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										<?php
 
 														foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
-															foreach($dlist as $d){
-																echo build_option($d["department_id"], $d["department_title"], $selected);
+															if ($result["organisation_id"] == $organisation_id){
+																foreach($dlist as $d){
+																	echo build_option($d["department_id"], $d["department_title"], $selected);
+																}
 															}
 														}
 											 ?>

@@ -88,7 +88,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 
 				echo display_error();
 
-				application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to the link wizard.");
+				application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to the link wizard.");
 			} else {
 				switch($ACTION) {
 					case "edit" :
@@ -182,7 +182,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 
 										$PROCESSED["updated_date"]	= time();
-										$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+										$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
 										if(!$ERROR) {
 											if($db->AutoExecute("course_links", $PROCESSED, "UPDATE", "id = ".$db->qstr($LINK_ID)." AND course_id = ".$db->qstr($IDENTIFIER))) {
@@ -457,7 +457,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									}
 
 									$PROCESSED["updated_date"]	= time();
-									$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+									$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
 									if(!$ERROR) {
 										$query	= "SELECT * FROM `course_links` WHERE `course_id` = ".$db->qstr($IDENTIFIER)." AND `link` = ".$db->qstr($PROCESSED["link"]);

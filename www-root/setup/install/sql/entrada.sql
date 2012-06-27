@@ -1030,7 +1030,7 @@ CREATE TABLE IF NOT EXISTS `assessment_grades` (
   `assessment_id` int(10) unsigned NOT NULL,
   `proxy_id` int(10) unsigned NOT NULL,
   `value` float NOT NULL,
-  `threshold_notified` int(1) NOT NULL default `0`,
+  `threshold_notified` int(1) NOT NULL default '0',
   PRIMARY KEY (`grade_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -2568,12 +2568,10 @@ CREATE TABLE IF NOT EXISTS `draft_events` (
   `event_id` int(12) DEFAULT NULL,
   `draft_id` int(11) DEFAULT NULL,
   `parent_id` int(12) DEFAULT NULL,
-  `event_children` int(11) NOT NULL,
+  `event_children` int(12) DEFAULT NULL,
   `recurring_id` int(12) DEFAULT '0',
-  `eventtype_id` int(12) DEFAULT '0',
   `region_id` int(12) DEFAULT '0',
   `course_id` int(12) NOT NULL DEFAULT '0',
-  `course_num` varchar(32) DEFAULT NULL,
   `event_phase` varchar(12) DEFAULT NULL,
   `event_title` varchar(255) NOT NULL,
   `event_description` text,
@@ -2581,7 +2579,7 @@ CREATE TABLE IF NOT EXISTS `draft_events` (
   `event_goals` text,
   `event_objectives` text,
   `event_message` text,
-  `include_parent_message` int(11) NOT NULL DEFAULT '1',
+  `include_parent_message` tinyint(1) NOT NULL DEFAULT '1',
   `event_location` varchar(64) DEFAULT NULL,
   `event_start` bigint(64) NOT NULL,
   `event_finish` bigint(64) NOT NULL,
@@ -3824,8 +3822,8 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1309 '),
-('version_entrada', '1.3.0');
+('version_db', '1311 '),
+('version_entrada', '1.4.0');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,

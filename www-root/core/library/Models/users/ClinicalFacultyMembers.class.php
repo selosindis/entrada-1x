@@ -39,8 +39,8 @@ require_once("Models/utility/Collection.class.php");
 class ClinicalFacultyMembers extends Collection {
 	
 	static public function get() {
-		global $db;
-		$ORGANISATION_ID	= $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+		global $db, $ENTRADA_USER;
+		$ORGANISATION_ID	= $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["organisation_id"];
 		
 		$curdbname = $db->databaseName;
 		$db->SelectDB(AUTH_DATABASE);

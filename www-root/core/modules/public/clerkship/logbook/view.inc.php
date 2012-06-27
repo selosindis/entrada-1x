@@ -37,7 +37,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/public/clerkship/logbook?section=view", "title" => "View Patient Encounters");
 	
@@ -52,7 +52,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
     	$PROXY_ID = $_GET["id"];
     	$student = false;
     } else {
-    	$PROXY_ID = $_SESSION["details"]["id"];
+    	$PROXY_ID = $ENTRADA_USER->getID();
     	$student = true;
     }
     
@@ -66,7 +66,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				if (isset($_POST["discussion_comment"]) && ($new_comments = clean_input($_POST["discussion_comment"], array("trim", "notags")))) {
 					$PROCESSED["comments"] = $new_comments;
 					$PROCESSED["clerk_id"] = $PROXY_ID;
-					$PROCESSED["proxy_id"] = $_SESSION["details"]["id"];
+					$PROCESSED["proxy_id"] = $ENTRADA_USER->getID();
 					$PROCESSED["rotation_id"] = $rotation_id;
 					$PROCESSED["updated_date"] = time();
 					
@@ -78,7 +78,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							if (!$notification_user) {
 								$notification_user = NotificationUser::add($PROXY_ID, "logbook_rotation", $rotation_id, $PROXY_ID);
 							}
-							NotificationUser::addAllNotifications("logbook_rotation", $rotation_id, $PROXY_ID, $_SESSION["details"]["id"], $lrcomment_id);
+							NotificationUser::addAllNotifications("logbook_rotation", $rotation_id, $PROXY_ID, $ENTRADA_USER->getID(), $lrcomment_id);
 						}
 						$SUCCESS++;
 						$SUCCESSSTR[] = "You have succesfully added a comment to this rotation".($student ? "" : " for ".get_account_data("firstlast", $PROXY_ID)).".";
@@ -704,7 +704,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	
 		echo display_error();
 	
-		application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this rotation [".$rotation_id."] in this module [".$MODULE."]");
+		application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this rotation [".$rotation_id."] in this module [".$MODULE."]");
 	}
 }
 ?>

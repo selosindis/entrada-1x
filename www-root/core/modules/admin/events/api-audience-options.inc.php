@@ -75,6 +75,8 @@ if (!defined("IN_EVENTS")) {
 
 			$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `audience_type` != 'course_id'";
 			$custom_audience = $db->GetAll($query);
+						
+			$ONLOAD[] = "selectEventAudienceOption('".(isset($PROCESSED["event_audience_type"]) && $PROCESSED["event_audience_type"] && ($course_list || $permission == "closed") ? $PROCESSED["event_audience_type"] : "custom")."')";
 			?>
 			<tr>
 				<td>&nbsp;</td>
@@ -83,7 +85,7 @@ if (!defined("IN_EVENTS")) {
 					<table>
 						<tbody>
 							<?php
-							if ($course_list) {
+							if ($course_list || $permission == "closed") {
 								?>
 								<tr>
 									<td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_course" value="course" onclick="selectEventAudienceOption('course')" style="vertical-align: middle"<?php echo ((($PROCESSED["event_audience_type"] == "course") || !isset($PROCESSED["event_audience_type"])) ? " checked=\"checked\"" : ""); ?> /></td>

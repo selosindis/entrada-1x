@@ -34,7 +34,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/clerkship/clerk?", "title" => "Clerk Management");
 	
@@ -113,7 +113,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					}
 		
 					if ((bool) $result["manage_apartments"]) {
-						$apartment_id			= regionaled_apartment_check($result["event_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+						$apartment_id			= regionaled_apartment_check($result["event_id"], $ENTRADA_USER->getActiveId());
 						$apartment_available	= (($apartment_id) ? true : false);
 					} else {
 						$apartment_available	= false;

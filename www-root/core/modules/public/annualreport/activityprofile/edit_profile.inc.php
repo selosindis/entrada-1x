@@ -34,7 +34,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/activityprofile?section=edit_profile", "title" => "Edit Activity Profile");
 	
@@ -43,7 +43,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	
 	echo "<h1>Edit Activity Profile</h1>\n";
 	
-	if(!$_SESSION["details"]["clinical_member"]) {
+	if(!$ENTRADA_USER->getClinical()) {
 		$PROFILE_ID = $_GET["rid"];
 		if($PROFILE_ID) {
 			$query	= "SELECT * FROM `ar_profile` WHERE `profile_id`=".$db->qstr($PROFILE_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
@@ -196,7 +196,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					
 						if(!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
-							$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 							$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
 							
 							if($db->AutoExecute("ar_profile", $PROCESSED, "UPDATE", "`profile_id`=".$db->qstr($PROFILE_ID))) {
@@ -728,7 +728,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						
 						if(!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
-							$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 							$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
 							
 							$PROCESSED["roles"] 		= implode(", ", $PROCESSED["roles"]);

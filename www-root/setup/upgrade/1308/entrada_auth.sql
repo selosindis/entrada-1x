@@ -1,4 +1,4 @@
-ALTER TABLE `user_access` ADD COLUMN organisation_id INT(12);
+ALTER TABLE `user_access` ADD COLUMN `organisation_id` INT(12) unsigned NOT NULL DEFAULT '0' AFTER `app_id`;
 
 CREATE TABLE IF NOT EXISTS `system_groups` (
   `id` INT NOT NULL AUTO_INCREMENT ,
@@ -70,7 +70,7 @@ INSERT INTO `system_roles` (`role_name`, `groups_id`) VALUES
 CREATE  TABLE IF NOT EXISTS `system_group_organisation` (
   `groups_id` INT NOT NULL ,
   `organisation_id` INT(12) UNSIGNED NOT NULL ,
-  PRIMARY KEY (`groups_id`, `organisations_organisation_id`) )
+  PRIMARY KEY (`groups_id`, `organisation_id`) )
 ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `system_group_organisation` (`organisation_id`, `groups_id`)

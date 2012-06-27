@@ -20,7 +20,7 @@ if (!$RECORD_ID) {
 }
 if (isset($_GET["sid"]) && $tmp = clean_input($_GET["sid"], "int")) {
 	/** @todo this needs to make sure the user is a teacher for the course if this way is used, otherwise students could add another student's proxy*/
-	$query = "SELECT * FROM `assignment_contacts` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$ENTRADA_USER->getProxyId();
+	$query = "SELECT * FROM `assignment_contacts` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$ENTRADA_USER->getID();
 	if ($iscontact = $db->GetRow($query)) {
 		$USER_ID = $tmp;
 	} else {

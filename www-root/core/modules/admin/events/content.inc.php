@@ -38,7 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
@@ -363,7 +363,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								/**
 								 * Update base Learning Event.
 								 */
-								if ($db->AutoExecute("events", array("event_objectives" => $event_objectives, "event_description" => $event_description, "event_message" => $event_message, "event_finish" => $event_finish, "event_duration" => $event_duration, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
+								if ($db->AutoExecute("events", array("event_objectives" => $event_objectives, "event_description" => $event_description, "event_message" => $event_message, "event_finish" => $event_finish, "event_duration" => $event_duration, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
 									$SUCCESS++;
 									$SUCCESSSTR[] = "You have successfully updated the event details for this learning event.";
 
@@ -401,7 +401,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								if ($db->Execute($query)) {
 									if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
 										foreach ($clinical_presentations as $objective_id => $presentation_name) {
-											if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+											if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 												$ERROR++;
 												$ERRORSTR[] = "There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.";
 
@@ -427,7 +427,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 															AND a.`objective_active` = '1'";
 												$result	= $db->GetRow($query);
 												if ($result) {
-													if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "course", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+													if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "course", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 														$ERROR++;
 														$ERRORSTR[] = "There was an error when trying to insert a &quot;course objective&quot; into the system. System administrators have been informed of this error; please try again later.";
 
@@ -456,14 +456,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												$sresult	= $db->GetRow($squery);
 												if ($sresult) {
 													if ((isset($value["major_topic"])) && ($value["major_topic"] == "major")) {
-														if (!$db->AutoExecute("event_topics", array("event_id" => $EVENT_ID, "topic_id" => $topic_id, "topic_coverage" => "major", "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+														if (!$db->AutoExecute("event_topics", array("event_id" => $EVENT_ID, "topic_id" => $topic_id, "topic_coverage" => "major", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 															$ERROR++;
 															$ERRORSTR[] = "There was an error when trying to insert an Event Topic response into the system. System administrators have been informed of this error; please try again later.";
 
 															application_log("error", "Unable to insert a new event_topic entry into the database while modifying event contents. Database said: ".$db->ErrorMsg());
 														}
 													} elseif ((isset($value["minor_topic"])) && ($value["minor_topic"] == "minor")) {
-														if (!$db->AutoExecute("event_topics", array("event_id" => $EVENT_ID, "topic_id" => $topic_id, "topic_coverage" => "minor", "topic_time" => ((isset($value["minor_desc"])) ? (int) trim($value["minor_desc"]) : ""), "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]), "INSERT")) {
+														if (!$db->AutoExecute("event_topics", array("event_id" => $EVENT_ID, "topic_id" => $topic_id, "topic_coverage" => "minor", "topic_time" => ((isset($value["minor_desc"])) ? (int) trim($value["minor_desc"]) : ""), "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 															$ERROR++;
 															$ERRORSTR[] = "There was an error when trying to insert an Event Topic response into the system. System administrators have been informed of this error; please try again later.";
 
@@ -1095,8 +1095,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "		</div>\n";
 								echo "	</td>\n";
 								echo "</tr>\n";
-
-								new_sidebar_item("Objective Importance", $sidebar_html, "objective-legend", "open");
 							}
 							?>
 							<tr>

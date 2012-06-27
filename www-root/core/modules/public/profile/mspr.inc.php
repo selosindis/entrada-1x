@@ -22,11 +22,11 @@ if (!defined("IN_PROFILE")) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 }  else {
 	require_once(dirname(__FILE__)."/includes/functions.inc.php");
 	
-	$PROXY_ID	= $_SESSION["details"]["id"];
+	$PROXY_ID	= $ENTRADA_USER->getID();
 	$user = User::get($PROXY_ID);
 	$PAGE_META["title"]			= "MSPR";
 	$PAGE_META["description"]	= "";
@@ -44,8 +44,8 @@ if (!defined("IN_PROFILE")) {
 	if ((is_array($_SESSION["permissions"])) && ($total_permissions = count($_SESSION["permissions"]) > 1)) {
 		$sidebar_html  = "The following individual".((($total_permissions - 1) != 1) ? "s have" : " has")." given you access to their ".APPLICATION_NAME." permission levels:";
 		$sidebar_html .= "<ul class=\"menu\">\n";
-		foreach ($_SESSION["permissions"] as $proxy_id => $result) {
-			if ($proxy_id != $_SESSION["details"]["id"]) {
+		foreach ($_SESSION["permissions"] as $access_id => $result) {
+			if ($access_id != $ENTRADA_USER->getDefaultAccessId()) {
 				$sidebar_html .= "<li class=\"checkmark\"><strong>".html_encode($result["fullname"])."</strong><br /><span class=\"content-small\">Exp: ".(($result["expires"]) ? date("D M d/y", $result["expires"]) : "Unknown")."</span></li>\n";
 			}
 		}

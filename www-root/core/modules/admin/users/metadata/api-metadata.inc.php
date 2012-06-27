@@ -201,7 +201,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				$type = MetaDataType::get($cat_id);
 				if ($type) {
 					$user = User::get($proxy_id);
-					$org_id = $user->getOrganisationID();
+					$org_id = $user->getOrganisationId();
 					$group = $user->getGroup();
 					$role = $user->getRole();
 					

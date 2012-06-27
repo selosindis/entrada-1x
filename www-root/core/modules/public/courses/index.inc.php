@@ -38,7 +38,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	 * and add the appropriate toggle sidebar item.
 	 */
 	if ($ENTRADA_ACL->amIAllowed("coursecontent", "update", false)) {
-		switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]) {
+		switch ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]) {
 			case "admin" :
 				$admin_wording	= "Administrator View";
 				$admin_url		= ENTRADA_URL."/admin/".$MODULE.(($COURSE_ID) ? "?".replace_query(array("section" => "edit", "id" => $COURSE_ID)) : "");
@@ -70,10 +70,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		$query = "SELECT `organisation_id` FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID);
 		if($result = $db->GetOne($query)){
 			$ORGANISATION_ID = $result;
-			$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"] = $result;
+			$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["organisation_id"] = $result;
 		}
 		else
-			$ORGANISATION_ID	= $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+			$ORGANISATION_ID	= $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["organisation_id"];
 	}
 	
 	$COURSE_LIST = array();
@@ -109,7 +109,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 			echo display_error();
 		} else {
-			if ($ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $ENTRADA_USER->getOrganisationID()), "read")) {
+			if ($ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $ENTRADA_USER->getOrganisationId()), "read")) {
 				add_statistic($MODULE, "view", "course_id", $COURSE_ID);
 
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE."?".replace_query(array("id" => $course_details["course_id"])), "title" => $course_details["course_name"].(($course_details["course_code"]) ? ": ".$course_details["course_code"] : ""));
@@ -388,7 +388,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								FROM `course_files`
 								LEFT JOIN `statistics`
 								ON `statistics`.`module`=".$db->qstr($MODULE)."
-								AND `statistics`.`proxy_id`=".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+								AND `statistics`.`proxy_id`=".$db->qstr($ENTRADA_USER->getActiveId())."
 								AND `statistics`.`action`='file_download'
 								AND `statistics`.`action_field`='file_id'
 								AND `statistics`.`action_value`=`course_files`.`id`

@@ -81,7 +81,7 @@ switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
 	break;
 }
 
-$cohort = groups_get_cohort($_SESSION["details"]["id"]);
+$cohort = groups_get_cohort($ENTRADA_USER->getID());
 $query = "	SELECT a.*, COUNT(b.`assessment_id`) AS `assessments` 
 			FROM `courses` AS a
 			JOIN `assessments` AS b
@@ -126,7 +126,7 @@ if ($results) {
 			echo "	<td".((!$result["course_active"]) ? " class=\"disabled\"" : "")."><a href=\"".ENTRADA_URL."/".$MODULE."/gradebook?section=view&amp;id=".$result["course_id"]."\">".html_encode($result["course_name"])."</a></td>\n";
 			echo "	<td".((!$result["course_active"]) ? " class=\"disabled\"" : "")."><a href=\"".ENTRADA_URL."/".$MODULE."/gradebook?section=view&amp;id=".$result["course_id"]."\">".($result["assessments"])."</a></td>\n";
 			if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
-				$gradebook = gradebook_get_weighted_grades($result["course_id"], $_SESSION["details"]["role"], $_SESSION["details"]["id"]);
+				$gradebook = gradebook_get_weighted_grades($result["course_id"], $_SESSION["details"]["role"], $ENTRADA_USER->getID());
 				echo "	<td>".trim($gradebook["grade"])." / ".trim($gradebook["total"])."</td>\n";
 			}
 			echo "</tr>\n";

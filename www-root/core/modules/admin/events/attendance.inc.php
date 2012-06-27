@@ -38,7 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 
 	?>
@@ -101,7 +101,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 															"event_id"=>$EVENT_ID,
 															"proxy_id"=>$proxy_id,
 															"updated_date"=>time(),
-															"updated_by"=>$ENTRADA_USER->getProxyId()
+															"updated_by"=>$ENTRADA_USER->getID()
 															);
 								if ($db->AutoExecute("event_attendance",$attendance_record,"INSERT")) {
 									echo htmlspecialchars(json_encode(array('success'=>'Successfully added attendance.','proxy_id'=>$proxy_id)), ENT_NOQUOTES);

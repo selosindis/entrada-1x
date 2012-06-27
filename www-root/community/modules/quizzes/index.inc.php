@@ -118,7 +118,7 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 			$query				= "	SELECT *
 							FROM `quiz_progress`
 							WHERE `aquiz_id` = ".$db->qstr($quiz_record["aquiz_id"])."
-							AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
+							AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 			$progress_record	= $db->GetAll($query);
 			if ($progress_record) {
 				$quiz_attempts = count($progress_record);
@@ -170,7 +170,7 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 							"quiz_score" => "0",
 							"quiz_value" => "0",
 							"updated_date" => time(),
-							"updated_by" => $_SESSION["details"]["id"]
+							"updated_by" => $ENTRADA_USER->getID()
 						);
 						if (!$db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "qprogress_id = ".$db->qstr($entry["qprogress_id"]))) {
 							application_log("error", "Unable to update the qprogress_id [".$qprogress_id."] to expired. Database said: ".$db->ErrorMsg());

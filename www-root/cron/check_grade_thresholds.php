@@ -25,8 +25,8 @@
 require_once("init.inc.php");
 
 function grade_below_threshold_notice($assessment_list) {
-	global $db;
-	
+	global $db, $AGENT_CONTACTS;
+
 	$assessment_list = (array) $assessment_list;
 	
 	foreach ($assessment_list as $assessment_id => $assessment) {

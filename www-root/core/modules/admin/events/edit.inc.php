@@ -35,7 +35,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
@@ -327,7 +327,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 						if (!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
-							$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
 							$PROCESSED["event_finish"] = $PROCESSED["event_start"];
 							$PROCESSED["event_duration"] = 0;
@@ -366,7 +366,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								if ($db->Execute($query)) {
 									if ((is_array($PROCESSED["associated_faculty"])) && (count($PROCESSED["associated_faculty"]))) {
 										foreach($PROCESSED["associated_faculty"] as $contact_order => $proxy_id) {
-											$contact_data = array("event_id" => $EVENT_ID, "proxy_id" => $proxy_id,"contact_role"=>$PROCESSED["contact_role"][$contact_order], "contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]);
+											$contact_data = array("event_id" => $EVENT_ID, "proxy_id" => $proxy_id,"contact_role"=>$PROCESSED["contact_role"][$contact_order], "contact_order" => (int) $contact_order, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID());
 											if ($is_draft) {
 												$contact_data["devent_id"] = $devent_id;
 											}
@@ -388,7 +388,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											 */
 											if (count($PROCESSED["associated_course_ids"])) {
 												foreach($PROCESSED["associated_course_ids"] as $course_id) {
-													$audience_data = array("event_id" => $EVENT_ID, "audience_type" => "course_id", "audience_value" => (int) $course_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]);
+													$audience_data = array("event_id" => $EVENT_ID, "audience_type" => "course_id", "audience_value" => (int) $course_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID());
 													if ($is_draft) {
 														$audience_data["devent_id"] = $devent_id;
 													}
@@ -406,7 +406,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											 */
 											if (count($PROCESSED["associated_cohort_ids"])) {
 												foreach($PROCESSED["associated_cohort_ids"] as $group_id) {
-													$audience_data = array("event_id" => $EVENT_ID, "audience_type" => "cohort", "audience_value" => (int) $group_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]);
+													$audience_data = array("event_id" => $EVENT_ID, "audience_type" => "cohort", "audience_value" => (int) $group_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID());
 													if ($is_draft) {
 														$audience_data["devent_id"] = $devent_id;
 													}
@@ -424,7 +424,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											 */
 											if (count($PROCESSED["associated_cgroup_ids"])) {
 												foreach($PROCESSED["associated_cgroup_ids"] as $cgroup_id) {
-													$audience_data = array("event_id" => $EVENT_ID, "audience_type" => "group_id", "audience_value" => (int) $cgroup_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]);
+													$audience_data = array("event_id" => $EVENT_ID, "audience_type" => "group_id", "audience_value" => (int) $cgroup_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID());
 													if ($is_draft) {
 														$audience_data["devent_id"] = $devent_id;
 													}
@@ -442,7 +442,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											 */
 											if (count($PROCESSED["associated_proxy_ids"])) {
 												foreach($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-													$audience_data = array("event_id" => $EVENT_ID, "audience_type" => "proxy_id", "audience_value" => (int) $proxy_id, "updated_date" => time(), "updated_by" => $_SESSION["details"]["id"]);
+													$audience_data = array("event_id" => $EVENT_ID, "audience_type" => "proxy_id", "audience_value" => (int) $proxy_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID());
 													if ($is_draft) {
 														$audience_data["devent_id"] = $devent_id;
 													}
@@ -614,7 +614,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					default :
 
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-						$ONLOAD[] = "selectEventAudienceOption('".(isset($PROCESSED["event_audience_type"]) && $PROCESSED["event_audience_type"] ? $PROCESSED["event_audience_type"] : "custom")."')";
 
 						$LASTUPDATED = $result["updated_date"];
 
@@ -885,7 +884,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										</td>
 									</tr>
 								</tbody>
-								<tbody id="audience-options"<?php echo (($PROCESSED["event_audience_type"] == "course") ? " style=\"display: none\"" : ""); ?>>
+								<tbody id="audience-options">
 								<?php
 								if ($PROCESSED["course_id"]) {
 									require_once(ENTRADA_ABSOLUTE."/core/modules/admin/events/api-audience-options.inc.php");

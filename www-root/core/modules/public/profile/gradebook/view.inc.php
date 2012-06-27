@@ -84,7 +84,7 @@ if ($COURSE_ID) {
 				AND b.`cohort` = ".$db->qstr($ENTRADA_USER->getCohort())."
 				JOIN `assessment_grades` AS c
 				ON b.`assessment_id` = c.`assessment_id`
-				AND c.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+				AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 				JOIN `assessment_marking_schemes` AS d
 				ON b.`marking_scheme_id` = d.`id`
 				WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
@@ -134,7 +134,7 @@ if ($COURSE_ID) {
 				echo "	<td>".($result["type"])."</td>\n";
 				echo "	<td>".trim($grade_value).assessment_suffix($result)."</td>\n";
 				if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
-					$gradebook = gradebook_get_weighted_grades($result["course_id"], $_SESSION["details"]["role"], $_SESSION["details"]["id"], $result["assessment_id"]);
+					$gradebook = gradebook_get_weighted_grades($result["course_id"], $_SESSION["details"]["role"], $ENTRADA_USER->getID(), $result["assessment_id"]);
 					echo "	<td>".trim($gradebook["grade"])." / ".trim($gradebook["total"])."</td>\n";
 				}
 				echo "	<td style=\"text-align: right;\">".(($grade_value === "-") ? "-" : (($result["handler"] == "Numeric" ? ($result["value"] === "0" ? "0" : trim(trim(number_format(($grade_value / $result["numeric_grade_points_total"] * 100), 2), "0"), "."))."%" : (($result["handler"] == "Percentage" ? ("N/A") : $grade_value)))))."</td>\n";

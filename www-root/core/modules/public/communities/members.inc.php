@@ -165,7 +165,7 @@ if ($COMMUNITY_ID) {
 									$PROCESSED["province"]			= "";
 									$PROCESSED["postcode"]			= "";
 									$PROCESSED["country"]			= "";
-									$PROCESSED["notes"]				= "Guest created by proxy id ".$_SESSION["details"]["id"];
+									$PROCESSED["notes"]				= "Guest created by proxy id ".$ENTRADA_USER->getID();
 
 									if (($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "INSERT")) && ($PROCESSED_ACCESS["user_id"] = $db->Insert_Id())) {
 										$GUEST_PROXY_ID = $PROCESSED_ACCESS["user_id"];
@@ -204,7 +204,7 @@ if ($COMMUNITY_ID) {
 										$PROCESSED_ACCESS["role"]				= "communityinvite";
 										$PROCESSED_ACCESS["group"]				= "guest";
 										$PROCESSED_ACCESS["extras"]				= "";
-										$PROCESSED_ACCESS["notes"]				= "Guest created by proxy id ".$_SESSION["details"]["id"];
+										$PROCESSED_ACCESS["notes"]				= "Guest created by proxy id ".$ENTRADA_USER->getID();
 
 										if ($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
 											$GUEST_ACCESS = true;
@@ -791,7 +791,7 @@ if ($COMMUNITY_ID) {
 									echo "<tr>\n";
 									echo "	<td><input type=\"checkbox\" name=\"member_proxy_ids[]\" value=\"".(int) $result["proxy_id"]."\" /></td>\n";
 									echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["member_joined"])."</td>\n";
-									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["username"])."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["firstname"]." ".$result["lastname"])."</a></td>\n";
+									echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["username"])."\"".(($result["proxy_id"] == $ENTRADA_USER->getActiveId()) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["firstname"]." ".$result["lastname"])."</a></td>\n";
 									echo "	<td>".($result["group"] == "guest" ? "Guest" : "Member" )."</td>\n";
 									echo "	<td class=\"list-status\"><img src=\"images/".(($MAILING_LISTS["active"]) && $mail_list->users[($result["proxy_id"])]["member_active"] ? "list-status-online.gif\" alt=\"Enabled\"" : "list-status-offline.gif\" alt=\"Disabled\"")." /></td>\n";
 									echo "</tr>\n";
@@ -937,9 +937,9 @@ if ($COMMUNITY_ID) {
 											<?php
 											foreach ($results as $result) {
 												echo "<tr>\n";
-												echo "	<td><input type=\"checkbox\" name=\"admin_proxy_ids[]\" value=\"".(int) $result["proxy_id"]."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " onclick=\"this.checked = false\" disabled=\"disabled\"" : "")." /></td>\n";
+												echo "	<td><input type=\"checkbox\" name=\"admin_proxy_ids[]\" value=\"".(int) $result["proxy_id"]."\"".(($result["proxy_id"] == $ENTRADA_USER->getActiveId()) ? " onclick=\"this.checked = false\" disabled=\"disabled\"" : "")." /></td>\n";
 												echo "	<td>".date(DEFAULT_DATE_FORMAT, $result["member_joined"])."</td>\n";
-												echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["username"])."\"".(($result["proxy_id"] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["firstname"]." ".$result["lastname"])."</a></td>\n";
+												echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["username"])."\"".(($result["proxy_id"] == $ENTRADA_USER->getActiveId()) ? " style=\"font-weight: bold" : "")."\">".html_encode($result["firstname"]." ".$result["lastname"])."</a></td>\n";
 												echo "	<td class=\"list-status\"><img src=\"images/".(($MAILING_LISTS["active"]) && $mail_list->users[($result["proxy_id"])]["member_active"] ? "list-status-online.gif\" alt=\"Active\"" : "list-status-offline.gif\" alt=\"Disabled\"")." /></td>\n";
 												echo "</tr>\n";
 											}
@@ -951,7 +951,7 @@ if ($COMMUNITY_ID) {
 							} else {
 								echo display_notice(array("Your community has no administrators at this time; the MEdTech Unit has been informed of this error, please try again later."));
 
-								application_log("error", "Someone [".$_SESSION["details"]["id"]."] accessed the Manage Members page in a community [".$COMMUNITY_ID."] with no administrators present.");
+								application_log("error", "Someone [".$ENTRADA_USER->getID()."] accessed the Manage Members page in a community [".$COMMUNITY_ID."] with no administrators present.");
 							}
 							?>
 	</div>

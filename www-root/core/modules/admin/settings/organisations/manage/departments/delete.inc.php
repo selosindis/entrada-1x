@@ -35,7 +35,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 ?>
 <h1>Deactivate a Department</h1>
@@ -56,7 +56,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					$query = "	UPDATE `" . AUTH_DATABASE . "`.`departments`
 									SET	`department_active`=0,
 									`updated_date`=" . $db->qstr(time()) . ",
-									`updated_by`=" . $db->qstr($ENTRADA_USER->getProxyId()) . "
+									`updated_by`=" . $db->qstr($ENTRADA_USER->getID()) . "
 									WHERE `department_id` = " . $db->qstr($id);
 					if ($db->Execute($query)) {
 						$SUCCESS++;

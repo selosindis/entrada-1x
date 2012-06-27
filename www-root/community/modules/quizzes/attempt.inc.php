@@ -83,7 +83,7 @@ if ($LOGGED_IN) {
 								$query				= "	SELECT *
 														FROM `quiz_progress`
 														WHERE `aquiz_id` = ".$db->qstr($RECORD_ID)."
-														AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+														AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 														AND `progress_value` = 'inprogress'
 														ORDER BY `updated_date` ASC";
 								$progress_record	= $db->GetRow($query);
@@ -187,7 +187,7 @@ if ($LOGGED_IN) {
 																			"quiz_score" => $quiz_score,
 																			"quiz_value" => $quiz_value,
 																			"updated_date" => time(),
-																			"updated_by" => $_SESSION["details"]["id"]
+																			"updated_by" => $ENTRADA_USER->getID()
 																		);
 	
 												if ($db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "qprogress_id = ".$db->qstr($qprogress_id))) {
@@ -203,7 +203,7 @@ if ($LOGGED_IN) {
 														application_log("error", "Unable to increment the total number of accesses (the number of completed quizzes) of aquiz_id [".$RECORD_ID."].");
 													}
 	
-													application_log("success", "Proxy_id [".$_SESSION["details"]["id"]."] has completed aquiz_id [".$RECORD_ID."].");
+													application_log("success", "Proxy_id [".$ENTRADA_USER->getID()."] has completed aquiz_id [".$RECORD_ID."].");
 													
 													/**
 													 * Check if this is a formative quiz, or a summative quiz that has passed it's release date (not likely)
@@ -242,7 +242,7 @@ if ($LOGGED_IN) {
 																	"quiz_score" => "0",
 																	"quiz_value" => "0",
 																	"updated_date" => time(),
-																	"updated_by" => $_SESSION["details"]["id"]
+																	"updated_by" => $ENTRADA_USER->getID()
 																);
 	
 										if (!$db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "qprogress_id = ".$db->qstr($qprogress_id))) {
@@ -290,7 +290,7 @@ if ($LOGGED_IN) {
 									$query				= "	SELECT *
 															FROM `quiz_progress`
 															WHERE `aquiz_id` = ".$db->qstr($RECORD_ID)."
-															AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+															AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 															AND `progress_value` = 'inprogress'
 															ORDER BY `updated_date` ASC";
 									$progress_record	= $db->GetRow($query);
@@ -304,12 +304,12 @@ if ($LOGGED_IN) {
 																	"content_id" => $quiz_record["content_id"],
 																	"content_type" => $QUIZ_TYPE,
 																	"quiz_id" => $quiz_record["quiz_id"],
-																	"proxy_id" => $_SESSION["details"]["id"],
+																	"proxy_id" => $ENTRADA_USER->getID(),
 																	"progress_value" => "inprogress",
 																	"quiz_score" => 0,
 																	"quiz_value" => 0,
 																	"updated_date" => $quiz_start_time,
-																	"updated_by" => $_SESSION["details"]["id"]
+																	"updated_by" => $ENTRADA_USER->getID()
 																);
 										if ($db->AutoExecute("quiz_progress", $quiz_progress_array, "INSERT"))  {
 											$qprogress_id = $db->Insert_Id();

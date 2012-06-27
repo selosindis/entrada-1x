@@ -89,7 +89,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 
 				echo display_error();
 
-				application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to the file wizard.");
+				application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to the file wizard.");
 			} else {
 				switch($ACTION) {
 					case "edit" :
@@ -249,7 +249,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 
 										$PROCESSED["updated_date"]	= time();
-										$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+										$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
 										if(!$ERROR) {
 											if((isset($_POST["update_file"])) && ($_POST["update_file"] == "yes")) {
@@ -671,7 +671,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								}
 
 								$PROCESSED["updated_date"]	= time();
-								$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+								$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
 								if(!$ERROR) {
 									$query	= "SELECT * FROM `course_files` WHERE `course_id`=".$db->qstr($IDENTIFIER)." AND `file_name`=".$db->qstr($PROCESSED["file_name"]);

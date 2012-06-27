@@ -22,7 +22,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($PROXY_ID) {
 		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($PROXY_ID);
@@ -94,7 +94,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 					if (!$ERROR) {
 						$PROCESSED["proxy_id"] = $PROXY_ID;
-						$PROCESSED["incident_author_id"] = $_SESSION["details"]["id"];
+						$PROCESSED["incident_author_id"] = $ENTRADA_USER->getID();
 						if ($db->AutoExecute(AUTH_DATABASE.".user_incidents", $PROCESSED, "INSERT")) {
 							$url = ENTRADA_URL."/admin/users/manage/incidents?id=".$PROXY_ID;
 
@@ -103,7 +103,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							
 							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 							
-							application_log("success", "Proxy ID [".$_SESSION["details"]["id"]."] successfully updated the incident id [".$INCIDENT_ID."].");
+							application_log("success", "Proxy ID [".$ENTRADA_USER->getID()."] successfully updated the incident id [".$INCIDENT_ID."].");
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "Unable to update this user incident at this time. The MEdTech Unit has been informed of this error, please try again later.";

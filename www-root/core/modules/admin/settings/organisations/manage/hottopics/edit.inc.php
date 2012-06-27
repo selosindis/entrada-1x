@@ -32,7 +32,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/organisations/manage/hottopics?".replace_query(array("section" => "edit"))."&amp;org=".$ORGANISATION_ID, "title" => "Edit Hot Topic");
@@ -67,15 +67,60 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		
 			if (!$ERROR) {
 				
-				$params = array("topic_name" => $PROCESSED["topic_name"],"topic_description"=>$PROCESSED["topic_description"], "updated_date"=>time(),"updated_by"=>$_SESSION["details"]["id"]);
-				
-				if ($db->AutoExecute("`events_lu_topics`", $params, "UPDATE","`topic_id`=".$db->qstr($PROCESSED["topic_id"]))) {
+				// Check to see if the topic_id is used in more than one organisation
+				$query = "	SELECT `organisation_id`, `topic_id`
+							FROM `topic_organisation` WHERE `topic_id` = ".$db->qstr($PROCESSED["topic_id"]);
+				$results = $db->GetAssoc($query);
 
-							$url = ENTRADA_URL . "/admin/settings/organisations/manage/hottopics?org=".$ORGANISATION_ID;
-							$SUCCESS++;
-							$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["topic_name"])."</strong> to the system.<br /><br />You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-							application_log("success", "New Event Type [".$PROCESSED["topic_id"]."] added to the system.");
+				if (count($results) > 1) {
+					// if the topic_id is used in multiple organisations we are going to create a new entry and remove the old one
+					$action = "INSERT";
+					$where = FALSE;
+					
+					// we need a list of event_ids that are associated with this topic_id
+					$query = "	SELECT b.`event_id`, c.`topic_id`
+								FROM `courses` AS a
+								LEFT JOIN `events` AS b
+								ON a.`course_id` = b.`course_id`
+								LEFT JOIN `event_topics` AS c
+								ON b.`event_id` = c.`event_id`
+								WHERE a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+								AND c.`topic_id` = ".$db->qstr($PROCESSED["topic_id"]);
+					$events_list = $db->GetAssoc($query);
+				} else {
+					// if the eventtype_id is not in multiple organisations update it as normal
+					$action = "UPDATE";
+					$where = "`topic_id` = ".$db->qstr($PROCESSED["topic_id"]);
+				}
+				
+				$params = array("topic_name" => $PROCESSED["topic_name"],"topic_description"=>$PROCESSED["topic_description"], "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getID());
+				
+				if ($db->AutoExecute("`events_lu_topics`", $params, $action, $where)) {
+					
+					if ($action == "INSERT") {
+						// if creating a new topic_id we will need to delete the old one, then update all of the previously fetched events to the new one.
+						$new_topic_id = $db->Insert_ID();
+						
+						$query = "	DELETE FROM `topic_organisation`
+									WHERE `topic_id` = ".$db->qstr($PROCESSED["topic_id"])."
+									AND `organisation_id` = ".$db->qstr($ORGANISATION_ID);
+						$db->Execute($query);
+						
+						$query = "	INSERT INTO `topic_organisation` (`topic_id`, `organisation_id`)
+									VALUES (".$db->qstr($new_topic_id).", ".$db->qstr($ORGANISATION_ID).")";
+						$db->Execute($query);
+						
+						$query = "	UPDATE `event_topics`
+									SET `topic_id` = ".$db->qstr($new_topic_id)."
+									WHERE `event_id` IN ('".implode("', '", array_keys($events_list))."')";
+						$db->Execute($query);
+					}
+
+					$url = ENTRADA_URL . "/admin/settings/organisations/manage/hottopics?org=".$ORGANISATION_ID;
+					$SUCCESS++;
+					$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["topic_name"])."</strong> to the system.<br /><br />You will now be redirected to the Hot Topics index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+					$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
+					application_log("success", "New Event Type [".$PROCESSED["topic_id"]."] added to the system.");
 
 				} else {
 					$ERROR++;

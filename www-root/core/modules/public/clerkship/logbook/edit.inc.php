@@ -38,7 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]." and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]." and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	if (isset($_GET["id"]) && (clean_input($_GET["id"], "int"))) {
 		$RECORD_ID = clean_input($_GET["id"], "int");
@@ -46,7 +46,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 		$RECORD_ID = clean_input($_POST["id"], "int");
 	}
 	if ($RECORD_ID) {
-		$PROCESSED = $db->GetRow("SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` WHERE `lentry_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])." AND `entry_active` = 1");
+		$PROCESSED = $db->GetRow("SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` WHERE `lentry_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `entry_active` = 1");
 		if ($PROCESSED) {
 			$PROCESSED_OBJECTIVES = $db->GetAll("SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` WHERE `lentry_id` = ".$db->qstr($RECORD_ID));
 			$PROCESSED_PROCEDURES = $db->GetAll("SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures` WHERE `lentry_id` = ".$db->qstr($RECORD_ID));
@@ -176,7 +176,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				
 				if (!$ERROR && (!isset($_POST["allow_save"]) || $_POST["allow_save"])) {
 					
-					$PROCESSED["proxy_id"] = $_SESSION["details"]["id"];
+					$PROCESSED["proxy_id"] = $ENTRADA_USER->getID();
 					
 					if ($db->AutoExecute("`".CLERKSHIP_DATABASE."`.`logbook_entries`", $PROCESSED, "UPDATE", "`lentry_id` = ".$db->qstr($RECORD_ID))) {
 						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["chosen_institution"] = $PROCESSED["lsite_id"];
@@ -301,13 +301,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							<td><label for="rotation_id" class="form-required">Rotation</label></td>
 							<td>
 								<?php 
-								$query	= "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`events` AS a LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b ON a.`event_id` = b.`event_id` WHERE b.`etype_id` = ".$db->qstr($_SESSION["details"]["id"])." AND a.`event_id` = ".$db->qstr(((int)$PROCESSED["rotation_id"]))." AND a.`event_type` = 'clinical'";
+								$query	= "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`events` AS a LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b ON a.`event_id` = b.`event_id` WHERE b.`etype_id` = ".$db->qstr($ENTRADA_USER->getID())." AND a.`event_id` = ".$db->qstr(((int)$PROCESSED["rotation_id"]))." AND a.`event_type` = 'clinical'";
 								$found	= ($db->GetRow($query) ? true : false);
 								?>
 								<select id="rotation_id" name="rotation_id" style="width: 95%<?php echo ($found ? "; display: none" : ""); ?>" onchange="$('allow_save').value = '0';$('addEncounterForm').submit();">
 								<option value="0">-- Select Rotation --</option>
 								<?php
-								$query		= "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`events` AS a LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b ON a.`event_id` = b.`event_id` WHERE b.`etype_id` = ".$db->qstr($_SESSION["details"]["id"])." AND a.`event_type` = 'clinical'";
+								$query		= "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`events` AS a LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b ON a.`event_id` = b.`event_id` WHERE b.`etype_id` = ".$db->qstr($ENTRADA_USER->getID())." AND a.`event_type` = 'clinical'";
 								$results	= $db->GetAll($query);
 								if ($results) {
 									foreach ($results as $result) {
@@ -453,7 +453,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 												LEFT JOIN `".CLERKSHIP_DATABASE."`.`categories` AS c
 												ON a.`category_id` = c.`category_id`
 												WHERE b.`econtact_type` = 'student'
-												AND b.`etype_id` = ".$db->qstr($_SESSION["details"]["id"])."
+												AND b.`etype_id` = ".$db->qstr($ENTRADA_USER->getID())."
 												AND a.`event_finish` < ".$db->qstr(time())."
 												GROUP BY c.`rotation_id`";
 								$rotations = $db->GetAll($query);
@@ -476,13 +476,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 												(
 													SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
 													WHERE `entry_active` = '0' 
-													AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+													AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 												)
 												AND b.`lentry_id` IN
 												(
 													SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
 													WHERE `entry_active` = '1' 
-													AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+													AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 												)
 												WHERE a.`rotation_id` IN (".$past_rotations.")
 												GROUP BY a.`objective_id`";
@@ -506,16 +506,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 												(
 													SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
 													WHERE `entry_active` = '0' 
-													AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+													AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 												)
 												AND b.`lentry_id` IN
 												(
 													SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
 													WHERE `entry_active` = '1' 
-													AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+													AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 												)
 												WHERE a.`rotation_id` IN (".$past_rotations.")
-												AND a.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $_SESSION["details"]["id"]))."
+												AND a.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $ENTRADA_USER->getID()))."
 												GROUP BY a.`lprocedure_id`";
 									$results = $db->GetAll($query);
 									if ($results) {
@@ -674,14 +674,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 													LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS b
 													ON b.`lprocedure_id` = a.`lprocedure_id`
 													WHERE a.`lprocedure_id` IN (".$procedure_ids.")
-													AND b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $_SESSION["details"]["id"]));
+													AND b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $ENTRADA_USER->getID()));
 										$deficient_procedures = $db->GetAll($query);
 										if ($rotation) {
 											$query = "	SELECT DISTINCT a.* FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS a
 														LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS b
 														ON b.`lprocedure_id` = a.`lprocedure_id`
 														WHERE b.`rotation_id` = ".$db->qstr($rotation_id)."
-														AND b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $_SESSION["details"]["id"]));
+														AND b.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $ENTRADA_USER->getID()));
 											$preferred_procedures = $db->GetAll($query);
 											if ($preferred_procedures) {
 												?>

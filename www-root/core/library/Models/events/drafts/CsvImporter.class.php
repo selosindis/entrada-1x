@@ -25,6 +25,8 @@
  *
 */
 
+ini_set('auto_detect_line_endings', true);
+
 class CsvImporter {
 	
 	private $errors, $success, $draft_id, $updater;
@@ -63,33 +65,39 @@ class CsvImporter {
 
 		/*
 		* 0		Event ID
-		* 1		Term
-		* 2		Course Code
-		* 3		Course Name
-		* 4		Date
-		* 5		Start Time
-		* 6		Event Type Durations
-		* 7		Event Types
-		* 8		Event Title
-		* 9		Location
-		* 10	Audience (Cohorts)
-		* 11	Audience (Student numbers)
-		* 12	Teacher Numbers
+		* 1		Parent Event ID
+		* 2		Term
+		* 3		Course Code
+		* 4		Course Name
+		* 5		Date
+		* 6		Start Time
+		* 7		Event Type Durations
+		* 8		Total Duration
+		* 9		Event Types
+		* 10	Event Title
+		* 11	Location
+		* 12	Audience (Cohorts)
+		* 13	Audience (Student numbers)
+		* 14	Teacher Numbers
+		* 15	Teacher Names
 		*/
 
 		$event_id				= ((isset($row[0]) ? clean_input($row[0], "int") : 0 ));
-		$term					= ((isset($row[1]) ? clean_input($row[1], array("trim","striptags")) : 0 ));
-		$course_code			= ((isset($row[2]) ? clean_input($row[2], array("trim","striptags")) : 0 ));
-		$course_name			= ((isset($row[3]) ? clean_input($row[3], array("trim","striptags")) : 0 ));
-		$date					= ((isset($row[4]) ? clean_input($row[4], array("trim","striptags")) : 0 ));
-		$start_time				= ((isset($row[5]) ? clean_input($row[5], array("trim","striptags")) : 0 ));
-		$eventtype_durations	= ((isset($row[6]) ? explode(";", $row[6]) : 0 ));
-		$eventtypes				= ((isset($row[7]) ? explode(";", $row[7]) : 0 ));
-		$event_title			= ((isset($row[8]) ? clean_input($row[8], array("trim","striptags")) : 0 ));
-		$event_location			= ((isset($row[9]) ? clean_input($row[9], array("trim","striptags")) : 0 ));
-		$event_audiences_cohort = ((isset($row[10]) && !empty($row[10]) ? explode(";", $row[10]) : 0 ));
-		$event_audiences_students = ((isset($row[11]) && !empty($row[11]) ? explode(";", clean_input($row[11], "nows")) : 0 ));
-		$event_teachers			= ((isset($row[12]) && !empty($row[12]) ? explode(";", clean_input($row[12], "nows")) : 0 ));
+		$parent_event			= ((isset($row[1]) ? clean_input($row[1], "int") : 0 ));
+		$term					= ((isset($row[2]) ? clean_input($row[2], array("trim","striptags")) : 0 ));
+		$course_code			= ((isset($row[3]) ? clean_input($row[3], array("trim","striptags")) : 0 ));
+		$course_name			= ((isset($row[4]) ? clean_input($row[4], array("trim","striptags")) : 0 ));
+		$date					= ((isset($row[5]) ? clean_input($row[5], array("trim","striptags")) : 0 ));
+		$start_time				= ((isset($row[6]) ? clean_input($row[6], array("trim","striptags")) : 0 ));
+		$total_duration			= ((isset($row[7]) ? clean_input($row[7], "int") : 0 ));
+		$eventtype_durations	= ((isset($row[8]) ? explode(";", $row[8]) : 0 ));
+		$eventtypes				= ((isset($row[9]) ? explode(";", $row[9]) : 0 ));
+		$event_title			= ((isset($row[10]) ? clean_input($row[10], array("trim","striptags")) : 0 ));
+		$event_location			= ((isset($row[11]) ? clean_input($row[11], array("trim","striptags")) : 0 ));
+		$event_audiences_cohort = ((isset($row[12]) && !empty($row[12]) ? explode(";", $row[12]) : 0 ));
+		$event_audiences_students = ((isset($row[13]) && !empty($row[13]) ? explode(";", clean_input($row[13], "nows")) : 0 ));
+		$event_teachers			= ((isset($row[14]) && !empty($row[14]) ? explode(";", clean_input($row[14], "nows")) : 0 ));
+		$teacher_names			= ((isset($row[15]) && !empty($row[15]) ? explode(";", $row[15]) : 0 ));
 		$event_duration			= 0;
 
 		// check draft for existing event_id and get the devent_id if found
@@ -235,8 +243,8 @@ class CsvImporter {
 				$where = "";
 			}
 			
-			$query =	$mode." `draft_events` (`draft_id`, `event_id`, `course_id`, `event_title`, `event_start`, `event_finish`, `event_duration`, `eventtype_id`) 
-						VALUES (".$this->draft_id.", ".$db->qstr($row["event_id"]).", ".$db->qstr($row["course_id"]).", ".$db->qstr($row["event_title"]).", ".$db->qstr($row["event_start"]).", ".$db->qstr($row["event_start"] + ($row["total_duration"] * 60)).", ".$db->qstr($row["total_duration"]).", ".$db->qstr($row["eventtypes"][0]["eventtype"]).")".
+			$query =	$mode." `draft_events` (`draft_id`, `event_id`, `course_id`, `event_title`, `event_start`, `event_finish`, `event_duration`) 
+						VALUES (".$this->draft_id.", ".$db->qstr($row["event_id"]).", ".$db->qstr($row["course_id"]).", ".$db->qstr($row["event_title"]).", ".$db->qstr($row["event_start"]).", ".$db->qstr($row["event_start"] + ($row["total_duration"] * 60)).", ".$db->qstr($row["total_duration"]).")".
 						$where;
 			$result = $db->Execute($query);
 			

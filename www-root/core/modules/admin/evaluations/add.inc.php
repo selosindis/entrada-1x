@@ -34,7 +34,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations?section=add", "title" => "Create Evaluation");
 
@@ -320,7 +320,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			if (!$ERROR) {
 				$PROCESSED["evaluation_active"] = 1;
 				$PROCESSED["updated_date"] = time();
-				$PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
 				/**
 				 * Insert the evaluation record into the evalutions table.
@@ -337,7 +337,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								"target_value" => $target_value,
 								"target_active" => 1,
 								"updated_date" => time(),
-								"updated_by" => $_SESSION["details"]["id"]
+								"updated_by" => $ENTRADA_USER->getID()
 							);
 
 							if (!$db->AutoExecute("evaluation_targets", $record, "INSERT") || (!$etarget_id = $db->Insert_Id())) {
@@ -357,7 +357,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								"evaluator_type" => $result["evaluator_type"],
 								"evaluator_value" => $result["evaluator_value"],
 								"updated_date" => time(),
-								"updated_by" => $_SESSION["details"]["id"]
+								"updated_by" => $ENTRADA_USER->getID()
 							);
 
 							if (!$db->AutoExecute("evaluation_evaluators", $record, "INSERT") || (!$eevaluator_id = $db->Insert_Id())) {

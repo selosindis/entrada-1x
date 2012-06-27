@@ -198,10 +198,18 @@ if ($ACTION == "login") {
 
 			application_log("access", "User[".$username."] successfully logged in.");
 
+			
+			// If $ENTRADA_USER was previously initialized in init.inc.php before the 
+			// session was authorized it is set to false and needs to be re-initialized.
+			if ($ENTRADA_USER == false) {
+				$ENTRADA_USER = User::get($result["ID"]);
+			}
+			
 			$_SESSION["isAuthorized"] = true;
 			$_SESSION["details"] = array();
 			$_SESSION["details"]["app_id"] = (int) AUTH_APP_ID;
 			$_SESSION["details"]["id"] = $result["ID"];
+			$_SESSION["details"]["access_id"] = $ENTRADA_USER->getAccessId();
 			$_SESSION["details"]["username"] = $username;
 			$_SESSION["details"]["prefix"] = $result["PREFIX"];
 			$_SESSION["details"]["firstname"] = $result["FIRSTNAME"];
@@ -218,11 +226,11 @@ if ($ACTION == "login") {
 			$_SESSION["details"]["allow_podcasting"] = false;
 
 			if ((isset($ENTRADA_CACHE)) && (!AUTH_DEVELOPMENT_MODE)) {
-				if (!($ENTRADA_CACHE->test("acl_".$_SESSION["details"]["id"]))) {
+				if (!($ENTRADA_CACHE->test("acl_".$ENTRADA_USER->getID()))) {
 					$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
-					$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$_SESSION["details"]["id"]);
+					$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$ENTRADA_USER->getID());
 				} else {
-					$ENTRADA_ACL = $ENTRADA_CACHE->load("acl_".$_SESSION["details"]["id"]);
+					$ENTRADA_ACL = $ENTRADA_CACHE->load("acl_".$ENTRADA_USER->getID());
 				}
 			} else {
 				$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
@@ -264,15 +272,9 @@ if ($ACTION == "login") {
 			$_SESSION["permissions"] = permissions_load();
 
 			$auth->updateLastLogin();
-			
-			// If $ENTRADA_USER was previously initialized in init.inc.php before the 
-			// session was authorized it is set to false and needs to be re-initialized.
-			if ($ENTRADA_USER == false && $_SESSION["isAuthorized"] == true) {
-				$ENTRADA_USER = User::get($_SESSION["details"]["id"]);
-			}
 		}
 		
-		$query = "SELECT `email_updated`, `clinical`, `google_id`, `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($_SESSION["details"]["id"]);
+		$query = "SELECT `email_updated`, `google_id`, `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getID());
 		$result	= $db->GetRow($query);
 		
 		if (($result) && ($result["google_id"])) {
@@ -283,8 +285,6 @@ if ($ACTION == "login") {
 		
 		if ($result) {
 			$_SESSION["details"]["notifications"] = $result["notifications"];
-			$_SESSION["details"]["clinical_member"] = $result["clinical"];
-			
 			if(!isset($result["email_updated"]) || $result["email_updated"] == "" || (($result["email_updated"] - mktime()) / 86400 >= 365)) {
 				$_SESSION["details"]["email_updated"] = false;
 			} else {
@@ -432,7 +432,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) 
 					FROM `community_members`AS a
 					LEFT JOIN `communities` AS b
 					ON a.`community_id` = b.`community_id`
-					WHERE a.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+					WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 					AND a.`member_active` = 1
 					ORDER BY a.`member_joined`";
 		$result	= $db->GetRow($query);
@@ -488,8 +488,8 @@ switch ($MODULE) {
 	default :
 		/*
 		$excused_proxy_ids = array();
-		if ($_SESSION["details"]["group"] == "student" && $MODULE != "evaluations" && !in_array($_SESSION["details"]["id"], $excused_proxy_ids)) {
-			$cohort = groups_get_cohort($_SESSION["details"]["id"]);
+		if ($_SESSION["details"]["group"] == "student" && $MODULE != "evaluations" && !in_array($ENTRADA_USER->getID(), $excused_proxy_ids)) {
+			$cohort = groups_get_cohort($ENTRADA_USER->getID());
 			$query = "SELECT * FROM `evaluations` AS a
 						JOIN `evaluation_evaluators` AS b
 						ON a.`evaluation_id` = b.`evaluation_id`
@@ -497,7 +497,7 @@ switch ($MODULE) {
 						(
 							(
 								b.`evaluator_type` = 'proxy_id'
-								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["id"])."
+								AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getID())."
 							)
 							OR
 							(
@@ -540,15 +540,22 @@ switch ($MODULE) {
 				$sidebar_html  = "<form id=\"masquerade-form\" action=\"".ENTRADA_URL."\" method=\"get\">\n";
 				$sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label><br />";
 				$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 160px\" onchange=\"window.location='".ENTRADA_URL."/".$MODULE."/?".str_replace("&#039;", "'", replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
-				foreach ($_SESSION["permissions"] as $proxy_id => $result) {
-					if (is_int($proxy_id)) {
-						$sidebar_html .= "<option value=\"".(($proxy_id == $_SESSION["details"]["id"]) ? "close" : $result["permission_id"])."\"".(($proxy_id == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"]) . "</option>\n";
+				$display_masks = false;
+				$added_users = array();
+				foreach ($_SESSION["permissions"] as $access_id => $result) {
+					if (is_int($access_id) && ((isset($result["mask"]) && $result["mask"]) || $access_id == $ENTRADA_USER->getDefaultAccessId()) && array_search($result["id"], $added_users) === false) {
+						if (isset($result["mask"]) && $result["mask"]) {
+							$display_masks = true;
+						}
+						$added_users[] = $result["id"];
+						$sidebar_html .= "<option value=\"".(($access_id == $ENTRADA_USER->getDefaultAccessId()) ? "close" : $result["permission_id"])."\"".(($result["id"] == $ENTRADA_USER->getActiveId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"]) . "</option>\n";
 					}
 				}
 				$sidebar_html .= "</select>\n";
 				$sidebar_html .= "</form>\n";
-
-				new_sidebar_item("Permission Masks", $sidebar_html, "permission-masks", "open");
+				if ($display_masks) {
+					new_sidebar_item("Permission Masks", $sidebar_html, "permission-masks", "open");
+				}
 				unset($query);
 			}
 
@@ -592,11 +599,11 @@ if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 			if ($key == $ENTRADA_USER->getActiveOrganisation()) {
 				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?organisation_id=" . $key . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
 				if ($org_group_role && !empty($org_group_role)) {
-					foreach($org_group_role[$key] as $group => $role) {						
-						if ($role[1] == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]) {
-							$sidebar_html .= "<li style=\"padding-left: 15px;\"><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $role[1])) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode(ucfirst($group) . " - " . ucfirst($role[0])) . "</span></a></li>\n";
+					foreach($org_group_role[$key] as $group_role) {						
+						if ($group_role["access_id"] == $ENTRADA_USER->getAccessId()) {
+							$sidebar_html .= "<li style=\"padding-left: 15px;\"><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $group_role["access_id"])) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode(ucfirst($group_role["group"]) . " - " . ucfirst($group_role["role"])) . "</span></a></li>\n";
 						} else {
-							$sidebar_html .= "<li style=\"padding-left: 15px;\"><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $role[1])) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>" . html_encode(ucfirst($group) . " - " . ucfirst($role[0])) . "</span></a></li>\n";						}
+							$sidebar_html .= "<li style=\"padding-left: 15px;\"><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $group_role["access_id"])) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>" . html_encode(ucfirst($group_role["group"]) . " - " . ucfirst($group_role["role"])) . "</span></a></li>\n";						}
 					}
 				}
 			} else {

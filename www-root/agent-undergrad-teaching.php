@@ -64,7 +64,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	$STEP					= 1;
 	$ENCODED_INFORMATION	= "";
 
-	$MEDTECH_PROXYID		= ((isset($_SESSION["details"]["id"]) && (int) $_SESSION["details"]["id"]) ? (int) $_SESSION["details"]["id"] : 0); // This must be in all files once authenticated.
+	$MEDTECH_PROXYID		= ((isset($ENTRADA_USER) && (int) $ENTRADA_USER->getID()) ? (int) $ENTRADA_USER->getID() : 0); // This must be in all files once authenticated.
 
 	if((isset($_GET["step"])) && ((int) trim($_GET["step"]))) {
 		$STEP = (int) trim($_GET["step"]);

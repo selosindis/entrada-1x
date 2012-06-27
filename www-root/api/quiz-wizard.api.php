@@ -124,7 +124,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	
 					echo display_error();
 	
-					application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to the file wizard.");
+					application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to the file wizard.");
 				} else {
 					$quiz_types_record = array();
 					$query		= "SELECT * FROM `quizzes_lu_quiztypes` WHERE `quiztype_active` = '1' ORDER BY `quiztype_order` ASC";
@@ -382,7 +382,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["content_type"]	= "event";
 											$PROCESSED["content_id"]	= $RECORD_ID;
 											$PROCESSED["updated_date"]	= time();
-											$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+											$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 	
 											if ($db->AutoExecute("attached_quizzes", $PROCESSED, "UPDATE", "aquiz_id = ".$db->qstr($AQUIZ_ID))) {
 												$modal_onload[] = "parentReload()";
@@ -687,7 +687,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													LEFT JOIN `quiz_contacts` AS b
 													ON a.`quiz_id` = b.`quiz_id`
 													WHERE a.`quiz_id` = ".$db->qstr($tmp_input)."
-													AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+													AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 								$quiz_record	= $db->GetRow($query);
 								if ($quiz_record) {
 									if ($quiz_record["quiz_active"] == 1) {
@@ -918,7 +918,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									$PROCESSED["content_id"]	= $RECORD_ID;
 									$PROCESSED["accesses"]		= 0;
 									$PROCESSED["updated_date"]	= time();
-									$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+									$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 	
 									if ($db->AutoExecute("attached_quizzes", $PROCESSED, "INSERT")) {
 										$modal_onload[] = "parentReload()";
@@ -1208,7 +1208,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													LEFT JOIN `quiz_questions` AS c
 													ON a.`quiz_id` = c.`quiz_id`
 													WHERE a.`quiz_active` = '1'
-													AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+													AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 													GROUP BY a.`quiz_id`
 													ORDER BY a.`quiz_title` ASC";
 									$results	= $db->GetAll($query);
@@ -1408,7 +1408,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			if($community_record) {
 				$query	= "	SELECT * FROM `community_members`
 							WHERE `community_id` = ".$db->qstr($community_record["community_id"])."
-							AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+							AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 							AND `member_active` = '1'
 							AND `member_acl` = '1'";
 				$result	= $db->GetRow($query);
@@ -1420,7 +1420,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	
 					echo display_error();
 	
-					application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to the file wizard.");
+					application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to the file wizard.");
 				} else {
 					$quiz_types_record = array();
 					$query		= "SELECT * FROM `quizzes_lu_quiztypes` WHERE `quiztype_active` = '1' ORDER BY `quiztype_order` ASC";
@@ -1669,7 +1669,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["content_type"]	= "community_page";
 											$PROCESSED["content_id"]	= $RECORD_ID;
 											$PROCESSED["updated_date"]	= time();
-											$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+											$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 	
 											if ($db->AutoExecute("attached_quizzes", $PROCESSED, "UPDATE", "aquiz_id = ".$db->qstr($AQUIZ_ID))) {
 												$modal_onload[] = "parentReload()";
@@ -1960,7 +1960,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													LEFT JOIN `quiz_contacts` AS b
 													ON a.`quiz_id` = b.`quiz_id`
 													WHERE a.`quiz_id` = ".$db->qstr($tmp_input)."
-													AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+													AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 								$quiz_record	= $db->GetRow($query);
 								if ($quiz_record) {
 									if ($quiz_record["quiz_active"] == 1) {
@@ -2173,7 +2173,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									$PROCESSED["content_id"]	= $RECORD_ID;
 									$PROCESSED["accesses"]		= 0;
 									$PROCESSED["updated_date"]	= time();
-									$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+									$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 	
 									if ($db->AutoExecute("attached_quizzes", $PROCESSED, "INSERT")) {
 										$modal_onload[] = "parentReload()";
@@ -2450,7 +2450,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													LEFT JOIN `quiz_questions` AS c
 													ON a.`quiz_id` = c.`quiz_id`
 													WHERE a.`quiz_active` = '1'
-													AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+													AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 													GROUP BY a.`quiz_id`
 													ORDER BY a.`quiz_title` ASC";
 									$results	= $db->GetAll($query);

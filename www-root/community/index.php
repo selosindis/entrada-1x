@@ -135,9 +135,15 @@ if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
 				$ERROR++;
 				application_log("error", "User[".$username."] tried to access account after expiration date.");
 			} else {
+				// If $ENTRADA_USER was previously initialized in init.inc.php before the 
+				// session was authorized it is set to false and needs to be re-initialized.
+				if ($ENTRADA_USER == false) {
+					$ENTRADA_USER = User::get($result["ID"]);
+				}
 				$_SESSION["isAuthorized"] = true;
 				$_SESSION["details"]["app_id"] = AUTH_APP_ID;
 				$_SESSION["details"]["id"] = $result["ID"];
+				$_SESSION["details"]["access_id"] = $ENTRADA_USER->getAccessId();
 				$_SESSION["details"]["firstname"] = $result["FIRSTNAME"];
 				$_SESSION["details"]["lastname"] = $result["LASTNAME"];
 				$_SESSION["details"]["email"] = $result["EMAIL"];
@@ -150,7 +156,7 @@ if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
 							JOIN `".AUTH_DATABASE."`.`user_access` AS b
 							ON a.`id` = b.`user_id`
 							AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-							WHERE a.`id` = ".$db->qstr($_SESSION["details"]["id"]);
+							WHERE a.`id` = ".$db->qstr($ENTRADA_USER->getID());
 				$userinfo = $db->GetRow($query);
 				if ($userinfo) {
 					$_SESSION["details"]["username"] = $userinfo["username"];
@@ -300,7 +306,7 @@ if ($COMMUNITY_URL) {
 					 * This function updates the users_online table.
 					 */
 					users_online();
-					$query	= "SELECT * FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])." AND `member_active` = '1'";
+					$query	= "SELECT * FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())." AND `member_active` = '1'";
 					$result	= $db->GetRow($query);
 					if ($result) {
 						$COMMUNITY_MEMBER = true;
@@ -371,7 +377,7 @@ if ($COMMUNITY_URL) {
 								$ALLOW_MEMBERSHIP = false;
 
 								if (($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
-									if (in_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"], $community_members)) {
+									if (in_array($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"], $community_members)) {
 										$ALLOW_MEMBERSHIP = true;
 									} else {
 										foreach ($community_members as $member_group) {
@@ -379,9 +385,9 @@ if ($COMMUNITY_URL) {
 												$pieces = explode("_", $member_group);
 			
 												if ((isset($pieces[0])) && ($group = trim($pieces[0]))) {
-													if ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"] == $group) {
+													if ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] == $group) {
 														if ((isset($pieces[1])) && ($role = trim($pieces[1]))) {
-															if ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"] == $role) {
+															if ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"] == $role) {
 																$ALLOW_MEMBERSHIP = true;
 																break;
 															}
@@ -400,7 +406,7 @@ if ($COMMUNITY_URL) {
 								$ALLOW_MEMBERSHIP = false;
 			
 								if (($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
-									$query	= "SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])." AND `member_active` = '1' AND `community_id` IN ('".implode("', '", $community_members)."')";
+									$query	= "SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())." AND `member_active` = '1' AND `community_id` IN ('".implode("', '", $community_members)."')";
 									$result	= $db->GetRow($query);
 									if ($result) {
 										$ALLOW_MEMBERSHIP = true;
@@ -440,8 +446,8 @@ if ($COMMUNITY_URL) {
 						$sidebar_html  = "<form id=\"masquerade-form\" action=\"".COMMUNITY_URL.$COMMUNITY_URL."\" method=\"get\">\n";
 						$sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label><br />";
 						$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 160px\" onchange=\"window.location='".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".str_replace("&#039;", "'", replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
-						foreach ($_SESSION["permissions"] as $proxy_id => $result) {
-							$sidebar_html .= "<option value=\"".(($proxy_id == $_SESSION["details"]["id"]) ? "close" : $result["permission_id"])."\"".(($proxy_id == $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
+						foreach ($_SESSION["permissions"] as $access_id => $result) {
+							$sidebar_html .= "<option value=\"".(($access_id == $ENTRADA_USER->getDefaultAccessId()) ? "close" : $result["permission_id"])."\"".(($access_id == $ENTRADA_USER->getAccessId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
 						}
 						$sidebar_html .= "</select>\n";
 						$sidebar_html .= "</form>\n";

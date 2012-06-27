@@ -38,7 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($QUIZ_TYPE == "event") {
 		if ($RECORD_ID) {
@@ -270,7 +270,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 						if (!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
-							$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
 							/**
 							 * Adding this quiz to each of the selected events.
@@ -694,7 +694,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
 										ON c.`id` = b.`proxy_id`
 										WHERE (a.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]).")
-										AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+										AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 										ORDER BY a.`event_start` ASC";
 						$results	= $db->GetAll($query);
 						if($results) {
@@ -839,7 +839,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											ON b.`community_id` = a.`community_id`
 											JOIN `community_members` AS c
 											ON c.`community_id` = a.`community_id`
-											AND c.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+											AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 											AND c.`member_acl` = '1'
 											WHERE b.`cpage_id` = ".$db->qstr($tmp_input)."
 											AND a.`community_active` = '1'
@@ -1014,7 +1014,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 						if (!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
-							$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
 							/**
 							 * Adding this quiz to each of the selected events.
@@ -1360,7 +1360,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 										ON bp.`community_id` = b.`community_id`
 										JOIN `community_members` AS c
 										ON c.`community_id` = b.`community_id`
-										AND c.`proxy_id` = ".$db->qstr($_SESSION["details"]["id"])."
+										AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 										AND c.`member_acl` = '1'
 										JOIN `".AUTH_DATABASE."`.`user_data` AS d
 										ON d.`id` = c.`proxy_id`

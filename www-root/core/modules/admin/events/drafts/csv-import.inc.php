@@ -30,7 +30,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else { 
 
 	require_once(ENTRADA_ABSOLUTE."/core/library/Models/events/drafts/CsvImporter.class.php");
@@ -43,7 +43,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	echo "<h1>Import Draft Learning Events from CSV</h1>";
 	
 	if ($result["status"] == "open") {
-		$csv_importer = new CsvImporter($draft_id, $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]);
+		$csv_importer = new CsvImporter($draft_id, $ENTRADA_USER->getActiveId());
 		$csv_importer->importCsv($_FILES["csv_file"]);
 
 		if ($errors = $csv_importer->getErrors()) {

@@ -37,7 +37,7 @@ if(!defined("PARENT_INCLUDED")) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	define("IN_ANNUAL_REPORT", true);
 	
@@ -67,7 +67,7 @@ if(!defined("PARENT_INCLUDED")) {
 		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/education\" title=\"Education\">Education</a></li>\n";
 		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/research\" title=\"Scholarship, Research and Other Creative Activity\">Scholarship, Research and Other Creative Activity</a></li>\n";
 		// Only include this link for clinical members
-		if($_SESSION["details"]["clinical_member"]) {
+		if($ENTRADA_USER->getClinical()) {
 			$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/clinical\" title=\"Clinical\">Clinical</a></li>\n";
 		}
 		$sidebar_html .= "<li class=\"link\"><a href=\"".ENTRADA_URL."/annualreport/academic\" title=\"Service\">Service</a></li>\n";

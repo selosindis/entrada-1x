@@ -34,7 +34,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($ALLOW_QUESTION_MODIFICATIONS) {
 		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations/forms/questions?id=".$FORM_ID."&amp;section=add", "title" => "Add Question");
@@ -222,7 +222,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					} else {
 						add_error("You do not have permission to create this evaluation form question. The system administrator was informed of this error; please try again later.");
 
-						application_log("error", "There was an error inserting an evaluation form question to eform_id [".$FORM_ID."] because the user [".$_SESSION["details"]["id"]."] didn't have permission to create a form question.");
+						application_log("error", "There was an error inserting an evaluation form question to eform_id [".$FORM_ID."] because the user [".$ENTRADA_USER->getID()."] didn't have permission to create a form question.");
 					}
 				}
 

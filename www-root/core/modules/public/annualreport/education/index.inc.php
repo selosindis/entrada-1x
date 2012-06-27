@@ -33,7 +33,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	
 	if(!isset($_SESSION["education_expand_grid"])) {
@@ -61,20 +61,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	FROM `events` AS a
 	LEFT JOIN `event_contacts` AS b
 	ON b.`event_id` = a.`event_id`
-	AND b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+	AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 	LEFT JOIN `courses` AS c
 	ON a.`course_id` = c.`course_id`
 	LEFT JOIN `event_audience` AS d
 	ON a.`event_id` = d.`event_id`
 	LEFT JOIN `event_eventtypes` AS e
 	ON a.`event_id` = e.`event_id`
-	WHERE b.`proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"])."
+	WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 	AND event_start > 1230785940
 	ORDER BY `event_start` DESC, `course_name` DESC, `course_code` DESC";
 
 	$results	= $db->GetAll($query);
 	
-	$proxyID 	= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
+	$proxyID 	= $ENTRADA_USER->getActiveId();
 	
 	$modified				= 0;
 	$undergraduateArray 	= array();
@@ -211,7 +211,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				
 					$PROCESSED["course_number"] 	= $coursenum;
 					$PROCESSED["year_reported"] 	= $year;
-					$PROCESSED["proxy_id"] 			= $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"];
+					$PROCESSED["proxy_id"] 			= $ENTRADA_USER->getActiveId();
 					$PROCESSED["course_name"]		= $course;
 					$PROCESSED["lecture_phase"] 	= $phase;
 					$PROCESSED["assigned"] 			= 'Yes';
@@ -288,7 +288,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		undergraduate_medical_teaching_grid = jQuery("#flex1").flexigrid
 		(
 			{
-			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
+			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>',
 			dataType: 'json',
 			method: 'POST',
 			colModel : [
@@ -337,7 +337,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		undergraduate_nonmedical_grid = jQuery("#flex2").flexigrid
 		(
 			{
-			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
+			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>',
 			dataType: 'json',
 			method: 'POST',
 			colModel : [
@@ -421,7 +421,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						            ({
 						               type: "POST",
 						               dataType: "json",
-						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>&rid='+ids
+						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>&rid='+ids
 						             });
 							       	
 							       	window.setTimeout('undergraduate_nonmedical_grid.flexReload()', 1000);
@@ -446,7 +446,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		graduate_grid = jQuery("#flex3").flexigrid
 		(
 			{
-			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
+			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>',
 			dataType: 'json',
 			method: 'POST',
 			colModel : [
@@ -530,7 +530,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						            ({
 						               type: "POST",
 						               dataType: "json",
-						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>&rid='+ids
+						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>&rid='+ids
 						             });
 							       	
 							       	window.setTimeout('graduate_grid.flexReload()', 1000);
@@ -555,7 +555,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		undergraduate_supervision_grid = jQuery("#flex4").flexigrid
 		(
 			{
-			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
+			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>',
 			dataType: 'json',
 			method: 'POST',
 			colModel : [
@@ -639,7 +639,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						            ({
 						               type: "POST",
 						               dataType: "json",
-						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>&rid='+ids
+						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>&rid='+ids
 						             });
 							       	
 							       	window.setTimeout('undergraduate_supervision_grid.flexReload()', 1000);
@@ -664,7 +664,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		graduate_supervision_grid = jQuery("#flex5").flexigrid
 		(
 			{
-			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
+			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>',
 			dataType: 'json',
 			method: 'POST',
 			colModel : [
@@ -748,7 +748,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						            ({
 						               type: "POST",
 						               dataType: "json",
-						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>&rid='+ids
+						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>&rid='+ids
 						             });
 							       	
 							       	window.setTimeout('graduate_supervision_grid.flexReload()', 1000);
@@ -773,7 +773,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		memberships_grid = jQuery("#flex6").flexigrid
 		(
 			{
-			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
+			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>',
 			dataType: 'json',
 			method: 'POST',
 			colModel : [
@@ -857,7 +857,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						            ({
 						               type: "POST",
 						               dataType: "json",
-						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>&rid='+ids
+						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>&rid='+ids
 						             });
 							       	
 							       	window.setTimeout('memberships_grid.flexReload()', 1000);
@@ -879,12 +879,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		}
 		
 		<?php 
-		if($_SESSION["details"]["clinical_member"]) {
+		if($ENTRADA_USER->getClinical()) {
 			$fields = "ar_clinical_education,clinical_education_id,level,description,location,year_reported";?>
 			clinical_education_grid = jQuery("#flex7").flexigrid
 			(
 				{
-				url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
+				url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>',
 				dataType: 'json',
 				method: 'POST',
 				colModel : [
@@ -968,7 +968,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							            ({
 							               type: "POST",
 							               dataType: "json",
-							               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>&rid='+ids
+							               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>&rid='+ids
 							             });
 								       	
 								       	window.setTimeout('clinical_education_grid.flexReload()', 1000);
@@ -995,7 +995,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		continuing_education_grid = jQuery("#flex8").flexigrid
 		(
 			{
-			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
+			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>',
 			dataType: 'json',
 			method: 'POST',
 			colModel : [
@@ -1079,7 +1079,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						            ({
 						               type: "POST",
 						               dataType: "json",
-						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>&rid='+ids
+						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>&rid='+ids
 						             });
 							       	
 							       	window.setTimeout('continuing_education_grid.flexReload()', 1000);
@@ -1104,7 +1104,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		innovation_grid = jQuery("#flex9").flexigrid
 		(
 			{
-			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
+			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>',
 			dataType: 'json',
 			method: 'POST',
 			colModel : [
@@ -1126,7 +1126,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			usepager: true,
 			showToggleBtn: false,
 			collapseTable: <?php echo ($_SESSION["education_expand_grid"] == "innovation_grid" ? "false" : "true"); ?>,
-			title: '<?php echo (!$_SESSION["details"]["clinical_member"] ? "I. " : "G. "); ?>Innovation in Education',
+			title: '<?php echo (!$ENTRADA_USER->getClinical() ? "I. " : "G. "); ?>Innovation in Education',
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
@@ -1188,7 +1188,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						            ({
 						               type: "POST",
 						               dataType: "json",
-						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>&rid='+ids
+						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>&rid='+ids
 						             });
 							       	
 							       	window.setTimeout('innovation_grid.flexReload()', 1000);
@@ -1213,7 +1213,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		other_grid = jQuery("#flex10").flexigrid
 		(
 			{
-			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>',
+			url: '<?php echo ENTRADA_URL; ?>/api/ar_loadgrid.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>',
 			dataType: 'json',
 			method: 'POST',
 			colModel : [
@@ -1235,7 +1235,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			usepager: true,
 			showToggleBtn: false,
 			collapseTable: <?php echo ($_SESSION["education_expand_grid"] == "other_grid" ? "false" : "true"); ?>,
-			title: '<?php echo (!$_SESSION["details"]["clinical_member"] ? "J. " : "H. "); ?>Other Education',
+			title: '<?php echo (!$ENTRADA_USER->getClinical() ? "J. " : "H. "); ?>Other Education',
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
@@ -1297,7 +1297,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						            ({
 						               type: "POST",
 						               dataType: "json",
-						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]; ?>&t=<?php echo $fields; ?>&rid='+ids
+						               url: '<?php echo ENTRADA_URL; ?>/api/ar_delete.api.php?id=<?php echo $ENTRADA_USER->getActiveId(); ?>&t=<?php echo $fields; ?>&rid='+ids
 						             });
 							       	
 							       	window.setTimeout('other_grid.flexReload()', 1000);

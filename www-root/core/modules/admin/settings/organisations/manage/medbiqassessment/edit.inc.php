@@ -32,7 +32,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQASSESSMENT"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/organisations/manage/medbiqassessment?".replace_query(array("section" => "edit"))."&amp;org=".$ORGANISATION_ID, "title" => "Edit Medbiquitous Assessment Method");
@@ -72,7 +72,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQASSESSMENT"))) {
 			
 			if (!$ERROR) {
 				$PROCESSED["updated_date"]	= time();
-				$PROCESSED["updated_by"]	= $_SESSION["details"]["id"];
+				$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 				
 				if($db->AutoExecute("medbiq_assessment_methods", $PROCESSED, "UPDATE", "`assessment_method_id`=".$db->qstr($assessment_method_id))) {
 					// Remove any existing links to the assessment type before updating the table
@@ -83,7 +83,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQASSESSMENT"))) {
 							$MAPPED_PROCESSED = array();
 							$MAPPED_PROCESSED["fk_assessment_method_id"] = $assessment_method_id;
 							$MAPPED_PROCESSED["updated_date"] = time();
-							$MAPPED_PROCESSED["updated_by"] = $_SESSION["details"]["id"];
+							$MAPPED_PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 							
 							foreach($SEMI_PROCESSED["fk_assessments_meta_id"] as $fk_assessments_meta_id) {
 								$MAPPED_PROCESSED["fk_assessments_meta_id"] = $fk_assessments_meta_id;

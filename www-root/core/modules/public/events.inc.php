@@ -34,7 +34,7 @@ if (!defined("PARENT_INCLUDED")) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	$USE_QUERY = false;
 	$EVENT_ID = 0;
@@ -126,7 +126,7 @@ if (!defined("PARENT_INCLUDED")) {
 	 * and add the appropriate toggle sidebar item.
 	 */
 	if ($ENTRADA_ACL->amIAllowed("eventcontent", "update", false)) {
-		switch ($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]) {
+		switch ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]) {
 			case "admin" :
 				$admin_wording = "Administrator View";
 				$admin_url = ENTRADA_RELATIVE."/admin/events".(($EVENT_ID) ? "?".replace_query(array("section" => "edit", "id" => $EVENT_ID)) : "");
@@ -169,7 +169,7 @@ if (!defined("PARENT_INCLUDED")) {
 		if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"]) {
 			$ORGANISATION_ID = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"];
 		} else {
-			$ORGANISATION_ID = $_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["organisation_id"];
+			$ORGANISATION_ID = $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["organisation_id"];
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["organisation_id"] = $ORGANISATION_ID;
 		}
 	}
@@ -615,7 +615,7 @@ foreach ($temp_objectives as $objective_id => $objective) {
 	$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"] = 0;
 }
 foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
-	if ($objective["event_objective"]) {
+	if (isset($objective["event_objective"]) && $objective["event_objective"]) {
 		foreach ($objective["parent_ids"] as $parent_id) {
 			if ($objective["primary"] || $objective["secondary"] || $objective["tertiary"] || $curriculum_objectives["objectives"][$parent_id]["primary"] || $curriculum_objectives["objectives"][$parent_id]["secondary"] || $curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
 				$curriculum_objectives["objectives"][$parent_id]["objective_".($objective["primary"] || ($curriculum_objectives["objectives"][$parent_id]["primary"] && !$objective["secondary"] && !$objective["tertiary"]) ? "primary" : ($objective["secondary"] || ($curriculum_objectives["objectives"][$parent_id]["secondary"] && !$objective["primary"] && !$objective["tertiary"]) ? "secondary" : "tertiary"))."_children"]++;
@@ -632,12 +632,12 @@ foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
 	}
 }
 foreach ($temp_objectives as $objective_id => $objective) {
-	if (!$objective["event_objective"]) {
-		if ($objective["primary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"]) {
+	if (!isset($objective["event_objective"]) || !$objective["event_objective"]) {
+		if (isset($objective["primary"]) && $objective["primary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"]) {
 			$curriculum_objectives["objectives"][$objective_id]["primary"] = false;
-		} elseif ($objective["secondary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"]) {
+		} elseif (isset($objective["secondary"]) && $objective["secondary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"]) {
 			$curriculum_objectives["objectives"][$objective_id]["secondary"] = false;
-		} elseif ($objective["tertiary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"]) {
+		} elseif (isset($objective["tertiary"]) && $objective["tertiary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"]) {
 			$curriculum_objectives["objectives"][$objective_id]["tertiary"] = false;
 		}
 	}
@@ -885,7 +885,7 @@ if ($topic_results) { ?>
 							$query				= "	SELECT *
 											FROM `quiz_progress`
 											WHERE `aquiz_id` = ".$db->qstr($quiz_record["aquiz_id"])."
-											AND `proxy_id` = ".$db->qstr($_SESSION["details"]["id"]);
+											AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 							$progress_record	= $db->GetAll($query);
 							if ($progress_record) {
 								$quiz_attempts = count($progress_record);
@@ -895,7 +895,7 @@ if ($topic_results) { ?>
 
 							if (((!(int) $quiz_record["release_date"]) || ($quiz_record["release_date"] <= time())) && ((!(int) $quiz_record["release_until"]) || ($quiz_record["release_until"] >= time())) && (!$exceeded_attempts)) {
 								$allow_attempt = true;
-							} elseif (isset($quiz_record["require_attendance"]) && events_fetch_event_attendance_for_user($EVENT_ID,$ENTRADA_USER->getProxyId())) {
+							} elseif (isset($quiz_record["require_attendance"]) && events_fetch_event_attendance_for_user($EVENT_ID,$ENTRADA_USER->getID())) {
 								$allow_attempt = true;
 							} else {
 								$allow_attempt = false;
@@ -936,7 +936,7 @@ if ($topic_results) { ?>
 											"quiz_score" => "0",
 											"quiz_value" => "0",
 											"updated_date" => time(),
-											"updated_by" => $_SESSION["details"]["id"]
+											"updated_by" => $ENTRADA_USER->getID()
 										);
 										if (!$db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "qprogress_id = ".$db->qstr($entry["qprogress_id"]))) {
 											application_log("error", "Unable to update the qprogress_id [".$qprogress_id."] to expired. Database said: ".$db->ErrorMsg());
@@ -1042,7 +1042,7 @@ if ($topic_results) { ?>
 					if ($event_discussions) {
 						$i = 0;
 						foreach ($event_discussions as $result) {
-							if ($result["proxy_id"] == $_SESSION["details"]["id"]) {
+							if ($result["proxy_id"] == $ENTRADA_USER->getID()) {
 								$editable		= true;
 								$edit_ajax[]	= $result["ediscussion_id"];
 							} else {
@@ -1134,9 +1134,9 @@ if ($topic_results) { ?>
 		 */
 		
 		$learning_events = events_fetch_filtered_events(
-				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"],
-				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"],
-				$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"],
+				$ENTRADA_USER->getActiveId(),
+				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"],
+				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"],
 				$ENTRADA_USER->getActiveOrganisation(),
 				$_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"],
 				$_SESSION[APPLICATION_IDENTIFIER]["events"]["so"],
@@ -1210,7 +1210,7 @@ if ($topic_results) { ?>
 							/**
 							 * Determine if this event has been modified since their last visit.
 							 */
-							if (((int) $result["last_visited"]) && ((int) $result["last_visited"] < (int) $result["updated_date"])) {
+							if (isset($result["last_visited"]) && ((int) $result["last_visited"]) && ((int) $result["last_visited"] < (int) $result["updated_date"])) {
 								$is_modified = true;
 								$count_modified++;
 							}

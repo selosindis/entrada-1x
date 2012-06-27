@@ -22,7 +22,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] does not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($PROXY_ID) {
 		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($PROXY_ID);
@@ -319,7 +319,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "You do not have permission to add a user within the selected organisation. This error has been logged and will be investigated.";
-								application_log("Proxy id [" . $_SESSION['details']['proxy_id'] . "] tried to create a user within an organisation [" . $organisation_id . "] they didn't have permissions on. ");
+								application_log("Proxy id [" . $ENTRADA_USER->getID() . "] tried to create a user within an organisation [" . $organisation_id . "] they didn't have permissions on. ");
 							}
 						} else {
 							$ERROR++;
@@ -346,6 +346,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										$PROCESSED_ACCESS["org_id"][] = $row[0];
 										$PROCESSED_ACCESS["group_id"][] = $row[1];
 										$PROCESSED_ACCESS["role_id"][] = $row[2];
+										$query = "SELECT a.`group_name`, b.`role_name` FROM `".AUTH_DATABASE."`.`system_groups` AS a
+													JOIN `".AUTH_DATABASE."`.`system_roles` AS b
+													WHERE a.`id` = ".$db->qstr($row[1])."
+													AND b.`id` = ".$db->qstr($row[2]);
+										$group_role = $db->GetRow($query);
+										if (($group_role && $group_role["group_name"] == "student" && ($grad_year = clean_input($group_role["role_name"], "int"))) ||
+												($group_role && $group_role["group_name"] == "alumni" && !isset($PROCESSED["grad_year"]) && ($grad_year = clean_input($group_role["role_name"], "int")))) {
+											$PROCESSED["grad_year"] = $grad_year;
+										}
 									}
 								}
 						}
@@ -358,29 +367,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					if (!$ERROR && $ENTRADA_ACL->amIAllowed(new UserResource(null, $PROCESSED["organisation_id"]), "update")) {
 						$PROCESSED["email_updated"] = time();
 						if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "id = ".$db->qstr($PROXY_ID))) {							
-
-							$query = "DELETE FROM `".AUTH_DATABASE."`.`user_organisations`
-									  WHERE `proxy_id` = ".$db->qstr($PROXY_ID);
-							if (!$db->Execute($query)) {
-								$ERROR++;
-								$ERRORSTR[] = "Failed to remove your old departments";
-								application_log("error", "Unable to remove all of the user's (" . $PROXY_ID . ") departments. Database said: ".$db->ErrorMsg());
-							}
-
-							//Add the user's organisations to the user_organisation table.
-							foreach ($organisation_ids as $org_id) {
-								$row = array();
-								$row["organisation_id"] = $org_id;
-								$row["proxy_id"] = $PROXY_ID;
-								if (!$db->AutoExecute(AUTH_DATABASE.".user_organisations", $row, "INSERT")) {
-									$ERROR++;
-									$ERRORSTR[] = "Unable to add all of this user's organisations to the database. The MEdTech Unit has been informed of this error, please try again later.";
-
-									application_log("error", "Unable to add all of the user's (" . $PROCESSED_ACCESS["user_id"] . ") departments. Database said: ".$db->ErrorMsg());
-								}
-							}
-							
-
 							$query = "SELECT * FROM " . AUTH_DATABASE . ".`user_access`
 									  WHERE `user_id` = " . $db->qstr($PROXY_ID) . "
 									  AND `app_id` = " . $db->qstr(AUTH_APP_ID);
@@ -504,7 +490,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										'member_active' => 1,
 										'entrada_only' => 1,
 										'updated_date' => time(),
-										'updated_by' => $ENTRADA_USER->getProxyId()
+										'updated_by' => $ENTRADA_USER->getID()
 									);
 									$db->AutoExecute("group_members", $gmember, "INSERT");
 								}
@@ -519,7 +505,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 							header( "refresh:5;url=".$url );
 				
-							application_log("success", "Proxy ID [".$_SESSION["details"]["id"]."] successfully updated the proxy id [".$PROXY_ID."] user profile.");
+							application_log("success", "Proxy ID [".$ENTRADA_USER->getID()."] successfully updated the proxy id [".$PROXY_ID."] user profile.");
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "Unable to update this user account at this time. The system administrator has been informed of this error, please try again later.";
@@ -551,7 +537,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 					//Initialize Organisation ID array for initial page display
 					$organisation_ids = array();
-					$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_organisations` WHERE `proxy_id` = ".$db->qstr($PROXY_ID);
+					$query = "SELECT `organisation_id` FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($PROXY_ID);
 					$results = $db->GetAll($query);
 					foreach ($results as $result) {
 						$organisation_ids[] = $result["organisation_id"];
@@ -577,23 +563,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					if ($SUCCESS) {
 						$query = "SELECT *
 								  FROM `" . AUTH_DATABASE . "`.`user_access` a
-								  WHERE a.`user_id` = " . $db->qstr($_SESSION["details"]["id"]) . "
+								  WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getID()) . "
 								  AND a.`organisation_id` = " . $db->qstr($_SESSION["tmp"]["current_org"]) . "
 								  AND a.`group` = " . $db->qstr($_SESSION["tmp"]["current_group"]) . "
 								  AND a.`role` = " . $db->qstr($_SESSION["tmp"]["current_role"]);
 						
 						$result = $db->getRow($query);
 						if ($result) {
-							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"] = $result["id"];
-							$ENTRADA_USER->setActiveGroupRole($result["id"]);
-							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"] = $ENTRADA_USER->getProxyId() . "-" . $result["id"];
-							$_SESSION["permissions"] = load_org_group_role($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
+							$ENTRADA_USER->setAccessId($result["id"]);
+							$_SESSION["permissions"] = permissions_load();
 						} 
 
 						unset($ENTRADA_ACL);
 						$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
-						$ENTRADA_CACHE->remove("acl_".$_SESSION["details"]["id"]);
-						$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$_SESSION["details"]["id"]);
+						$ENTRADA_CACHE->remove("acl_".$ENTRADA_USER->getID());
+						$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$ENTRADA_USER->getID());
 						echo display_success();
 					}
 				break;
@@ -601,8 +585,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				default :
 					$query = "SELECT *
 							  FROM `" . AUTH_DATABASE . "`.`user_access` a
-							  WHERE a.`user_id` = " . $db->qstr($_SESSION["details"]["id"]) . "
-							  AND a.`id` = " . $db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["ua_id"]);
+							  WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getID()) . "
+							  AND a.`id` = " . $db->qstr($ENTRADA_USER->getAccessId());
 					$result = $db->getRow($query);
 					if ($result) {
 						$current_org = $result["organisation_id"];
@@ -1070,13 +1054,15 @@ jQuery(document).ready(function() {
 										<?php
 
 														foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
-															foreach($dlist as $d){
-																if (in_array($d["department_id"], $PROCESSED_DEPARTMENTS)) {
-																	$selected = true;
-																} else {
-																	$selected = false;
+															if ($result["organisation_id"] == $organisation_id){
+																foreach($dlist as $d){
+																	if (in_array($d["department_id"], $PROCESSED_DEPARTMENTS)) {
+																		$selected = true;
+																	} else {
+																		$selected = false;
+																	}
+																	echo build_option($d["department_id"], $d["department_title"], $selected);
 																}
-																echo build_option($d["department_id"], $d["department_title"], $selected);
 															}
 														}
 											 ?>

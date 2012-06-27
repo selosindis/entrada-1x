@@ -416,15 +416,19 @@ class User {
 
 		//get all of the users groups and roles for each organisation
 		$query = "SELECT b.`organisation_id`, b.`organisation_title`, a.`group`, a.`role`, a.`id`, c.`organisation_id` AS `default_organisation_id`
-					  FROM `" . AUTH_DATABASE . "`.`user_access` a
-					  JOIN `" . AUTH_DATABASE . "`.`organisations` b
-					  ON a.`organisation_id` = b.`organisation_id`
-					  JOIN `" . AUTH_DATABASE . "`.`user_data` c
-					  ON a.`user_id` = c.`id`
-					  WHERE a.`user_id` = ?
-					  ORDER BY a.`id` ASC";
+					FROM `" . AUTH_DATABASE . "`.`user_access` a
+					JOIN `" . AUTH_DATABASE . "`.`organisations` b
+					ON a.`organisation_id` = b.`organisation_id`
+					JOIN `" . AUTH_DATABASE . "`.`user_data` c
+					ON a.`user_id` = c.`id`
+					WHERE a.`user_id` = ?
+					AND a.`account_active` = 'true'
+					AND (a.`access_starts` = '0' OR a.`access_starts` < ?)
+					AND (a.`access_expires` = '0' OR a.`access_expires` >= ?)
+					AND a.`app_id` = ?
+					ORDER BY a.`id` ASC";
 
-		$results = $db->getAll($query, array($this->getActiveId()));
+		$results = $db->getAll($query, array($this->getActiveId(), time(), time(), AUTH_APP_ID));
 		if ($results) {
 			$org_group_role = array();
 			foreach ($results as $result) {

@@ -306,8 +306,8 @@ CREATE TABLE IF NOT EXISTS `user_access` (
   KEY `user_app_id` (`user_id`,`app_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `user_access` (`id`, `user_id`, `app_id`, `account_active`, `access_starts`, `access_expires`, `last_login`, `last_ip`, `login_attempts`, `locked_out_until`, `role`, `group`, `extras`, `private_hash`, `notes`) VALUES
-(1, 1, 1, 'true', 1216149930, 0, 0, '', NULL, NULL, 'admin', 'medtech', 'YToxOntzOjE2OiJhbGxvd19wb2RjYXN0aW5nIjtzOjM6ImFsbCI7fQ==', MD5(CONCAT(rand(), CURRENT_TIMESTAMP)), '');
+INSERT INTO `user_access` (`id`, `user_id`, `app_id`, `organisation_id`, `account_active`, `access_starts`, `access_expires`, `last_login`, `last_ip`, `login_attempts`, `locked_out_until`, `role`, `group`, `extras`, `private_hash`, `notes`) VALUES
+(1, 1, 1, 1, 'true', 1216149930, 0, 0, '', NULL, NULL, 'admin', 'medtech', 'YToxOntzOjE2OiJhbGxvd19wb2RjYXN0aW5nIjtzOjM6ImFsbCI7fQ==', MD5(CONCAT(rand(), CURRENT_TIMESTAMP)), '');
 
 CREATE TABLE IF NOT EXISTS `user_data` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,

@@ -83,6 +83,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				$ERROR++;
 				$ERRORSTR[] = "The <strong>Group Type</strong> field is required.";
 			}
+			
+			/**
+			 * Required field "course_id" / Course ID.
+			 */
+			if (isset($PROCESSED["group_type"]) && $PROCESSED["group_type"] == 'course_list') {
+				if (isset($_POST["course_id"]) && $course_id = clean_input($_POST["course_id"], array("int"))) {
+					$PROCESSED["group_value"] = $course_id;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "The <strong>Course</strong> field is required for course lists.";
+				}				
+			} else {
+				$PROCESSED["group_value"] = false;
+			}
 
 			if (isset($_POST["post_action"])) {
 				switch($_POST["post_action"]) {
@@ -238,6 +252,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 							<option value="0">-- Select a group type --</option>
 							<option value="course_list"<?php echo ($PROCESSED["group_type"] == "course_list" ? " selected=\"selected\"" : ""); ?>>Course list</option>
 							<option value="cohort"<?php echo ($PROCESSED["group_type"] == "cohort" ? " selected=\"selected\"" : ""); ?>>Cohort</option>
+							</select>
+						</td>
+					</tr>
+					<tr id="course_select_row"<?php echo $PROCESSED["group_type"] == 'course_list'?'':' style="display:none;"';?>>
+						<td>&nbsp;</td>
+						<td><label for="group_type" class="form-required">Course</label></td>
+						<td>
+							<select id="course_id" name="course_id" style="width: 250px">
+							<option value="0">-- Select a course --</option>
+							<?php
+							$courses = courses_fetch_courses(true);
+							if ($courses) {
+								foreach ($courses as $course){
+									?><option value="<?php echo $course["course_id"];?>"<?php echo $PROCESSED["group_value"] == $course["course_id"]?' selected="selected"':'';?>><?php echo $course["course_code"]." : ".$course["course_name"];?></option><?php
+								}
+							} ?>
 							</select>
 						</td>
 					</tr>
@@ -408,6 +438,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				</table>
 			</form>
 			<script type="text/javascript">
+				jQuery(document).ready(function(){
+					jQuery('#group_type').change(function(){
+						if(jQuery(this).val() == 'course_list'){
+							jQuery('#course_select_row').show();
+						}else{
+							jQuery('#course_select_row').hide();
+						}
+					});
+				});				
 				<?php
 				if (isset($added_ids) && $added_ids) {
 					?>

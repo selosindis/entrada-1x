@@ -2131,7 +2131,7 @@ function permissions_load() {
 	$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`firstname`, a.`lastname`, b.`organisation_id`, b.`role`, b.`group`, b.`id` AS `access_id`
 				FROM `".AUTH_DATABASE."`.`user_data` AS a
 				RIGHT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-				ON b.`user_id` = a.`id` 
+				ON b.`user_id` = a.`id`
 				AND b.`app_id`=".$db->qstr(AUTH_APP_ID)."
 				AND b.`account_active`='true'
 				AND (b.`access_starts`='0' OR b.`access_starts`<=".$db->qstr(time()).")
@@ -4062,7 +4062,7 @@ function users_online($action = "default") {
 
 	switch($action) {
 		case "logout" :
-			if((isset($ENTRADA_USER)) && ((int) $ENTRADA_USER->getID())) {
+			if (isset($ENTRADA_USER) && $ENTRADA_USER && (int) $ENTRADA_USER->getID()) {
 			/**
 			 * This query will delete only the exact session information, but it's probably better to delete
 			 * everthing about this user is it not? I don't know.
@@ -4073,7 +4073,7 @@ function users_online($action = "default") {
 					application_log("error", "Loggout: Failed to delete users_online entry for proxy id ".$ENTRADA_USER->getID().". Database said: ".$db->ErrorMsg());
 				}
 			}
-			break;
+		break;
 		case "default" :
 		default :
 			if((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
@@ -9329,7 +9329,7 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 
 			$iterated = true;
 		} while ((($display_importance != "tertiary") && ($display_importance != "secondary" || $active["tertiary"]) && ($display_importance != "primary" || $active["secondary"] || $active["tertiary"])) && $top);
-		
+
 		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"]) > 1) || $hierarchical) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
 			$output .= "</ul>";
 		}
@@ -9346,9 +9346,9 @@ function events_subnavigation($event_info,$tab='content'){
 		echo "		<li".($tab=='edit'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $event_info['event_id'], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Details</a></li>";
 	}
 	echo "		<li".($tab=='content'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $event_info['event_id'], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Content</a></li>";
-	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"],"step"=>false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Attendance</a></li>";				
-	echo "	</ul>";				
-	echo "</div>\n";			
+	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"],"step"=>false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Attendance</a></li>";
+	echo "	</ul>";
+	echo "</div>\n";
 
 }
 
@@ -11309,7 +11309,7 @@ function events_fetch_event_audience_for_user($event_id = 0, $user_id = false) {
 						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
 									`course_group_audience` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
-									ON a.`proxy_id` = u.`id`									
+									ON a.`proxy_id` = u.`id`
 									AND a.`cgroup_id` = ".$db->qstr($result["audience_value"])."
 									LEFT JOIN `event_attendance` d
 									ON u.`id` = d.`proxy_id`
@@ -11317,9 +11317,9 @@ function events_fetch_event_audience_for_user($event_id = 0, $user_id = false) {
 						$group_audience = $db->getAll($query);
 						if ($group_audience) {
 							$event_audience = array_merge($event_audience,$group_audience);
-						}												
-						break;					
-					case "cohort" :	// Cohorts					
+						}
+						break;
+					case "cohort" :	// Cohorts
 						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
 									`group_members` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
@@ -11387,7 +11387,7 @@ function events_fetch_event_audience_attendance($event_id = 0) {
 						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
 									`course_group_audience` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
-									ON a.`proxy_id` = u.`id`									
+									ON a.`proxy_id` = u.`id`
 									AND a.`cgroup_id` = ".$db->qstr($result["audience_value"])."
 									LEFT JOIN `event_attendance` d
 									ON u.`id` = d.`proxy_id`
@@ -11395,7 +11395,7 @@ function events_fetch_event_audience_attendance($event_id = 0) {
 						$group_audience = $db->getAll($query);
 						if ($group_audience) {
 							$event_audience = array_merge($event_audience,$group_audience);
-						}												
+						}
 						break;
 					case "cohort" :	// Cohorts
 						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM

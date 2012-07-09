@@ -1,7 +1,7 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
- * 
+ *
  * Entrada is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -27,10 +27,10 @@
 */
 
 if (!defined("PARENT_INCLUDED")) exit;
+
 if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -115,7 +115,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					}
 				}
 			}
-			
+
 			$_SERVER["QUERY_STRING"] = replace_query(array("action" => false));
 		break;
 		default :
@@ -213,37 +213,37 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					AND b.`action` = 'read'
 					AND b.`action_field` = 'notice_id'
 					AND b.`action_value` = a.`notice_id`
-					LEFT JOIN `notice_audience` AS c 
-					ON a.`notice_id` = c.`notice_id` 
+					LEFT JOIN `notice_audience` AS c
+					ON a.`notice_id` = c.`notice_id`
 					WHERE (
 						c.`audience_type` = 'all:users'
 						".($corrected_role == "medtech" ? "OR c.`audience_type` LIKE '%all%' OR c.`audience_type` = 'cohorts'" : "OR c.`audience_type` = 'all:".$corrected_role."'")."
 						OR
 						((
-							c.`audience_type` = 'students' 
-							OR c.`audience_type` = 'faculty' 
-							OR c.`audience_type` = 'staff') 
+							c.`audience_type` = 'students'
+							OR c.`audience_type` = 'faculty'
+							OR c.`audience_type` = 'staff')
 							AND c.`audience_value` = ".$db->qstr($ENTRADA_USER->getID())."
-						) 
+						)
 						OR ((
-							c.`audience_type` = 'cohorts' 
-							OR c.`audience_type` = 'course_list') 
+							c.`audience_type` = 'cohorts'
+							OR c.`audience_type` = 'course_list')
 							AND c.`audience_value` IN (
-								SELECT `group_id` 
-								FROM `group_members` 
+								SELECT `group_id`
+								FROM `group_members`
 								WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID()).")
 						)
-					) 
-					AND (a.`organisation_id` IS NULL 
-					OR a.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"]).") 
-					AND (a.`display_from`='0' 
-					OR a.`display_from` <= '".time()."') 
-					AND (a.`display_until`='0' 
-					OR a.`display_until` >= '".time()."') 
+					)
+					AND (a.`organisation_id` IS NULL
+					OR a.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"]).")
+					AND (a.`display_from`='0'
+					OR a.`display_from` <= '".time()."')
+					AND (a.`display_until`='0'
+					OR a.`display_until` >= '".time()."')
 					AND a.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
 					GROUP BY a.`notice_id`
 					ORDER BY a.`updated_date` DESC, a.`display_until` ASC";
-		
+
 		$results = $db->GetAll($query);
 		if ($results) {
 			foreach ($results as $result) {
@@ -301,12 +301,12 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			 * How did this person not get assigned this already? Mak'em new.
 			 */
 			if (!isset($cohort) || !$cohort) {
-				$query = "SELECT * 
+				$query = "SELECT *
 						FROM `groups`
 						WHERE `group_id` = ".$db->qstr(fetch_first_cohort());
 				$cohort = $db->GetRow($query);
 			}
-			
+
 			$HEAD[]	= "<link rel=\"alternate\" type=\"application/rss+xml\" title=\"Notices\" href=\"".ENTRADA_URL."/notices/".$cohort["group_id"]."\" />";
 
 			if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])) {
@@ -362,10 +362,10 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 								</div>
 							</div>
 							<?php
-							$query = "	SELECT `rotation_id` 
+							$query = "	SELECT `rotation_id`
 										FROM `".CLERKSHIP_DATABASE."`.`events`
 										WHERE `event_id` = ".$db->qstr($clerkship_schedule[0]["event_id"]);
-							$ROTATION_ID = $db->GetOne($query); 
+							$ROTATION_ID = $db->GetOne($query);
 							?>
 							<div style="float: right; margin-bottom: 5px">
 								<div id="module-content">
@@ -424,7 +424,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 									}
 
 									$event_title = clean_input($result["event_title"], array("htmlbrackets", "trim"));
-								
+
 									$cssclass = "";
 									$skip = false;
 
@@ -846,7 +846,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	<div class="rss-add">
 		<a id="add-rss-feeds-link" href="#edit-rss-feeds" class="feeds add-rss">Add RSS Feed</a>
 		<a id="edit-rss-feeds-link" href="#edit-rss-feeds" class="feeds edit-rss">Modify RSS Feeds</a>
-		
+
 		<div id="rss-edit-details" class="display-generic" style="display: none;">
 			While you are in <strong>edit mode</strong> you can rearrange the feeds below by dragging them to your preferred location. You can also <a href="#edit-rss-feeds" id="rss-feed-reset">reset this page to the default RSS feeds</a> if you would like. <span id="rss-save-results">&nbsp;</span>
 		</div>
@@ -858,13 +858,13 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 						<col style="width: 25%" />
 						<col style="width: 72%" />
 					</colgroup>
-					<tr>						
+					<tr>
 						<td colspan="3">
 							<h2 style="margin-top: 0">Add RSS Feed</h2>
 							<p>You can add your own external news feeds to your dashboard by providing both a title, and the full URL to your valid RSS feed.</p>
 						</td>
 					</tr>
-					<tr>						
+					<tr>
 						<td id="rss-add-status" colspan="3"></td>
 					</tr>
 					<tr>
@@ -904,7 +904,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	</script>
 	<div id="dashboard-syndicated-content" style="width: 750px">
 		<ul id="rss-list-1" class="rss-list first">
-			
+
 			<?php
 			if ((is_array($dashboard_feeds)) && (count($dashboard_feeds))) {
 				$list_2 = false;
@@ -915,13 +915,13 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 				}
 
 				for ($i = 0; $i < count($dashboard_feeds); $i++) {
-					
+
 					if ($i >= $break && !$list_2) {
 						$list_2 = true;
 						echo "</ul>
 						<ul id=\"rss-list-2\" class=\"rss-list\">\n";
 					}
-					
+
 					$feed = $dashboard_feeds[$i];
 					echo "<li> \n";
 					echo "<h2 class=\"rss-title\"><a href=\"".$feed["url"]."\" title=\"".$feed["title"]."\" target=\"_blank\">".$feed["title"]."</a></h2>\n";

@@ -23,6 +23,7 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
+
 /**
  * Register the Zend autoloader so we use any part of Zend Framework without
  * the need to require the specific Zend Framework files.
@@ -82,20 +83,20 @@ if ($ENTRADA_USER) {
 	$query = "SELECT a.*
 			  FROM `" . AUTH_DATABASE . "`.`system_groups` a,
 			  `" . AUTH_DATABASE . "`.`system_group_organisation` c
-			  WHERE a.`id` = c.`groups_id`			  
+			  WHERE a.`id` = c.`groups_id`
 			  AND c.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
 			  ORDER BY a.`group_name` ASC";
 	$results = $db->getAll($query);
 	if ($results) {
-		foreach($results as $result) {
+		foreach ($results as $result) {
 			$SYSTEM_GROUPS[$result["group_name"]] = array();
-			$query = "SELECT a.*
-			  FROM `" . AUTH_DATABASE . "`.`system_roles` a
-			  WHERE a.`groups_id` = " . $result["id"] . "
-			  ORDER BY a.`role_name` ASC";
+			$query = "	SELECT a.*
+						FROM `" . AUTH_DATABASE . "`.`system_roles` a
+						WHERE a.`groups_id` = " . $result["id"] . "
+						ORDER BY a.`role_name` ASC";
 			$roles = $db->getAll($query);
 			if ($roles) {
-				foreach($roles as $role) {
+				foreach ($roles as $role) {
 					$SYSTEM_GROUPS[$result["group_name"]][] = $role["role_name"];
 				}
 			}
@@ -103,11 +104,11 @@ if ($ENTRADA_USER) {
 	}
 
 	if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]) || !$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]) {
-		$query = "SELECT a.`group`, a.`role`, a.`id`
-						  FROM `" . AUTH_DATABASE . "`.`user_access` a
-						  WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getID()) . "
-						  AND a.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
-						  ORDER BY a.`id` ASC";
+		$query = "	SELECT a.`group`, a.`role`, a.`id`
+					FROM `" . AUTH_DATABASE . "`.`user_access` a
+					WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getID()) . "
+					AND a.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
+					ORDER BY a.`id` ASC";
 		$result = $db->getRow($query);
 		if ($result) {
 			$ENTRADA_USER->setAccessId($result["id"]);
@@ -127,15 +128,16 @@ if ($ENTRADA_USER) {
 				$allow_organisation_change = true;
 			}
 		}
+
 		if ($allow_organisation_change) {
 			$ENTRADA_USER->setActiveOrganisation($organisation);
-	
+
 			$query = "SELECT a.`group`, a.`role`, a.`id`
 						  FROM `" . AUTH_DATABASE . "`.`user_access` a
 						  WHERE a.`user_id` = " . $ENTRADA_USER->getActiveId() . "
 						  AND a.`organisation_id` = " . $db->qstr($organisation) . "
 						  ORDER BY a.`id` ASC";
-	
+
 			$result = $db->getRow($query);
 			if ($result) {
 				$ENTRADA_USER->setAccessId($result["id"]);

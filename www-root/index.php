@@ -225,7 +225,7 @@ if ($ACTION == "login") {
 			$_SESSION["details"]["private_hash"] = $result["PRIVATE_HASH"];
 			$_SESSION["details"]["allow_podcasting"] = false;
 
-			if ((isset($ENTRADA_CACHE)) && (!AUTH_DEVELOPMENT_MODE)) {
+			if ((isset($ENTRADA_CACHE)) && (!DEVELOPMENT_MODE)) {				
 				if (!($ENTRADA_CACHE->test("acl_".$ENTRADA_USER->getID()))) {
 					$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
 					$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$ENTRADA_USER->getID());

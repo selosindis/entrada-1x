@@ -4271,7 +4271,7 @@ function generate_hash($num_chars = 32) {
  * @return bool
  */
 function communities_log_history($community_id = 0, $page_id = 0, $record_id = 0, $history_message = "", $display_message = 0, $parent_id = 0) {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	if(($community_id = (int) $community_id) && (strlen(trim($history_message)))) {
 		$page_id			= (int) $page_id;
@@ -4846,7 +4846,7 @@ function communities_module_access_unique($community_id = 0, $module_id = 0, $ac
  * @return bool
  */
 function communities_module_activate($community_id = 0, $module_id = 0) {
-	global $db;
+	global $db, $ENTRADA_USER;
 
 	if(($community_id = (int) $community_id) && ($module_id = (int) $module_id)) {
 	/**

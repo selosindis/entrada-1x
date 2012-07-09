@@ -2127,10 +2127,12 @@ function preferences_load($module) {
  */
 function permissions_load() {
 	global $db, $ENTRADA_USER;
-	$permissions	= array();
+
+	$permissions = array();
+
 	$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`firstname`, a.`lastname`, b.`organisation_id`, b.`role`, b.`group`, b.`id` AS `access_id`
 				FROM `".AUTH_DATABASE."`.`user_data` AS a
-				RIGHT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+				JOIN `".AUTH_DATABASE."`.`user_access` AS b
 				ON b.`user_id` = a.`id`
 				AND b.`app_id`=".$db->qstr(AUTH_APP_ID)."
 				AND b.`account_active`='true'
@@ -2139,11 +2141,21 @@ function permissions_load() {
 				WHERE a.`id` = ".$db->qstr($ENTRADA_USER->getID())."
 				ORDER BY b.`id` ASC";
 	$results = $db->GetAll($query);
-	if($results) {
+	if ($results) {
 		foreach ($results as $result) {
-			$permissions[$result["access_id"]] = array("id" => $result["proxy_id"], "access_id" => $result["access_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result["organisation_id"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+			$permissions[$result["access_id"]] = array (
+				"id" => $result["proxy_id"],
+				"access_id" => $result["access_id"],
+				"group" => $result["group"],
+				"role" => $result["role"],
+				"organisation_id" => $result["organisation_id"],
+				"fullname" => $result["fullname"],
+				"firstname" => $result["firstname"],
+				"lastname" => $result["lastname"]
+			);
 		}
 	}
+
 	$query = "	SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, c.`organisation_id`, c.`role`, c.`group`, c.`id` AS `access_id`
 				FROM `permissions` AS a
 				LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -2153,14 +2165,30 @@ function permissions_load() {
 				AND c.`account_active`='true'
 				AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
 				AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")
-				WHERE a.`assigned_to`=".$db->qstr($ENTRADA_USER->getID())." AND a.`valid_from`<=".$db->qstr(time())." AND a.`valid_until`>=".$db->qstr(time())."
+				WHERE a.`assigned_to` = ".$db->qstr($ENTRADA_USER->getID())."
+				AND a.`valid_from` <= ".$db->qstr(time())."
+				AND a.`valid_until` >= ".$db->qstr(time())."
 				ORDER BY `fullname` ASC";
 	$results = $db->GetAll($query);
-	if($results) {
+	if ($results) {
 		foreach ($results as $result) {
-			$permissions[$result["access_id"]] = array("id" => $result["proxy_id"], "access_id" => $result["access_id"], "permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"], "mask" => true);
+			$permissions[$result["access_id"]] = array (
+				"id" => $result["proxy_id"],
+				"access_id" => $result["access_id"],
+				"permission_id" => $result["permission_id"],
+				"group" => $result["group"],
+				"role" => $result["role"],
+				"organisation_id"=>$result['organisation_id'],
+				"starts" => $result["valid_from"],
+				"expires" => $result["valid_until"],
+				"fullname" => $result["fullname"],
+				"firstname" => $result["firstname"],
+				"lastname" => $result["lastname"],
+				"mask" => true
+			);
 		}
 	}
+
 	return $permissions;
 }
 

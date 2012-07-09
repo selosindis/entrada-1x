@@ -108,59 +108,60 @@ class Entrada_ACL extends ACL_Factory {
 		//Fetch all the different users this current user could masquerade as.
 		$query = "	SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, b.`organisation_id`, c.`role`, c.`group`, c.`id` AS `access_id`
 					FROM `permissions` AS a
-					LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+					JOIN `".AUTH_DATABASE."`.`user_data` AS b
 					ON b.`id` = a.`assigned_by`
-					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
+					JOIN `".AUTH_DATABASE."`.`user_access` AS c
 					ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
 					AND c.`account_active`='true'
 					AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
 					AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")
-					WHERE a.`assigned_to`=".$db->qstr($userdetails["id"])." AND a.`valid_from`<=".$db->qstr(time())." AND a.`valid_until`>=".$db->qstr(time())."
+					WHERE a.`assigned_to`=".$db->qstr($userdetails["id"])."
+					AND a.`valid_from` <= ".$db->qstr(time())."
+					AND a.`valid_until` >= ".$db->qstr(time())."
 					ORDER BY `fullname` ASC";
 		$results = $db->GetAll($query);
-
-		//For all the possible permission masks, add the details of this mask to one large array, $permissions. Permissions here mean permission to masquerade as another user.
 		if ($results) {
 			foreach ($results as $result) {
 				$permissions[$result["access_id"]] = array("id" => $result["proxy_id"], "access_id" => $result["access_id"], "permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id" => $result["organisation_id"], "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
 			}
 		}
-		//Add all user_access records to the $permissions tree by organisation.
-		$query = "SELECT b.`id` AS `proxy_id`, c.`id` as ua_id, e.`organisation_id`, e.`organisation_title`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, c.`role`, c.`group`
-				FROM `".AUTH_DATABASE."`.`user_data` AS b
-				JOIN `".AUTH_DATABASE."`.`user_access` AS c
-				ON c.`user_id` = b.`id`
-				AND b.`id` = " . $userdetails["id"] . "
-				AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
-				AND c.`account_active`='true'
-				AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
-				AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")
-				JOIN `".AUTH_DATABASE."`.`organisations` AS e
-				ON e.`organisation_id` = c.`organisation_id`
-				ORDER BY c.`group` ASC";
 
+		// Add all user_access records to the $permissions tree by organisation.
+		$query = "	SELECT b.`id` AS `proxy_id`, c.`id` as ua_id, e.`organisation_id`, e.`organisation_title`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, c.`role`, c.`group`
+					FROM `".AUTH_DATABASE."`.`user_data` AS b
+					JOIN `".AUTH_DATABASE."`.`user_access` AS c
+					ON c.`user_id` = b.`id`
+					AND b.`id` = " . $userdetails["id"] . "
+					AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
+					AND c.`account_active`='true'
+					AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
+					AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")
+					JOIN `".AUTH_DATABASE."`.`organisations` AS e
+					ON e.`organisation_id` = c.`organisation_id`
+					ORDER BY c.`group` ASC";
 		$results = $db->GetAll($query);
-
 		if ($results) {
 			foreach ($results as $result) {
 				$permissions[$result["ua_id"]] = array("group" => $result["group"], "role" => $result["role"], "organisation_id" => $result["organisation_id"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
 			}
 		}
 
-		//Next, fetch all the role-resource permissions related to all these users.
+		// Next, fetch all the role-resource permissions related to all these users.
 		$this->rr_permissions = $this->_fetchPermissions($permissions);
+
 		/**
 		 * Next, "Clean" the permissions. This should create a permissions record for each active user_access record associated with
 		 * the user id passed in from the acl_permissions table. This may need to change so the permissions table simply uses an
 		 * access_id in the future for more granular permissions granting, but in the mean-time, this will ensure each access record for
 		 * the user will be granted the same custom access from a user `entity_type` record.
-		**/
+		 */
 		$clean_permissions = array();
 		foreach ($this->rr_permissions as $permissions_record) {
 			if ($permissions_record["entity_type"] != "user") {
 				$clean_permissions[] = $permissions_record;
 			} else {
-				$query = "SELECT `id` FROM `".AUTH_DATABASE."`.`user_access`
+				$query = "	SELECT `id`
+							FROM `".AUTH_DATABASE."`.`user_access`
 							WHERE `user_id` = ".$db->qstr($permissions_record["entity_value"])."
 							AND `app_id` = ".$db->qstr(AUTH_APP_ID)."
 							AND `account_active` = 'true'
@@ -175,21 +176,22 @@ class Entrada_ACL extends ACL_Factory {
 				}
 			}
 		}
-		//This adds all the resources referenced by the permissions to the ACL.
+
+		// This adds all the resources referenced by the permissions to the ACL.
 		$acl = $this->_build($permissions, $clean_permissions);
 
-		//Add generic roles
+		// Add generic roles
 		foreach (array("organisation", "group", "role", "user") as $entity_type) {
 			$acl->addRole(new Zend_Acl_Role($entity_type));
 		}
 
+		// Initialize variables for use throughout creation
 		foreach ($permissions as $access_id => $permission_mask) {
-		//Initialize variables for use throughout creation
-			$cur_access_id			= $access_id;
-			$cur_role				= $permission_mask["role"];
-			$cur_group				= $permission_mask["group"];
-			$cur_organisation		= (array_key_exists("organisation_title", $permission_mask) ? $permission_mask["organisation_title"] : NULL);
-			$cur_organisation_id	= $permission_mask["organisation_id"];
+			$cur_access_id = $access_id;
+			$cur_role = $permission_mask["role"];
+			$cur_group = $permission_mask["group"];
+			$cur_organisation = (array_key_exists("organisation_title", $permission_mask) ? $permission_mask["organisation_title"] : NULL);
+			$cur_organisation_id = $permission_mask["organisation_id"];
 
 			if (!$acl->hasRole("organisation".$cur_organisation_id)) {
 				$acl->addRole(new Zend_Acl_Role("organisation".$cur_organisation_id), "organisation");
@@ -203,11 +205,13 @@ class Entrada_ACL extends ACL_Factory {
 				$acl->addRole(new Zend_Acl_Role("role".$cur_role), array("role", "group".$cur_group));
 			}
 
-			$user_role	= new Zend_Acl_Role("user".$cur_access_id);
+			$user_role = new Zend_Acl_Role("user".$cur_access_id);
 			$acl->addRole($user_role, array("role".$cur_role, "user"));
 		}
+
 		//Instantiate ACL_Factory to facilitate application of rules
 		$this->acl = new ACL_Factory($acl);
+
 		//Create the final ACL
 		$this->acl->create_acl($clean_permissions);
 	}
@@ -248,6 +252,7 @@ class Entrada_ACL extends ACL_Factory {
 
 		$user = new EntradaUser("user".$ENTRADA_USER->getAccessId());
 		$user->details = $_SESSION["details"];
+
 		return $this->isAllowed($user, $resource, $action, $assert);
 	}
 

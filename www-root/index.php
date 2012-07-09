@@ -136,6 +136,7 @@ if ($ACTION == "login") {
 		$result = $auth->Authenticate(
 			array(
 				"id",
+				"access_id",
 				"prefix",
 				"firstname",
 				"lastname",
@@ -209,7 +210,7 @@ if ($ACTION == "login") {
 			$_SESSION["details"] = array();
 			$_SESSION["details"]["app_id"] = (int) AUTH_APP_ID;
 			$_SESSION["details"]["id"] = $result["ID"];
-			$_SESSION["details"]["access_id"] = $ENTRADA_USER->getAccessId();
+			$_SESSION["details"]["access_id"] = $result["ACCESS_ID"];
 			$_SESSION["details"]["username"] = $username;
 			$_SESSION["details"]["prefix"] = $result["PREFIX"];
 			$_SESSION["details"]["firstname"] = $result["FIRSTNAME"];

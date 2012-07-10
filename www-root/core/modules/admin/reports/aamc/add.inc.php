@@ -159,7 +159,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AAMC_CI"))) {
 			$PROCESSED["report_start"]	= strtotime("September 1st ".$start_year." 00:00:00");
 			$PROCESSED["report_finish"] = strtotime("August 31st ".($start_year + 1)." 23:59:59");
 
-			$PROCESSED["report_title"] = $org->getAAMCIntitutionName() . " Curriculum " . date("Y", $PROCESSED["report_start"]) . "-" . date("Y", $PROCESSED["report_finish"]);
+			$PROCESSED["report_title"] = $org->getAAMCInstitutionName() . " Curriculum " . date("Y", $PROCESSED["report_start"]) . "-" . date("Y", $PROCESSED["report_finish"]);
 		break;
 	}
 
@@ -205,7 +205,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AAMC_CI"))) {
 							<td></td>
 							<td style="vertical-align: top"><label for="report_title" class="form-required">Report Title</label></td>
 							<td>
-								<div id="course_id_path" class="content-small"><?php echo $org->getAAMCIntitutionName(); ?> &gt; <?php echo $org->getAAMCProgramName(); ?></div>
+								<div id="course_id_path" class="content-small"><?php echo $org->getAAMCInstitutionName(); ?> &gt; <?php echo $org->getAAMCProgramName(); ?></div>
 								<input type="text" id="report_title" name="report_title" value="<?php echo ((isset($PROCESSED["report_title"]) && $PROCESSED["report_title"]) ? html_encode($PROCESSED["report_title"]) : ""); ?>" maxlength="255" style="width: 99%; font-size: 150%; padding: 3px" />
 							</td>
 						</tr>

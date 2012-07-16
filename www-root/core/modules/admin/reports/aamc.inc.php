@@ -49,7 +49,15 @@ if (!defined("PARENT_INCLUDED")) {
 	if (($router) && ($router->initRoute())) {
 		$module_file = $router->getRoute();
 		if ($module_file) {
-			require_once($module_file);
+			$org = Organisation::get((int) $ENTRADA_USER->getActiveOrganisation());
+
+			if ($org->getAAMCInstitutionId() && $org->getAAMCInstitutionName() && $org->getAAMCProgramId() && $org->getAAMCProgramName()) {
+				require_once($module_file);
+			} else {
+				add_error("Before you are able to generate a AAMC Cirriculum Inventory report you must provide your AAMC institution name and identifier, and program name and identifier on the <a href=\"".ENTRADA_RELATIVE."/admin/settings/organisations/manage?org=".$ENTRADA_USER->getActiveOrganisation()."&amp;section=edit\">Edit Organisation</a> page.");
+
+				echo display_error();
+			}
 		}
 	} else {
 		$url = ENTRADA_URL."/admin/".$MODULE;

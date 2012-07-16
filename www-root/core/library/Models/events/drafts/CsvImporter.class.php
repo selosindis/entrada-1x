@@ -29,7 +29,7 @@ ini_set('auto_detect_line_endings', true);
 
 class CsvImporter {
 	
-	private $errors, $success, $draft_id, $updater;
+	private $errors, $success, $draft_id, $updater, $valid_rows, $last_parent;
 	
 	function __construct($draft_id, $proxy_id) {
 		$this->draft_id = $draft_id;
@@ -77,9 +77,10 @@ class CsvImporter {
 		* 10	Event Title
 		* 11	Location
 		* 12	Audience (Cohorts)
-		* 13	Audience (Student numbers)
-		* 14	Teacher Numbers
-		* 15	Teacher Names
+		* 13	Audience (Groups)
+		* 14	Audience (Student numbers)
+		* 15	Teacher Numbers
+		* 16	Teacher Names
 		*/
 
 		$event_id				= ((isset($row[0]) ? clean_input($row[0], "int") : 0 ));
@@ -95,9 +96,10 @@ class CsvImporter {
 		$event_title			= ((isset($row[10]) ? clean_input($row[10], array("trim","striptags")) : 0 ));
 		$event_location			= ((isset($row[11]) ? clean_input($row[11], array("trim","striptags")) : 0 ));
 		$event_audiences_cohort = ((isset($row[12]) && !empty($row[12]) ? explode(";", $row[12]) : 0 ));
-		$event_audiences_students = ((isset($row[13]) && !empty($row[13]) ? explode(";", clean_input($row[13], "nows")) : 0 ));
-		$event_teachers			= ((isset($row[14]) && !empty($row[14]) ? explode(";", clean_input($row[14], "nows")) : 0 ));
-		$teacher_names			= ((isset($row[15]) && !empty($row[15]) ? explode(";", $row[15]) : 0 ));
+		$event_audiences_groups = ((isset($row[13]) && !empty($row[13]) ? explode(";", $row[13]) : 0 ));
+		$event_audiences_students = ((isset($row[14]) && !empty($row[14]) ? explode(";", clean_input($row[14], array("nows", "striptags"))) : 0 ));
+		$event_teachers			= ((isset($row[15]) && !empty($row[15]) ? explode(";", clean_input($row[15], array("nows", "striptags"))) : 0 ));
+		$teacher_names			= ((isset($row[16]) && !empty($row[16]) ? explode(";", $row[16]) : 0 ));
 		$event_duration			= 0;
 
 		// check draft for existing event_id and get the devent_id if found
@@ -114,7 +116,18 @@ class CsvImporter {
 		// set the output event_id
 		$output[$event_id]["event_id"] = $event_id;
 		
-		// term - not required -- DROP THIS
+		// check the parent_id column
+		if ($parent_event == 1) {
+			$output[$event_id]["parent_event"] = 0;
+			$this->last_parent = $event_id;
+		} else if ($parent_event == 0) {
+			$output[$event_id]["parent_event"] = $this->last_parent;
+		} else {
+			$err["errors"][] = "Parent ID field must be 1 or 0.";
+			$skip_row = true;
+		}
+		
+		// term - not required
 		if ($term != 0) {
 			$output[$event_id]["term"] = $event_id;
 		}
@@ -153,7 +166,7 @@ class CsvImporter {
 			foreach ($eventtype_durations as $duration) {
 				$query = "	SELECT `eventtype_id`
 							FROM `events_lu_eventtypes`
-							WHERE LCASE(`eventtype_title`) = ".$db->qstr(strtolower($eventtypes[$i]));
+							WHERE LCASE(`eventtype_title`) = ".$db->qstr(strtolower(clean_input($eventtypes[$i], "striptags")));
 				$results = $db->GetRow($query);
 				if ($results) {
 					$output[$event_id]["eventtypes"][$i]["type"] = $results["eventtype_id"];
@@ -185,9 +198,12 @@ class CsvImporter {
 		
 		// event audience, not required	but needs to be verified
 		if (!empty($event_audiences_cohort)) {
+			foreach ($event_audiences_cohort as $i => $cohort) {
+				$event_audiences_cohort[$i] = $db->qstr(strtolower(clean_input($cohort, array("trim", "striptags"))));
+			}
 			$query = "	SELECT `group_id`, `group_name`
 						FROM `groups`
-						WHERE LCASE(`group_name`) IN (".$db->qstr(strtolower(implode("', '", $event_audiences_cohort))).")
+						WHERE LCASE(`group_name`) IN (".implode(", ", $event_audiences_cohort).")
 						GROUP BY `group_name`";
 			$results = $db->GetAll($query);
 			if ($results) {
@@ -197,10 +213,33 @@ class CsvImporter {
 			}
 		}
 		
+		if (!empty($event_audiences_groups)) {
+			foreach ($event_audiences_groups as $i => $group) {
+				$event_audiences_groups[$i] = $db->qstr(strtolower(clean_input($group, array("trim", "striptags"))));
+			}
+			var_dump($event_audiences_groups);
+			$query = "	SELECT `cgroup_id`, `course_id`, `group_name`
+						FROM `course_groups`
+						WHERE LCASE(`group_name`) IN (".implode(", ", $event_audiences_groups).")
+						GROUP BY `group_name`";
+			$results = $db->GetAll($query);
+			if ($results) {
+				foreach ($results as $result) {
+					$output[$event_id]["audiences"]["groups"][] = $result["cgroup_id"];
+				}
+			} else {
+				$err["errors"][] = "Event audience group not found.";
+				$skip_row = true;
+			}
+		}
+		
 		if (!empty($event_audiences_students)) {
+			foreach ($event_audiences_students as $i => $student) {
+				$event_audiences_students[$i] = $db->qstr((int) $student);
+			}
 			$query = "	SELECT `id`
 						FROM `".AUTH_DATABASE."`.`user_data` 
-						WHERE `number` IN ('".implode("', '", $event_audiences_students)."')";
+						WHERE `number` IN ('".implode(", ", $event_audiences_students)."')";
 			$results = $db->GetAll($query);
 			if ($results) {
 				foreach ($results as $result) {
@@ -210,9 +249,12 @@ class CsvImporter {
 		}
 		
 		if (!empty($event_teachers)) {
+			foreach ($event_teachers as $teacher) {
+				$event_teachers[$teacher] = $db->qstr((int) $teacher);
+			}
 			$query = "	SELECT `id`
 						FROM `".AUTH_DATABASE."`.`user_data` 
-						WHERE `number` IN ('".implode("', '", $event_teachers)."')";
+						WHERE `number` IN ('".implode(", ", $event_teachers)."')";
 			$results = $db->GetAll($query);
 			if ($results) {
 				foreach ($results as $result) {
@@ -243,8 +285,8 @@ class CsvImporter {
 				$where = "";
 			}
 			
-			$query =	$mode." `draft_events` (`draft_id`, `event_id`, `course_id`, `event_title`, `event_start`, `event_finish`, `event_duration`) 
-						VALUES (".$this->draft_id.", ".$db->qstr($row["event_id"]).", ".$db->qstr($row["course_id"]).", ".$db->qstr($row["event_title"]).", ".$db->qstr($row["event_start"]).", ".$db->qstr($row["event_start"] + ($row["total_duration"] * 60)).", ".$db->qstr($row["total_duration"]).")".
+			$query =	$mode." `draft_events` (`draft_id`, `event_id`, `parent_id`, `course_id`, `event_title`, `event_start`, `event_finish`, `event_duration`, `event_location`) 
+						VALUES (".$this->draft_id.", ".$db->qstr($row["event_id"]).", ".$db->qstr($row["parent_event"]).", ".$db->qstr($row["course_id"]).", ".$db->qstr($row["event_title"]).", ".$db->qstr($row["event_start"]).", ".$db->qstr($row["event_start"] + ($row["total_duration"] * 60)).", ".$db->qstr($row["total_duration"]).", ".$db->qstr($row["event_location"]).")".
 						$where;
 			$result = $db->Execute($query);
 			
@@ -260,6 +302,14 @@ class CsvImporter {
 				foreach ($row["audiences"]["cohorts"] as $cohort) {
 					$query =	$mode." `draft_audience` (`devent_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
 								VALUES (".$db->qstr($devent_id).", 'cohort', ".$db->qstr($cohort).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")".
+								$where;
+					$result = $db->Execute($query);
+				}
+			}
+			if (isset($row["audiences"]["groups"])) {
+				foreach ($row["audiences"]["groups"] as $group) {
+					$query =	$mode." `draft_audience` (`devent_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
+								VALUES (".$db->qstr($devent_id).", 'group_id', ".$db->qstr($group).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")".
 								$where;
 					$result = $db->Execute($query);
 				}
@@ -296,11 +346,16 @@ class CsvImporter {
 					if (isset($results["errors"])) {
 						$this->errors[$row_count] = $results["errors"];
 					} else {
-						$this->importRow($results);
-						$this->success[] = $row_count;
+						$this->valid_rows[] = $results;
 					}
 				}
 				$row_count++;
+			}
+			if (count($this->errors) <= 0) {
+				foreach ($this->valid_rows as $valid_row) {
+					$this->importRow($valid_row);
+					$this->success[] = $row_count;
+				}
 			}
 		}
 		fclose($handle);

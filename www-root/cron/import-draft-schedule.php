@@ -42,41 +42,31 @@ if ($drafts) {
 		$events = $db->GetAll($query);
 		if ($events) {
 			foreach ($events as $event) {
-				if (empty($event["event_id"])) {
-					// if the event has been added to the draft it will have no event_id, so it will need to be inserted.
-					if ($db->AutoExecute("`events`", $event, 'INSERT')) {
-						// delete event from draft_events
-						$query = "DELETE FROM `draft_events` WHERE `devent_id` = ".$db->qstr($event["devent_id"]);
-						if (!$db->Execute($query)) { 
-							$error++;
-							application_log("error", "Error deleting draft event [devent_id - ".$event["devent_id"]."] on draft schedule import. DB said: ".$db->ErrorMsg());
-						}
+				if (!empty($event["event_id"])) {
+					$event_id = $event["event_id"];
+					$query = "DELETE FROM `events` WHERE `event_id` = ".$db->qstr($event_id);
+					$db->Execute($query);
+				}
+				if ($db->AutoExecute("`events`", $event, 'INSERT')) {
+					if (empty($event["event_id"])) {
 						$event_id = $db->Insert_ID();
-					} else {
+					}
+					// delete event from draft_events
+					$query = "DELETE FROM `draft_events` WHERE `devent_id` = ".$db->qstr($event["devent_id"]);
+					if (!$db->Execute($query)) { 
 						$error++;
-						application_log("error", "Error inserting event [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
+						application_log("error", "Error deleting draft event [devent_id - ".$event["devent_id"]."] on draft schedule import. DB said: ".$db->ErrorMsg());
 					}
 				} else {
-					// if the event has been edited in the draft it will have an event_id, so it will need to be updated.
-					if ($db->AutoExecute("`events`", $event, 'UPDATE', "`event_id` = ".$db->qstr($event["event_id"]))) {
-						// delete event from draft_events
-						$query = "DELETE FROM `draft_events` WHERE `devent_id` = ".$db->qstr($event["devent_id"]);
-						if (!$db->Execute($query)) { 
-							$error++;
-							application_log("error", "Error deleting draft event [devent_id - ".$event["devent_id"]."] on draft schedule import. DB said: ".$db->ErrorMsg());
-						}
-						$event_id = $event["event_id"];
-					} else {
-						$error++;
-						application_log("error", "Error updating event [".$event["event_id"]."] on draft schedule import. DB said: ".$db->ErrorMsg());
-					}
+					$error++;
+					application_log("error", "Error inserting event [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
 				}
-				
+					
 				$notification_events .= $event["event_title"]." at ".date("Y-m-d H:i", $event["event_start"])."\n";
 				
 				// remove the eventtypes associated with the event
 				$query = "	DELETE FROM `event_eventtypes`
-							WHERE `event_id` = ".$db->qstr($event["event_id"]);
+							WHERE `event_id` = ".$db->qstr($event_id);
 				if ($db->Execute($query)) {
 					// add the eventtypes associated with the draft event
 					$query = "	SELECT *
@@ -105,7 +95,7 @@ if ($drafts) {
 				
 				// remove the event_contacts associated with the event
 				$query = "	DELETE FROM `event_contacts`
-							WHERE `event_id` = ".$db->qstr($event["event_id"]);
+							WHERE `event_id` = ".$db->qstr($event_id);
 				if ($db->Execute($query)) {
 					// add the eventtypes associated with the draft event
 					$query = "	SELECT a.*, CONCAT(b.`first_name`, b.`last_name`) AS `fullname`, b.`email`
@@ -139,7 +129,7 @@ if ($drafts) {
 				
 				// remove the event_contacts associated with the event
 				$query = "	DELETE FROM `event_audience`
-							WHERE `event_id` = ".$db->qstr($event["event_id"]);
+							WHERE `event_id` = ".$db->qstr($event_id);
 				if ($db->Execute($query)) {
 					// add the eventtypes associated with the draft event
 					$query = "	SELECT *
@@ -179,7 +169,7 @@ if ($drafts) {
 			$message .= "The following learning events were imported into the system:\n";
 			$message .= "------------------------------------------------------------\n\n";
 			$message .= $notification_events;
-			echo "<pre>".$message."</pre>";
+			echo $message;
 			$query = "	SELECT a.`proxy_id`, CONCAT(b.`firstname`, ' ', b.`lastname`) AS `name`, b.`email`
 						FROM `draft_creators` AS a
 						JOIN `".AUTH_DATABASE."`.`user_data` AS b

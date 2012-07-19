@@ -2127,11 +2127,13 @@ function preferences_load($module) {
  */
 function permissions_load() {
 	global $db, $ENTRADA_USER;
-	$permissions	= array();
+
+	$permissions = array();
+
 	$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`firstname`, a.`lastname`, b.`organisation_id`, b.`role`, b.`group`, b.`id` AS `access_id`
 				FROM `".AUTH_DATABASE."`.`user_data` AS a
-				RIGHT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-				ON b.`user_id` = a.`id` 
+				JOIN `".AUTH_DATABASE."`.`user_access` AS b
+				ON b.`user_id` = a.`id`
 				AND b.`app_id`=".$db->qstr(AUTH_APP_ID)."
 				AND b.`account_active`='true'
 				AND (b.`access_starts`='0' OR b.`access_starts`<=".$db->qstr(time()).")
@@ -2139,11 +2141,21 @@ function permissions_load() {
 				WHERE a.`id` = ".$db->qstr($ENTRADA_USER->getID())."
 				ORDER BY b.`id` ASC";
 	$results = $db->GetAll($query);
-	if($results) {
+	if ($results) {
 		foreach ($results as $result) {
-			$permissions[$result["access_id"]] = array("id" => $result["proxy_id"], "access_id" => $result["access_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result["organisation_id"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"]);
+			$permissions[$result["access_id"]] = array (
+				"id" => $result["proxy_id"],
+				"access_id" => $result["access_id"],
+				"group" => $result["group"],
+				"role" => $result["role"],
+				"organisation_id" => $result["organisation_id"],
+				"fullname" => $result["fullname"],
+				"firstname" => $result["firstname"],
+				"lastname" => $result["lastname"]
+			);
 		}
 	}
+
 	$query = "	SELECT a.*, b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`firstname`, b.`lastname`, c.`organisation_id`, c.`role`, c.`group`, c.`id` AS `access_id`
 				FROM `permissions` AS a
 				LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -2153,14 +2165,30 @@ function permissions_load() {
 				AND c.`account_active`='true'
 				AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
 				AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")
-				WHERE a.`assigned_to`=".$db->qstr($ENTRADA_USER->getID())." AND a.`valid_from`<=".$db->qstr(time())." AND a.`valid_until`>=".$db->qstr(time())."
+				WHERE a.`assigned_to` = ".$db->qstr($ENTRADA_USER->getID())."
+				AND a.`valid_from` <= ".$db->qstr(time())."
+				AND a.`valid_until` >= ".$db->qstr(time())."
 				ORDER BY `fullname` ASC";
 	$results = $db->GetAll($query);
-	if($results) {
+	if ($results) {
 		foreach ($results as $result) {
-			$permissions[$result["access_id"]] = array("id" => $result["proxy_id"], "access_id" => $result["access_id"], "permission_id" => $result["permission_id"], "group" => $result["group"], "role" => $result["role"], "organisation_id"=>$result['organisation_id'],  "starts" => $result["valid_from"], "expires" => $result["valid_until"], "fullname" => $result["fullname"], "firstname" => $result["firstname"], "lastname" => $result["lastname"], "mask" => true);
+			$permissions[$result["access_id"]] = array (
+				"id" => $result["proxy_id"],
+				"access_id" => $result["access_id"],
+				"permission_id" => $result["permission_id"],
+				"group" => $result["group"],
+				"role" => $result["role"],
+				"organisation_id"=>$result['organisation_id'],
+				"starts" => $result["valid_from"],
+				"expires" => $result["valid_until"],
+				"fullname" => $result["fullname"],
+				"firstname" => $result["firstname"],
+				"lastname" => $result["lastname"],
+				"mask" => true
+			);
 		}
 	}
+
 	return $permissions;
 }
 
@@ -4062,7 +4090,7 @@ function users_online($action = "default") {
 
 	switch($action) {
 		case "logout" :
-			if((isset($ENTRADA_USER)) && ((int) $ENTRADA_USER->getID())) {
+			if (isset($ENTRADA_USER) && $ENTRADA_USER && (int) $ENTRADA_USER->getID()) {
 			/**
 			 * This query will delete only the exact session information, but it's probably better to delete
 			 * everthing about this user is it not? I don't know.
@@ -4073,7 +4101,7 @@ function users_online($action = "default") {
 					application_log("error", "Loggout: Failed to delete users_online entry for proxy id ".$ENTRADA_USER->getID().". Database said: ".$db->ErrorMsg());
 				}
 			}
-			break;
+		break;
 		case "default" :
 		default :
 			if((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
@@ -8763,19 +8791,19 @@ function courses_subnavigation($course_details, $tab="details") {
 	echo "<div class=\"no-printing\">\n";
     echo "    <ul class=\"nav nav-tabs\">\n";
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-        echo "<li".($tab=="groups"?" class=\"active\"":"")."><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit " . $module_singular_name . " Groups</a></li>\n";
+        echo "<li".($tab=="groups"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">" . $module_singular_name . " Groups</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-        echo "<li".($tab=="details"?" class=\"active\"":"")."><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit  " . $module_singular_name . " Details</a></li>\n";
+        echo "<li".($tab=="details"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">" . $module_singular_name . " Details</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-        echo "<li".($tab=="content"?" class=\"active\"":"")."><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px;\">Manage  " . $module_singular_name . " Content</a></li>\n";
+        echo "<li".($tab=="content"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px;\">" . $module_singular_name . " Content</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-        echo "<li".($tab=="gradebook"?" class=\"active\"":"")."><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\" style=\"font-size: 10px;\">Manage  " . $module_singular_name . " Gradebook</a></li>";
+        echo "<li".($tab=="gradebook"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\" style=\"font-size: 10px;\">" . $module_singular_name . " Gradebook</a></li>";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-		echo "<li".($tab=="enrolment"?" class=\"active\"":"")."><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit " . $module_singular_name . " Enrolment</a></li>\n";
+		echo "<li".($tab=="enrolment"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">" . $module_singular_name . " Enrolment</a></li>\n";
 	}
 	echo "	</ul>\n";
 
@@ -9329,7 +9357,7 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 
 			$iterated = true;
 		} while ((($display_importance != "tertiary") && ($display_importance != "secondary" || $active["tertiary"]) && ($display_importance != "primary" || $active["secondary"] || $active["tertiary"])) && $top);
-		
+
 		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"]) > 1) || $hierarchical) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
 			$output .= "</ul>";
 		}
@@ -9346,9 +9374,9 @@ function events_subnavigation($event_info,$tab='content'){
 		echo "		<li".($tab=='edit'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $event_info['event_id'], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Details</a></li>";
 	}
 	echo "		<li".($tab=='content'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $event_info['event_id'], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Content</a></li>";
-	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"],"step"=>false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Attendance</a></li>";				
-	echo "	</ul>";				
-	echo "</div>\n";			
+	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"],"step"=>false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Attendance</a></li>";
+	echo "	</ul>";
+	echo "</div>\n";
 
 }
 
@@ -11309,7 +11337,7 @@ function events_fetch_event_audience_for_user($event_id = 0, $user_id = false) {
 						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
 									`course_group_audience` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
-									ON a.`proxy_id` = u.`id`									
+									ON a.`proxy_id` = u.`id`
 									AND a.`cgroup_id` = ".$db->qstr($result["audience_value"])."
 									LEFT JOIN `event_attendance` d
 									ON u.`id` = d.`proxy_id`
@@ -11317,9 +11345,9 @@ function events_fetch_event_audience_for_user($event_id = 0, $user_id = false) {
 						$group_audience = $db->getAll($query);
 						if ($group_audience) {
 							$event_audience = array_merge($event_audience,$group_audience);
-						}												
-						break;					
-					case "cohort" :	// Cohorts					
+						}
+						break;
+					case "cohort" :	// Cohorts
 						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
 									`group_members` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
@@ -11387,7 +11415,7 @@ function events_fetch_event_audience_attendance($event_id = 0) {
 						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM
 									`course_group_audience` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
-									ON a.`proxy_id` = u.`id`									
+									ON a.`proxy_id` = u.`id`
 									AND a.`cgroup_id` = ".$db->qstr($result["audience_value"])."
 									LEFT JOIN `event_attendance` d
 									ON u.`id` = d.`proxy_id`
@@ -11395,7 +11423,7 @@ function events_fetch_event_audience_attendance($event_id = 0) {
 						$group_audience = $db->getAll($query);
 						if ($group_audience) {
 							$event_audience = array_merge($event_audience,$group_audience);
-						}												
+						}
 						break;
 					case "cohort" :	// Cohorts
 						$query = "	SELECT u.*, d.`eattendance_id` AS `has_attendance` FROM

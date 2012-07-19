@@ -47,7 +47,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		$csv_importer->importCsv($_FILES["csv_file"]);
 
 		if ($errors = $csv_importer->getErrors()) {
-			$err_msg = "The following errors occured while importing <strong>".$_FILES["csv_file"]["name"]."</strong>. Please correct the errors and import them from a new CSV file.<br /><br />";
+			$err_msg = "The following errors occured while importing <strong>".$_FILES["csv_file"]["name"]."</strong>. Please correct the errors and try to import CSV file again.<br /><br />";
 			foreach ($errors as $rowid => $error) {
 				$err_msg .= "Row <strong>".$rowid."</strong> contained the following errors and was not imported:</strong><br />";
 				foreach ($error as $msg) {
@@ -57,8 +57,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			$err_msg .= "<br />Please <a href=\"".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\">click here</a> to return to the edit draft page.";
 			add_error($err_msg);
 			echo display_error();
-		}
-		if ($success = $csv_importer->getSuccess()) {
+		} else if ($success = $csv_importer->getSuccess()) {
 			add_success("Successfully imported <strong>".count($success)."</strong> events from <strong>".$_FILES["csv_file"]["name"]."</strong>".
 						(!isset($errors) ? "<br /><br />You will now be redirected to the edit draft page; this will happen automatically in 5 seconds or <a href=\"".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\">click here</a> to continue." : "" ));
 			echo display_success();

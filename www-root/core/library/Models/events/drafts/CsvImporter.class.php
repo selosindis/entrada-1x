@@ -217,7 +217,7 @@ class CsvImporter {
 			foreach ($event_audiences_groups as $i => $group) {
 				$event_audiences_groups[$i] = $db->qstr(strtolower(clean_input($group, array("trim", "striptags"))));
 			}
-			var_dump($event_audiences_groups);
+			
 			$query = "	SELECT `cgroup_id`, `course_id`, `group_name`
 						FROM `course_groups`
 						WHERE LCASE(`group_name`) IN (".implode(", ", $event_audiences_groups).")

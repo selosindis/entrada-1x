@@ -40,6 +40,9 @@ if (!defined("IN_PROFILE")) {
 	$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/ActiveEditProcessor.js'></script>";
 	$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/PriorityList.js'></script>";
 	$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/ActiveEditor.js'></script>";
+	$HEAD[] = "<link href=\"".ENTRADA_URL."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
+	$HEAD[] = "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/config/xc2_default.js\"></script>\n";
+	$HEAD[] = "<script language=\"javascript\" type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_inpage.js\"></script>\n";
 	
 	if ((is_array($_SESSION["permissions"])) && ($total_permissions = count($_SESSION["permissions"]) > 1)) {
 		$sidebar_html  = "The following individual".((($total_permissions - 1) != 1) ? "s have" : " has")." given you access to their ".APPLICATION_NAME." permission levels:";
@@ -127,7 +130,8 @@ if (!defined("IN_PROFILE")) {
 		$community_based_project = $mspr["Community Based Project"];
 		$research_citations = $mspr["Research"];
 		
-	
+		$faculty = ClinicalFacultyMembers::get();
+
 		display_status_messages();
 	
 ?>
@@ -747,6 +751,246 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			</div>
 		</div>
 	</div>
+	
+<!-- OBSERVERSHIP CHANGES START -->
+
+<div class="section">
+			<h3 title="Observerships Section" class="collapsable collapsed">Observerships</h3>
+			<div id="observerships-section">
+				<?php if (clerkship_fetch_schedule($ENTRADA_USER->getID()) == false) { ?>
+				<div id="add_observership_link" style="float: right;">
+					<ul class="page-action">
+						<li><a id="add_observership" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Observership</a></li>
+					</ul>
+				</div>
+				<?php } ?>
+				<div class="clear">&nbsp;</div>
+				<div id="update-observership-box" class="modal-confirmation" style="width: 60em; height: 60ex;">
+					<h1>Edit Observership</h1>
+					<form method="post" name="edit_observership_form">
+						<table class="mspr_form">
+							<colgroup>
+								<col width="35%"></col>
+								<col width="65%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><label class="form-required" for="title">Title/Discipline:</label></td>
+		 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine Observership</span></td>
+								</tr>
+								<tr>
+									<td><label class="form-required" for="site">Site:</label></td>
+									<td><input name="site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="location">Location:</label></td>
+									<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_proxy_id">Faculty Preceptor:</label></td>
+									<td>
+										<select name="preceptor_proxy_id">
+										<?php
+											echo build_option(0,"Non-Faculty");
+											echo build_option(-1,"Various");
+											foreach ($faculty as $faculty_member) {
+												echo build_option($faculty_member->getID(), $faculty_member->getLastname().", ".$faculty_member->getFirstname());
+											}
+										?>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_prefix">Non-Faculty Preceptor Prefix:</label></td>
+									<td>
+										<select style="width: 55px; vertical-align: middle; margin-right: 5px" name="preceptor_prefix" id="prefix">
+											<option selected="selected" value=""></option>
+											<option value="Dr.">Dr.</option>
+											<option value="Mr.">Mr.</option>
+											<option value="Mrs.">Mrs.</option>
+											<option value="Ms.">Ms.</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
+									<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getFirstname(); ?></span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Last Name:</label></td>
+									<td><input name="preceptor_lastname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getLastname(); ?></span></td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_email">Non-Faculty Preceptor Email Address:</label></td>
+									<td><input name="preceptor_email"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getEmail(); ?></span></td>
+								</tr>
+								<tr>
+									<td><label class="form-required" for="start">Start Date:</label></td>
+									<td>
+										<input type="text" name="start" id="observership_edit_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="end">End Date:</label></td>
+									<td>
+										<input type="text" name="end" id="observership_edit_end"></input>
+									</td>
+								</tr>
+							</tbody>
+						
+						</table>
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+					</div>
+					
+				</div>
+				<div id="add-observership-box" class="modal-confirmation" style="width: 60em; height: 55ex;">
+					<h1>Add Observership</h1>
+					<form method="post" name="add_observership_form">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Add"></input>
+						<table class="mspr_form">
+							<colgroup>
+								<col width="35%"></col>
+								<col width="65%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><label class="form-required" for="title">Title/Discipline:</label></td>
+		 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine Observership</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="site">Site:</label></td>
+									<td><input name="site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="location">Location:</label></td>
+									<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_proxy_id">Faculty Preceptor:</label></td>
+									<td>
+										<select name="preceptor_proxy_id">
+										<?php
+											echo build_option(0,"Non-Faculty");
+											echo build_option(-1,"Various");
+											foreach ($faculty as $faculty_member) {
+												echo build_option($faculty_member->getID(), $faculty_member->getLastname().", ".$faculty_member->getFirstname());
+											}
+										?>
+										</select>
+									</td>
+								</tr>	
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_prefix">Non-Faculty Preceptor Prefix:</label></td>
+									<td>
+										<select style="width: 55px; vertical-align: middle; margin-right: 5px" name="preceptor_prefix" id="prefix">
+											<option selected="selected" value=""></option>
+											<option value="Dr.">Dr.</option>
+											<option value="Mr.">Mr.</option>
+											<option value="Mrs.">Mrs.</option>
+											<option value="Ms.">Ms.</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
+									<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getPrefix()." ".$user->getFirstname(); ?></span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Last Name:</label></td>
+									<td><input name="preceptor_lastname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getLastname(); ?></span></td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Email Address:</label></td>
+									<td><input name="preceptor_email"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getEmail(); ?></span></td>
+								</tr>
+								<tr>
+									<td><label class="form-required" for="start">Start Date:</label></td>
+									<td>
+										<input type="text" name="start" id="observership_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="end">End Date:</label></td>
+									<td>
+										<input type="text" name="end" id="observership_end"></input>
+									</td>
+								</tr>
+							</tbody>
+						
+						</table>
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Submit</button>
+					</div>
+					
+				</div>
+				<div id="observerships"><?php echo display_observerships($observerships,"public"); ?></div>
+			</div>
+		</div>
+	<script type="text/javascript">
+		document.observe('dom:loaded', function() {
+		try {
+			function get_modal_options() {
+				return {
+					overlayOpacity:	0.75,
+					closeOnClick:	'overlay',
+					className:		'modal-confirmation',
+					fade:			true,
+					fadeDuration:	0.30
+				};
+			}
+			
+			var api_url = '<?php echo webservice_url("mspr-profile"); ?>&id=<?php echo $PROXY_ID; ?>&mspr-section=';
+
+			var edit_observership_modal = new Control.Modal('update-observership-box', get_modal_options());
+			var add_observership_modal = new Control.Modal('add-observership-box', get_modal_options());
+			
+			$('observership_start').observe('focus',function(e) {
+				showCalendar('',this,this,null,null,0,30,1);
+			}.bind($('observership_start')));
+			$('observership_end').observe('focus',function(e) {
+				showCalendar('',this,this,null,null,0,30,1);
+			}.bind($('observership_end')));
+
+			var observerships = new ActiveDataEntryProcessor({
+				url : api_url + 'observerships',
+				data_destination: $('observerships'),
+				remove_forms_selector: '#observerships .entry form.remove_form',
+				new_button: $('add_observership_link'),
+				section: "observerships",
+				new_modal: add_observership_modal
+
+			});
+			
+			$('observership_edit_start').observe('focus',function(e) {
+				showCalendar('',this,this,null,null,0,30,1);
+			}.bind($('observership_edit_start')));
+			$('observership_edit_end').observe('focus',function(e) {
+				showCalendar('',this,this,null,null,0,30,1);
+			}.bind($('observership_edit_end')));
+
+			var observsership_edit = new ActiveEditor({
+				url : api_url + 'observerships',
+				data_destination: $('observerships'),
+				edit_forms_selector: '#observerships .entry form.edit_form',
+				edit_modal: edit_observership_modal,
+				section: 'observerships'
+			});
+
+			}catch(e) {alert(e);
+				clog(e);
+			}
+		});
+	</script>
+<!-- OBSERVERSHIP CHANGES END -->	
+	
 	<h2 title="Supplied Information Section" class="collapsed">Information Supplied by Staff and Faculty</h2>
 	<div id="supplied-information-section">
 		<div class="instructions">
@@ -786,10 +1030,6 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			<div class="subsection">
 				<h4 title="International Activities">International Activities</h4>
 				<div id="international-activities"><?php echo display_international_activities_profile($international_activities); ?></div>
-			</div>
-			<div class="subsection" >
-				<h4>Learning Activities - Observerships</h4>
-				<div id="observerships"><?php echo display_observerships_profile($observerships); ?></div>
 			</div>
 			<div class="subsection" >
 				<h4>Student-Run Electives</h4>

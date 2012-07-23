@@ -2093,6 +2093,50 @@ function clerkship_fetch_specific_school($schools_id) {
 }
 
 /**
+ * Function will return an array containing past and current clerkship schedule or false if neither are found.
+ * @param $user_id
+ * @return array() or bool
+ */
+function clerkship_fetch_schedule($user_id) {
+	global $db;
+	
+	$query				= "	SELECT *
+							FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+							LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+							ON b.`event_id` = a.`event_id`
+							LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
+							ON c.`region_id` = a.`region_id`
+							WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00", time()))."
+							AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
+							AND b.`econtact_type` = 'student'
+							AND b.`etype_id` = ".$db->qstr($user_id)."
+							ORDER BY a.`event_start` ASC";
+	$clerkship_schedule	= $db->GetAll($query);
+	
+	$query						= "	SELECT *
+									FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+									LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+									ON b.`event_id` = a.`event_id`
+									LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
+									ON c.`region_id` = a.`region_id`
+									WHERE a.`event_finish` <= ".$db->qstr(strtotime("00:00:00", time()))."
+									AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
+									AND b.`econtact_type` = 'student'
+									AND b.`etype_id` = ".$db->qstr($user_id)."
+									ORDER BY a.`event_start` ASC";
+	$clerkship_past_schedule	= $db->GetAll($query);
+
+	if ($clerkship_schedule || $clerkship_past_schedule) {
+		$schedules["present"]	= $clerkship_schedule;
+		$schedules["past"]		= $clerkship_past_schedule;
+		return $schedules;
+	} else {
+		return false;
+	}
+}
+
+
+/**
  * This function will load users module preferences into a session from the database table.
  * It also returns the preferences as an array, so they can be later compared to see if a
  * preferences_update() is required.

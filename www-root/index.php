@@ -371,6 +371,9 @@ if ($ACTION == "login") {
 if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
 	if (isset($PATH_SEPARATED[1])) {
 		switch ($PATH_SEPARATED[1]) {
+			case "confirm_observership" :
+				$MODULE = "confirm_observership";
+			break;
 			case "privacy_policy" :
 				$MODULE = "privacy_policy";
 			break;
@@ -476,6 +479,9 @@ define("PARENT_INCLUDED", true);
 require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/public/header.tpl.php");
 
 switch ($MODULE) {
+	case "confirm_observership" :
+		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR."confirm_observership.inc.php");
+	break;
 	case "privacy_policy" :
 		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR."privacy_policy.inc.php");
 	break;

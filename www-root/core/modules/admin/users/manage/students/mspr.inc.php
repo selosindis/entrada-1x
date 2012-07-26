@@ -758,6 +758,187 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 				<div id="external_awards"><?php echo display_external_awards($external_awards,"admin"); ?></div>
 			</div>
 		</div>
+		
+		
+		<div class="section">
+			<h3 title="Observerships Section" class="collapsable collapsed">Observerships</h3>
+			<div id="observerships-section">
+				<div id="add_observership_link" style="float: right;">
+					<ul class="page-action">
+						<li><a id="add_observership" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Observership</a></li>
+					</ul>
+				</div>
+				<div class="clear">&nbsp;</div>
+				<div id="update-observership-box" class="modal-confirmation" style="width: 60em; height: 60ex;">
+					<h1>Edit Observership</h1>
+					<form method="post" name="edit_observership_form">
+						<table class="mspr_form">
+							<colgroup>
+								<col width="35%"></col>
+								<col width="65%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><label class="form-required" for="title">Title/Discipline:</label></td>
+		 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine Observership</span></td>
+								</tr>
+								<tr>
+									<td><label class="form-required" for="site">Site:</label></td>
+									<td><input name="site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="location">Location:</label></td>
+									<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_proxy_id">Faculty Preceptor:</label></td>
+									<td>
+										<select name="preceptor_proxy_id">
+										<?php
+											echo build_option(0,"Non-Faculty");
+											echo build_option(-1,"Various");
+											foreach ($faculty as $faculty_member) {
+												echo build_option($faculty_member->getID(), $faculty_member->getLastname().", ".$faculty_member->getFirstname());
+											}
+										?>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_prefix">Non-Faculty Preceptor Prefix:</label></td>
+									<td>
+										<select style="width: 55px; vertical-align: middle; margin-right: 5px" name="preceptor_prefix" id="prefix">
+											<option selected="selected" value=""></option>
+											<option value="Dr.">Dr.</option>
+											<option value="Mr.">Mr.</option>
+											<option value="Mrs.">Mrs.</option>
+											<option value="Ms.">Ms.</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
+									<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getFirstname(); ?></span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Last Name:</label></td>
+									<td><input name="preceptor_lastname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getLastname(); ?></span></td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_email">Non-Faculty Preceptor Email Address:</label></td>
+									<td><input name="preceptor_email"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getEmail(); ?></span></td>
+								</tr>
+								<tr>
+									<td><label class="form-required" for="start">Start Date:</label></td>
+									<td>
+										<input type="text" name="start" id="observership_edit_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="end">End Date:</label></td>
+									<td>
+										<input type="text" name="end" id="observership_edit_end"></input>
+									</td>
+								</tr>
+							</tbody>
+						
+						</table>
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+					</div>
+					
+				</div>
+				
+				<div id="add-observership-box" class="modal-confirmation" style="width: 60em; height: 55ex;">
+					<h1>Add Observership</h1>
+					<form method="post" name="add_observership_form">
+						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
+						<input type="hidden" name="action" value="Add"></input>
+						<table class="mspr_form">
+							<colgroup>
+								<col width="35%"></col>
+								<col width="65%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><label class="form-required" for="title">Title/Discipline:</label></td>
+		 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine Observership</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="site">Site:</label></td>
+									<td><input name="site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-required" for="location">Location:</label></td>
+									<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_proxy_id">Faculty Preceptor:</label></td>
+									<td>
+										<select name="preceptor_proxy_id">
+										<?php
+											echo build_option(0,"Non-Faculty");
+											echo build_option(-1,"Various");
+											foreach ($faculty as $faculty_member) {
+												echo build_option($faculty_member->getID(), $faculty_member->getLastname().", ".$faculty_member->getFirstname());
+											}
+										?>
+										</select>
+									</td>
+								</tr>	
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_prefix">Non-Faculty Preceptor Prefix:</label></td>
+									<td>
+										<select style="width: 55px; vertical-align: middle; margin-right: 5px" name="preceptor_prefix" id="prefix">
+											<option selected="selected" value=""></option>
+											<option value="Dr.">Dr.</option>
+											<option value="Mr.">Mr.</option>
+											<option value="Mrs.">Mrs.</option>
+											<option value="Ms.">Ms.</option>
+										</select>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
+									<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getPrefix()." ".$user->getFirstname(); ?></span></td>
+								</tr>	
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Last Name:</label></td>
+									<td><input name="preceptor_lastname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getLastname(); ?></span></td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Email Address:</label></td>
+									<td><input name="preceptor_email"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getEmail(); ?></span></td>
+								</tr>
+								<tr>
+									<td><label class="form-required" for="start">Start Date:</label></td>
+									<td>
+										<input type="text" name="start" id="observership_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
+									</td>
+								</tr>
+								<tr>
+									<td><label class="form-nrequired" for="end">End Date:</label></td>
+									<td>
+										<input type="text" name="end" id="observership_end"></input>
+									</td>
+								</tr>
+							</tbody>
+						
+						</table>
+					</form>
+					
+					<div class="footer">
+						<button class="left modal-close"">Close</button>
+						<button class="right modal-confirm">Submit</button>
+					</div>
+					
+				</div>
+				<div id="observerships"><?php echo display_observerships($observerships,"admin"); ?></div>
+			</div>
+		</div>		
 	</div>
 
 	<h2 title="Required Information Section">Information Requiring Entry</h2>
@@ -1092,177 +1273,6 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			</div>
 		</div>
 		
-		<div class="section">
-			<h3 title="Observerships Section" class="collapsable collapsed">Observerships</h3>
-			<div id="observerships-section">
-				<div id="add_observership_link" style="float: right;">
-					<ul class="page-action">
-						<li><a id="add_observership" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Observership</a></li>
-					</ul>
-				</div>
-				<div class="clear">&nbsp;</div>
-				<div id="update-observership-box" class="modal-confirmation" style="width: 60em; height: 50ex;">
-					<h1>Edit Observership</h1>
-					<form method="post" name="edit_observership_form">
-						<table class="mspr_form">
-							<colgroup>
-								<col width="35%"></col>
-								<col width="65%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-									<td><label class="form-required" for="title">Title/Discipline:</label></td>
-		 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine Observership</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="site">Site:</label></td>
-									<td><input name="site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="location">Location:</label></td>
-									<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
-								</tr>
-								<tr>
-									<td><label class="form-nrequired" for="preceptor_proxy_id">Faculty Preceptor:</label></td>
-									<td>
-										<select name="preceptor_proxy_id">
-										<?php
-											echo build_option(0,"Non-Faculty");
-											echo build_option(-1,"Various");
-											foreach ($faculty as $faculty_member) {
-												echo build_option($faculty_member->getID(), $faculty_member->getLastname().", ".$faculty_member->getFirstname());
-											}
-										?>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td><label class="form-nrequired" for="preceptor_prefix">Non-Faculty Preceptor Prefix:</label></td>
-									<td>
-										<select style="width: 55px; vertical-align: middle; margin-right: 5px" name="preceptor_prefix" id="prefix">
-											<option selected="selected" value=""></option>
-											<option value="Dr.">Dr.</option>
-											<option value="Mr.">Mr.</option>
-											<option value="Mrs.">Mrs.</option>
-											<option value="Ms.">Ms.</option>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
-									<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getFirstname(); ?></span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Last Name:</label></td>
-									<td><input name="preceptor_lastname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getLastname(); ?></span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="start">Start Date:</label></td>
-									<td>
-										<input type="text" name="start" id="observership_edit_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
-									</td>
-								</tr>
-								<tr>
-									<td><label class="form-nrequired" for="end">End Date:</label></td>
-									<td>
-										<input type="text" name="end" id="observership_edit_end"></input>
-									</td>
-								</tr>
-							</tbody>
-						
-						</table>
-					</form>
-					
-					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
-					</div>
-					
-				</div>
-				
-				<div id="add-observership-box" class="modal-confirmation" style="width: 60em; height: 50ex;">
-					<h1>Add Observership</h1>
-					<form method="post" name="add_observership_form">
-						<input type="hidden" name="user_id" value="<?php echo $user->getID(); ?>"></input>
-						<input type="hidden" name="action" value="Add"></input>
-						<table class="mspr_form">
-							<colgroup>
-								<col width="35%"></col>
-								<col width="65%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-									<td><label class="form-required" for="title">Title/Discipline:</label></td>
-		 							<td><input name="title"></input> <span class="content-small"><strong>Example:</strong> Family Medicine Observership</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="site">Site:</label></td>
-									<td><input name="site"></input> <span class="content-small"><strong>Example:</strong> Kingston General Hospital</span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="location">Location:</label></td>
-									<td><input name="location" value="Kingston, ON"></input> <span class="content-small"><strong>Example:</strong> Kingston, ON</span></td>
-								</tr>
-								<tr>
-									<td><label class="form-nrequired" for="preceptor_proxy_id">Faculty Preceptor:</label></td>
-									<td>
-										<select name="preceptor_proxy_id">
-										<?php
-											echo build_option(0,"Non-Faculty");
-											echo build_option(-1,"Various");
-											foreach ($faculty as $faculty_member) {
-												echo build_option($faculty_member->getID(), $faculty_member->getLastname().", ".$faculty_member->getFirstname());
-											}
-										?>
-										</select>
-									</td>
-								</tr>	
-								<tr>
-									<td><label class="form-nrequired" for="preceptor_prefix">Non-Faculty Preceptor Prefix:</label></td>
-									<td>
-										<select style="width: 55px; vertical-align: middle; margin-right: 5px" name="preceptor_prefix" id="prefix">
-											<option selected="selected" value=""></option>
-											<option value="Dr.">Dr.</option>
-											<option value="Mr.">Mr.</option>
-											<option value="Mrs.">Mrs.</option>
-											<option value="Ms.">Ms.</option>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td><label class="form-nrequired" for="preceptor_firstname">Non-Faculty Preceptor First Name:</label></td>
-									<td><input name="preceptor_firstname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getPrefix()." ".$user->getFirstname(); ?></span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-nrequired" for="preceptor_lastname">Non-Faculty Preceptor Last Name:</label></td>
-									<td><input name="preceptor_lastname"></input><span class="content-small"> <strong>Example:</strong> <?php echo $user->getLastname(); ?></span></td>
-								</tr>	
-								<tr>
-									<td><label class="form-required" for="start">Start Date:</label></td>
-									<td>
-										<input type="text" name="start" id="observership_start"></input> <span class="content-small"><strong>Format:</strong> yyyy-mm-dd</span>
-									</td>
-								</tr>
-								<tr>
-									<td><label class="form-nrequired" for="end">End Date:</label></td>
-									<td>
-										<input type="text" name="end" id="observership_end"></input>
-									</td>
-								</tr>
-							</tbody>
-						
-						</table>
-					</form>
-					
-					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Submit</button>
-					</div>
-					
-				</div>
-				<div id="observerships"><?php echo display_observerships($observerships,"admin"); ?></div>
-			</div>
-		</div>
 		
 		<div class="section">
 

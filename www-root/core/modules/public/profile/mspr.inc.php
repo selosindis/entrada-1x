@@ -751,10 +751,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			</div>
 		</div>
 	</div>
-	
-<!-- OBSERVERSHIP CHANGES START -->
-
-<div class="section">
+	<div class="section">
 			<h3 title="Observerships Section" class="collapsable collapsed">Observerships</h3>
 			<div id="observerships-section">
 				<?php if (clerkship_fetch_schedule($ENTRADA_USER->getID()) == false) { ?>
@@ -988,9 +985,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 				clog(e);
 			}
 		});
-	</script>
-<!-- OBSERVERSHIP CHANGES END -->	
-	
+	</script>	
 	<h2 title="Supplied Information Section" class="collapsed">Information Supplied by Staff and Faculty</h2>
 	<div id="supplied-information-section">
 		<div class="instructions">

@@ -2415,7 +2415,7 @@ CREATE TABLE IF NOT EXISTS `event_objectives` (
 
 CREATE TABLE IF NOT EXISTS `attached_quizzes` (
   `aquiz_id` int(12) NOT NULL AUTO_INCREMENT,
-  `content_type` enum('event','community_page') NOT NULL DEFAULT 'event',
+  `content_type` enum('event','community_page', 'assessment') NOT NULL DEFAULT 'event',
   `content_id` int(12) NOT NULL DEFAULT '0',
   `required` int(1) NOT NULL DEFAULT '0',
   `require_attendance` INT NOT NULL DEFAULT '0',

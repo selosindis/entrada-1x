@@ -164,7 +164,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	} else {
 		$ERROR++;
 		$ERRORSTR[] = "You must provide a valid <strong>User ID</strong> to view.";
-		$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE.DIRECTORY_SEPARATOR.$SECTION."\\'', 15000)";
+		$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."/".$SECTION."\\'', 15000)";
 
 		echo display_error();
 	}

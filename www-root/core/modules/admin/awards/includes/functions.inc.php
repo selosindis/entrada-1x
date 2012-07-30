@@ -260,7 +260,7 @@ function process_manage_award_details() {
 
 function process_awards_admin() {
 	if (isset($_POST['action'])) {
-				$action = $_POST['action'];
+			$action = $_POST['action'];
 						
 			switch($action) {
 				

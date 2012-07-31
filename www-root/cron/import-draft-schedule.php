@@ -281,8 +281,6 @@ if ($drafts) {
 				}
 				
 				$mail->send();
-			} else {
-				$errors[] = "<pre>no draft creators...</pre>";
 			}
 			
 			// delete the draft creators

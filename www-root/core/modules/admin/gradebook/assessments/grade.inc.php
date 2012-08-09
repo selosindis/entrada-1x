@@ -59,9 +59,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => "Grading Assessment");
 
-			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`, `assessment_marking_schemes`.`description` as `marking_scheme_description`
+			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`, `assessment_marking_schemes`.`description` as `marking_scheme_description`, `assessments_lu_meta`.`type` as `assessment_type`
 						FROM `assessments`
 						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
+						LEFT JOIN `assessments_lu_meta` ON `assessments_lu_meta`.`id` = `assessments`.`characteristic_id`
 						WHERE `assessments`.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
 			$assessment = $db->GetRow($query);
 			if ($assessment) {
@@ -191,8 +192,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						</div>
 						<form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
 							<input type="file" name ="file"/><br /><br />
-							<input type="submit" value ="Import CSV"/>
+							<input type="submit" value="Import CSV"/>
 						</form>
+						<br /><br /><br />
+						<?php 
+						if ($assessment["assessment_type"] == "quiz") { 
+							$query = "	SELECT * 
+										FROM `attached_quizzes` 
+										WHERE `content_type` = 'assessment' 
+										AND `content_id` = ".$db->qstr($ASSESSMENT_ID);
+							if ($results = $db->GetRow($query)) {
+							?>
+						<h3>Import from attached quiz:</h3>
+						<div id="display-notice-box" class="display-notice" style="width:408px;">
+							<ul>
+							<li><strong>Important Notes:</strong><br />
+								This will import the results from the quiz <strong><?php echo $results["quiz_title"]; ?></strong>. Any existing grades will be overwritten during importation. Only students who have completed the quiz will be graded.</li>
+							</ul>
+						</div>
+						<form action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "import-quiz", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
+							<input type="hidden" name="course_id" value="<?php echo $assessment["course_id"]; ?>" />
+							<input type="hidden" name="assessment_id" value="<?php echo $assessment["assessment_id"]; ?>" />
+							<input type="submit" value="Import Quiz" />
+						</form>
+						<?php 
+							}
+						} ?>
 					</div>
 					<script type="text/javascript">
 						jQuery(document).ready(function(){

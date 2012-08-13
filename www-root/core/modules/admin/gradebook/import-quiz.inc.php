@@ -48,7 +48,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	
 	echo "<h1>Import Quiz results into Gradebook Assessment</h1>";
 		
-	// fetch the quiz attached to the assessment
+	/*
+	 *  fetch the quiz attached to the assessment
+	 */
 	$query = "	SELECT * 
 				FROM `attached_quizzes` 
 				WHERE `content_type` = 'assessment' 
@@ -58,7 +60,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		
 		echo "<h2>Importing ".$aquiz["quiz_title"]."</h2>";
 		
-		// fetch the proxy_ids for the assessment
+		/*
+		 *  fetch the proxy_ids for the assessment
+		 */
 		$query = "	SELECT a.`assessment_id`, a.`name`, GROUP_CONCAT(b.`proxy_id` SEPARATOR ',') AS `group_members`, a.`grade_threshold`
 					FROM `assessments` AS a
 					LEFT JOIN `group_members` AS b
@@ -69,21 +73,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			
 			$audience_members = explode(",", $assessment["group_members"]);
 
-			// fetch the existing assessment grades
+			/*
+			 *  fetch the existing assessment grades
+			 */
 			$query = "	SELECT `proxy_id`, `grade_id`, `value` 
 						FROM `assessment_grades` 
 						WHERE `assessment_id` = ".$db->qstr($assessment_id)." 
 						AND `proxy_id` IN (".$assessment["group_members"].")";
 			$grades = $db->GetAssoc($query);
 			
-			// fetch the attached quiz responses
+			/*
+			 *  fetch the attached quiz responses
+			 */
 			$query = "	SELECT a.`proxy_id`, a.* 
 						FROM `quiz_progress` AS a
 						WHERE a.`quiz_id` = ".$db->qstr($aquiz["quiz_id"])."
 						AND a.`progress_value` = 'complete'
-						AND a.`proxy_id` IN (".$assessment["group_members"].")";
+						AND a.`proxy_id` IN (".$assessment["group_members"].")
+						ORDER BY a.`updated_date` DESC";
 			$responses = $db->GetAssoc($query);
-
+			
 			if ($responses) {
 				
 				foreach ($audience_members as $member) {

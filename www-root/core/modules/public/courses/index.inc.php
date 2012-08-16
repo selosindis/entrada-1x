@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * This file displays the list of objectives pulled 
+ * This file displays the list of objectives pulled
  * from the entrada.global_lu_objectives table.
  *
  * @author Organisation: Queen's University
@@ -63,7 +63,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			$sidebar_html .= "<li class=\"off\"><a href=\"".$admin_url."\">".html_encode($admin_wording)."</a></li>\n";
 		}
 		$sidebar_html .= "</ul>\n";
-	
+
 		new_sidebar_item("Display Style", $sidebar_html, "display-style", "open");
 	}
 	if(!$ORGANISATION_ID){
@@ -75,13 +75,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		else
 			$ORGANISATION_ID	= $_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["organisation_id"];
 	}
-	
+
 	$COURSE_LIST = array();
 
-	$results = courses_fetch_courses(true, false);
+	$results = courses_fetch_courses(true, true);
 	if ($results) {
 		foreach ($results as $result) {
-			$COURSE_LIST[$result["course_id"]] = html_encode($result["course_name"].(($result["course_code"]) ? ": ".$result["course_code"] : ""));
+			$COURSE_LIST[$result["course_id"]] = html_encode(($result["course_code"] ? $result["course_code"] . ": " : "") . $result["course_name"]);
 		}
 	}
 
@@ -99,7 +99,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			exit;
 		}
 
-		$query = "	SELECT * FROM `courses` 
+		$query = "	SELECT * FROM `courses`
 					WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 					AND `course_active` = '1'";
 		$course_details	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
@@ -362,7 +362,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								if ($result["objective_name"]) {
 									echo "<li><a id=\"objective-".$result["objective_id"]."-details\" style=\"text-decoration: none;\" href=\"".ENTRADA_URL."/courses/objectives?section=objective-details&api=true&oid=".$result["objective_id"]."&cid=".$COURSE_ID."\">".$result["objective_name"]."</a></li>\n";
 								}
-							
+
 							}
 							$HEAD[] = "
 								});

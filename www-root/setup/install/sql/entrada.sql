@@ -2415,7 +2415,7 @@ CREATE TABLE IF NOT EXISTS `event_objectives` (
 
 CREATE TABLE IF NOT EXISTS `attached_quizzes` (
   `aquiz_id` int(12) NOT NULL AUTO_INCREMENT,
-  `content_type` enum('event','community_page') NOT NULL DEFAULT 'event',
+  `content_type` enum('event','community_page', 'assessment') NOT NULL DEFAULT 'event',
   `content_id` int(12) NOT NULL DEFAULT '0',
   `required` int(1) NOT NULL DEFAULT '0',
   `require_attendance` INT NOT NULL DEFAULT '0',
@@ -3981,19 +3981,23 @@ CREATE TABLE IF NOT EXISTS `student_mspr_class` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_observerships` (
-  `id` int(11) NOT NULL auto_increment,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
   `student_id` int(11) NOT NULL,
   `title` varchar(256) NOT NULL,
   `location` varchar(256) NOT NULL,
   `site` varchar(256) NOT NULL,
   `start` int(11) NOT NULL,
-  `end` int(11) default NULL,
-  `preceptor_firstname` varchar(256) default NULL,
-  `preceptor_lastname` varchar(256) default NULL,
-  `preceptor_proxy_id` int(12) unsigned default NULL,
-  `preceptor_prefix` varchar(4) default NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  `end` int(11) DEFAULT NULL,
+  `preceptor_prefix` varchar(4) DEFAULT NULL,
+  `preceptor_firstname` varchar(256) DEFAULT NULL,
+  `preceptor_lastname` varchar(256) DEFAULT NULL,
+  `preceptor_proxy_id` int(12) unsigned DEFAULT NULL,
+  `preceptor_email` varchar(255) DEFAULT NULL,
+  `status` enum('UNCONFIRMED','CONFIRMED','REJECTED') NOT NULL DEFAULT 'UNCONFIRMED',
+  `unique_id` varchar(64) DEFAULT NULL,
+  `notice_sent` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_research` (
   `id` int(11) NOT NULL auto_increment,

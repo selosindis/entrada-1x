@@ -59,6 +59,9 @@ class AuthSystem {
 		if (($url != "") && ($url_parsed = @parse_url($url))) {
 			$this->connection["url"] = $url_parsed["host"];
 			$this->connection["uri"] = $url_parsed["path"];
+			if (isset($url_parsed["port"]) && $url_parsed["port"]) {
+				$this->connection["port"] = $url_parsed["port"];
+			}
 
 			if ((isset($url_parsed["scheme"])) && ($url_parsed["scheme"] == "https")) {
 				$this->connection["protocol"] = "https";

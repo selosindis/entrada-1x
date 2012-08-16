@@ -13,3 +13,4 @@
 00,10,20,30,40,50 * * * * /usr/bin/php -f ENTRADA_ABSOLUTE/cron/send-queued-notifications.php > /dev/null 2>&1
 59 23 * * 0 /usr/bin/php -f ENTRADA_ABSOLUTE/cron/import-draft-schedule.php > /dev/null 2>&1
 59 23 * * * /usr/bin/php -f ENTRADA_ABSOLUTE/cron/check_grade_thresholds.php > /dev/null 2>&1
+59 23 * * * /usr/bin/php -f ENTRADA_ABSOLUTE/cron/observership-confirmations.php > /dev/null 2>&1

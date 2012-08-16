@@ -546,6 +546,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		$sidebar_html .= "<a href=\"".ENTRADA_URL."/courses/objectives\">View <strong>Curriculum Map</strong></a>\n";
 
 		new_sidebar_item("Our Curriculum", $sidebar_html, "curriculum-search-bar", "open");
+		if ($COURSE_LIST) {
 		?>
 		<div style="text-align: right">
 			<form>
@@ -563,15 +564,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			</form>
 		</div>
 		<?php
-
+		}
 		$query	= "SELECT * FROM `curriculum_lu_types` WHERE `curriculum_type_active` = '1' ORDER BY `curriculum_type_order` ASC";
 		$terms	= $db->GetAll($query);
+		$course_flag = false;
 		if ($terms) {
 			echo "<h2>". $module_singular_name . " Listing</h2>\n";
 			echo "<ol class=\"curriculum-layout\">\n";
 			foreach ($terms as $term) {
 				$courses = courses_fetch_courses(true, true, $term["curriculum_type_id"]);
 				if ($courses) {
+					$course_flag = true;
 					echo "<li><h3>".html_encode($term["curriculum_type_name"])."</h3>\n";
 					echo "	<ul class=\"course-list\">\n";
 					foreach ($courses as $course) {
@@ -582,6 +585,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				}
 			}
 			echo "</ol>\n";
+		}
+		if (!$course_flag) {
+			echo display_notice(array("There are no courses to display."));
 		}
 	}
 }

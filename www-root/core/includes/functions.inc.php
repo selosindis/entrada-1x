@@ -308,11 +308,17 @@ function load_system_navigator() {
 						WHERE (a.`allow_member_view` = '1')
 						OR (c.`member_acl` = '1')";
 			$cpage_ids = $db->GetAll($query);
-			foreach ($cpage_ids as $page_id) {
-				$community_pages[] = $page_id["cpage_id"];
+			
+			if ($cpage_ids) { 
+				foreach ($cpage_ids as $page_id) {
+					$community_pages[] = $page_id["cpage_id"];
+				}
 			}
-			foreach ($community_pages as $key => $page_id) {
-				$page_ids[] = $page_id;
+			
+			if ($community_pages) {
+				foreach ($community_pages as $key => $page_id) {
+					$page_ids[] = $page_id;
+				}
 			}
 
 			if(@count($community_ids)) {
@@ -2091,6 +2097,50 @@ function clerkship_fetch_specific_school($schools_id) {
 
 	return false;
 }
+
+/**
+ * Function will return an array containing past and current clerkship schedule or false if neither are found.
+ * @param $user_id
+ * @return array() or bool
+ */
+function clerkship_fetch_schedule($user_id) {
+	global $db;
+	
+	$query				= "	SELECT *
+							FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+							LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+							ON b.`event_id` = a.`event_id`
+							LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
+							ON c.`region_id` = a.`region_id`
+							WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00", time()))."
+							AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
+							AND b.`econtact_type` = 'student'
+							AND b.`etype_id` = ".$db->qstr($user_id)."
+							ORDER BY a.`event_start` ASC";
+	$clerkship_schedule	= $db->GetAll($query);
+	
+	$query						= "	SELECT *
+									FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+									LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+									ON b.`event_id` = a.`event_id`
+									LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
+									ON c.`region_id` = a.`region_id`
+									WHERE a.`event_finish` <= ".$db->qstr(strtotime("00:00:00", time()))."
+									AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
+									AND b.`econtact_type` = 'student'
+									AND b.`etype_id` = ".$db->qstr($user_id)."
+									ORDER BY a.`event_start` ASC";
+	$clerkship_past_schedule	= $db->GetAll($query);
+
+	if ($clerkship_schedule || $clerkship_past_schedule) {
+		$schedules["present"]	= $clerkship_schedule;
+		$schedules["past"]		= $clerkship_past_schedule;
+		return $schedules;
+	} else {
+		return false;
+	}
+}
+
 
 /**
  * This function will load users module preferences into a session from the database table.
@@ -8791,19 +8841,19 @@ function courses_subnavigation($course_details, $tab="details") {
 	echo "<div class=\"no-printing\">\n";
     echo "    <ul class=\"nav nav-tabs\">\n";
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-        echo "<li".($tab=="groups"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit " . $module_singular_name . " Groups</a></li>\n";
+        echo "<li".($tab=="groups"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">" . $module_singular_name . " Groups</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-        echo "<li".($tab=="details"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit  " . $module_singular_name . " Details</a></li>\n";
+        echo "<li".($tab=="details"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">" . $module_singular_name . " Details</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-        echo "<li".($tab=="content"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px;\">Manage  " . $module_singular_name . " Content</a></li>\n";
+        echo "<li".($tab=="content"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px;\">" . $module_singular_name . " Content</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-        echo "<li".($tab=="gradebook"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\" style=\"font-size: 10px;\">Manage  " . $module_singular_name . " Gradebook</a></li>";
+        echo "<li".($tab=="gradebook"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\" style=\"font-size: 10px;\">" . $module_singular_name . " Gradebook</a></li>";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-		echo "<li".($tab=="enrolment"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Edit " . $module_singular_name . " Enrolment</a></li>\n";
+		echo "<li".($tab=="enrolment"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">" . $module_singular_name . " Enrolment</a></li>\n";
 	}
 	echo "	</ul>\n";
 

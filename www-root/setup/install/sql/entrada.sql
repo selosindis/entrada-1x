@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS `ar_book_chapter_mono` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`book_chapter_mono_id`)
+  PRIMARY KEY (`book_chapter_mono_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_clinical_activity` (
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS `ar_clinical_activity` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`clinical_activity_id`)
+  PRIMARY KEY (`clinical_activity_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_clinical_education` (
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS `ar_clinical_education` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`clinical_education_id`)
+  PRIMARY KEY (`clinical_education_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_clinical_innovation` (
@@ -60,7 +60,7 @@ CREATE TABLE IF NOT EXISTS `ar_clinical_innovation` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`clinical_innovation_id`)
+  PRIMARY KEY (`clinical_innovation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_clinics` (
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS `ar_clinics` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`clinics_id`)
+  PRIMARY KEY (`clinics_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_conference_papers` (
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS `ar_conference_papers` (
   `proxy_id` int(11) default NULL,
   `updated_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) default NULL,
-  PRIMARY KEY  (`conference_papers_id`)
+  PRIMARY KEY (`conference_papers_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_consults` (
@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS `ar_consults` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`consults_id`)
+  PRIMARY KEY (`consults_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_continuing_education` (
@@ -124,7 +124,7 @@ CREATE TABLE IF NOT EXISTS `ar_continuing_education` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`continuing_education_id`)
+  PRIMARY KEY (`continuing_education_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_external_contributions` (
@@ -142,7 +142,7 @@ CREATE TABLE IF NOT EXISTS `ar_external_contributions` (
   `proxy_id` int(11) default NULL,
   `updated_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) default NULL,
-  PRIMARY KEY  (`external_contributions_id`)
+  PRIMARY KEY (`external_contributions_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_graduate_supervision` (
@@ -158,7 +158,7 @@ CREATE TABLE IF NOT EXISTS `ar_graduate_supervision` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`graduate_supervision_id`)
+  PRIMARY KEY (`graduate_supervision_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_graduate_teaching` (
@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS `ar_graduate_teaching` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`graduate_teaching_id`)
+  PRIMARY KEY (`graduate_teaching_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_innovation` (
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS `ar_innovation` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`innovation_id`)
+  PRIMARY KEY (`innovation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_internal_contributions` (
@@ -216,13 +216,13 @@ CREATE TABLE IF NOT EXISTS `ar_internal_contributions` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`internal_contributions_id`)
+  PRIMARY KEY (`internal_contributions_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_lu_activity_types` (
   `id` int(11) NOT NULL auto_increment,
   `activity_type` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_activity_types` (`id`, `activity_type`) VALUES
@@ -234,7 +234,7 @@ INSERT INTO `ar_lu_activity_types` (`id`, `activity_type`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_clinical_locations` (
   `id` int(11) NOT NULL auto_increment,
   `clinical_location` varchar(50) DEFAULT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_clinical_locations` (`id`, `clinical_location`) VALUES
@@ -246,7 +246,7 @@ INSERT INTO `ar_lu_clinical_locations` (`id`, `clinical_location`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_conference_paper_types` (
   `id` int(11) NOT NULL auto_increment,
   `conference_paper_type` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_conference_paper_types` (`id`, `conference_paper_type`) VALUES
@@ -256,7 +256,7 @@ INSERT INTO `ar_lu_conference_paper_types` (`id`, `conference_paper_type`) VALUE
 CREATE TABLE IF NOT EXISTS `ar_lu_consult_locations` (
   `id` int(11) NOT NULL auto_increment,
   `consult_location` varchar(50) NOT NULL DEFAULT '',
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_consult_locations` (`id`, `consult_location`) VALUES
@@ -268,7 +268,7 @@ INSERT INTO `ar_lu_consult_locations` (`id`, `consult_location`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_contribution_roles` (
   `id` int(11) NOT NULL auto_increment,
   `contribution_role` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_contribution_roles` (`id`, `contribution_role`) VALUES
@@ -293,7 +293,7 @@ INSERT INTO `ar_lu_contribution_roles` (`id`, `contribution_role`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_contribution_types` (
   `id` int(11) NOT NULL auto_increment,
   `contribution_type` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_contribution_types` (`id`, `contribution_type`) VALUES
@@ -336,7 +336,7 @@ INSERT INTO `ar_lu_degree_types` (`id`, `degree_type`, `visible`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_education_locations` (
   `id` int(11) NOT NULL auto_increment,
   `education_location` varchar(50) NOT NULL DEFAULT '',
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_education_locations` (`id`, `education_location`) VALUES
@@ -348,7 +348,7 @@ INSERT INTO `ar_lu_education_locations` (`id`, `education_location`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_focus_groups` (
   `group_id` int(11) NOT NULL auto_increment,
   `focus_group` varchar(100) NOT NULL DEFAULT '',
-  PRIMARY KEY  (`group_id`),
+  PRIMARY KEY (`group_id`),
   KEY `focus_group` (`focus_group`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -380,7 +380,7 @@ INSERT INTO `ar_lu_focus_groups` (`group_id`, `focus_group`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_hospital_location` (
   `hosp_id` int(11) NOT NULL DEFAULT '0',
   `hosp_desc` varchar(100) NOT NULL DEFAULT '',
-  PRIMARY KEY  (`hosp_id`),
+  PRIMARY KEY (`hosp_id`),
   KEY `hosp_desc` (`hosp_desc`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -392,7 +392,7 @@ INSERT INTO `ar_lu_hospital_location` (`hosp_id`, `hosp_desc`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_innovation_types` (
   `id` int(11) NOT NULL auto_increment,
   `innovation_type` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_innovation_types` (`id`, `innovation_type`) VALUES
@@ -406,7 +406,7 @@ INSERT INTO `ar_lu_innovation_types` (`id`, `innovation_type`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_membership_roles` (
   `id` int(11) NOT NULL auto_increment,
   `membership_role` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_membership_roles` (`id`, `membership_role`) VALUES
@@ -419,7 +419,7 @@ INSERT INTO `ar_lu_membership_roles` (`id`, `membership_role`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_on_call_locations` (
   `id` int(11) NOT NULL auto_increment,
   `on_call_location` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_on_call_locations` (`id`, `on_call_location`) VALUES
@@ -431,7 +431,7 @@ INSERT INTO `ar_lu_on_call_locations` (`id`, `on_call_location`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_other_locations` (
   `id` int(11) NOT NULL auto_increment,
   `other_location` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_other_locations` (`id`, `other_location`) VALUES
@@ -443,7 +443,7 @@ INSERT INTO `ar_lu_other_locations` (`id`, `other_location`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_patent_types` (
   `id` int(11) NOT NULL auto_increment,
   `patent_type` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_patent_types` (`id`, `patent_type`) VALUES
@@ -455,7 +455,7 @@ INSERT INTO `ar_lu_patent_types` (`id`, `patent_type`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_pr_roles` (
   `role_id` int(11) NOT NULL default '0',
   `role_description` varchar(50) NOT NULL default '',
-  PRIMARY KEY  (`role_id`),
+  PRIMARY KEY (`role_id`),
   KEY `role_description` (`role_description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -467,7 +467,7 @@ INSERT INTO `ar_lu_pr_roles` (`role_id`, `role_description`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_prize_categories` (
   `id` int(11) NOT NULL auto_increment,
   `prize_category` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_prize_categories` (`id`, `prize_category`) VALUES
@@ -478,7 +478,7 @@ INSERT INTO `ar_lu_prize_categories` (`id`, `prize_category`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_prize_types` (
   `id` int(11) NOT NULL auto_increment,
   `prize_type` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_prize_types` (`id`, `prize_type`) VALUES
@@ -489,7 +489,7 @@ INSERT INTO `ar_lu_prize_types` (`id`, `prize_type`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_profile_roles` (
   `id` int(11) NOT NULL auto_increment,
   `profile_role` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_profile_roles` (`id`, `profile_role`) VALUES
@@ -500,7 +500,7 @@ INSERT INTO `ar_lu_profile_roles` (`id`, `profile_role`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_publication_statuses` (
   `id` int(11) NOT NULL auto_increment,
   `publication_status` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_publication_statuses` (`id`, `publication_status`) VALUES
@@ -513,7 +513,7 @@ INSERT INTO `ar_lu_publication_statuses` (`id`, `publication_status`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_publication_type` (
   `type_id` int(11) NOT NULL DEFAULT '0',
   `type_description` varchar(50) NOT NULL DEFAULT '',
-  PRIMARY KEY  (`type_id`),
+  PRIMARY KEY (`type_id`),
   KEY `type_description` (`type_description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -533,7 +533,7 @@ INSERT INTO `ar_lu_publication_type` (`type_id`, `type_description`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_research_types` (
   `id` int(11) NOT NULL auto_increment,
   `research_type` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_research_types` (`id`, `research_type`) VALUES
@@ -545,7 +545,7 @@ INSERT INTO `ar_lu_research_types` (`id`, `research_type`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_scholarly_types` (
   `id` int(11) NOT NULL auto_increment,
   `scholarly_type` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_scholarly_types` (`id`, `scholarly_type`) VALUES
@@ -557,7 +557,7 @@ INSERT INTO `ar_lu_scholarly_types` (`id`, `scholarly_type`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_self_education_types` (
   `id` int(11) NOT NULL auto_increment,
   `self_education_type` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_self_education_types` (`id`, `self_education_type`) VALUES
@@ -570,7 +570,7 @@ INSERT INTO `ar_lu_self_education_types` (`id`, `self_education_type`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_supervision_types` (
   `id` int(11) NOT NULL auto_increment,
   `supervision_type` varchar(50) NOT NULL DEFAULT '',
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_supervision_types` (`id`, `supervision_type`) VALUES
@@ -580,7 +580,7 @@ INSERT INTO `ar_lu_supervision_types` (`id`, `supervision_type`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_trainee_levels` (
   `id` int(11) NOT NULL auto_increment,
   `trainee_level` varchar(50) NOT NULL,
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_trainee_levels` (`id`, `trainee_level`) VALUES
@@ -593,7 +593,7 @@ INSERT INTO `ar_lu_trainee_levels` (`id`, `trainee_level`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_undergraduate_supervision_courses` (
   `id` int(11) NOT NULL auto_increment,
   `undergarduate_supervision_course` varchar(50) NOT NULL DEFAULT '',
-  PRIMARY KEY  (`id`)
+  PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `ar_lu_undergraduate_supervision_courses` (`id`, `undergarduate_supervision_course`) VALUES
@@ -634,7 +634,7 @@ CREATE TABLE IF NOT EXISTS `ar_memberships` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`memberships_id`)
+  PRIMARY KEY (`memberships_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_non_peer_reviewed_papers` (
@@ -658,7 +658,7 @@ CREATE TABLE IF NOT EXISTS `ar_non_peer_reviewed_papers` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`non_peer_reviewed_papers_id`)
+  PRIMARY KEY (`non_peer_reviewed_papers_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_on_call` (
@@ -671,7 +671,7 @@ CREATE TABLE IF NOT EXISTS `ar_on_call` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`on_call_id`)
+  PRIMARY KEY (`on_call_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_other` (
@@ -683,7 +683,7 @@ CREATE TABLE IF NOT EXISTS `ar_other` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`other_id`)
+  PRIMARY KEY (`other_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_other_activity` (
@@ -696,7 +696,7 @@ CREATE TABLE IF NOT EXISTS `ar_other_activity` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`other_activity_id`)
+  PRIMARY KEY (`other_activity_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_patent_activity` (
@@ -707,7 +707,7 @@ CREATE TABLE IF NOT EXISTS `ar_patent_activity` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`patent_activity_id`)
+  PRIMARY KEY (`patent_activity_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_peer_reviewed_papers` (
@@ -732,7 +732,7 @@ CREATE TABLE IF NOT EXISTS `ar_peer_reviewed_papers` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`peer_reviewed_papers_id`)
+  PRIMARY KEY (`peer_reviewed_papers_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_poster_reports` (
@@ -757,7 +757,7 @@ CREATE TABLE IF NOT EXISTS `ar_poster_reports` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`poster_reports_id`)
+  PRIMARY KEY (`poster_reports_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_prizes` (
@@ -769,7 +769,7 @@ CREATE TABLE IF NOT EXISTS `ar_prizes` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`prizes_id`)
+  PRIMARY KEY (`prizes_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_procedures` (
@@ -782,7 +782,7 @@ CREATE TABLE IF NOT EXISTS `ar_procedures` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`procedures_id`)
+  PRIMARY KEY (`procedures_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_profile` (
@@ -814,7 +814,7 @@ CREATE TABLE IF NOT EXISTS `ar_profile` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`profile_id`)
+  PRIMARY KEY (`profile_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_research` (
@@ -838,7 +838,7 @@ CREATE TABLE IF NOT EXISTS `ar_research` (
   `proxy_id` int(11) default NULL,
   `updated_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) default NULL,
-  PRIMARY KEY  (`research_id`)
+  PRIMARY KEY (`research_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_scholarly_activity` (
@@ -849,7 +849,7 @@ CREATE TABLE IF NOT EXISTS `ar_scholarly_activity` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`scholarly_activity_id`)
+  PRIMARY KEY (`scholarly_activity_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_self_education` (
@@ -865,7 +865,7 @@ CREATE TABLE IF NOT EXISTS `ar_self_education` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`self_education_id`)
+  PRIMARY KEY (`self_education_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_undergraduate_nonmedical_teaching` (
@@ -888,7 +888,7 @@ CREATE TABLE IF NOT EXISTS `ar_undergraduate_nonmedical_teaching` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`undergraduate_nonmedical_teaching_id`)
+  PRIMARY KEY (`undergraduate_nonmedical_teaching_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_undergraduate_supervision` (
@@ -902,7 +902,7 @@ CREATE TABLE IF NOT EXISTS `ar_undergraduate_supervision` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`undergraduate_supervision_id`)
+  PRIMARY KEY (`undergraduate_supervision_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_undergraduate_teaching` (
@@ -927,8 +927,8 @@ CREATE TABLE IF NOT EXISTS `ar_undergraduate_teaching` (
   `proxy_id` int(11) default NULL,
   `updated_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` varchar(7) NOT NULL default '',
-  PRIMARY KEY  (`undergraduate_teaching_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`undergraduate_teaching_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `ar_ward_supervision` (
   `ward_supervision_id` int(11) NOT NULL auto_increment,
@@ -940,7 +940,7 @@ CREATE TABLE IF NOT EXISTS `ar_ward_supervision` (
   `proxy_id` int(11) DEFAULT NULL,
   `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
-  PRIMARY KEY  (`ward_supervision_id`)
+  PRIMARY KEY (`ward_supervision_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `assessments` (
@@ -1020,7 +1020,7 @@ CREATE TABLE IF NOT EXISTS `assessment_exceptions` (
   `assessment_id` int(12) NOT NULL,
   `proxy_id` int(12) NOT NULL,
   `grade_weighting` int(11) NOT NULL default '0',
-  PRIMARY KEY  (`aexception_id`),
+  PRIMARY KEY (`aexception_id`),
   KEY `proxy_id` (`assessment_id`,`proxy_id`),
   KEY `assessment_id` (`assessment_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -1061,7 +1061,7 @@ CREATE TABLE IF NOT EXISTS `assessment_objectives` (
   PRIMARY KEY (`aobjective_id`),
   KEY `assessment_id` (`assessment_id`),
   KEY `objective_id` (`objective_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `assignments` (
   `assignment_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -1201,7 +1201,7 @@ CREATE TABLE IF NOT EXISTS `communities_categories` (
   `category_keywords` varchar(255) NOT NULL,
   `category_visible` int(1) NOT NULL DEFAULT '1',
   `category_status` int(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`category_id`),
+  PRIMARY KEY (`category_id`),
   KEY `category_parent` (`category_parent`,`category_keywords`),
   KEY `category_status` (`category_status`),
   FULLTEXT KEY `category_description` (`category_description`,`category_keywords`)
@@ -1234,7 +1234,7 @@ CREATE TABLE IF NOT EXISTS `communities_modules` (
   `module_permissions` text NOT NULL,
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`module_id`),
+  PRIMARY KEY (`module_id`),
   KEY `module_shortname` (`module_shortname`),
   KEY `module_active` (`module_active`),
   FULLTEXT KEY `module_title` (`module_title`,`module_description`)
@@ -1270,7 +1270,7 @@ CREATE TABLE IF NOT EXISTS `community_announcements` (
   `announcement_description` text NOT NULL,
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cannouncement_id`),
+  PRIMARY KEY (`cannouncement_id`),
   KEY `community_id` (`community_id`,`proxy_id`,`release_date`,`release_until`,`updated_date`,`updated_by`),
   FULLTEXT KEY `announcement_title` (`announcement_title`,`announcement_description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -1281,7 +1281,7 @@ CREATE TABLE IF NOT EXISTS `community_courses` (
   `course_id` int(12) NOT NULL,
   PRIMARY KEY (`community_course_id`),
   KEY `community_id` (`community_id`,`course_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `community_discussions` (
   `cdiscussion_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -1305,7 +1305,7 @@ CREATE TABLE IF NOT EXISTS `community_discussions` (
   `release_until` bigint(64) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cdiscussion_id`),
+  PRIMARY KEY (`cdiscussion_id`),
   KEY `community_id` (`community_id`,`forum_order`,`allow_member_post`,`allow_member_reply`),
   KEY `release_date` (`release_date`),
   KEY `release_until` (`release_until`),
@@ -1336,7 +1336,7 @@ CREATE TABLE IF NOT EXISTS `community_discussion_topics` (
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
   `notify` int(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cdtopic_id`),
+  PRIMARY KEY (`cdtopic_id`),
   KEY `cdiscussion_parent` (`cdtopic_parent`,`community_id`,`proxy_id`,`updated_date`,`updated_by`),
   KEY `cdiscussion_id` (`cdiscussion_id`),
   KEY `topic_active` (`topic_active`),
@@ -1367,7 +1367,7 @@ CREATE TABLE IF NOT EXISTS `community_events` (
   `event_description` text NOT NULL,
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cevent_id`),
+  PRIMARY KEY (`cevent_id`),
   KEY `community_id` (`community_id`, `cpage_id`, `proxy_id`,`event_start`,`event_finish`,`release_date`,`release_until`,`updated_date`,`updated_by`),
   FULLTEXT KEY `event_title` (`event_title`,`event_description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -1395,7 +1395,7 @@ CREATE TABLE IF NOT EXISTS `community_galleries` (
   `release_until` bigint(64) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cgallery_id`),
+  PRIMARY KEY (`cgallery_id`),
   KEY `community_id` (`community_id`,`gallery_order`,`allow_member_upload`,`allow_member_comment`),
   KEY `release_date` (`release_date`),
   KEY `release_until` (`release_until`),
@@ -1424,7 +1424,7 @@ CREATE TABLE IF NOT EXISTS `community_gallery_comments` (
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
   `notify` int(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cgcomment_id`),
+  PRIMARY KEY (`cgcomment_id`),
   KEY `cgallery_id` (`cgallery_id`,`community_id`,`proxy_id`,`comment_active`,`updated_date`,`updated_by`),
   KEY `cgphoto_id` (`cgphoto_id`),
   KEY `release_date` (`release_date`),
@@ -1447,7 +1447,7 @@ CREATE TABLE IF NOT EXISTS `community_gallery_photos` (
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
   `notify` int(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cgphoto_id`),
+  PRIMARY KEY (`cgphoto_id`),
   KEY `cgallery_id` (`cgallery_id`,`community_id`,`proxy_id`,`photo_filesize`,`updated_date`,`updated_by`),
   KEY `photo_active` (`photo_active`),
   KEY `release_date` (`release_date`,`release_until`),
@@ -1465,7 +1465,7 @@ CREATE TABLE IF NOT EXISTS `community_history` (
   `history_message` text NOT NULL,
   `history_display` int(1) NOT NULL DEFAULT '0',
   `history_timestamp` bigint(64) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`chistory_id`),
+  PRIMARY KEY (`chistory_id`),
   KEY `community_id` (`community_id`,`history_display`),
   KEY `history_timestamp` (`history_timestamp`),
   KEY `cpage_id` (`cpage_id`),
@@ -1477,7 +1477,7 @@ CREATE TABLE IF NOT EXISTS `community_mailing_lists` (
   `community_id` int(12) NOT NULL DEFAULT '0',
   `list_name` varchar(64) NOT NULL,
   `list_type` enum('announcements','discussion','inactive') NOT NULL DEFAULT 'inactive',
-  PRIMARY KEY  (`cmlist_id`),
+  PRIMARY KEY (`cmlist_id`),
   KEY `community_id` (`community_id`,`list_name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -1488,7 +1488,7 @@ CREATE TABLE IF NOT EXISTS `community_mailing_list_members` (
   `email` varchar(64) NOT NULL,
   `member_active` int(1) NOT NULL DEFAULT '0',
   `list_administrator` int(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cmlmember_id`),
+  PRIMARY KEY (`cmlmember_id`),
   UNIQUE KEY `member_id` (`community_id`,`proxy_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -1510,7 +1510,7 @@ CREATE TABLE IF NOT EXISTS `community_modules` (
   `community_id` int(12) NOT NULL DEFAULT '0',
   `module_id` int(12) NOT NULL DEFAULT '0',
   `module_active` int(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cmodule_id`),
+  PRIMARY KEY (`cmodule_id`),
   KEY `community_id` (`community_id`,`module_id`,`module_active`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -1524,7 +1524,7 @@ CREATE TABLE IF NOT EXISTS `community_notifications` (
   `author_id` int(12) NOT NULL DEFAULT '0',
   `body` text NOT NULL,
   `url` varchar(45) NOT NULL,
-  PRIMARY KEY  (`cnotification_id`)
+  PRIMARY KEY (`cnotification_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `community_notify_members` (
@@ -1534,7 +1534,7 @@ CREATE TABLE IF NOT EXISTS `community_notify_members` (
   `community_id` int(12) NOT NULL DEFAULT '0',
   `notify_type` varchar(32) NOT NULL DEFAULT 'announcement',
   `notify_active` int(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cnmember_id`)
+  PRIMARY KEY (`cnmember_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `community_pages` (
@@ -1570,7 +1570,7 @@ CREATE TABLE IF NOT EXISTS `community_page_options` (
   `option_value` int(12) NOT NULL DEFAULT '1',
   `proxy_id` int(12) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cpoption_id`,`community_id`,`cpage_id`),
+  PRIMARY KEY (`cpoption_id`,`community_id`,`cpage_id`),
   KEY `cpage_id` (`cpage_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -1580,7 +1580,7 @@ CREATE TABLE IF NOT EXISTS `community_permissions` (
   `module_id` int(12) NOT NULL DEFAULT '0',
   `action` varchar(64) NOT NULL,
   `level` int(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cpermission_id`),
+  PRIMARY KEY (`cpermission_id`),
   KEY `community_id` (`community_id`,`module_id`,`action`,`level`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -1613,7 +1613,7 @@ CREATE TABLE IF NOT EXISTS `community_polls` (
   `release_until` bigint(64) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cpolls_id`),
+  PRIMARY KEY (`cpolls_id`),
   KEY `community_id` (`community_id`),
   KEY `proxy_id` (`proxy_id`),
   KEY `poll_title` (`poll_title`),
@@ -1631,7 +1631,7 @@ CREATE TABLE IF NOT EXISTS `community_polls_access` (
   `proxy_id` int(12) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cpaccess_id`),
+  PRIMARY KEY (`cpaccess_id`),
   KEY `proxy_id` (`proxy_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -1663,7 +1663,7 @@ CREATE TABLE IF NOT EXISTS `community_polls_responses` (
   `response_index` int(5) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cpresponses_id`),
+  PRIMARY KEY (`cpresponses_id`),
   KEY `cpolls_id` (`cpolls_id`),
   KEY `response_index` (`response_index`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -1674,7 +1674,7 @@ CREATE TABLE IF NOT EXISTS `community_polls_results` (
   `proxy_id` int(12) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cpresults_id`),
+  PRIMARY KEY (`cpresults_id`),
   KEY `proxy_id` (`proxy_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -1701,7 +1701,7 @@ CREATE TABLE IF NOT EXISTS `community_shares` (
   `release_until` bigint(64) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cshare_id`),
+  PRIMARY KEY (`cshare_id`),
   KEY `community_id` (`community_id`,`folder_order`,`allow_member_upload`,`allow_member_comment`),
   KEY `release_date` (`release_date`),
   KEY `release_until` (`release_until`),
@@ -1730,7 +1730,7 @@ CREATE TABLE IF NOT EXISTS `community_share_comments` (
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
   `notify` int(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`cscomment_id`),
+  PRIMARY KEY (`cscomment_id`),
   KEY `cshare_id` (`cshare_id`,`community_id`,`proxy_id`,`comment_active`,`updated_date`,`updated_by`),
   KEY `csfile_id` (`csfile_id`),
   KEY `release_date` (`release_date`),
@@ -1753,7 +1753,7 @@ CREATE TABLE IF NOT EXISTS `community_share_files` (
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
   `notify` int(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`csfile_id`),
+  PRIMARY KEY (`csfile_id`),
   KEY `cshare_id` (`cshare_id`,`community_id`,`proxy_id`,`updated_date`,`updated_by`),
   KEY `file_active` (`file_active`),
   KEY `release_date` (`release_date`,`release_until`),
@@ -1775,7 +1775,7 @@ CREATE TABLE IF NOT EXISTS `community_share_file_versions` (
   `file_active` int(1) NOT NULL DEFAULT '1',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`csfversion_id`),
+  PRIMARY KEY (`csfversion_id`),
   KEY `cshare_id` (`csfile_id`,`cshare_id`,`community_id`,`proxy_id`,`file_version`,`updated_date`,`updated_by`),
   KEY `file_active` (`file_active`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -1815,7 +1815,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `sync_ldap` int(1) NOT NULL DEFAULT '0',
   `notifications` int(1) NOT NULL DEFAULT '1',
   `course_active` int(1) NOT NULL DEFAULT '1',
-  PRIMARY KEY  (`course_id`),
+  PRIMARY KEY (`course_id`),
   KEY `notifications` (`notifications`),
   KEY `pcoord_id` (`pcoord_id`),
   KEY `evalrep_id` (`evalrep_id`),
@@ -1874,7 +1874,7 @@ CREATE TABLE IF NOT EXISTS `course_files` (
   `accesses` int(12) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`id`),
+  PRIMARY KEY (`id`),
   KEY `course_id` (`course_id`),
   KEY `required` (`required`),
   KEY `valid_from` (`valid_from`),
@@ -1918,7 +1918,7 @@ CREATE TABLE IF NOT EXISTS `course_links` (
   `accesses` int(12) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`id`),
+  PRIMARY KEY (`id`),
   KEY `course_id` (`course_id`),
   KEY `required` (`required`),
   KEY `valid_from` (`valid_from`),
@@ -1943,7 +1943,7 @@ CREATE TABLE IF NOT EXISTS `cron_community_notifications` (
   `ccnotification_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `cnotification_id` int(12) NOT NULL,
   `proxy_id` int(12) NOT NULL,
-  PRIMARY KEY  (`ccnotification_id`)
+  PRIMARY KEY (`ccnotification_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `curriculum_lu_types` (
@@ -1956,7 +1956,7 @@ CREATE TABLE IF NOT EXISTS `curriculum_lu_types` (
   `curriculum_level_id` int(12) default NULL,
   `updated_date` bigint(64) unsigned NOT NULL,
   `updated_by` int(12) unsigned NOT NULL,
-  PRIMARY KEY  (`curriculum_type_id`),
+  PRIMARY KEY (`curriculum_type_id`),
   KEY `curriculum_type_order` (`curriculum_type_order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -2010,7 +2010,7 @@ CREATE TABLE IF NOT EXISTS `evaluations_lu_questiontypes` (
   `questiontype_description` text NOT NULL,
   `questiontype_active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`questiontype_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `evaluations_lu_questiontypes` (`questiontype_id`, `questiontype_shortname`, `questiontype_title`, `questiontype_description`, `questiontype_active`) VALUES
 (1, 'matrix_single', 'Choice Matrix (single response)', 'The rating scale allows evaluators to rate each question based on the scale you provide (i.e. 1 = Not Demonstrated, 2 = Needs Improvement, 3 = Satisfactory, 4 = Above Average).', 1),
@@ -2023,7 +2023,7 @@ CREATE TABLE IF NOT EXISTS `evaluations_lu_targets` (
   `target_description` text NOT NULL,
   `target_active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`target_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `evaluations_lu_targets` (`target_id`, `target_shortname`, `target_title`, `target_description`, `target_active`) VALUES
 (1, 'course', 'Course Evaluation', '', 1),
@@ -2134,7 +2134,7 @@ CREATE TABLE IF NOT EXISTS `events` (
   `release_until` bigint(64) NOT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
-  PRIMARY KEY  (`event_id`),
+  PRIMARY KEY (`event_id`),
   KEY `course_id` (`course_id`),
   KEY `region_id` (`region_id`),
   KEY `recurring_id` (`recurring_id`),
@@ -2161,7 +2161,7 @@ CREATE TABLE IF NOT EXISTS `events_lu_topics` (
   `topic_type` enum('ed10','ed11','other') NOT NULL DEFAULT 'other',
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
-  PRIMARY KEY  (`topic_id`)
+  PRIMARY KEY (`topic_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `events_lu_topics` (`topic_id`, `topic_name`, `topic_description`, `topic_type`, `updated_date`, `updated_by`) VALUES
@@ -2215,7 +2215,7 @@ CREATE TABLE IF NOT EXISTS `events_lu_eventtypes` (
   `eventtype_report_calculation` varchar(100) DEFAULT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
-  PRIMARY KEY  (`eventtype_id`),
+  PRIMARY KEY (`eventtype_id`),
   KEY `eventtype_order` (`eventtype_order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -2238,11 +2238,11 @@ CREATE TABLE IF NOT EXISTS `events_lu_objectives` (
   `objective_order` int(12) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
-  PRIMARY KEY  (`objective_id`),
+  PRIMARY KEY (`objective_id`),
   KEY `objective_order` (`objective_order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `events_lu_resources` (
+CREATE TABLE IF NOT EXISTS `events_lu_resources` (
   `resource_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `resource` varchar(250) NOT NULL DEFAULT '',
   `description` text,
@@ -2260,7 +2260,7 @@ CREATE TABLE IF NOT EXISTS `events_recurring` (
   `recurring_number` int(12) NOT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
-  PRIMARY KEY  (`recurring_id`)
+  PRIMARY KEY (`recurring_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `event_audience` (
@@ -2270,7 +2270,7 @@ CREATE TABLE IF NOT EXISTS `event_audience` (
   `audience_value` varchar(16) NOT NULL,
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`eaudience_id`),
+  PRIMARY KEY (`eaudience_id`),
   KEY `event_id` (`event_id`),
   KEY `target_value` (`audience_value`),
   KEY `target_type` (`audience_type`),
@@ -2285,7 +2285,7 @@ CREATE TABLE IF NOT EXISTS `event_contacts` (
   `contact_order` int(6) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`econtact_id`),
+  PRIMARY KEY (`econtact_id`),
   UNIQUE KEY `event_id_2` (`event_id`,`proxy_id`),
   KEY `contact_order` (`contact_order`),
   KEY `event_id` (`event_id`),
@@ -2302,14 +2302,14 @@ CREATE TABLE IF NOT EXISTS `event_discussions` (
   `discussion_active` int(1) NOT NULL DEFAULT '1',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`ediscussion_id`),
+  PRIMARY KEY (`ediscussion_id`),
   KEY `event_id` (`event_id`),
   KEY `proxy_id` (`proxy_id`),
   KEY `parent_id` (`parent_id`),
   FULLTEXT KEY `discussion_title` (`discussion_title`,`discussion_comment`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `event_resources` (
+CREATE TABLE IF NOT EXISTS `event_resources` (
   `event_resources_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `fk_resource_id` int(11) NOT NULL,
   `fk_event_id` int(11) NOT NULL,
@@ -2326,7 +2326,7 @@ CREATE TABLE IF NOT EXISTS `event_topics` (
   `topic_time` varchar(25) DEFAULT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
-  PRIMARY KEY  (`etopic_id`),
+  PRIMARY KEY (`etopic_id`),
   KEY `event_id` (`event_id`),
   KEY `topic_id` (`topic_id`),
   KEY `topic_coverage` (`topic_coverage`),
@@ -2338,7 +2338,7 @@ CREATE TABLE IF NOT EXISTS `event_eventtypes` (
   `event_id` int(12) NOT NULL,
   `eventtype_id` int(12) NOT NULL,
   `duration` int(12) NOT NULL,
-  PRIMARY KEY  (`eeventtype_id`),
+  PRIMARY KEY (`eeventtype_id`),
   KEY `event_id` (`event_id`),
   KEY `eventtype_id` (`eventtype_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -2360,7 +2360,7 @@ CREATE TABLE IF NOT EXISTS `event_files` (
   `release_until` bigint(64) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`efile_id`),
+  PRIMARY KEY (`efile_id`),
   KEY `required` (`required`),
   KEY `access_method` (`access_method`),
   KEY `event_id` (`event_id`),
@@ -2378,7 +2378,7 @@ CREATE TABLE IF NOT EXISTS `event_history` (
   KEY `history_timestamp` (`history_timestamp`),
   KEY `event_id` (`event_id`),
   KEY `proxy_id` (`proxy_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `event_links` (
   `elink_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -2394,7 +2394,7 @@ CREATE TABLE IF NOT EXISTS `event_links` (
   `release_until` bigint(64) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`elink_id`),
+  PRIMARY KEY (`elink_id`),
   KEY `lecture_id` (`event_id`),
   KEY `required` (`required`),
   KEY `release_date` (`release_date`,`release_until`)
@@ -2484,7 +2484,7 @@ CREATE TABLE IF NOT EXISTS `event_related` (
   `related_value` varchar(16) NOT NULL,
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`erelated_id`),
+  PRIMARY KEY (`erelated_id`),
   KEY `event_id` (`event_id`),
   KEY `related_type` (`related_type`),
   KEY `related_value` (`related_value`),
@@ -2497,7 +2497,7 @@ CREATE TABLE IF NOT EXISTS `filetypes` (
   `mime` varchar(64) NOT NULL,
   `english` varchar(64) NOT NULL,
   `image` blob NOT NULL,
-  PRIMARY KEY  (`id`),
+  PRIMARY KEY (`id`),
   KEY `ext` (`ext`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -2536,7 +2536,7 @@ CREATE TABLE IF NOT EXISTS `draft_audience` (
   KEY `target_type` (`audience_type`),
   KEY `event_id_2` (`event_id`,`audience_type`,`audience_value`),
   KEY `audience_type` (`audience_type`,`audience_value`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `draft_contacts` (
   `dcontact_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -2553,7 +2553,7 @@ CREATE TABLE IF NOT EXISTS `draft_contacts` (
   KEY `contact_order` (`contact_order`),
   KEY `event_id` (`event_id`),
   KEY `proxy_id` (`proxy_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `draft_creators` (
   `create_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -2561,7 +2561,7 @@ CREATE TABLE IF NOT EXISTS `draft_creators` (
   `proxy_id` int(11) NOT NULL,
   PRIMARY KEY (`create_id`),
   KEY `DRAFT` (`draft_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `draft_events` (
   `devent_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -2600,7 +2600,7 @@ CREATE TABLE IF NOT EXISTS `draft_events` (
   KEY `event_start_3` (`event_start`,`event_finish`,`release_date`,`release_until`),
   KEY `parent_id` (`parent_id`),
   FULLTEXT KEY `event_title` (`event_title`,`event_description`,`event_goals`,`event_objectives`,`event_message`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `draft_eventtypes` (
   `deventtype_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -2614,7 +2614,7 @@ CREATE TABLE IF NOT EXISTS `draft_eventtypes` (
   KEY `eeventtype_id` (`eeventtype_id`),
   KEY `event_id` (`devent_id`),
   KEY `eventtype_id` (`eventtype_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `drafts` (
   `draft_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -2624,12 +2624,12 @@ CREATE TABLE IF NOT EXISTS `drafts` (
   `created` int(11) DEFAULT NULL,
   `preserve_elements` binary(4) DEFAULT NULL,
   PRIMARY KEY (`draft_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `global_lu_countries` (
   `countries_id` int(6) NOT NULL AUTO_INCREMENT,
   `country` varchar(250) NOT NULL DEFAULT '',
-  PRIMARY KEY  (`countries_id`)
+  PRIMARY KEY (`countries_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `global_lu_countries` (`countries_id`, `country`) VALUES
@@ -2878,7 +2878,7 @@ INSERT INTO `global_lu_countries` (`countries_id`, `country`) VALUES
 CREATE TABLE IF NOT EXISTS `global_lu_disciplines` (
   `discipline_id` int(11) NOT NULL AUTO_INCREMENT,
   `discipline` varchar(250) NOT NULL,
-  PRIMARY KEY  (`discipline_id`)
+  PRIMARY KEY (`discipline_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `global_lu_disciplines` (`discipline_id`, `discipline`) VALUES
@@ -2950,9 +2950,9 @@ INSERT INTO `global_lu_disciplines` (`discipline_id`, `discipline`) VALUES
 CREATE TABLE IF NOT EXISTS `global_lu_focus_groups` (
   `group_id` int(11) NOT NULL auto_increment,
   `focus_group` varchar(100) NOT NULL default '',
-  PRIMARY KEY  (`group_id`),
+  PRIMARY KEY (`group_id`),
   KEY `focus_group` (`focus_group`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `global_lu_focus_groups` (`group_id`, `focus_group`) VALUES
 (1, 'Cancer'),
@@ -2982,7 +2982,7 @@ INSERT INTO `global_lu_focus_groups` (`group_id`, `focus_group`) VALUES
 CREATE TABLE IF NOT EXISTS `global_lu_hospital_location` (
   `hosp_id` int(11) NOT NULL default '0',
   `hosp_desc` varchar(100) NOT NULL default '',
-  PRIMARY KEY  (`hosp_id`),
+  PRIMARY KEY (`hosp_id`),
   KEY `hosp_desc` (`hosp_desc`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -3506,7 +3506,7 @@ CREATE TABLE IF NOT EXISTS `global_lu_provinces` (
   `country_id` int(11) NOT NULL,
   `province` varchar(200) NOT NULL,
   `abbreviation` varchar(200) NOT NULL,
-  PRIMARY KEY  (`province_id`)
+  PRIMARY KEY (`province_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `global_lu_provinces` (`province_id`, `country_id`, `province`, `abbreviation`) VALUES
@@ -3577,7 +3577,7 @@ INSERT INTO `global_lu_provinces` (`province_id`, `country_id`, `province`, `abb
 CREATE TABLE IF NOT EXISTS `global_lu_publication_type` (
   `type_id` int(11) NOT NULL default '0',
   `type_description` varchar(50) NOT NULL default '',
-  PRIMARY KEY  (`type_id`),
+  PRIMARY KEY (`type_id`),
   KEY `type_description` (`type_description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -3597,7 +3597,7 @@ INSERT INTO `global_lu_publication_type` (`type_id`, `type_description`) VALUES
 CREATE TABLE IF NOT EXISTS `global_lu_roles` (
   `role_id` int(11) NOT NULL default '0',
   `role_description` varchar(50) NOT NULL default '',
-  PRIMARY KEY  (`role_id`),
+  PRIMARY KEY (`role_id`),
   KEY `role_description` (`role_description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -3612,7 +3612,7 @@ INSERT INTO `global_lu_roles` (`role_id`, `role_description`) VALUES
 CREATE TABLE IF NOT EXISTS `global_lu_schools` (
   `schools_id` int(11) NOT NULL AUTO_INCREMENT,
   `school_title` varchar(250) NOT NULL,
-  PRIMARY KEY  (`schools_id`)
+  PRIMARY KEY (`schools_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `global_lu_schools` (`schools_id`, `school_title`) VALUES
@@ -3643,7 +3643,7 @@ CREATE TABLE IF NOT EXISTS `notices` (
   `display_until` bigint(64) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`notice_id`),
+  PRIMARY KEY (`notice_id`),
   KEY `display_from` (`display_from`),
   KEY `display_until` (`display_until`),
   KEY `organisation_id` (`organisation_id`)
@@ -3674,7 +3674,7 @@ CREATE TABLE IF NOT EXISTS `permissions` (
   `assigned_to` int(12) NOT NULL DEFAULT '0',
   `valid_from` bigint(64) NOT NULL DEFAULT '0',
   `valid_until` bigint(64) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`permission_id`),
+  PRIMARY KEY (`permission_id`),
   KEY `assigned_by` (`assigned_by`),
   KEY `assigned_to` (`assigned_to`),
   KEY `valid_from` (`valid_from`),
@@ -3686,7 +3686,7 @@ CREATE TABLE IF NOT EXISTS `poll_answers` (
   `poll_id` int(12) NOT NULL DEFAULT '0',
   `answer_text` varchar(255) NOT NULL,
   `answer_order` int(2) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`answer_id`),
+  PRIMARY KEY (`answer_id`),
   KEY `poll_id` (`poll_id`),
   KEY `answer_order` (`answer_order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -3698,7 +3698,7 @@ CREATE TABLE IF NOT EXISTS `poll_questions` (
   `poll_question` text NOT NULL,
   `poll_from` bigint(64) NOT NULL DEFAULT '0',
   `poll_until` bigint(64) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`poll_id`),
+  PRIMARY KEY (`poll_id`),
   KEY `poll_target` (`poll_target`),
   KEY `poll_from` (`poll_from`),
   KEY `poll_until` (`poll_until`)
@@ -3711,7 +3711,7 @@ CREATE TABLE IF NOT EXISTS `poll_results` (
   `proxy_id` int(12) NOT NULL DEFAULT '0',
   `ip` varchar(64) NOT NULL,
   `timestamp` bigint(64) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`result_id`),
+  PRIMARY KEY (`result_id`),
   KEY `poll_id` (`poll_id`),
   KEY `answer_id` (`answer_id`),
   KEY `proxy_id` (`proxy_id`)
@@ -3724,7 +3724,7 @@ CREATE TABLE IF NOT EXISTS `quizzes` (
   `quiz_active` int(1) NOT NULL DEFAULT '1',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`quiz_id`),
+  PRIMARY KEY (`quiz_id`),
   KEY `quiz_active` (`quiz_active`),
   FULLTEXT KEY `quiz_title` (`quiz_title`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -3735,7 +3735,7 @@ CREATE TABLE IF NOT EXISTS `quizzes_lu_questiontypes` (
   `questiontype_description` text NOT NULL,
   `questiontype_active` int(1) NOT NULL DEFAULT '1',
   `questiontype_order` int(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`questiontype_id`),
+  PRIMARY KEY (`questiontype_id`),
   KEY `questiontype_active` (`questiontype_active`,`questiontype_order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -3749,7 +3749,7 @@ CREATE TABLE IF NOT EXISTS `quizzes_lu_quiztypes` (
   `quiztype_description` text NOT NULL,
   `quiztype_active` int(1) NOT NULL DEFAULT '1',
   `quiztype_order` int(3) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`quiztype_id`),
+  PRIMARY KEY (`quiztype_id`),
   KEY `quiztype_active` (`quiztype_active`,`quiztype_order`),
   KEY `quiztype_code` (`quiztype_code`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -3764,7 +3764,7 @@ CREATE TABLE IF NOT EXISTS `quiz_contacts` (
   `proxy_id` int(12) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`qcontact_id`),
+  PRIMARY KEY (`qcontact_id`),
   KEY `quiz_id` (`quiz_id`,`proxy_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -3777,7 +3777,7 @@ CREATE TABLE IF NOT EXISTS `quiz_questions` (
   `question_order` int(6) NOT NULL DEFAULT '0',
   `question_active` int(1) NOT NULL DEFAULT '1',
   `randomize_responses` int(1) NOT NULL,
-  PRIMARY KEY  (`qquestion_id`),
+  PRIMARY KEY (`qquestion_id`),
   KEY `quiz_id` (`quiz_id`,`questiontype_id`,`question_order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -3790,7 +3790,7 @@ CREATE TABLE IF NOT EXISTS `quiz_question_responses` (
   `response_is_html` enum('0','1') NOT NULL,
   `response_feedback` text NOT NULL,
   `response_active` int(1) NOT NULL DEFAULT '1',
-  PRIMARY KEY  (`qqresponse_id`),
+  PRIMARY KEY (`qqresponse_id`),
   KEY `qquestion_id` (`qquestion_id`,`response_order`,`response_correct`),
   KEY `response_is_html` (`response_is_html`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -3821,7 +3821,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1311 '),
+('version_db', '1400'),
 ('version_entrada', '1.4.0');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
@@ -3833,7 +3833,7 @@ CREATE TABLE IF NOT EXISTS `statistics` (
   `action_field` varchar(64) DEFAULT NULL,
   `action_value` varchar(64) DEFAULT NULL,
   `prune_after` bigint(64) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`statistic_id`),
+  PRIMARY KEY (`statistic_id`),
   KEY `proxy_id` (`proxy_id`,`timestamp`,`module`,`action`,`action_field`,`action_value`),
   KEY `proxy_id_2` (`proxy_id`),
   KEY `timestamp` (`timestamp`),
@@ -3851,7 +3851,7 @@ CREATE TABLE IF NOT EXISTS `statistics_archive` (
   `action_field` varchar(64) DEFAULT NULL,
   `action_value` varchar(64) DEFAULT NULL,
   `prune_after` bigint(64) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`statistic_id`),
+  PRIMARY KEY (`statistic_id`),
   KEY `proxy_id` (`proxy_id`,`timestamp`,`module`,`action`,`action_field`,`action_value`),
   KEY `proxy_id_2` (`proxy_id`),
   KEY `timestamp` (`timestamp`),
@@ -3869,33 +3869,33 @@ CREATE TABLE IF NOT EXISTS `student_awards_external` (
   `award_terms` mediumtext NOT NULL,
   `status` tinyint(1) NOT NULL default '0',
   `comment` varchar(4096) default NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_awards_internal` (
   `id` int(11) NOT NULL auto_increment,
   `user_id` int(11) NOT NULL,
   `award_id` int(11) NOT NULL,
   `year` year(4) NOT NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_awards_internal_types` (
   `id` int(11) NOT NULL auto_increment,
   `award_terms` mediumtext NOT NULL,
   `title` varchar(200) NOT NULL default '',
   `disabled` tinyint(1) NOT NULL default '0',
-  PRIMARY KEY  (`id`),
+  PRIMARY KEY (`id`),
   UNIQUE KEY `title_unique` (`title`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_clineval_comments` (
   `id` int(11) NOT NULL auto_increment,
   `source` varchar(4096) NOT NULL,
   `comment` mediumtext NOT NULL,
   `user_id` int(11) NOT NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_community_health_and_epidemiology` (
   `user_id` int(11) NOT NULL,
@@ -3905,7 +3905,7 @@ CREATE TABLE IF NOT EXISTS `student_community_health_and_epidemiology` (
   `supervisor` varchar(255) NOT NULL,
   `status` tinyint(1) NOT NULL default '0',
   `comment` varchar(500) default NULL,
-  PRIMARY KEY  (`user_id`)
+  PRIMARY KEY (`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_contributions` (
@@ -3920,8 +3920,8 @@ CREATE TABLE IF NOT EXISTS `student_contributions` (
   `end_month` int(11) default NULL,
   `end_year` int(11) default NULL,
   `comment` varchar(4096) default NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_critical_enquiries` (
   `user_id` int(11) NOT NULL,
@@ -3931,22 +3931,22 @@ CREATE TABLE IF NOT EXISTS `student_critical_enquiries` (
   `supervisor` varchar(255) NOT NULL,
   `status` tinyint(1) NOT NULL default '0',
   `comment` varchar(4096) default NULL,
-  PRIMARY KEY  (`user_id`)
+  PRIMARY KEY (`user_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_disciplinary_actions` (
   `id` int(11) NOT NULL auto_increment,
   `user_id` int(11) NOT NULL,
   `action_details` mediumtext NOT NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_formal_remediations` (
   `id` int(11) NOT NULL auto_increment,
   `user_id` int(11) NOT NULL,
   `remediation_details` mediumtext NOT NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_international_activities` (
   `id` int(11) NOT NULL auto_increment,
@@ -3956,15 +3956,15 @@ CREATE TABLE IF NOT EXISTS `student_international_activities` (
   `site` varchar(256) NOT NULL,
   `start` timestamp NOT NULL default '0000-00-00 00:00:00',
   `end` timestamp NULL default NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_leaves_of_absence` (
   `id` int(11) NOT NULL auto_increment,
   `user_id` int(11) NOT NULL,
   `absence_details` mediumtext NOT NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_mspr` (
   `user_id` int(11) default NULL,
@@ -3977,7 +3977,7 @@ CREATE TABLE IF NOT EXISTS `student_mspr` (
 CREATE TABLE IF NOT EXISTS `student_mspr_class` (
   `year` int(11) NOT NULL default '0',
   `closed` int(11) default NULL,
-  PRIMARY KEY  (`year`)
+  PRIMARY KEY (`year`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_observerships` (
@@ -4006,16 +4006,16 @@ CREATE TABLE IF NOT EXISTS `student_research` (
   `status` tinyint(1) NOT NULL default '0',
   `priority` tinyint(4) NOT NULL default '0',
   `comment` varchar(4096) default NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_studentships` (
   `id` int(11) NOT NULL auto_increment,
   `user_id` int(11) NOT NULL,
   `title` varchar(4096) NOT NULL,
   `year` year(4) NOT NULL default '0000',
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `student_student_run_electives` (
   `id` int(11) NOT NULL auto_increment,
@@ -4027,8 +4027,8 @@ CREATE TABLE IF NOT EXISTS `student_student_run_electives` (
   `start_year` smallint(4) unsigned default NULL,
   `end_month` tinyint(2) unsigned default NULL,
   `end_year` smallint(4) unsigned default NULL,
-  PRIMARY KEY  (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `users_online` (
   `session_id` varchar(32) NOT NULL,
@@ -4038,7 +4038,7 @@ CREATE TABLE IF NOT EXISTS `users_online` (
   `firstname` varchar(35) NOT NULL,
   `lastname` varchar(35) NOT NULL,
   `timestamp` bigint(64) NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`session_id`),
+  PRIMARY KEY (`session_id`),
   KEY `ip_address` (`ip_address`),
   KEY `proxy_id` (`proxy_id`),
   KEY `timestamp` (`timestamp`)
@@ -4060,13 +4060,13 @@ CREATE TABLE IF NOT EXISTS `tasks` (
   `completion_comment_policy` enum('no_comments','require_comments','allow_comments') NOT NULL default 'allow_comments',
   `rejection_comment_policy` enum('no_comments','require_comments','allow_comments') NOT NULL default 'allow_comments',
   `verification_notification_policy` smallint(5) unsigned NOT NULL default '0',
-  PRIMARY KEY  (`task_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`task_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `task_associated_faculty` (
   `task_id` int(12) unsigned NOT NULL,
   `faculty_id` int(12) unsigned NOT NULL,
-  PRIMARY KEY  (`task_id`,`faculty_id`)
+  PRIMARY KEY (`task_id`,`faculty_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `task_completion` (
@@ -4079,27 +4079,27 @@ CREATE TABLE IF NOT EXISTS `task_completion` (
   `completion_comment` text,
   `rejection_comment` text,
   `rejection_date` bigint(64) default NULL,
-  PRIMARY KEY  (`task_id`,`recipient_id`)
+  PRIMARY KEY (`task_id`,`recipient_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `task_owners` (
   `task_id` int(12) unsigned NOT NULL default '0',
   `owner_id` int(12) unsigned NOT NULL default '0',
   `owner_type` enum('course','event','user') NOT NULL default 'course',
-  PRIMARY KEY  (`task_id`,`owner_id`,`owner_type`)
+  PRIMARY KEY (`task_id`,`owner_id`,`owner_type`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `task_recipients` (
   `task_id` int(12) unsigned NOT NULL,
   `recipient_type` enum('user','group','grad_year','cohort','organisation') NOT NULL,
   `recipient_id` int(12) unsigned NOT NULL,
-  PRIMARY KEY  (`task_id`,`recipient_type`,`recipient_id`)
+  PRIMARY KEY (`task_id`,`recipient_type`,`recipient_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `task_verifiers` (
   `task_id` int(12) unsigned NOT NULL,
   `verifier_id` int(12) unsigned NOT NULL,
-  PRIMARY KEY  (`task_id`,`verifier_id`)
+  PRIMARY KEY (`task_id`,`verifier_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `meta_types` (
@@ -4107,8 +4107,8 @@ CREATE TABLE IF NOT EXISTS `meta_types` (
   `label` varchar(255) NOT NULL,
   `description` text NOT NULL,
   `parent_type_id` int(10) unsigned default NULL,
-  PRIMARY KEY  (`meta_type_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`meta_type_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `meta_types` (`meta_type_id`, `label`, `description`, `parent_type_id`) VALUES
 (1, 'N95 Mask Fit', 'Make, Model, and size definition of required N95 masks.', NULL),
@@ -4138,9 +4138,9 @@ CREATE TABLE IF NOT EXISTS `meta_type_relations` (
   `meta_type_id` int(10) unsigned default NULL,
   `entity_type` varchar(63) NOT NULL,
   `entity_value` varchar(63) NOT NULL,
-  PRIMARY KEY  (`meta_data_relation_id`),
+  PRIMARY KEY (`meta_data_relation_id`),
   UNIQUE KEY `meta_type_id` (`meta_type_id`,`entity_type`,`entity_value`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `meta_type_relations` (`meta_data_relation_id`, `meta_type_id`, `entity_type`, `entity_value`) VALUES
 (1, 1, 'organisation:group', '1:student'),
@@ -4170,15 +4170,15 @@ CREATE TABLE IF NOT EXISTS `meta_values` (
   `value_notes` text NOT NULL,
   `effective_date` bigint(20) default NULL,
   `expiry_date` bigint(20) default NULL,
-  PRIMARY KEY  (`meta_value_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+  PRIMARY KEY (`meta_value_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `mtd_categories` (
   `id` int(11) NOT NULL ,
   `category_code` varchar(3) NOT NULL,
   `category_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_facilities` (
   `id` int(11) NOT NULL ,
@@ -4186,7 +4186,7 @@ CREATE TABLE IF NOT EXISTS `mtd_facilities` (
   `facility_name` varchar(50) NOT NULL,
   `kingston` int(1) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_locale_duration` (
   `id` int(11) NOT NULL ,
@@ -4194,21 +4194,21 @@ CREATE TABLE IF NOT EXISTS `mtd_locale_duration` (
   `percent_time` int(3) NOT NULL,
   `schedule_id` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_moh_program_codes` (
   `id` int(11) NOT NULL ,
   `program_code` varchar(3) NOT NULL,
   `program_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_moh_service_codes` (
   `id` int(11) NOT NULL ,
   `service_code` varchar(3) NOT NULL,
   `service_description` varchar(50) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_schedule` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
@@ -4231,21 +4231,21 @@ CREATE TABLE IF NOT EXISTS `mtd_schools` (
   `school_code` varchar(3) NOT NULL,
   `school_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_pgme_moh_programs` (
   `id` int(11) NOT NULL ,
   `pgme_program_name` varchar(100) NOT NULL,
   `moh_service_name` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 ;
 
 CREATE TABLE IF NOT EXISTS `mtd_type` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `type_code` varchar(1) NOT NULL,
   `type_description` varchar(100) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `mtd_type` (`id`, `type_code`, `type_description`) VALUES
 (1, 'I', 'in-patient/emergency'),
@@ -4290,7 +4290,7 @@ CREATE TABLE IF NOT EXISTS `group_members` (
   PRIMARY KEY (`gmember_id`),
   KEY `group_id` (`group_id`,`proxy_id`,`updated_date`,`updated_by`),
   KEY `member_active` (`member_active`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `group_organisations` (
   `gorganisation_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -4373,14 +4373,14 @@ INSERT INTO `topic_organisation` SELECT `topic_id`, 1 FROM `events_lu_topics`;
 CREATE TABLE IF NOT EXISTS `curriculum_lu_levels` (
   `curriculum_level_id` int(11) unsigned NOT NULL auto_increment,
   `curriculum_level` varchar(100) NOT NULL default '',
-  PRIMARY KEY  (`curriculum_level_id`)
+  PRIMARY KEY (`curriculum_level_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `curriculum_lu_levels` (`curriculum_level_id`, `curriculum_level`) VALUES
 (1, 'Undergraduate'),
 (2, 'Postgraduate');
 
-CREATE TABLE `map_assessments_meta` (
+CREATE TABLE IF NOT EXISTS `map_assessments_meta` (
   `map_assessments_meta_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `fk_assessment_method_id` int(11) NOT NULL,
   `fk_assessments_meta_id` int(11) NOT NULL,
@@ -4389,7 +4389,7 @@ CREATE TABLE `map_assessments_meta` (
   PRIMARY KEY (`map_assessments_meta_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `map_event_resources` (
+CREATE TABLE IF NOT EXISTS `map_event_resources` (
   `map_event_resources_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `fk_medbiq_resource_id` int(11) DEFAULT NULL,
   `fk_resource_id` int(11) NOT NULL,
@@ -4398,7 +4398,7 @@ CREATE TABLE `map_event_resources` (
   PRIMARY KEY (`map_event_resources_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `map_events_eventtypes` (
+CREATE TABLE IF NOT EXISTS `map_events_eventtypes` (
   `map_events_eventtypes_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `fk_instructional_method_id` int(11) NOT NULL,
   `fk_eventtype_id` int(11) NOT NULL,
@@ -4407,7 +4407,7 @@ CREATE TABLE `map_events_eventtypes` (
   PRIMARY KEY (`map_events_eventtypes_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `medbiq_assessment_methods` (
+CREATE TABLE IF NOT EXISTS `medbiq_assessment_methods` (
   `assessment_method_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `assessment_method` varchar(250) NOT NULL DEFAULT '',
   `assessment_method_description` text,
@@ -4437,7 +4437,7 @@ INSERT INTO `medbiq_assessment_methods` (`assessment_method_id`, `assessment_met
 (17,'Self-Assessment','The process of evaluating one?s own deficiencies, achievements, behavior or professional performance and competencies (Institute for International Medical Education, 2002); Assessment completed by the learner to reflect and critically assess his/her own performance against a set of established criteria (Gordon, 1991) (NOTE: Does not refer to NBME Self-Assessment)',1,0,0),
 (18,'Stimulated Recall','The use of various stimuli (e.g., written records, audio tapes, video tapes) to re-activate the experience of a learner during a learning activity or clinical encounter in order to reflect on task performance, reasoning, decision-making, interpersonal skills, personal thoughts and feelings, etc. (Barrows, 2000)',1,0,0);
 
-CREATE TABLE `medbiq_instructional_methods` (
+CREATE TABLE IF NOT EXISTS `medbiq_instructional_methods` (
   `instructional_method_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `instructional_method` varchar(250) NOT NULL DEFAULT '',
   `instructional_method_description` text,
@@ -4455,7 +4455,7 @@ INSERT INTO `medbiq_instructional_methods` (`instructional_method_id`, `instruct
 (5,'Conference','Departmentally-driven and/or content-specific presentations by clinical faculty/professionals, residents,\rand/or learners before a large group of other professionals and/or learners (e.g., Mortality and Morbidity, or \"M & M,\" Conference--Biddle & Oaster, 1990--and Interdisciplinary Conference--Feldman, 1999; also see Cooke, Irby, & O\'Brien, 2010b)',1,0,0),
 (6,'Demonstration','A description, performance, or explanation of a process, illustrated by examples, observable action, specimens, etc. (Dictionary.com, n.d.)',1,0,0),
 (7,'Discussion, Large Group (>13)','An exchange (oral or written) of opinions, observations, or ideas among a Large Group [more than 12\rparticipants], usually to analyze, clarify, or reach conclusions about issues, questions, or problems (Education Resources Information Center, 1980)',1,0,0),
-(8,'Discussion, Small Group (&lt;12)','An exchange (oral or written) of opinions, observations, or ideas among a Small Group [12 or fewer participants], usually to analyze, clarify, or reach conclusions about issues, questions, or problems (Education Resources Information Center, 1980)',1,0,0),
+(8,'Discussion, Small Group (<12)','An exchange (oral or written) of opinions, observations, or ideas among a Small Group [12 or fewer participants], usually to analyze, clarify, or reach conclusions about issues, questions, or problems (Education Resources Information Center, 1980)',1,0,0),
 (9,'Games','Individual or group games that have cognitive, social, behavioral, and/or emotional, etc., dimensions which are related to educational objectives (Education Resources Information Center, 1966a)',1,0,0),
 (10,'Independent Learning','Instructor-/ or mentor-guided learning activities to be performed by the learner outside of formal educational settings (classroom, lab, clinic) (Bowen & Smith, 2010); Dedicated time on learner schedules to prepare for specific learning activities, e.g., case discussions, TBL, PBL, clinical activities, research project(s)',1,0,0),
 (11,'Journal Club','A forum in which participants discuss recent research papers from field literature in order to develop\rcritical reading skills (comprehension, analysis, and critique) (Cooke, Irby, & O\'Brien, 2010a; Mann & O\'Neill, 2010; Woods & Winkel, 1982)',1,0,0),
@@ -4479,7 +4479,7 @@ INSERT INTO `medbiq_instructional_methods` (`instructional_method_id`, `instruct
 (29,'Ward Rounds','An instructional session conducted in an actual clinical setting, using real patients or patient cases to demonstrate procedures or clinical skills, illustrate clinical reasoning and problem-solving, or stimulate discussion and analytical thinking among a group of learners (Bowen & Smith, 2010; Wiener, 1974)',1,0,0),
 (30,'Workshop','A brief intensive educational program for a relatively small group of people that focuses especially on techniques and skills related to a specific topic (U. S. National Library of Medicine, 2011)',1,0,0);
 
-CREATE TABLE `medbiq_resources` (
+CREATE TABLE IF NOT EXISTS `medbiq_resources` (
   `resource_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `resource` varchar(250) NOT NULL DEFAULT '',
   `resource_description` text,
@@ -4521,7 +4521,7 @@ CREATE TABLE IF NOT EXISTS `notification_users` (
   `digest_mode` tinyint(1) NOT NULL DEFAULT '0',
   `next_notification_date` int(64) NOT NULL DEFAULT '0',
   PRIMARY KEY (`nuser_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `notifications` (
   `notification_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -4532,14 +4532,14 @@ CREATE TABLE IF NOT EXISTS `notifications` (
   `sent` tinyint(1) NOT NULL DEFAULT '0',
   `sent_date` bigint(64) DEFAULT '0',
   PRIMARY KEY (`notification_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `curriculum_level_organisation` (
   `cl_org_id` INT(12) NOT NULL AUTO_INCREMENT,
   `org_id` INT(12) NOT NULL,
   `curriculum_level_id` INT(11) NOT NULL,
   PRIMARY KEY (`cl_org_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `curriculum_level_organisation` (`org_id`,`curriculum_level_id`)
 VALUES

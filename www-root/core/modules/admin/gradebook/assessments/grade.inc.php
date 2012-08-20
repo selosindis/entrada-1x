@@ -98,6 +98,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<ul class="page-action">
 						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit", "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
 					</ul>
+					<ul style="list-style:none;">
+						<li><a href="#" style="background-image:url(<?php echo ENTRADA_URL."/images/reset.gif"; ?>);background-repeat:no-repeat;padding-left:20px;font-weight:700;" onclick="location.reload(true)" /> Refresh</a></li>
+					</ul>
 				</div>
 				<div style="clear: both;"></div>
 				<?php
@@ -181,43 +184,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								?>
 							</tbody>
 						</table>
-						<br />
-						<h2>Import Grades</h2>
-						<div id="display-notice-box" class="display-notice" style="width:408px;">
-							<ul>
-							<li><strong>Important Notes:</strong>
-								<br />Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets). 
-								<br />Any grades entered will be overwritten if present in the CSV.</li>
-							</ul>
-						</div>
-						<form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
-							<input type="file" name ="file"/><br /><br />
-							<input type="submit" value="Import CSV"/>
-						</form>
-						<br /><br /><br />
-						<?php 
-						if ($assessment["assessment_type"] == "quiz") { 
-							$query = "	SELECT * 
-										FROM `attached_quizzes` 
-										WHERE `content_type` = 'assessment' 
-										AND `content_id` = ".$db->qstr($ASSESSMENT_ID);
-							if ($results = $db->GetRow($query)) {
-							?>
-						<h3>Import from attached quiz:</h3>
-						<div id="display-notice-box" class="display-notice" style="width:408px;">
-							<ul>
-							<li><strong>Important Notes:</strong><br />
-								This will import the results from the quiz <strong><?php echo $results["quiz_title"]; ?></strong>. Any existing grades will be overwritten during importation. Only students who have completed the quiz will be graded.</li>
-							</ul>
-						</div>
-						<form action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "import-quiz", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
-							<input type="hidden" name="course_id" value="<?php echo $assessment["course_id"]; ?>" />
-							<input type="hidden" name="assessment_id" value="<?php echo $assessment["assessment_id"]; ?>" />
-							<input type="submit" value="Import Quiz" />
-						</form>
-						<?php 
-							}
-						} ?>
 					</div>
 					<script type="text/javascript">
 						jQuery(document).ready(function(){
@@ -334,9 +300,93 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							break;
 						}
 						?>
-						<button onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $ASSESSMENT_ID)); ?>'">Download CSV</button>
-						<button onclick="location.reload(true)">Refresh</button>
-						<div style="margin-top: 40px;">
+						<div id="import-csv" style="display:none;">
+							<h2>Import grades from CSV</h2>
+							<div id="display-notice-box" class="display-notice">
+								<ul>
+								<li><strong>Important Notes:</strong>
+									<br />Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets). 
+									<br />Any grades entered will be overwritten if present in the CSV.</li>
+								</ul>
+							</div>
+							<form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
+								<input type="file" name="file"/>
+							</form>
+						</div>
+						<?php 
+						if ($assessment["assessment_type"] == "quiz") { 
+							$query = "	SELECT * 
+										FROM `attached_quizzes` 
+										WHERE `content_type` = 'assessment' 
+										AND `content_id` = ".$db->qstr($ASSESSMENT_ID);
+							if ($attached_quiz = $db->GetRow($query)) {
+							?>
+						<div id="import-quiz" style="display:none;">
+							<h2>Import grades from attached quiz</h2>
+							<div id="display-notice-box" class="display-notice">
+								<ul>
+								<li><strong>Important Notes:</strong><br />
+									This will import the results from the quiz <strong><?php echo $attached_quiz["quiz_title"]; ?></strong>. Any existing grades will be overwritten during importation. Only students who have completed the quiz will be graded.</li>
+								</ul>
+							</div>
+							<form action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "import-quiz", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
+								<input type="hidden" name="course_id" value="<?php echo $assessment["course_id"]; ?>" />
+								<input type="hidden" name="assessment_id" value="<?php echo $assessment["assessment_id"]; ?>" />
+							</form>
+						</div>
+						<?php 
+							}
+						} ?>
+						<div style="margin-top: 20px;">
+							<script type="text/javascript">
+							jQuery(function(){
+								jQuery("#import-csv-button, #import-quiz-button").live("click", function(){
+									if (jQuery(this).attr("id") == "import-quiz-button") {
+										var target = jQuery("#import-quiz");
+										var title = "Import Quiz";
+										var height = 300;
+									} else if (jQuery(this).attr("id") == "import-csv-button") {
+										var target = jQuery("#import-csv");
+										var title = "Import CSV";
+										var height = 350;
+									}
+									var importResults = target.dialog({
+										modal:		true,
+										resizable:	false,
+										draggable:	false,
+										width: 500,
+										height: height,
+										title: title,
+										buttons: [
+											{
+												text: "Ok",
+												click: function() { 
+													importResults.children("form").submit();
+												}
+											},
+											{
+												text: "Cancel",
+												click: function() {
+													importResults.dialog("close");
+													importResults.dialog("destroy");
+												}
+											}
+										]
+									});
+									return false;
+								});
+							});
+							</script>
+							<h2>Import &amp; Export</h2>
+							<ul class="import-export-list" style="padding:0px;">
+							<?php if ($assessment["assessment_type"] == "quiz" && !empty($attached_quiz)) { ?>
+								<li class="up" style="display:block;"><a href="#" id="import-quiz-button">Import grades from attached Quiz</a></li>
+							<?php } ?>
+								<li class="up" style="display:block;"><a href="#" id="import-csv-button">Import grades from CSV file</a></li>
+								<li class="down" style="display:block;"><a href="#" onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $ASSESSMENT_ID)); ?>'; return false;">Export grades to CSV file</a></li>
+							</ul>
+						</div>
+						<div  style="margin-top: 20px;">
 							<h2>Grade Calculation Exceptions</h2>
 							<p>
 								You can use the following exception creator to modify the calculations used to create the students final grade in this course. 

@@ -976,21 +976,30 @@ if ($community_courses) {
 			new_sidebar_item("Learning Event Legend", $sidebar_html, "event-legend", "open");
 		break;
 		case (preg_match("/objectives$/", $PAGE_URL) != 0) :
-			$results = $db->GetAll("SELECT `course_id` FROM `community_courses` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID));
 			$course_ids_str = "";
 			$clean_ids_str = "";
 			$course_ids = array();
-			foreach ($results as $course_id) {
-				$course_ids[] = $course_id["course_id"];
-				if ($course_ids_str) {
-					$course_ids_str .= ", ".$db->qstr($course_id["course_id"]);
-					$clean_ids_str .= ",".$course_id["course_id"];
-				} else {
-					$course_ids_str = $db->qstr($course_id["course_id"]);
-					$clean_ids_str = ",".$course_id["course_id"];
+
+			$query = "	SELECT a.`course_id`
+						FROM `community_courses` AS a
+						JOIN `courses` AS b
+						ON a.`course_id` = b.`course_id`
+						WHERE b.`course_active` = '1'
+						AND a.`community_id` = ".$db->qstr($COMMUNITY_ID);
+			$results = $db->GetAll($query);
+			if ($results) {
+				foreach ($results as $course_id) {
+					$course_ids[] = $course_id["course_id"];
+					if ($course_ids_str) {
+						$course_ids_str .= ", ".$db->qstr($course_id["course_id"]);
+						$clean_ids_str .= ",".$course_id["course_id"];
+					} else {
+						$course_ids_str = $db->qstr($course_id["course_id"]);
+						$clean_ids_str = ",".$course_id["course_id"];
+					}
 				}
 			}
-
+			
 			$show_objectives = false;
 			list($objectives,$top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(),$course_ids,-1, 1, false);
 

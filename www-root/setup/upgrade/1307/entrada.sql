@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS `draft_audience` (
   KEY `target_type` (`audience_type`),
   KEY `event_id_2` (`event_id`,`audience_type`,`audience_value`),
   KEY `audience_type` (`audience_type`,`audience_value`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `draft_contacts` (
   `dcontact_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `draft_contacts` (
   KEY `contact_order` (`contact_order`),
   KEY `event_id` (`event_id`),
   KEY `proxy_id` (`proxy_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `draft_creators` (
   `create_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS `draft_creators` (
   `proxy_id` int(11) NOT NULL,
   PRIMARY KEY (`create_id`),
   KEY `DRAFT` (`draft_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `draft_events` (
   `devent_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS `draft_events` (
   KEY `event_start_3` (`event_start`,`event_finish`,`release_date`,`release_until`),
   KEY `parent_id` (`parent_id`),
   FULLTEXT KEY `event_title` (`event_title`,`event_description`,`event_goals`,`event_objectives`,`event_message`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `draft_eventtypes` (
   `deventtype_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -92,7 +92,7 @@ CREATE TABLE IF NOT EXISTS `draft_eventtypes` (
   KEY `eeventtype_id` (`eeventtype_id`),
   KEY `event_id` (`devent_id`),
   KEY `eventtype_id` (`eventtype_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `drafts` (
   `draft_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -102,6 +102,6 @@ CREATE TABLE IF NOT EXISTS `drafts` (
   `created` int(11) DEFAULT NULL,
   `preserve_elements` binary(4) DEFAULT NULL,
   PRIMARY KEY (`draft_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 UPDATE `settings` SET `value` = '1307' WHERE `shortname` = 'version_db';

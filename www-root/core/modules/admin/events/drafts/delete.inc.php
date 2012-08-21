@@ -97,28 +97,32 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								WHERE a.`draft_id` = ".$db->qstr($draft_id);
 					$draft_events = $db->GetAll($query);
 					
-					foreach ($draft_events as $draft_event) {
-						$devents[] = $draft_event["devent_id"];
-					}
-					
-					$query = "	DELETE FROM `draft_audience` WHERE `devent_id` IN ('".implode("', '", $devents)."')";
-					$db->Execute($query);
-					
-					$query = "	DELETE FROM `draft_contacts` WHERE `devent_id` IN ('".implode("', '", $devents)."')";
-					$db->Execute($query);
-					
-					$query = "	DELETE FROM `draft_eventtypes` WHERE `devent_id` IN ('".implode("', '", $devents)."')";
-					$db->Execute($query);
-					
-					$query = "	DELETE FROM `draft_events` WHERE `draft_id` = ".$db->qstr($draft_id);
-					$db->Execute($query);
-					
-					$query = "	DELETE FROM `draft_creators` WHERE `draft_id` = ".$db->qstr($draft_id);
-					$db->Execute($query);
-					
-					$query = "	DELETE FROM `drafts` WHERE `draft_id` = ".$db->qstr($draft_id);
-					if ($db->Execute($query)) {
-						$removed[$draft_id]["draft_title"] = $drafts[$draft_id];
+					if ($draft_events) {
+						
+						foreach ($draft_events as $draft_event) {
+							$devents[] = $draft_event["devent_id"];
+						}
+
+						$query = "	DELETE FROM `draft_audience` WHERE `devent_id` IN ('".implode("', '", $devents)."')";
+						$db->Execute($query);
+
+						$query = "	DELETE FROM `draft_contacts` WHERE `devent_id` IN ('".implode("', '", $devents)."')";
+						$db->Execute($query);
+
+						$query = "	DELETE FROM `draft_eventtypes` WHERE `devent_id` IN ('".implode("', '", $devents)."')";
+						$db->Execute($query);
+
+						$query = "	DELETE FROM `draft_events` WHERE `draft_id` = ".$db->qstr($draft_id);
+						$db->Execute($query);
+
+						$query = "	DELETE FROM `draft_creators` WHERE `draft_id` = ".$db->qstr($draft_id);
+						$db->Execute($query);
+
+						$query = "	DELETE FROM `drafts` WHERE `draft_id` = ".$db->qstr($draft_id);
+						if ($db->Execute($query)) {
+							$removed[$draft_id]["draft_title"] = $drafts[$draft_id];
+						}
+						
 					}
 				}
 			}

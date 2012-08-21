@@ -308,11 +308,17 @@ function load_system_navigator() {
 						WHERE (a.`allow_member_view` = '1')
 						OR (c.`member_acl` = '1')";
 			$cpage_ids = $db->GetAll($query);
-			foreach ($cpage_ids as $page_id) {
-				$community_pages[] = $page_id["cpage_id"];
+			
+			if ($cpage_ids) { 
+				foreach ($cpage_ids as $page_id) {
+					$community_pages[] = $page_id["cpage_id"];
+				}
 			}
-			foreach ($community_pages as $key => $page_id) {
-				$page_ids[] = $page_id;
+			
+			if ($community_pages) {
+				foreach ($community_pages as $key => $page_id) {
+					$page_ids[] = $page_id;
+				}
 			}
 
 			if(@count($community_ids)) {

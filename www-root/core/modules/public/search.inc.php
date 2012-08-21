@@ -36,7 +36,7 @@ if (!defined("PARENT_INCLUDED")) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 /**
  * Meta information for this page.
@@ -101,40 +101,61 @@ if (!defined("PARENT_INCLUDED")) {
 		}
 
 		if ($SEARCH_MODE == "standard") {
-			$query_counter = "	SELECT COUNT(DISTINCT(a.`event_id`)) AS `total_rows`
-								FROM `events` AS a
-								LEFT JOIN `event_audience` AS b
-								ON b.`event_id` = a.`event_id`
-								LEFT JOIN `courses` AS c
-								ON a.`course_id` = c.`course_id`
-								WHERE (a.`parent_id` IS NULL OR a.`parent_id` = '0')
-								AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'cohort' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
-								(($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION != 'all' ? " c.`organisation_id` = ".$db->qstr((int) $SEARCH_ORGANISATION)." AND" : "").
-								(($SEARCH_YEAR) ? " (`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
-								MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)";
+            $index = Zend_Search_Lucene::open(SEARCH_INDEX_PATH.'/events');
+            $userQuery = Zend_Search_Lucene_Search_QueryParser::parse($SEARCH_QUERY);
 
-			$query_search = "	SELECT a.*, b.`audience_type`, b.`audience_value` AS `event_cohort`, MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE) AS `rank`
+            $result = $index->find($userQuery);
+            $hits = array();
+            foreach ($result as $hit) {
+                $hits[]= $hit->event_id;
+            }
+
+            $TOTAL_ROWS = count($result);
+
+//			$query_counter = "	SELECT COUNT(DISTINCT(a.`event_id`)) AS `total_rows`
+//								FROM `events` AS a
+//								LEFT JOIN `event_audience` AS b
+//								ON b.`event_id` = a.`event_id`
+//								LEFT JOIN `courses` AS c
+//								ON a.`course_id` = c.`course_id`
+//								WHERE (a.`parent_id` IS NULL OR a.`parent_id` = '0')
+//								AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'cohort' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
+//								(($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION != 'all' ? " c.`organisation_id` = ".$db->qstr((int) $SEARCH_ORGANISATION)." AND" : "").
+//								(($SEARCH_YEAR) ? " (`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
+//								MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)";
+
+//			$query_search = "	SELECT a.*, b.`audience_type`, b.`audience_value` AS `event_cohort`, MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE) AS `rank`
+//								FROM `events` AS a
+//								LEFT JOIN `event_audience` AS b
+//								ON b.`event_id` = a.`event_id`
+//								LEFT JOIN `courses` AS c
+//								ON a.`course_id` = c.`course_id`
+//								WHERE (a.`parent_id` IS NULL OR a.`parent_id` = '0')
+//								AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'cohort' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
+//								(($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION != 'all' ? " c.`organisation_id` = ".$db->qstr((int) $SEARCH_ORGANISATION)." AND" : "").
+//								(($SEARCH_YEAR) ? " (`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
+//								MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)
+//								GROUP BY a.`event_id`
+//								ORDER BY `rank` DESC, `event_start` DESC
+//								LIMIT %s, %s";
+
+            $query_search = "	SELECT a.*, b.`audience_type`, b.`audience_value` AS `event_cohort`, MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE) AS `rank`
 								FROM `events` AS a
 								LEFT JOIN `event_audience` AS b
 								ON b.`event_id` = a.`event_id`
 								LEFT JOIN `courses` AS c
 								ON a.`course_id` = c.`course_id`
-								WHERE (a.`parent_id` IS NULL OR a.`parent_id` = '0')
-								AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'cohort' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
-								(($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION != 'all' ? " c.`organisation_id` = ".$db->qstr((int) $SEARCH_ORGANISATION)." AND" : "").
-								(($SEARCH_YEAR) ? " (`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
-								MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)
-								GROUP BY a.`event_id`
-								ORDER BY `rank` DESC, `event_start` DESC
+								WHERE a.event_id IN (".implode(',', $hits).")
 								LIMIT %s, %s";
+
 
 			/**
 			 * Get the total number of results using the generated queries above and calculate the total number
 			 * of pages that are available based on the results per page preferences.
 			 */
-			$result = ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query_counter) : $db->GetRow($query_counter));
+			//$result = ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query_counter) : $db->GetRow($query_counter));
 			if ($result) {
-				$TOTAL_ROWS	= $result["total_rows"];
+			//	$TOTAL_ROWS	= $result["total_rows"];
 
 				if ($TOTAL_ROWS <= $RESULTS_PER_PAGE) {
 					$TOTAL_PAGES = 1;

@@ -54,6 +54,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				$query .= "	AND (b.`group` = 'staff' OR b.`group` = 'medtech')";
 			break;
 			case "faculty" :
+			case "evalfaculty" :
 				$query .= "	AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer'))";
 			break;
 			case "resident" :

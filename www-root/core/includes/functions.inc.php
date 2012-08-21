@@ -7702,7 +7702,7 @@ function lp_multiple_select_inline($id, $checkboxes, $options) {
 
 	$options = array_merge($default_options, $options);
 	$classes = array("select_multiple_container", "inline");
-
+	
 	if(is_array($options['class'])) {
 		foreach($options['class'] as $class) {
 			$classes[] = $class;
@@ -7742,7 +7742,7 @@ function lp_multiple_select_inline($id, $checkboxes, $options) {
 	if($options['ajax']) {
 		$return .= '<tr><td colspan="2" style="text-align: center;">Please select a '.$options['selectboxname'].' from above.</td></tr>';
 	} else {
-		$return .= lp_multiple_select_table($checkboxes, 0, 0);
+		$return .= lp_multiple_select_table($checkboxes, 0, 0, $options["category_check_all"]);
 	}
 
 	$return .='</table><div style="clear: both;"></div></div></div>';
@@ -7752,7 +7752,7 @@ function lp_multiple_select_inline($id, $checkboxes, $options) {
 
 
 
-function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all = false) {
+function lp_multiple_select_table($checkboxes, $indent, $i, $category_check_all = false) {
 	$return = "";
 	$input_class = 'select_multiple_checkbox';
 
@@ -7764,8 +7764,8 @@ function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all
 		}
 
 		if(isset($checkbox['category']) && $checkbox['category'] == true) {
-			if($category_select_all) {
-				$input = '<input type="checkbox" id="'.$checkbox['value'].'_category"/>';
+			if($category_check_all) {
+				$input = '<input type="checkbox" id="'.$checkbox['value'].'_category"/ value="'.$checkbox['value'].'" />';
 			} else {
 				$input = "&nbsp;";
 			}
@@ -7779,6 +7779,12 @@ function lp_multiple_select_table($checkboxes, $indent, $i, $category_select_all
 		} else {
 			$input = '<input type="checkbox" id="'.$checkbox['value'].'" value="'.$checkbox['value'].'" '.$checkbox['checked'].'/>';
 			$name_class = "select_multiple_name";
+			if ($input_class == "select_multiple_checkbox_category") {
+				$input_class = 'select_multiple_checkbox';
+			}
+		}
+		if (isset($checkbox["class"]) && $checkbox["class"]) {
+			$class .= " ".$checkbox["class"];
 		}
 
 		if(isset($checkbox['name_class'])) {

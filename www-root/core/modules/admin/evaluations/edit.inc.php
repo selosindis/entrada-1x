@@ -171,65 +171,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					} else {
 						$PROCESSED["release_until"] = 0;
 					}
-
-					/**
-					 * Processing for evaluation_targets table.
-					 */
-					switch ($evaluation_target_type) {
-						case "course" :
-							if (isset($_POST["course_ids"]) && is_array($_POST["course_ids"]) && !empty($_POST["course_ids"])) {
-								foreach ($_POST["course_ids"] as $course_id) {
-									$course_id = clean_input($course_id, "int");
-									if ($course_id) {
-										$query = "SELECT `course_id` FROM `courses` WHERE `course_id` = ".$db->qstr($course_id);
-										$result = $db->GetRow($query);
-										if ($result) {
-											$PROCESSED["evaluation_targets"][] = $result["course_id"];
-										}
-									}
-								}
-
-								if (empty($PROCESSED["evaluation_targets"])) {
-									add_error("You must select at least one <strong>course</strong> that you would like to have evaluated.");
-								}
-							} else {
-								add_error("You must select <strong>which courses</strong> you would like to have evaluated.");
-							}
-						break;
-						case "teacher" :
-							if (isset($_POST["teacher_ids"]) && is_array($_POST["teacher_ids"]) && !empty($_POST["teacher_ids"])) {
-								foreach ($_POST["teacher_ids"] as $proxy_id) {
-									$proxy_id = clean_input($proxy_id, "int");
-									if ($proxy_id) {
-										$query = "	SELECT a.`id` AS `proxy_id`
-													FROM `".AUTH_DATABASE."`.`user_data` AS a
-													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-													ON b.`user_id` = a.`id`
-													WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-													AND (b.`group` = 'faculty' OR
-														(b.`group` = 'resident' AND b.`role` = 'lecturer')
-													)
-													AND a.`id` = ".$db->qstr($proxy_id);
-										$result = $db->GetRow($query);
-										if ($result) {
-											$PROCESSED["evaluation_targets"][] = $result["proxy_id"];
-										}
-									}
-								}
-
-								if (empty($PROCESSED["evaluation_targets"])) {
-									add_error("You must select at least one <strong>teacher</strong> that you would like to have evaluated.");
-								}
-							} else {
-								add_error("You must select <strong>which teachers</strong> you would like to have evaluated.");
-							}
-						break;
-						default :
-							add_error("The form type you have selected is currently unavailable. The system administrator has been notified of this issue, please try again later.");
-
-							application_log("error", "Unaccounted for target_shortname [".$evaluation_target_type."] encountered. An update to add.inc.php is required.");
-						break;
-					}
+					
+					$PROCESSED = Evaluation::processTargets($_POST, $PROCESSED);
 
 					/**
 					 * Processing for evaluation_evaluators table.
@@ -328,7 +271,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						if (empty($PROCESSED["evaluation_evaluators"])) {
 							add_error("No evaluators were selected.");
 						}
-					} else {
+					} elseif ($evaluation_target_type != "peer") {
 						add_error("Please select an appropriate type of evaluator (i.e. entire class, percentage, etc).");
 					}
 
@@ -341,7 +284,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						 */
 						if ($db->AutoExecute("evaluations", $PROCESSED, "UPDATE", "`evaluation_id` = ".$db->qstr($EVALUATION_ID))) {
 							/**
-							 * Insert the target records into the evaluation_targets table.
+							 * Insert the target records into the evaluation_evaluators table.
 							 */
 							if (!empty($PROCESSED["evaluation_evaluators"])) {
 								$db->Execute("DELETE FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID));
@@ -357,6 +300,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									if (!$db->AutoExecute("evaluation_evaluators", $record, "INSERT") || (!$eevaluator_id = $db->Insert_Id())) {
 										add_error("Unable to attach an evaluation target to this evaluation. The system administrator has been notified of this error, please try again later.");
 										application_log("Unable to attach target_id [".$evaluation_target_id."] / target_value [".$target_value."] to evaluation_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
+									}
+								}
+							}
+							/**
+							 * Insert the target records into the evaluation_targets table.
+							 */
+							if (!empty($PROCESSED["evaluation_targets"])) {
+								$db->Execute("DELETE FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID));
+								foreach ($PROCESSED["evaluation_targets"] as $target_value) {
+									$record = array(
+										"evaluation_id" => $evaluation_id,
+										"target_id" => $evaluation_target_id,
+										"target_value" => $target_value["target_value"],
+										"target_type" => $target_value["target_type"],
+										"target_active" => 1,
+										"updated_date" => time(),
+										"updated_by" => $ENTRADA_USER->getID()
+									);
+
+									if (!$db->AutoExecute("evaluation_targets", $record, "INSERT") || (!$etarget_id = $db->Insert_Id())) {
+										add_error("Unable to attach an evaluation target to this evaluation. The system administrator has been notified of this error, please try again later.");
+										application_log("Unable to attach target_id [".$evaluation_target_id."] / target_value [".$target_value."] to evaluation_id [".$evaluation_id."]. Database said: ".$db->ErrorMsg());
 									}
 								}
 							}
@@ -376,14 +341,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				case 1 :
 				default :
 					$PROCESSED = $evaluation_info;
-
-					$query = "SELECT * FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)." AND `target_active` = '1'";
-					$results = $db->GetAll($query);
-					if ($results) {
-						foreach ($results as $result) {
-							$PROCESSED["evaluation_targets"][] = $result["target_value"];
-						}
-					}
+					$PROCESSED = Evaluation::processTargets($_POST, $PROCESSED);
 
 					$query = "SELECT * FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
 					$results = $db->GetAll($query);
@@ -404,6 +362,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				default :
 					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+					$HEAD[] = "<script src=\"".ENTRADA_URL."/javascript/elementresizer.js\" type=\"text/javascript\"></script>\n";
 
 					if (has_error() || has_notice()) {
 						echo display_status_messages();
@@ -436,11 +395,66 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									onFailure : function (response) {
 										$('evaluation_options').update('');
 										$('evaluation_options').hide();
+									},
+									onComplete : function () {
+										if ($('scripts-on-open') && $('scripts-on-open').innerHTML) {
+											eval($('scripts-on-open').innerHTML);
+										}
+										if ($('target_type_rotations')) {
+											var target_type = 'rotations';
+											if ($(target_type + '_options')) {
+
+												$(target_type + '_options').addClassName('multiselect-processed');
+
+												multiselect[target_type] = new Control.SelectMultiple('evaluation_target_'+target_type, target_type + '_options', {
+													checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+													nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+													filter: target_type + '_select_filter',
+													resize: target_type + '_scroll',
+													afterCheck: function(element) {
+														var tr = $(element.parentNode.parentNode);
+														tr.removeClassName('selected');
+
+														if (element.checked) {
+															tr.addClassName('selected');
+
+															addTarget(element.id, target_type);
+														} else {
+															removeTarget(element.id, target_type);
+														}
+													}
+												});
+
+												if ($(target_type + '_cancel')) {
+													$(target_type + '_cancel').observe('click', function(event) {
+														this.container.hide();
+
+														$('target_type').options.selectedIndex = 0;
+														$('target_type').show();
+
+														return false;
+													}.bindAsEventListener(multiselect[target_type]));
+												}
+
+												if ($(target_type + '_close')) {
+													$(target_type + '_close').observe('click', function(event) {
+														this.container.hide();
+
+														$('target_type').clear();
+
+														return false;
+													}.bindAsEventListener(multiselect[target_type]));
+												}
+
+												multiselect[target_type].container.show();
+											}
+										}
 									}
 								});
+							} else {
+								$('evaluation_options').show();
 							}
 						} else {
-							$('evaluation_options').update('');
 							$('evaluation_options').hide();
 						}
 					}
@@ -451,7 +465,237 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						});
 
 						$$('.target_group').invoke('hide');
-						$$('.' + type + '_audience').invoke('show');
+						$$('.' + type + '_target').invoke('show');
+					}
+
+					var multiselect = [];
+					var target_type;
+
+					function showMultiSelect() {
+						$$('select_multiple_container').invoke('hide');
+						target_type = $F('target_type');
+						form_id = $('eform_id').options[$('eform_id').selectedIndex].value;
+						var cohorts = ($('evaluation_target_cohorts') ? $('evaluation_target_cohorts').value : "");
+						var course_groups = ($('evaluation_target_course_groups') ? $('evaluation_target_course_groups').value : "");
+						var students = ($('evaluation_target_students') ? $('evaluation_target_students').value : "");
+						var rotations = ($('evaluation_target_rotations') ? $('evaluation_target_rotations').value : "");
+
+						if (multiselect[target_type]) {
+							multiselect[target_type].container.show();
+						} else {
+							if (target_type) {
+								new Ajax.Request('<?php echo ENTRADA_RELATIVE; ?>/admin/evaluations?section=api-target-selector', {
+									evalScripts : true,
+									parameters: {
+										'options_for' : target_type,
+										'form_id' : form_id,
+										'ajax' : 1,
+										'evaluation_target_cohorts' : cohorts,
+										'evaluation_target_course_groups' : course_groups,
+										'evaluation_target_students' : students,
+										'evaluation_target_rotations' : rotations
+									},
+									method: 'post',
+									onLoading: function() {
+										$('options_loading').show();
+									},
+									onSuccess: function(response) {
+										if (response.responseText) {
+											$('options_container').insert(response.responseText);
+
+											if ($(target_type + '_options')) {
+
+												$(target_type + '_options').addClassName('multiselect-processed');
+
+												multiselect[target_type] = new Control.SelectMultiple('evaluation_target_'+target_type, target_type + '_options', {
+													checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+													nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+													filter: target_type + '_select_filter',
+													resize: target_type + '_scroll',
+													afterCheck: function(element) {
+														var tr = $(element.parentNode.parentNode);
+														tr.removeClassName('selected');
+
+														if (element.checked) {
+															tr.addClassName('selected');
+
+															addTarget(element.id, target_type);
+														} else {
+															removeTarget(element.id, target_type);
+														}
+													}
+												});
+
+												if ($(target_type + '_cancel')) {
+													$(target_type + '_cancel').observe('click', function(event) {
+														this.container.hide();
+
+														$('target_type').options.selectedIndex = 0;
+														$('target_type').show();
+
+														return false;
+													}.bindAsEventListener(multiselect[target_type]));
+												}
+
+												if ($(target_type + '_close')) {
+													$(target_type + '_close').observe('click', function(event) {
+														this.container.hide();
+
+														$('target_type').clear();
+
+														return false;
+													}.bindAsEventListener(multiselect[target_type]));
+												}
+
+												multiselect[target_type].container.show();
+											}
+										} else {
+											new Effect.Highlight('target_type', {startcolor: '#FFD9D0', restorecolor: 'true'});
+											new Effect.Shake('target_type');
+										}
+									},
+									onError: function() {
+										alert("There was an error retrieving the requested target. Please try again.");
+									},
+									onComplete: function() {
+										$('options_loading').hide();
+									}
+								});
+							}
+						}
+						return false;
+					}
+
+					function addTarget(element, target_id) {
+						if (!$('target_'+element)) {
+							$('target_list').innerHTML += '<li class="' + (target_id == 'students' ? 'user' : 'group') + '" id="target_'+element+'" style="cursor: move;">'+$($(element).value+'_label').innerHTML+'<img src="<?php echo ENTRADA_RELATIVE; ?>/images/action-delete.gif" onclick="removeTarget(\''+element+'\', \''+target_id+'\');" class="list-cancel-image" /></li>';
+							$$('#target_list div').each(function (e) { e.hide(); });
+
+							Sortable.destroy('target_list');
+							Sortable.create('target_list');
+						}
+						var tr = $(element).parentNode.parentNode;
+						if (tr.hasClassName('category')) {
+							tr.siblings().each( 
+								function (el) {
+									el.addClassName('selected');
+								}
+							);
+							$$('#rotations_scroll .select_multiple_checkbox input').each( 
+								function (e) {
+									e.checked = true;
+									e.disable();
+								}
+							);
+						} else if (tr.hasClassName('cat_enabled')) {
+							tr.previousSiblings().each( 
+								function (e) {
+									if (e.hasClassName('category')) {
+										e.addClassName('selected');
+									}
+								}
+							);
+							$$('#rotations_scroll .select_multiple_checkbox_category input').each( 
+								function (e) {
+									e.checked = true;
+									e.disable(); 
+								} 
+							);
+						}
+					}
+
+					function removeTarget(element, target_id) {
+						if ($(element)) {
+							var tr = $(element).parentNode.parentNode;
+							if (tr.hasClassName('category')) {
+								tr.siblings().each( 
+									function (e) {
+										e.removeClassName('selected');
+									}
+								);
+								$$('#rotations_scroll .select_multiple_checkbox input').each( 
+									function (e) {
+										e.enable();
+										e.checked = false;
+									}
+								)
+								$('evaluation_target_'+target_id).value = "";
+							} else {
+								tr.previousSiblings().each( 
+									function (e) {
+										if (e.hasClassName('category')) {
+											e.removeClassName('selected');
+										}
+									}
+								);
+								$$('#rotations_scroll .select_multiple_checkbox_category input').each( 
+									function (el) { 
+										el.enable(); 
+										el.checked = false;
+									} 
+								);
+							}
+						}
+						if ($('target_'+element)) {
+							$('target_'+element).remove();
+						}
+						Sortable.destroy('target_list');
+						Sortable.create('target_list');
+						if ($(element)) {
+							$(element).checked = false;
+						}
+						var target = $('evaluation_target_'+target_id).value.split(',');
+						for (var i = 0; i < target.length; i++) {
+							if (target[i] == element) {
+								target.splice(i, 1);
+								break;
+							}
+						}
+						$('evaluation_target_'+target_id).value = target.join(',');
+					}
+
+					function updateAudienceOptions() {
+						var form_id = $('eform_id').options[$('eform_id').selectedIndex].value;
+						if (form_id > 0)  {
+
+							var selectedForm = '';
+
+							var currentLabel = $('eform_id').options[$('eform_id').selectedIndex].innerHTML;
+
+							if (currentLabel != selectedForm) {
+								selectedForm = currentLabel;
+								var cohorts = ($('evaluation_target_cohorts') ? $('evaluation_target_cohorts').getValue() : '');
+								var course_groups = ($('evaluation_target_course_groups') ? $('evaluation_target_course_groups').getValue() : '');
+								var students = ($('evaluation_target_students') ? $('evaluation_target_students').getValue() : '');
+
+								$('audience-options').show();
+								$('audience-options').update('<tr><td colspan="2">&nbsp;</td><td><div class="content-small" style="vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Please wait while <strong>audience options</strong> are being loaded ... </div></td></tr>');
+
+								new Ajax.Updater('audience-options', '<?php echo ENTRADA_RELATIVE; ?>/admin/events?section=api-audience-options', {
+									evalScripts : true,
+									parameters : {
+										'ajax' : 1,
+										'form_id' : form_id,
+										'evaluation_target_students': students,
+										'evaluation_target_course_groups': course_groups,
+										'evaluation_target_cohorts': cohorts
+									},
+									onSuccess : function (response) {
+										if (response.responseText == "") {
+											$('audience-options').update('');
+											$('audience-options').hide();
+										}
+									},
+									onFailure : function () {
+										$('audience-options').update('');
+										$('audience-options').hide();
+									}
+								});
+							}
+						} else {
+							$('audience-options').update('');
+							$('audience-options').hide();
+						}
 					}
 					</script>
 					<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=edit&amp;step=2" method="post" name="editEvaluationForm" id="editEvaluationForm">
@@ -541,6 +785,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							}
 							?>
 							</tbody>
+							<tbody id="target-options">
+							<?php
+							if ($PROCESSED["eform_id"]) {
+								require_once(ENTRADA_ABSOLUTE."/core/modules/admin/evaluations/api-target-selector.inc.php");
+							}
+							?>
+							</tbody>
 							<tbody>
 								<tr>
 									<td colspan="3">&nbsp;</td>
@@ -562,7 +813,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									</td>
 								</tr>
 								<tr>
-									<td colspan="3">&nbsp;</td>
+									<td colspan="2">&nbsp;</td>
+									<td id="submittable_notice">&nbsp;</td>
 								</tr>
 								<?php echo generate_calendars("evaluation", "Evaluation", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["evaluation_finish"])) ? $PROCESSED["evaluation_finish"] : 0)); ?>
 								<tr>

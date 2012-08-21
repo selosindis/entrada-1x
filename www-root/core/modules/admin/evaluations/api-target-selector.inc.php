@@ -49,18 +49,18 @@ if (!defined("IN_EVALUATIONS")) {
 		 * Clears all open buffers so we can return a plain response for the Javascript.
 		 */
 		ob_clear_open_buffers();
-
-		$PROCESSED = Evaluation::processTargets($_POST);
 	}
-
-	if ($PROCESSED["eform_id"]) {
-		Evaluation::getTargetControls($_POST, "", $PROCESSED["eform_id"]);
+	
+	$options_for = false;
+	$form_id = 0;
+	
+	if (isset($_POST["options_for"]) && ($tmp_input = clean_input($_POST["options_for"], array("trim")))) {
+		$options_for = $tmp_input;
 	}
-
-	/**
-	 * If we are return this via Javascript,
-	 * exit now so we don't get the entire page.
-	 */
+	
+	if ($options_for && $ENTRADA_USER->getActiveOrganisation()) {
+		Evaluation::getTargetControls($_POST, $options_for);
+	}
 	if ($use_ajax) {
 		exit;
 	}

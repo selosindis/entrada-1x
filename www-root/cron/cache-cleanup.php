@@ -24,5 +24,11 @@
  */
 require_once("init.inc.php");
 
-$command = "find ".CACHE_DIRECTORY." -mtime +7 | grep '\.cache' | xargs rm -f";
-exec($command);
+if (defined("CACHE_DIRECTORY") && CACHE_DIRECTORY && is_dir(CACHE_DIRECTORY) && is_writable(CACHE_DIRECTORY)) {
+	$command = "find ".CACHE_DIRECTORY." -mtime +7 | grep '\.cache' | xargs rm -f";
+	exec($command);
+	
+	application_log("notice", "Scrubbed the Entrada cache directory by running: [".$command."].");
+} else {
+	application_log("error", "Unable to cleanup the Entrada cache directory. Please check the CACHE_DIRECTORY constant in settings.inc.php.");
+}

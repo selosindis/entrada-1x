@@ -61,7 +61,7 @@ define("COMMUNITY_URL", ENTRADA_URL."/community");								// Full URL to the com
 define("COMMUNITY_ABSOLUTE", ENTRADA_ABSOLUTE."/community");					// Full Directory Path to the community directory without a trailing slash.
 define("COMMUNITY_RELATIVE", ENTRADA_RELATIVE."/community");					// Absolute Path from the document_root to the community without a trailing slash.
 
-define("DATABASE_TYPE", $config->database->adapter);							// Database Connection Type
+define("DATABASE_TYPE", $config->database->adapter);												// Database Connection Type
 define("DATABASE_HOST", $config->database->host);								// The hostname or IP of the database server you want to connnect to.
 define("DATABASE_NAME", $config->database->entrada_database);					// The name of the database to connect to.
 define("DATABASE_USER", $config->database->username);							// A username that can access this database.
@@ -241,7 +241,7 @@ GOOGLENOTIFICATION;
  */
 define("DEFAULT_WEATHER_FETCH", "http://weather.yahooapis.com/forecastrss?u=c&w=%LOCATIONCODE%");
 
-$WEATHER_LOCATION_CODES = array("4145" => "Kingston, Ontario");					// These are the weather.com weather city / airport weather codes that are fetched and stored for use on the Dashboard.
+$WEATHER_LOCATION_CODES = array("4145" => "Kingston, Ontario");				// These are the weather.com weather city / airport weather codes that are fetched and stored for use on the Dashboard.
 
 define("LOG_DIRECTORY", $config->entrada_storage . "/logs");					// Full directory path to the logs directory without a trailing slash.
 
@@ -255,7 +255,7 @@ define("RSS_CACHE_TIMEOUT", 300);												// Number of seconds that an RSS fi
 
 define("COOKIE_TIMEOUT", ((time()) + (3600 * 24 * 365)));						// Number of seconds the cookie will be valid for. (default: ((time())+(3600*24*365)) = 1 year)
 
-define("MAX_NAV_TABS", 10);														// The maxium number of navigation tabs shown to users on every page. Extras will go into a "More" dropdown tab.
+define("MAX_NAV_TABS", 10);														//The maxium number of navigation tabs shown to users on every page. Extras will go into a "More" dropdown tab.
 define("MAX_PRIVACY_LEVEL", 3);													// Select the max privacy level you accept.
 define("MAX_UPLOAD_FILESIZE", 52428800);										// Maximum allowable filesize (in bytes) of a file that can be uploaded (52428800 = 50MB).
 
@@ -267,7 +267,7 @@ define("ANNUALREPORT_STORAGE", $config->entrada_storage."/annualreports");		// F
 
 define("STORAGE_USER_PHOTOS", $config->entrada_storage . "/user-photos");		// Full directory path where user profile photos are stored without trailing slash.
 define("FILE_STORAGE_PATH", $config->entrada_storage . "/event-files");			// Full directory path where off-line files are stored without trailing slash.
-define("MSPR_STORAGE",$config->entrada_storage . "/msprs");						// Full directory path where student Medical School Performance Reports should be sotred
+define("MSPR_STORAGE",$config->entrada_storage . "/msprs");					//Full directory path where student Medical School Performance Reports should be sotred
 
 define("SENDMAIL_PATH", "/usr/sbin/sendmail -t -i");							// Full path and parametres to sendmail.
 
@@ -275,7 +275,7 @@ define("DEBUG_MODE", true);														// Some places have extra debug code to
 define("SHOW_LOAD_STATS", false);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.4.0");											// The current filesystem version of Entrada.
+define("APPLICATION_VERSION", "1.4.0DEV");										// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada: An eLearning Ecosystem";
@@ -576,17 +576,17 @@ $AR_FUTURE_YEARS = $AR_CUR_YEAR + 10;
  * Defines for MSPR
  */
 
-define("INTERNAL_AWARD_AWARDING_BODY","My University");
+define("INTERNAL_AWARD_AWARDING_BODY","Queen's University");
 define("CLERKSHIP_COMPLETED_CUTOFF", "October 26");
 
-define("MSPR_REJECTION_REASON_REQUIRED",true);									// Defines whether a reason is required when rejecting a submission
-define("MSPR_REJECTION_SEND_EMAIL",true);										// Defines whether an email should be send on rejection of a student submission to their mspr
+define("MSPR_REJECTION_REASON_REQUIRED",true);	//defines whether a reason is required when rejecting a submission
+define("MSPR_REJECTION_SEND_EMAIL",true);	//defines whether an email should be send on rejection of a student submission to their mspr
 
-define("MSPR_CLERKSHIP_MERGE_NEAR", true);										// Defines whether or not clerkship rotation with the same title should be merged if they are near in time.
-define("MSPR_CLERKSHIP_MERGE_DISTANCE", "+1 week");								// Defines how close together clerkship rotations with the SAME title need to be in order to be merged on the mspr display
+define("MSPR_CLERKSHIP_MERGE_NEAR", true); //defines whether or not clerkship rotation with the same title should be merged if they are near in time.
+define("MSPR_CLERKSHIP_MERGE_DISTANCE", "+1 week"); //defines how close together clerkship rotations with the SAME title need to be in order to be merged on the mspr display
 
-define("AUTO_APPROVE_ADMIN_MSPR_EDITS",true);									// If true, the comment will be cleared, and the entry approved.
-define("AUTO_APPROVE_ADMIN_MSPR_SUBMISSIONS", true);							// When adding to student submissions, admin contributions in these areas are automatically approved, if true.
+define("AUTO_APPROVE_ADMIN_MSPR_EDITS",true); //if true, the comment will be cleared, and the entry approved.
+define("AUTO_APPROVE_ADMIN_MSPR_SUBMISSIONS", true); //when adding to student submissions, admin contributions in these areas are automatically approved, if true.
 
 /**
  * Defines for Tasks Module
@@ -623,7 +623,7 @@ define("TASK_FACULTY_SELECTION_OFF", "off");
 
 
 //Defaults
-define("TASK_DEFAULT_RECIPIENT_TYPE", TASK_RECIPIENT_USER);						// Options are: user, cohort, organisation
+define("TASK_DEFAULT_RECIPIENT_TYPE",TASK_RECIPIENT_USER); //options are: user, cohort, organisation
 define("TASK_DEFAULT_VERIFICATION_TYPE", TASK_VERIFICATION_NONE);
 define("TASK_DEFAULT_VERIFICATION_NOTIFICATION", TASK_VERIFICATION_NOTIFICATION_OFF);
 define("TASK_DEFAULT_COMPLETE_COMMENT", TASK_COMMENT_ALLOW);

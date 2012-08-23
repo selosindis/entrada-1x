@@ -11338,8 +11338,9 @@ function events_fetch_event_audience($event_id = 0) {
  * @return array
  */
 function events_fetch_event_attendance_for_user($event_id = 0, $user_id = false) {
+	global $db;
 	if($event_id && $user_id){
-		$query = "SELECT * FROM `event_attendance` WHERE `event_id` = ".$db->qstr($event_id)." AND `proxy_id` ".$db->qstr($user_id);
+		$query = "SELECT * FROM `event_attendance` WHERE `event_id` = ".$db->qstr($event_id)." AND `proxy_id` = ".$db->qstr($user_id);
 		return $db->GetRow($query);
 	}
 	return false;

@@ -111,7 +111,18 @@ if ($RECORD_ID) {
 							$ERROR++;
 							$ERRORSTR[] = "The <strong>Post Body</strong> field is required, this is the body of your post.";
 						}
-
+						
+						/**
+						 * Non-required field "anonymous" / Should posts be displayed anonymously to non-admins
+						 */
+						if (defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && (isset($_POST["anonymous"])) && ((int) $_POST["anonymous"])) {
+							echo 'I made it here';
+							$PROCESSED["anonymous"]	= 1;
+						} else {
+							echo 'I did not make it there';
+							$PROCESSED["anonymous"]	= 0;
+						}	
+						
 						/**
 						 * Email Notificaions.
 						 */
@@ -234,6 +245,15 @@ if ($RECORD_ID) {
 									<textarea id="topic_description" name="topic_description" style="width: 100%; height: 200px" cols="68" rows="12"><?php echo ((isset($PROCESSED["topic_description"])) ? html_encode($PROCESSED["topic_description"]) : ""); ?></textarea>
 								</td>
 							</tr>
+							<tr>
+								<td colspan="3">&nbsp;</td>
+							</tr>
+							<?php if (defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON) { ?>
+							<tr>
+								<td><input type="checkbox" name="anonymous" <?php echo (isset($PROCESSED["anonymous"]) && $PROCESSED["anonymous"] ? "checked=\"checked\"" : ""); ?> value="1"/></td>
+								<td colspan="2"><label for="anonymous" class="form-nrequired">Hide name from non-administrator users</label></td>
+							</tr>									
+							<?php } ?>
 							<?php
 							if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) {
 								?>
@@ -273,6 +293,15 @@ if ($RECORD_ID) {
 							$ERROR++;
 							$ERRORSTR[] = "The <strong>Post Body</strong> field is required, this is your reply to the post.";
 						}
+
+						/**
+						 * Non-required field "anonymous" / Should posts be displayed anonymously to non-admins
+						 */
+						if (defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && (isset($_POST["anonymous"])) && ((int) $_POST["anonymous"])) {
+							$PROCESSED["anonymous"]	= 1;
+						} else {
+							$PROCESSED["anonymous"]	= 0;
+						}							
 
 						if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"] && isset($_POST["enable_notifications"])) {
 							$notifications = $_POST["enable_notifications"];
@@ -364,6 +393,14 @@ if ($RECORD_ID) {
 									<textarea id="topic_description" name="topic_description" style="width: 100%; height: 200px" cols="68" rows="12"><?php echo ((isset($PROCESSED["topic_description"])) ? html_encode($PROCESSED["topic_description"]) : ""); ?></textarea>
 								</td>
 							</tr>
+							<?php if (defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON) { ?>
+							<tr>
+								<td>&nbsp;</td>
+							</tr>
+							<tr>
+								<td><input type="checkbox" name="anonymous" <?php echo (isset($PROCESSED["anonymous"]) && $PROCESSED["anonymous"] ? "checked=\"checked\"" : ""); ?> value="1"/><label for="anonymous" class="form-nrequired">Hide name from non-administrator users</label></td>
+							</tr>		
+							<?php } ?>
 							<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) { ?>
 							<tr>
 								<td>&nbsp;</td>

@@ -77,6 +77,12 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	if ((isset($_GET["qid"])) && ((int) trim($_GET["qid"]))) {
 		$AQUIZ_ID = (int) trim($_GET["qid"]);
 	}
+	/**
+	 * defaulting values for require_attendance and random_order here because the community doesn't ask for it but will still need to enter a value
+	 * Defaults in MySQL anyway but just for good measure giving them a value.
+	 */
+	$PROCESSED["require_attendance"] = 0;
+	$PROCESSED["random_order"] = 0;
 	
 	$modal_onload = array();
 	?>
@@ -183,8 +189,17 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["required"] = 1;
 										} else {
 											$PROCESSED["required"] = 0;
+										}									
+										
+										/**
+										 * Non-required field "random_order" / Should quiz question order be shuffled?
+										 */
+										if ((isset($_POST["random_order"])) && ($_POST["random_order"] == 1)) {
+											$PROCESSED["random_order"] = 1;
+										} else {
+											$PROCESSED["random_order"] = 0;
 										}
-	
+										
 										/**
 										 * Required field "quiztype_id" / When should learners be allowed to view the results of the quiz?
 										 */
@@ -234,6 +249,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["timeframe"] = "";
 										}
 	
+										/**
+										 * Non-required field "require_attendance" / Should completion of this quiz be limited by the learner's event attendance?
+										 */
+										if ((isset($_POST["require_attendance"])) && ($_POST["require_attendance"] == 1)) {
+											$PROCESSED["require_attendance"] = 1;
+										} else {
+											$PROCESSED["require_attendance"] = 0;
+										}			
+										
 										/**
 										 * Non-required field "release_date" / Accessible Start (validated through validate_calendars function).
 										 * Non-required field "release_until" / Accessible Finish (validated through validate_calendars function).
@@ -487,6 +511,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 															echo display_notice();
 														}
 														?>
+														
+														<div class="wizard-question">
+															<div>Is attendance required for this quiz to be completed?</div>
+															<div class="response-area">
+																<input type="radio" id="require_attendance_no" name="require_attendance" value="0"<?php echo (((!isset($PROCESSED["require_attendance"])) || (!$PROCESSED["require_attendance"])) ? " checked=\"checked\"" : ""); ?> /> <label for="required_no">Not Required</label><br />
+																<input type="radio" id="require_attendance_yes" name="require_attendance" value="1"<?php echo (($PROCESSED["require_attendance"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">Required</label><br />
+															</div>
+														</div>
+														
 														<div class="wizard-question">
 															<div>When should this quiz be taken in relation to the event?</div>
 															<div class="response-area">
@@ -564,7 +597,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 																<input type="radio" id="required_yes" name="required" value="1"<?php echo (($PROCESSED["required"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">Required</label><br />
 															</div>
 														</div>
-		
+
+														<div class="wizard-question">
+															<div>Should the order of the questions be shuffled for this quiz?</div>
+															<div class="response-area">
+																<input type="radio" id="random_order_no" name="random_order" value="0"<?php echo (((!isset($PROCESSED["random_order"])) || (!$PROCESSED["random_order"])) ? " checked=\"checked\"" : ""); ?> /> <label for="required_no">Not Shuffled</label><br />
+																<input type="radio" id="random_order_yes" name="random_order" value="1"<?php echo (($PROCESSED["random_order"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">Shuffled</label><br />
+															</div>
+														</div>		
+
 														<div class="wizard-question">
 															<div>How much time (in minutes) can the learner spend taking this quiz?</div>
 															<div class="response-area">
@@ -721,6 +762,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 	
 										/**
+										 * Non-required field "random_order" / Should quiz question order be shuffled?
+										 */
+										if ((isset($_POST["random_order"])) && ($_POST["random_order"] == 1)) {
+											$PROCESSED["random_order"] = 1;
+										} else {
+											$PROCESSED["random_order"] = 0;
+										}
+	
+										/**
 										 * Required field "quiztype_id" / When should learners be allowed to view the results of the quiz?
 										 */
 										if ((isset($_POST["quiztype_id"])) && (array_key_exists($_POST["quiztype_id"], $quiz_types_record)) && ($tmp_input = clean_input($_POST["quiztype_id"], "int"))) {
@@ -769,6 +819,16 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["timeframe"] = "";
 										}
 	
+	
+										/**
+										 * Non-required field "require_attendance" / Should completion of this quiz be limited by the learner's event attendance?
+										 */
+										if ((isset($_POST["require_attendance"])) && ($_POST["require_attendance"] == 1)) {
+											$PROCESSED["require_attendance"] = 1;
+										} else {
+											$PROCESSED["require_attendance"] = 0;
+										}
+										
 										/**
 										 * Non-required field "release_date" / Accessible Start (validated through validate_calendars function).
 										 * Non-required field "release_until" / Accessible Finish (validated through validate_calendars function).
@@ -1023,6 +1083,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													echo display_notice();
 												}
 												?>
+												
+												<div class="wizard-question">
+													<div>Is attendance required for this quiz to be completed?</div>
+													<div class="response-area">
+														<input type="radio" id="require_attendance_no" name="require_attendance" value="0"<?php echo (((!isset($PROCESSED["require_attendance"])) || (!$PROCESSED["require_attendance"])) ? " checked=\"checked\"" : ""); ?> /> <label for="required_no">Not Required</label><br />
+														<input type="radio" id="require_attendance_yes" name="require_attendance" value="1"<?php echo (($PROCESSED["require_attendance"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">Required</label><br />
+													</div>
+												</div>			
+												
 												<div class="wizard-question">
 													<div>When should this quiz be taken in relation to the event?</div>
 													<div class="response-area">
@@ -1100,6 +1169,14 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														<input type="radio" id="required_yes" name="required" value="1"<?php echo (($PROCESSED["required"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">Required</label><br />
 													</div>
 												</div>
+												
+												<div class="wizard-question">
+													<div>Should the question order be shuffled for this quiz?</div>
+													<div class="response-area">
+														<input type="radio" id="random_order_no" name="random_order" value="0"<?php echo (((!isset($PROCESSED["random_order"])) || (!$PROCESSED["random_order"])) ? " checked=\"checked\"" : ""); ?> /> <label for="required_no">Not Shuffled</label><br />
+														<input type="radio" id="random_order_yes" name="random_order" value="1"<?php echo (($PROCESSED["random_order"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">Shuffled</label><br />
+													</div>
+												</div>												
 		
 												<div class="wizard-question">
 													<div>How much time (in minutes) can the learner spend taking this quiz?</div>

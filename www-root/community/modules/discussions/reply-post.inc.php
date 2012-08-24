@@ -25,7 +25,7 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".COMMUNITY_URL."/javascript/d
 
 echo "<h1>Reply To Post</h1>\n";
 
-if ($RECORD_ID) {
+if ($RECORD_ID) {	
 	$query			= "
 					SELECT a.*, b.`forum_title`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `poster_fullname`, c.`username` AS `poster_username`, d.`notify_active`
 					FROM `community_discussion_topics` AS a
@@ -78,6 +78,15 @@ if ($RECORD_ID) {
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Post Body</strong> field is required, this is your reply to the post.";
 					}
+					
+					/**
+					 * Non-required field "anonymous" / Should posts be displayed anonymously to non-admins
+					 */
+					if (defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && (isset($_POST["anonymous"])) && ((int) $_POST["anonymous"])) {
+						$PROCESSED["anonymous"]	= 1;
+					} else {
+						$PROCESSED["anonymous"]	= 0;
+					}						
 					
 					if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"] && isset($_POST["enable_notifications"])) {
 						$notifications = $_POST["enable_notifications"];
@@ -172,6 +181,14 @@ if ($RECORD_ID) {
 								<textarea id="topic_description" name="topic_description" style="width: 100%; height: 200px" cols="68" rows="12"><?php echo ((isset($PROCESSED["topic_description"])) ? html_encode($PROCESSED["topic_description"]) : ""); ?></textarea>
 							</td>
 						</tr>
+						<?php if (defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON) { ?>
+						<tr>
+							<td>&nbsp;</td>
+						</tr>
+						<tr>
+							<td><input type="checkbox" name="anonymous" <?php echo (isset($PROCESSED["anonymous"]) && $PROCESSED["anonymous"] ? "checked=\"checked\"" : ""); ?> value="1"/><label for="anonymous" class="form-nrequired">Hide name from non-administrator users</label></td>
+						</tr>								
+						<?php } ?>
 						<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) { ?>
 						<tr>
 							<td>&nbsp;</td>
@@ -196,7 +213,7 @@ if ($RECORD_ID) {
 							<col style="width: 70%" />
 						</colgroup>
 						<tr>
-							<td style="border-bottom: none; border-right: none"><span class="content-small">By:</span> <a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($topic_record["poster_username"]); ?>" style="font-size: 10px"><?php echo html_encode($topic_record["poster_fullname"]); ?></a></td>
+							<td style="border-bottom: none; border-right: none"><span class="content-small">By:</span>  <?php if(defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && !$COMMUNITY_ADMIN && isset($topic_record["anonymous"]) && $topic_record["anonymous"]){?><span style="font-size: 10px">Anonymous</span><?php } else {?><a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($topic_record["poster_username"]); ?>" style="font-size: 10px"><?php echo html_encode($topic_record["poster_fullname"]); ?></a><?php } ?></td>
 							<td style="border-bottom: none">
 								<div style="float: left">
 									<span class="content-small"><strong>Posted:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $topic_record["updated_date"]); ?></span>

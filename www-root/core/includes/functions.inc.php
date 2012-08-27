@@ -208,7 +208,7 @@ function check_sidebar($buffer) {
 	if(@count($SIDEBAR)) {
 		@ksort($SIDEBAR);
 
-		$output .= "<div class=\"sidebar\" id=\"sidebar\">\n";
+		$output .= "<div class=\"inner-sidebar\">\n";
 		$output .= implode("\n\n", $SIDEBAR);
 		$output .= "</div>\n";
 	}
@@ -406,7 +406,7 @@ function load_system_navigator() {
 		$output .= "		</div>\n";
 		$output .= "	</div>\n";
 		$output .= "	<div id=\"navigator-tab\">\n";
-		$output .= "		<a href=\"javascript: void(0);\" onclick=\"new Effect.toggle('navigator', 'slide', { duration: 0.4 }); return false;\"><img src=\"".ENTRADA_RELATIVE."/images/nav_toggle.gif\" width=\"153\" height=\"29\" border=\"0\" alt=\"Toggle MEdTech Navigator\" title=\"Toggle MEdTech Navigator\" /></a>\n";
+		$output .= "		<a href=\"javascript: void(0);\" class=\"toc\" onclick=\"new Effect.toggle('navigator', 'slide', { duration: 0.4 }); return false;  \">Table of contents</a>\n";
 		$output .= "	</div>\n";
 		$output .= "</div>\n";
 	}
@@ -468,9 +468,9 @@ function navigator_tabs() {
 				$admin_text = implode("\n", $admin_tabs);
 			}
 
-			$tabs_admin .= "<li class=\"admin staysput".$tab_bold."\" id=\"admin_tab\">";
-			$tabs_admin .= "	<a href=\"#\" onclick=\"return false;\" id=\"admin_tab_link\"><span>Admin</span></a>";
-			$tabs_admin .= "	<ul class=\"drop_options\" id=\"admin_drop_options\">";
+			$tabs_admin .= "<li class=\"dropdown".$tab_bold."\" id=\"admin_tab\">";
+			$tabs_admin .= "	<a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\" id=\"admin_tab_link\"><span>Admin</span> <b class=\"caret\"></b></a>";
+			$tabs_admin .= "	<ul class=\"dropdown-menu\" id=\"admin_drop_options\">";
 			$tabs_admin .=			$admin_text;
 			$tabs_admin .= "		<li class=\"bottom\"><div>&nbsp;</div></li>";
 			$tabs_admin .= "	</ul>";
@@ -576,9 +576,9 @@ function navigator_tabs() {
 			// Grab another tab into more to make space for the more tab within the max limit
 			$more_tabs[] = array_pop($public_tabs);
 
-			$tabs_more  = "<li class=\"more staysput".$more_bold."\" id=\"more_tab\">";
-			$tabs_more .= "	<a href=\"#\" onclick=\"return false;\"><span>More</span></a>";
-			$tabs_more .= "	<ul class=\"drop_options\" id=\"more_drop_options\">";
+			$tabs_more  = "<li class=\"dropdown".$more_bold."\" id=\"more_tab\">";
+			$tabs_more .= "	<a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\">More <b class=\"caret\"></b></a>";
+			$tabs_more .= "	<ul class=\"dropdown-menu\" id=\"more_drop_options\">";
 			$tabs_more .=		implode("\n", $more_tabs);
 			$tabs_more .= "		<li class=\"bottom\"><div></div></li>";
 			$tabs_more .= "	</ul>";
@@ -602,7 +602,7 @@ function navigator_tabs() {
 	/**
 	 * Add Logout tab.
 	 */
-	$output_html .= "<li class=\"last staysput\"><a href=\"".ENTRADA_RELATIVE."/?action=logout\"><span>Logout</span></a></li>\n";
+	/*$output_html .= "<li class=\"last staysput\"><a href=\"".ENTRADA_RELATIVE."/?action=logout\"><span>Logout</span></a></li>\n";*/
 
 
 	/**
@@ -613,8 +613,8 @@ function navigator_tabs() {
 	/**
 	 * Remove temporary placeholders.
 	 */
-	$output_html = "<div id=\"screenTabs\"><div id=\"tabs\"><ul>".preg_replace("/\%(.*)\%/", "", $output_html)."</ul></div></div>";
-
+	/*$output_html = "<div id=\"screenTabs\"><div id=\"tabs\"><ul>".preg_replace("/\%(.*)\%/", "", $output_html)."</ul></div></div>";*/
+	$output_html = "<ul class=\"nav\">".preg_replace("/\%(.*)\%/", "", $output_html)."</ul>";
 	return $output_html;
 }
 
@@ -736,7 +736,7 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 	$output .= "<div class=\"sidebar-body\">".$html."</div>\n";
 	$output .= "</div><br />\n";*/
 
-	$output  = "<table class=\"sidebar\" id=\"".html_encode($id)."\" cellspacing=\"0\" summary=\"".html_encode($title)."\">\n";
+	/*$output  = "<table class=\"sidebar\" id=\"".html_encode($id)."\" cellspacing=\"0\" summary=\"".html_encode($title)."\">\n";
 	$output .= "<thead>\n";
 	$output .= "	<tr>\n";
 	$output .= "		<td class=\"sidebar-head\">".html_encode($title)."</td>\n";
@@ -748,7 +748,17 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 	$output .= "	</tr>\n";
 	$output .= "</tbody>\n";
 	$output .= "</table>\n";
-	$output .= "<br />\n";
+	$output .= "<br />\n";*/
+	
+	$output  = "<div class=\"panel\" id=\"".html_encode($id)."\" summary=\"".html_encode($title)."\">\n";
+	$output .= "<div class=\"panel-head\">\n";
+	$output .= "		<h3>".html_encode($title)."</h3>\n";
+	$output .= "</div>\n";
+	$output .= "		<div class=\"clearfix panel-body\">".$html."</div>\n";
+	$output .= "</div>\n";
+
+
+
 
 	switch ($position) {
 		case SIDEBAR_PREPEND:

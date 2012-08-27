@@ -37,7 +37,7 @@ color: #036;
 div.person-data span.person-name {
 color: #036; 
 }
-
+/*
 a {
 color:#036;
 }
@@ -45,7 +45,7 @@ color:#036;
 h1, h2, h3, .head-heading, .content-heading, .content-subheading {
 color:#036;
 }
-
+*/
 ul.objective-list li label.heading, ol.objective-list li span.heading {
 color:#036;
 }

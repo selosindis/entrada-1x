@@ -32,9 +32,9 @@ if(!defined("PARENT_INCLUDED")) exit;
 $ONLOAD[] = "document.getElementById('username').focus()";
 
 ?>
-<h1><?php echo APPLICATION_NAME; ?> Login</h1>
-Please enter your <?php echo APPLICATION_NAME; ?> username and password to log in.
-<blockquote>
+<h2><?php echo APPLICATION_NAME; ?> Login</h2>
+<p>Please enter your <?php echo APPLICATION_NAME; ?> username and password to log in.</p>
+
 	<?php
 	if(($ACTION == "login") && ($ERROR)) {
 		echo display_error();
@@ -57,9 +57,24 @@ Please enter your <?php echo APPLICATION_NAME; ?> username and password to log i
 		echo display_notice(array("You must log in to download the requested file; once you have logged in the download will start automatically."));
 	}
 	?>
-	<form action="<?php echo ENTRADA_URL; ?>/<?php echo (($PROCEED_TO) ? "?url=".rawurlencode($PROCEED_TO) : ""); ?>" method="post">
+	<form class="form-horizontal login-form" action="<?php echo ENTRADA_URL; ?>/<?php echo (($PROCEED_TO) ? "?url=".rawurlencode($PROCEED_TO) : ""); ?>" method="post">
 		<input type="hidden" name="action" value="login" />
-		<table style="width: 275px" cellspacing="1" cellpadding="1" border="0">
+		 <div class="control-group">
+			<label class="control-label" for="username">Username</label>
+			<div class="controls">
+			<input type="text" id="username" name="username" value="<?php echo ((isset($_REQUEST["username"])) ? html_encode(trim($_REQUEST["username"])) : ""); ?>"/>
+			</div>
+		</div>
+		 <div class="control-group">
+			<label class="control-label" for="password">Password</label>
+			<div class="controls">
+			<input type="password" id="password" name="password" value=""/>
+			</div>
+		</div>
+		<div class="form-actions">
+			<input type="submit" class="btn btn-primary" value="Login">
+		</div>
+		<!--<table style="width: 275px" cellspacing="1" cellpadding="1" border="0">
 			<colgroup>
 				<col style="width: 30%" />
 				<col style="width: 70%" />
@@ -87,6 +102,5 @@ Please enter your <?php echo APPLICATION_NAME; ?> username and password to log i
 					<td style="text-align: right"><input type="password" id="password" name="password" value="" style="width: 150px" /></td>
 				</tr>
 			</tbody>
-		</table>
+		</table>-->
 	</form>
-</blockquote>

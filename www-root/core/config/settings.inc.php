@@ -268,6 +268,7 @@ define("ANNUALREPORT_STORAGE", $config->entrada_storage."/annualreports");		// F
 define("STORAGE_USER_PHOTOS", $config->entrada_storage . "/user-photos");		// Full directory path where user profile photos are stored without trailing slash.
 define("FILE_STORAGE_PATH", $config->entrada_storage . "/event-files");			// Full directory path where off-line files are stored without trailing slash.
 define("MSPR_STORAGE",$config->entrada_storage . "/msprs");					//Full directory path where student Medical School Performance Reports should be sotred
+define("SEARCH_INDEX_PATH",$config->entrada_storage . "/search-indexes");					//Full directory path where student Medical School Performance Reports should be sotred
 
 define("SENDMAIL_PATH", "/usr/sbin/sendmail -t -i");							// Full path and parametres to sendmail.
 
@@ -327,7 +328,9 @@ define("COMMUNITY_NOTIFY_LIMIT", 100);											// Per batch email mailout limi
 define("COMMUNITY_MAIL_LIST_MEMBERS_LIMIT", 100);								// Per batch google requests limit
 
 define("COMMUNITY_NOTIFICATIONS_ACTIVE", false);
+define("COMMUNITY_DISCUSSIONS_ANON", true);
 define("NOTIFICATIONS_ACTIVE", false);
+define("DISCUSSIONS_ANON", true);
 
 /**
  * Array containing valid Podcast mime types as required by Apple.

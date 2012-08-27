@@ -10,6 +10,7 @@
  * @copyright Copyright 2009 Queen's University. All Rights Reserved.
  *
 */
+error_reporting(E_ALL);
 @set_time_limit(0);
 @set_include_path(implode(PATH_SEPARATOR, array(
     dirname(__FILE__) . "/../core",
@@ -55,7 +56,7 @@ switch ($input->action) {
     case 'reindex':
         $index = Zend_Search_Lucene::open($path.'/'.$input->index);
 
-        $query = "SELECT a.*, b.`audience_type`, b.`audience_value` AS `event_cohort`
+        $query = "SELECT a.*, b.`audience_type`, b.`audience_value` AS `event_cohort`, c.`organisation_id`
 								FROM `events` AS a
 								LEFT JOIN `event_audience` AS b
 								ON b.`event_id` = a.`event_id`
@@ -66,26 +67,35 @@ switch ($input->action) {
         //AND (a.event_id = 22044 OR a.event_id = 22456 OR a.event_id = 22897)
 
         $results = $db->GetAll($query);
-
         foreach ($results as $result) {
             $hits = $index->find('event_id:'.$result['event_id']);
             foreach ($hits as $hit) {
                 $index->delete($hit->id);
             }
 
-            $event_resources = events_fetch_event_resources($result['event_id'], "files");
-            $event_files = $event_resources["files"];
+            $query	= "	SELECT a.*, MAX(b.`timestamp`) AS `last_visited`
+						FROM `event_files` AS a
+						LEFT JOIN `statistics` AS b
+						ON b.`module` = 'events'
+						AND b.`action` = 'file_download'
+						AND b.`action_field` = 'file_id'
+						AND b.`action_value` = a.`efile_id`
+						WHERE a.`event_id` = ".$db->qstr($result['event_id']);
+
+            $event_files = $db->GetAll($query);
+            //var_dump($event_files);die();
 
             $filesBody = null;
             foreach ($event_files as $file) {
-                //var_dump($file);
+                if (is_null($file['file_name'])) {
+                    continue;
+                }
                 $path = pathinfo($file['file_name']);
                 $document = Entrada_Search_Lucene_Document::factory(FILE_STORAGE_PATH."/".$file['efile_id'], $path['extension']);
                 if (!is_null($document)) {
                     $filesBody .= ' '.$document->body;
                 }
             }
-
 
             $document = new Zend_Search_Lucene_Document();
             $document->addField(Zend_Search_Lucene_Field::text('title', $result['event_title']));
@@ -94,11 +104,10 @@ switch ($input->action) {
             $document->addField(Zend_Search_Lucene_Field::unStored('goals', $result['event_goals']));
             $document->addField(Zend_Search_Lucene_Field::unStored('objectives', $result['event_objectives']));
             $document->addField(Zend_Search_Lucene_Field::unStored('message', $result['event_message']));
-            $document->addField(Zend_Search_Lucene_Field::unStored('audience_type', $result['audience_type']));
-            $document->addField(Zend_Search_Lucene_Field::unStored('audience_value', $result['audience_value']));
-            $document->addField(Zend_Search_Lucene_Field::unStored('event_start', $result['event_start']));
+            $document->addField(Zend_Search_Lucene_Field::keyword('audience_type', $result['audience_type']));
+            $document->addField(Zend_Search_Lucene_Field::keyword('audience_value', $result['event_cohort']));
+            $document->addField(Zend_Search_Lucene_Field::keyword('event_start', $result['event_start']));
             $document->addField(Zend_Search_Lucene_Field::unStored('files_body', $filesBody));
-
             $document->addField(Zend_Search_Lucene_Field::keyword('organisation_id', $result['organisation_id']));
             $index->addDocument($document);
         }

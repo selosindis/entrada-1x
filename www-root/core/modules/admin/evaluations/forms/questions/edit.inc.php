@@ -80,6 +80,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						$PROCESSED["evaluation_form_categories"] = array();
 						$PROCESSED["evaluation_form_category_criteria"] = array();
 						foreach ($categories as $index => $category) {
+							if (!isset($PROCESSED["allow_comments"])) {
+								$PROCESSED["allow_comments"] = $category["allow_comments"];
+							}
 							$PROCESSED["evaluation_form_categories"][$index + 1] = array();
 							$PROCESSED["evaluation_form_categories"][$index + 1]["category"] = $category["question_text"];
 
@@ -110,7 +113,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				}
 			}
 			if ($ALLOW_QUESTION_MODIFICATIONS) {
-				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$question_record["efquestion_id"], "title" => limit_chars($question_record["question_title"], 32));
+				if (isset($question_record["question_title"]) && $question_record["question_title"]) {
+					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$question_record["efquestion_id"], "title" => limit_chars($question_record["question_title"], 32));
+				}
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit-question&id=".$FORM_ID, "title" => "Edit Evaluation Question");
 				/**
 				 * Required field "questiontype_id" / Question Type
@@ -132,36 +137,61 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						 */
 						$PROCESSED["eform_id"] = $question_record["eform_id"];
 						//If Rubric question type.
-						if ($PROCESSED["questiontype_id"] == 3) {
-							/**
-							 * Required field "rubric_title" / Rubric Title.
-							 */
-							if ((isset($_POST["rubric_title"])) && ($tmp_input = clean_input($_POST["rubric_title"], array("trim")))) {
-								$PROCESSED["rubric_title"] = $tmp_input;
-							} else {
-								add_error("The <strong>Rubric Title</strong> field is required.");
-							}
-							/**
-							 * Required field "rubric_description" / Rubric Description.
-							 */
-							if ((isset($_POST["rubric_description"])) && ($tmp_input = clean_input($_POST["rubric_description"], array("trim", "allowedtags")))) {
-								$PROCESSED["rubric_description"] = $tmp_input;
-							} else {
-								$PROCESSED["rubric_description"] = "";
-							}
-							
-							if ((isset($_POST["categories_count"])) && ($tmp_input = clean_input($_POST["categories_count"], array("int")))) {
-								$PROCESSED["categories_count"] = $tmp_input;
-							}
-						} else {
-							/**
-							 * Required field "question_text" / Form Question.
-							 */
-							if ((isset($_POST["question_text"])) && ($tmp_input = clean_input($_POST["question_text"], array("trim", "allowedtags")))) {
-								$PROCESSED["question_text"] = $tmp_input;
-							} else {
-								add_error("The <strong>Form Question</strong> field is required.");
-							}
+						switch ($PROCESSED["questiontype_id"]) {
+							case 3 :
+								/**
+								 * Required field "rubric_title" / Rubric Title.
+								 */
+								if ((isset($_POST["rubric_title"])) && ($tmp_input = clean_input($_POST["rubric_title"], array("trim")))) {
+									$PROCESSED["rubric_title"] = $tmp_input;
+								} else {
+									add_error("The <strong>Rubric Title</strong> field is required.");
+								}
+								/**
+								 * Required field "rubric_description" / Rubric Description.
+								 */
+								if ((isset($_POST["rubric_description"])) && ($tmp_input = clean_input($_POST["rubric_description"], array("trim", "allowedtags")))) {
+									$PROCESSED["rubric_description"] = $tmp_input;
+								} else {
+									$PROCESSED["rubric_description"] = "";
+								}
+
+								if ((isset($_POST["categories_count"])) && ($tmp_input = clean_input($_POST["categories_count"], array("int")))) {
+									$PROCESSED["categories_count"] = $tmp_input;
+								}
+								
+								if ((isset($_POST["allow_comments"])) && $_POST["allow_comments"]) {
+									$PROCESSED["allow_comments"] = true;
+								} else {
+									$PROCESSED["allow_comments"] = false;
+								}
+							break;
+							case 1 :
+							default :
+								
+								if ((isset($_POST["responses_count"])) && ($tmp_input = clean_input($_POST["responses_count"], array("int")))) {
+									$PROCESSED["responses_count"] = $tmp_input;
+								}
+								
+								/**
+								 * Required field "question_text" / Form Question.
+								 */
+								if ((isset($_POST["allow_comments"])) && $_POST["allow_comments"]) {
+									$PROCESSED["allow_comments"] = true;
+								} else {
+									$PROCESSED["allow_comments"] = false;
+								}
+							case 2 :
+							case 4 :
+								/**
+								 * Required field "question_text" / Form Question.
+								 */
+								if ((isset($_POST["question_text"])) && ($tmp_input = clean_input($_POST["question_text"], array("trim", "allowedtags")))) {
+									$PROCESSED["question_text"] = $tmp_input;
+								} else {
+									add_error("The <strong>Form Question</strong> field is required.");
+								}
+							break;
 						}
 
 						/**
@@ -244,8 +274,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 											$criteria = clean_input($criteria, array("trim"));
 
-											if (($criteria_key) && ($criteria != "")) {
-												if (is_array($PROCESSED["evaluation_form_category_criteria"][$i]) && !empty($PROCESSED["evaluation_form_category_criteria"][$i])) {
+											if ($criteria_key) {
+												if ($criteria != "" && is_array($PROCESSED["evaluation_form_category_criteria"][$i]) && !empty($PROCESSED["evaluation_form_category_criteria"][$i])) {
 													foreach ($PROCESSED["evaluation_form_category_criteria"][$i] as $value) {
 														if ($value["criteria"] == $criteria) {
 															add_error("You cannot have more than one <strong>identical criteria</strong> in a category.");
@@ -265,7 +295,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								}
 							}
 						}
-
 						/**
 						 * There must be at least 2 possible responses to proceed.
 						 */
@@ -273,11 +302,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							add_error("You must provide 2 responses in the <strong>Available Responses</strong> section.");
 						}
 
-						/**
-						 * You must specify the minimum passing level
-						 */
-						if (!$minimum_passing_level_found) {
-							add_error("You must specify which of the responses is the <strong>minimum passing level</strong>.");
+						if ($PROCESSED["questiontype_id"] == 1 || $PROCESSED["questiontype_id"] == 3) {
+							/**
+							 * You must specify the minimum passing level
+							 */
+							if (!$minimum_passing_level_found) {
+								add_error("You must specify which of the responses is the <strong>minimum passing level</strong>.");
+							}
 						}
 
 
@@ -326,13 +357,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 										$categories = $db->GetAll($query);
 										foreach ($categories as $category) {
 											$db->Execute("DELETE FROM `evaluation_form_questions` WHERE `efquestion_id` = ".$db->qstr($category["efquestion_id"]));
+											$db->Execute("DELETE FROM `evaluation_form_responses` WHERE `efquestion_id` = ".$db->qstr($category["efquestion_id"]));
 											$db->Execute("DELETE FROM `evaluation_form_rubric_questions` WHERE `efquestion_id` = ".$db->qstr($category["efquestion_id"]));
 										}
 										foreach ($PROCESSED["evaluation_form_categories"] as $index => $category) {
 											$PROCESSED_QUESTION = array("eform_id" => $FORM_ID,
 																		"questiontype_id" => 3,
 																		"question_text" => $PROCESSED["evaluation_form_categories"][$index]["category"],
-																		"question_order" => $PROCESSED["question_order"]);
+																		"question_order" => $PROCESSED["question_order"],
+																		"allow_comments" => $PROCESSED["allow_comments"]);
 											$efquestion_id = 0;
 											$PROCESSED["question_order"]++;
 											if ($db->AutoExecute("evaluation_form_questions", $PROCESSED_QUESTION, "INSERT") && ($efquestion_id = $db->Insert_Id()) &&
@@ -356,7 +389,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 															/**
 															 * Add the responses criteria to the evaluation_form_rubric_criteria table.
 															 */
-															if ((isset($PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"])) && ($PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"])) {
+															if ((isset($PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"])) && ($PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"] || $PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"] === "")) {
 																$PROCESSED_CRITERIA = array (
 																				"efresponse_id" => $efresponse_id,
 																				"criteria_text" => $PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"],
@@ -477,7 +510,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 										 */
 										unset($PROCESSED);
 
-										application_log("success", "New evaluation form question [".$efquestion_id."] added to eform_id [".$FORM_ID."].");
+										application_log("success", "Evaluation form question [".$RECORD_ID."] updated for eform_id [".$FORM_ID."].");
 									} else {
 										add_error("There was a problem inserting this evaluation form question. The system administrator was informed of this error; please try again later.");
 
@@ -501,6 +534,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							case 3 :
 							break;
 							case 2 :
+							case 4 :
+								$PROCESSED = $question_record;
 							break;
 							case 1 :
 							default :
@@ -514,10 +549,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								$results = $db->GetAll($query);
 								if ($results) {
 									$i = 1;
+									$minimum_passed = false;
+									$PROCESSED["responses_count"] = count($results);
 
 									foreach ($results as $result) {
+										if ($result["minimum_passing_level"]) {
+											$minimum_passed = true;
+										}
 										$PROCESSED["evaluation_form_responses"][$i]["response_order"] = $result["response_order"];
-										$PROCESSED["evaluation_form_responses"][$i]["response_correct"] = $result["response_correct"];
+										$PROCESSED["evaluation_form_responses"][$i]["response_correct"] = ($minimum_passed ? true : false);
 										$PROCESSED["evaluation_form_responses"][$i]["response_is_html"] = $result["response_is_html"];
 										$PROCESSED["evaluation_form_responses"][$i]["minimum_passing_level"] = $result["minimum_passing_level"];
 

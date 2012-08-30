@@ -110,19 +110,49 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				header("Location: ".ENTRADA_URL."/admin/courses/groups?id=".$COURSE_ID);
 				exit;
 			}
+			
+			/**
+			 * Add any existing associated reviewers from the evaluation_contacts table
+			 * into the $PROCESSED["associated_reviewers"] array.
+			 */
+			$query = "SELECT * FROM `course_group_contacts` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." ORDER BY `contact_order` ASC";
+			$results = $db->GetAll($query);
+			if ($results) {
+				foreach($results as $contact_order => $result) {
+					$PROCESSED["associated_tutors"][(int) $contact_order] = $result["proxy_id"];
+				}
+			}
+			
+			/**
+			* Compiles the full list of faculty members.
+			*/
+		   $TUTOR_LIST = array();
+		   $query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`organisation_id`
+					   FROM `".AUTH_DATABASE."`.`user_data` AS a
+					   LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+					   ON b.`user_id` = a.`id`
+					   WHERE b.`app_id` = '".AUTH_APP_ID."'
+					   AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer') OR b.`group` = 'staff' OR b.`group` = 'medtech')
+					   ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+		   $results = $db->GetAll($query);
+		   if ($results) {
+			   foreach($results as $result) {
+				   $TUTOR_LIST[$result["proxy_id"]] = array('proxy_id'=>$result["proxy_id"], 'fullname'=>$result["fullname"], 'organisation_id'=>$result['organisation_id']);
+			   }
+		   }
 								
 			$group_ids = $_SESSION["gids"];
 			
 			$query = "	SELECT * FROM `course_groups`
 						WHERE `cgroup_id` IN (".implode(", ", $group_ids).")
 						ORDER By `group_name`";
-			$results	= $db->GetAll($query);
+			$course_groups	= $db->GetAll($query);
 
-			if (!$results) {
+			if (!$course_groups) {
 				header("Location: ".ENTRADA_URL."/admin/".$MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : "")."?id=".$COURSE_ID);
 			}
 			if (!$GROUP_ID) {
-				$GROUP_ID = $results[0]["cgroup_id"];
+				$GROUP_ID = $course_groups[0]["cgroup_id"];
 			}
 
 			$group_name = $db->GetOne("SELECT `group_name` FROM `course_groups` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID));
@@ -142,8 +172,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 								GROUP BY a.`id`
 								ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 			$ONLOAD[]	= "showgroup('".$group_name."',".$GROUP_ID.")";
+			
 
-
+			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+			
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID, "title" => "Manage Course Groups");
 			courses_subnavigation($course_details,"groups");
 			?>
@@ -190,19 +222,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						</colgroup>
 						<tbody>
 						<?php
-							foreach($results as $result) {
+							foreach($course_groups as $result) {
 								$members = $db->GetRow("SELECT COUNT(*) AS members, case when (MIN(`active`)=0) then 1 else 0 end as `inactive`
 														FROM  `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($result["cgroup_id"]));
 								
-									echo "<tr class=\"group".((!$result["active"]) ? " na" : (($members["inactive"]) ? " np" : ""))."\">";
-									echo "	<td style=\"vertical-align: top\">&nbsp;<input type=\"radio\" name=\"groups\" value=\"".$result["cgroup_id"]."\" onclick=\"selectgroup(".$result["cgroup_id"].",'".$result["group_name"]."');\"".(($result["cgroup_id"] == $GROUP_ID) ?" checked=\"checked\"" : "")."/></td>\n";
-									echo "	<td><a href=\"".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&gid=".$result["cgroup_id"]."\" >".html_encode($result["group_name"])."</a></td>";
-									echo "	<td><a href=\"".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&gid=".$result["cgroup_id"]."\" >".$members["members"]."</a></td>";
-									echo "	<td>
-										<a href=\"".ENTRADA_URL."/admin/courses/groups?section=edit&action=rename&id=".$COURSE_ID."&gid=".$result["cgroup_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Rename Group\" title=\"Rename Group\" border=\"0\" /></a>&nbsp;
-										<a href=\"".ENTRADA_URL."/admin/courses/groups?section=edit&action=delete&id=".$COURSE_ID."&gid=".$result["cgroup_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Delete/Activate Group\" title=\"Delete/Activate Group\" border=\"0\" /></a>
-										</td>\n";
-									echo "</tr>";
+								echo "<tr class=\"group".((!$result["active"]) ? " na" : (($members["inactive"]) ? " np" : ""))."\">";
+								echo "	<td style=\"vertical-align: top\">&nbsp;<input type=\"radio\" name=\"groups\" value=\"".$result["cgroup_id"]."\" onclick=\"selectgroup(".$result["cgroup_id"].",'".$result["group_name"]."');\"".(($result["cgroup_id"] == $GROUP_ID) ?" checked=\"checked\"" : "")."/></td>\n";
+								echo "	<td><a href=\"".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&gid=".$result["cgroup_id"]."\" >".html_encode($result["group_name"])."</a></td>";
+								echo "	<td><a href=\"".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&gid=".$result["cgroup_id"]."\" >".$members["members"]."</a></td>";
+								echo "	<td>
+									<a href=\"".ENTRADA_URL."/admin/courses/groups?section=edit&action=rename&id=".$COURSE_ID."&gid=".$result["cgroup_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Rename Group\" title=\"Rename Group\" border=\"0\" /></a>&nbsp;
+									<a href=\"".ENTRADA_URL."/admin/courses/groups?section=edit&action=delete&id=".$COURSE_ID."&gid=".$result["cgroup_id"]."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" width=\"16\" height=\"16\" alt=\"Delete/Activate Group\" title=\"Delete/Activate Group\" border=\"0\" /></a>
+									</td>\n";
+								echo "</tr>";
 							}
 						?>
 						</tbody>
@@ -264,6 +296,57 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 					<input type="submit" class="button" value="Delete/Activate" style="vertical-align: middle" />
 				</div>
 				<input type="hidden" name="members" value="1" />
+			</form>
+			<form action="<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=edit&action=managetutors&id=<?php echo $COURSE_ID; ?>&gid=<?php echo $GROUP_ID;?>" method="post">
+				<h2 style="margin-top: 10px">Manage Tutors</h2>
+				<table style="margin-top: 1px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Manage Tutors">
+					<colgroup>
+						<col style="width: 3%" />
+						<col style="width: 20%" />
+						<col style="width: 77%" />
+					</colgroup>
+					<tfoot>
+						<tr>
+							<td colspan="3" style="padding-top: 15px; text-align: right">
+								<input type="submit" class="button" value="Update Tutors" style="vertical-align: middle" />
+							</td>
+						</tr>
+					</tfoot>
+					<tbody>
+						<tr>
+							<td></td>
+							<td style="vertical-align: top;">
+								<label for="evaluation_tutors" class="form-nrequired">Evaluation Tutors</label>
+							</td>
+							<td>
+								<input type="text" id="tutor_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
+								<?php
+								$ONLOAD[] = "tutor_list = new AutoCompleteList({ type: 'tutor', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=facultyorstaff', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
+								?>
+								<div class="autocomplete" id="tutor_name_auto_complete"></div>
+								<input type="hidden" id="associated_tutor" name="associated_tutor" />
+								<input type="button" class="button-sm" id="add_associated_tutor" value="Add" style="vertical-align: middle" />
+								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+								<ul id="tutor_list" class="menu" style="margin-top: 15px">
+									<?php
+									if (is_array($PROCESSED["associated_tutors"]) && count($PROCESSED["associated_tutors"])) {
+										foreach ($PROCESSED["associated_tutors"] as $tutor) {
+											if ((array_key_exists($tutor, $TUTOR_LIST)) && is_array($TUTOR_LIST[$tutor])) {
+												?>
+												<li class="user" id="tutor_<?php echo $TUTOR_LIST[$tutor]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $TUTOR_LIST[$tutor]["fullname"]; ?> <img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="tutor_list.removeItem('<?php echo $TUTOR_LIST[$tutor]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+												<?php
+											}
+										}
+									}
+									?>
+								</ul>
+								<input type="hidden" id="tutor_ref" name="tutor_ref" value="" />
+								<input type="hidden" id="tutor_id" name="tutor_id" value="" />
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<input type="hidden" name="step" value="2" />
 			</form>
 			<br />
 			<div id="additions">

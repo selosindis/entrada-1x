@@ -43,9 +43,32 @@ echo $clerkship_evaluations;
 
 $cohort = groups_get_cohort($ENTRADA_USER->getID());
 
+$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
+			JOIN `course_groups` AS b
+			ON a.`cgroup_id` = b.`cgroup_id`
+			WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+			AND a.`active` = 1
+			AND b.`active` = 1";
+$course_groups = $db->GetAll($query);
+
+$cgroup_ids_string = "";
+if (isset($course_groups) && is_array($course_groups)) {
+	foreach ($course_groups as $course_group) {
+		if ($cgroup_ids_string) {
+			$cgroup_ids_string .= ", ".$db->qstr($course_group["cgroup_id"]);
+		} else {
+			$cgroup_ids_string = $db->qstr($course_group["cgroup_id"]);
+		}
+	}
+}
+
 $query = "	SELECT * FROM `evaluations` AS a
 			JOIN `evaluation_evaluators` AS b
 			ON a.`evaluation_id` = b.`evaluation_id`
+			JOIN `evaluation_forms` AS c
+			ON a.`eform_id` = c.`eform_id`
+			JOIN `evaluations_lu_targets` AS d
+			ON c.`target_id` = d.`target_id`
 			WHERE
 			(
 				(
@@ -59,6 +82,9 @@ $query = "	SELECT * FROM `evaluations` AS a
 				)".($_SESSION["details"]["group"] == "student" ? " OR (
 					b.`evaluator_type` = 'cohort'
 					AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
+				)" : "").($cgroup_ids_string ? " OR (
+					b.`evaluator_type` = 'cgroup_id'
+					AND b.`evaluator_value` IN (".$cgroup_ids_string.")
 				)" : "")."
 			)
 			AND a.`evaluation_start` < ".$db->qstr(time())."
@@ -67,6 +93,7 @@ $query = "	SELECT * FROM `evaluations` AS a
 			ORDER BY a.`evaluation_finish` DESC";
 $results = $db->GetAll($query);
 if ($results) {
+	require_once("Models/evaluation/Evaluation.class.php");
 	$evaluation_id = 0;
 	?>
 	<table class="tableList" cellspacing="0" summary="List of Evaluations">
@@ -91,27 +118,27 @@ if ($results) {
 	<tbody>
 	<?php
 	foreach ($results as $result) {
-		$query = "	SELECT * FROM `evaluation_targets` AS a
-					JOIN `evaluations_lu_targets` AS b
-					ON a.`target_id` = b.`target_id`
-					WHERE a.`evaluation_id` = ".$result["evaluation_id"];
-		$evaluation_target = $db->GetRow($query);
-		
-		$evaluation_targets_count = $db->GetOne("SELECT COUNT(`etarget_id`) FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($result["evaluation_id"]));
-		$evaluation_target_title = fetch_evaluation_target_title($evaluation_target, $evaluation_targets_count);
+		$evaluation_targets_list = Evaluation::getTargetsArray($result["evaluation_id"], $result["eevaluator_id"], $ENTRADA_USER->getID());
+		if ($evaluation_targets_list) {
+			$evaluation_targets_count = count($evaluation_targets_list);
+			if (array_search($result["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $result["max_submittable"]) {
+				$result["max_submittable"] = ($evaluation_targets_count * (int) $result["max_submittable"]);
+			}
+			$evaluation_target_title = fetch_evaluation_target_title($evaluation_targets_list[0], $evaluation_targets_count, $result["target_shortname"]);
+			if ($result["target_shortname"] == "peer" && $result["max_submittable"] == 0) {
+				$result["max_submittable"] = $evaluation_targets_count;
+			}
+		}
 
 		$query = "	SELECT COUNT(`efquestion_id`) FROM `evaluation_form_questions`
 					WHERE `eform_id` = ".$db->qstr($result["eform_id"])."
 					GROUP BY `eform_id`";
 		$evaluation_questions = $db->GetOne($query);
 		
-		$query = "	SELECT a.*, COUNT(b.`eresponse_id`) AS `responses` FROM `evaluation_progress` AS a
-					LEFT JOIN `evaluation_responses` AS b
-					ON a.`eprogress_id` = b.`eprogress_id`
-					WHERE a.`evaluation_id` = ".$db->qstr($result["evaluation_id"])."
-					AND a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-					GROUP BY b.`eprogress_id`
-					ORDER BY `responses` ASC";
+		$query = "	SELECT * FROM `evaluation_progress`
+					WHERE `evaluation_id` = ".$db->qstr($result["evaluation_id"])."
+					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+					AND `progress_value` = 'complete'";
 		$evaluation_progress = $db->GetRow($query);
 		
 		$query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
@@ -119,13 +146,6 @@ if ($results) {
 					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 					AND `progress_value` = 'complete'";
 		$completed_attempts = $db->GetOne($query);
-		
-		
-	
-		$query = "	SELECT COUNT(`eresponse_id`) FROM `evaluation_responses` 
-					WHERE `eprogress_id` = ".$db->qstr($evaluation_progress["eprogress_id"])."
-					GROUP BY `eprogress_id`";
-		$evaluation_responses = $db->GetOne($query);
 		
 		if (($result["release_date"] <= time() || !$result["release_date"])) {
 			$click_url = ENTRADA_URL."/evaluations?section=attempt&id=".$result["evaluation_id"];
@@ -136,7 +156,7 @@ if ($results) {
 		if ($click_url) {
 			echo "<tr>\n";
 			echo "	<td>&nbsp;</td>\n";
-			echo "	<td><a href=\"".$click_url."\">".(!empty($evaluation_target["target_title"]) ? $evaluation_target["target_title"] : "No Type Found")."</a></td>\n";
+			echo "	<td><a href=\"".$click_url."\">".(!empty($result["target_title"]) ? $result["target_title"] : "No Type Found")."</a></td>\n";
 			echo "	<td><a href=\"".$click_url."\">".(!empty($evaluation_target_title) ? $evaluation_target_title : "No Target")."</a></td>\n";
 			echo "	<td><a href=\"".$click_url."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_finish"])."</a></td>\n";
 			echo "	<td><a href=\"".$click_url."\">".html_encode($result["evaluation_title"])."</a></td>\n";

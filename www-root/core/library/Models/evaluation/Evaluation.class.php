@@ -90,6 +90,19 @@ class Evaluation {
 						</td>
 					</tr>
 					<tr>
+						<td style="vertical-align: top">
+							<label for="allow_comments" class="form-required">Allow Comments</label>
+						</td>
+						<td>
+							<input type="checkbox" id="allow_comments" name="allow_comments"<?php echo (isset($question_data["allow_comments"]) && $question_data["allow_comments"] ? " checked=\"checked\"" : ""); ?> />
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2">
+							&nbsp;
+						</td>
+					</tr>
+					<tr>
 						<td style="padding-top: 5px; vertical-align: top">
 							<label for="response_text_0" class="form-required">Column Labels</label>
 						</td>
@@ -175,7 +188,7 @@ class Evaluation {
 				?>
 					<tr>
 						<td style="vertical-align: top">
-							<label for="question_text" class="form-nrequired">Descriptive Text</label>
+							<label for="question_text" class="form-required">Descriptive Text</label>
 						</td>
 						<td>
 							<textarea id="question_text" class="expandable" name="question_text" style="width: 98%; height:0"><?php echo ((isset($question_data["question_text"])) ? clean_input($question_data["question_text"], "encode") : ""); ?></textarea>
@@ -195,42 +208,45 @@ class Evaluation {
 						</td>
 					</tr>
 					<tr>
+						<td style="vertical-align: top">
+							<label for="responses_count" class="form-required">Number of Responses</label>
+						</td>
+						<td>
+							<select name="responses_count" id="responses_count" onchange="updateResponses(this.options[this.selectedIndex].value)">
+								<option value="2"<?php echo (isset($question_data["responses_count"]) && $question_data["responses_count"] == 2 ? " selected=\"selected\"" : ""); ?>>2</option>
+								<option value="3"<?php echo ((isset($question_data["responses_count"]) && $question_data["responses_count"] == 3) ? " selected=\"selected\"" : ""); ?>>3</option>
+								<option value="4"<?php echo ((isset($question_data["responses_count"]) && $question_data["responses_count"] == 4) || !isset($question_data["responses_count"]) || !$question_data["responses_count"] ? " selected=\"selected\"" : ""); ?>>4</option>
+								<option value="5"<?php echo ((isset($question_data["responses_count"]) && $question_data["responses_count"] == 5) ? " selected=\"selected\"" : ""); ?>>5</option>
+							</select>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2">
+							&nbsp;
+						</td>
+					</tr>
+					<tr>
+						<td style="vertical-align: top">
+							<label for="allow_comments" class="form-required">Allow Comments</label>
+						</td>
+						<td>
+							<input type="checkbox" id="allow_comments" name="allow_comments"<?php echo (isset($question_data["allow_comments"]) && $question_data["allow_comments"] ? " checked=\"checked\"" : ""); ?> />
+						</td>
+					</tr>
+					<tr>
+						<td colspan="2">
+							&nbsp;
+						</td>
+					</tr>
+					<tr>
 						<td style="padding-top: 5px; vertical-align: top">
 							<label for="response_text_0" class="form-required">Available Responses</label>
 						</td>
 						<td style="padding-top: 5px">
-							<table class="form-question" cellspacing="0" cellpadding="2" border="0" summary="Form Question Responses">
-							<colgroup>
-								<col style="width: 3%" />
-								<col style="width: 77%" />
-								<col style="width: 20%" />
-							</colgroup>
-							<thead>
-								<tr>
-									<td colspan="2">&nbsp;</td>
-									<td class="center" style="font-weight: bold; font-size: 11px">Minimum Pass</td>
-								</tr>
-							</thead>
-							<tbody>
+							<table class="form-question" id="response_list" cellspacing="0" cellpadding="2" border="0" summary="Form Question Responses">
 								<?php
-								foreach (range(1, 4) as $number) {
-									$minimum_passing_level = (((!isset($question_data["evaluation_form_responses"][$number]["minimum_passing_level"]) && ($number == 1)) || (isset($question_data["evaluation_form_responses"][$number]["minimum_passing_level"]) && (int) $question_data["evaluation_form_responses"][$number]["minimum_passing_level"])) ? true : false);
-									?>
-									<tr>
-										<td style="padding-top: 13px">
-											<label for="response_text_<?php echo $number; ?>" class="form-required"><?php echo $number; ?></label>
-										</td>
-										<td style="padding-top: 10px">
-											<input type="text" id="response_text_<?php echo $number; ?>" name="response_text[<?php echo $number; ?>]" style="width: 99%" value="<?php echo ((isset($question_data["evaluation_form_responses"][$number]["response_text"])) ? clean_input($question_data["evaluation_form_responses"][$number]["response_text"], "encode") : ""); ?>" />
-										</td>
-										<td class="minimumPass center" style="padding-top: 10px">
-											<input type="radio" name="minimum_passing_level" id="fail_indicator_<?php echo $number; ?>" value="<?php echo $number; ?>"<?php echo (($minimum_passing_level) ? " checked=\"true\"" : ""); ?> />
-										</td>
-									</tr>
-									<?php
-								}
+								echo Evaluation::getQuestionResponseList($question_data);
 								?>
-							</tbody>
 							</table>
 						</td>
 					</tr>
@@ -309,17 +325,116 @@ class Evaluation {
 			}
 		}
 	}
-	public static function getQuestionAnswerControls($questions) {
-		global $db, $ALLOW_QUESTION_MODIFICATIONS, $FORM_ID;
+	
+	public static function getPreceptorSelect($evaluation_id, $event_id, $evaluator_proxy_id, $preceptor_proxy_id = 0) {
+		global $db;
+		
+		$output = "";
+		
+		$query	= "SELECT b.`preceptor_proxy_id` FROM `evaluation_progress` AS a
+					JOIN `evaluation_progress_clerkship_events` AS b
+					ON a.`eprogress_id` = b.`eprogress_id`
+					WHERE a.`evaluation_id` = ".$db->qstr($evaluation_id)."
+					AND a.`proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+					AND b.`event_id` = ".$db->qstr($event_id);
+		$temp_preceptors = $db->GetAll($query);
+		$preceptor_proxy_ids_string = "";
+		if ($temp_preceptors) {
+			foreach ($temp_preceptors as $temp_preceptor) {
+				$preceptor_proxy_ids_string .= ($preceptor_proxy_ids_string ? ", " : "").$db->qstr($temp_preceptor["preceptor_proxy_id"]);
+			}
+		}
+		$query	= "SELECT b.`department_id`, d.`id` AS `proxy_id`, CONCAT_WS(', ', d.`lastname`, d.`firstname`) AS `fullname`, e.`department_title`
+					FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+					JOIN `".CLERKSHIP_DATABASE."`.`category_departments` AS b
+					ON a.`category_id` = b.`category_id`
+					LEFT JOIN `".AUTH_DATABASE."`.`user_departments` AS c
+					ON c.`dep_id` = b.`department_id`
+					LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS d
+					ON d.`id` = c.`user_id`
+					LEFT JOIN `".AUTH_DATABASE."`.`departments` AS e
+					ON e.`department_id` = c.`dep_id`
+					WHERE a.`event_id` = ".$db->qstr($event_id)."
+					".($preceptor_proxy_ids_string ? "AND d.`id` NOT IN (".$preceptor_proxy_ids_string.")" : "")."
+					ORDER BY d.`lastname` ASC, d.`firstname` ASC";
+		$preceptors = $db->GetAll($query);
+		if (!$preceptors) {
+			$query = "SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname` FROM `".AUTH_DATABASE."`.`user_data` AS a
+						JOIN `".AUTH_DATABASE."`.`user_access` AS b
+						ON a.`id` = b.`user_id`
+						WHERE b.`group` = 'faculty'
+						".($preceptor_proxy_ids_string ? "AND a.`id` NOT IN (".$preceptor_proxy_ids_string.")" : "")."
+						GROUP BY a.`id`";
+			$preceptors = $db->GetAll($query);
+		}
+		if ($preceptors) {
+			$output = "<select id=\"preceptor_proxy_id\" name=\"preceptor_proxy_id\">\n";
+			$output .= "<option value=\"0\">-- Select a preceptor --</option>\n";
+			foreach ($preceptors as $preceptor) {
+				$output .= "<option value=\"".$preceptor["proxy_id"]."\"".($preceptor_proxy_id && $preceptor_proxy_id == $preceptor["proxy_id"] ? " selected=\"selected\"" : "").">".$preceptor["fullname"]."</option>";
+			}
+			$output .= "</select>\n";
+		}
+		return $output;
+	}
+	
+	public static function getQuestionResponseList($question_data) {
+		if ($question_data) {
+			?>
+			<colgroup>
+				<col style="width: 3%" />
+				<col style="width: 77%" />
+				<col style="width: 20%" />
+			</colgroup>
+			<thead>
+				<tr>
+					<td colspan="2">&nbsp;</td>
+					<td class="center" style="font-weight: bold; font-size: 11px">Minimum Pass</td>
+				</tr>
+			</thead>
+			<tbody>
+				<?php
+				foreach (range(1, (isset($question_data["responses_count"]) && (int) $question_data["responses_count"] ? (int) $question_data["responses_count"] : 4)) as $number) {
+					$minimum_passing_level = (((!isset($question_data["evaluation_form_responses"][$number]["minimum_passing_level"]) && ($number == 1)) || (isset($question_data["evaluation_form_responses"][$number]["minimum_passing_level"]) && (int) $question_data["evaluation_form_responses"][$number]["minimum_passing_level"])) ? true : false);
+					?>
+					<tr>
+						<td style="padding-top: 13px">
+							<label for="response_text_<?php echo $number; ?>" class="form-required"><?php echo $number; ?></label>
+						</td>
+						<td style="padding-top: 10px">
+							<input type="text" class="response_text" id="response_text_<?php echo $number; ?>" name="response_text[<?php echo $number; ?>]" style="width: 99%" value="<?php echo ((isset($question_data["evaluation_form_responses"][$number]["response_text"])) ? clean_input($question_data["evaluation_form_responses"][$number]["response_text"], "encode") : ""); ?>" />
+						</td>
+						<td class="minimumPass center" style="padding-top: 10px">
+							<input type="radio" name="minimum_passing_level" id="fail_indicator_<?php echo $number; ?>" value="<?php echo $number; ?>"<?php echo (($minimum_passing_level) ? " checked=\"true\"" : ""); ?> />
+						</td>
+					</tr>
+					<?php
+				}
+				?>
+			</tbody>
+			<?php
+		}
+	}
+	public static function getQuestionAnswerControls($questions, $form_id, $allow_question_modifications = true, $attempt = false, $eprogress_id = 0) {
+		global $db;
 		
 		?>
 		<div id="form-content-questions-holder">
 			<ol id="form-questions-list">
 			<?php
+			if ($eprogress_id) {
+				$current_progress_record = Evaluation::loadProgress($eprogress_id);;
+			} else {
+				$current_progress_record = false;
+			}
 			$rubric_id = 0;
 			$show_rubric_headers = false;
 			$show_rubric_footers = false;
 			$rubric_table_open = false;
+			$original_question_id = 0;
+			$comments_enabled = false;
+			$modified_count = 0;
+			$desctext_count = 0;
 			foreach ($questions as $key => $question) {
 				if (isset($question["questiontype_id"]) && $question["questiontype_id"]) {
 					$query = "SELECT * FROM `evaluations_lu_questiontypes`
@@ -342,23 +457,39 @@ class Evaluation {
 								}
 								$rubric_id = $rubric["efrubric_id"];
 								$show_rubric_headers = true;
+								$original_question_id = $question["efquestion_id"];
+								$comments_enabled = $question["allow_comments"];
 							}
 							if ($show_rubric_footers) {
 								$show_rubric_footers = false;
 								$rubric_table_open = false;
-								echo "</table></div></li>";
+								echo "</table></div>";
+								if ($comments_enabled) {
+									echo "	<div class=\"clear\"></div>\n";
+									echo "	<div class=\"comments\">\n";
+									echo "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
+									echo "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
+									echo "	</div>\n";
+								} else {
+									echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+								}
+								$original_question_id = $question["efquestion_id"];
+								$comments_enabled = $question["allow_comments"];
+								echo "</li>";
 							}
 							if ($show_rubric_headers) {
 								$rubric_table_open = true;
-								echo "<li id=\"question_".$question["efquestion_id"]."\">\n";
-								echo "<h2>".$rubric["rubric_title"]."<span style=\"font-weight: normal; margin-left: 10px;\" class=\"content-small\">".$rubric["rubric_description"]."</span></h2>\n";
-								if ($ALLOW_QUESTION_MODIFICATIONS) {
+								echo "<li id=\"question_".$question["efquestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">\n";
+								echo "<span id=\"question_text_".$question["efquestion_id"]."\" style=\"display: none;\">".$rubric["rubric_title"].(stripos($rubric["rubric_title"], "rubric") === false ? " Rubric" : "")."</span>";
+								echo "<h2>".$rubric["rubric_title"]."<span style=\"font-weight: normal; margin-left: 10px; padding-right: 30px;\" class=\"content-small\">".$rubric["rubric_description"]."</span></h2>\n";
+								if ($allow_question_modifications) {
 									echo "<div class=\"rubric-controls\">\n";
-									echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$FORM_ID."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
+									echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$form_id."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
 									echo "	<a id=\"question_delete_".$question["efquestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
 									echo "</div>\n";
 								}
-								echo "<br /><div class=\"question\"><table class=\"rubric\">\n";
+								$modified_count++;
+								echo "<br /><div class=\"question".($allow_question_modifications ? " question-handle" : "")."\"><table class=\"rubric\">\n";
 								echo "	<tr>\n";
 								$columns = 0;
 								$query = "	SELECT a.*
@@ -384,7 +515,7 @@ class Evaluation {
 							
 							$question_number = ($key + 1);
 
-							echo "<tr id=\"question_".$question["efquestion_id"]."\"".(($key % 2) ? " class=\"odd\"" : "").">";
+							echo "<tr id=\"question_".$question["efquestion_id"]."\">";
 							
 							$query = "	SELECT b.*, a.`efquestion_id`, a.`minimum_passing_level`
 										FROM `evaluation_form_responses` AS a
@@ -399,62 +530,86 @@ class Evaluation {
 								echo "			".$question["question_text"];
 								echo "		</td>\n";
 								foreach ($criteriae as $criteria) {
-									echo "<td style=\"width: ".$criteria_width."%; vertical-align: top;".($criteria["minimum_passing_level"] ? " background-color: #F0F0F0;" : "")."\" >\n";
+									echo "<td style=\"width: ".$criteria_width."%; vertical-align: top;\" >\n";
 									echo "	<div style=\"width: 100%; text-align: center; padding-bottom: 10px;\">";
-									echo "		<input type=\"radio\" id=\"".$form_record["eform_id"]."_".$criteria["efquestion_id"]."_".$criteria["efresponse_id"]."\" name=\"form[".$form_record["eform_id"]."][".$criteria["efquestion_id"]."]\" />";
+									echo "		<input type=\"radio\" id=\"".$form_id."_".$criteria["efquestion_id"]."_".$criteria["efresponse_id"]."\" name=\"responses[".$question["efquestion_id"]."]\"".($attempt ? " onclick=\"((this.checked == true) ? storeResponse('".$question["efquestion_id"]."', '".$criteria["efresponse_id"]."', ".($question["allow_comments"] ? "$('".$original_question_id."_comment').value" : "''").") : false)\"" : "").($current_progress_record && isset($current_progress_record[$question["efquestion_id"]]["efresponse_id"]) && $current_progress_record[$question["efquestion_id"]]["efresponse_id"] == $criteria["efresponse_id"] ? " checked=\"checked\"" : "")." value=\"".$criteria["efresponse_id"]."\" />";
 									echo "	</div>\n";
-									echo clean_input($criteria["criteria_text"], "specialchars");
+									echo clean_input(nl2br($criteria["criteria_text"]), "allowedtags");
 									echo "</td>\n";
 								}
 							}
 							echo "</tr>";
 						}
 					break;
-					case "free_text" :
 					case "descriptive_text" :
+					case "free_text" :
 						if ($rubric_table_open) {
-							echo "</table></li>";
 							$rubric_table_open = false;
 							$rubric_id = 0;
+							echo "</table></div>";
+							if ($comments_enabled) {
+								echo "	<div class=\"clear\"></div>\n";
+								echo "	<div class=\"comments\">\n";
+								echo "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
+								echo "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
+								echo "	</div>\n";
+							} else {
+								echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+							}
+							$original_question_id = 0;
+							$comments_enabled = false;
+							echo "</li>";
 						} 
 						$question_number = ($key + 1);
 
-						echo "<li id=\"question_".$question["efquestion_id"]."\"".(($key % 2) ? " class=\"odd\"" : "").">";
-						if ($ALLOW_QUESTION_MODIFICATIONS) {
+						echo "<li id=\"question_".$question["efquestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">";
+						if ($allow_question_modifications) {
 							echo "<div class=\"controls\">\n";
-							echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$FORM_ID."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
+							echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$form_id."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
 							echo "	<a id=\"question_delete_".$question["efquestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
 							echo "</div>\n";
 						}
-						echo "	<div id=\"question_text_".$question["efquestion_id"]."\" class=\"question\">\n";
+						echo "	<div id=\"question_text_".$question["efquestion_id"]."\" for=\"".$question["efquestion_id"]."_comment\" class=\"question".($allow_question_modifications ? " question-handle" : "")."\">\n";
 						echo "		".clean_input($question["question_text"], "specialchars");
 						echo "	</div>\n";
 						echo "	<div class=\"clear\"></div>";
 						if ($questiontype["questiontype_shortname"] == "free_text") {
 							echo "	<div class=\"comments\">";
-							echo "	<label for=\"".$form_record["eform_id"]."_".$response["efquestion_id"]."_".$response["efresponse_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
-							echo "	<textarea id=\"".$form_record["eform_id"]."_".$response["efquestion_id"]."_".$response["efresponse_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"></textarea>";
+							echo "	<textarea name=\"comments[".$question["efquestion_id"]."]\" id=\"".$question["efquestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$question["efquestion_id"]]["comments"]) ? $current_progress_record[$question["efquestion_id"]]["comments"] : "")."</textarea>";
 							echo "	</div>";
 						}
 						echo "</li>\n";
+						$modified_count++;
 					break;
 					case "matrix_single" :
 					default :
 						if ($rubric_table_open) {
-							echo "</table></li>";
 							$rubric_table_open = false;
 							$rubric_id = 0;
+							echo "</table></div>";
+							if ($comments_enabled) {
+								echo "	<div class=\"clear\"></div>\n";
+								echo "	<div class=\"comments\">\n";
+								echo "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
+								echo "	<textarea id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
+								echo "	</div>\n";
+							} else {
+								echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+							}
+							$original_question_id = 0;
+							$comments_enabled = false;
+							echo "</li>";
 						} 
 						$question_number = ($key + 1);
 
-						echo "<li id=\"question_".$question["efquestion_id"]."\"".(($key % 2) ? " class=\"odd\"" : "").">";
-						if ($ALLOW_QUESTION_MODIFICATIONS) {
+						echo "<li id=\"question_".$question["efquestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">";
+						if ($allow_question_modifications) {
 							echo "<div class=\"controls\">\n";
-							echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$FORM_ID."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
+							echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$form_id."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
 							echo "	<a id=\"question_delete_".$question["efquestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
 							echo "</div>\n";
 						}
-						echo "	<div id=\"question_text_".$question["efquestion_id"]."\" class=\"question\">\n";
+						echo "	<div id=\"question_text_".$question["efquestion_id"]."\" class=\"question".($allow_question_modifications ? " question-handle" : "")."\">\n";
 						echo "		".clean_input($question["question_text"], "specialchars");
 						echo "	</div>\n";
 						echo "	<div class=\"responses\">\n";
@@ -468,30 +623,45 @@ class Evaluation {
 
 							foreach ($responses as $response) {
 								echo "<div style=\"width: ".$response_width."%\">\n";
-								echo "	<label for=\"".$form_record["eform_id"]."_".$response["efquestion_id"]."_".$response["efresponse_id"]."\">".clean_input($response["response_text"], "specialchars")."</label><br />";
-								echo "	<input type=\"radio\" style=\"margin-top: 5px\" id=\"".$form_record["eform_id"]."_".$response["efquestion_id"]."_".$response["efresponse_id"]."\" name=\"form[".$form_record["eform_id"]."][".$response["efquestion_id"]."]\" />";
+								echo "	<label for=\"".$form_id."_".$response["efquestion_id"]."_".$response["efresponse_id"]."\">".clean_input($response["response_text"], "specialchars")."</label><br />";
+								echo "	<input type=\"radio\" style=\"margin-top: 5px\" id=\"response_".$question["efquestion_id"]."_".$response["efresponse_id"]."\" name=\"responses[".$response["efquestion_id"]."]\"".($attempt ? " onclick=\"((this.checked == true) ? storeResponse('".$question["efquestion_id"]."', '".$response["efresponse_id"]."', ".($question["allow_comments"] ? "$('".$response["efquestion_id"]."_comment').value" : "''").") : false)\"" : "").($current_progress_record && isset($current_progress_record[$question["efquestion_id"]]["efresponse_id"]) && $current_progress_record[$question["efquestion_id"]]["efresponse_id"] == $response["efresponse_id"] ? " checked=\"checked\"" : "")." value=\"".$response["efresponse_id"]."\" />";
 								echo "</div>\n";
 							}
 						}
 						echo "	</div>\n";
-						echo "	<div class=\"clear\"></div>";
-						echo "	<div class=\"comments\">";
-						echo "	<label for=\"".$form_record["eform_id"]."_".$response["efquestion_id"]."_".$response["efresponse_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
-						echo "	<textarea id=\"".$form_record["eform_id"]."_".$response["efquestion_id"]."_".$response["efresponse_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"></textarea>";
-						echo "	</div>";
+						if ($question["allow_comments"]) {
+							echo "	<div class=\"clear\"></div>";
+							echo "	<div class=\"comments\">";
+							echo "	<label for=\"".$question["efquestion_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
+							echo "	<textarea name=\"comments[".$question["efquestion_id"]."]\" id=\"".$question["efquestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$question["efquestion_id"]]["comments"]) ? $current_progress_record[$question["efquestion_id"]]["comments"] : "")."</textarea>";
+							echo "	</div>";
+						} else {
+							echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+						}
 						echo "</li>\n";
+						$modified_count++;
 					break;
 				}
 			}
 			if ($rubric_table_open) {
-				echo "</table></li>";
+				echo "</table></div>";
+				if ($comments_enabled) {
+					echo "	<div class=\"clear\"></div>\n";
+					echo "	<div class=\"comments\">\n";
+					echo "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
+					echo "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
+					echo "	</div>\n";
+				} else {
+					echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+				}
+				echo "</li>";
 			} 
 				
 			?>
 			</ol>
 		</div>
 		<?php
-		if ($ALLOW_QUESTION_MODIFICATIONS) {
+		if ($allow_question_modifications) {
 			?>
 			<div id="delete-question-confirmation-box" class="modal-confirmation">
 				<h1>Delete Form <strong>Question</strong> Confirmation</h1>
@@ -531,7 +701,7 @@ class Evaluation {
 				function updateFormQuestionOrder() {
 					new Ajax.Request('<?php echo ENTRADA_URL; ?>/admin/evaluations/forms/questions', {
 						method: 'post',
-						parameters: { id : <?php echo $FORM_ID; ?>, section : 'api-order', result : Sortable.serialize('form-questions-list', { name : 'order' }) },
+						parameters: { id : <?php echo $form_id; ?>, section : 'api-order', result : Sortable.serialize('form-questions-list', { name : 'order' }) },
 						onSuccess: function(transport) {
 							var count = 0;
 							$$('#form-questions-list li').each(function(obj) {
@@ -560,7 +730,7 @@ class Evaluation {
 
 					new Ajax.Request('<?php echo ENTRADA_URL; ?>/admin/evaluations/forms/questions', {
 						method: 'post',
-						parameters: { id: '<?php echo $FORM_ID; ?>', section: 'api-delete', record: efquestion_id },
+						parameters: { id: '<?php echo $form_id; ?>', section: 'api-delete', record: efquestion_id },
 						onSuccess: function(transport) {
 							if (transport.responseText.match(200)) {
 								$('question_' + efquestion_id).remove();
@@ -633,9 +803,9 @@ class Evaluation {
 							<td style="vertical-align: top">
 								<select class="multi-picklist" id="PickList" name="course_ids[]" multiple="multiple" size="4" style="width: 100%; margin-bottom: 5px">
 								<?php
-								if ((is_array($PROCESSED["evaluation_targets"])) && (!empty($PROCESSED["evaluation_targets"]))) {
-									foreach ($PROCESSED["evaluation_targets"] as $course_id) {
-										echo "<option value=\"".(int) $course_id."\">".html_encode($courses_list[$course_id])."</option>\n";
+								if ((is_array($target_data["evaluation_targets"])) && (!empty($target_data["evaluation_targets"]))) {
+									foreach ($target_data["evaluation_targets"] as $target) {
+										echo "<option value=\"".(int) $target["target_value"]."\">".html_encode($courses_list[$target["target_value"]])."</option>\n";
 									}
 								}
 								?>
@@ -652,7 +822,7 @@ class Evaluation {
 									<select class="multi-picklist" id="SelectList" name="other_courses_list" multiple="multiple" size="15" style="width: 100%">
 									<?php
 									foreach ($courses_list as $course_id => $course_name) {
-										if (!in_array($course_id, $PROCESSED["evaluation_targets"])) {
+										if (!in_array($course_id, $target_data["evaluation_targets"])) {
 											echo "<option value=\"".(int) $course_id."\">".html_encode($course_name)."</option>\n";
 										}
 									}
@@ -697,9 +867,9 @@ class Evaluation {
 							<td style="vertical-align: top">
 								<select class="multi-picklist" id="PickList" name="teacher_ids[]" multiple="multiple" size="4" style="width: 100%; margin-bottom: 5px">
 								<?php
-								if ((is_array($PROCESSED["evaluation_targets"])) && (!empty($PROCESSED["evaluation_targets"]))) {
-									foreach ($PROCESSED["evaluation_targets"] as $proxy_id) {
-										echo "<option value=\"".(int) $proxy_id."\">".html_encode($teachers_list[$proxy_id])."</option>\n";
+								if ((is_array($target_data["evaluation_targets"])) && (!empty($target_data["evaluation_targets"]))) {
+									foreach ($target_data["evaluation_targets"] as $target) {
+										echo "<option value=\"".(int) $target["target_value"]."\">".html_encode($teachers_list[$target["target_value"]])."</option>\n";
 									}
 								}
 								?>
@@ -716,7 +886,7 @@ class Evaluation {
 									<select class="multi-picklist" id="SelectList" name="other_teachers_list" multiple="multiple" size="15" style="width: 100%">
 									<?php
 									foreach ($teachers_list as $proxy_id => $teacher_name) {
-										if (!in_array($proxy_id, $PROCESSED["evaluation_targets"])) {
+										if (!in_array($proxy_id, $target_data["evaluation_targets"])) {
 											echo "<option value=\"".(int) $proxy_id."\">".html_encode($teacher_name)."</option>\n";
 										}
 									}
@@ -740,6 +910,17 @@ class Evaluation {
 						if ($temp_course_groups) {
 							foreach ($temp_course_groups as $temp_course_group) {
 								$course_groups[$temp_course_group["cgroup_id"]] = $temp_course_group;
+							}
+						}
+						if (!isset($target_data["associated_cgroup_ids"]) && !isset($target_data["associated_cohort_ids"]) && !isset($target_data["associated_proxy_ids"])) {
+							foreach ($target_data["evaluation_targets"] as $target) {
+								if ($target["target_type"] == "cgroup_id") {
+									$target_data["associated_cgroup_ids"][] = $target["target_value"];
+								} elseif ($target["target_type"] == "cohort") {
+									$target_data["associated_cohort_ids"][] = $target["target_value"];
+								} elseif ($target["target_type"] == "proxy_id") {
+									$target_data["associated_proxy_ids"][] = $target["target_value"];
+								}
 							}
 						}
 						unset($temp_course_groups);
@@ -817,29 +998,23 @@ class Evaluation {
 														}
 													}
 													$target_data["form_id"] = $form_id;
-													$PROCESSED = Evaluation::processTargets($target_data, $PROCESSED);
 
-													if (!isset($PROCESSED["associated_cohort_ids"]) && !isset($PROCESSED["associated_cgroup_ids"]) && !isset($PROCESSED["associated_proxy_ids"]) && !isset($target_data["evaluation_target_cohorts"]) && !isset($target_data["evaluation_target_course_groups"]) && !isset($target_data["evaluation_target_students"]) && isset($EVALUATION_ID)) {
-														$query = "SELECT * FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
+													if (!isset($target_data["associated_cohort_ids"]) && !isset($target_data["associated_cgroup_ids"]) && !isset($target_data["associated_proxy_ids"]) && isset($target_data["evaluation_id"])) {
+														$query = "SELECT * FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($target_data["evaluation_id"]);
 														$results = $db->GetAll($query);
 														if ($results) {
-															$PROCESSED["target_type"] = "custom";
+															$target_data["target_type"] = "custom";
 
 															foreach($results as $result) {
 																switch($result["target_type"]) {
-																	case "course_id" :
-																		$PROCESSED["target_type"] = "course";
-
-																		$PROCESSED["associated_course_ids"] = (int) $result["target_value"];
-																	break;
 																	case "cohort" :
-																		$PROCESSED["associated_cohort_ids"][] = (int) $result["target_value"];
+																		$target_data["associated_cohort_ids"][] = (int) $result["target_value"];
 																	break;
-																	case "group_id" :
-																		$PROCESSED["associated_cgroup_ids"][] = (int) $result["target_value"];
+																	case "cgroup_id" :
+																		$target_data["associated_cgroup_ids"][] = (int) $result["target_value"];
 																	break;
 																	case "proxy_id" :
-																		$PROCESSED["associated_proxy_ids"][] = (int) $result["target_value"];
+																		$target_data["associated_proxy_ids"][] = (int) $result["target_value"];
 																	break;
 																}
 															}
@@ -850,14 +1025,14 @@ class Evaluation {
 													$cgroup_ids_string = "";
 													$student_ids_string = "";
 
-													if (isset($PROCESSED["associated_course_ids"]) && $PROCESSED["associated_course_ids"]) {
+													if (isset($target_data["associated_course_ids"]) && $target_data["associated_course_ids"]) {
 														$course_target_included = true;
 													} else {
 														$course_target_included = false;
 													}
 
-													if (isset($PROCESSED["associated_cohort_ids"]) && is_array($PROCESSED["associated_cohort_ids"])) {
-														foreach ($PROCESSED["associated_cohort_ids"] as $group_id) {
+													if (isset($target_data["associated_cohort_ids"]) && is_array($target_data["associated_cohort_ids"])) {
+														foreach ($target_data["associated_cohort_ids"] as $group_id) {
 															if ($cohort_ids_string) {
 																$cohort_ids_string .= ",group_".$group_id;
 															} else {
@@ -866,8 +1041,8 @@ class Evaluation {
 														}
 													}
 
-													if (isset($PROCESSED["associated_cgroup_ids"]) && is_array($PROCESSED["associated_cgroup_ids"])) {
-														foreach ($PROCESSED["associated_cgroup_ids"] as $group_id) {
+													if (isset($target_data["associated_cgroup_ids"]) && is_array($target_data["associated_cgroup_ids"])) {
+														foreach ($target_data["associated_cgroup_ids"] as $group_id) {
 															if ($cgroup_ids_string) {
 																$cgroup_ids_string .= ",cgroup_".$group_id;
 															} else {
@@ -876,8 +1051,8 @@ class Evaluation {
 														}
 													}
 
-													if (isset($PROCESSED["associated_proxy_ids"]) && is_array($PROCESSED["associated_proxy_ids"])) {
-														foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
+													if (isset($target_data["associated_proxy_ids"]) && is_array($target_data["associated_proxy_ids"])) {
+														foreach ($target_data["associated_proxy_ids"] as $proxy_id) {
 															if ($student_ids_string) {
 																$student_ids_string .= ",student_".$proxy_id;
 															} else {
@@ -893,8 +1068,8 @@ class Evaluation {
 
 													<ul class="menu multiselect" id="target_list" style="margin-top: 5px">
 													<?php
-													if (isset($PROCESSED["associated_cohort_ids"]) && count($PROCESSED["associated_cohort_ids"])) {
-														foreach ($PROCESSED["associated_cohort_ids"] as $group) {
+													if (isset($target_data["associated_cohort_ids"]) && count($target_data["associated_cohort_ids"])) {
+														foreach ($target_data["associated_cohort_ids"] as $group) {
 															if ((array_key_exists($group, $COHORT_LIST)) && is_array($COHORT_LIST[$group])) {
 																?>
 																<li class="group" id="target_group_<?php echo $COHORT_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $COHORT_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeTarget('group_<?php echo $COHORT_LIST[$group]["group_id"]; ?>', 'cohorts');" class="list-cancel-image" /></li>
@@ -902,8 +1077,8 @@ class Evaluation {
 															}
 														}
 													}
-													if (isset($PROCESSED["associated_cgroup_ids"]) && count($PROCESSED["associated_cgroup_ids"])) {
-														foreach ($PROCESSED["associated_cgroup_ids"] as $group) {
+													if (isset($target_data["associated_cgroup_ids"]) && count($target_data["associated_cgroup_ids"])) {
+														foreach ($target_data["associated_cgroup_ids"] as $group) {
 															if ((array_key_exists($group, $GROUP_LIST)) && is_array($GROUP_LIST[$group])) {
 																?>
 																<li class="group" id="target_cgroup_<?php echo $GROUP_LIST[$group]["cgroup_id"]; ?>" style="cursor: move;"><?php echo $GROUP_LIST[$group]["group_name"]." - ".$GROUP_LIST[$group]["course_code"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeTarget('cgroup_<?php echo $GROUP_LIST[$group]["cgroup_id"]; ?>', 'course_groups');" class="list-cancel-image" /></li>
@@ -912,8 +1087,8 @@ class Evaluation {
 														}
 													}
 
-													if (isset($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) {
-														foreach ($PROCESSED["associated_proxy_ids"] as $student) {
+													if (isset($target_data["associated_proxy_ids"]) && count($target_data["associated_proxy_ids"])) {
+														foreach ($target_data["associated_proxy_ids"] as $student) {
 															if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
 																?>
 																<li class="user" id="target_student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeTarget('student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>', 'students');" class="list-cancel-image" /></li>
@@ -944,8 +1119,13 @@ class Evaluation {
 					break;
 					case "rotation_core" :
 						$target_data["form_id"] = $form_id;
-						$PROCESSED = Evaluation::processTargets($target_data, $PROCESSED);
-
+						if (!isset($target_data["associated_rotation_ids"])) {
+							foreach ($target_data["evaluation_targets"] as $target) {
+								if ($target["target_type"] == "rotation_id") {
+									$target_data["associated_rotation_ids"][] = $target["target_value"];
+								}
+							}
+						}
 						?>
 						<tr>
 							<td>&nbsp;</td>
@@ -969,7 +1149,7 @@ class Evaluation {
 												if ($rotation_results) {
 													foreach ($rotation_results as $rotation) {
 														$ROTATION_LIST[$rotation["rotation_id"]] = $rotation;
-														if (isset($PROCESSED["associated_rotation_ids"]) && is_array($PROCESSED["associated_rotation_ids"]) && in_array($rotation["rotation_id"], $PROCESSED["associated_rotation_ids"])) {
+														if (isset($target_data["associated_rotation_ids"]) && is_array($target_data["associated_rotation_ids"]) && in_array($rotation["rotation_id"], $target_data["associated_rotation_ids"])) {
 															$checked = "checked=\"checked\"";
 														} else {
 															$checked = "";
@@ -982,8 +1162,8 @@ class Evaluation {
 												} else {
 													echo display_notice("There are no core rotations available.");
 												}
-												if (isset($PROCESSED["associated_rotation_ids"]) && is_array($PROCESSED["associated_rotation_ids"])) {
-													foreach ($PROCESSED["associated_rotation_ids"] as $rotation_id) {
+												if (isset($target_data["associated_rotation_ids"]) && is_array($target_data["associated_rotation_ids"])) {
+													foreach ($target_data["associated_rotation_ids"] as $rotation_id) {
 														if ($rotation_ids_string) {
 															$rotation_ids_string .= ",rotation_".$rotation_id;
 														} else {
@@ -995,11 +1175,11 @@ class Evaluation {
 												<input type="hidden" id="evaluation_target_rotations" name="evaluation_target_rotations" value="<?php echo $rotation_ids_string; ?>" />
 												<ul class="menu multiselect" id="target_list" style="margin-top: 5px;">
 													<?php
-													if (is_array($PROCESSED["associated_rotation_ids"]) && count($PROCESSED["associated_rotation_ids"])) {
-														foreach ($PROCESSED["associated_rotation_ids"] as $rotation) {
+													if (is_array($target_data["associated_rotation_ids"]) && count($target_data["associated_rotation_ids"])) {
+														foreach ($target_data["associated_rotation_ids"] as $rotation) {
 															if ((array_key_exists($rotation, $ROTATION_LIST)) && is_array($ROTATION_LIST[$rotation])) {
 																?>
-																<li class="group" id="target_rotation_<?php echo $ROTATION_LIST[$rotation]["rotation_id"]; ?>" style="cursor: move;"><?php echo $ROTATION_LIST[$rotation]["rotation_title"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeTarget('rotation_<?php echo $COHORT_LIST[$group]["group_id"]; ?>', 'rotations');" class="list-cancel-image" /></li>
+																<li class="group" id="target_rotation_<?php echo $ROTATION_LIST[$rotation]["rotation_id"]; ?>" style="cursor: move;"><?php echo $ROTATION_LIST[$rotation]["rotation_title"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeTarget('rotation_<?php echo $COHORT_LIST[$group]["group_id"]; ?>', 'rotations');" class="list-cancel-image" style="position: relative; float: right;" /></li>
 																<?php
 															}
 														}
@@ -1032,7 +1212,13 @@ class Evaluation {
 					break;
 					case "preceptor" :
 						$target_data["form_id"] = $form_id;
-						$PROCESSED = Evaluation::processTargets($target_data, $PROCESSED);
+						if (!isset($target_data["associated_rotation_ids"])) {
+							foreach ($target_data["evaluation_targets"] as $target) {
+								if ($target["target_type"] == "rotation_id") {
+									$target_data["associated_rotation_ids"][] = $target["target_value"];
+								}
+							}
+						}
 						?>
 						<tr>
 							<td>&nbsp;</td>
@@ -1056,7 +1242,7 @@ class Evaluation {
 												if ($rotation_results) {
 													foreach ($rotation_results as $rotation) {
 														$ROTATION_LIST[$rotation["rotation_id"]] = $rotation;
-														if (isset($PROCESSED["associated_rotation_ids"]) && is_array($PROCESSED["associated_rotation_ids"]) && in_array($rotation["rotation_id"], $PROCESSED["associated_rotation_ids"])) {
+														if (isset($target_data["associated_rotation_ids"]) && is_array($target_data["associated_rotation_ids"]) && in_array($rotation["rotation_id"], $target_data["associated_rotation_ids"])) {
 															$checked = "checked=\"checked\"";
 														} else {
 															$checked = "";
@@ -1069,8 +1255,8 @@ class Evaluation {
 												} else {
 													echo display_notice("There are no clerkship rotations available.");
 												}
-												if (isset($PROCESSED["associated_rotation_ids"]) && is_array($PROCESSED["associated_rotation_ids"])) {
-													foreach ($PROCESSED["associated_rotation_ids"] as $rotation_id) {
+												if (isset($target_data["associated_rotation_ids"]) && is_array($target_data["associated_rotation_ids"])) {
+													foreach ($target_data["associated_rotation_ids"] as $rotation_id) {
 														if ($rotation_ids_string) {
 															$rotation_ids_string .= ",rotation_".$rotation_id;
 														} else {
@@ -1082,11 +1268,11 @@ class Evaluation {
 												<input type="hidden" id="evaluation_target_rotations" name="evaluation_target_rotations" value="<?php echo $rotation_ids_string; ?>" />
 												<ul class="menu multiselect" id="target_list" style="margin-top: 5px;">
 													<?php
-													if (is_array($PROCESSED["associated_rotation_ids"]) && count($PROCESSED["associated_rotation_ids"])) {
-														foreach ($PROCESSED["associated_rotation_ids"] as $rotation) {
+													if (is_array($target_data["associated_rotation_ids"]) && count($target_data["associated_rotation_ids"])) {
+														foreach ($target_data["associated_rotation_ids"] as $rotation) {
 															if ((array_key_exists($rotation, $ROTATION_LIST)) && is_array($ROTATION_LIST[$rotation])) {
 																?>
-																<li class="group" id="target_rotation_<?php echo $ROTATION_LIST[$rotation]["rotation_id"]; ?>" style="cursor: move;"><?php echo $ROTATION_LIST[$rotation]["rotation_title"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeTarget('rotation_<?php echo $COHORT_LIST[$group]["group_id"]; ?>', 'rotations');" class="list-cancel-image" /></li>
+																<li class="group" id="target_rotation_<?php echo $ROTATION_LIST[$rotation]["rotation_id"]; ?>" style="cursor: move;"><?php echo $ROTATION_LIST[$rotation]["rotation_title"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeTarget('rotation_<?php echo $COHORT_LIST[$group]["group_id"]; ?>', 'rotations');" class="list-cancel-image" style="position: relative; float: right;" /></li>
 																<?php
 															}
 														}
@@ -1130,10 +1316,6 @@ class Evaluation {
 					break;
 				}
 
-				/**
-				 * This will eventually need to be moved up into the above switch, or brought into a class
-				 * that should have been written for this.
-				 */
 				if ($target_details["target_shortname"] != "peer" && $target_details["target_shortname"] != "student") {
 					?>
 					<tr>
@@ -1153,7 +1335,7 @@ class Evaluation {
 								</colgroup>
 								<tbody>
 									<tr>
-										<td style="vertical-align: top"><input type="radio" name="target_group_type" id="target_group_type_cohort" value="cohort" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
+										<td style="vertical-align: top"><input<?php echo ($target_data["evaluation_evaluators"][0]["evaluator_type"] == "cohort" ? " checked=\"checked\"" : ""); ?> type="radio" name="target_group_type" id="target_group_type_cohort" value="cohort" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
 										<td style="padding-bottom: 15px">
 											<label for="target_group_type_cohort" class="radio-group-title">Entire class must complete this evaluation</label>
 											<div class="content-small">This evaluation must be completed by everyone in the selected class.</div>
@@ -1168,7 +1350,7 @@ class Evaluation {
 												$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
 												if (isset($active_cohorts) && !empty($active_cohorts)) {
 													foreach ($active_cohorts as $cohort) {
-														echo "<option value=\"".$cohort["group_id"]."\"".((($PROCESSED["evaluation_targets"][0]["target_type"] == "cohort") && ($PROCESSED["evaluation_targets"][0]["target_value"] == $cohort["group_id"])) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
+														echo "<option value=\"".$cohort["group_id"]."\"".((($target_data["evaluation_evaluators"][0]["evaluator_type"] == "cohort") && ($target_data["evaluation_evaluators"][0]["evaluator_value"] == $cohort["group_id"])) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
 													}
 												}
 												?>
@@ -1205,7 +1387,7 @@ class Evaluation {
 										<td colspan="2">&nbsp;</td>
 									</tr>
 									<tr >
-										<td style="vertical-align: top"><input type="radio" name="target_group_type" id="target_group_type_proxy_id" value="proxy_id" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
+										<td style="vertical-align: top"><input<?php echo ($target_data["evaluation_evaluators"][0]["evaluator_type"] == "proxy_id" ? " checked=\"checked\"" : ""); ?> type="radio" name="target_group_type" id="target_group_type_proxy_id" value="proxy_id" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
 										<td style="padding-bottom: 15px">
 											<label for="target_group_type_proxy_id" class="radio-group-title">Selected students must complete this evaluation</label>
 											<div class="content-small">This evaluation must be completed only by the selected individuals.</div>
@@ -1224,8 +1406,8 @@ class Evaluation {
 											<span class="content-small" style="margin-left: 3px; padding-top: 5px"><strong>e.g.</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?></span>
 											<ul id="student_list" class="menu" style="margin-top: 15px">
 												<?php
-												if (($PROCESSED["evaluation_evaluators"][0]["evaluator_type"] == "proxy_id") && is_array($PROCESSED["evaluation_evaluators"]) && !empty($PROCESSED["evaluation_evaluators"])) {
-													foreach ($PROCESSED["evaluation_evaluators"] as $evaluator) {
+												if (($target_data["evaluation_evaluators"][0]["evaluator_type"] == "proxy_id") && is_array($target_data["evaluation_evaluators"]) && !empty($target_data["evaluation_evaluators"])) {
+													foreach ($target_data["evaluation_evaluators"] as $evaluator) {
 														$proxy_id = (int) $evaluator["evaluator_value"];
 														?>
 														<li class="community" id="student_<?php echo $proxy_id; ?>" style="cursor: move;"><?php echo get_account_data("fullname", $proxy_id); ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="student_list.removeItem('<?php echo $proxy_id; ?>');" class="list-cancel-image" /></li>
@@ -1241,17 +1423,22 @@ class Evaluation {
 								</tbody>
 							</table>
 							<div id="scripts-on-open" style="display: none;">
-							selectTargetGroupOption('<?php echo (isset($PROCESSED["evaluation_targets"][0]["target_type"]) ? $PROCESSED["evaluation_targets"][0]["target_type"] : 'cohort'); ?>');
-							student_list = new AutoCompleteList({ type: 'student', url: '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=student', remove_image: '<?php echo ENTRADA_RELATIVE; ?>/images/action-delete.gif' });
+								$('submittable_notice').update('&nbsp;');
+								selectTargetGroupOption('<?php echo (isset($target_data["evaluation_evaluators"][0]["evaluator_type"]) ? $target_data["evaluation_evaluators"][0]["evaluator_type"] : 'cohort'); ?>');
+								student_list = new AutoCompleteList({ type: 'student', url: '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=student', remove_image: '<?php echo ENTRADA_RELATIVE; ?>/images/action-delete.gif' });
 							</div>
 						</td>
 					</tr>
 					<?php
 				} elseif ($target_details["target_shortname"] == "peer") {
 					?>
-					<div id="scripts-on-open" style="display: none;">
-						$('submittable_notice').update('<div class="display-notice"><ul><li>If you set the Min or Max Submittable for a Peer Evaluation to 0, the value will default to the number of targets available to evaluate.</li></ul></div>');
-					</div>
+					<tr>
+						<td colspan="3">
+							<div id="scripts-on-open" style="display: none;">
+								$('submittable_notice').update('<div class="display-notice"><ul><li>If you set the Min or Max Submittable for a Peer Evaluation to 0, the value will default to the number of targets available to evaluate.</li></ul></div>');
+							</div>
+						</td>
+					</tr
 					<?php
 				} elseif ($target_details["target_shortname"] == "student") {
 					?>
@@ -1270,6 +1457,7 @@ class Evaluation {
 										url: '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=evalfaculty', 
 										remove_image: '<?php echo ENTRADA_RELATIVE; ?>/images/action-delete.gif'
 									});
+								$('submittable_notice').update('&nbsp;');
 							</div>
 							<input type="text" id="evalfaculty_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
 							<div class="autocomplete" id="evalfaculty_name_auto_complete"></div>
@@ -1278,8 +1466,8 @@ class Evaluation {
 							<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 							<ul id="evalfaculty_list" class="menu" style="margin-top: 15px">
 								<?php
-								if (($PROCESSED["evaluation_evaluators"][0]["evaluator_type"] == "faculty") && is_array($PROCESSED["evaluation_evaluators"]) && !empty($PROCESSED["evaluation_evaluators"])) {
-									foreach ($PROCESSED["evaluation_evaluators"] as $evaluator) {
+								if (($target_data["evaluation_evaluators"][0]["evaluator_type"] == "proxy_id") && is_array($target_data["evaluation_evaluators"]) && !empty($target_data["evaluation_evaluators"])) {
+									foreach ($target_data["evaluation_evaluators"] as $evaluator) {
 										$proxy_id = (int) $evaluator["evaluator_value"];
 										?>
 										<li class="community" id="evalfaculty_<?php echo $proxy_id; ?>" style="cursor: move;"><?php echo get_account_data("fullname", $proxy_id); ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $proxy_id; ?>');" class="list-cancel-image" /></li>
@@ -1315,7 +1503,7 @@ class Evaluation {
 													AND `group_active` = 1";
 										$result	= $db->GetRow($query);
 										if ($result) {
-											$PROCESSED["associated_cohort_ids"][] = $group_id;
+											$target_data["associated_cohort_ids"][] = $group_id;
 										}
 									}
 								}
@@ -1336,7 +1524,7 @@ class Evaluation {
 					$groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 					if ($groups_results) {
 						foreach ($groups_results as $group) {
-							if (isset($PROCESSED["associated_cohort_ids"]) && is_array($PROCESSED["associated_cohort_ids"]) && in_array($group["group_id"], $PROCESSED["associated_cohort_ids"])) {
+							if (isset($target_data["associated_cohort_ids"]) && is_array($target_data["associated_cohort_ids"]) && in_array($group["group_id"], $target_data["associated_cohort_ids"])) {
 								$checked = "checked=\"checked\"";
 							} else {
 								$checked = "";
@@ -1366,7 +1554,7 @@ class Evaluation {
 													AND (`active` = '1')";
 										$result	= $db->GetRow($query);
 										if ($result) {
-											$PROCESSED["associated_cgroup_ids"][] = $cgroup_id;
+											$target_data["associated_cgroup_ids"][] = $cgroup_id;
 										}
 									}
 								}
@@ -1391,7 +1579,7 @@ class Evaluation {
 								$last_course_category = $group["course_name"];
 								$groups[$group["course_id"]] = array("text" => $group["course_name"], "value" => "course_" . $group["course_id"], "category" => true);
 							}
-							if (isset($PROCESSED["associated_cgroup_ids"]) && is_array($PROCESSED["associated_cgroup_ids"]) && in_array($group["cgroup_id"], $PROCESSED["associated_cgroup_ids"])) {
+							if (isset($target_data["associated_cgroup_ids"]) && is_array($target_data["associated_cgroup_ids"]) && in_array($group["cgroup_id"], $target_data["associated_cgroup_ids"])) {
 								$checked = "checked=\"checked\"";
 							} else {
 								$checked = "";
@@ -1426,7 +1614,7 @@ class Evaluation {
 													AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
 										$result	= $db->GetRow($query);
 										if ($result) {
-											$PROCESSED["associated_proxy_ids"][] = $proxy_id;
+											$target_data["associated_proxy_ids"][] = $proxy_id;
 										}
 									}
 								}
@@ -1453,7 +1641,7 @@ class Evaluation {
 					$student_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 					if ($student_results) {
 						foreach ($student_results as $student) {
-							if (isset($PROCESSED["associated_proxy_ids"]) && is_array($PROCESSED["associated_proxy_ids"]) && in_array($student["proxy_id"], $PROCESSED["associated_proxy_ids"])) {
+							if (isset($target_data["associated_proxy_ids"]) && is_array($target_data["associated_proxy_ids"]) && in_array($student["proxy_id"], $target_data["associated_proxy_ids"])) {
 								$checked = "checked=\"checked\"";
 							} else {
 								$checked = "";
@@ -1479,7 +1667,6 @@ class Evaluation {
 		if (!isset($PROCESSED["eform_id"]) || !$PROCESSED["eform_id"]) {
 			$PROCESSED["eform_id"] = 0;
 		}
-
 		if ((isset($target_data["form_id"]) && ($eform_id = clean_input($target_data["form_id"], "int"))) || (isset($target_data["eform_id"]) && ($eform_id = clean_input($target_data["eform_id"], "int"))) || (isset($PROCESSED["eform_id"]) && ($eform_id = clean_input($PROCESSED["eform_id"], "int")))) {
 			$PROCESSED["eform_id"] = $eform_id;
 			$query = "	SELECT a.*, b.`target_id`, b.`target_shortname`
@@ -1534,9 +1721,9 @@ class Evaluation {
 											(b.`group` = 'resident' AND b.`role` = 'lecturer')
 										)
 										AND a.`id` = ".$db->qstr($proxy_id);
-							$result = $db->GetRow($query);
+							$result = $db->GetOne($query);
 							if ($result) {
-									$PROCESSED["evaluation_targets"][] = array("target_value" => $result[$proxy_id], "target_type" => "proxy_id");
+									$PROCESSED["evaluation_targets"][] = array("target_value" => $proxy_id, "target_type" => "proxy_id");
 							}
 						}
 					}
@@ -1567,24 +1754,25 @@ class Evaluation {
 									$result	= $db->GetRow($query);
 									if ($result) {
 										$PROCESSED["associated_cohort_ids"][] = $group_id;
-										$PROCESSED["evaluation_targets"][] = array("target_value" => $group_id, "target_type" => "group_id");
+										$PROCESSED["evaluation_targets"][] = array("target_value" => $group_id, "target_type" => "cohort");
 									}
 								}
 							}
 						}
 					}
-				} else {
+				} elseif (isset($target_data["evaluation_id"]) && $target_data["evaluation_id"]) {
 					$query = "	SELECT * FROM `groups` AS a
 								JOIN `evaluation_targets` AS b
 								ON b.`target_value` = a.`group_id`
 								AND b.`target_type` = 'group_id'
 								WHERE `group_type` = 'cohort'
+								AND b.`evaluation_id` = ".$db->qstr($target_data["evaluation_id"])."
 								AND `group_active` = 1";
 					$results	= $db->GetAll($query);
 					if ($results) { 
 						foreach ($results as $result) {
 							$PROCESSED["associated_cohort_ids"][] = $result["group_id"];
-							$PROCESSED["evaluation_targets"][] = array("target_value" => $result["group_id"], "target_type" => "group_id");
+							$PROCESSED["evaluation_targets"][] = array("target_value" => $result["group_id"], "target_type" => "cohort");
 						}
 					}
 				}
@@ -1610,12 +1798,13 @@ class Evaluation {
 							}
 						}
 					}
-				} else {
+				} elseif (isset($target_data["evaluation_id"]) && $target_data["evaluation_id"]) {
 					$query = "	SELECT * FROM `course_groups` AS a
 								JOIN `evaluation_targets` AS b
 								ON b.`target_value` = a.`cgroup_id`
 								AND b.`target_type` = 'cgroup_id'
-								WHERE `active` = 1";
+								WHERE a.`active` = 1
+								AND b.`evaluation_id` = ".$db->qstr($target_data["evaluation_id"]);
 					$results	= $db->GetAll($query);
 					if ($results) {
 						foreach ($results as $result) {
@@ -1651,7 +1840,7 @@ class Evaluation {
 							}
 						}
 					}
-				} elseif ($target_data["evaluation_id"]) {
+				} elseif (isset($target_data["evaluation_id"]) && $target_data["evaluation_id"]) {
 					$query = "	SELECT a.*
 								FROM `".AUTH_DATABASE."`.`user_data` AS a
 								JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -1689,12 +1878,22 @@ class Evaluation {
 									$result	= $db->GetRow($query);
 									if ($result) {
 										$PROCESSED["associated_rotation_ids"][] = $rotation_id;
+										$PROCESSED["evaluation_targets"][] = array("target_value" => $rotation_id, "target_type" => "rotation_id");
 									}
 								}
 							}
 						}
 					}
 				}
+			break;
+			case "rotation_elective" :
+				$query = "SELECT `rotation_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` WHERE `rotation_title` LIKE '%Elective%'";
+				$elective_rotation_id = $db->GetOne($query);
+				if (!$elective_rotation_id) {
+					$elective_rotation_id = 0;
+				}
+				$PROCESSED["associated_rotation_ids"][] = $elective_rotation_id;
+				$PROCESSED["evaluation_targets"][] = array("target_value" => $elective_rotation_id, "target_type" => "rotation_id");
 			break;
 			case "preceptor" :
 				/**
@@ -1712,6 +1911,7 @@ class Evaluation {
 									$result	= $db->GetRow($query);
 									if ($result) {
 										$PROCESSED["associated_rotation_ids"][] = $rotation_id;
+										$PROCESSED["evaluation_targets"][] = array("target_value" => $rotation_id, "target_type" => "rotation_id");
 									}
 								}
 							}
@@ -1720,6 +1920,9 @@ class Evaluation {
 				}
 
 			break;
+			case "self" :
+				$PROCESSED["evaluation_targets"][] = array("target_value" => 0, "target_type" => "self");
+			break;
 			default :
 				add_error("The form type you have selected is currently unavailable. The system administrator has been notified of this issue, please try again later.");
 
@@ -1727,6 +1930,813 @@ class Evaluation {
 			break;
 		}
 		return $PROCESSED;
+	}
+	
+	public static function getTargetsArray ($evaluation_id, $evaluator_id = 0, $evaluator_proxy_id = 0, $simple = true, $available_only = false) {
+		global $db, $ENTRADA_USER;
+		
+		if (!$evaluator_proxy_id && isset($ENTRADA_USER) && $ENTRADA_USER->getProxyId()) {
+			$evaluator_proxy_id = $ENTRADA_USER->getProxyId();
+		} elseif ($evaluator_id) {
+			$query = "SELECT * FROM `evaluation_evaluators` WHERE `eevaluator_id` = ".$db->qstr($evaluator_id);
+			$evaluator = $db->GetRow($query);
+			if ($evaluator["evaluator_type"] == "proxy_id") {
+				$evaluator_proxy_id = $evaluator["evaluator_value"];
+			}
+		}
+		
+		$evaluation_targets = array();
+		
+		$query = "SELECT * FROM `evaluations` AS a
+					JOIN `evaluation_forms` AS b
+					ON a.`eform_id` = b.`eform_id`
+					JOIN `evaluations_lu_targets` AS c
+					ON b.`target_id` = c.`target_id`
+					WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+		$evaluation = $db->GetRow($query);
+		if ($evaluation) {
+			if ($evaluator_id) {
+				$query = "SELECT * FROM `evaluation_evaluators`
+							WHERE `eevaluator_id` = ".$db->qstr($evaluator_id)."
+							AND `evaluation_id` = ".$db->qstr($evaluation_id);
+				$evaluator_record = $db->getRow($query);
+			}
+			switch ($evaluation["target_shortname"]) {
+				case "self" :
+					if ($simple) {
+						$evaluation_targets[] = $evaluator_proxy_id;
+					} else {
+						$query = "SELECT *, b.`id` AS `proxy_id` FROM `evaluation_targets` AS a
+									JOIN `".AUTH_DATABASE."`.`user_data` AS b
+									ON b.`id` = ".$db->qstr($evaluator_proxy_id)."
+									WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+									AND a.`target_type` = 'self'
+									AND a.`target_active` = 1";
+						$evaluation_target_record = $db->GetRow($query);
+						if ($evaluation_target_record) {
+							$evaluation_targets[] = $evaluation_target_record;
+						}
+					}
+				break;
+				case "peer" :
+					if ($evaluator) {
+						switch ($evaluator["evaluator_type"]) {
+							case "cgroup_id" :
+								$query = "SELECT ".($simple ? "a.`proxy_id`" : "b.*, c.*, a.`proxy_id`")." FROM `course_group_audience` AS a
+											JOIN `".AUTH_DATABASE."`.`user_data` AS b
+											ON a.`proxy_id` = b.`id`
+											JOIN `evaluation_targets` AS c
+											ON c.`target_value` = a.`cgroup_id`
+											AND c.`target_type` = 'cgroup_id'
+											AND c.`evaluation_id` = ".$db->qstr($evaluation_id)."
+											WHERE a.`cgroup_id` = ".$db->qstr($evaluator["evaluator_value"])."
+											".($evaluator_proxy_id && $available_only ? "AND a.`proxy_id` NOT IN (
+												SELECT `target_record_id` FROM `evaluation_progress` 
+												WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+												AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+												AND `progress_value` = 'complete'
+											)" : "")."
+											AND a.`active` = 1
+											GROUP BY b.`id`";
+								$evaluation_target_users = $db->GetAll($query);
+								if ($evaluation_target_users) {
+									foreach ($evaluation_target_users as $evaluation_target_user) {
+										if ($evaluation_target_user["proxy_id"] != $evaluator_proxy_id) {
+											if ($simple) {
+												$evaluation_targets[] = $evaluation_target_user["proxy_id"];
+											} else {
+												$evaluation_targets[] = $evaluation_target_user;
+											}
+										}
+									}
+								}
+							break;
+							case "cohort" :
+								$query = "SELECT ".($simple ? "a.`proxy_id`" : "*")." FROM `group_members` AS a
+											JOIN `".AUTH_DATABASE."`.`user_data` AS b
+											ON a.`proxy_id` = b.`id`
+											JOIN `evaluation_targets` AS c
+											ON c.`target_value` = a.`group_id`
+											AND c.`target_type` = 'cohort'
+											AND c.`evaluation_id` = ".$db->qstr($evaluation_id)."
+											WHERE a.`group_id` = ".$db->qstr($evaluator["evaluator_value"])."
+											".($evaluator_proxy_id && $available_only ? "AND a.`proxy_id` NOT IN (
+												SELECT `target_record_id` FROM `evaluation_progress` 
+												WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+												AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+												AND `progress_value` = 'complete'
+											)" : "")."
+											AND a.`member_active` = 1
+											GROUP BY b.`id`";
+								$evaluation_target_users = $db->GetAll($query);
+								if ($evaluation_target_users) {
+									foreach ($evaluation_target_users as $evaluation_target_user) {
+										if ($evaluation_target_user["proxy_id"] != $evaluator_proxy_id) {
+											if ($simple) {
+												$evaluation_targets[] = $evaluation_target_user["proxy_id"];
+											} else {
+												$evaluation_targets[] = $evaluation_target_user;
+											}
+										}
+									}
+								}
+							break;
+							case "proxy_id" :
+								$query = "SELECT *, b.`id` AS `proxy_id` FROM `evaluation_targets` AS a
+											JOIN `".AUTH_DATABASE."`.`user_data` AS b
+											ON a.`target_value` = b.`id`
+											WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+											AND a.`target_type` = 'proxy_id'
+											".($evaluator_proxy_id && $available_only ? "AND a.`etarget_id` NOT IN (
+												SELECT `etarget_id` FROM `evaluation_progress` 
+												WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+												AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+												AND `progress_value` = 'complete'
+											)" : "")."
+											AND a.`target_active` = 1";
+								$evaluation_target_records = $db->GetAll($query);
+								if ($evaluation_target_records) {
+									foreach ($evaluation_target_records as $evaluation_target_record) {
+										if ($evaluation_target_record["target_value"] != $evaluator_proxy_id) {
+											if ($simple) {
+												$evaluation_targets[] = $evaluation_target_record["target_value"];
+											} else {
+												$query = "SELECT *, a.`id` AS `proxy_id` FROM `".AUTH_DATABASE."`.`user_data` AS a
+															JOIN `evaluation_targets` AS b
+															ON b.`target_value` = a.`id`
+															AND b.`target_type` = 'proxy_id'
+															AND b.`evaluation_id` = ".$db->qstr($evaluation_id)."
+															WHERE a.`id` = ".$db->qstr($evaluation_target_record["target_value"])."
+															GROUP BY b.`id`";
+												$evaluation_target_user = $db->GetRow($query);
+												$evaluation_targets[] = $user_data;
+											}
+										}
+									}
+								}
+							break;
+						}
+					}
+				break;
+				case "preceptor" :
+				case "rotation_elective" :
+				case "rotation_core" :
+					$query = "SELECT ".($simple ? "b.`rotation_id`" : "*")." FROM `evaluation_targets` AS a
+								JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS b
+								ON a.`target_value` = b.`rotation_id`
+								AND a.`target_type` = 'rotation_id'
+								WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"]);
+					$rotations = $db->GetAll($query);
+					foreach ($rotations as $rotation) {
+						$evaluated_event_ids_string = "";
+						if ($evaluator_proxy_id) {
+							if ($available_only) {
+								$query = "SELECT a.`event_id` FROM `evaluation_progress_clerkship_events` AS a
+											JOIN `evaluation_progress` AS b
+											ON a.`eprogress_id` = b.`eprogress_id`
+											WHERE b.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+											AND b.`proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+											GROUP BY a.`event_id`
+											HAVING COUNT(a.`event_id`) >= ".$evaluation["max_submittable"];
+								$evaluation_event_ids = $db->GetAll($query);
+								if ($evaluation_event_ids) {
+									foreach ($evaluation_event_ids as $event) {
+										$evaluated_event_ids_string .= ($evaluated_event_ids_string ? ", " : "").$db->qstr($event["event_id"]);
+									}
+								}
+							}
+							$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+										JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+										ON a.`event_id` = b.`event_id`
+										WHERE a.`rotation_id` = ".$db->qstr($rotation["rotation_id"])."
+										AND b.`etype_id` = ".$db->qstr($evaluator_proxy_id)."
+										".($evaluated_event_ids_string && $available_only ? "AND a.`event_id` NOT IN (".$evaluated_event_ids_string.")" : "")."
+										AND a.`event_finish` <= ".$db->qstr(time());
+							$events = $db->GetAll($query);
+							if ($events) {
+								foreach ($events as $event) {
+									if ($simple) {
+										$evaluation_targets[] = $event["event_id"];
+									} else {
+										$event = array_merge($event, $rotation);
+										$evaluation_targets[] = $event;
+									}
+								}
+							}
+						}
+					}
+				break;
+				case "student" :
+					$query = "SELECT * FROM `evaluation_targets`
+								WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+								AND `target_active` = 1";
+					$evaluation_target_records = $db->GetAll($query);
+					if ($evaluation_target_records) {
+						foreach ($evaluation_target_records as $evaluation_target_record) {
+							switch ($evaluation_target_record["target_type"]) {
+								case "cgroup_id" :
+									$query = "SELECT ".($simple ? "a.`proxy_id`" : "*")." FROM `course_group_audience` AS a
+												JOIN `".AUTH_DATABASE."`.`user_data` AS b
+												ON a.`proxy_id` = b.`id`
+												WHERE a.`cgroup_id` = ".$db->qstr($evaluation_target_record["target_value"])."
+												".($evaluator_proxy_id && $available_only ? "AND a.`proxy_id` NOT IN (
+													SELECT `target_record_id` FROM `evaluation_progress` 
+													WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+													AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+													AND `progress_value` = 'complete'
+												)" : "")."
+												AND a.`active` = 1
+												GROUP BY b.`id`";
+									$evaluation_target_users = $db->GetAll($query);
+									if ($evaluation_target_users) {
+										foreach ($evaluation_target_users as $evaluation_target_user) {
+											if ($simple) {
+												$evaluation_targets[] = $evaluation_target_user["proxy_id"];
+											} else {
+												$evaluation_target_user = array_merge($evaluation_target_user, $evaluation_target_record);
+												$evaluation_targets[] = $evaluation_target_user;
+											}
+										}
+									}
+								break;
+								case "cohort" :
+									$query = "SELECT ".($simple ? "a.`proxy_id`" : "*")." FROM `group_members` AS a
+												JOIN `".AUTH_DATABASE."`.`user_data` AS b
+												ON a.`proxy_id` = b.`id`
+												WHERE a.`group_id` = ".$db->qstr($evaluation_target_record["target_value"])."
+												".($evaluator_proxy_id && $available_only ? "AND a.`proxy_id` NOT IN (
+													SELECT `target_record_id` FROM `evaluation_progress` 
+													WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+													AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+													AND `progress_value` = 'complete'
+												)" : "")."
+												AND a.`member_active` = 1
+												GROUP BY b.`id`";
+									$evaluation_target_users = $db->GetAll($query);
+									if ($evaluation_target_users) {
+										foreach ($evaluation_target_users as $evaluation_target_user) {
+											if ($simple) {
+												$evaluation_targets[] = $evaluation_target_user["proxy_id"];
+											} else {
+												$evaluation_target_user = array_merge($evaluation_target_user, $evaluation_target_record);
+												$evaluation_targets[] = $evaluation_target_user;
+											}
+										}
+									}
+								break;
+								case "proxy_id" :
+									if ($simple) {
+										$evaluation_targets[] = $evaluation_target_record["target_value"];
+									} else {
+										$query = "SELECT *, `id` AS `proxy_id` FROM `".AUTH_DATABASE."`.`user_data`
+													WHERE `id` = ".$db->qstr($evaluation_target_record["target_value"])."
+													".($evaluator_proxy_id && $available_only ? "AND `id` NOT IN (
+														SELECT `target_record_id` FROM `evaluation_progress` 
+														WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+														AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+														AND `progress_value` = 'complete'
+													)" : "")."
+													GROUP BY `id`";
+										$evaluation_target_user = $db->GetRow($query);
+										$evaluation_target_user = array_merge($user_data, $evaluation_target_record);
+										$evaluation_targets[] = $user_data;
+									}
+								break;
+							}
+						}
+					}
+				break;
+				case "teacher" :
+					$query = "SELECT ".($simple ? "a.`target_value` as `proxy_id`" : "*, a.`target_value` as `proxy_id`")." FROM `evaluation_targets` AS a
+								JOIN `".AUTH_DATABASE."`.`user_data` AS b
+								ON a.`target_value` = b.`id`
+								AND a.`target_type` = 'proxy_id'
+								WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+								".($evaluator_proxy_id && $available_only ? "AND a.`etarget_id` NOT IN (
+									SELECT `etarget_id` FROM `evaluation_progress` 
+									WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+									AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+									AND `progress_value` = 'complete'
+								)" : "")."
+								AND a.`target_active` = 1";
+					$evaluation_target_users = $db->GetAll($query);
+					if ($evaluation_target_users) {
+						foreach ($evaluation_target_users as $evaluation_target_user) {
+							if ($simple) {
+								$evaluation_targets[] = $evaluation_target_user["proxy_id"];
+							} else {
+								$evaluation_targets[] = $evaluation_target_user;
+							}
+						}
+					}
+				break;
+				case "course" :
+				default :
+					$query = "SELECT ".($simple ? "b.`course_id`" : "*")." FROM `evaluation_targets` AS a
+								JOIN `courses` AS b
+								ON a.`target_value` = b.`course_id`
+								AND a.`target_type` = 'course_id'
+								WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+								".($evaluator_proxy_id && $available_only ? "AND a.`etarget_id` NOT IN (
+									SELECT `etarget_id` FROM `evaluation_progress` 
+									WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+									AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+									AND `progress_value` = 'complete'
+								)" : "")."
+								AND a.`target_active` = 1";
+					$evaluation_target_courses = $db->GetAll($query);
+					if ($evaluation_target_courses) {
+						foreach ($evaluation_target_courses as $evaluation_target_course) {
+							if ($simple) {
+								$evaluation_targets[] = $evaluation_target_course["course_id"];
+							} else {
+								$evaluation_targets[] = $evaluation_target_course;
+							}
+						}
+					}
+				break;
+			}
+		}
+		return $evaluation_targets;
+	}
+	
+	public static function getNewEvaluationsPending ($evaluation) {
+		global $db;
+		
+		$pending_evaluations = array();
+		
+		$query = "SELECT * FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"]);
+		$evaluators = $db->GetAll($query);
+		foreach ($evaluators as $evaluator) {
+			$evaluator_users = Evaluation::getEvaluatorUsers($evaluator);
+			foreach ($evaluator_users as $evaluator_user) {
+				$temp_evaluation = Evaluation::getUserPendingEvaluation($evaluation, $evaluator, $evaluator_user);
+				if ($temp_evaluation) {
+					$pending_evaluations[] = $temp_evaluation;
+				}
+			}
+		}
+		return $pending_evaluations;
+	}
+	
+	public static function getEvaluatorUsers ($evaluator) {
+		global $db;
+		
+		switch ($evaluator["evaluator_type"]) {
+			case "proxy_id" :
+				$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` 
+							WHERE `id` = ".$db->qstr($evaluator["evaluator_value"]);
+			break;
+			case "cohort" :
+				$query = "SELECT a.* FROM `".AUTH_DATABASE."`.`user_data` AS a 
+							JOIN `group_members` AS b
+							ON a.`id` = b.`proxy_id`
+							WHERE b.`group_id` = ".$db->qstr($evaluator["evaluator_value"])."
+							AND b.`member_active` = 1";
+			break;
+			case "cgroup_id" :
+				$query = "SELECT a.* FROM `".AUTH_DATABASE."`.`user_data` AS a 
+							JOIN `course_group_audience` AS b
+							ON a.`id` = b.`proxy_id`
+							WHERE b.`cgroup_id` = ".$db->qstr($evaluator["evaluator_value"])."
+							AND b.`active` = 1";
+			break;
+			case "organisation_id" :
+				$query = "SELECT a.* FROM `".AUTH_DATABASE."`.`user_data` AS a 
+							JOIN `".AUTH_DATABASE."`.`user_access` AS b
+							ON a.`id` = b.`user_id`
+							AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+							WHERE b.`organisation_id` = ".$db->qstr($evaluator["evaluator_value"])."
+							AND b.`account_active` = 'true'";
+			break;
+		}
+		if ($query) {
+			$evaluator_users = array();
+			$evaluator_user_records = $db->GetAll($query);
+			if ($evaluator_user_records) {
+				foreach ($evaluator_user_records as $evaluator_user) {
+					$evaluator_users[$evaluator_user["id"]] = $evaluator_user;
+				}
+				return $evaluator_users;
+			}
+		}
+		return false;
+	}
+	
+	public static function getUserPendingEvaluation ($evaluation, $evaluator, $evaluator_user) {
+		global $db;
+		switch ($evaluation["target_shortname"]) {
+			case "self" :
+			case "peer" :
+			case "student" :
+			case "teacher" :
+			case "course" :
+			default :
+				if ($evaluation["max_submittable"]) {
+					$query = "SELECT COUNT(`eprogress_id`) FROM `evaluation_progress` 
+								WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])." 
+								AND `proxy_id` = ".$db->qstr($evaluator_user["id"])." 
+								AND `progress_value` = 'complete'";
+					$submissions_count = $db->GetOne($query);
+				}
+				if ((!isset($submissions_count) || !$submissions_count || $submissions_count < $evaluation["max_submittable"]) && ($evaluation["evaluation_start"] <= time() && $evaluation["evaluation_start"] >= strtotime("-1 day"))) {
+					$evaluation_targets = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true);
+				}
+			break;
+			case "preceptor" :
+			case "rotation_core" :
+			case "rotation_elective" :
+				$evaluation_targets = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true);
+			break;
+		}
+		if (isset($evaluation_targets) && $evaluation_targets) {
+			$evaluation["evaluator"] = $evaluator;
+			$evaluation["user"] = $evaluator_user;
+			$evaluation["targets"] = $evaluation_targets;
+			return $evaluation;
+		} else {
+			return false;
+		}
+	}
+	
+	public static function loadProgress($eprogress_id = 0) {
+		global $db;
+
+		$output = array();
+
+		if ($eprogress_id = (int) $eprogress_id) {
+		/**
+			 * Grab the specified progress identifier, but you better be sure this
+			 * is the correct one, and the results are being returned to the proper
+			 * user.
+		 */
+			$query		= "	SELECT *
+							FROM `evaluation_progress` AS a
+							JOIN `evaluations` AS b
+							ON a.`evaluation_id` = b.`evaluation_id`
+							WHERE a.`eprogress_id` = ".$db->qstr($eprogress_id);
+			$progress	= $db->GetRow($query);
+			if ($progress) {
+			/**
+			 * Add all of the qquestion_ids to the $output array so they're set.
+			 */
+				$query		= "SELECT * FROM `evaluation_form_questions` WHERE `eform_id` = ".$db->qstr($progress["eform_id"])." ORDER BY `question_order` ASC";
+				$questions	= $db->GetAll($query);
+				if ($questions) {
+					foreach ($questions as $question) {
+						$output[$question["efquestion_id"]] = 0;
+					}
+				} else {
+					return false;
+				}
+
+				/**
+				 * Update the $output array with any currently selected responses.
+				 */
+				$query		= "	SELECT *
+								FROM `evaluation_responses`
+								WHERE `eprogress_id` = ".$db->qstr($eprogress_id);
+				$responses	= $db->GetAll($query);
+				if ($responses) {
+					foreach ($responses as $response) {
+						$output[$response["efquestion_id"]] = array();
+						$output[$response["efquestion_id"]]["efresponse_id"] = $response["efresponse_id"];
+						$output[$response["efquestion_id"]]["comments"] = $response["comments"];
+					}
+				}
+			} else {
+				return false;
+			}
+		}
+
+		return $output;
+	}
+	
+	public static function getMinimumPassingLevel ($efquestion_id) {
+		global $db;
+		
+		$query = "SELECT `response_order` FROM `evaluation_form_response`
+					WHERE `efquestion_id` = ".$db->qstr($efquestion_id)."
+					AND `minimum_passing_level` = 1";
+		$minimum_passing_level = $db->GetOne($query);
+		if ($minimum_passing_level) {
+			return $minimum_passing_level;
+		} else {
+			return 0;
+		}
+	}
+	
+	public static function getThresholdNotificationRecipients ($evaluation_id, $eresponse_id) {
+		global $db;
+		
+		$query = "SELECT * FROM `evaluations`
+					WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+		$evaluation = $db->GetRow($query);
+		
+		if (isset($evaluation["threshold_notifications_type"]) && $evaluation["threshold_notifications_type"] && $evaluation["threshold_notifications_type"] != "disabled") {
+			$query = "SELECT * FROM `evaluation_responses` AS a
+						JOIN `evaluation_progress` AS b
+						ON a.`eprogress_id` = b.`eprogress_id`
+						JOIN `evaluation_targets` AS c
+						ON c.`etarget_id` = b.`etarget_id`
+						WHERE a.`eresponse_id` = ".$db->qstr($eresponse_id);
+			$evaluation_progress = $db->GetRow($query);
+			switch ($evaluation["threshold_notifications_type"]) {
+				case "authors" :
+				default :
+					$query = "SELECT b.* FROM `evaluation_form_contacts` AS a
+								JOIN `".AUTH_DATABASE."`.`user_data` AS b
+								ON a.`proxy_id` = b.`id`
+								WHERE a.`eform_id` = ".$db->qstr($evaluation_progress["target_value"])."
+								AND a.`contact_type` = 'author'";
+					$notification_recipients = $db->GetAll($query);
+				break;
+				case "reviewers" :
+					$query = "SELECT b.* FROM `evaluation_contacts` AS a
+								JOIN `".AUTH_DATABASE."`.`user_data` AS b
+								ON a.`proxy_id` = b.`id`
+								WHERE a.`evaluation_id` = ".$db->qstr($evaluation_progress["target_value"])."
+								AND a.`contact_type` = 'reviewer'";
+					$notification_recipients = $db->GetAll($query);
+				break;
+				case "tutors" :
+					$query = "SELECT b.* FROM `course_group_contacts` AS a
+								JOIN `".AUTH_DATABASE."`.`user_data` AS b
+								ON a.`proxy_id` = b.`id`
+								WHERE a.`cgroup_id` = ".$db->qstr($evaluation_progress["target_value"]);
+					$notification_recipients = $db->GetAll($query);
+				break;
+				case "directors" :
+				case "pcoordinators" :
+				case "ccoordinators" :
+					$contact_type = rtrim($evaluation["threshold_notifications_type"], "s");
+					if ($evaluation_progress["target_type"] == "course_id" || $evaluation_progress["target_type"] == "rotation_id") {
+						if ($evaluation_progress["target_type"] == "rotation_id") {
+							$query = "SELECT `course_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` WHERE `rotation_id` = ".$db->qstr($evaluation_progress["target_value"]);
+							$course_id = $db->GetOne($query);
+						} else {
+							$course_id = $evaluation_progress["target_value"];
+						}
+					}
+					if ($course_id) {
+						$query = "SELECT b.* FROM `course_contacts` AS a
+									JOIN `".AUTH_DATABASE."`.`user_data` AS b
+									ON a.`proxy_id` = b.`id`
+									WHERE a.`course_id` = ".$db->qstr($course_id)."
+									AND a.`contact_type` = ".$db->qstr($contact_type).($contact_type == "pcoordinator" ? "
+									UNION
+									SELECT b.* FROM `courses` AS a
+									JOIN `".AUTH_DATABASE."`.`user_data` AS b
+									ON a.`pcoord_id` = b.`id`
+									WHERE a.`course_id` = ".$db->qstr($course_id) : "");
+						$notification_recipients = $db->GetAll($query);
+					}
+				break;
+			}
+		}
+	}
+	
+	public static function getEvaluationReviewPermissions ($evaluation_id) {
+		global $db, $ENTRADA_USER;
+		
+		$permissions = array();
+		
+		$query = "SELECT * FROM `evaluations` AS a
+					JOIN `evaluation_forms` AS b
+					ON a.`eform_id` = b.`eform_id`
+					JOIN `evaluations_lu_targets` AS c
+					ON b.`target_id` = c.`target_id`
+					WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+		$evaluation = $db->GetRow($query);
+		if ($evaluation) {
+			if (1){//$evaluation["allow_target_review"]) {
+				$query = "SELECT * FROM `evaluation_targets`
+							WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+				$evaluation_targets = $db->GetAll($query);
+
+				if ($evaluation_targets) {
+					switch ($evaluation["target_shortname"]) {
+						case "preceptor" :
+							$permissions[] = array("preceptor_proxy_id" => $ENTRADA_USER->getID(), "target_type" => "rotation_id", "contact_type" => "preceptor");
+						case "rotation_core" :
+						case "rotation_elective" :
+							foreach ($evaluation_targets as $evaluation_target) {
+								if ($evaluation_target["target_type"] == "rotation_id") {
+									$query = "SELECT b.* FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
+												JOIN `course_contacts` AS b
+												ON a.`course_id` = b.`course_id`
+												AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+												WHERE a.`rotation_id` = ".$db->qstr($evaluation_target["target_value"])."
+												AND b.`contact_type` IN ('director', 'pcoordinator')";
+									$courses_contacts = $db->GetAll($query);
+									if ($courses_contacts) {
+										foreach ($courses_contacts as $courses_contact) {
+											$permissions[] = array("target_value" => $evaluation_target["target_value"], "target_type" => "rotation_id", "contact_type" => $courses_contact["contact_type"]);
+										}
+									}
+								}
+							}
+						break;
+						case "course" :
+							if ($evaluation["target_shortname"] == "course") {
+								foreach ($evaluation_targets as $evaluation_target) {
+									if ($evaluation_target["target_type"] == "course_id") {
+										$query = "SELECT * FROM `course_contacts`
+													WHERE `course_id` = ".$db->qstr($evaluation_target["target_value"])."
+													AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+													AND `contact_type` IN ('director', 'pcoordinator')";
+										$courses_contacts = $db->GetAll($query);
+										if ($courses_contacts) {
+											foreach ($courses_contacts as $courses_contact) {
+												$permissions[] = array("target_value" => $courses_contact["course_id"], "target_type" => "course_id", "contact_type" => $courses_contact["contact_type"]);
+											}
+										}
+									}
+								}
+							}
+						break;
+						case "peers" :
+							$skip_evaluator_check = false;
+							foreach ($evaluation_targets as $evaluation_target) {
+								if ($evaluation_target["target_type"] == "cgroup_id") {
+									$query = "SELECT `cgroup_id` FROM `course_group_contacts`
+												WHERE `cgroup_id` = ".$db->qstr($evaluation_target["target_value"])."
+												AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+									$tutor_record = $db->GetRow($query);
+									if ($tutor_record) {
+										$permissions[] = array("target_value" => $tutor_record["cgroup_id"], "target_type" => "cgroup_id", "contact_type" => "tutor");
+										$skip_evaluator_check = true;
+									}
+								}
+							}
+
+							if (!$skip_evaluator_check) {
+								$cohort = groups_get_cohort($ENTRADA_USER->getID());
+
+								$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
+											JOIN `course_groups` AS b
+											ON a.`cgroup_id` = b.`cgroup_id`
+											WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+											AND a.`active` = 1
+											AND b.`active` = 1";
+								$course_groups = $db->GetAll($query);
+
+								$cgroup_ids_string = "";
+								if (isset($course_groups) && is_array($course_groups)) {
+									foreach ($course_groups as $course_group) {
+										if ($cgroup_ids_string) {
+											$cgroup_ids_string .= ", ".$db->qstr($course_group["cgroup_id"]);
+										} else {
+											$cgroup_ids_string = $db->qstr($course_group["cgroup_id"]);
+										}
+									}
+								}
+								$query = "	SELECT b.* FROM `evaluations` AS a
+											JOIN `evaluation_evaluators` AS b
+											ON a.`evaluation_id` = b.`evaluation_id`
+											WHERE
+											(
+												(
+													b.`evaluator_type` = 'proxy_id'
+													AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getID())."
+												)
+												".(isset($cohort["group_id"]) && $cohort["group_id"] ? " OR (
+													b.`evaluator_type` = 'cohort'
+													AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
+												)" : "").($cgroup_ids_string ? " OR (
+													b.`evaluator_type` = 'cgroup_id'
+													AND b.`evaluator_value` IN (".$cgroup_ids_string.")
+												)" : "")."
+											)
+											AND a.`evaluation_start` < ".$db->qstr(time())."
+											AND a.`evaluation_active` = 1
+											AND a.`evaluation_id` = ".$db->qstr($evaluation_id)."
+											ORDER BY a.`evaluation_finish` DESC";
+								$evaluator_records = $db->GetAll($query);
+								if ($evaluator_records) {
+									if ($evaluation["max_submittable"] == 0) {
+										$evaluation_targets_list = array();
+										foreach ($evaluator_records as $evaluator_record) {
+											$temp_targets = Evaluation::getTargetsArray($evaluation_id, $evaluator_record["eevaluator_id"], $ENTRADA_USER->getID());
+											foreach ($temp_targets as $temp_target) {
+												$evaluation_targets_list[] = $temp_target;
+											}
+										}
+										if ($evaluation_targets_list) {
+											$max_submittable = count($evaluation_targets_list);
+										}
+									} else {
+										$max_submittable = $evaluation["max_submittable"];
+									}
+									if (isset($max_submittable) && $max_submittable) {
+										$query = "SELECT `eprogress_id` FROM `evaluation_progress` 
+													WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+										$eprogress_ids = $db->GetAll($query);
+										if ($eprogress_ids && $max_submittable == count($eprogress_ids)) {
+											$permissions[] = array("target_record_id" => $ENTRADA_USER->getID(), "contact_type" => "target");
+										}
+									}
+								}
+							}
+						break;
+						case "faculty" :
+							foreach ($evaluation_targets as $evaluation_target) {
+								if ($evaluation_target["target_type"] == "proxy_id" && $evaluation_target["target_value"] == $ENTRADA_USER->getID()) {
+									$permissions[] = array("target_value" => $ENTRADA_USER->getID(), "target_type" => "proxy_id", "contact_type" => "faculty");
+									break;
+								}
+							}
+						break;
+						case "self" :
+							$permissions[] = array("target_record_id" => $ENTRADA_USER->getID(), "contact_type" => "target");
+						break;
+					}
+				}
+			}
+			$query = "SELECT * FROM `evaluation_contacts`
+						WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
+						AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+						AND `contact_type` = 'reviewer'";
+			$evaluation_contact = $db->GetRow($query);
+			if ($evaluation_contact) {
+				$permissions[] = array("contact_type" => "reviewer");
+			}
+		}
+		
+		return $permissions;
+	}
+	
+	public static function getProgressRecordsByPermissions ($evaluation_id, $permissions) {
+		global $db;
+
+		$progress_records = array();
+		if (is_array($permissions) && count($permissions)) {
+			foreach ($permissions as $permission) {
+				if ($permission["contact_type"] == "reviewer") {
+					$query = "SELECT * FROM `evaluation_progress` AS a
+								JOIN `evaluation_targets` AS b
+								ON a.`etarget_id` = b.`etarget_id`
+								WHERE a.`evaluation_id` = ".$db->qstr($evaluation_id)."
+								AND a.`progress_value` = 'completed'";
+					$progress_records = $db->GetAll($query);
+					break;
+				}
+			}
+			if (!count($progress_records)) {
+				foreach ($permissions as $permission) {
+					switch ($permission["contact_type"]) {
+						case "target" :
+							$query = "SELECT * FROM `evaluation_progress` AS a
+										JOIN `evaluation_targets` AS b
+										ON a.`etarget_id` = b.`etarget_id`
+										WHERE a.`target_record_id` = ".$db->qstr($permission["target_record_id"])."
+										AND a.`evaluation_id` = ".$db->qstr($evaluation_id);
+							$temp_progress_records = $db->GetAll($query);
+							if ($temp_progress_records) {
+								foreach ($temp_progress_records as $temp_progress_record) {
+									$progress_records[] = $temp_progress_record;								
+								}
+							}
+						break;
+						case "faculty" :
+						case "tutor" :
+						case "director" :
+						case "pcoordinator" :
+								$query = "SELECT * FROM `evaluation_progress` AS a
+											JOIN `evaluation_targets` AS b
+											ON a.`etarget_id` = b.`etarget_id`
+											WHERE b.`target_type` = ".$db->qstr($permission["target_type"])."
+											AND b.`target_value` = ".$db->qstr($permission["target_value"])."
+											AND a.`evaluation_id` = ".$db->qstr($evaluation_id);
+								$temp_progress_records = $db->GetAll($query);
+								if ($temp_progress_records) {
+									foreach ($temp_progress_records as $temp_progress_record) {
+										$progress_records[] = $temp_progress_record;								
+									}
+								}
+						break;
+						case "preceptor" :
+							$query = "SELECT * FROM `evaluation_progress` AS a
+										JOIN `evaluation_targets` AS b
+										ON a.`etarget_id` = b.`etarget_id`
+										JOIN `evaluation_progress_clerkship_events` AS c
+										ON a.`eprogress_id` = c.`eprogress_id`
+										WHERE b.`target_type` = 'rotation_id'
+										AND c.`preceptor_proxy_id` = ".$db->qstr($permission["preceptor_proxy_id"])."
+										AND a.`evaluation_id` = ".$db->qstr($evaluation_id);
+							$temp_progress_records = $db->GetAll($query);
+							if ($temp_progress_records) {
+								foreach ($temp_progress_records as $temp_progress_record) {
+									$progress_records[] = $temp_progress_record;								
+								}
+							}
+						break;
+					}
+				}
+			}
+		}
+		
+		return $progress_records;
 	}
 }
 

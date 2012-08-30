@@ -126,10 +126,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					}
 
 					/**
+					 * Non-required field "evaluation_mandatory" / Evaluation Mandatory
+					 */
+					if (isset($_POST["evaluation_mandatory"]) && ($_POST["min_submittable"])) {
+						$PROCESSED["evaluation_mandatory"] = true;
+					} else {
+						$PROCESSED["evaluation_mandatory"] = false;
+					}
+
+					/**
 					 * Required field "min_submittable" / Min Submittable
 					 */
 					if (isset($_POST["min_submittable"]) && ($min_submittable = clean_input($_POST["min_submittable"], "int")) && ($min_submittable >= 1)) {
 						$PROCESSED["min_submittable"] = $min_submittable;
+					} elseif ($evaluation_target_type == "peer") {
+						$PROCESSED["min_submittable"] = 0;
 					} else {
 						add_error("The evaluation <strong>Min Submittable</strong> field is required and must be greater than 1.");
 					}
@@ -139,21 +150,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					 */
 					if (isset($_POST["max_submittable"]) && ($max_submittable = clean_input($_POST["max_submittable"], "int")) && ($max_submittable <= 99)) {
 						$PROCESSED["max_submittable"] = $max_submittable;
+					} elseif ($evaluation_target_type == "peer") {
+						$PROCESSED["max_submittable"] = 0;
 					} else {
 						add_error("The evaluation <strong>Max Submittable</strong> field is required and must be less than 99.");
 					}
 
 					if ($PROCESSED["min_submittable"] > $PROCESSED["max_submittable"]) {
 						add_error("Your <strong>Min Submittable</strong> value may not be greater than your <strong>Max Submittable</strong> value.");
-					}
-
-					/**
-					 * Required field "max_submittable" / Max Submittable
-					 */
-					if (isset($_POST["max_submittable"]) && ($max_submittable = clean_input($_POST["max_submittable"], "int")) && ($max_submittable <= 99)) {
-						$PROCESSED["max_submittable"] = $max_submittable;
-					} else {
-						add_error("The evaluation <strong>Max Submittable</strong> field is required and must be less than 99.");
 					}
 
 					/**
@@ -171,13 +175,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					} else {
 						$PROCESSED["release_until"] = 0;
 					}
-					
-					$PROCESSED = Evaluation::processTargets($_POST, $PROCESSED);
 
 					/**
 					 * Processing for evaluation_evaluators table.
 					 */
-					if (isset($_POST["target_group_type"]) && in_array($_POST["target_group_type"], array("cohort", "percentage", "proxy_id"))) {
+					if (isset($_POST["target_group_type"]) && in_array($_POST["target_group_type"], array("cohort", "percentage", "proxy_id", "faculty"))) {
 						switch ($_POST["target_group_type"]) {
 							case "cohort" :
 								if (isset($_POST["cohort"]) && ($cohort = clean_input($_POST["cohort"], array("alphanumeric")))) {
@@ -266,6 +268,45 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									add_error("You must select at least one individual to act as an evaluator.");
 								}
 							break;
+							case "faculty" :
+									if ((isset($_POST["associated_evalfaculty"]))) {
+										$evaluator_values = array();
+
+										$associated_faculty = explode(",", $_POST["associated_evalfaculty"]);
+
+										if (is_array($associated_faculty) && !empty($associated_faculty)) {
+											foreach($associated_faculty as $proxy_id) {
+												$proxy_id = clean_input($proxy_id, "int");
+
+												if ($proxy_id) {
+													$evaluator_values[] = $proxy_id;
+												}
+											}
+										}
+
+										if (!empty($evaluator_values)) {
+											$evaluator_values = array_unique($evaluator_values);
+
+											$query = "	SELECT a.`id` AS `proxy_id`
+														FROM `".AUTH_DATABASE."`.`user_data` AS a
+														LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+														ON b.`user_id` = a.`id`
+														WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+														AND b.`account_active` = 'true'
+														AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+														AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+														AND a.`id` IN (".implode(", ", $evaluator_values).")";
+											$results = $db->GetAll($query);
+											if ($results) {
+												foreach ($results as $result) {
+													$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "proxy_id", "evaluator_value" => $result["proxy_id"]);
+												}
+											}
+										}
+									} else {
+										add_error("You must select at least one individual to act as an evaluator.");
+									}
+							break;
 						}
 
 						if (empty($PROCESSED["evaluation_evaluators"])) {
@@ -273,6 +314,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						}
 					} elseif ($evaluation_target_type != "peer") {
 						add_error("Please select an appropriate type of evaluator (i.e. entire class, percentage, etc).");
+					}
+					
+					$PROCESSED = Evaluation::processTargets($_POST, $PROCESSED);
+					
+					/**
+					 * Non-required field "associated_reviewer" / Associated Reviewers (array of proxy ids).
+					 * This is actually accomplished after the event is inserted below.
+					 */	
+					if ((isset($_POST["associated_reviewer"]))) {
+						$associated_reviewers = explode(",", $_POST["associated_reviewer"]);
+						foreach($associated_reviewers as $contact_order => $proxy_id) {
+							if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+								$PROCESSED["associated_reviewers"][(int) $contact_order] = $proxy_id;	
+							}
+						}
 					}
 
 					if (!$ERROR) {
@@ -283,6 +339,56 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						 * Insert the evaluation record into the evalutions table.
 						 */
 						if ($db->AutoExecute("evaluations", $PROCESSED, "UPDATE", "`evaluation_id` = ".$db->qstr($EVALUATION_ID))) {
+							
+							/**
+							 * If there are reviewers associated with this event, add them
+							 * to the evaluation_contacts table.
+							 */
+							$query = "DELETE FROM `evaluation_contacts` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
+							if ($db->Execute($query)) {
+								if ((is_array($PROCESSED["associated_reviewers"])) && (count($PROCESSED["associated_reviewers"]))) {
+									foreach($PROCESSED["associated_reviewers"] as $contact_order => $proxy_id) {
+										$contact_details =  array(	"evaluation_id" => $EVALUATION_ID, 
+																	"proxy_id" => $proxy_id, 
+																	"contact_role" => "reviewer",
+																	"contact_order" => (int) $contact_order, 
+																	"updated_date" => time(), 
+																	"updated_by" => $ENTRADA_USER->getID());
+										if (!$db->AutoExecute("evaluation_contacts", $contact_details, "INSERT")) {
+											add_error("There was an error while trying to attach an <strong>Associated Reviewer</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.");
+
+											application_log("error", "Unable to insert a new evaluation_contact record while adding a new evaluation. Database said: ".$db->ErrorMsg());
+										}
+									}
+								}
+							}
+							
+							/**
+							 * Insert the target records into the evaluation_targets table.
+							 */
+							if (!empty($PROCESSED["evaluation_targets"])) {
+								$db->Execute("DELETE FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID));
+								foreach ($PROCESSED["evaluation_targets"] as $target_value) {
+									$record = array(
+										"evaluation_id" => $EVALUATION_ID,
+										"target_id" => $evaluation_target_id,
+										"target_value" => $target_value["target_value"],
+										"target_type" => $target_value["target_type"],
+										"target_active" => 1,
+										"updated_date" => time(),
+										"updated_by" => $ENTRADA_USER->getID()
+									);
+									
+									if ($evaluation_target_type == "peer") {
+										$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => $record["target_type"], "evaluator_value" => $record["target_value"]);
+									}
+
+									if (!$db->AutoExecute("evaluation_targets", $record, "INSERT") || (!$etarget_id = $db->Insert_Id())) {
+										add_error("Unable to attach a target to this evaluation. The system administrator has been notified of this error, please try again later.");
+										application_log("Unable to attach target_id [".$evaluation_target_id."] / target_value [".$target_value["target_value"]."] to evaluation_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
+									}
+								}
+							}
 							/**
 							 * Insert the target records into the evaluation_evaluators table.
 							 */
@@ -298,30 +404,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									);
 
 									if (!$db->AutoExecute("evaluation_evaluators", $record, "INSERT") || (!$eevaluator_id = $db->Insert_Id())) {
-										add_error("Unable to attach an evaluation target to this evaluation. The system administrator has been notified of this error, please try again later.");
-										application_log("Unable to attach target_id [".$evaluation_target_id."] / target_value [".$target_value."] to evaluation_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
-									}
-								}
-							}
-							/**
-							 * Insert the target records into the evaluation_targets table.
-							 */
-							if (!empty($PROCESSED["evaluation_targets"])) {
-								$db->Execute("DELETE FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID));
-								foreach ($PROCESSED["evaluation_targets"] as $target_value) {
-									$record = array(
-										"evaluation_id" => $evaluation_id,
-										"target_id" => $evaluation_target_id,
-										"target_value" => $target_value["target_value"],
-										"target_type" => $target_value["target_type"],
-										"target_active" => 1,
-										"updated_date" => time(),
-										"updated_by" => $ENTRADA_USER->getID()
-									);
-
-									if (!$db->AutoExecute("evaluation_targets", $record, "INSERT") || (!$etarget_id = $db->Insert_Id())) {
-										add_error("Unable to attach an evaluation target to this evaluation. The system administrator has been notified of this error, please try again later.");
-										application_log("Unable to attach target_id [".$evaluation_target_id."] / target_value [".$target_value."] to evaluation_id [".$evaluation_id."]. Database said: ".$db->ErrorMsg());
+										add_error("Unable to attach an evaluator to this evaluation. The system administrator has been notified of this error, please try again later.");
+										application_log("Unable to attach evaluator / evaluator_value [".$result["evaluator_value"]."] to evaluation_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
 									}
 								}
 							}
@@ -341,13 +425,47 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				case 1 :
 				default :
 					$PROCESSED = $evaluation_info;
-					$PROCESSED = Evaluation::processTargets($_POST, $PROCESSED);
 
+					/**
+					 * Required field "eform_id" / Evaluation Form
+					 */
+					if (isset($PROCESSED["eform_id"]) && ($eform_id = clean_input($PROCESSED["eform_id"], "int"))) {
+						$query = "	SELECT a.*, b.`target_id`, b.`target_shortname`
+									FROM `evaluation_forms` AS a
+									LEFT JOIN `evaluations_lu_targets` AS b
+									ON b.`target_id` = a.`target_id`
+									WHERE a.`eform_id` = ".$db->qstr($eform_id)."
+									AND a.`form_active` = '1'";
+						$result = $db->GetRow($query);
+						if ($result) {
+							$evaluation_target_id = $result["target_id"];
+							$evaluation_target_type = $result["target_shortname"];
+						}
+					}
 					$query = "SELECT * FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
 					$results = $db->GetAll($query);
 					if ($results) {
 						foreach ($results as $result) {
 							$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => $result["evaluator_type"], "evaluator_value" => $result["evaluator_value"]);
+						}
+					}
+					$query = "SELECT * FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
+					$results = $db->GetAll($query);
+					if ($results) {
+						foreach ($results as $result) {
+							$PROCESSED["evaluation_targets"][] = array("target_type" => $result["target_type"], "target_value" => $result["target_value"]);
+						}
+					}
+
+					/**
+					 * Add any existing associated reviewers from the evaluation_contacts table
+					 * into the $PROCESSED["associated_reviewers"] array.
+					 */
+					$query = "SELECT * FROM `evaluation_contacts` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID)." ORDER BY `contact_order` ASC";
+					$results = $db->GetAll($query);
+					if ($results) {
+						foreach($results as $contact_order => $result) {
+							$PROCESSED["associated_reviewers"][(int) $contact_order] = $result["proxy_id"];
 						}
 					}
 				break;
@@ -364,11 +482,85 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 					$HEAD[] = "<script src=\"".ENTRADA_URL."/javascript/elementresizer.js\" type=\"text/javascript\"></script>\n";
 
+					/**
+					 * Compiles the full list of reviewers.
+					 */
+					$REVIEWER_LIST = array();
+					$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`organisation_id`
+								FROM `".AUTH_DATABASE."`.`user_data` AS a
+								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+								ON b.`user_id` = a.`id`
+								WHERE b.`app_id` = '".AUTH_APP_ID."'
+								AND (b.`group` = 'faculty' OR (b.`group` = 'resident' AND b.`role` = 'lecturer') OR b.`group` = 'staff' OR b.`group` = 'medtech')
+								ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+					$results = $db->GetAll($query);
+					if ($results) {
+						foreach($results as $result) {
+							$REVIEWER_LIST[$result["proxy_id"]] = array('proxy_id'=>$result["proxy_id"], 'fullname'=>$result["fullname"], 'organisation_id'=>$result['organisation_id']);
+						}
+					}
+					
 					if (has_error() || has_notice()) {
 						echo display_status_messages();
 					}
+					$ONLOAD[] = "initFormOptions()";
 					?>
 					<script type="text/javascript">
+					function initFormOptions() {
+						if ($('scripts-on-open') && $('scripts-on-open').innerHTML) {
+							eval($('scripts-on-open').innerHTML);
+						}
+						if ($('target_type_rotations')) {
+							var target_type = 'rotations';
+							if ($(target_type + '_options')) {
+
+								$(target_type + '_options').addClassName('multiselect-processed');
+
+								multiselect[target_type] = new Control.SelectMultiple('evaluation_target_'+target_type, target_type + '_options', {
+									checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
+									nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
+									filter: target_type + '_select_filter',
+									resize: target_type + '_scroll',
+									afterCheck: function(element) {
+										var tr = $(element.parentNode.parentNode);
+										tr.removeClassName('selected');
+
+										if (element.checked) {
+											tr.addClassName('selected');
+
+											addTarget(element.id, target_type);
+										} else {
+											removeTarget(element.id, target_type);
+										}
+									}
+								});
+
+								if ($(target_type + '_cancel')) {
+									$(target_type + '_cancel').observe('click', function(event) {
+										this.container.hide();
+
+										$('target_type').options.selectedIndex = 0;
+										$('target_type').show();
+
+										return false;
+									}.bindAsEventListener(multiselect[target_type]));
+								}
+
+								if ($(target_type + '_close')) {
+									$(target_type + '_close').observe('click', function(event) {
+										this.container.hide();
+
+										$('target_type').clear();
+
+										return false;
+									}.bindAsEventListener(multiselect[target_type]));
+								}
+
+								multiselect[target_type].container.show();
+							}
+						}
+					}
+						
 					function updateFormOptions() {
 						if ($F('eform_id') > 0)  {
 
@@ -484,7 +676,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							multiselect[target_type].container.show();
 						} else {
 							if (target_type) {
-								new Ajax.Request('<?php echo ENTRADA_RELATIVE; ?>/admin/evaluations?section=api-target-selector', {
+								new Ajax.Request('<?php echo ENTRADA_RELATIVE; ?>/admin/evaluations?section=api-form-options', {
 									evalScripts : true,
 									parameters: {
 										'options_for' : target_type,
@@ -588,16 +780,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								}
 							);
 						} else if (tr.hasClassName('cat_enabled')) {
-							tr.previousSiblings().each( 
-								function (e) {
-									if (e.hasClassName('category')) {
-										e.addClassName('selected');
-									}
-								}
-							);
 							$$('#rotations_scroll .select_multiple_checkbox_category input').each( 
 								function (e) {
-									e.checked = true;
 									e.disable(); 
 								} 
 							);
@@ -621,13 +805,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								)
 								$('evaluation_target_'+target_id).value = "";
 							} else {
-								tr.previousSiblings().each( 
-									function (e) {
-										if (e.hasClassName('category')) {
-											e.removeClassName('selected');
-										}
-									}
-								);
 								$$('#rotations_scroll .select_multiple_checkbox_category input').each( 
 									function (el) { 
 										el.enable(); 
@@ -785,16 +962,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							}
 							?>
 							</tbody>
-							<tbody id="target-options">
-							<?php
-							if ($PROCESSED["eform_id"]) {
-								require_once(ENTRADA_ABSOLUTE."/core/modules/admin/evaluations/api-target-selector.inc.php");
-							}
-							?>
-							</tbody>
 							<tbody>
 								<tr>
-									<td colspan="3">&nbsp;</td>
+									<td></td>
+									<td style="vertical-align: top">
+										<label for="allow_comments" class="form-required">Evaluation Mandatory</label>
+										<div class="content-small">Require this evaluation be completed by all evaluators.</div>
+									</td>
+									<td>
+										<input type="checkbox" id="evaluation_mandatory" name="evaluation_mandatory"<?php echo (isset($PROCESSED["evaluation_mandatory"]) && $PROCESSED["evaluation_mandatory"] ? " checked=\"checked\"" : ""); ?> />
+									</td>
 								</tr>
 								<tr>
 									<td></td>
@@ -814,11 +991,50 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								</tr>
 								<tr>
 									<td colspan="2">&nbsp;</td>
-									<td id="submittable_notice">&nbsp;</td>
+									<td id="submittable_notice">
+										<?php
+										if ($evaluation_target_type == "peer") {
+											echo "<div class=\"display-notice\"><ul><li>If you set the Min or Max Submittable for a Peer Evaluation to 0, the value will default to the number of targets available to evaluate.</li></ul></div>";
+										} else {
+											echo "&nbsp;";
+										}
+										?>
+									</td>
 								</tr>
 								<?php echo generate_calendars("evaluation", "Evaluation", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["evaluation_finish"])) ? $PROCESSED["evaluation_finish"] : 0)); ?>
 								<tr>
 									<td colspan="3">&nbsp;</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td style="vertical-align: top;">
+										<label for="evaluation_reviewers" class="form-nrequired">Evaluation Reviewers</label>
+									</td>
+									<td>
+										<input type="text" id="reviewer_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
+										<?php
+										$ONLOAD[] = "reviewer_list = new AutoCompleteList({ type: 'reviewer', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=facultyorstaff', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
+										?>
+										<div class="autocomplete" id="reviewer_name_auto_complete"></div>
+										<input type="hidden" id="associated_reviewer" name="associated_reviewer" />
+										<input type="button" class="button-sm" id="add_associated_reviewer" value="Add" style="vertical-align: middle" />
+										<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+										<ul id="reviewer_list" class="menu" style="margin-top: 15px">
+											<?php
+											if (is_array($PROCESSED["associated_reviewers"]) && count($PROCESSED["associated_reviewers"])) {
+												foreach ($PROCESSED["associated_reviewers"] as $reviewer) {
+													if ((array_key_exists($reviewer, $REVIEWER_LIST)) && is_array($REVIEWER_LIST[$reviewer])) {
+														?>
+														<li class="user" id="reviewer_<?php echo $REVIEWER_LIST[$reviewer]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $REVIEWER_LIST[$reviewer]["fullname"]; if ($reviewer != $ENTRADA_USER->getID()) {?> <img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="reviewer_list.removeItem('<?php echo $REVIEWER_LIST[$reviewer]["proxy_id"]; ?>');" class="list-cancel-image" /><?php } ?></li>
+														<?php
+													}
+												}
+											}
+											?>
+										</ul>
+										<input type="hidden" id="reviewer_ref" name="reviewer_ref" value="" />
+										<input type="hidden" id="reviewer_id" name="reviewer_id" value="" />
+									</td>
 								</tr>
 								<tr>
 									<td colspan="3"><h2>Time Release Options</h2></td>

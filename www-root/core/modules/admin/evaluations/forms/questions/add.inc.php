@@ -89,19 +89,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						} else {
 							$PROCESSED["columns_count"] = "";
 						}
-					break;
-					case 2 :
-					case 4 :
 						/**
 						 * Required field "question_text" / Form Question.
 						 */
-						if ((isset($_POST["question_title"])) && ($tmp_input = clean_input($_POST["question_title"], array("trim", "notags")))) {
-							$PROCESSED["question_title"] = $tmp_input;
+						if ((isset($_POST["allow_comments"])) && clean_input($_POST["allow_comments"], array("bool"))) {
+							$PROCESSED["allow_comments"] = true;
 						} else {
-							add_error("The <strong>Title</strong> field is required.");
+							$PROCESSED["allow_comments"] = false;
 						}
+					break;
 					case 1 :
 					default :
+						/**
+						 * Required field "question_text" / Form Question.
+						 */
+						if ((isset($_POST["allow_comments"])) && clean_input($_POST["allow_comments"], array("bool"))) {
+							$PROCESSED["allow_comments"] = true;
+						} else {
+							$PROCESSED["allow_comments"] = false;
+						}
+					case 2 :
+					case 4 :
 					/**
 					 * Required field "question_text" / Form Question.
 					 */
@@ -193,10 +201,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								foreach ($_POST["criteria"][$i] as $criteria_key => $criteria) {
 									$criteria_key = clean_input($criteria_key, "int");
 
-									$criteria = clean_input($criteria, array("trim"));
+									$criteria = clean_input($criteria, array("trim", "notags"));
 
-									if (($criteria_key) && ($criteria != "")) {
-										if (is_array($PROCESSED["evaluation_form_category_criteria"][$i]) && !empty($PROCESSED["evaluation_form_category_criteria"][$i])) {
+									if (($criteria_key)) {
+										if ($criteria != "" && is_array($PROCESSED["evaluation_form_category_criteria"][$i]) && !empty($PROCESSED["evaluation_form_category_criteria"][$i])) {
 											foreach ($PROCESSED["evaluation_form_category_criteria"][$i] as $value) {
 												if ($value["criteria"] == $criteria) {
 													add_error("You cannot have more than one <strong>identical criteria</strong> in a category.");
@@ -262,7 +270,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									$PROCESSED_QUESTION = array("eform_id" => $FORM_ID,
 																"questiontype_id" => 3,
 																"question_text" => $category["category"],
-																"question_order" => $PROCESSED["question_order"]);
+																"question_order" => $PROCESSED["question_order"],
+																"allow_comments" => $PROCESSED["allow_comments"]);
 									$efquestion_id = 0;
 									if ($db->AutoExecute("evaluation_form_questions", $PROCESSED_QUESTION, "INSERT") && ($efquestion_id = $db->Insert_Id()) &&
 											$db->AutoExecute("evaluation_form_rubric_questions", array("efrubric_id" => $efrubric_id, "efquestion_id" => $efquestion_id), "INSERT")) {
@@ -284,7 +293,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 													/**
 													 * Add the responses criteria to the evaluation_form_rubric_criteria table.
 													 */
-													if ((isset($PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"])) && ($PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"])) {
+													if ((isset($PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"])) && ($PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"] || $PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"] === "")) {
 														$PROCESSED_CRITERIA = array (
 																		"efresponse_id" => $efresponse_id,
 																		"criteria_text" => $PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"],

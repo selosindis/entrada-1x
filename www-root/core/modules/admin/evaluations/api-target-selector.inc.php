@@ -49,17 +49,35 @@ if (!defined("IN_EVALUATIONS")) {
 		 * Clears all open buffers so we can return a plain response for the Javascript.
 		 */
 		ob_clear_open_buffers();
-	}
 	
-	$options_for = false;
+		if (isset($_POST["form_id"]) && $form_id = clean_input($_POST["form_id"], "int")) {
+			$PROCESSED["form_id"] = $form_id;
+		}
+
+		if (isset($_POST["evaluation_id"]) && $evaluation_id = clean_input($_POST["evaluation_id"], "int")) {
+			$PROCESSED["evaluation_id"] = $evaluation_id;
+		}
+
+		if (isset($PROCESSED["evaluation_id"])) {
+			$query = "SELECT * FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($PROCESSED["evaluation_id"]);
+			$evaluators = $db->GetAll();
+			$PROCESSED["evaluation_evaluators"] = $evaluators;
+
+			$query = "SELECT * FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($PROCESSED["evaluation_id"]);
+			$targets = $db->GetAll();
+			$PROCESSED["evaluation_targets"] = $targets;
+		}
+	
+		if (isset($_POST["options_for"]) && ($tmp_input = clean_input($_POST["options_for"], array("trim")))) {
+			$options_for = $tmp_input;
+		} else {
+			$options_for = false;
+		}
+	}
 	$form_id = 0;
 	
-	if (isset($_POST["options_for"]) && ($tmp_input = clean_input($_POST["options_for"], array("trim")))) {
-		$options_for = $tmp_input;
-	}
-	
-	if ($options_for && $ENTRADA_USER->getActiveOrganisation()) {
-		Evaluation::getTargetControls($_POST, $options_for);
+	if ((!$use_ajax || $options_for) && $ENTRADA_USER->getActiveOrganisation()) {
+		Evaluation::getTargetControls($PROCESSED, $options_for);
 	}
 	if ($use_ajax) {
 		exit;

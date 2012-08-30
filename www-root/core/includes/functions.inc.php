@@ -14402,22 +14402,23 @@ function status_redirect($url) {
 	display_status_messages();
 }
 
-function fetch_evaluation_target_title($evaluation_target = array(), $number_of_targets = 1) {
+function fetch_evaluation_target_title($evaluation_target = array(), $number_of_targets = 1, $target_shortname) {
 	global $db;
 	if ($number_of_targets == 1) {
 		if (!empty($evaluation_target)) {
-			switch ($evaluation_target["target_shortname"]) {
+			switch ($target_shortname) {
 				case "course" :
-					$query = "SELECT `course_code` FROM `courses` WHERE `course_id` = ".$db->qstr($evaluation_target["target_value"]);
+					$query = "SELECT `course_code` FROM `courses` WHERE `course_id` = ".$db->qstr($evaluation_target);
 					if ($course_code = $db->GetOne($query)) {
 						return $course_code;
 					}
 					break;
+				case "preceptor" :
 				case "rotation_core" :
 				case "rotation_elective" :
-					$query = "SELECT `event_title` FROM `".CLERKSHIP_DATABASE."`.`events` WHERE `event_id` = ".$db->qstr($evaluation_target["target_value"]);
+					$query = "SELECT `event_title` FROM `".CLERKSHIP_DATABASE."`.`events` WHERE `event_id` = ".$db->qstr($evaluation_target);
 					if ($event_name = $db->GetOne($query)) {
-						return $event_name;
+						return $event_name.($target_shortname == "preceptor" ? " Preceptor" : "");
 					}
 					break;
 				case "self" :
@@ -14425,10 +14426,9 @@ function fetch_evaluation_target_title($evaluation_target = array(), $number_of_
 					break;
 				case "teacher" :
 				case "student" :
-				case "preceptor" :
 				case "peer" :
 				default :
-					$query = "SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `fullname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($evaluation_target["target_value"]);
+					$query = "SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `fullname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($evaluation_target);
 					if ($teacher_name = $db->GetOne($query)) {
 						return $teacher_name;
 					}
@@ -14437,23 +14437,27 @@ function fetch_evaluation_target_title($evaluation_target = array(), $number_of_
 		}
 	} else {
 		if (!empty($evaluation_target)) {
-			switch ($evaluation_target["target_shortname"]) {
+			switch ($target_shortname) {
 				case "course" :
 					return $number_of_targets." Courses";
-					break;
+				break;
 				case "student" :
 					return $number_of_targets." Students";
-					break;
+				break;
+				case "rotation_core" :
+				case "rotation_elective" :
+					return $number_of_targets." Events";
+				break;
 				case "preceptor" :
-					return $number_of_targets." Preceptors";
-					break;
+					return $number_of_targets." Events' Preceptors";
+				break;
 				case "peer" :
 					return $number_of_targets." Peers";
-					break;
+				break;
 				case "teacher" :
 				default :
 					return $number_of_targets." Faculty Members";
-					break;
+				break;
 			}
 		}
 	}
@@ -14491,14 +14495,18 @@ function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efr
 	/**
 	 * Check to ensure that this response is associated with this question.
 	 */
-	$query	= "SELECT * FROM `evaluation_form_responses` WHERE `efresponse_id` = ".$db->qstr($efresponse_id)." AND `efquestion_id` = ".$db->qstr($efquestion_id);
+	if ($efresponse_id !== 0) {
+		$query	= "SELECT * FROM `evaluation_form_responses` WHERE `efresponse_id` = ".$db->qstr($efresponse_id)." AND `efquestion_id` = ".$db->qstr($efquestion_id);
+	} else {
+		$query	= "SELECT * FROM `evaluation_form_questions` WHERE `efquestion_id` = ".$db->qstr($efquestion_id)." AND `questiontype_id` = 4";
+	}
 	$result	= $db->GetRow($query);
 	if ($result) {
 	/**
 	 * See if they have already responded to this question or not as this
 	 * determines whether an INSERT or an UPDATE is required.
 	 */
-		$query = "	SELECT `eresponse_id`, `efresponse_id`, `comments`
+		$query = "	SELECT `eresponse_id`, `efresponse_id`, `comments`, `eprogress_id`
 					FROM `evaluation_responses`
 					WHERE `eprogress_id` = ".$db->qstr($eprogress_id)."
 					AND `eform_id` = ".$db->qstr($eform_id)."
@@ -14506,6 +14514,19 @@ function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efr
 					AND `efquestion_id` = ".$db->qstr($efquestion_id);
 		$result	= $db->GetRow($query);
 		if ($result) {
+			$query = "SELECT c.`eresponse_id` FROM `evaluation_form_rubric_questions` AS a
+						JOIN `evaluation_form_questions` AS b
+						ON a.`efquestion_id` = b.`efquestion_id`
+						JOIN `evaluation_responses` AS c
+						ON a.`efquestion_id` = c.`efquestion_id`
+						AND c.`eprogress_id` = ".$db->qstr($result["eprogress_id"])."
+						WHERE a.`efrubric_id` = (
+							SELECT `efrubric_id` FROM `evaluation_form_rubric_questions` 
+							WHERE `efquestion_id` = ".$db->qstr($efquestion_id)."
+						)
+						ORDER BY b.`question_order` ASC
+						LIMIT 0, 1";
+			$comment_response_id = $db->GetOne($query);
 		/**
 		 * Checks to see if the response is different from what was previously
 		 * stored in the event_evaluation_responses table.
@@ -14513,12 +14534,25 @@ function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efr
 			if ($efresponse_id != $result["efresponse_id"] || $comments != $result["comments"]) {
 				$evaluation_response_array	= array (
 					"efresponse_id" => $efresponse_id,
-					"comments" => $comments,
+					"comments" => (!$comment_response_id ? $comments : NULL),
 					"updated_date" => time(),
 					"updated_by" => $ENTRADA_USER->getID()
 				);
 				if ($db->AutoExecute("evaluation_responses", $evaluation_response_array, "UPDATE", "`eresponse_id` = ".$db->qstr($result["eresponse_id"]))) {
-					return true;
+					if ($comment_response_id) {
+						$evaluation_response_array	= array (
+							"comments" => $comments,
+							"updated_date" => time(),
+							"updated_by" => $ENTRADA_USER->getID()
+						);
+						if ($db->AutoExecute("evaluation_responses", $evaluation_response_array, "UPDATE", "`eresponse_id` = ".$db->qstr($comment_response_id))) {
+							return true;
+						} else {
+							application_log("error", "Unable to update the comments for a question that has already been recorded. Database said: ".$db->ErrorMsg());
+						}
+					} else {
+						return true;
+					}
 				} else {
 					application_log("error", "Unable to update a response to a question that has already been recorded. Database said: ".$db->ErrorMsg());
 				}
@@ -14548,67 +14582,6 @@ function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efr
 	}
 
 	return false;
-}
-
-/**
- * This function loads the current progress based on an eprogress_id.
- *
- * @global object $db
- * @param int $eprogress_id
- * @return array Returns the users currently progress or returns false if there
- * is an error.
- */
-function evaluation_load_progress($eprogress_id = 0) {
-	global $db;
-
-	$output = array();
-
-	if ($eprogress_id = (int) $eprogress_id) {
-	/**
-		 * Grab the specified progress identifier, but you better be sure this
-		 * is the correct one, and the results are being returned to the proper
-		 * user.
-	 */
-		$query		= "	SELECT *
-						FROM `evaluation_progress` AS a
-						JOIN `evaluations` AS b
-						ON a.`evaluation_id` = b.`evaluation_id`
-						WHERE a.`eprogress_id` = ".$db->qstr($eprogress_id);
-		$progress	= $db->GetRow($query);
-		if ($progress) {
-		/**
-		 * Add all of the qquestion_ids to the $output array so they're set.
-		 */
-			$query		= "SELECT * FROM `evaluation_form_questions` WHERE `eform_id` = ".$db->qstr($progress["eform_id"])." ORDER BY `question_order` ASC";
-			$questions	= $db->GetAll($query);
-			if ($questions) {
-				foreach ($questions as $question) {
-					$output[$question["efquestion_id"]] = 0;
-				}
-			} else {
-				return false;
-			}
-
-			/**
-			 * Update the $output array with any currently selected responses.
-			 */
-			$query		= "	SELECT *
-							FROM `evaluation_responses`
-							WHERE `eprogress_id` = ".$db->qstr($eprogress_id);
-			$responses	= $db->GetAll($query);
-			if ($responses) {
-				foreach ($responses as $response) {
-					$output[$response["efquestion_id"]] = array();
-					$output[$response["efquestion_id"]]["efresponse_id"] = $response["efresponse_id"];
-					$output[$response["efquestion_id"]]["comments"] = $response["comments"];
-				}
-			}
-		} else {
-			return false;
-		}
-	}
-
-	return $output;
 }
 
 function evaluation_generate_description($min_submittable = 0, $evaluation_questions = 1, $evaluation_attempts = 0, $evaluation_finish = 0) {

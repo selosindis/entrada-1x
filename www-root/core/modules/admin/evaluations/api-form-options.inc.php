@@ -26,7 +26,6 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
  */
-
 if (!defined("IN_EVALUATIONS")) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -52,9 +51,8 @@ if (!defined("IN_EVALUATIONS")) {
 
 		$PROCESSED = Evaluation::processTargets($_POST);
 	}
-
 	if ($PROCESSED["eform_id"]) {
-		Evaluation::getTargetControls($_POST, "", $PROCESSED["eform_id"]);
+		Evaluation::getTargetControls($PROCESSED, "", $PROCESSED["eform_id"]);
 	}
 
 	/**

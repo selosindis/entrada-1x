@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["research_expand_grid"] = "book_chapter_mono_grid";
 	
 	if($BOOK_CHAPTER_MONO_ID) {
-		$query	= "SELECT * FROM `ar_book_chapter_mono` WHERE `book_chapter_mono_id`=".$db->qstr($BOOK_CHAPTER_MONO_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
+		$query	= "SELECT * FROM `ar_book_chapter_mono` WHERE `book_chapter_mono_id`=".$db->qstr($BOOK_CHAPTER_MONO_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/research?section=edit_book_chapter_mono", "title" => "Edit Book / Chapter / Monograph / Editorial");
@@ -289,7 +289,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					if(!$ERROR) {
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-						$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
+						$PROCESSED["proxy_id"]		= $ENTRADA_USER->getActiveId();
 						$PROCESSED["status_date"]	= $month.$year;
 
 						if($db->AutoExecute("ar_book_chapter_mono", $PROCESSED, "UPDATE", "`book_chapter_mono_id`=".$db->qstr($BOOK_CHAPTER_MONO_ID))) {

@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["clinical_expand_grid"] = "consults_grid";
 	
 	if($CONSULTS_ID) {
-		$query	= "SELECT * FROM `ar_consults` WHERE `consults_id`=".$db->qstr($CONSULTS_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
+		$query	= "SELECT * FROM `ar_consults` WHERE `consults_id`=".$db->qstr($CONSULTS_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/clinical?section=edit_consult", "title" => "Edit In-Hospital Consult");
@@ -127,7 +127,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					if(!$ERROR) {
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-						$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
+						$PROCESSED["proxy_id"]		= $ENTRADA_USER->getActiveId();
 						
 						if($db->AutoExecute("ar_consults", $PROCESSED, "UPDATE", "`consults_id`=".$db->qstr($CONSULTS_ID))) {
 								switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {

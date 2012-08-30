@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["research_expand_grid"] = "non_peer_reviewed_grid";
 	
 	if($NON_PEER_REVIEWED_PAPERS_ID) {
-		$query	= "SELECT * FROM `ar_non_peer_reviewed_papers` WHERE `non_peer_reviewed_papers_id`=".$db->qstr($NON_PEER_REVIEWED_PAPERS_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
+		$query	= "SELECT * FROM `ar_non_peer_reviewed_papers` WHERE `non_peer_reviewed_papers_id`=".$db->qstr($NON_PEER_REVIEWED_PAPERS_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/research?section=edit_non_peer_reviewed", "title" => "Edit Non-Peer-Reviewed Publication");
@@ -274,7 +274,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					if(!$ERROR) {
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-						$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
+						$PROCESSED["proxy_id"]		= $ENTRADA_USER->getActiveId();
 						$PROCESSED["status_date"]		= $month.$year;
 
 						if($db->AutoExecute("ar_non_peer_reviewed_papers", $PROCESSED, "UPDATE", "`non_peer_reviewed_papers_id`=".$db->qstr($NON_PEER_REVIEWED_PAPERS_ID))) {

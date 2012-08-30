@@ -1328,7 +1328,7 @@ CREATE TABLE IF NOT EXISTS `community_discussion_topics` (
   `cdiscussion_id` int(12) NOT NULL DEFAULT '0',
   `community_id` int(12) NOT NULL DEFAULT '0',
   `proxy_id` int(12) NOT NULL DEFAULT '0',
-  `anonymous` int(1) NOT NULL DEFAULT '0' AFTER `proxy_id`,
+  `anonymous` int(1) NOT NULL DEFAULT '0',
   `topic_title` varchar(128) NOT NULL DEFAULT '',
   `topic_description` text NOT NULL,
   `topic_active` int(1) NOT NULL DEFAULT '1',

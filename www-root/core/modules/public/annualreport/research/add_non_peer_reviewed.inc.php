@@ -263,7 +263,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			if(!$ERROR) {
 				$PROCESSED["updated_date"]	= time();
 				$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-				$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
+				$PROCESSED["proxy_id"]		= $ENTRADA_USER->getActiveId();
 				$PROCESSED["status_date"]		= $month.$year;
 				
 				if($db->AutoExecute("ar_non_peer_reviewed_papers", $PROCESSED, "INSERT")) {

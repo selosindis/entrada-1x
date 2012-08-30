@@ -164,7 +164,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 							$result["report_completed"] = "no";
 							$result["updated_date"]	= time();
 							$result["updated_by"] = $ENTRADA_USER->getID();
-							$result["proxy_id"]	= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
+							$result["proxy_id"]	= $ENTRADA_USER->getActiveId();
 							
 							// Remove the ID from the array so that the insert can happen as if it were a new record.
 							array_shift($result);
@@ -321,7 +321,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					<?php
 						$getProfileDatesQuery = "	SELECT DISTINCT `year_reported` 
 													FROM `ar_profile` 
-													WHERE `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'])."
+													WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 													ORDER BY `year_reported` DESC";
 						if($resutls = $db->GetAll($getProfileDatesQuery)) {
 							foreach($resutls as $result) {

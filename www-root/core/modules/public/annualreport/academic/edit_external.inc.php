@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["academic_expand_grid"] = "external_grid";
 	
 	if($EXTERNAL_CONTRIBUTIONS_ID) {
-		$query	= "SELECT * FROM `ar_external_contributions` WHERE `external_contributions_id`=".$db->qstr($EXTERNAL_CONTRIBUTIONS_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
+		$query	= "SELECT * FROM `ar_external_contributions` WHERE `external_contributions_id`=".$db->qstr($EXTERNAL_CONTRIBUTIONS_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/academic?section=edit_external", "title" => "Edit Contributions to External Organisations / International Development Projects");
@@ -185,7 +185,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					if(!$ERROR) {
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-						$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
+						$PROCESSED["proxy_id"]		= $ENTRADA_USER->getActiveId();
 						
 						if($db->AutoExecute("ar_external_contributions", $PROCESSED, "UPDATE", "`external_contributions_id`=".$db->qstr($EXTERNAL_CONTRIBUTIONS_ID))) {
 								switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {

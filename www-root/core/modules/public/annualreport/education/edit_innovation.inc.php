@@ -40,7 +40,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	// This grid should be expanded upon redirecting back to the education index.
 	$_SESSION["education_expand_grid"] = "innovation_grid";
 	if($INNOVATION_ID) {
-		$query	= "SELECT * FROM `ar_innovation` WHERE `innovation_id`=".$db->qstr($INNOVATION_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
+		$query	= "SELECT * FROM `ar_innovation` WHERE `innovation_id`=".$db->qstr($INNOVATION_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/education?section=edit_innovation", "title" => "Edit Innovation in Education");
@@ -112,7 +112,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					if(!$ERROR) {
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-						$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
+						$PROCESSED["proxy_id"]		= $ENTRADA_USER->getActiveId();
 						
 						if($db->AutoExecute("ar_innovation", $PROCESSED, "UPDATE", "`innovation_id`=".$db->qstr($INNOVATION_ID))) {
 								switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {

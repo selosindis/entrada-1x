@@ -40,7 +40,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	// This grid should be expanded upon redirecting back to the education index.
 	$_SESSION["education_expand_grid"] = "undergraduate_supervision_grid";
 	if($UNDERGRADUATE_SUPERVISION_ID) {
-		$query	= "SELECT * FROM `ar_undergraduate_supervision` WHERE `undergraduate_supervision_id`=".$db->qstr($UNDERGRADUATE_SUPERVISION_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
+		$query	= "SELECT * FROM `ar_undergraduate_supervision` WHERE `undergraduate_supervision_id`=".$db->qstr($UNDERGRADUATE_SUPERVISION_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/education?section=edit_undergrad_sup", "title" => "Edit Undergraduate Supervision");
@@ -119,7 +119,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					if(!$ERROR) {
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-						$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
+						$PROCESSED["proxy_id"]		= $ENTRADA_USER->getActiveId();
 						
 						if($db->AutoExecute("ar_undergraduate_supervision", $PROCESSED, "UPDATE", "`undergraduate_supervision_id`=".$db->qstr($UNDERGRADUATE_SUPERVISION_ID))) {
 								switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {

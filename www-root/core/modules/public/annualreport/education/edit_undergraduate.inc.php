@@ -41,7 +41,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["education_expand_grid"] = "undergraduate_medical_teaching_grid";
 	
 	if($UNDERGRADUATE_TEACHING_ID) {
-		$query	= "SELECT * FROM `ar_undergraduate_teaching` WHERE `undergraduate_teaching_id` = ".$db->qstr($UNDERGRADUATE_TEACHING_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
+		$query	= "SELECT * FROM `ar_undergraduate_teaching` WHERE `undergraduate_teaching_id` = ".$db->qstr($UNDERGRADUATE_TEACHING_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 		$result = $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/education?section=edit_undergraduate", "title" => "Edit Undergraduate Teaching");
@@ -105,7 +105,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					if(!$ERROR) {
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-						$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
+						$PROCESSED["proxy_id"]		= $ENTRADA_USER->getActiveId();
 						
 						$undergraduateTeachingQuery = "SELECT `course_name` FROM `ar_undergraduate_teaching` WHERE `undergraduate_teaching_id` = ".$db->qstr($UNDERGRADUATE_TEACHING_ID);
 						$undergraduateTeachingResult = $db->GetRow($undergraduateTeachingQuery);

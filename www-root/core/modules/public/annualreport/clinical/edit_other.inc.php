@@ -42,7 +42,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$_SESSION["clinical_expand_grid"] = "other_grid";
 	
 	if($OTHER_ACTIVITY_ID) {
-		$query	= "SELECT * FROM `ar_other_activity` WHERE `other_activity_id`=".$db->qstr($OTHER_ACTIVITY_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
+		$query	= "SELECT * FROM `ar_other_activity` WHERE `other_activity_id`=".$db->qstr($OTHER_ACTIVITY_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 		$result	= $db->GetRow($query);
 		if($result) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/clinical?section=edit_other", "title" => "Edit Other Professional Activity");
@@ -118,7 +118,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					if(!$ERROR) {
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-						$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
+						$PROCESSED["proxy_id"]		= $ENTRADA_USER->getActiveId();
 						
 						if($db->AutoExecute("ar_other_activity", $PROCESSED, "UPDATE", "`other_activity_id`=".$db->qstr($OTHER_ACTIVITY_ID))) {
 								switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {

@@ -5298,7 +5298,7 @@ function communities_discussions_latest($cdiscussion_id = 0) {
 	$output["replies"]	= 0;
 
 	if($cdiscussion_id = (int) $cdiscussion_id) {
-		$query = "	SELECT IF(a.`cdtopic_parent` = '0', a.`cdtopic_id`, b.`cdtopic_id`) AS `cdtopic_id`, IF(a.`cdtopic_parent` = '0', a.`topic_title`, b.`topic_title`) AS `topic_title`, a.`updated_date`, a.`proxy_id`, c.`username`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `poster_fullname`
+		$query = "	SELECT IF(a.`cdtopic_parent` = '0', a.`cdtopic_id`, b.`cdtopic_id`) AS `cdtopic_id`, IF(a.`cdtopic_parent` = '0', a.`topic_title`, b.`topic_title`) AS `topic_title`, IF(a.`cdtopic_parent` = '0', a.`anonymous`, b.`anonymous`) AS `anonymous`, a.`updated_date`, a.`proxy_id`, c.`username`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `poster_fullname`
 					FROM `community_discussion_topics` AS a
 					LEFT JOIN `community_discussion_topics` AS b
 					ON a.`cdtopic_parent` = b.`cdtopic_id`
@@ -5318,6 +5318,7 @@ function communities_discussions_latest($cdiscussion_id = 0) {
 			$output["updated_date"]	= $result["updated_date"];
 			$output["cdtopic_id"]	= $result["cdtopic_id"];
 			$output["topic_title"]	= $result["topic_title"];
+			$output["anonymous"]	= $result["anonymous"];
 
 			/**
 			 * Fetch the total number of posts.
@@ -11344,8 +11345,9 @@ function events_fetch_event_audience($event_id = 0) {
  * @return array
  */
 function events_fetch_event_attendance_for_user($event_id = 0, $user_id = false) {
+	global $db;
 	if($event_id && $user_id){
-		$query = "SELECT * FROM `event_attendance` WHERE `event_id` = ".$db->qstr($event_id)." AND `proxy_id` ".$db->qstr($user_id);
+		$query = "SELECT * FROM `event_attendance` WHERE `event_id` = ".$db->qstr($event_id)." AND `proxy_id` = ".$db->qstr($user_id);
 		return $db->GetRow($query);
 	}
 	return false;

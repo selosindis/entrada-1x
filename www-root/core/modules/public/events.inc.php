@@ -893,9 +893,9 @@ if ($topic_results) { ?>
 
 							$exceeded_attempts	= ((((int) $quiz_record["quiz_attempts"] === 0) || ($quiz_attempts < $quiz_record["quiz_attempts"])) ? false : true);
 
-							if (((!(int) $quiz_record["release_date"]) || ($quiz_record["release_date"] <= time())) && ((!(int) $quiz_record["release_until"]) || ($quiz_record["release_until"] >= time())) && (!$exceeded_attempts)) {
-								$allow_attempt = true;
-							} elseif (isset($quiz_record["require_attendance"]) && events_fetch_event_attendance_for_user($EVENT_ID,$ENTRADA_USER->getID())) {
+							if (isset($quiz_record["require_attendance"]) && $quiz_record["require_attendance"] && !events_fetch_event_attendance_for_user($EVENT_ID,$ENTRADA_USER->getID())) {
+								$allow_attempt = false;
+							} elseif (((!(int) $quiz_record["release_date"]) || ($quiz_record["release_date"] <= time())) && ((!(int) $quiz_record["release_until"]) || ($quiz_record["release_until"] >= time())) && (!$exceeded_attempts)) {
 								$allow_attempt = true;
 							} else {
 								$allow_attempt = false;

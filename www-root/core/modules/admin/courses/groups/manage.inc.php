@@ -110,6 +110,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				header("Location: ".ENTRADA_URL."/admin/courses/groups?id=".$COURSE_ID);
 				exit;
 			}
+								
+			$group_ids = $_SESSION["gids"];
+			
+			$query = "	SELECT * FROM `course_groups`
+						WHERE `cgroup_id` IN (".implode(", ", $group_ids).")
+						ORDER By `group_name`";
+			$course_groups	= $db->GetAll($query);
+
+			if (!$course_groups) {
+				header("Location: ".ENTRADA_URL."/admin/".$MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : "")."?id=".$COURSE_ID);
+			}
+			if (!$GROUP_ID) {
+				$GROUP_ID = $course_groups[0]["cgroup_id"];
+			}
 			
 			/**
 			 * Add any existing associated reviewers from the evaluation_contacts table
@@ -140,20 +154,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				   $TUTOR_LIST[$result["proxy_id"]] = array('proxy_id'=>$result["proxy_id"], 'fullname'=>$result["fullname"], 'organisation_id'=>$result['organisation_id']);
 			   }
 		   }
-								
-			$group_ids = $_SESSION["gids"];
-			
-			$query = "	SELECT * FROM `course_groups`
-						WHERE `cgroup_id` IN (".implode(", ", $group_ids).")
-						ORDER By `group_name`";
-			$course_groups	= $db->GetAll($query);
-
-			if (!$course_groups) {
-				header("Location: ".ENTRADA_URL."/admin/".$MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : "")."?id=".$COURSE_ID);
-			}
-			if (!$GROUP_ID) {
-				$GROUP_ID = $course_groups[0]["cgroup_id"];
-			}
 
 			$group_name = $db->GetOne("SELECT `group_name` FROM `course_groups` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID));
 

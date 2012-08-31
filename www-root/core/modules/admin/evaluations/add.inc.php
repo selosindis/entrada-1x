@@ -164,7 +164,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			/**
 			 * Processing for evaluation_evaluators table.
 			 */
-			if (isset($_POST["target_group_type"]) && in_array($_POST["target_group_type"], array("cohort", "percentage", "proxy_id", "faculty"))) {
+			if (isset($_POST["target_group_type"]) && in_array($_POST["target_group_type"], array("cohort", "percentage", "proxy_id", "faculty", "cgroup_id"))) {
 				switch ($_POST["target_group_type"]) {
 					case "cohort" :
 						if (isset($_POST["cohort"]) && ($cohort = clean_input($_POST["cohort"], array("trim", "int")))) {
@@ -214,83 +214,109 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							add_error("Please provide a valid class to complete this evaluation.");
 						}
 					break;
-					case "proxy_id" :
-							if ((isset($_POST["associated_student"]))) {
-								$evaluator_values = array();
-
-								$associated_student = explode(",", $_POST["associated_student"]);
-
-								if (is_array($associated_student) && !empty($associated_student)) {
-									foreach($associated_student as $proxy_id) {
-										$proxy_id = clean_input($proxy_id, "int");
-
-										if ($proxy_id) {
-											$evaluator_values[] = $proxy_id;
-										}
-									}
-								}
-								
-								if (!empty($evaluator_values)) {
-									$evaluator_values = array_unique($evaluator_values);
-									
-									$query = "	SELECT a.`id` AS `proxy_id`
-												FROM `".AUTH_DATABASE."`.`user_data` AS a
-												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-												ON b.`user_id` = a.`id`
-												WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-												AND b.`account_active` = 'true'
-												AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-												AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-												AND a.`id` IN (".implode(", ", $evaluator_values).")";
-									$results = $db->GetAll($query);
-									if ($results) {
-										foreach ($results as $result) {
-											$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "proxy_id", "evaluator_value" => $result["proxy_id"]);
-										}
-									}
-								}
-							} else {
-								add_error("You must select at least one individual to act as an evaluator.");
+					case "cgroup_id" :
+						if (isset($_POST["cgroup_ids"]) && is_array($_POST["cgroup_ids"])) {
+							$cgroup_ids = $_POST["cgroup_ids"];
+							foreach ($cgroup_ids as $cgroup_id) {
+								$evaluator_values[] = (int)$cgroup_id;
 							}
+							if (!empty($evaluator_values)) {
+								$evaluator_values = array_unique($evaluator_values);
+
+								$query = "	SELECT a.`cgroup_id`
+											FROM `course_groups` AS a
+											JOIN `courses` AS b
+											ON b.`course_id` = a.`course_id`
+											WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+											AND a.`active` = 1
+											AND b.`course_active` = 1
+											AND a.`cgroup_id` IN (".implode(", ", $evaluator_values).")";
+								$results = $db->GetAll($query);
+								if ($results) {
+									foreach ($results as $result) {
+										$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "cgroup_id", "evaluator_value" => $result["cgroup_id"]);
+									}
+								}
+							}
+						}
+					break;
+					case "proxy_id" :
+						if ((isset($_POST["associated_student"]))) {
+							$evaluator_values = array();
+
+							$associated_student = explode(",", $_POST["associated_student"]);
+
+							if (is_array($associated_student) && !empty($associated_student)) {
+								foreach($associated_student as $proxy_id) {
+									$proxy_id = clean_input($proxy_id, "int");
+
+									if ($proxy_id) {
+										$evaluator_values[] = $proxy_id;
+									}
+								}
+							}
+
+							if (!empty($evaluator_values)) {
+								$evaluator_values = array_unique($evaluator_values);
+
+								$query = "	SELECT a.`id` AS `proxy_id`
+											FROM `".AUTH_DATABASE."`.`user_data` AS a
+											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+											ON b.`user_id` = a.`id`
+											WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+											AND b.`account_active` = 'true'
+											AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+											AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+											AND a.`id` IN (".implode(", ", $evaluator_values).")";
+								$results = $db->GetAll($query);
+								if ($results) {
+									foreach ($results as $result) {
+										$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "proxy_id", "evaluator_value" => $result["proxy_id"]);
+									}
+								}
+							}
+						} else {
+							add_error("You must select at least one individual to act as an evaluator.");
+						}
 					break;
 					case "faculty" :
-							if ((isset($_POST["associated_evalfaculty"]))) {
-								$evaluator_values = array();
+						if ((isset($_POST["associated_evalfaculty"]))) {
+							$evaluator_values = array();
 
-								$associated_faculty = explode(",", $_POST["associated_evalfaculty"]);
+							$associated_faculty = explode(",", $_POST["associated_evalfaculty"]);
 
-								if (is_array($associated_faculty) && !empty($associated_faculty)) {
-									foreach($associated_faculty as $proxy_id) {
-										$proxy_id = clean_input($proxy_id, "int");
+							if (is_array($associated_faculty) && !empty($associated_faculty)) {
+								foreach($associated_faculty as $proxy_id) {
+									$proxy_id = clean_input($proxy_id, "int");
 
-										if ($proxy_id) {
-											$evaluator_values[] = $proxy_id;
-										}
+									if ($proxy_id) {
+										$evaluator_values[] = $proxy_id;
 									}
 								}
-								
-								if (!empty($evaluator_values)) {
-									$evaluator_values = array_unique($evaluator_values);
-									
-									$query = "	SELECT a.`id` AS `proxy_id`
-												FROM `".AUTH_DATABASE."`.`user_data` AS a
-												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-												ON b.`user_id` = a.`id`
-												WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-												AND b.`account_active` = 'true'
-												AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-												AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-												AND a.`id` IN (".implode(", ", $evaluator_values).")";
-									$results = $db->GetAll($query);
-									if ($results) {
-										foreach ($results as $result) {
-											$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "proxy_id", "evaluator_value" => $result["proxy_id"]);
-										}
-									}
-								}
-							} else {
-								add_error("You must select at least one individual to act as an evaluator.");
 							}
+
+							if (!empty($evaluator_values)) {
+								$evaluator_values = array_unique($evaluator_values);
+
+								$query = "	SELECT a.`id` AS `proxy_id`
+											FROM `".AUTH_DATABASE."`.`user_data` AS a
+											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+											ON b.`user_id` = a.`id`
+											WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+											AND b.`account_active` = 'true'
+											AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+											AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+											AND a.`id` IN (".implode(", ", $evaluator_values).")";
+								$results = $db->GetAll($query);
+								if ($results) {
+									foreach ($results as $result) {
+										$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => "proxy_id", "evaluator_value" => $result["proxy_id"]);
+									}
+								}
+							}
+						} else {
+							add_error("You must select at least one individual to act as an evaluator.");
+						}
 					break;
 				}
 
@@ -314,6 +340,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						$PROCESSED["associated_reviewers"][(int) $contact_order] = $proxy_id;	
 					}
 				}
+			}
+
+			/**
+			 * Processing for evaluation_evaluators table.
+			 */
+			if (isset($_POST["threshold_notifications_type"]) && in_array($_POST["threshold_notifications_type"], array("reviewers","tutors","directors","pcoordinators","authors","disabled"))) {
+				$PROCESSED["threshold_notifications_type"] = $_POST["threshold_notifications_type"];
+			} else {
+				$PROCESSED["threshold_notifications_type"] = "disabled";
 			}
 			
 			if (!$ERROR) {
@@ -976,6 +1011,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								</ul>
 								<input type="hidden" id="reviewer_ref" name="reviewer_ref" value="" />
 								<input type="hidden" id="reviewer_id" name="reviewer_id" value="" />
+							</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td style="vertical-align: top;">
+								<label for="threshold_notifications_type" class="form-nrequired">Mandatory Threshold Notifications</label>
+							</td>
+							<td>
+								<select  name="threshold_notifications_type" id="threshold_notifications_type">
+									<option value="disabled"<?php echo (!isset($PROCESSED["threshold_notifications_type"]) || !$PROCESSED["threshold_notifications_type"] || $PROCESSED["threshold_notifications_type"] == "disabled" ? " checked=\"checked\"" : ""); ?>>-- Disabled --</option>
+									<option value="reviewers"<?php echo ($PROCESSED["threshold_notifications_type"] == "reviewers" ? " selected=\"selected\"" : ""); ?>>Evaluation Reviewers</option>
+									<option value="authors"<?php echo ($PROCESSED["threshold_notifications_type"] == "authors" ? " selected=\"selected\"" : ""); ?>>Evaluation Form Authors</option>
+									<option<?php echo ((!in_array($evaluation_target_type, array("student", "peer", "self"))) ? " style=\"display: none;\"" : ""); ?> value="tutors"<?php echo ($PROCESSED["threshold_notifications_type"] == "tutors" ? " selected=\"selected\"" : ""); ?> id="tutors_select">Tutors</option>
+									<option<?php echo ((!in_array($evaluation_target_type, array("course", "rotation_core", "preceptor"))) ? " style=\"display: none;\"" : ""); ?> value="directors"<?php echo ($PROCESSED["threshold_notifications_type"] == "directors" ? " selected=\"selected\"" : ""); ?> id="directors_select">Course Directors</option>
+									<option<?php echo ((!in_array($evaluation_target_type, array("course", "rotation_core", "preceptor"))) ? " style=\"display: none;\"" : ""); ?> value="pcoordinators"<?php echo ($PROCESSED["threshold_notifications_type"] == "pcoordinators" ? " selected=\"selected\"" : ""); ?> id="pcoordinators_select">Program Coordinators</option>
+								</select>
+								<div class="content-small">
+									<strong>Note</strong>: When set to a value other than Disabled, notifications will be sent out to the identified user(s) whenever an evaluation is submitted in which a question is answered below the <strong>Minimum Pass</strong> set for that question. 
+								</div>
 							</td>
 						</tr>
 						<tr>

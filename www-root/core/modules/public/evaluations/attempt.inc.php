@@ -150,6 +150,7 @@ if ($RECORD_ID) {
 											WHERE a.`evaluation_id` = ".$db->qstr($PROCESSED["evaluation_id"])."
 											AND b.`event_id` = ".$db->qstr($PROCESSED_CLERKSHIP_EVENT["event_id"]);
 								$etarget_id = $db->GetOne($query);
+								$PROCESSED["target_record_id"] = $event_id;
 							}
 							if ($PROCESSED["target_shortname"] == "preceptor") {
 								if (isset($_POST["preceptor_proxy_id"]) && ($preceptor_proxy_id = clean_input($_POST["preceptor_proxy_id"]))) {

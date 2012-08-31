@@ -1386,6 +1386,63 @@ class Evaluation {
 									<tr>
 										<td colspan="2">&nbsp;</td>
 									</tr>
+									<tr>
+										<td style="vertical-align: top"><input<?php echo ($target_data["evaluation_evaluators"][0]["evaluator_type"] == "cgroup_id" ? " checked=\"checked\"" : ""); ?> type="radio" name="target_group_type" id="target_group_type_cgroup_id" value="cgroup_id" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
+										<td style="padding-bottom: 15px">
+											<label for="target_group_type_cgroup_id" class="radio-group-title">Selected course groups must complete this evaluation</label>
+											<div class="content-small">This evaluation must be completed by everyone in the selected course groups.</div>
+										</td>
+									</tr>
+									<tr class="target_group cgroup_id_target">
+										<td></td>
+										<td style="vertical-align: middle" class="content-small">
+											<label for="cgroup_ids" class="form-required">All students in</label>
+											<select multiple="multiple" id="cgroup_ids" name="cgroup_ids[]" style="width: 450px; height: 200px; vertical-align: top;"><?php
+												$query = "SELECT * FROM `course_groups` AS a 
+															JOIN `courses` AS b 
+															ON a.`course_id` = b.`course_id` 
+															WHERE b.`course_active` = 1
+															AND a.`active` = 1
+															AND b.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation()."
+															ORDER BY b.`course_name`, 
+																LENGTH(a.`group_name`), 
+																a.`group_name` ASC";
+												$temp_course_groups = $db->GetAll($query);
+												$course_groups = array();
+												if ($temp_course_groups) {
+													foreach ($temp_course_groups as $temp_course_group) {
+														$course_groups[$temp_course_group["cgroup_id"]] = $temp_course_group;
+													}
+												}
+												$evaluator_cgroup_ids = array();
+												foreach ($target_data["evaluation_evaluators"] as $evaluator) {
+													if ($evaluator["evaluator_type"] == "cgroup_id") {
+														$evaluator_cgroup_ids[] = $evaluator["evaluator_value"];
+													}
+												}
+												if (isset($course_groups) && !empty($course_groups)) {
+													$last_course_name = false;
+													foreach ($course_groups as $course_group) {
+														if ($course_group["course_name"] && $last_course_name != $course_group["course_name"]) {
+															if ($last_course_name) {
+																echo "</optgroup>\n";
+															}
+															$last_course_name = $course_group["course_name"];
+															echo "<optgroup label=\"".$course_group["course_name"].($course_group["course_code"] ? " - ".$course_group["course_code"] : "")."\">\n";
+														}
+														echo "<option value=\"".$course_group["cgroup_id"]."\"".(in_array($course_group["cgroup_id"], $evaluator_cgroup_ids) ? " selected=\"selected\"" : "").">".html_encode($course_group["group_name"])."</option>\n";
+													}
+													if ($last_course_name) {
+														echo "</optgroup>\n";
+													}
+												}
+												?>
+											</select>
+										</td>
+									</tr>
+									<tr>
+										<td colspan="2">&nbsp;</td>
+									</tr>
 									<tr >
 										<td style="vertical-align: top"><input<?php echo ($target_data["evaluation_evaluators"][0]["evaluator_type"] == "proxy_id" ? " checked=\"checked\"" : ""); ?> type="radio" name="target_group_type" id="target_group_type_proxy_id" value="proxy_id" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
 										<td style="padding-bottom: 15px">
@@ -1426,6 +1483,21 @@ class Evaluation {
 								$('submittable_notice').update('&nbsp;');
 								selectTargetGroupOption('<?php echo (isset($target_data["evaluation_evaluators"][0]["evaluator_type"]) ? $target_data["evaluation_evaluators"][0]["evaluator_type"] : 'cohort'); ?>');
 								student_list = new AutoCompleteList({ type: 'student', url: '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=student', remove_image: '<?php echo ENTRADA_RELATIVE; ?>/images/action-delete.gif' });
+								<?php
+								if (in_array($target_details["target_shortname"], array("course", "rotation_core", "preceptor"))) {
+									?>
+									$('directors_select').show();
+									$('pcoordinators_select').show();
+									$('tutors_select').hide();
+									<?php
+								} elseif ($target_details["target_shortname"] == "self") {
+									?>
+									$('tutors_select').show();
+									$('directors_select').hide();
+									$('pcoordinators_select').hide();
+									<?php
+								}
+								?>
 							</div>
 						</td>
 					</tr>
@@ -1435,6 +1507,7 @@ class Evaluation {
 					<tr>
 						<td colspan="3">
 							<div id="scripts-on-open" style="display: none;">
+								$('tutors_select').show();
 								$('submittable_notice').update('<div class="display-notice"><ul><li>If you set the Min or Max Submittable for a Peer Evaluation to 0, the value will default to the number of targets available to evaluate.</li></ul></div>');
 							</div>
 						</td>
@@ -1457,6 +1530,9 @@ class Evaluation {
 										url: '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=evalfaculty', 
 										remove_image: '<?php echo ENTRADA_RELATIVE; ?>/images/action-delete.gif'
 									});
+								$('tutors_select').show();
+								$('directors_select').hide();
+								$('pcoordinators_select').hide();
 								$('submittable_notice').update('&nbsp;');
 							</div>
 							<input type="text" id="evalfaculty_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
@@ -2260,7 +2336,7 @@ class Evaluation {
 		return $evaluation_targets;
 	}
 	
-	public static function getNewEvaluationsPending ($evaluation) {
+	public static function getEvaluationsPending ($evaluation) {
 		global $db;
 		
 		$pending_evaluations = array();
@@ -2277,6 +2353,25 @@ class Evaluation {
 			}
 		}
 		return $pending_evaluations;
+	}
+	
+	public static function getOverdueEvaluations ($evaluation) {
+		global $db;
+		
+		$overdue_evaluations = array();
+		
+		$query = "SELECT * FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"]);
+		$evaluators = $db->GetAll($query);
+		foreach ($evaluators as $evaluator) {
+			$evaluator_users = Evaluation::getEvaluatorUsers($evaluator);
+			foreach ($evaluator_users as $evaluator_user) {
+				$temp_evaluation = Evaluation::getUserOverdueEvaluation($evaluation, $evaluator, $evaluator_user);
+				if ($temp_evaluation) {
+					$overdue_evaluations[] = $temp_evaluation;
+				}
+			}
+		}
+		return $overdue_evaluations;
 	}
 	
 	public static function getEvaluatorUsers ($evaluator) {
@@ -2359,6 +2454,46 @@ class Evaluation {
 		}
 	}
 	
+	public static function getUserOverdueEvaluation ($evaluation, $evaluator, $evaluator_user) {
+		global $db;
+		if ($evaluation["evaluation_mandatory"] && ($evaluation["min_submittable"] || $evaluation["target_shortname"] == "peer")) {
+			switch ($evaluation["target_shortname"]) {
+				case "peer" :
+					if (!$evaluation["min_submittable"]) {
+						$evaluation_targets_list = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, false);
+						$evaluation["min_submittable"] = (count($evaluation_targets_list) ? count($evaluation_targets_list) : 0);
+					}
+				case "self" :
+				case "student" :
+				case "teacher" :
+				case "course" :
+				default :
+					$query = "SELECT COUNT(`eprogress_id`) FROM `evaluation_progress` 
+								WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])." 
+								AND `proxy_id` = ".$db->qstr($evaluator_user["id"])." 
+								AND `progress_value` = 'complete'";
+					$submissions_count = $db->GetOne($query);
+					if ((!isset($submissions_count) || !$submissions_count || $submissions_count < $evaluation["min_submittable"]) && ($evaluation["evaluation_finish"] <= time() && $evaluation["evaluation_start"] <= strtotime("-1 day"))) {
+						$evaluation_targets = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true);
+					}
+				break;
+				case "preceptor" :
+				case "rotation_core" :
+				case "rotation_elective" :
+					$evaluation_targets = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true);
+				break;
+			}
+			if (isset($evaluation_targets) && $evaluation_targets) {
+				$evaluation["evaluator"] = $evaluator;
+				$evaluation["user"] = $evaluator_user;
+				$evaluation["targets"] = $evaluation_targets;
+				return $evaluation;
+			} else {
+				return false;
+			}
+		}
+	}
+	
 	public static function loadProgress($eprogress_id = 0) {
 		global $db;
 
@@ -2426,7 +2561,7 @@ class Evaluation {
 		}
 	}
 	
-	public static function getThresholdNotificationRecipients ($evaluation_id, $eresponse_id) {
+	public static function getThresholdNotificationRecipients ($evaluation_id, $eprogress_id) {
 		global $db;
 		
 		$query = "SELECT * FROM `evaluations`
@@ -2434,17 +2569,15 @@ class Evaluation {
 		$evaluation = $db->GetRow($query);
 		
 		if (isset($evaluation["threshold_notifications_type"]) && $evaluation["threshold_notifications_type"] && $evaluation["threshold_notifications_type"] != "disabled") {
-			$query = "SELECT * FROM `evaluation_responses` AS a
-						JOIN `evaluation_progress` AS b
-						ON a.`eprogress_id` = b.`eprogress_id`
-						JOIN `evaluation_targets` AS c
-						ON c.`etarget_id` = b.`etarget_id`
-						WHERE a.`eresponse_id` = ".$db->qstr($eresponse_id);
+			$query = "SELECT * FROM `evaluation_progress` AS a
+						JOIN `evaluation_targets` AS b
+						ON b.`etarget_id` = a.`etarget_id`
+						WHERE a.`eprogress_id` = ".$db->qstr($eprogress_id);
 			$evaluation_progress = $db->GetRow($query);
 			switch ($evaluation["threshold_notifications_type"]) {
 				case "authors" :
 				default :
-					$query = "SELECT b.* FROM `evaluation_form_contacts` AS a
+					$query = "SELECT b.*, b.`id` AS `proxy_id` FROM `evaluation_form_contacts` AS a
 								JOIN `".AUTH_DATABASE."`.`user_data` AS b
 								ON a.`proxy_id` = b.`id`
 								WHERE a.`eform_id` = ".$db->qstr($evaluation_progress["target_value"])."
@@ -2452,7 +2585,7 @@ class Evaluation {
 					$notification_recipients = $db->GetAll($query);
 				break;
 				case "reviewers" :
-					$query = "SELECT b.* FROM `evaluation_contacts` AS a
+					$query = "SELECT b.*, b.`id` AS `proxy_id` FROM `evaluation_contacts` AS a
 								JOIN `".AUTH_DATABASE."`.`user_data` AS b
 								ON a.`proxy_id` = b.`id`
 								WHERE a.`evaluation_id` = ".$db->qstr($evaluation_progress["target_value"])."
@@ -2460,7 +2593,7 @@ class Evaluation {
 					$notification_recipients = $db->GetAll($query);
 				break;
 				case "tutors" :
-					$query = "SELECT b.* FROM `course_group_contacts` AS a
+					$query = "SELECT b.*, b.`id` AS `proxy_id` FROM `course_group_contacts` AS a
 								JOIN `".AUTH_DATABASE."`.`user_data` AS b
 								ON a.`proxy_id` = b.`id`
 								WHERE a.`cgroup_id` = ".$db->qstr($evaluation_progress["target_value"]);
@@ -2470,22 +2603,20 @@ class Evaluation {
 				case "pcoordinators" :
 				case "ccoordinators" :
 					$contact_type = rtrim($evaluation["threshold_notifications_type"], "s");
-					if ($evaluation_progress["target_type"] == "course_id" || $evaluation_progress["target_type"] == "rotation_id") {
-						if ($evaluation_progress["target_type"] == "rotation_id") {
-							$query = "SELECT `course_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` WHERE `rotation_id` = ".$db->qstr($evaluation_progress["target_value"]);
-							$course_id = $db->GetOne($query);
-						} else {
-							$course_id = $evaluation_progress["target_value"];
-						}
+					if ($evaluation_progress["target_type"] == "rotation_id") {
+						$query = "SELECT `course_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` WHERE `rotation_id` = ".$db->qstr($evaluation_progress["target_value"]);
+						$course_id = $db->GetOne($query);
+					} elseif ($evaluation_progress["target_type"] == "course_id") {
+						$course_id = $evaluation_progress["target_value"];
 					}
 					if ($course_id) {
-						$query = "SELECT b.* FROM `course_contacts` AS a
+						$query = "SELECT b.*, b.`id` AS `proxy_id` FROM `course_contacts` AS a
 									JOIN `".AUTH_DATABASE."`.`user_data` AS b
 									ON a.`proxy_id` = b.`id`
 									WHERE a.`course_id` = ".$db->qstr($course_id)."
 									AND a.`contact_type` = ".$db->qstr($contact_type).($contact_type == "pcoordinator" ? "
 									UNION
-									SELECT b.* FROM `courses` AS a
+									SELECT b.*, b.`id` AS `proxy_id` FROM `courses` AS a
 									JOIN `".AUTH_DATABASE."`.`user_data` AS b
 									ON a.`pcoord_id` = b.`id`
 									WHERE a.`course_id` = ".$db->qstr($course_id) : "");

@@ -14446,15 +14446,15 @@ function fetch_evaluation_target_title($evaluation_target = array(), $number_of_
 				case "student" :
 					return $number_of_targets." Students";
 				break;
+				case "peer" :
+					return $number_of_targets." Peers";
+				break;
 				case "rotation_core" :
 				case "rotation_elective" :
 					return $number_of_targets." Events";
 				break;
 				case "preceptor" :
 					return $number_of_targets." Events' Preceptors";
-				break;
-				case "peer" :
-					return $number_of_targets." Peers";
 				break;
 				case "teacher" :
 				default :

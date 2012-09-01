@@ -349,6 +349,23 @@ if ($RECORD_ID) {
 																);
 
 										if ($db->AutoExecute("evaluation_progress", $evaluation_progress_array, "UPDATE", "eprogress_id = ".$db->qstr($eprogress_id))) {
+											if ($evaluation_record["threshold_notifications_type"] != "disabled") {
+												$is_below_threshold = Evaluation::responsesBelowThreshold($evaluation_record["evaluation_id"], $eprogress_id);
+												if ($is_below_threshold) {
+													if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
+														require_once("Models/notifications/NotificationUser.class.php");
+														require_once("Models/notifications/Notification.class.php");
+														$threshold_notification_recipients = Evaluation::getThresholdNotificationRecipients($evaluation_record["evaluation_id"], $eprogress_id, $PROCESSED["eevaluator_id"]);
+														foreach ($threshold_notification_recipients as $threshold_notification_recipient) {
+															$notification_user = NotificationUser::get($threshold_notification_recipient["proxy_id"], "evaluation_threshold", $evaluation_record["evaluation_id"], $ENTRADA_USER->getID());
+															if (!$notification_user) {
+																$notification_user = NotificationUser::add($threshold_notification_recipient["proxy_id"], "evaluation_threshold", $evaluation_record["evaluation_id"], $ENTRADA_USER->getID());
+															}
+															Notification::add($notification_user->getID(), $ENTRADA_USER->getID(), $eprogress_id);
+														}
+													}
+												}
+											}
 											if (array_search($PROCESSED["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false) {
 												if (!$db->AutoExecute("evaluation_progress_clerkship_events", $PROCESSED_CLERKSHIP_EVENT, "INSERT")) {
 													application_log("error", "Unable to record the final clerkship event details for eprogress_id [".$eprogress_id."] in the evaluation_progress_clerkship_events table. Database said: ".$db->ErrorMsg());

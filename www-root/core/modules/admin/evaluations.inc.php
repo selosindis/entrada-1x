@@ -64,7 +64,7 @@ if (!defined("PARENT_INCLUDED")) {
 				new_sidebar_item("Manage Evaluations", $sidebar_html, "evaluation-nav", "open");
 			}
 			$PREFERENCES = preferences_load($MODULE);
-			require_once("Models/Evaluation/Evaluation.class.php");
+			require_once("Models/evaluation/Evaluation.class.php");
 			
 			$module_file = $router->getRoute();
 			if ($module_file) {

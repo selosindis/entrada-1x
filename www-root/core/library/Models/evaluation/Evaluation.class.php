@@ -1179,7 +1179,7 @@ class Evaluation {
 														foreach ($target_data["associated_rotation_ids"] as $rotation) {
 															if ((array_key_exists($rotation, $ROTATION_LIST)) && is_array($ROTATION_LIST[$rotation])) {
 																?>
-																<li class="group" id="target_rotation_<?php echo $ROTATION_LIST[$rotation]["rotation_id"]; ?>" style="cursor: move;"><?php echo $ROTATION_LIST[$rotation]["rotation_title"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeTarget('rotation_<?php echo $COHORT_LIST[$group]["group_id"]; ?>', 'rotations');" class="list-cancel-image" style="position: relative; float: right;" /></li>
+																<li class="group" id="target_rotation_<?php echo $ROTATION_LIST[$rotation]["rotation_id"]; ?>" style="cursor: move;"><?php echo $ROTATION_LIST[$rotation]["rotation_title"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeTarget('rotation_<?php echo $ROTATION_LIST[$rotation]["rotation_id"]; ?>', 'rotations');" class="list-cancel-image" style="position: relative; float: right;" /></li>
 																<?php
 															}
 														}
@@ -1272,7 +1272,7 @@ class Evaluation {
 														foreach ($target_data["associated_rotation_ids"] as $rotation) {
 															if ((array_key_exists($rotation, $ROTATION_LIST)) && is_array($ROTATION_LIST[$rotation])) {
 																?>
-																<li class="group" id="target_rotation_<?php echo $ROTATION_LIST[$rotation]["rotation_id"]; ?>" style="cursor: move;"><?php echo $ROTATION_LIST[$rotation]["rotation_title"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeTarget('rotation_<?php echo $COHORT_LIST[$group]["group_id"]; ?>', 'rotations');" class="list-cancel-image" style="position: relative; float: right;" /></li>
+																<li class="group" id="target_rotation_<?php echo $ROTATION_LIST[$rotation]["rotation_id"]; ?>" style="cursor: move;"><?php echo $ROTATION_LIST[$rotation]["rotation_title"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeTarget('rotation_<?php echo $ROTATION_LIST[$rotation]["rotation_id"]; ?>', 'rotations');" class="list-cancel-image" style="position: relative; float: right;" /></li>
 																<?php
 															}
 														}
@@ -2561,8 +2561,10 @@ class Evaluation {
 		}
 	}
 	
-	public static function getThresholdNotificationRecipients ($evaluation_id, $eprogress_id) {
+	public static function getThresholdNotificationRecipients ($evaluation_id, $eprogress_id, $eevaluator_id) {
 		global $db;
+		
+		$notification_recipients = array();
 		
 		$query = "SELECT * FROM `evaluations`
 					WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
@@ -2572,7 +2574,10 @@ class Evaluation {
 			$query = "SELECT * FROM `evaluation_progress` AS a
 						JOIN `evaluation_targets` AS b
 						ON b.`etarget_id` = a.`etarget_id`
-						WHERE a.`eprogress_id` = ".$db->qstr($eprogress_id);
+						JOIN `evaluation_evaluators` AS c
+						ON a.`evaluation_id` = c.`evaluation_id`
+						WHERE a.`eprogress_id` = ".$db->qstr($eprogress_id)."
+						AND c.`eevaluator_id` = ".$db->qstr($eevaluator_id);
 			$evaluation_progress = $db->GetRow($query);
 			switch ($evaluation["threshold_notifications_type"]) {
 				case "authors" :
@@ -2593,10 +2598,17 @@ class Evaluation {
 					$notification_recipients = $db->GetAll($query);
 				break;
 				case "tutors" :
-					$query = "SELECT b.*, b.`id` AS `proxy_id` FROM `course_group_contacts` AS a
-								JOIN `".AUTH_DATABASE."`.`user_data` AS b
-								ON a.`proxy_id` = b.`id`
-								WHERE a.`cgroup_id` = ".$db->qstr($evaluation_progress["target_value"]);
+					if ($evaluation_progress["target_value"]) {
+						$query = "SELECT b.*, b.`id` AS `proxy_id` FROM `course_group_contacts` AS a
+									JOIN `".AUTH_DATABASE."`.`user_data` AS b
+									ON a.`proxy_id` = b.`id`
+									WHERE a.`cgroup_id` = ".$db->qstr($evaluation_progress["target_value"]);
+					} else {
+						$query = "SELECT b.*, b.`id` AS `proxy_id` FROM `course_group_contacts` AS a
+									JOIN `".AUTH_DATABASE."`.`user_data` AS b
+									ON a.`proxy_id` = b.`id`
+									WHERE a.`cgroup_id` = ".$db->qstr($evaluation_progress["evaluator_value"]);
+					}
 					$notification_recipients = $db->GetAll($query);
 				break;
 				case "directors" :
@@ -2625,9 +2637,10 @@ class Evaluation {
 				break;
 			}
 		}
+		return $notification_recipients;
 	}
 	
-	public static function getEvaluationReviewPermissions ($evaluation_id) {
+	public static function getReviewPermissions ($evaluation_id) {
 		global $db, $ENTRADA_USER;
 		
 		$permissions = array();
@@ -2640,7 +2653,7 @@ class Evaluation {
 					WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
 		$evaluation = $db->GetRow($query);
 		if ($evaluation) {
-			if (1){//$evaluation["allow_target_review"]) {
+			if ($evaluation["allow_target_review"]) {
 				$query = "SELECT * FROM `evaluation_targets`
 							WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
 				$evaluation_targets = $db->GetAll($query);
@@ -2868,6 +2881,204 @@ class Evaluation {
 		}
 		
 		return $progress_records;
+	}
+	
+	public static function responsesBelowThreshold($evaluation_id, $eprogress_id) {
+		global $db;
+		
+		$query = "SELECT c.* FROM `evaluations` AS a
+					JOIN `evaluation_forms` AS b
+					ON a.`eform_id` = b.`eform_id`
+					JOIN `evaluation_form_questions` AS c
+					ON b.`eform_id` = c.`eform_id`
+					WHERE a.`evaluation_id` = ".$db->qstr($evaluation_id);
+		$evaluation_questions = $db->GetAll($query);
+		if ($evaluation_questions) {
+			foreach ($evaluation_questions as $evaluation_question) {
+				$query = "SELECT `response_order` FROM `evaluation_form_responses`
+							WHERE `efquestion_id` = ".$db->qstr($evaluation_question["efquestion_id"]);
+				$minimum_passing_level = $db->GetOne($query);
+				if ($minimum_passing_level) {
+					$query = "SELECT c.`response_order` FROM `evaluation_progress` AS a
+								JOIN `evaluation_responses` AS b
+								ON a.`eprogress_id` = b.`eprogress_id`
+								JOIN `evaluation_form_responses` AS c
+								ON b.`efresponse_id` = c.`efresponse_id`
+								WHERE b.`efquestion_id` = ".$db->qstr($evaluation_question["efquestion_id"]);
+					$response_level = $db->GetOne($query);
+					if ($response_level && $response_level < $minimum_passing_level) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+	
+	public static function getEvaluatorEvaluations() {
+		global $db, $ENTRADA_USER;
+		
+		$evaluations = array();
+		
+		$cohort = groups_get_cohort($ENTRADA_USER->getID());
+
+		$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
+					JOIN `course_groups` AS b
+					ON a.`cgroup_id` = b.`cgroup_id`
+					WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+					AND a.`active` = 1
+					AND b.`active` = 1";
+		$course_groups = $db->GetAll($query);
+
+		$cgroup_ids_string = "";
+		if (isset($course_groups) && is_array($course_groups)) {
+			foreach ($course_groups as $course_group) {
+				if ($cgroup_ids_string) {
+					$cgroup_ids_string .= ", ".$db->qstr($course_group["cgroup_id"]);
+				} else {
+					$cgroup_ids_string = $db->qstr($course_group["cgroup_id"]);
+				}
+			}
+		}
+
+		$query = "	SELECT * FROM `evaluations` AS a
+					JOIN `evaluation_evaluators` AS b
+					ON a.`evaluation_id` = b.`evaluation_id`
+					JOIN `evaluation_forms` AS c
+					ON a.`eform_id` = c.`eform_id`
+					JOIN `evaluations_lu_targets` AS d
+					ON c.`target_id` = d.`target_id`
+					WHERE
+					(
+						(
+							b.`evaluator_type` = 'proxy_id'
+							AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getID())."
+						)
+						OR
+						(
+							b.`evaluator_type` = 'organisation_id'
+							AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+						)".($_SESSION["details"]["group"] == "student" ? " OR (
+							b.`evaluator_type` = 'cohort'
+							AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
+						)" : "").($cgroup_ids_string ? " OR (
+							b.`evaluator_type` = 'cgroup_id'
+							AND b.`evaluator_value` IN (".$cgroup_ids_string.")
+						)" : "")."
+					)
+					AND a.`evaluation_start` < ".$db->qstr(time())."
+					AND a.`evaluation_active` = 1
+					GROUP BY a.`evaluation_id`
+					ORDER BY a.`evaluation_finish` DESC";
+		$temp_evaluations = $db->GetAll($query);
+		if ($temp_evaluations) {
+			foreach ($temp_evaluations as $evaluation) {
+				$evaluation_targets_list = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluation["eevaluator_id"], $ENTRADA_USER->getID());
+				if ($evaluation_targets_list) {
+					$evaluation_targets_count = count($evaluation_targets_list);
+					if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation["max_submittable"]) {
+						$evaluation["max_submittable"] = ($evaluation_targets_count * (int) $evaluation["max_submittable"]);
+					}
+					$evaluation_target_title = fetch_evaluation_target_title($evaluation_targets_list[0], $evaluation_targets_count, $evaluation["target_shortname"]);
+					if ($evaluation["target_shortname"] == "peer" && $evaluation["max_submittable"] == 0) {
+						$evaluation["max_submittable"] = $evaluation_targets_count;
+					}
+					
+					if ($evaluation_target_title) {
+						$evaluation["evaluation_target_title"] = $evaluation_target_title;
+					}
+					
+					if ($evaluation_targets_list) {
+						$evaluation["evaluation_targets"] = $evaluation_targets_list;
+					}
+				}
+
+				$query = "	SELECT COUNT(`efquestion_id`) FROM `evaluation_form_questions`
+							WHERE `eform_id` = ".$db->qstr($evaluation["eform_id"])."
+							GROUP BY `eform_id`";
+				$evaluation_questions = $db->GetOne($query);
+				if ($evaluation_questions) {
+					$evaluation["evaluation_questions"] = $evaluation_questions;
+				} else {
+					$evaluation["evaluation_questions"] = 0;
+				}
+
+				$query = "	SELECT * FROM `evaluation_progress`
+							WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+							AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+							AND `progress_value` = 'complete'";
+				$evaluation_progress = $db->GetAll($query);
+				if ($evaluation_progress) {
+					$evaluation["evaluation_progress"] = $evaluation_progress;
+				} else {
+					$evaluation["evaluation_progress"] = 0;
+				}
+
+				$query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
+							WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+							AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+							AND `progress_value` = 'complete'";
+				$completed_attempts = $db->GetOne($query);
+				if ($completed_attempts) {
+					$evaluation["completed_attempts"] = $completed_attempts;
+				} else {
+					$evaluation["completed_attempts"] = 0;
+				}
+
+				if (($evaluation["release_date"] <= time() || !$evaluation["release_date"])) {
+					$evaluation["click_url"] = ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"];
+				} else {
+					$evaluation["click_url"] = "";
+				}
+				$evaluations[] = $evaluation;
+			}
+		}
+		return $evaluations;
+	}
+	
+	public static function getAuthorEvaluations() {
+		global $db, $ENTRADA_USER, $ENTRADA_ACL;
+		
+		$evaluations = array();
+		
+		$query = "	SELECT a.`evaluation_id`, a.`evaluation_title`, a.`evaluation_active`, a.`evaluation_start`, a.`evaluation_finish`, c.`target_shortname` AS `evaluation_type`
+							FROM `evaluations` AS a
+							JOIN `evaluation_targets` AS b
+							ON a.`evaluation_id` = b.`evaluation_id`
+							JOIN `evaluations_lu_targets` AS c
+							ON b.`target_id` = c.`target_id`
+							GROUP BY a.`evaluation_id`";
+		$temp_evaluations = $db->GetAll($query);
+		foreach ($temp_evaluations as $evaluation) {
+			if ($ENTRADA_ACL->amIAllowed(new EvaluationResource($evaluation["evaluation_id"], true), 'update')) {
+				$evaluations[] = $evaluation;
+			}
+		}
+		
+		return $evaluations;
+		
+	}
+	
+	public static function getAuthorEvaluationForms() {
+		global $db, $ENTRADA_USER, $ENTRADA_ACL;
+		
+		$evaluations = array();
+		
+		$query = "	SELECT a.`evaluation_id`, a.`evaluation_title`, a.`evaluation_active`, a.`evaluation_start`, a.`evaluation_finish`, c.`target_shortname` AS `evaluation_type`
+							FROM `evaluation_forms` AS a
+							JOIN `evaluation_form_contacts` AS b
+							ON a.`eform_id` = b.`eform_id`
+							AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+							GROUP BY a.`evaluation_id`";
+		$temp_evaluations = $db->GetAll($query);
+		foreach ($temp_evaluations as $evaluation) {
+			if ($ENTRADA_ACL->amIAllowed(new EvaluationResource($evaluation["evaluation_id"], true), 'update')) {
+				$evaluations[] = $evaluation;
+			}
+		}
+		
+		return $evaluations;
+		
 	}
 }
 

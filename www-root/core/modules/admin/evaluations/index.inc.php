@@ -116,17 +116,6 @@ if (!defined("IN_EVALUATIONS")) {
 			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = "ASC";
 		}
 	}
-	
-	$scheduler_evaluations = array(
-				"duration_start" => 0,
-				"duration_end" => 0,
-				"total_rows" => 0,
-				"total_pages" => 0,
-				"page_current" => 0,
-				"page_previous" => 0,
-				"page_next" => 0,
-				"evaluations" => array()
-			);
 
 	/**
 	 * Provide the queries with the columns to order by.
@@ -147,120 +136,47 @@ if (!defined("IN_EVALUATIONS")) {
 		break;
 	}
 	
-    /**** Query ***/
-    $query_count = "SELECT COUNT(`evaluation_id`) AS `total_rows`
-					FROM `evaluations`
-					WHERE `evaluation_active` = '1'";
-    
-    $query_evaluations = "	SELECT a.`evaluation_id`, a.`evaluation_title`, a.`evaluation_active`, a.`evaluation_start`, a.`evaluation_finish`, c.`target_shortname` AS `evaluation_type`
-							FROM `evaluations` AS a
-							JOIN `evaluation_targets` AS b
-							ON a.`evaluation_id` = b.`evaluation_id`
-							JOIN `evaluations_lu_targets` AS c
-							ON b.`target_id` = c.`target_id`
-							GROUP BY a.`evaluation_id`
-							ORDER BY %s
-							LIMIT %s, %s";
+    $evaluations = Evaluation::getAuthorEvaluations();
 
-	/**
-	 * Get the total number of results using the generated queries above and calculate the total number
-	 * of pages that are available based on the results per page preferences.
-	 */
-	$result_count = $db->GetRow($query_count);
-
-	if ($result_count) {
-		$scheduler_evaluations["total_rows"] = (int) $result_count["total_rows"];
-
-		if ($scheduler_evaluations["total_rows"] <= $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]) {
-			$scheduler_evaluations["total_pages"] = 1;
-		} elseif (($scheduler_evaluations["total_rows"] % $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]) == 0) {
-			$scheduler_evaluations["total_pages"] = (int) ($scheduler_evaluations["total_rows"] / $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]);
-		} else {
-			$scheduler_evaluations["total_pages"] = (int) ($scheduler_evaluations["total_rows"] / $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]) + 1;
-		}
-	} else {
-		$scheduler_evaluations["total_rows"] = 0;
-		$scheduler_evaluations["total_pages"] = 1;
-	}
-	/**
-	 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
-	 */
-	if (isset($_GET["pv"])) {
-		$scheduler_evaluations["page_current"] = (int) trim($_GET["pv"]);
-
-		if (($scheduler_evaluations["page_current"] < 1) || ($scheduler_evaluations["page_current"] > $scheduler_evaluations["total_pages"])) {
-			$scheduler_evaluations["page_current"] = 1;
-		}
-	} else {
-		$scheduler_evaluations["page_current"] = 1;
-	}
-
-	$scheduler_evaluations["page_previous"] = (($scheduler_evaluations["page_current"] > 1) ? ($scheduler_evaluations["page_current"] - 1) : false);
-	$scheduler_evaluations["page_next"] = (($scheduler_evaluations["page_current"] < $scheduler_evaluations["total_pages"]) ? ($scheduler_evaluations["page_current"] + 1) : false);
-
-	/**
-	 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
-	 */
-	$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"] * $scheduler_evaluations["page_current"]) - $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]);
-
-	/**
-	 * Provide the previous query so we can have previous / next event links on the details page.
-	 */
-	$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]["previous_query"]["query"] = $query_evaluations;
-	$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["evaluations"]["previous_query"]["total_rows"] = $scheduler_evaluations["total_rows"];
-
-	$query_evaluations = sprintf($query_evaluations, $sort_by, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["pp"]);
-	$scheduler_evaluations["evaluations"] = $db->GetAll($query_evaluations);
-	
-	if ($scheduler_evaluations["total_pages"] > 1) {
-		echo "<div class=\"fright\" style=\"margin-bottom: 10px\">\n";
-		echo "<form action=\"".ENTRADA_URL."/admin/evaluations\" method=\"get\" id=\"pageSelector\">\n";
-		echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
-		if ($scheduler_evaluations["page_previous"]) {
-			echo "<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("pv" => $scheduler_evaluations["page_previous"]))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$scheduler_evaluations["page_previous"].".\" title=\"Back to page ".$scheduler_evaluations["page_previous"].".\" style=\"vertical-align: middle\" /></a>\n";
-		} else {
-			echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
-		}
-		echo "</span>";
-		echo "<span style=\"vertical-align: middle\">\n";
-		echo "<select name=\"pv\" onchange=\"$('pageSelector').submit();\"".(($scheduler_evaluations["total_pages"] <= 1) ? " disabled=\"disabled\"" : "").">\n";
-		for($i = 1; $i <= $scheduler_evaluations["total_pages"]; $i++) {
-			echo "<option value=\"".$i."\"".(($i == $scheduler_evaluations["page_current"]) ? " selected=\"selected\"" : "").">".(($i == $scheduler_evaluations["page_current"]) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
-		}
-		echo "</select>\n";
-		echo "</span>\n";
-		echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
-		if ($scheduler_evaluations["page_current"] < $scheduler_evaluations["total_pages"]) {
-			echo "<a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("pv" => $scheduler_evaluations["page_next"]))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$scheduler_evaluations["page_next"].".\" title=\"Forward to page ".$scheduler_evaluations["page_next"].".\" style=\"vertical-align: middle\" /></a>";
-		} else {
-			echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
-		}
-		echo "</span>\n";
-		echo "</form>\n";
-		echo "</div>\n";
-		echo "<div class=\"clear\"></div>\n";
-	}
-
-	if (count($scheduler_evaluations["evaluations"])) {
+	if (count($evaluations)) {
+		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";
+		$HEAD[] = "<script type=\"text/javascript\">
+		jQuery(document).ready(function() {
+			jQuery('#evaluations').dataTable(
+				{    
+					'sPaginationType': 'full_numbers',
+					'bInfo': false,
+					'aoColumns': [
+						null,
+						null,
+						{'sType': 'alt-string'},
+						{'sType': 'alt-string'},
+						null,
+						null
+					]
+				}
+			);
+		});
+		</script>";
 		if ($ENTRADA_ACL->amIAllowed("evaluation", "delete", false)) : ?>
 		<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=delete" method="post">
 		<?php endif; ?>
-		<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Evaluations">
+		<table id="evaluations" class="tableList" cellspacing="0" cellpadding="1" summary="List of Evaluations">
 			<colgroup>
 				<col class="modified" />
 				<col class="title" />
 				<col class="date" />
-				<col class="targets" />
+				<col class="date" />
 				<col class="date-smallest" />
 				<col class="attachment" />
 			</colgroup>
 			<thead>
 				<tr>
 					<td class="modified">&nbsp;</td>
-					<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("title", "Title"); ?></td>
-					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "evaluation_start") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("evaluation_start", "Evaluation Start"); ?></td>
-					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "evaluation_finish") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("evaluation_finish", "Evaluation Finish"); ?></td>
-					<td class="date-smallest<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("type", "Evaluation Type"); ?></td>
+					<td class="title">Title</td>
+					<td class="date">Evaluation Start</td>
+					<td class="date">Evaluation Finish</td>
+					<td class="date-smallest>">Evaluation Type</td>
 					<td class="attachment">&nbsp;</td>
 				</tr>
 			</thead>
@@ -276,14 +192,14 @@ if (!defined("IN_EVALUATIONS")) {
 			<?php endif; ?>
 			<tbody>
 			<?php
-			foreach ($scheduler_evaluations["evaluations"] as $result) {
+			foreach ($evaluations as $result) {
 				$url = ENTRADA_URL."/admin/evaluations?section=progress&evaluation=".$result["evaluation_id"];
 				
 				echo "<tr id=\"evaluation-".$result["evaluation_id"]."\" class=\"evaluation\">\n";
 				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["evaluation_id"]."\" /></td>\n";
 				echo "	<td class=\"title\"><a href=\"".$url."\">".html_encode($result["evaluation_title"])."</a></td>\n";
-				echo "	<td class=\"date\"><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_start"])."</a></td>\n";
-				echo "	<td class=\"target\"><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_finish"])."</a></td>\n";
+				echo "	<td class=\"date\"><a href=\"".$url."\" alt=\"".$result["evaluation_start"]."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_start"])."</a></td>\n";
+				echo "	<td class=\"date\"><a href=\"".$url."\" alt=\"".$result["evaluation_finish"]."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_finish"])."</a></td>\n";
 				echo "	<td class=\"date-smallest\"><a href=\"".$url."\">".html_encode($result["evaluation_type"])."</a></td>\n";
 				echo "	<td class=\"attachment\"><a href=\"".ENTRADA_URL."/admin/evaluations?section=edit&id=".$result["evaluation_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Evaluation Detail\" title=\"Manage Evaluation Detail\" border=\"0\" /></a></td>\n";
 				echo "</tr>\n";
@@ -303,10 +219,6 @@ if (!defined("IN_EVALUATIONS")) {
 		</div>
 		<?php
 	}
-
-	echo "<form action=\"\" method=\"get\">\n";
-	echo "<input type=\"hidden\" id=\"dstamp\" name=\"dstamp\" value=\"".html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])."\" />\n";
-	echo "</form>\n";
 
 	/**
 	 * Sidebar item that will provide another method for sorting, ordering, etc.

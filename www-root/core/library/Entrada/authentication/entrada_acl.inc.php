@@ -2131,6 +2131,76 @@ class EvaluationResource extends EntradaAclResource {
 	}
 }
 
+class EvaluationReviewerAssertion implements Zend_Acl_Assert_Interface {
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
+
+		//If asserting is off then return true right away
+		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+
+		if (isset($resource->evaluation_id)) {
+			$evaluation_id = $resource->evaluation_id;
+		} else if (isset($acl->_entrada_last_query->evaluation_id)) {
+			$evaluation_id = $acl->_entrada_last_query->evaluation_id;
+		} else {
+			//Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if ($resource_type !== "evaluation") {
+			//This only asserts for users reviewing evaluations.
+				return false;
+			}
+
+			$evaluation_id = preg_replace('/[^0-9]+/', "", $resource_id);
+		}
+
+		$role_id = $role->getRoleId();
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
+
+		if (!isset($user_id) || !$user_id) {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
+		}
+		
+		require_once("Models/evaluation/Evaluation.class.php");
+		$permissions = Evaluation::getReviewPermissions($evaluation_id);
+		if (count($permissions)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	static function _checkQuizOwner($user_id, $quiz_id) {
+		global $db;
+
+		$query		= "	SELECT a.`proxy_id`
+						FROM `quiz_contacts` AS a
+						WHERE a.`quiz_id` = ".$db->qstr($quiz_id);
+		$results	= $db->GetAll($query);
+		if ($results) {
+			foreach ($results as $result) {
+				if ($result["proxy_id"] == $user_id) {
+					return true;
+				}
+			}
+		}
+
+		return false;
+	}
+}
+
 class EvaluationResultResource extends EvaluationResource {
 	public function getResourceId() {
 		return "evaluationresult".($this->specific ? $this->evaluation_id : "");
@@ -2155,6 +2225,8 @@ class EvaluationFormQuestionResource extends EvaluationResource {
 		return "evaluationformquestion".($this->specific ? $this->evaluation_id : "");
 	}
 }
+
+
 
 class CommunityResource extends EntradaAclResource {
 	/**

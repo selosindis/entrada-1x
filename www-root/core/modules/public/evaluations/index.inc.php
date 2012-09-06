@@ -31,72 +31,68 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 }
+
 ?>
-<h1>My Evaluations</h1>
+<h1>My Evaluations and Assessments</h1>
 <?php
 
-ob_start();
-clerkship_display_available_evaluations();
-$clerkship_evaluations = trim(ob_get_clean());
+require_once("Models/evaluation/Evaluation.class.php");
+$evaluations = Evaluation::getEvaluatorEvaluations();
 
-echo $clerkship_evaluations;
+if ($evaluations) {
+	$evaluation_id = 0;
+	echo "<div class=\"no-printing\">\n";
+    echo "    <ul class=\"nav nav-tabs\">\n";
+	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "available" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"available\" onclick=\"loadTab(this.id)\">Available Evaluations</a></li>\n";
+	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "overdue" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"overdue\" onclick=\"loadTab(this.id)\">Overdue Evaluations</a></li>\n";
+	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "complete" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"complete\" onclick=\"loadTab(this.id)\">Completed Evaluations</a></li>\n";
+	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "all" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"all\" onclick=\"loadTab(this.id)\">All Evaluations</a></li>\n";
+	echo "	</ul>\n";
 
-$cohort = groups_get_cohort($ENTRADA_USER->getID());
-
-$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
-			JOIN `course_groups` AS b
-			ON a.`cgroup_id` = b.`cgroup_id`
-			WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-			AND a.`active` = 1
-			AND b.`active` = 1";
-$course_groups = $db->GetAll($query);
-
-$cgroup_ids_string = "";
-if (isset($course_groups) && is_array($course_groups)) {
-	foreach ($course_groups as $course_group) {
-		if ($cgroup_ids_string) {
-			$cgroup_ids_string .= ", ".$db->qstr($course_group["cgroup_id"]);
-		} else {
-			$cgroup_ids_string = $db->qstr($course_group["cgroup_id"]);
+	echo "</div>\n";
+	echo "<br />";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";
+	$HEAD[] = "<script type=\"text/javascript\">
+	var eTable;
+	jQuery(document).ready(function() {
+		eTable = jQuery('#evaluations').dataTable(
+			{    
+				'sPaginationType': 'full_numbers',
+				'aoColumns' : [ 
+						null,
+						null,
+						null,
+						{'sType': 'alt-string'},
+						null,
+						null,
+                        { 'bVisible' : false }
+					],
+				'bInfo': false
+			}
+		);
+		eTable.fnFilter('".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "all" ? "" : $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"])."', 6);
+	});
+	
+	function loadTab (value) {
+		if (!$(value).hasClassName('active')) {
+			new Ajax.Request('".ENTRADA_URL."/evaluations', {
+				method: 'get',
+				parameters: {
+								'view_type': value,
+								'ajax': 1
+							}
+			});
+			var filterval = (value == 'all' ? '' : value)
+			eTable.fnFilter(filterval, 6);
+			$$('li.active').each(function (e) {
+				e.removeClassName('active');
+			});
+			$(value).parentNode.addClassName('active');
 		}
 	}
-}
-
-$query = "	SELECT * FROM `evaluations` AS a
-			JOIN `evaluation_evaluators` AS b
-			ON a.`evaluation_id` = b.`evaluation_id`
-			JOIN `evaluation_forms` AS c
-			ON a.`eform_id` = c.`eform_id`
-			JOIN `evaluations_lu_targets` AS d
-			ON c.`target_id` = d.`target_id`
-			WHERE
-			(
-				(
-					b.`evaluator_type` = 'proxy_id'
-					AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getID())."
-				)
-				OR
-				(
-					b.`evaluator_type` = 'organisation_id'
-					AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
-				)".($_SESSION["details"]["group"] == "student" ? " OR (
-					b.`evaluator_type` = 'cohort'
-					AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
-				)" : "").($cgroup_ids_string ? " OR (
-					b.`evaluator_type` = 'cgroup_id'
-					AND b.`evaluator_value` IN (".$cgroup_ids_string.")
-				)" : "")."
-			)
-			AND a.`evaluation_start` < ".$db->qstr(time())."
-			AND a.`evaluation_active` = 1
-			GROUP BY a.`evaluation_id`
-			ORDER BY a.`evaluation_finish` DESC";
-$results = $db->GetAll($query);
-if ($results) {
-	require_once("Models/evaluation/Evaluation.class.php");
-	$evaluation_id = 0;
+	</script>";
 	?>
-	<table class="tableList" cellspacing="0" summary="List of Evaluations">
+	<table id="evaluations" class="tableList" cellspacing="0" summary="List of Evaluations and Assessments">
 	<colgroup>
 		<col class="modified" />
 		<col class="general" />
@@ -104,82 +100,50 @@ if ($results) {
 		<col class="date" />
 		<col class="title" />
 		<col class="general" />
+		<col class="general" />
 	</colgroup>
 	<thead>
 		<tr>
 			<td class="modified">&nbsp;</td>
-			<td class="general">Evaluation Type</td>
-			<td class="general">Evaluation Target</td>
-			<td class="date">Close Date</td>
-			<td class="title">Evaluation Title</td>
-			<td class="general">Evaluations Submitted</td>
+			<td class="general">Type</td>
+			<td class="general">Target(s)</td>
+			<td class="date-small">Close Date</td>
+			<td class="title">Title</td>
+			<td class="date-smallest">Submitted</td>
+			<td class="general">Status</td>
 		</tr>
 	</thead>
 	<tbody>
 	<?php
-	foreach ($results as $result) {
-		$evaluation_targets_list = Evaluation::getTargetsArray($result["evaluation_id"], $result["eevaluator_id"], $ENTRADA_USER->getID());
-		if ($evaluation_targets_list) {
-			$evaluation_targets_count = count($evaluation_targets_list);
-			if (array_search($result["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $result["max_submittable"]) {
-				$result["max_submittable"] = ($evaluation_targets_count * (int) $result["max_submittable"]);
-			}
-			$evaluation_target_title = fetch_evaluation_target_title($evaluation_targets_list[0], $evaluation_targets_count, $result["target_shortname"]);
-			if ($result["target_shortname"] == "peer" && $result["max_submittable"] == 0) {
-				$result["max_submittable"] = $evaluation_targets_count;
-			}
-		}
-
-		$query = "	SELECT COUNT(`efquestion_id`) FROM `evaluation_form_questions`
-					WHERE `eform_id` = ".$db->qstr($result["eform_id"])."
-					GROUP BY `eform_id`";
-		$evaluation_questions = $db->GetOne($query);
-		
-		$query = "	SELECT * FROM `evaluation_progress`
-					WHERE `evaluation_id` = ".$db->qstr($result["evaluation_id"])."
-					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-					AND `progress_value` = 'complete'";
-		$evaluation_progress = $db->GetRow($query);
-		
-		$query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
-					WHERE `evaluation_id` = ".$db->qstr($result["evaluation_id"])."
-					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-					AND `progress_value` = 'complete'";
-		$completed_attempts = $db->GetOne($query);
-		
-		if (($result["release_date"] <= time() || !$result["release_date"])) {
-			$click_url = ENTRADA_URL."/evaluations?section=attempt&id=".$result["evaluation_id"];
-		} else {
-			$click_url = "";
-		}
-		
-		if ($click_url) {
+	foreach ($evaluations as $evaluation) {
+		if ($evaluation["click_url"]) {
 			echo "<tr>\n";
 			echo "	<td>&nbsp;</td>\n";
-			echo "	<td><a href=\"".$click_url."\">".(!empty($result["target_title"]) ? $result["target_title"] : "No Type Found")."</a></td>\n";
-			echo "	<td><a href=\"".$click_url."\">".(!empty($evaluation_target_title) ? $evaluation_target_title : "No Target")."</a></td>\n";
-			echo "	<td><a href=\"".$click_url."\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_finish"])."</a></td>\n";
-			echo "	<td><a href=\"".$click_url."\">".html_encode($result["evaluation_title"])."</a></td>\n";
-			echo "	<td><a href=\"".$click_url."\">".($completed_attempts ? ((int)$completed_attempts) : "0")."/".($result["max_submittable"] ? ((int)$result["max_submittable"]) : "0")."</a></td>\n";
+			echo "	<td><a href=\"".$evaluation["click_url"]."\">".(!empty($evaluation["target_title"]) ? $evaluation["target_title"] : "No Type Found")."</a></td>\n";
+			echo "	<td><a href=\"".$evaluation["click_url"]."\">".(!empty($evaluation["evaluation_target_title"]) ? $evaluation["evaluation_target_title"] : "No Target")."</a></td>\n";
+			echo "	<td><a href=\"".$evaluation["click_url"]."\" alt=\"".$evaluation["evaluation_finish"]."\">".date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_finish"])."</a></td>\n";
+			echo "	<td><a href=\"".$evaluation["click_url"]."\">".html_encode($evaluation["evaluation_title"])."</a></td>\n";
+			echo "	<td><a href=\"".$evaluation["click_url"]."\">".($evaluation["completed_attempts"] ? ((int)$evaluation["completed_attempts"]) : "0")."/".($evaluation["max_submittable"] ? ((int)$evaluation["max_submittable"]) : "0")."</a></td>\n";
+			echo "	<td>".($evaluation["max_submittable"] > $evaluation["completed_attempts"] && $evaluation["evaluation_finish"] < time() ? "overdue available" : ($evaluation["max_submittable"] > $evaluation["completed_attempts"] ? "available" : "complete"))."</td>";
 			echo "</tr>\n";
 		} else {
 			echo "<tr>\n";
 			echo "	<td class=\"content-small\">&nbsp;</td>\n";
-			echo "	<td class=\"content-small\">".(!empty($evaluation_target["target_title"]) ? $evaluation_target["target_title"] : "No Type Found")."</td>\n";
-			echo "	<td class=\"content-small\">".(!empty($evaluation_target_title) ? $evaluation_target_title : "No Target")."</td>\n";
-			echo "	<td class=\"content-small\">".date(DEFAULT_DATE_FORMAT, $result["evaluation_finish"])."</td>\n";
-			echo "	<td class=\"content-small\">".html_encode($result["evaluation_title"])."</td>\n";
-			echo "	<td class=\"content-small\">".($completed_attempts ? ((int)$completed_attempts) : "0")."/".($result["max_submittable"] ? ((int)$result["max_submittable"]) : "0")."</td>\n";
+			echo "	<td class=\"content-small\">".(!empty($evaluation["target_title"]) ? $evaluation["target_title"] : "No Type Found")."</td>\n";
+			echo "	<td class=\"content-small\">".(!empty($evaluation["evaluation_target_title"]) ? $evaluation["evaluation_target_title"] : "No Target")."</td>\n";
+			echo "	<td class=\"content-small\"><span alt=\"".$evaluation["evaluation_finish"]."\">".date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_finish"])."</span></td>\n";
+			echo "	<td class=\"content-small\">".html_encode($evaluation["evaluation_title"])."</td>\n";
+			echo "	<td class=\"content-small\">".($evaluation["completed_attempts"] ? ((int)$evaluation["completed_attempts"]) : "0")."/".($evaluation["max_submittable"] ? ((int)$evaluation["max_submittable"]) : "0")."</td>\n";
+			echo "	<td>".($evaluation["max_submittable"] > $evaluation["completed_attempts"] && $evaluation["evaluation_finish"] < time() ? "overdue available" : ($evaluation["max_submittable"] > $evaluation["completed_attempts"] ? "available" : "complete"))."</td>";
 			echo "</tr>\n";
 		}
-
 	}
 	?>
 	</tbody>
 	</table>
 	<?php
 } else {
-	if (!$clerkship_evaluations) {
+	if (!isset($evaluations) || !$evaluations) {
 		?>
 		<div class="display-generic">
 			There are no evaluations or assessments <strong>assigned to you</strong> in the system at this time.

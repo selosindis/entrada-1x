@@ -1,8 +1,21 @@
 body{
     background:url("../images/bg-pattern.png") right bottom repeat transparent;
 }
+.icon{
+  background-image:url("../images/icons-sprite.png");
+  background-repeat:no-repeat;
+  background-color:transparent;
+  width:16px;
+  height:16px;
+  display:inline-block;
+}
+.icon-logout{
+  background-position:left top;
+}
 #content{
   border-radius:5px;
+  -moz-box-shadow:0 0 3px rgba(0,0,0,0.1);
+  -webkit-box-shadow:0 0 3px rgba(0,0,0,0.1);
   box-shadow:0 0 3px rgba(0,0,0,0.1);
 }
 .inner-content{
@@ -32,6 +45,8 @@ header#main-header .banner{
   /*border-top:1px solid #FFF;*/
   border-top:1px solid rgba(255,255,255,0.1);
   border-bottom:4px solid #d1ceb1;
+  -moz-box-shadow:0 -4px 7px rgba(0, 0, 0, 0.075);
+  -webkit-box-shadow:0 -4px 7px rgba(0, 0, 0, 0.075);
   box-shadow:0 -4px 7px rgba(0, 0, 0, 0.075);
   min-height:34px;
   border-radius:0;
@@ -49,6 +64,8 @@ header#main-header .banner{
 .navbar .nav > li.current > a{
   background:#162d35;
   color:#FFF;
+  -moz-box-shadow:0 0 8px rgba(0,0,0,0.5) inset;
+  -webkit-box-shadow:0 0 8px rgba(0,0,0,0.5) inset;
   box-shadow:0 0 8px rgba(0,0,0,0.5) inset;
   position:relative;
 }
@@ -66,19 +83,25 @@ header#main-header .banner{
 a.log-out{
   border-radius:20px;
   background:#18323b;
+  -moz-box-shadow:0 0 6px rgba(0,0,0,0.1) inset,1px 1px 0 rgba(255,255,255,0.1);
+  -webkit-box-shadow:0 0 6px rgba(0,0,0,0.1) inset,1px 1px 0 rgba(255,255,255,0.1);
   box-shadow:0 0 6px rgba(0,0,0,0.1) inset,1px 1px 0 rgba(255,255,255,0.1);
   color:#d3e9f0;
-  padding:3px 17px;
+  padding:3px 10px 3px 15px;
   float:right;
   font-weight:bold;
+  margin-top:10px;
 }
 a.log-out:hover{
   text-decoration:none;
+  color:#FFF;
 }
 #sidebar .panel{
   margin-bottom:18px;
   background:#FFF;
   border-radius:3px;
+  -moz-box-shadow:0 0 3px rgba(0,0,0,0.1);
+  -webkit-box-shadow:0 0 3px rgba(0,0,0,0.1);
   box-shadow:0 0 3px rgba(0,0,0,0.1);
   border:none;
 }
@@ -102,6 +125,8 @@ a.log-out:hover{
 .panel-body{
   background:#FFF;
   padding:10px;
+  -moz-border-radius:0 0 3px 3px;
+  -webkitborder-radius:0 0 3px 3px;
   border-radius:0 0 3px 3px;
 }
 .dropdown-menu li > a:hover{
@@ -139,6 +164,42 @@ a.log-out:hover{
 }
 .login-form label{
   font-weight:bold;
+}
+/** User picture **/
+.welcome-area{
+  float:right;
+  color:#7dbedc;
+  font-size:11px;
+}
+.welcome-area .userAvatar img{
+  padding:2px;
+  background:#FFF;
+  background:rgba(255,255,255,0.9);
+  -moz-box-shadow:1px 1px 2px rgba(0,0,0,0.4);
+  -webkit-box-shadow:1px 1px 2px rgba(0,0,0,0.4);
+  box-shadow:1px 1px 2px rgba(0,0,0,0.4);
+  -moz-border-radius:2px;
+  -webkit-border-radius:2px;
+  border-radius:2px;
+  margin-right:7px;
+}
+.welcome-area .userName{
+  color:#D3E9F0;
+  font-weight:bold;
+}
+ul.legend-list{
+  list-style:none;
+  margin-left:0;
+}
+ul.legend-list li{
+  line-height:21px;
+}
+ul.legend-list li img{
+  margin-right:3px;
+}
+span.bread-separator{
+  color:#999;
+  margin:0 3px;
 }
 /***** Footer *****/
 footer#main-footer .container{

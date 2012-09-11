@@ -987,9 +987,15 @@ background:transparent url(../images/checkbox-checkmark.gif) no-repeat;
 }
 
 ul.menu li.link {
-background:transparent url(../images/list-link.gif) no-repeat;
+background:transparent url(../images/list-link.gif) 4px 7px no-repeat;
 }
-
+ul.menu li.link a{
+  text-decoration:underline;
+  font-size:12px;
+}
+ul.menu li.link a:hover{
+  text-decoration:none;
+}
 ul.menu li.item {
 background:transparent url(../images/list-item.gif) no-repeat;
 }
@@ -1584,23 +1590,24 @@ margin-bottom:25px;
 
 div.bread-crumb-trail {
 margin-bottom:15px;
-border-bottom:1px #9D9D9D dotted;
-padding:2px 2px 2px 5px;
+border-bottom:1px dotted #DDDDDD;
+padding-bottom:8px;
+margin-top:-10px;
 }
 
 div.bread-crumb-trail ul {
 list-style:none;
 list-style-type:none;
 margin:0;
-padding:4px 0 0;
+padding:0;
 }
 
 div.bread-crumb-trail ul li {
 display:inline;
 list-style-type:none;
-padding-left:15px;
+/*padding-left:15px;*/
 vertical-align:middle;
-background:transparent url(../images/record-next-on.gif) no-repeat center left;
+/*background:transparent url(../images/record-next-on.gif) no-repeat center left;*/
 }
 
 ul.unIndentedList {

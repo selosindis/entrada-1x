@@ -79,9 +79,14 @@
 					<div class="row-fluid">
 						<div class="span5">
 							<h1><a href="<?php echo ENTRADA_URL; ?>"><img src="<?php echo TEMPLATE_RELATIVE; ?>/images/logo.png" alt="<?php echo APPLICATION_NAME; ?>" title="<?php echo APPLICATION_NAME; ?>"/></a></h1>
-						</div> <!-- /span9 -->
-						<div class="span7">
-								<a href="<?php echo ENTRADA_RELATIVE; ?>?action=logout\" class="log-out">Logout</a>
+						</div> <!-- /span5 -->
+						<div class="span5">
+								<div class="welcome-area">
+										<a href="#"><span class="userAvatar"><img src="http://lorempixel.com/35/35/"></span></a> Welcome <span class="userName">Matt Simpson</span>
+								</div>
+						</div>
+						<div class="span2">
+								<a href="<?php echo ENTRADA_RELATIVE; ?>?action=logout\" class="log-out">Logout <i class="icon icon-logout"></i></a>
 						</div>
 					</div> <!--/row-fluid-->
 				</div> <!--/container-->

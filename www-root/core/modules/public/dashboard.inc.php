@@ -633,10 +633,12 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			echo "<form action=\"\" method=\"get\">\n";
 			echo "<input type=\"hidden\" id=\"dstamp\" name=\"dstamp\" value=\"".html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])."\" />\n";
 			echo "</form>\n";
-
-			$sidebar_html  = "<div><img src=\"".ENTRADA_URL."/images/legend-class-event.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> entire class event</div>\n";
-			$sidebar_html .= "<div><img src=\"".ENTRADA_URL."/images/legend-individual.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> individual learning event</div>\n";
-			$sidebar_html .= "<div><img src=\"".ENTRADA_URL."/images/legend-updated.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" style=\"vertical-align: middle\" /> recently updated event</div>\n";
+			
+			$sidebar_html = "<ul class=\"legend-list\">\n";
+			$sidebar_html  .= "<li><img src=\"".ENTRADA_URL."/images/legend-class-event.gif\"  alt=\"\" title=\"\" style=\"vertical-align: middle\" /> entire class event</li>\n";
+			$sidebar_html .= "<li><img src=\"".ENTRADA_URL."/images/legend-individual.gif\"  alt=\"\" title=\"\" style=\"vertical-align: middle\" /> individual learning event</li>\n";
+			$sidebar_html .= "<li><img src=\"".ENTRADA_URL."/images/legend-updated.gif\"  alt=\"\" title=\"\" style=\"vertical-align: middle\" /> recently updated event</li>\n";
+			$sidebar_html .= "</ul>\n";
 
 			new_sidebar_item("Learning Event Legend", $sidebar_html, "event-legend", "open");
 		break;

@@ -689,7 +689,7 @@ function check_breadcrumb($buffer) {
 		$output .= "<div class=\"bread-crumb-trail\" id=\"bread-crumb-trail\">\n";
 		$output .= "<ul>\n";
 		foreach ($BREADCRUMB as $entry) {
-			$output .= "<li>".((($i < $total) && ($entry["url"] != "")) ? "<a href=\"".$entry["url"]."\">" : "").html_encode($entry["title"]).((($i < $total) && ($entry["url"] != "")) ? "</a>" : "")."</li>\n";
+			$output .= "<li><span class=\"bread-separator\">/</span> ".((($i < $total) && ($entry["url"] != "")) ? "<a href=\"".$entry["url"]."\">" : "").html_encode($entry["title"]).((($i < $total) && ($entry["url"] != "")) ? "</a>" : "")."</li>\n";
 			$i++;
 		}
 		$output .= "</ul>\n";

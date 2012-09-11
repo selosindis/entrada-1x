@@ -289,6 +289,7 @@ switch ($STEP) {
 				try {
 					if (!$setup->loadDumpData()) {
 						$ERROR++;
+						$ERRORSTR[] = $setup->database_error;
 					}
 				} catch(Exception $e) {
 					$ERROR++;

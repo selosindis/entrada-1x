@@ -150,6 +150,7 @@ class NotificationUser {
 				$content_type_name = "logbook rotation";
 			break;
 			case "evaluation" :
+			case "evaluation_overdue" :
 			case "evaluation_threshold" :
 				$query = "SELECT `target_title` FROM `evaluations_lu_targets` AS a
 							JOIN `evaluation_forms` AS b
@@ -193,6 +194,7 @@ class NotificationUser {
 			break;
 			case "evaluation" :
 			case "evaluation_threshold" :
+			case "evaluation_overdue" :
 				$query = "SELECT `evaluation_title` FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($this->record_id);
 				if ($evaluation_title = $db->GetOne($query)) {
 					$content_title = $evaluation_title;
@@ -225,6 +227,7 @@ class NotificationUser {
 			break;
 			case "evaluation" :
 			case "evaluation_threshold" :
+			case "evaluation_overdue" :
 				$query = "SELECT `evaluation_description` FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($this->record_id);
 				if ($evaluation_description = $db->GetOne($query)) {
 					$content_body = $evaluation_description;
@@ -255,6 +258,7 @@ class NotificationUser {
 				$content_url = ENTRADA_URL."/clerkship/logbook?section=view&core=".$this->getRecordID().($this->getRecordProxyID() != $this->getProxyID() ? "&id=".$this->getRecordProxyID() : "");
 			break;
 			case "evaluation" :
+			case "evaluation_overdue" :
 				$content_url = ENTRADA_URL."/evaluations?section=attempt&id=".$this->getRecordID();
 			break;
 			case "evaluation_threshold" :

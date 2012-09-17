@@ -35,60 +35,6 @@ if (!defined("IN_EVALUATIONS")) {
 
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
 } else {
-	
-	/**
-	 * Update requested column to sort by.
-	 * Valid: date, teacher, title, phase
-	 */
-	if(isset($_GET["sb"])) {
-		if(in_array(trim($_GET["sb"]), array("title" , "evaluation_start", "evaluation_finish", "evaluation_type"))) {
-			if (trim($_GET["sb"]) == "title") {
-				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "title";
-			} elseif (trim($_GET["sb"]) == "evaluation_start") {
-				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "evaluation_start";
-			} elseif (trim($_GET["sb"]) == "evaluation_finish") {
-				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "evaluation_finish";
-			} elseif (trim($_GET["sb"]) == "evaluation_type") {
-				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "evaluation_type";
-			}
-		}
-	} else {
-		if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
-				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]	= "title";
-		}
-	}
-
-	/**
-	 * Update requested order to sort by.
-	 * Valid: asc, desc
-	 */
-	if (isset($_GET["so"])) {
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = ((strtolower($_GET["so"]) == "desc") ? "desc" : "asc");
-
-		$_SERVER["QUERY_STRING"] = replace_query(array("so" => false));
-	} else {
-		if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"])) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = "asc";
-		}
-	}
-
-	/**
-	 * Update requsted number of rows per page.
-	 * Valid: any integer really.
-	 */
-	if ((isset($_GET["pp"])) && ((int) trim($_GET["pp"]))) {
-		$integer = (int) trim($_GET["pp"]);
-
-		if (($integer > 0) && ($integer <= 250)) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] = $integer;
-		}
-
-		$_SERVER["QUERY_STRING"] = replace_query(array("pp" => false));
-	} else {
-		if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"])) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] = DEFAULT_ROWS_PER_PAGE;
-		}
-	}
 
 	?>
 	<h1>Manage Evaluations</h1>
@@ -103,37 +49,6 @@ if (!defined("IN_EVALUATIONS")) {
 		</div>
 		<div style="clear: both"></div>
 		<?php
-	}
-
-	/**
-	 * Update requested order to sort by.
-	 * Valid: asc, desc
-	 */
-	if(isset($_GET["so"])) {
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = ((strtolower($_GET["so"]) == "desc") ? "DESC" : "ASC");
-	} else {
-		if(!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"])) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = "ASC";
-		}
-	}
-
-	/**
-	 * Provide the queries with the columns to order by.
-	 */
-	switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
-		case "title" :
-			$sort_by = "a.`evaluation_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", a.`evaluation_start` ASC";
-		break;
-		case "evaluation_start" :
-			$sort_by = "a.`evaluation_start` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", a.`evaluation_title` ASC";
-		break;
-		case "evaluation_finish" :
-			$sort_by = "a.`evaluation_finish` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", a.`evaluation_title` ASC";
-		break;
-		case "type" :
-		default :
-			$sort_by = "`evaluation_type` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["evaluations"]["so"]).", a.`evaluation_start` ASC";
-		break;
 	}
 	
     $evaluations = Evaluation::getAuthorEvaluations();

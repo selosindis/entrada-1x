@@ -217,6 +217,7 @@ class Notification {
 						$notification_body = str_replace($search, $replace, $notification_body);
 					break;
 					case "evaluation" :
+					case "evaluation_overdue" :
 						$search = array("%UC_CONTENT_TYPE_NAME%",
 										"%CONTENT_TYPE_NAME%",
 										"%CONTENT_TYPE_SHORTNAME%",
@@ -252,7 +253,7 @@ class Notification {
 											html_encode($notification_user->getContentURL()),
 											html_encode(APPLICATION_NAME),
 											html_encode(ENTRADA_URL));
-						$notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-evaluation-".($evaluation_finish >= time() || $evaluation_start >= strtotime("-1 day") ? "release" : "overdue").".xml");
+						$notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-evaluation-".($evaluation["evaluation_finish"] >= time() || $evaluation["evaluation_start"] >= strtotime("-1 day") ? "release" : "overdue").".xml");
 						$notification_body = str_replace($search, $replace, $notification_body);
 					break;
 					case "evaluation_threshold" :

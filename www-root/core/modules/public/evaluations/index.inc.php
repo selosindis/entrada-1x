@@ -43,12 +43,11 @@ if ($evaluations) {
 	$evaluation_id = 0;
 	echo "<div class=\"no-printing\">\n";
     echo "    <ul class=\"nav nav-tabs\">\n";
-	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "available" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"available\" onclick=\"loadTab(this.id)\">Available Evaluations</a></li>\n";
-	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "overdue" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"overdue\" onclick=\"loadTab(this.id)\">Overdue Evaluations</a></li>\n";
-	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "complete" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"complete\" onclick=\"loadTab(this.id)\">Completed Evaluations</a></li>\n";
-	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "all" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"all\" onclick=\"loadTab(this.id)\">All Evaluations</a></li>\n";
+	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "available" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"available\" onclick=\"loadTab(this.id)\">Display Available</a></li>\n";
+	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "overdue" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"overdue\" onclick=\"loadTab(this.id)\">Display Overdue</a></li>\n";
+	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "complete" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"complete\" onclick=\"loadTab(this.id)\">Display Completed</a></li>\n";
+	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "all" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"all\" onclick=\"loadTab(this.id)\">Display All</a></li>\n";
 	echo "	</ul>\n";
-
 	echo "</div>\n";
 	echo "<br />";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";

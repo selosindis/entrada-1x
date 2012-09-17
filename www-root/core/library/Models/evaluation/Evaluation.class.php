@@ -66,7 +66,7 @@ class Evaluation {
 					</tr>
 					<tr>
 						<td style="vertical-align: top">
-							<label for="rubric_description" class="form-required">Rubric Description</label>
+							<label for="rubric_description" class="form-nrequired">Rubric Description</label>
 						</td>
 						<td>
 							<textarea id="rubric_description" class="expandable" name="rubric_description" style="width: 98%; height:0"><?php echo ((isset($question_data["rubric_description"])) ? clean_input($question_data["rubric_description"], "encode") : ""); ?></textarea>
@@ -2008,7 +2008,7 @@ class Evaluation {
 		return $PROCESSED;
 	}
 	
-	public static function getTargetsArray ($evaluation_id, $evaluator_id = 0, $evaluator_proxy_id = 0, $simple = true, $available_only = false) {
+	public static function getTargetsArray ($evaluation_id, $evaluator_id = 0, $evaluator_proxy_id = 0, $simple = true, $available_only = false, $recent = false) {
 		global $db, $ENTRADA_USER;
 		
 		if (!$evaluator_proxy_id && isset($ENTRADA_USER) && $ENTRADA_USER->getProxyId()) {
@@ -2187,6 +2187,7 @@ class Evaluation {
 										WHERE a.`rotation_id` = ".$db->qstr($rotation["rotation_id"])."
 										AND b.`etype_id` = ".$db->qstr($evaluator_proxy_id)."
 										".($evaluated_event_ids_string && $available_only ? "AND a.`event_id` NOT IN (".$evaluated_event_ids_string.")" : "")."
+										".($recent ? "AND a.`event_finish` > ".$db->qstr(strtotime("-36 hours"))."" : "")."
 										AND a.`event_finish` <= ".$db->qstr(time());
 							$events = $db->GetAll($query);
 							if ($events) {
@@ -2336,7 +2337,7 @@ class Evaluation {
 		return $evaluation_targets;
 	}
 	
-	public static function getEvaluationsPending ($evaluation) {
+	public static function getEvaluationsPending ($evaluation, $recent = false) {
 		global $db;
 		
 		$pending_evaluations = array();
@@ -2346,7 +2347,7 @@ class Evaluation {
 		foreach ($evaluators as $evaluator) {
 			$evaluator_users = Evaluation::getEvaluatorUsers($evaluator);
 			foreach ($evaluator_users as $evaluator_user) {
-				$temp_evaluation = Evaluation::getUserPendingEvaluation($evaluation, $evaluator, $evaluator_user);
+				$temp_evaluation = Evaluation::getUserPendingEvaluation($evaluation, $evaluator, $evaluator_user, $recent);
 				if ($temp_evaluation) {
 					$pending_evaluations[] = $temp_evaluation;
 				}
@@ -2374,35 +2375,51 @@ class Evaluation {
 		return $overdue_evaluations;
 	}
 	
-	public static function getEvaluatorUsers ($evaluator) {
+	public static function getEvaluatorUsers ($evaluator, $available_only = false) {
 		global $db;
 		
 		switch ($evaluator["evaluator_type"]) {
 			case "proxy_id" :
-				$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` 
-							WHERE `id` = ".$db->qstr($evaluator["evaluator_value"]);
+				$query = "SELECT *, CONCAT_WS(', ', `lastname`, `firstname`) AS `fullname`, `id` AS `proxy_id` FROM `".AUTH_DATABASE."`.`user_data` 
+							WHERE `id` = ".$db->qstr($evaluator["evaluator_value"]).( $available_only ? "
+							AND `id` NOT IN (
+								SELECT `proxy_id` FROM `evaluation_evaluator_exclusions`
+								WHERE `evaluation_id` = ".$db->qstr($evaluator["evaluation_id"])."
+							)" : "");
 			break;
 			case "cohort" :
-				$query = "SELECT a.* FROM `".AUTH_DATABASE."`.`user_data` AS a 
+				$query = "SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`id` AS `proxy_id` FROM `".AUTH_DATABASE."`.`user_data` AS a 
 							JOIN `group_members` AS b
 							ON a.`id` = b.`proxy_id`
 							WHERE b.`group_id` = ".$db->qstr($evaluator["evaluator_value"])."
-							AND b.`member_active` = 1";
+							AND b.`member_active` = 1".( $available_only ? "
+							AND a.`id` NOT IN (
+								SELECT `proxy_id` FROM `evaluation_evaluator_exclusions`
+								WHERE `evaluation_id` = ".$db->qstr($evaluator["evaluation_id"])."
+							)" : "");
 			break;
 			case "cgroup_id" :
-				$query = "SELECT a.* FROM `".AUTH_DATABASE."`.`user_data` AS a 
+				$query = "SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`id` AS `proxy_id` FROM `".AUTH_DATABASE."`.`user_data` AS a 
 							JOIN `course_group_audience` AS b
 							ON a.`id` = b.`proxy_id`
 							WHERE b.`cgroup_id` = ".$db->qstr($evaluator["evaluator_value"])."
-							AND b.`active` = 1";
+							AND b.`active` = 1".( $available_only ? "
+							AND a.`id` NOT IN (
+								SELECT `proxy_id` FROM `evaluation_evaluator_exclusions`
+								WHERE `evaluation_id` = ".$db->qstr($evaluator["evaluation_id"])."
+							)" : "");
 			break;
 			case "organisation_id" :
-				$query = "SELECT a.* FROM `".AUTH_DATABASE."`.`user_data` AS a 
+				$query = "SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`id` AS `proxy_id` FROM `".AUTH_DATABASE."`.`user_data` AS a 
 							JOIN `".AUTH_DATABASE."`.`user_access` AS b
 							ON a.`id` = b.`user_id`
 							AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 							WHERE b.`organisation_id` = ".$db->qstr($evaluator["evaluator_value"])."
-							AND b.`account_active` = 'true'";
+							AND b.`account_active` = 'true'".( $available_only ? "
+							AND a.`id` NOT IN (
+								SELECT `proxy_id` FROM `evaluation_evaluator_exclusions`
+								WHERE `evaluation_id` = ".$db->qstr($evaluator["evaluation_id"])."
+							)" : "");
 			break;
 		}
 		if ($query) {
@@ -2418,7 +2435,7 @@ class Evaluation {
 		return false;
 	}
 	
-	public static function getUserPendingEvaluation ($evaluation, $evaluator, $evaluator_user) {
+	public static function getUserPendingEvaluation ($evaluation, $evaluator, $evaluator_user, $recent = false) {
 		global $db;
 		switch ($evaluation["target_shortname"]) {
 			case "self" :
@@ -2441,7 +2458,7 @@ class Evaluation {
 			case "preceptor" :
 			case "rotation_core" :
 			case "rotation_elective" :
-				$evaluation_targets = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true);
+				$evaluation_targets = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true, $recent);
 			break;
 		}
 		if (isset($evaluation_targets) && $evaluation_targets) {
@@ -2586,7 +2603,7 @@ class Evaluation {
 								JOIN `".AUTH_DATABASE."`.`user_data` AS b
 								ON a.`proxy_id` = b.`id`
 								WHERE a.`eform_id` = ".$db->qstr($evaluation_progress["target_value"])."
-								AND a.`contact_type` = 'author'";
+								AND a.`contact_role` = 'author'";
 					$notification_recipients = $db->GetAll($query);
 				break;
 				case "reviewers" :
@@ -2808,6 +2825,21 @@ class Evaluation {
 		}
 		
 		return $permissions;
+	}
+	
+	public static function getFormAuthorPermissions($eform_id) {
+		global $db, $ENTRADA_USER;
+		
+		$query = "SELECT * FROM `evaluation_form_contacts`
+					WHERE `eform_id` = ".$db->qstr($eform_id)."
+					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+					AND `contact_role` = 'author'";
+		$permissions = $db->GetRow($query);
+		if ($permissions) {
+			return $permissions;
+		} else {
+			return false;
+		}
 	}
 	
 	public static function getProgressRecordsByPermissions ($evaluation_id, $permissions) {
@@ -3062,23 +3094,41 @@ class Evaluation {
 	public static function getAuthorEvaluationForms() {
 		global $db, $ENTRADA_USER, $ENTRADA_ACL;
 		
-		$evaluations = array();
+		$evaluation_forms = array();
 		
-		$query = "	SELECT a.`evaluation_id`, a.`evaluation_title`, a.`evaluation_active`, a.`evaluation_start`, a.`evaluation_finish`, c.`target_shortname` AS `evaluation_type`
-							FROM `evaluation_forms` AS a
-							JOIN `evaluation_form_contacts` AS b
-							ON a.`eform_id` = b.`eform_id`
-							AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-							GROUP BY a.`evaluation_id`";
-		$temp_evaluations = $db->GetAll($query);
-		foreach ($temp_evaluations as $evaluation) {
-			if ($ENTRADA_ACL->amIAllowed(new EvaluationResource($evaluation["evaluation_id"], true), 'update')) {
-				$evaluations[] = $evaluation;
+		$query = "SELECT a.*, b.`target_shortname`, b.`target_title`
+					FROM `evaluation_forms` AS a
+					JOIN `evaluations_lu_targets` AS b
+					ON a.`target_id` = b.`target_id`
+					GROUP BY a.`eform_id`";
+		$temp_evaluation_forms = $db->GetAll($query);
+		foreach ($temp_evaluation_forms as $evaluation_form) {
+			if ($ENTRADA_ACL->amIAllowed(new EvaluationFormResource($evaluation_form["eform_id"], true), 'update')) {
+				$evaluation_forms[] = $evaluation_form;
 			}
 		}
 		
-		return $evaluations;
+		return $evaluation_forms;
 		
+	}
+	
+	public static function getEvaluators($evaluation_id, $available_only = false) {
+		global $db;
+		
+		$evaluators_output = array();
+		
+		$query = "SELECT * FROM `evaluation_evaluators`
+					WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+		$evaluators = $db->GetAll($query);
+		
+		if ($evaluators) {
+			foreach ($evaluators as $evaluator) {
+				$evaluator_users = Evaluation::getEvaluatorUsers($evaluator, $available_only);
+				$evaluators_output = array_merge($evaluators_output, $evaluator_users);
+			}
+		}
+		
+		return $evaluators_output;
 	}
 }
 

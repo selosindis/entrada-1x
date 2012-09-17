@@ -133,6 +133,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					} else {
 						$PROCESSED["evaluation_mandatory"] = false;
 					}
+			
+					/**
+					 * Non-required field "allow_target_review" / Allow Target Review
+					 */
+					if (isset($_POST["allow_target_review"]) && ($_POST["allow_target_review"])) {
+						$PROCESSED["allow_target_review"] = true;
+					} else {
+						$PROCESSED["allow_target_review"] = false;
+					}
 
 					/**
 					 * Required field "min_submittable" / Min Submittable
@@ -356,6 +365,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							}
 						}
 					}
+					
+					/**
+					 * Non-required field "associated_exclusion" / Associated Evaluator Exclusions (array of proxy ids).
+					 * This is actually accomplished after the event is inserted below.
+					 */	
+					if ((isset($_POST["associated_exclusion"]))) {
+						$associated_exclusions = explode(",", $_POST["associated_exclusion"]);
+						foreach($associated_exclusions as $contact_order => $proxy_id) {
+							if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+								$PROCESSED["associated_exclusions"][(int) $contact_order] = $proxy_id;	
+							}
+						}
+					}
 
 					/**
 					 * Processing for evaluation_evaluators table.
@@ -392,7 +414,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 										if (!$db->AutoExecute("evaluation_contacts", $contact_details, "INSERT")) {
 											add_error("There was an error while trying to attach an <strong>Associated Reviewer</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.");
 
-											application_log("error", "Unable to insert a new evaluation_contact record while adding a new evaluation. Database said: ".$db->ErrorMsg());
+											application_log("error", "Unable to insert a new evaluation_contact record while editing an evaluation. Database said: ".$db->ErrorMsg());
+										}
+									}
+								}
+							}
+							
+							/**
+							 * If there are reviewers associated with this event, add them
+							 * to the evaluation_contacts table.
+							 */
+							$query = "DELETE FROM `evaluation_evaluator_exclusions` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
+							if ($db->Execute($query)) {
+								if ((is_array($PROCESSED["associated_exclusions"])) && (count($PROCESSED["associated_exclusions"]))) {
+									foreach($PROCESSED["associated_exclusions"] as $contact_order => $proxy_id) {
+										$contact_details =  array(	"evaluation_id" => $EVALUATION_ID, 
+																	"proxy_id" => $proxy_id, 
+																	"updated_date" => time(), 
+																	"updated_by" => $ENTRADA_USER->getID());
+										if (!$db->AutoExecute("evaluation_evaluator_exclusions", $contact_details, "INSERT")) {
+											add_error("There was an error while trying to attach an <strong>Associated Evaluator Exclusion</strong> to this event.<br /><br />The system administrator was informed of this error; please try again later.");
+
+											application_log("error", "Unable to insert a new evaluation_evaluator_exclusions record while editing an evaluation. Database said: ".$db->ErrorMsg());
 										}
 									}
 								}
@@ -503,6 +546,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							$PROCESSED["associated_reviewers"][(int) $contact_order] = $result["proxy_id"];
 						}
 					}
+					
+					/**
+					 * Add any existing associated exclusions from the evaluation_contacts table
+					 * into the $PROCESSED["associated_exclusions"] array.
+					 */
+					$query = "SELECT * FROM `evaluation_evaluator_exclusions` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
+					$results = $db->GetAll($query);
+					if ($results) {
+						foreach($results as $contact_order => $result) {
+							$PROCESSED["associated_exclusions"][] = $result["proxy_id"];
+						}
+					}
 				break;
 			}
 
@@ -532,6 +587,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					if ($results) {
 						foreach($results as $result) {
 							$REVIEWER_LIST[$result["proxy_id"]] = array('proxy_id'=>$result["proxy_id"], 'fullname'=>$result["fullname"], 'organisation_id'=>$result['organisation_id']);
+						}
+					}
+					
+					$EVALUATOR_LIST = array();
+					$evaluators = Evaluation::getEvaluators($EVALUATION_ID);
+					if ($evaluators) {
+						foreach ($evaluators as $evaluator) {
+							$EVALUATOR_LIST[$evaluator["proxy_id"]] = array("proxy_id" => $evaluator["proxy_id"], "fullname" => $evaluator["fullname"], "organisation_id" => $evaluator["organisation_id"]);
 						}
 					}
 					
@@ -1002,10 +1065,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									<td></td>
 									<td style="vertical-align: top">
 										<label for="allow_comments" class="form-required">Evaluation Mandatory</label>
-										<div class="content-small">Require this evaluation be completed by all evaluators.</div>
 									</td>
 									<td>
 										<input type="checkbox" id="evaluation_mandatory" name="evaluation_mandatory"<?php echo (isset($PROCESSED["evaluation_mandatory"]) && $PROCESSED["evaluation_mandatory"] ? " checked=\"checked\"" : ""); ?> />
+										<div style="float: right; width: 91%" class="content-small">Require this evaluation be completed by all evaluators.</div>
+									</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td style="vertical-align: top">
+										<label for="allow_target_review" class="form-required">Allow Target Review</label>
+									</td>
+									<td>
+										<input type="checkbox" id="allow_target_review" name="allow_target_review"<?php echo (!isset($PROCESSED["allow_target_review"]) || $PROCESSED["allow_target_review"] ? " checked=\"checked\"" : ""); ?> />
+										<div style="float: right; width: 91%" class="content-small">Allow targets (or users with "ownership" permissions of the target) to review the results for this evaluation.</div>
 									</td>
 								</tr>
 								<tr>
@@ -1044,6 +1117,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									<td></td>
 									<td style="vertical-align: top;">
 										<label for="evaluation_reviewers" class="form-nrequired">Evaluation Reviewers</label>
+										<div class="content-small">Reviewers can create, view, and publish reports for this evaluation.</div>
 									</td>
 									<td>
 										<input type="text" id="reviewer_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
@@ -1070,6 +1144,44 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 										<input type="hidden" id="reviewer_ref" name="reviewer_ref" value="" />
 										<input type="hidden" id="reviewer_id" name="reviewer_id" value="" />
 									</td>
+								</tr>
+								<tr>
+									<td colspan="3">&nbsp;</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td style="vertical-align: top;">
+										<label for="evaluation_exclusions" class="form-nrequired">Evaluator Exclusions</label>
+										<div class="content-small">Evaluators in the Exclusions list are not allowed (or required) to fill out the evaluation, despite being in the evaluators list.</div>
+									</td>
+									<td>
+										<input type="text" id="exclusion_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
+										<?php
+										$ONLOAD[] = "exclusion_list = new AutoCompleteList({ type: 'exclusion', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=evaluators&id=".$EVALUATION_ID."', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
+										?>
+										<div class="autocomplete" id="exclusion_name_auto_complete"></div>
+										<input type="hidden" id="associated_exclusion" name="associated_exclusion" />
+										<input type="button" class="button-sm" id="add_associated_exclusion" value="Add" style="vertical-align: middle" />
+										<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+										<ul id="exclusion_list" class="menu" style="margin-top: 15px">
+											<?php
+											if (is_array($PROCESSED["associated_exclusions"]) && count($PROCESSED["associated_exclusions"])) {
+												foreach ($PROCESSED["associated_exclusions"] as $exclusion) {
+													if ((array_key_exists($exclusion, $EVALUATOR_LIST)) && is_array($EVALUATOR_LIST[$exclusion])) {
+														?>
+														<li class="user" id="exclusion_<?php echo $EVALUATOR_LIST[$exclusion]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $EVALUATOR_LIST[$exclusion]["fullname"]; if ($exclusion != $ENTRADA_USER->getID()) {?> <img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="exclusion_list.removeItem('<?php echo $EVALUATOR_LIST[$exclusion]["proxy_id"]; ?>');" class="list-cancel-image" /><?php } ?></li>
+														<?php
+													}
+												}
+											}
+											?>
+										</ul>
+										<input type="hidden" id="exclusion_ref" name="exclusion_ref" value="" />
+										<input type="hidden" id="exclusion_id" name="exclusion_id" value="" />
+									</td>
+								</tr>
+								<tr>
+									<td colspan="3">&nbsp;</td>
 								</tr>
 								<tr>
 									<td></td>

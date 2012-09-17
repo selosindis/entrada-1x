@@ -2181,23 +2181,57 @@ class EvaluationReviewerAssertion implements Zend_Acl_Assert_Interface {
 			return false;
 		}
 	}
+}
 
-	static function _checkQuizOwner($user_id, $quiz_id) {
+class EvaluationFormAuthorAssertion implements Zend_Acl_Assert_Interface {
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
 		global $db;
 
-		$query		= "	SELECT a.`proxy_id`
-						FROM `quiz_contacts` AS a
-						WHERE a.`quiz_id` = ".$db->qstr($quiz_id);
-		$results	= $db->GetAll($query);
-		if ($results) {
-			foreach ($results as $result) {
-				if ($result["proxy_id"] == $user_id) {
-					return true;
-				}
-			}
+		//If asserting is off then return true right away
+		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
 		}
 
-		return false;
+		if (isset($resource->eform_id)) {
+			$eform_id = $resource->eform_id;
+		} else if (isset($acl->_entrada_last_query->eform_id)) {
+			$eform_id = $acl->_entrada_last_query->eform_id;
+		} else {
+			//Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if ($resource_type !== "evaluationform") {
+			//This only asserts for users authoring evaluation forms.
+				return false;
+			}
+
+			$eform_id = preg_replace('/[^0-9]+/', "", $resource_id);
+		}
+
+		$role_id = $role->getRoleId();
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
+
+		if (!isset($user_id) || !$user_id) {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
+		}
+		
+		require_once("Models/evaluation/Evaluation.class.php");
+		$permissions = Evaluation::getFormAuthorPermissions($eform_id);
+		if ($permissions) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 }
 
@@ -2208,6 +2242,11 @@ class EvaluationResultResource extends EvaluationResource {
 }
 
 class EvaluationFormResource extends EvaluationResource {
+	var $eform_id;
+
+	function __construct($eform_id, $assert = null) {
+		$this->eform_id = $eform_id;
+	}
 	public function getResourceId() {
 		return "evaluationform".($this->specific ? $this->evaluation_id : "");
 	}

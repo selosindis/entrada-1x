@@ -70,7 +70,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							add_error("The <strong>Rubric Title</strong> field is required.");
 						}
 						/**
-						 * Required field "question_text" / Form Question.
+						 * Non-required field "question_text" / Form Question.
 						 */
 						if ((isset($_POST["rubric_description"])) && ($tmp_input = clean_input($_POST["rubric_description"], array("trim", "allowedtags")))) {
 							$PROCESSED["rubric_description"] = $tmp_input;

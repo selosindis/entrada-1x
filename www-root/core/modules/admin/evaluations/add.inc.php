@@ -113,10 +113,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			/**
 			 * Non-required field "evaluation_mandatory" / Evaluation Mandatory
 			 */
-			if (isset($_POST["evaluation_mandatory"]) && ($_POST["min_submittable"])) {
+			if (isset($_POST["evaluation_mandatory"]) && ($_POST["evaluation_mandatory"])) {
 				$PROCESSED["evaluation_mandatory"] = true;
 			} else {
 				$PROCESSED["evaluation_mandatory"] = false;
+			}
+			
+			/**
+			 * Non-required field "allow_target_review" / Allow Target Review
+			 */
+			if (isset($_POST["allow_target_review"]) && ($_POST["allow_target_review"])) {
+				$PROCESSED["allow_target_review"] = true;
+			} else {
+				$PROCESSED["allow_target_review"] = false;
 			}
 
 			/**
@@ -951,11 +960,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						<tr>
 							<td></td>
 							<td style="vertical-align: top">
-								<label for="allow_comments" class="form-required">Evaluation Mandatory</label>
-								<div class="content-small">Require this evaluation be completed by all evaluators.</div>
+								<label for="evaluation_mandatory" class="form-required">Evaluation Mandatory</label>
 							</td>
 							<td>
 								<input type="checkbox" id="evaluation_mandatory" name="evaluation_mandatory"<?php echo (!isset($PROCESSED["evaluation_mandatory"]) || $PROCESSED["evaluation_mandatory"] ? " checked=\"checked\"" : ""); ?> />
+								<div style="float: right; width: 91%" class="content-small">Require this evaluation be completed by all evaluators.</div>
+							</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td style="vertical-align: top">
+								<label for="allow_target_review" class="form-required">Allow Target Review</label>
+							</td>
+							<td>
+								<input type="checkbox" id="allow_target_review" name="allow_target_review"<?php echo (!isset($PROCESSED["allow_target_review"]) || $PROCESSED["allow_target_review"] ? " checked=\"checked\"" : ""); ?> />
+								<div style="float: right; width: 91%" class="content-small">Allow targets (or users with "ownership" permissions of the target) to review the results for this evaluation.</div>
 							</td>
 						</tr>
 						<tr>

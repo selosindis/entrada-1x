@@ -597,6 +597,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					return;
 				}
 				</script>
+				<h1>Text</h1>
 				<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Weekly Student Calendar">
 				<tr>
 					<td style="text-align: left; vertical-align: middle; white-space: nowrap">

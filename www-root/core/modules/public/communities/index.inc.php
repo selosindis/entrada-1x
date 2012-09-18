@@ -50,6 +50,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 		</div>
 	</div>
 </div>
+<div class="row-fluid"></div>
 
 <div class="community-body">
 	<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="">

@@ -31,46 +31,28 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 	exit;
 }
 ?>
-<div class="community-heading" style="width:749px; height: 154px">
-	<div>
-		<div class=corner-tl></div>
-		<div class=corner-tr></div>
-		<div class=corner-bl></div>
-		<div class=corner-br></div>
-		<div class=community-int-heading></div>
-		<div class="community-contentblock bordering">
-			<div class="community-content">
-				<h3 style="line-height: 110%"><?php echo $translate->_("public_communities_heading_line"); ?></h3>
+
+<div class="row-fluid">
+	<div class="community-block">
+		
+			<div class="row-fluid">
+				<div class="span8 community-content">
+					<h3><?php echo $translate->_("public_communities_heading_line"); ?></h3>
+					<p class="community-int-footing">Need a <strong>place</strong> for your <strong>group</strong> to sit? <a href="<?php echo ENTRADA_URL; ?>/communities?section=create"><strong>Create an online community</strong></a>  in 5 minutes.</p>
+				</div><!--/span9 -->
+				<div class="span4 community-image">
+					<img src="images/community-people-image.jpg" alt="community people" />
+				</div>
 			</div>
-		</div>
-		<div class="community-int-footing">
-			<div>
-				Need a <strong>place</strong> for your <strong>group</strong> to sit? <a href="<?php echo ENTRADA_URL; ?>/communities?section=create">Create</a> an <strong>online community</strong> in 5 minutes.
-			</div>
-		</div>
+		
 	</div>
 </div>
-<div class="row-fluid"></div>
-
-<div class="community-body">
-	<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="">
-	<colgroup>
-		<col style="width: 35%" />
-		<col style="width: 1%" />
-		<col style="width: 64%" />
-	</colgroup>
-	<tbody>
-	<tr>
-		<td class="column-left">
-			<div style="min-height: 430px; min-width: 250px;">
-				<div style="background-color: #EBF4BF; border: 1px #669900 solid; margin: 4px; padding: 6px; text-align: center; vertical-align: middle">
-					<a href="<?php echo ENTRADA_URL; ?>/communities?section=create" style="color: #669900; font-size: 14px"><strong>Create</strong><em style="padding-left: 3px; padding-right: 4px">a</em><strong>Community</strong></a>
-				</div>
-				<div style="text-align: center">
-					<span class="content-small" style="color: #bababa"><strong>Powering</strong> <?php echo communities_count(); ?> communities</span>
-				</div>
-
-				<!-- 10 Most Active Communities -->
+<div class="row-fluid create-comm-container">
+	<a href="<?php echo ENTRADA_URL; ?>/communities?section=create" class="btn btn-primary">Create a community</a><span class="content-small"><strong>Powering</strong> <?php echo communities_count(); ?> communities</span>
+</div>
+<div class="community-body row-fluid">
+	<div class="span4">
+		<!-- 10 Most Active Communities -->
 				<?php
 				$query		= "
 							SELECT a.`community_id`, b.`community_url`, b.`community_title`
@@ -82,7 +64,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				$results = $db->GetAll($query);
 				if($results) {
 					?>
-					<h2>Most Active Communities</h2>
+					<h3>Most Active Communities</h3>
 					<ol class="community-list">
 					<?php
 					foreach($results as $result) {
@@ -106,8 +88,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				$results	= $db->CacheGetAll(CACHE_TIMEOUT, $query);
 				if($results) {
 					?>
-					<h2>Newest Communities</h2>
-					<ol class="community-list">
+					<h3>Newest Communities</h3>
+					<ul class="list-arrows">
 					<?php
 					foreach($results as $result) {
 						?>
@@ -117,16 +99,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						<?php
 					}
 					?>
-					</ol>
+					</ul>
 					<?php
 				}
 				?>
-			</div>
-		</td>
-		<td>&nbsp;</td>
-		<td class="column-right">
-			<div style="min-height: 430px; width: 400px;">
-				<?php
+	</div>
+	<div class="span8">
+		<div class="inner-comm-body">
+		<?php
 				/**
 				 * How many browse or search results to display per page.
 				 */
@@ -157,7 +137,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							exit;
 						}
 						?>
-						<h2>Browse Communities</h2>
+						<h3>Browse Communities</h3>
 						<div style="margin-top: -10px; float: right">
 							<a href="<?php echo ENTRADA_URL; ?>/communities?section=create&amp;category=<?php echo $CATEGORY_ID; ?>" style="color: #669900; font-size: 10px">create new community here</a>
 						</div>
@@ -286,11 +266,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							exit;
 						}
 						?>
-						<h2>Search for a Community</h2>
-						<div style="margin-left: 15px; margin-bottom: 15px">
+						<h3>Search for a Community</h3>
+						<div class="row-fluid">
 							<form action="<?php echo ENTRADA_URL; ?>/communities" method="get">
 							<input type="hidden" name="action" value="search" />
-							<input type="text" id="q" name="q" value="<?php echo html_encode($SEARCH_QUERY); ?>" style="width: 255px" /> <input type="submit" class="button" value="Search" />
+							<input type="text" id="q" name="q" value="<?php echo html_encode($SEARCH_QUERY); ?>" style="margin-bottom:0"/> <input type="submit" class="btn" value="Search" />
 							<div class="content-small" style="margin-top: 3px">
 								Example 1: <a href="<?php echo ENTRADA_URL; ?>/communities?action=search&amp;q=Sports+Club" class="content-small">Sports Club</a><br />
 								Example 2: <a href="<?php echo ENTRADA_URL; ?>/communities?action=search&amp;q=Team+Technology" class="content-small">Team Technology</a><br />
@@ -379,7 +359,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								echo "	<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
 								echo "	<tbody>\n";
 								echo "		<tr>\n";
-								echo "			<td style=\"font-size: 14px; font-weight: bold; color: #003366\">Results:</td>\n";
+								echo "			<td style=\"font-size: 13px; font-weight: bold;\">Results:</td>\n";
 								echo "			<td style=\"text-align: right; font-size: 10px; color: #666666; overflow: hidden; white-space: nowrap\">".$TOTAL_ROWS." Result".(($TOTAL_ROWS != 1) ? "s" : "")." Found. Results ".($limit_parameter + 1)." - ".((($RESULTS_PER_PAGE + $limit_parameter) <= $TOTAL_ROWS) ? ($RESULTS_PER_PAGE + $limit_parameter) : $TOTAL_ROWS)." for &quot;<strong>".html_encode($SEARCH_QUERY)."</strong>&quot; shown below.</td>\n";
 								echo "		</tr>\n";
 								echo "		</tbody>\n";
@@ -420,18 +400,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						 * Default page action (show community information).
 						 */
 						?>
-						<h2>Search for a Community</h2>
-						<div style="margin-left: 15px">
+						<h3>Search for a Community</h3>
+						<div class="row-fluid">
 							<form action="<?php echo ENTRADA_URL; ?>/communities" method="get">
 							<input type="hidden" name="action" value="search" />
-							<input type="text" id="q" name="q" value="<?php echo ((isset($_GET["q"])) ? html_encode(trim($_GET["q"])) : ""); ?>" style="width: 255px" /> <input type="submit" class="button" value="Search" />
+							<input type="text" id="q" name="q" value="<?php echo ((isset($_GET["q"])) ? html_encode(trim($_GET["q"])) : ""); ?>" style="margin-bottom:0" /> <input type="submit" class="btn" value="Search" />
 							<div class="content-small" style="margin-top: 3px">
 								Example 1: <a href="<?php echo ENTRADA_URL; ?>/communities?action=search&amp;q=Sports+Club" class="content-small">Sports Club</a><br />
 								Example 2: <a href="<?php echo ENTRADA_URL; ?>/communities?action=search&amp;q=Team+Technology" class="content-small">Team Technology</a><br />
 							</div>
 							</form>
 						</div>
-						<h2>Browse Communities</h2>
+						<h3>Browse Communities</h3>
 						<div style="margin-left: 0px">
 						<?php
 						$query	= "
@@ -452,7 +432,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							<?php
 							foreach($results as $result) {
 								echo "<tr>\n";
-								echo "	<td colspan=\"2\"><div class=\"strong-green\"><img src=\"".ENTRADA_URL."/images/btn_attention.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" /> ".html_encode($result["category_title"])."</div></td>\n";
+								echo "	<td colspan=\"2\"><h4 class=\"categ-title\"> ".html_encode($result["category_title"])."</h4></td>\n";
 								echo "</tr>\n";
 								$query	= "
 										SELECT *
@@ -472,7 +452,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 										$count++;
 										$column++;
 										$communities = communities_count($sresult["category_id"]);
-										echo "<td style=\"padding: 2px 2px 2px 19px\">";
+										echo "<td style=\"padding: 2px 2px 2px 10px\">";
 										echo "	<a href=\"".ENTRADA_URL."/communities?".replace_query(array("action" => "browse", "category" => $sresult["category_id"]))."\" style=\"font-size: 13px; color: #006699\">".html_encode($sresult["category_title"])."</a> <span style=\"font-style: oblique\" class=\"content-small\">(".$communities.")</span>";
 										echo "</td>\n";
 
@@ -511,9 +491,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 					break;
 				}
 				?>
-			</div>
-		</td>
-	</tr>
-	</tbody>
-	</table>
-</div>
+		</div> <!--/inner-comm-body-->
+	</div> <!--/span8-->
+</div> <!--/communtiy-body -->
+
+

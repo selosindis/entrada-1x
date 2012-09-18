@@ -1,6 +1,10 @@
 body{
     background:url("../images/bg-pattern.png") right bottom repeat transparent;
 }
+h3{
+  font-size:16px;
+  margin-bottom:5px;
+}
 .icon{
   background-image:url("../images/icons-sprite.png");
   background-repeat:no-repeat;
@@ -201,6 +205,7 @@ span.bread-separator{
   color:#999;
   margin:0 3px;
 }
+
 /***** Footer *****/
 footer#main-footer .container{
   text-align:center;

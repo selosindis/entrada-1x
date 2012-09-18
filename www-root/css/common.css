@@ -5,13 +5,13 @@ font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
 font-size:12px;
 margin:0 0 10px;
 }*/
-
+/*
 td {
-color:#000;
+color:#333;
 font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
 font-size:12px;
 }
-
+*/
 td.filtered {
 color:#000;
 font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
@@ -21,15 +21,12 @@ font-size:11px;
 td.logged-text {
 color:#666;
 font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
-font-size:10px;
+font-size:11px;
 padding-right:5px;
 }
 
-a {
-font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
-font-size:12px;
-color:#036;
-text-decoration:none;
+a, a:link{
+  color:#006699;
 }
 
 a.navi {
@@ -41,7 +38,7 @@ text-decoration:none;
 
 a.head-navi {
 font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
-font-size:10px;
+font-size:11px;
 color:#333;
 text-decoration:none;
 }
@@ -112,11 +109,11 @@ background: transparent url(../images/bg-percentage.gif) no-repeat center right;
 background: transparent url(../images/external.gif) no-repeat 0% 60%;
 padding-left: 12px;
 }
-
+/*
 form {
 display:inline;
 }
-
+*/
 #display-unsaved-warning {
 position:fixed;
 top:165px;
@@ -664,7 +661,7 @@ background-image:url(../images/time_bg.gif);
 .eventbg_1 {
 background-color:#557CA3;
 color:#FFF;
-font-size:10px;
+font-size:11px;
 padding:0;
 }
 
@@ -678,7 +675,7 @@ border-right:none;
 .eventbg_2 {
 background-color:#9e9e48;
 color:#FFF;
-font-size:10px;
+font-size:11px;
 padding:0;
 }
 
@@ -692,7 +689,7 @@ border-right:none;
 .eventbg_3 {
 background-color:#5F718F;
 color:#FFF;
-font-size:10px;
+font-size:11px;
 padding:0;
 }
 
@@ -745,7 +742,7 @@ border-bottom:1px solid #fff;
 background-color:#fff;
 overflow:hidden;
 height:20px;
-font-size:10px;
+font-size:11px;
 padding:5px;
 }
 
@@ -919,7 +916,6 @@ width:175px;
 }
 
 ul.menu li a {
-font-size:10px;
 text-decoration:none;
 }
 
@@ -932,10 +928,10 @@ font-weight:bold;
 }
 
 ul.menu li,ul.menu li.off {
-font-size:10px;
+font-size:12px;
 padding-bottom:4px;
 padding-left:17px;
-background:transparent url(../images/checkbox-off.gif) no-repeat;
+background:transparent url(../images/checkbox-off.gif) 0 4px no-repeat;
 }
 
 ul.menu.multiselect li,ul.menu.multiselect li.off {
@@ -986,8 +982,18 @@ ul.menu li.correct,ul.menu li.checkmark {
 background:transparent url(../images/checkbox-checkmark.gif) no-repeat;
 }
 
-ul.menu li.link {
+ul.menu li.link, ul.list-arrows li {
 background:transparent url(../images/list-link.gif) 4px 7px no-repeat;
+}
+ul.list-arrows {
+  list-style:none;
+  margin:0;
+}
+
+ul.list-arrows li{
+  background-position:4px 11px;
+  padding-left:17px;
+  line-height:24px;
 }
 ul.menu li.link a{
   text-decoration:underline;
@@ -1568,8 +1574,8 @@ padding-left:3px;
 }
 
 .searchTitle {
-background-color:#EBECFF;
-border-top:1px #339 solid;
+background-color:#F3f3f3;
+border-top:1px #DDD solid;
 width:100%;
 margin:0 0 15px;
 padding:3px;
@@ -2918,7 +2924,7 @@ padding-left:0;
 }
 .multiList li,
 .sortableList li {
-font-size:10px;
+font-size:11px;
 padding:10px 0 5px 0;
 height:16px;
 list-style-type:none;
@@ -3739,7 +3745,7 @@ padding:13px;
 }
 
 table.galleries tbody tr td.small a,table.galleries tbody tr td.small a:hover,table.galleries tbody tr td.small,table.discussions tbody tr td.small a,table.discussions tbody tr td.small a:hover,table.discussions tbody tr td.small {
-	font-size:10px;
+	font-size:11px;
 }
 
 .dataTables_length, .dataTables_paginate {

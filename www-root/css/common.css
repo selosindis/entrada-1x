@@ -163,29 +163,58 @@ font-size:12px;
 }
 
 .display-success {
-background-color:#DEE6E3;
-border:1px #A9D392 solid;
+  background-color: #DFF0D8;
+  border:1px solid #D6E9C6;
+	-webkit-border-radius: 4px 4px 4px 4px;
+	-moz-border-radius: 4px 4px 4px 4px;
+	border-radius: 4px 4px 4px 4px;
+  color: #468847;
+  margin-bottom: 18px;
+  padding: 8px 35px 8px 14px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .display-notice {
-background-color:#FFC;
-border:1px #FC0 solid;
+	background-color: #FCF8E3;
+    border: 1px solid #FBEED5;
+	-webkit-border-radius: 4px 4px 4px 4px;
+	-moz-border-radius: 4px 4px 4px 4px;
+	border-radius: 4px 4px 4px 4px;
+    color: #b0740c;
+    margin-bottom: 18px;
+    padding: 8px 35px 8px 14px;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .display-error {
-background-color:#FFD9D0;
-border:1px #C00 solid;
+    background-color: #F2DEDE;
+    border:1px solid #EED3D7;
+    color: #B94A48;
+	-webkit-border-radius: 4px 4px 4px 4px;
+	-moz-border-radius: 4px 4px 4px 4px;
+	border-radius: 4px 4px 4px 4px;
+    margin-bottom: 18px;
+    padding: 8px 35px 8px 14px;
+    text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .display-generic {
-background-color:#F0F0EE;
-border:1px #CCC solid;
+  background-color: #D9EDF7;
+  border:1px solid #BCE8F1;
+  color: #3A87AD;
+  -webkit-border-radius: 4px 4px 4px 4px;
+  -moz-border-radius: 4px 4px 4px 4px;
+  border-radius: 4px 4px 4px 4px;
+  margin-bottom: 18px;
+  padding: 8px 35px 8px 14px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .display-generic ul,.display-success ul,.display-notice ul,.display-error ul,ul.notify-communities {
 list-style-type:none;
 margin:0;
-padding:4px 10px 10px;
+/*padding:4px 10px 10px;*/
+padding:0;
 }
 
 .display-generic ul li,.display-success ul li,.display-notice ul li,.display-error ul li {
@@ -374,14 +403,6 @@ input[type="button"][disabled], button.disabled-button,input.disabled-button {
 color:#999;
 }
 
-select {
-background-color:#EEE;
-color:#000;
-font-family:Verdana, Arial, Helvetica, sans-serif;
-font-size:12px;
-vertical-align: middle;
-}
-
 .select-box {
 background-color:#EEE;
 color:#000;
@@ -399,11 +420,11 @@ text-decoration:blink;
 
 .form-required {
 vertical-align: middle;
-color:#A30000;
 }
 .form-required:after{
   content:"*";
-  
+  color:#e04015;
+  font-weight:bold;
 }
 .form-nrequired {
 vertical-align: middle;

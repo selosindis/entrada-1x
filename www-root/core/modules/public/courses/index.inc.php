@@ -536,11 +536,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			}
 		}
 	} else {
-		$sidebar_html  = "<div><form action=\"".ENTRADA_URL."/search\" method=\"get\" style=\"display: inline\">\n";
+		$sidebar_html  = "<div><form action=\"".ENTRADA_URL."/search\" method=\"get\" style=\"margin:0\">\n";
 		$sidebar_html .= "<label for=\"q\" class=\"form-nrequired\">Search the curriculum:</label><br />";
 		$sidebar_html .= "<input type=\"text\" id=\"q\" name=\"q\" value=\"\" style=\"width: 95%\" /><br />\n";
 		$sidebar_html .= "<span style=\"float: left; padding-top: 7px;\"><a href=\"".ENTRADA_URL."/search\" style=\"font-size: 11px\">Advanced Search</a></span>\n";
-		$sidebar_html .= "<span style=\"float: right; padding-top: 4px;\"><input type=\"submit\" class=\"button-sm\" value=\"Search\" /></span>\n";
+		$sidebar_html .= "<span style=\"float: right; padding-top: 4px;\"><input type=\"submit\" class=\"btn\" value=\"Search\" /></span>\n";
 		$sidebar_html .= "</form></div>\n";
 		$sidebar_html .= "<br /><br /><hr style=\"clear: both;\"/>\n";
 		$sidebar_html .= "<a href=\"".ENTRADA_URL."/courses/objectives\">View <strong>Curriculum Map</strong></a>\n";

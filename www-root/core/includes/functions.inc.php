@@ -9634,7 +9634,7 @@ function tracking_output_filter_controls($module_type = "") {
 				<input type="hidden" id="filter_edit_type" name="filter_type" value="" />
 				<input type="hidden" id="multifilter" name="filter" value="" />
 				<label for="filter_select" class="content-subheading" style="vertical-align: middle">Apply Filter:</label>
-				<select id="filter_select" onchange="showMultiSelect();" style="width: 184px; vertical-align: middle">
+				<select id="filter_select" onchange="showMultiSelect();">
 					<option>Select Filter</option>
 					<option value="members">Member Filters</option>
 					<option value="module">Module Type Filters</option>
@@ -9862,21 +9862,25 @@ function events_output_filter_controls($module_type = "") {
 	<table id="filterList" style="clear: both; width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Event Filters">
 		<tr>
 			<td style="width: 53%; vertical-align: top">
-				<form action="<?php echo ENTRADA_RELATIVE.$module_type; ?>/events" method="get" id="filter_edit" name="filter_edit" style="position: relative;">
+				<form action="<?php echo ENTRADA_RELATIVE.$module_type; ?>/events" method="get" id="filter_edit" name="filter_edit" style="position: relative;" class="form-horizontal">
 				<input type="hidden" name="action" value="filter_edit" />
 				<input type="hidden" id="filter_edit_type" name="filter_type" value="" />
 				<input type="hidden" id="multifilter" name="filter" value="" />
-				<label for="filter_select" class="content-subheading" style="vertical-align: middle">Apply Filter:</label>
-				<select id="filter_select" onchange="showMultiSelect();" style="width: 184px; vertical-align: middle">
-					<option>Select Filter</option>
-					<?php
-					if ($filter_controls) {
-						foreach ($filter_controls as $value => $control) {
-							echo "<option value=\"" . $value . "\">" . $control["label"] . "</option>";
-						}
-					}
-					?>
-				</select>
+				<div class="control-group">
+				 <label for="filter_select" class="control-label" style="width:100px;font-weight:bold;text-align:left;vertical-align: middle">Apply Filter:</label>
+				 <div class="controls" style="margin-left:100px">
+				 <select id="filter_select" onchange="showMultiSelect();">
+					 <option>Select Filter</option>
+					 <?php
+					 if ($filter_controls) {
+						 foreach ($filter_controls as $value => $control) {
+							 echo "<option value=\"" . $value . "\">" . $control["label"] . "</option>";
+						 }
+					 }
+					 ?>
+				 </select>
+				 </div>
+				</div>
 				<span id="filter_options_loading" style="display:none; vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Loading ... </span>
 				<span id="options_container"></span>
 				</form>

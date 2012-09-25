@@ -11,17 +11,36 @@ h1,h2,h3,h4{
 }
 h2{
   font-weight:normal;
+  color:#c94d21;
 }
 h1{
   font-size:28px;
   font-weight:500;
   letter-spacing:-0.5px;
+  margin-bottom:28px;
+}
+.banner h1{
+  margin-bottom:0;
 }
 h2{
   font-size:-0.5px;
   font-size:20px;
 }
 label{
+  display:inline-block;
+}
+.alert ul{
+  margin-bottom:0;
+  list-style:none;
+}
+.form-horizontal .control-label {
+  width:150px;
+}
+.form-horizontal .controls {
+  margin-left:170px;
+}
+span.or{
+  margin:0 10px;
   display:inline-block;
 }
 .icon{
@@ -155,10 +174,11 @@ a.log-out:hover{
 .dropdown-menu li > a:hover{
   background:#173039;
 }
-.form-actions{
+.form-horizontal .form-actions{
   background:none;
   border:none;
   margin:0;
+  padding-left:170px;
 }
 .btn-primary{
   background-color: #379fe1; /* Old browsers */

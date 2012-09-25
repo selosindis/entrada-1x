@@ -1193,7 +1193,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								<?php 
 									foreach($results as $result) { ?>
 									<table class="tableList" style="display: none; width: 100%;" id="<?php echo "perm_organisation_" . $result["organisation_id"]; ?>" >
-										<caption><h2 style="text-align: left;"><?php echo $result["organisation_title"]; ?><img style="float: right;" src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif"></h2></caption>
+										<caption><h2 style="text-align: left;"><?php echo $result["organisation_title"]; ?></h2></caption>
 										<colgroup>
 											<col style="width: 15%" />
 											<col style="width: 15%" />

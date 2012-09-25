@@ -46,6 +46,8 @@ if ((isset($_GET["id"])) && ($tmp_input = clean_input($_GET["id"], array("trim",
 
 if (isset($_REQUEST["community"]) && $_REQUEST["community"]) {
 	$QUIZ_TYPE = "community_page";
+} else if (isset($_GET["assessment"]) && $_GET["assessment"]) {
+	$QUIZ_TYPE = "assessment";
 } else {
 	$QUIZ_TYPE = "event";
 }

@@ -1936,7 +1936,7 @@ color:#333;
 text-decoration:underline;
 }
 
-.faculty-list li {
+.faculty-list li, .import-export-list li {
 display:inline;
 padding:0 14px 0 16px;
 }
@@ -1946,11 +1946,11 @@ width:15px;
 background-image:none;
 }
 
-.faculty-list li.up {
+.faculty-list li.up, .import-export-list li.up {
 background:transparent url(../images/btn_up.gif) no-repeat center left;
 }
 
-.faculty-list li.down {
+.faculty-list li.down, .import-export-list li.down {
 background:transparent url(../images/btn_down.gif) no-repeat center left;
 }
 
@@ -1962,7 +1962,7 @@ background:transparent url(../images/btn_add.gif) no-repeat center left;
 background:transparent url(../images/btn_remove.gif) no-repeat center left;
 }
 
-.faculty-list li a {
+.faculty-list li a, .import-export-list li a {
 color:#693;
 font-weight:700;
 font-size:11px;

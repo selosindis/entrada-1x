@@ -782,4 +782,155 @@ class User {
 		return new Users($users);
 	}
 
+	/**
+	 * Creates a user account and updates object, returns true or false.
+	 * $user_data requires: "username", "firstname", "lastname", "email", "password", "organisation_id"
+	 * $user_access requires: "group", "role", "app_id"
+	 * 
+	 * @param array $user_data User data array, keys match table fields. Ex: array("id" => "1", "username" => "foo").
+	 * @param array $user_access User access array, keys match table fields. Ex: array("group" => "admin").
+	 * @return boolean
+	 */
+	public function createUser(array $user_data, array $user_access) {
+		global $db;
+		
+		$required_user_data		= array("username", "firstname", "lastname", "email", "password", "organisation_id");
+		$required_user_access	= array("group", "role", "app_id");
+		
+		foreach ($required_user_data as $data) {
+			if (!array_key_exists($data, $user_data)) {
+				$error = true;
+			}
+		}
+		
+		foreach ($required_user_access as $data) {
+			if (!array_key_exists($data, $user_access)) {
+				$error = true;
+			}
+		}
+		
+		if (!$error) {
+		
+			foreach ($user_data as $fieldname => $data) {
+				$processed["user_data"][$fieldname] = clean_input($data, array("trim", "striptags"));
+			}
+			
+			foreach ($user_access as $fieldname => $data) {
+				$processed["user_access"][$fieldname] = clean_input($data, array("trim", "striptags"));
+			}
+
+			if ($db->AutoExecute("`".AUTH_DATABASE."`.`user_data`", $processed["user_data"], "INSERT")) {
+
+				$processed["user_data"]["id"]			= $db->Insert_ID();
+				$processed["user_access"]["user_id"]	= $processed["user_data"]["id"];
+
+				if (!isset($processed["user_access"]["organisation_id"])) { $processed["user_access"]["organisation_id"] = $processed["user_data"]["organisation_id"]; }
+				if (!isset($processed["user_access"]["access_starts"])) { $processed["user_access"]["access_starts"] = time(); }
+				if (!isset($processed["user_access"]["account_active"])) { $processed["user_access"]["account_active"] = "true"; }
+				if (!isset($processed["user_access"]["private_hash"])) { $processed["user_access"]["private_hash"]	= generate_hash(); }
+
+				if (!$db->AutoExecute("`".AUTH_DATABASE."`.`user_access`", $processed["user_access"], "INSERT")) {
+					application_log("error", "Failed to add user, DB said: ".$db->ErrorMsg());
+					$return = false;
+				} else {
+					
+					$params = get_class_vars(__CLASS__);
+
+					foreach ($params as $param_name => $param) {
+						$this->$param_name = (isset($processed["user_data"][$param_name]) ? $processed["user_data"][$param_name] : (isset($processed["user_access"][$param_name]) ? $processed["user_access"][$param_name] : $param));
+					}
+					
+					$return = true;
+				}
+				
+			} else {
+				application_log("error", "Failed to add user, DB said: ".$db->ErrorMsg());
+				$return = false;
+			}
+		
+		} else {
+			$return = false;
+		}
+		
+		return $return;
+	}
+	
+	/**
+	 * Updates a user account and updates object, returns true or false.
+	 * @param $user_data User data array, keys match table fields. Ex: array("id" => "1", "username" => "foo")
+	 * @param $user_access User access array, keys match table fields. Assumes user_id from $user_data["id"]. Ex: array("group" => "admin"). 
+	 * @return boolean
+	 */
+	public function updateUser(array $user_data, array $user_access = array()) {
+		global $db;
+		
+		if (!isset($user_data["id"]) || empty($user_data["id"])) {
+			$processed["user_data"]["id"] = $this->getID();
+		}
+		
+		foreach ($user_data as $fieldname => $data) {
+			$processed["user_data"][$fieldname] = clean_input($data, array("trim", "striptags"));
+		}
+
+		if (!empty($user_access)) {
+			foreach ($user_access as $fieldname => $data) {
+				$processed["user_access"][$fieldname] = clean_input($data, array("trim", "striptags"));
+			}
+		}
+
+		if ($db->AutoExecute("`".AUTH_DATABASE."`.`user_data`", $processed["user_data"], "UPDATE", "id = ".$db->qstr($processed["user_data"]["id"]))) {
+
+			if (!empty($processed["user_access"])) {
+				if (!$db->AutoExecute("`".AUTH_DATABASE."`.`user_access`", $processed["user_access"], "UPDATE", "user_id = ".$db->qstr($processed["user_data"]["id"]))) {
+					application_log("error", "Failed to update user [".$processed["user_data"]["id"]."], DB said: ".$db->ErrorMsg());
+					$return = false;
+				}
+			}
+
+			$params = get_class_vars(__CLASS__);
+
+			foreach ($params as $param_name => $param) {
+				$this->$param_name = (isset($processed["user_data"][$param_name]) ? $processed["user_data"][$param_name] : (isset($processed["user_access"][$param_name]) ? $processed["user_access"][$param_name] : $param));
+			}
+
+		} else {
+			application_log("error", "Failed to update user [".$processed["user_data"]["id"]."], DB said: ".$db->ErrorMsg());
+			$return = false;
+		}
+		
+		
+		return $return;
+	}
+	
+	/**
+	 * Deactivates a user account and returns true or false.
+	 * @param int $id The userid to activate. Uses objects ID if empty.
+	 * @return boolean
+	 */
+	public function deactivateUser($id = "") {
+		global $db;
+		
+		if (!empty($id)) {
+			$proxy_id = (int) $id;
+		} else {
+			$proxy_id = $this->getID();
+		}
+		
+		if ($proxy_id) {
+			$processed["account_active"] = "false";
+			if (!$db->AutoExecute("`".AUTH_DATABASE."`.`user_access`", $processed, "UPDATE", "user_id = ".$db->qstr($proxy_id))) {
+				application_log("error", "Failed to set account_active to false for user [".$processed["user_data"]["id"]."], DB said: ".$db->ErrorMsg());
+				$return = false;
+			} else {
+				$return = true;
+			}
+		} else {
+			application_log("error", "Unable to deactivate user account, no proxy_id.");
+			$return = false;
+		}
+
+		return $return;
+		
+	}
+	
 }

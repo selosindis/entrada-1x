@@ -455,7 +455,7 @@ if ($RECORD_ID) {
 															FROM `quiz_questions` AS a
 															WHERE a.`quiz_id` = ".$db->qstr($quiz_record["quiz_id"])."
 															AND a.`question_active` = '1'
-															ORDER BY a.`question_order` ASC";
+															ORDER BY ".((isset($quiz_record["random_order"]) && $quiz_record["random_order"] == 1)?"RAND()" :"a.`question_order` ASC");
 									$questions			= $db->GetAll($query);
 									$total_questions	= 0;
 									if ($questions) {

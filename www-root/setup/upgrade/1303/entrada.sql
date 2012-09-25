@@ -1,4 +1,4 @@
-CREATE TABLE `medbiq_assessment_methods` (
+CREATE TABLE IF NOT EXISTS `medbiq_assessment_methods` (
   `assessment_method_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `assessment_method` varchar(250) NOT NULL DEFAULT '',
   `assessment_method_description` text,
@@ -28,7 +28,7 @@ INSERT INTO `medbiq_assessment_methods` (`assessment_method_id`, `assessment_met
 (17,'Self-Assessment','The process of evaluating one?s own deficiencies, achievements, behavior or professional performance and competencies (Institute for International Medical Education, 2002); Assessment completed by the learner to reflect and critically assess his/her own performance against a set of established criteria (Gordon, 1991) (NOTE: Does not refer to NBME Self-Assessment)',1,0,0),
 (18,'Stimulated Recall','The use of various stimuli (e.g., written records, audio tapes, video tapes) to re-activate the experience of a learner during a learning activity or clinical encounter in order to reflect on task performance, reasoning, decision-making, interpersonal skills, personal thoughts and feelings, etc. (Barrows, 2000)',1,0,0);
 
-CREATE TABLE `medbiq_instructional_methods` (
+CREATE TABLE IF NOT EXISTS `medbiq_instructional_methods` (
   `instructional_method_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `instructional_method` varchar(250) NOT NULL DEFAULT '',
   `instructional_method_description` text,
@@ -70,7 +70,7 @@ INSERT INTO `medbiq_instructional_methods` (`instructional_method_id`, `instruct
 (29,'Ward Rounds','An instructional session conducted in an actual clinical setting, using real patients or patient cases to demonstrate procedures or clinical skills, illustrate clinical reasoning and problem-solving, or stimulate discussion and analytical thinking among a group of learners (Bowen & Smith, 2010; Wiener, 1974)',1,0,0),
 (30,'Workshop','A brief intensive educational program for a relatively small group of people that focuses especially on techniques and skills related to a specific topic (U. S. National Library of Medicine, 2011)',1,0,0);
 
-CREATE TABLE `medbiq_resources` (
+CREATE TABLE IF NOT EXISTS `medbiq_resources` (
   `resource_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `resource` varchar(250) NOT NULL DEFAULT '',
   `resource_description` text,
@@ -102,7 +102,7 @@ INSERT INTO `medbiq_resources` (`resource_id`, `resource`, `resource_description
 (19,'Virtual/Computerized Laboratory','A practical learning environment in which technology- and computer-based simulations allow learners to engage in computer-assisted instruction while being able to ask and answer questions and also engage in discussion of content (Cooke, Irby, & O\'Brien, 2010a); also, to learn through experience by performing medical tasks, especially high-risk ones, in a safe environment (Uniformed Services University, 2011)',1,0,0),
 (20,'Wet Laboratory','Facilities outfitted with specialized equipment* and bench space or adjustable, flexible desktop space for working with solutions or biological materials (\"C.1 Wet Laboratories,\" 2006; Stanford University School of Medicine, 2007;\rWBDG Staff, 2010) *Often includes sinks, chemical fume hoods, biosafety cabinets, and piped services such as deionized or RO water, lab cold and hot water, lab waste/vents, carbon dioxide, vacuum, compressed air, eyewash, safety showers, natural gas, telephone, LAN, and power (\"C.1 Wet Laboratories,\" 2006)',1,0,0);
 
-CREATE TABLE `map_assessments_meta` (
+CREATE TABLE IF NOT EXISTS `map_assessments_meta` (
   `map_assessments_meta_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `fk_assessment_method_id` int(11) NOT NULL,
   `fk_assessments_meta_id` int(11) NOT NULL,
@@ -111,7 +111,7 @@ CREATE TABLE `map_assessments_meta` (
   PRIMARY KEY (`map_assessments_meta_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `map_event_resources` (
+CREATE TABLE IF NOT EXISTS `map_event_resources` (
   `map_event_resources_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `fk_medbiq_resource_id` int(11) DEFAULT NULL,
   `fk_resource_id` int(11) NOT NULL,
@@ -120,7 +120,7 @@ CREATE TABLE `map_event_resources` (
   PRIMARY KEY (`map_event_resources_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `map_events_eventtypes` (
+CREATE TABLE IF NOT EXISTS `map_events_eventtypes` (
   `map_events_eventtypes_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `fk_instructional_method_id` int(11) NOT NULL,
   `fk_eventtype_id` int(11) NOT NULL,
@@ -129,7 +129,7 @@ CREATE TABLE `map_events_eventtypes` (
   PRIMARY KEY (`map_events_eventtypes_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `event_resources` (
+CREATE TABLE IF NOT EXISTS `event_resources` (
   `event_resources_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `fk_resource_id` int(11) NOT NULL,
   `fk_event_id` int(11) NOT NULL,
@@ -138,7 +138,7 @@ CREATE TABLE `event_resources` (
   PRIMARY KEY (`event_resources_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-CREATE TABLE `events_lu_resources` (
+CREATE TABLE IF NOT EXISTS `events_lu_resources` (
   `resource_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `resource` varchar(250) NOT NULL DEFAULT '',
   `description` text,

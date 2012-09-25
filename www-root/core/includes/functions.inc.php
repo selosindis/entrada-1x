@@ -308,11 +308,17 @@ function load_system_navigator() {
 						WHERE (a.`allow_member_view` = '1')
 						OR (c.`member_acl` = '1')";
 			$cpage_ids = $db->GetAll($query);
-			foreach ($cpage_ids as $page_id) {
-				$community_pages[] = $page_id["cpage_id"];
+			
+			if ($cpage_ids) { 
+				foreach ($cpage_ids as $page_id) {
+					$community_pages[] = $page_id["cpage_id"];
+				}
 			}
-			foreach ($community_pages as $key => $page_id) {
-				$page_ids[] = $page_id;
+			
+			if ($community_pages) {
+				foreach ($community_pages as $key => $page_id) {
+					$page_ids[] = $page_id;
+				}
 			}
 
 			if(@count($community_ids)) {
@@ -2101,6 +2107,50 @@ function clerkship_fetch_specific_school($schools_id) {
 
 	return false;
 }
+
+/**
+ * Function will return an array containing past and current clerkship schedule or false if neither are found.
+ * @param $user_id
+ * @return array() or bool
+ */
+function clerkship_fetch_schedule($user_id) {
+	global $db;
+	
+	$query				= "	SELECT *
+							FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+							LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+							ON b.`event_id` = a.`event_id`
+							LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
+							ON c.`region_id` = a.`region_id`
+							WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00", time()))."
+							AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
+							AND b.`econtact_type` = 'student'
+							AND b.`etype_id` = ".$db->qstr($user_id)."
+							ORDER BY a.`event_start` ASC";
+	$clerkship_schedule	= $db->GetAll($query);
+	
+	$query						= "	SELECT *
+									FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+									LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+									ON b.`event_id` = a.`event_id`
+									LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
+									ON c.`region_id` = a.`region_id`
+									WHERE a.`event_finish` <= ".$db->qstr(strtotime("00:00:00", time()))."
+									AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
+									AND b.`econtact_type` = 'student'
+									AND b.`etype_id` = ".$db->qstr($user_id)."
+									ORDER BY a.`event_start` ASC";
+	$clerkship_past_schedule	= $db->GetAll($query);
+
+	if ($clerkship_schedule || $clerkship_past_schedule) {
+		$schedules["present"]	= $clerkship_schedule;
+		$schedules["past"]		= $clerkship_past_schedule;
+		return $schedules;
+	} else {
+		return false;
+	}
+}
+
 
 /**
  * This function will load users module preferences into a session from the database table.
@@ -4309,7 +4359,7 @@ function generate_hash($num_chars = 32) {
  * @return bool
  */
 function communities_log_history($community_id = 0, $page_id = 0, $record_id = 0, $history_message = "", $display_message = 0, $parent_id = 0) {
-	global $db;
+	global $db,$ENTRADA_USER;
 
 	if(($community_id = (int) $community_id) && (strlen(trim($history_message)))) {
 		$page_id			= (int) $page_id;
@@ -4884,7 +4934,7 @@ function communities_module_access_unique($community_id = 0, $module_id = 0, $ac
  * @return bool
  */
 function communities_module_activate($community_id = 0, $module_id = 0) {
-	global $db;
+	global $db,$ENTRADA_USER;
 
 	if(($community_id = (int) $community_id) && ($module_id = (int) $module_id)) {
 	/**
@@ -4921,7 +4971,7 @@ function communities_module_activate($community_id = 0, $module_id = 0) {
 					$page_order = 0;
 				}
 
-				if(($db->AutoExecute("community_pages", array("community_id" => $community_id, "page_order" => $page_order, "page_type" => $module_info["module_shortname"], "menu_title" => $module_info["module_title"], "page_title" => $module_info["module_title"], "page_url" => $module_info["module_shortname"], "page_content" => "", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) && ($cpage_id = $db->Insert_Id())) {
+				if(($db->AutoExecute("community_pages", array("community_id" => $community_id, "page_order" => $page_order, "page_type" => $module_info["module_shortname"], "menu_title" => $module_info["module_title"], "page_title" => $module_info["module_title"], "page_url" => $module_info["module_shortname"], "page_content" => "", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getId()), "INSERT")) && ($cpage_id = $db->Insert_Id())) {
 
 					communities_log_history($community_id, $cpage_id, 0, "community_history_add_page", 1);
 
@@ -5258,7 +5308,7 @@ function communities_discussions_latest($cdiscussion_id = 0) {
 	$output["replies"]	= 0;
 
 	if($cdiscussion_id = (int) $cdiscussion_id) {
-		$query = "	SELECT IF(a.`cdtopic_parent` = '0', a.`cdtopic_id`, b.`cdtopic_id`) AS `cdtopic_id`, IF(a.`cdtopic_parent` = '0', a.`topic_title`, b.`topic_title`) AS `topic_title`, a.`updated_date`, a.`proxy_id`, c.`username`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `poster_fullname`
+		$query = "	SELECT IF(a.`cdtopic_parent` = '0', a.`cdtopic_id`, b.`cdtopic_id`) AS `cdtopic_id`, IF(a.`cdtopic_parent` = '0', a.`topic_title`, b.`topic_title`) AS `topic_title`, IF(a.`cdtopic_parent` = '0', a.`anonymous`, b.`anonymous`) AS `anonymous`, a.`updated_date`, a.`proxy_id`, c.`username`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `poster_fullname`
 					FROM `community_discussion_topics` AS a
 					LEFT JOIN `community_discussion_topics` AS b
 					ON a.`cdtopic_parent` = b.`cdtopic_id`
@@ -5278,6 +5328,7 @@ function communities_discussions_latest($cdiscussion_id = 0) {
 			$output["updated_date"]	= $result["updated_date"];
 			$output["cdtopic_id"]	= $result["cdtopic_id"];
 			$output["topic_title"]	= $result["topic_title"];
+			$output["anonymous"]	= $result["anonymous"];
 
 			/**
 			 * Fetch the total number of posts.
@@ -11298,8 +11349,9 @@ function events_fetch_event_audience($event_id = 0) {
  * @return array
  */
 function events_fetch_event_attendance_for_user($event_id = 0, $user_id = false) {
+	global $db;
 	if($event_id && $user_id){
-		$query = "SELECT * FROM `event_attendance` WHERE `event_id` = ".$db->qstr($event_id)." AND `proxy_id` ".$db->qstr($user_id);
+		$query = "SELECT * FROM `event_attendance` WHERE `event_id` = ".$db->qstr($event_id)." AND `proxy_id` = ".$db->qstr($user_id);
 		return $db->GetRow($query);
 	}
 	return false;

@@ -47,9 +47,8 @@ class ClinicalFacultyMembers extends Collection {
 		$query = "SELECT distinct `user_data`.*
 				FROM user_data 
 				LEFT JOIN user_access ON `user_access`.`user_id` = `user_data`.`id`
-				where user_access.group='faculty' and clinical='1' and `organisation_id`=? group by lastname,firstname 
+				where user_access.group='faculty' and clinical='1' and `user_data`.`organisation_id`=? group by lastname,firstname 
 				order by lastname,firstname";
-				
 		$results	= $db->GetAll($query, array($ORGANISATION_ID));
 		$db->SelectDB($curdbname);
 		$faculty_members = array();

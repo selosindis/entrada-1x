@@ -46,7 +46,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	if(!$ENTRADA_USER->getClinical()) {
 		$PROFILE_ID = $_GET["rid"];
 		if($PROFILE_ID) {
-			$query	= "SELECT * FROM `ar_profile` WHERE `profile_id`=".$db->qstr($PROFILE_ID)." AND `proxy_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']);
+			$query	= "SELECT * FROM `ar_profile` WHERE `profile_id`=".$db->qstr($PROFILE_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 			$result	= $db->GetRow($query);
 			if($result) {
 				// Error Checking
@@ -180,7 +180,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					 */
 					$sql = "SELECT * 
 					FROM ar_profile 
-					WHERE proxy_id = ".$_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']."
+					WHERE proxy_id = ".$ENTRADA_USER->getActiveId()."
 					AND year_reported = $year_reported
 					AND profile_id != $PROFILE_ID";
 					
@@ -197,7 +197,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						if(!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
 							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-							$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
+							$PROCESSED["proxy_id"]		= $ENTRADA_USER->getActiveId();
 							
 							if($db->AutoExecute("ar_profile", $PROCESSED, "UPDATE", "`profile_id`=".$db->qstr($PROFILE_ID))) {
 									switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
@@ -713,7 +713,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					 */
 					$sql = "SELECT * 
 					FROM ar_profile 
-					WHERE proxy_id = ".$_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id']."
+					WHERE proxy_id = ".$ENTRADA_USER->getActiveId()."
 					AND year_reported = $year_reported
 					AND profile_id != $PROFILE_ID";
 					
@@ -729,7 +729,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						if(!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
 							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-							$PROCESSED["proxy_id"]		= $_SESSION[APPLICATION_IDENTIFIER]['tmp']['proxy_id'];
+							$PROCESSED["proxy_id"]		= $ENTRADA_USER->getActiveId();
 							
 							$PROCESSED["roles"] 		= implode(", ", $PROCESSED["roles"]);
 							

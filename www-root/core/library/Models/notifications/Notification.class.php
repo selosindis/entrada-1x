@@ -276,7 +276,7 @@ class Notification {
 						$replace = array(	html_encode(ucwords($notification_user->getContentTypeName())),
 											html_encode($notification_user->getContentTypeName()),
 											html_encode($content_type_shortname),
-											html_encode(get_account_data("wholename", $notification_user->getProxyID())),
+											html_encode(get_account_data("wholename", $proxy_id)),
 											html_encode($notification_user->getContentTitle()),
 											html_encode($notification_user->getContentURL()."&pid=".$record_id),
 											html_encode(APPLICATION_NAME),

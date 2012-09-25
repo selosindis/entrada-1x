@@ -32,14 +32,30 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 	exit;
 }
 
-?>
-<h1>My Evaluations and Assessments</h1>
-<?php
-
 require_once("Models/evaluation/Evaluation.class.php");
-$evaluations = Evaluation::getEvaluatorEvaluations();
 
-if ($evaluations) {
+if (isset($_GET["view"]) && $_GET["view"] == "review") {
+	$view = "review";
+} elseif (isset($_GET["view"]) && $_GET["view"] == "attempt") { 
+	$view = "attempt";
+} else {
+	$view = "index";
+}
+
+$evaluations = Evaluation::getEvaluatorEvaluations();
+$review_evaluations = Evaluation::getReviewerEvaluations();
+
+if ($evaluations && $view != "review") {
+	?>
+	<h1>My Evaluations and Assessments</h1>
+	<?php
+	if ($review_evaluations) {
+		$sidebar_html  = "<ul class=\"menu\">\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/evaluations?view=review\">View Completed Evaluations Available for Review</a></li>\n";
+		$sidebar_html .= "</ul>\n";
+
+		new_sidebar_item("Evaluations Review", $sidebar_html, "view-review", "open", "1.9");
+	}
 	$evaluation_id = 0;
 	echo "<div class=\"no-printing\">\n";
     echo "    <ul class=\"nav nav-tabs\">\n";
@@ -91,14 +107,14 @@ if ($evaluations) {
 	}
 	</script>";
 	?>
-	<table id="evaluations" class="tableList" cellspacing="0" summary="List of Evaluations and Assessments">
+	<table id="evaluations" class="tableList" cellspacing="0" summary="List of Evaluations and Assessments to Attempt">
 	<colgroup>
 		<col class="modified" />
 		<col class="general" />
 		<col class="general" />
-		<col class="date" />
+		<col class="date-small" />
 		<col class="title" />
-		<col class="general" />
+		<col class="date-smallest" />
 		<col class="general" />
 	</colgroup>
 	<thead>
@@ -136,6 +152,52 @@ if ($evaluations) {
 			echo "	<td>".($evaluation["max_submittable"] > $evaluation["completed_attempts"] && $evaluation["evaluation_finish"] < time() ? "overdue available" : ($evaluation["max_submittable"] > $evaluation["completed_attempts"] ? "available" : "complete"))."</td>";
 			echo "</tr>\n";
 		}
+	}
+	?>
+	</tbody>
+	</table>
+	<?php
+} elseif ($review_evaluations && $view != "attempt") {
+	?>
+	<h1>Evaluations and Assessments available for review</h1>
+	<?php
+	if ($review_evaluations) {
+		$sidebar_html  = "<ul class=\"menu\">\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/evaluations?view=attempt\">View My Evaluations Available for Completion</a></li>\n";
+		$sidebar_html .= "</ul>\n";
+
+		new_sidebar_item("My Evaluations", $sidebar_html, "view-pending", "open", "1.9");
+	}
+	?>
+	<table id="evaluations" class="tableList" cellspacing="0" summary="List of Evaluations and Assessments to Review">
+	<colgroup>
+		<col class="modified" />
+		<col class="general" />
+		<col class="date-small" />
+		<col class="title" />
+		<col class="date-smallest" />
+	</colgroup>
+	<thead>
+		<tr>
+			<td class="modified">&nbsp;</td>
+			<td class="general">Type</td>
+			<td class="date-small">Close Date</td>
+			<td class="title">Title</td>
+			<td class="date-smallest">Submitted</td>
+		</tr>
+	</thead>
+	<tbody>
+	<?php
+	foreach ($review_evaluations as $evaluation) {
+		$url = ENTRADA_URL."/evaluations?section=review&id=".$evaluation["evaluation_id"];
+
+		echo "<tr>\n";
+		echo "	<td>&nbsp;</td>\n";
+		echo "	<td><a href=\"".$url."\">".(!empty($evaluation["target_title"]) ? $evaluation["target_title"] : "No Type Found")."</a></td>\n";
+		echo "	<td><a href=\"".$url."\" alt=\"".$evaluation["evaluation_finish"]."\">".date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_finish"])."</a></td>\n";
+		echo "	<td><a href=\"".$url."\">".html_encode($evaluation["evaluation_title"])."</a></td>\n";
+		echo "	<td><a href=\"".$url."\">".($evaluation["completed_attempts"] ? ((int)$evaluation["completed_attempts"]) : "0")."</a></td>\n";
+		echo "</tr>\n";
 	}
 	?>
 	</tbody>

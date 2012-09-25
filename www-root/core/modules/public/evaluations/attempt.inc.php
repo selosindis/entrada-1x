@@ -356,12 +356,14 @@ if ($RECORD_ID) {
 														require_once("Models/notifications/NotificationUser.class.php");
 														require_once("Models/notifications/Notification.class.php");
 														$threshold_notification_recipients = Evaluation::getThresholdNotificationRecipients($evaluation_record["evaluation_id"], $eprogress_id, $PROCESSED["eevaluator_id"]);
-														foreach ($threshold_notification_recipients as $threshold_notification_recipient) {
-															$notification_user = NotificationUser::get($threshold_notification_recipient["proxy_id"], "evaluation_threshold", $evaluation_record["evaluation_id"], $ENTRADA_USER->getID());
-															if (!$notification_user) {
-																$notification_user = NotificationUser::add($threshold_notification_recipient["proxy_id"], "evaluation_threshold", $evaluation_record["evaluation_id"], $ENTRADA_USER->getID());
+														if (isset($threshold_notification_recipients) && $threshold_notification_recipients) {
+															foreach ($threshold_notification_recipients as $threshold_notification_recipient) {
+																$notification_user = NotificationUser::get($threshold_notification_recipient["proxy_id"], "evaluation_threshold", $evaluation_record["evaluation_id"], $ENTRADA_USER->getID());
+																if (!$notification_user) {
+																	$notification_user = NotificationUser::add($threshold_notification_recipient["proxy_id"], "evaluation_threshold", $evaluation_record["evaluation_id"], $ENTRADA_USER->getID());
+																}
+																Notification::add($notification_user->getID(), $ENTRADA_USER->getID(), $eprogress_id);
 															}
-															Notification::add($notification_user->getID(), $ENTRADA_USER->getID(), $eprogress_id);
 														}
 													}
 												}
@@ -495,10 +497,10 @@ if ($RECORD_ID) {
 										if (count($evaluation_targets) == 1) {
 											echo "<input type=\"hidden\" id=\"evaluation_target\" name=\"evaluation_target\" value=\"".$evaluation_targets[0]["etarget_id"]."\" />";
 											if ($PROCESSED["target_shortname"] == "teacher") {
-												echo "<input type=\"hidden\" id=\"target_record_id\" name=\"target_record_id\" value=\"".$evaluation_targets[0]["proxy_id"]."\" />";
+												echo "<input type=\"hidden\" id=\"target_record_id\" name=\"evaluation_target\" value=\"".$evaluation_targets[0]["proxy_id"]."\" />";
 												$target_name = $evaluation_targets[0]["firstname"]." ".$evaluation_targets[0]["lastname"];
 											} elseif ($PROCESSED["target_shortname"] == "course") {
-												echo "<input type=\"hidden\" id=\"target_record_id\" name=\"target_record_id\" value=\"".$evaluation_targets[0]["course_id"]."\" />";
+												echo "<input type=\"hidden\" id=\"target_record_id\" name=\"evaluation_target\" value=\"".$evaluation_targets[0]["course_id"]."\" />";
 												$target_name = $db->GetOne("SELECT `course_name` FROM `courses` WHERE `course_id` = ".$db->qstr($evaluation_targets[0]["target_value"]));
 											} elseif ($PROCESSED["target_shortname"] == "rotation_core" || $PROCESSED["target_shortname"] == "rotation_elective") {
 												echo "<input type=\"hidden\" id=\"event_id\" name=\"event_id\" value=\"".$evaluation_targets[0]["event_id"]."\" />";
@@ -521,7 +523,7 @@ if ($RECORD_ID) {
 											}
 										} elseif ($PROCESSED["target_shortname"] == "teacher") {
 											echo "<div class=\"content-small\">Please choose a teacher to evaluate: \n";
-											echo "<select id=\"evaluation_target\" name=\"target_record_id\">";
+											echo "<select id=\"evaluation_target\" name=\"evaluation_target\">";
 											echo "<option value=\"0\">-- Select a teacher --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
@@ -532,6 +534,7 @@ if ($RECORD_ID) {
 											echo "</div>";
 										} elseif ($PROCESSED["target_shortname"] == "rotation_core" || $PROCESSED["target_shortname"] == "rotation_elective" || $PROCESSED["target_shortname"] == "preceptor") {
 											echo "<div class=\"content-small\">Please choose a clerkship service to evaluate: \n";
+											echo "<input type=\"hidden\" id=\"evaluation_target\" name=\"evaluation_target\" value=\"".$evaluation_targets[0]["etarget_id"]."\" />";
 											echo "<select id=\"event_id\" name=\"event_id\"".($PROCESSED["target_shortname"] == "preceptor" ? " onchange=\"loadPreceptors(this.options[this.selectedIndex].value)\"" : "").">";
 											echo "<option value=\"0\">-- Select an event --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {

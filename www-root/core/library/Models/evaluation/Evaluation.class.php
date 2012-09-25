@@ -371,7 +371,9 @@ class Evaluation {
 			$output = "<select id=\"preceptor_proxy_id\" name=\"preceptor_proxy_id\">\n";
 			$output .= "<option value=\"0\">-- Select a preceptor --</option>\n";
 			foreach ($preceptors as $preceptor) {
-				$output .= "<option value=\"".$preceptor["proxy_id"]."\"".($preceptor_proxy_id && $preceptor_proxy_id == $preceptor["proxy_id"] ? " selected=\"selected\"" : "").">".$preceptor["fullname"]."</option>";
+				if ($preceptor["proxy_id"]) {
+					$output .= "<option value=\"".$preceptor["proxy_id"]."\"".($preceptor_proxy_id && $preceptor_proxy_id == $preceptor["proxy_id"] ? " selected=\"selected\"" : "").">".$preceptor["fullname"]."</option>";
+				}
 			}
 			$output .= "</select>\n";
 		}
@@ -2602,7 +2604,7 @@ class Evaluation {
 					$query = "SELECT b.*, b.`id` AS `proxy_id` FROM `evaluation_form_contacts` AS a
 								JOIN `".AUTH_DATABASE."`.`user_data` AS b
 								ON a.`proxy_id` = b.`id`
-								WHERE a.`eform_id` = ".$db->qstr($evaluation_progress["target_value"])."
+								WHERE a.`eform_id` = ".$db->qstr($evaluation["eform_id"])."
 								AND a.`contact_role` = 'author'";
 					$notification_recipients = $db->GetAll($query);
 				break;
@@ -2610,8 +2612,8 @@ class Evaluation {
 					$query = "SELECT b.*, b.`id` AS `proxy_id` FROM `evaluation_contacts` AS a
 								JOIN `".AUTH_DATABASE."`.`user_data` AS b
 								ON a.`proxy_id` = b.`id`
-								WHERE a.`evaluation_id` = ".$db->qstr($evaluation_progress["target_value"])."
-								AND a.`contact_type` = 'reviewer'";
+								WHERE a.`evaluation_id` = ".$db->qstr($evaluation_id)."
+								AND a.`contact_role` = 'reviewer'";
 					$notification_recipients = $db->GetAll($query);
 				break;
 				case "tutors" :
@@ -2674,7 +2676,6 @@ class Evaluation {
 				$query = "SELECT * FROM `evaluation_targets`
 							WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
 				$evaluation_targets = $db->GetAll($query);
-
 				if ($evaluation_targets) {
 					switch ($evaluation["target_shortname"]) {
 						case "preceptor" :
@@ -2716,7 +2717,7 @@ class Evaluation {
 								}
 							}
 						break;
-						case "peers" :
+						case "peer" :
 							$skip_evaluator_check = false;
 							foreach ($evaluation_targets as $evaluation_target) {
 								if ($evaluation_target["target_type"] == "cgroup_id") {
@@ -2791,7 +2792,8 @@ class Evaluation {
 									}
 									if (isset($max_submittable) && $max_submittable) {
 										$query = "SELECT `eprogress_id` FROM `evaluation_progress` 
-													WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+													WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
+													AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 										$eprogress_ids = $db->GetAll($query);
 										if ($eprogress_ids && $max_submittable == count($eprogress_ids)) {
 											$permissions[] = array("target_record_id" => $ENTRADA_USER->getID(), "contact_type" => "target");
@@ -2809,7 +2811,27 @@ class Evaluation {
 							}
 						break;
 						case "self" :
-							$permissions[] = array("target_record_id" => $ENTRADA_USER->getID(), "contact_type" => "target");
+							$skip_evaluator_check = false;
+							$query = "SELECT * FROM `evaluation_evaluators`
+										WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
+							$evaluation_evaluators = $db->GetAll($query);
+							if ($evaluation_evaluators) {
+								foreach ($evaluation_evaluators as $evaluation_evaluator) {
+									if ($evaluation_evaluator["evaluator_type"] == "cgroup_id") {
+										$query = "SELECT `cgroup_id` FROM `course_group_contacts`
+													WHERE `cgroup_id` = ".$db->qstr($evaluation_evaluator["evaluator_value"])."
+													AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+										$tutor_record = $db->GetRow($query);
+										if ($tutor_record) {
+											$permissions[] = array("target_value" => 0, "evaluator_type" => "cgroup_id", "evaluator_value" => $tutor_record["cgroup_id"], "target_type" => "self", "contact_type" => "tutor");
+											$skip_evaluator_check = true;
+										}
+									}
+								}
+							}
+							if (!$skip_evaluator_check) {
+								$permissions[] = array("target_record_id" => $ENTRADA_USER->getID(), "contact_type" => "target");
+							}
 						break;
 					}
 				}
@@ -2817,7 +2839,7 @@ class Evaluation {
 			$query = "SELECT * FROM `evaluation_contacts`
 						WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
 						AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-						AND `contact_type` = 'reviewer'";
+						AND `contact_role` = 'reviewer'";
 			$evaluation_contact = $db->GetRow($query);
 			if ($evaluation_contact) {
 				$permissions[] = array("contact_type" => "reviewer");
@@ -2825,6 +2847,38 @@ class Evaluation {
 		}
 		
 		return $permissions;
+	}
+	
+	public static function getReviewerEvaluations() {
+		global $db, $ENTRADA_USER;
+		
+		$query = "SELECT a.*, b.*, c.*, d.* FROM `evaluations` AS a
+					JOIN `evaluation_targets` AS b
+					ON a.`evaluation_id` = b.`evaluation_id`
+					JOIN `evaluation_forms` AS c
+					ON a.`eform_id` = c.`eform_id`
+					JOIN `evaluations_lu_targets` AS d
+					ON c.`target_id` = d.`target_id`
+					GROUP BY a.`evaluation_id`";
+		$evaluations = $db->GetAll($query);
+		
+		$output_evaluations = array();
+		
+		foreach ($evaluations as $evaluation) {
+			$permissions = Evaluation::getReviewPermissions($evaluation["evaluation_id"]);
+			if ($permissions) {
+				$progress_records = Evaluation::getProgressRecordsByPermissions($evaluation["evaluation_id"], $permissions, true);
+				if (isset($progress_records) && count($progress_records)) {
+					$evaluation["completed_attempts"] = count($progress_records);
+					$evaluation["evaluation_progress"] = $progress_records;
+					$evaluation["permissions"] = $permissions;
+					$output_evaluations[] = $evaluation;
+				}
+			}
+		}
+		
+		return $output_evaluations;
+		
 	}
 	
 	public static function getFormAuthorPermissions($eform_id) {
@@ -2842,18 +2896,20 @@ class Evaluation {
 		}
 	}
 	
-	public static function getProgressRecordsByPermissions ($evaluation_id, $permissions) {
+	public static function getProgressRecordsByPermissions ($evaluation_id, $permissions, $complete_only = false) {
 		global $db;
 
 		$progress_records = array();
 		if (is_array($permissions) && count($permissions)) {
 			foreach ($permissions as $permission) {
 				if ($permission["contact_type"] == "reviewer") {
-					$query = "SELECT * FROM `evaluation_progress` AS a
+					$query = "SELECT *, a.`eprogress_id` FROM `evaluation_progress` AS a
 								JOIN `evaluation_targets` AS b
 								ON a.`etarget_id` = b.`etarget_id`
+								LEFT JOIN `evaluation_progress_clerkship_events` AS c
+								ON a.`eprogress_id` = c.`eprogress_id`
 								WHERE a.`evaluation_id` = ".$db->qstr($evaluation_id)."
-								AND a.`progress_value` = 'completed'";
+								AND a.`progress_value` = 'complete'";
 					$progress_records = $db->GetAll($query);
 					break;
 				}
@@ -2862,9 +2918,11 @@ class Evaluation {
 				foreach ($permissions as $permission) {
 					switch ($permission["contact_type"]) {
 						case "target" :
-							$query = "SELECT * FROM `evaluation_progress` AS a
+							$query = "SELECT *, a.`eprogress_id` FROM `evaluation_progress` AS a
 										JOIN `evaluation_targets` AS b
 										ON a.`etarget_id` = b.`etarget_id`
+										LEFT JOIN `evaluation_progress_clerkship_events` AS c
+										ON a.`eprogress_id` = c.`eprogress_id`
 										WHERE a.`target_record_id` = ".$db->qstr($permission["target_record_id"])."
 										AND a.`evaluation_id` = ".$db->qstr($evaluation_id);
 							$temp_progress_records = $db->GetAll($query);
@@ -2878,11 +2936,14 @@ class Evaluation {
 						case "tutor" :
 						case "director" :
 						case "pcoordinator" :
-								$query = "SELECT * FROM `evaluation_progress` AS a
+								$query = "SELECT *, a.`eprogress_id` FROM `evaluation_progress` AS a
 											JOIN `evaluation_targets` AS b
 											ON a.`etarget_id` = b.`etarget_id`
+											LEFT JOIN `evaluation_progress_clerkship_events` AS c
+											ON a.`eprogress_id` = c.`eprogress_id`
 											WHERE b.`target_type` = ".$db->qstr($permission["target_type"])."
 											AND b.`target_value` = ".$db->qstr($permission["target_value"])."
+											".(isset($permission["evaluator_type"]) && $permission["evaluator_type"] == "cgroup_id" && $permission["evaluator_value"] ? "AND a.`proxy_id` IN (SELECT `proxy_id` FROM `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($permission["evaluator_value"])." AND `active` = 1)" : "")."
 											AND a.`evaluation_id` = ".$db->qstr($evaluation_id);
 								$temp_progress_records = $db->GetAll($query);
 								if ($temp_progress_records) {
@@ -2892,7 +2953,7 @@ class Evaluation {
 								}
 						break;
 						case "preceptor" :
-							$query = "SELECT * FROM `evaluation_progress` AS a
+							$query = "SELECT *, a.`eprogress_id` FROM `evaluation_progress` AS a
 										JOIN `evaluation_targets` AS b
 										ON a.`etarget_id` = b.`etarget_id`
 										JOIN `evaluation_progress_clerkship_events` AS c
@@ -2912,7 +2973,18 @@ class Evaluation {
 			}
 		}
 		
-		return $progress_records;
+		$output_progress_records = array();
+		
+		if ($complete_only) {
+			foreach ($progress_records as $progress_record) {
+				if ($progress_record["progress_value"] == "complete") {
+					$output_progress_records[$progress_record["eprogress_id"]] = $progress_record;
+				}
+			}
+		} else {
+			$output_progress_records = $progress_records;
+		}
+		return $output_progress_records;
 	}
 	
 	public static function responsesBelowThreshold($evaluation_id, $eprogress_id) {

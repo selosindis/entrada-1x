@@ -37,7 +37,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
 	if ($MAILING_LISTS["active"]) {
@@ -122,10 +122,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				$ERRORSTR[] = "The parent community that you have chosen is not currently activated; therefore a sub-communit cannot be created at this time.<br /><br />If you would like to create a community here, please contact a community administrator who will need to re-activate the community in their community profile.";
 				$COMMUNITY_PARENT = 0;
 			} elseif($result["community_members"] != "") {
-				if((is_array($community_members = @unserialize($result["community_members"]))) && (isset($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]))) {
-					if(!in_array($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"], $community_members)) {
+				if((is_array($community_members = @unserialize($result["community_members"]))) && (isset($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]))) {
+					if(!in_array($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"], $community_members)) {
 						$ERROR++;
-						$ERRORSTR[] = "The parent community that you have chosen only allows certain MEdTech groups (".html_encode(implode(", ", $community_members)).") to become members, and your group is ".html_encode($_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]).".<br /><br />If you would like to create a community here, please contact a community administrator who will need to adjust the groups requirements option in their community profile.";
+						$ERRORSTR[] = "The parent community that you have chosen only allows certain MEdTech groups (".html_encode(implode(", ", $community_members)).") to become members, and your group is ".html_encode($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]).".<br /><br />If you would like to create a community here, please contact a community administrator who will need to adjust the groups requirements option in their community profile.";
 						$COMMUNITY_PARENT = 0;
 					}
 				}
@@ -356,10 +356,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			if(!$ERROR) {
 				$PROCESSED["community_opened"]	= time();
 				$PROCESSED["updated_date"]		= time();
-				$PROCESSED["updated_by"]		= $_SESSION["details"]["id"];
+				$PROCESSED["updated_by"]		= $ENTRADA_USER->getID();
 
 				if(($db->AutoExecute("communities", $PROCESSED, "INSERT")) && ($community_id = $db->Insert_Id())) {
-					if($db->AutoExecute("community_members", array("community_id" => $community_id, "proxy_id" => $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"], "member_active" => 1, "member_joined" => time(), "member_acl" => 1), "INSERT")) {
+					if($db->AutoExecute("community_members", array("community_id" => $community_id, "proxy_id" => $ENTRADA_USER->getActiveId(), "member_active" => 1, "member_joined" => time(), "member_acl" => 1), "INSERT")) {
 
 						foreach($community_modules as $module_id) {
 							if(!communities_module_activate($community_id, $module_id)) {
@@ -371,7 +371,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						}
 
 						$query = "INSERT INTO `community_pages` (`community_id`, `parent_id`, `page_order`, `page_type`, `menu_title`, `page_title`, `page_url`, `page_content`, `allow_member_view`, `allow_troll_view`, `allow_public_view`, `updated_date`, `updated_by`) VALUES
-								(".$db->qstr($community_id).", '0', '0', 'default', 'Home', 'Home', '', '', '1', '1', '1', ".$db->qstr(time()).", ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]).")";
+								(".$db->qstr($community_id).", '0', '0', 'default', 'Home', 'Home', '', '', '1', '1', '1', ".$db->qstr(time()).", ".$db->qstr($ENTRADA_USER->getActiveId()).")";
 						if (!$db->Execute($query)) {
 							$ERROR++;
 							$ERRORSTR[] = "Your community was successfully created; however, a home page could not be creared for the community.<br /><br />The system administrator has been informed of this problem, and they will resolve it shortly.";
@@ -435,7 +435,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						$ERROR++;
 						$ERRORSTR[] = "Your community was successfully created; however, administrative permissions for your account could not be set to the new community.<br /><br />The system administrator has been informed of this problem, and they will resolve it shortly.";
 
-						application_log("error", "Community was created, but admin permissions for proxy id ".$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]." could not be set. Database said: ".$db->ErrorMsg());
+						application_log("error", "Community was created, but admin permissions for proxy id ".$ENTRADA_USER->getActiveId()." could not be set. Database said: ".$db->ErrorMsg());
 					}
 				} else {
 					$ERROR++;
@@ -616,72 +616,56 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 		});
 	});
 </script>
-<form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("action" => "create", "step" => 3)); ?>" method="post">
+<form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("action" => "create", "step" => 3)); ?>" method="post" class="form-horizontal">
 	<input type="hidden" name="category_id" value="<?php echo html_encode($CATEGORY_ID); ?>" />
 	<input type="hidden" name="community_parent" value="<?php echo html_encode($COMMUNITY_PARENT); ?>" />
-	<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Creating a Community">
-		<colgroup>
-			<col style="width: 3%" />
-			<col style="width: 20%" />
-			<col style="width: 77%" />
-		</colgroup>
-		<tr>
-			<td colspan="3">
-				<h2>Community Details</h2>
-			</td>
-		</tr>
-					<?php
+	<h3>Community Details</h3>
+	<div class="control-group">
+		<?php
 					if(is_array($community_parents)) {
 						?>
-		<tr>
-			<td></td>
-			<td><span class="form-nrequired">Community Path</span></td>
-			<td>
-								<?php
+		<label class="control-label">Community Path:</label>
+		<div class="controls">
+			<?php
 								foreach($community_parents as $result) {
 									echo html_encode($result["community_title"])." / ";
 								}
 								?>
-			</td>
-		</tr>
-					<?php
+		</div>
+		<?php
 					}
 					?>
-		<tr>
-			<td><?php echo help_create_button("Community Name", ""); ?></td>
-			<td><label for="community_title" class="form-required">Community Name</label></td>
-			<td>
-				<input type="text" id="community_title" name="community_title" value="<?php echo html_encode($PROCESSED["community_title"]); ?>" maxlength="64" style="width: 250px" onkeyup="validateShortname(this.value)" />
-				<span class="content-small">(<strong>Example:</strong> Medicine Club)</span>
-			</td>
-		</tr>
-		<tr>
-			<td><?php echo help_create_button("Community Keywords", ""); ?></td>
-			<td><label for="community_keywords" class="form-nrequired">Community Keywords</label></td>
-			<td>
-				<input type="text" id="community_keywords" name="community_keywords" value="<?php echo html_encode($PROCESSED["community_keywords"]); ?>" maxlength="255" style="width: 90%" />
-			</td>
-		</tr>
-		<tr>
-			<td style="vertical-align: top"><?php echo help_create_button("Community Description", ""); ?></td>
-			<td style="vertical-align: top"><label for="community_description" class="form-nrequired">Community Description</label></td>
-			<td><textarea id="community_description" name="community_description" style="width: 90%; height: 75px"><?php echo html_encode($PROCESSED["community_description"]); ?></textarea></td>
-		</tr>
-		<tr>
-			<td colspan="3">&nbsp;</td>
-		</tr>
-		<tr>
-			<td><?php echo help_create_button("Community Shortname", ""); ?></td>
-			<td><label for="community_shortname" class="form-required">Community Shortname</label></td>
-			<td>
-				<input type="text" id="community_shortname" name="community_shortname" value="" maxlength="20" style="width: 150px" onkeyup="validateShortname(this.value)" />
-				<span class="content-small">(<strong>Example:</strong> medicine_club)</span>
-			</td>
-		</tr>
-		<tr>
-			<td colspan="2">&nbsp;</td>
-			<td class="content-small" style="padding-bottom: 15px">
-				<strong>Help Note:</strong> The community shortname is a name used to uniquely identify your new community in the URL; a username for the community of sorts. It must lower-case, less than 20 characters, and can only contain letters, numbers, underscore or period.
+	</div>
+	<div class="control-group">
+		
+		<label class="control-label form-required" for="community_title">Community Name:</label>
+		<div class="controls">
+			<input type="text" id="community_title" name="community_title" value="<?php echo html_encode($PROCESSED["community_title"]); ?>" onkeyup="validateShortname(this.value)" />
+			<span class="content-small">(<strong>Example:</strong> Medicine Club)</span>
+		</div>
+	</div>
+	<div class="control-group">
+		<label class="control-label" for="community_keywords">Community Keywords:</label>
+		<div class="controls">
+			<input type="text" id="community_keywords" name="community_keywords" value="<?php echo html_encode($PROCESSED["community_keywords"]); ?>"  />
+		</div>
+	</div>
+	<div class="control-group">
+		<label class="control-label" for="community_description">Community Description:</label>
+		<div class="controls">
+			<textarea id="community_description" name="community_description"><?php echo html_encode($PROCESSED["community_description"]); ?></textarea>
+		</div>
+	</div>
+	<div class="control-group">
+		<label class="control-label form-required" for="community_shortname">Community Shortname:</label>
+		<div class="controls">
+			<input type="text" id="community_shortname" name="community_shortname" onkeyup="validateShortname(this.value)" />
+			<span class="content-small">(<strong>Example:</strong> medicine_club)</span>
+		</div>
+	</div>
+	<div class="control-group">
+		<div class="controls">
+			<p class="content-small"><strong>Help Note:</strong> The community shortname is a name used to uniquely identify your new community in the URL; a username for the community of sorts. It must lower-case, less than 20 characters, and can only contain letters, numbers, underscore or period.
 				<br /><br />
 							<?php
 							echo ENTRADA_URL."/community/";
@@ -690,15 +674,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									echo html_encode($result["community_shortname"])."/";
 								}
 							}
-							?><span id="displayed_shortname"></span>
-			</td>
-		</tr>
-		<tr>
-			<td style="padding-top:6px;"><?php echo help_create_button("Community Template", "community_template"); ?></td>
-			<td style="padding-top:6px;"><label for="community_template" class="form-nrequired">Community Template</label></td>
-			<td>
-				<div>
-					<?php
+							?><span id="displayed_shortname"></span></p>
+		</div>
+	</div>
+	<div class="control-group">
+		<label class="control-label form-required" >Community Template:</label>
+		<div class="controls">
+			<?php
 						$query = "SELECT * FROM `community_templates`"; 
 						$results = $db->GetAll($query);
 						if ($results) {
@@ -777,32 +759,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							<?php
 							}
 							?>
-				</div>
-			</td>
-		</tr>
-		<tr>
-			<td colspan="3">&nbsp;</td>
-		</tr>
-		<?php /* <tr>
-			<td><?php echo help_create_button("Contact E-Mail Address", ""); ?></td>
-			<td><label for="community_email" class="form-nrequired">Contact E-Mail</label></td>
-			<td><input type="text" id="community_email" name="community_email" value="<?php echo html_encode($PROCESSED["community_email"]); ?>" maxlength="128" style="width: 250px" /></td>
-		</tr>
-		<tr>
-			<td><?php echo help_create_button("External Website", ""); ?></td>
-			<td><label for="community_website" class="form-nrequired">External Website</label></td>
-			<td><input type="text" id="community_website" name="community_website" value="<?php echo html_encode($PROCESSED["community_website"]); ?>" maxlength="1055" style="width: 250px" /></td>
-		</tr> */ ?>
-		<tr>
-			<td colspan="3" style="padding-top: 20px">
-				<h2>Community Modules</h2>
-			</td>
-		</tr>
-		<tr>
-			<td style="vertical-align: top"><?php echo help_create_button("Available Modules", ""); ?></td>
-			<td style="vertical-align: top"><span class="form-required">Available Modules</span></td>
-			<td>
-							<?php
+		</div>
+	</div>
+	<h3>Community modules</h3>
+	<div class="control-group">
+		<label class="control-label form-required">Available Modules:</label>
+		<div class="controls">
+			<?php
 							$query	= "SELECT * FROM `communities_modules` WHERE `module_active` = '1' AND `module_visible` = '1' ORDER BY `module_title` ASC";
 							$results	= $db->GetAll($query);
 							if($results) {
@@ -838,18 +801,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								application_log("error", "Unable to fetch Community Modules from database. Database said: ".$db->ErrorMsg());
 							}
 							?>
-			</td>
-		</tr>
-		<tr>
-			<td colspan="3" style="padding-top: 10px">
-				<h2>Community Permissions</h2>
-			</td>
-		</tr>
-		<tr>
-			<td style="vertical-align: top"><?php echo help_create_button("Access Permissions", ""); ?></td>
-			<td style="vertical-align: top"><span class="form-nrequired">Access Permissions</span></td>
-			<td style="padding-bottom: 15px">
-				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Setting Access Permissions">
+		</div>
+	</div>
+	<h3>Community Permissions</h3>
+	<div class="control-group">
+		<label class="control-label form-required">Access Permissions:</label>
+		<div class="controls">
+			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Setting Access Permissions">
 					<colgroup>
 						<col style="width: 3%" />
 						<col style="width: 97%" />
@@ -871,13 +829,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						</tr>
 					</tbody>
 				</table>
-			</td>
-		</tr>
-		<tr>
-			<td style="vertical-align: top"><?php echo help_create_button("Registration Options", ""); ?></td>
-			<td style="vertical-align: top"><span class="form-nrequired">Registration Options</span></td>
-			<td style="padding-bottom: 15px">
-				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Setting Registration Options">
+		</div>
+	</div>
+	<div class="control-group">
+		<label class="control-label form-required">Registration Options:</label>
+		<div class="controls">
+			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Setting Registration Options">
 					<colgroup>
 						<col style="width: 3%" />
 						<col style="width: 97%" />
@@ -969,14 +926,20 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						</tr>
 					</tbody>
 				</table>
-			</td>
-		</tr>
+		</div>
+	</div>
+	<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Creating a Community">
+		<colgroup>
+			<col style="width: 20%" />
+			<col style="width: 77%" />
+			<col style="width: 3%" />
+		</colgroup>
 					<?php
 					if ($MAILING_LISTS["active"]) {
 						?>
 		<tr><td colspan="3"><h2 style="margin-top: 0px">Community Mailing List</h2></td></tr>
 		<tr>
-			<td style="vertical-align: top"><?php echo help_create_button("Mailing List Mode", ""); ?></td>
+			<!--<td style="vertical-align: top"><?php echo help_create_button("Mailing List Mode", ""); ?></td>-->
 			<td style="vertical-align: top"><span class="form-nrequired">Mailing List Mode</span></td>
 			<td style="padding-bottom: 15px">
 				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Setting Mailing List Mode">
@@ -1020,7 +983,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL."/".$MODULE; ?>'" />
 						</td>
 						<td style="width: 75%; text-align: right; vertical-align: middle">
-							<input type="submit" class="button" value="Create" />
+							<input type="submit" class="btn btn-primary" value="Create" />
 						</td>
 					</tr>
 				</table>
@@ -1034,7 +997,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 		case 1 :
 		default :
 			?>
-<h2>Step 1: Choosing Your Category</h2>
+<h3>Step 1: Choosing Your Category</h3>
 			<?php
 			if($ERROR) {
 				echo display_error();

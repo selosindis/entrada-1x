@@ -137,14 +137,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							exit;
 						}
 						?>
-						<h3>Browse Communities</h3>
-						<div style="margin-top: -10px; float: right">
-							<a href="<?php echo ENTRADA_URL; ?>/communities?section=create&amp;category=<?php echo $CATEGORY_ID; ?>" style="color: #669900; font-size: 10px">create new community here</a>
+						<div class="row-fluid">
+							<div class="span8"><h3>Browse Communities</h3></div>
+							<div class="span4 alignRight"><a href="<?php echo ENTRADA_URL; ?>/communities?section=create&amp;category=<?php echo $CATEGORY_ID; ?>" class="btn btn-small">create new community</a></div>
 						</div>
-						<div style="margin-bottom: 15px">
-							<div class="strong-green"><img src="<?php echo ENTRADA_URL; ?>/images/btn_attention.gif" width="11" height="11" alt="" title="" /> <?php echo html_encode($category_details["category_title"]); ?></div>
-							<?php echo html_encode($community_details["category_description"]); ?>
-						</div>
+							<h4 class="categ-title"><?php echo html_encode($category_details["category_title"]); ?></h4>
+							<?php echo html_encode($community_details["category_description"]); ?></h4>
 						<?php
 						$query_counter	= "SELECT COUNT(*) AS `total_rows` FROM `communities` WHERE `category_id` = ".$db->qstr($CATEGORY_ID)." AND `community_active` = '1'";
 						$query_search	= "SELECT `community_id`, `category_id`, `community_url`, `community_shortname`, `community_title`, `community_description`, `community_keywords` FROM `communities` WHERE `category_id` = ".$db->qstr($CATEGORY_ID)." AND `community_active` = '1' ORDER BY `community_title` ASC LIMIT %s, %s";

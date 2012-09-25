@@ -401,7 +401,10 @@ text-decoration:blink;
 vertical-align: middle;
 color:#A30000;
 }
-
+.form-required:after{
+  content:"*";
+  
+}
 .form-nrequired {
 vertical-align: middle;
 color:#2F3032;

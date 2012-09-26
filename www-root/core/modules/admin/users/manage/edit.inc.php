@@ -343,7 +343,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										} elseif (!$perm["role_id"]) {
 											$ERROR++;
 											$ERRORSTR[] = "Please assign a role for all permissions.";
-										} else {										
+										} else {	
+											$PROCESSED_ACCESS["id"] = $perm["access_id"];
 											$PROCESSED_ACCESS["user_id"] = $PROXY_ID;
 											$PROCESSED_ACCESS["app_id"] = AUTH_APP_ID;
 											$PROCESSED_ACCESS["organisation_id"] = $perm["org_id"];
@@ -982,8 +983,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												<td colspan="3"><h3>Profiles</h3></td>
 											</tr>
 									<?php
-									
-								
 									$query		= "	SELECT ua.*, o.`organisation_id`, o.`organisation_title`, ud.`clinical`, ud.`entry_year`, ud.`grad_year`
 												FROM `".AUTH_DATABASE."`.`user_access` ua
 												JOIN `" . AUTH_DATABASE . "`.`organisations` o
@@ -1021,7 +1020,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											
 											$role_id = $db->GetOne($query);
 											
-											
+											$initial_acl["access_id"] = $result["id"];
 											$initial_acl["org_id"] = $result["organisation_id"]; 
 											$initial_acl["group_id"] = $group_id; 
 											$initial_acl["role_id"] = $role_id;

@@ -911,7 +911,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								<table class="org_table">
 										<tr>
 											<td style="padding-top:10px">
-											<label for="organisations""><strong>Organisation</strong></label><br />
+											<label for="organisations"><strong>Organisation</strong></label><br />
 											<select id="organisations" name="organisations" style="width:250px">
 										<?php
 											foreach($results as $result) {

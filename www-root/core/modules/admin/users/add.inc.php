@@ -58,13 +58,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			$in_departments = json_decode($in_departments["list"], true);
 			
 			/**
-			 * Required field "organisation_id" / Organisation Name.
+			 * Required field "organisation_id" / Organisation.
 			 */
 			if (isset($permissions[0]["org_id"]) && $default_organisation_id = clean_input($permissions[0]["org_id"], array("trim", "int"))) {								
 				$PROCESSED["organisation_id"] = $default_organisation_id;				
 			} else {
 				$ERROR++;
-				$ERRORSTR[] = "1. The <strong>Organisation Name</strong> field is required.";
+				$ERRORSTR[] = "As least one <strong>Organisation</strong> is required.";
 			}
 
 			/*
@@ -404,15 +404,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						} elseif (!$perm["role_id"]) {
 							$ERROR++;
 							$ERRORSTR[] = "Please assign a role for all permissions.";
-						} else {	
-							$query = "INSERT INTO `" . AUTH_DATABASE . "`.`user_organisations` (`organisation_id`, `proxy_id`)
-										VALUES(" . $perm["org_id"] . ", " . $PROCESSED_ACCESS["user_id"] . ")";
-							if (!$db->Execute($query)) {
-								$ERROR++;
-								$ERRORSTR[] = "Could not setup this user's organisations.";
-								application_log("error", "Error setting up organisations for user id [" . $PROCESSED_ACCESS["user_id"] . "]. Database said: ".$db->ErrorMsg());
-							}
-
+						} else {							
 							$query = "SELECT g.`group_name`, r.`role_name`
 									FROM `" . AUTH_DATABASE . "`.`system_groups` g, `" . AUTH_DATABASE . "`.`system_roles` r,
 										`" . AUTH_DATABASE . "`.`system_group_organisation` gho, `" . AUTH_DATABASE . "`.`organisations` o
@@ -531,7 +523,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								$SUCCESS++;
 								$SUCCESSSTR[]	= "You have successfully given this existing user access to this application.<br /><br />You will now be redirected to the users index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
-								//$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 								application_log("success", "Gave [".$PROCESSED_ACCESS["group"]." / ".$PROCESSED_ACCESS["role"]."] permissions to user id [".$PROCESSED_ACCESS["user_id"]."].");
 							} else {
@@ -560,15 +552,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								} elseif (!$perm["role_id"]) {
 									$ERROR++;
 									$ERRORSTR[] = "Please assign a role for all permissions.";
-								} else {	
-									$query = "INSERT INTO `" . AUTH_DATABASE . "`.`user_organisations` (`organisation_id`, `proxy_id`)
-											  VALUES(" . $perm["org_id"] . ", " . $PROCESSED_ACCESS["user_id"] . ")";
-									if (!$db->Execute($query)) {
-										$ERROR++;
-										$ERRORSTR[] = "Could not setup this user's organisations.";
-										application_log("error", "Error setting up organisations for user id [" . $PROCESSED_ACCESS["user_id"] . "]. Database said: ".$db->ErrorMsg());
-									}
-									
+								} else {									
 									$query = "SELECT g.`group_name`, r.`role_name`
 											FROM `" . AUTH_DATABASE . "`.`system_groups` g, `" . AUTH_DATABASE . "`.`system_roles` r,
 												`" . AUTH_DATABASE . "`.`system_group_organisation` gho, `" . AUTH_DATABASE . "`.`organisations` o
@@ -687,7 +671,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											$SUCCESS++;
 											$SUCCESSSTR[]	= "You have successfully created a new user in the authentication system, and have given them <strong>".$PROCESSED_ACCESS["group"]."</strong> / <strong>".$PROCESSED_ACCESS["role"]."</strong> access.<br /><br />You will now be redirected to the users index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
-											//$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+											$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 											application_log("success", "Gave [".$PROCESSED_ACCESS["group"]." / ".$PROCESSED_ACCESS["role"]."] permissions to user id [".$PROCESSED_ACCESS["user_id"]."].");
 										} else {
@@ -719,7 +703,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				$STEP = 1;
 			} else {
 				$url			= ENTRADA_URL."/admin/users";
-				//$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+				$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 				/**
 				 * If there are permissions only we may not have the information that we require,
@@ -1140,10 +1124,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						</tr>
 						<?php
 								$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title` 
-												FROM `".AUTH_DATABASE."`.`user_organisations` ua
+												FROM `".AUTH_DATABASE."`.`user_access` ua
 												JOIN `" . AUTH_DATABASE . "`.`organisations` o
 												ON ua.`organisation_id` = o.`organisation_id`
-												WHERE ua.`proxy_id` = " . $db->qstr($ENTRADA_USER->getID());
+												WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getID());
 													
 								$results	= $db->GetAll($query);
 								if ($results) {

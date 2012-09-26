@@ -45,7 +45,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$PROCESSED["organisation_id"] = $default_organisation_id;				
 					} else {
 						$ERROR++;
-						$ERRORSTR[] = "1. The <strong>Organisation Name</strong> field is required.";
+						$ERRORSTR[] = "At least one <strong>Organisation</strong> is required.";
 					}
 					/**
 					 * Non-required (although highly recommended) field for staff / student number.
@@ -347,14 +347,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											$PROCESSED_ACCESS["user_id"] = $PROXY_ID;
 											$PROCESSED_ACCESS["app_id"] = AUTH_APP_ID;
 											$PROCESSED_ACCESS["organisation_id"] = $perm["org_id"];
-
-											$query = "INSERT INTO `" . AUTH_DATABASE . "`.`user_organisations` (`organisation_id`, `proxy_id`)
-													  VALUES(" . $perm["org_id"] . ", " . $PROCESSED_ACCESS["user_id"] . ")";
-											if (!$db->Execute($query)) {
-												$ERROR++;
-												$ERRORSTR[] = "Could not setup this user's organisations.";
-												application_log("error", "Error setting up organisations for user id [" . $PROCESSED_ACCESS["user_id"] . "]. Database said: ".$db->ErrorMsg());
-											}
 											
 											$query = "SELECT g.`group_name`, r.`role_name`
 														FROM `" . AUTH_DATABASE . "`.`system_groups` g, `" . AUTH_DATABASE . "`.`system_roles` r,
@@ -517,7 +509,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							$SUCCESS++;
 							$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($PROCESSED["firstname"]." ".$PROCESSED["lastname"])."</strong> account in the authentication system.<br /><br />You will now be redirected to the users profile page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
-							//header( "refresh:5;url=".$url );
+							header( "refresh:5;url=".$url );
 				
 							application_log("success", "Proxy ID [".$ENTRADA_USER->getID()."] successfully updated the proxy id [".$PROXY_ID."] user profile.");
 						} else {
@@ -904,11 +896,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							</td>
 						</tr>
 						<?php							
-								$query		= "	SELECT o.`organisation_id`, o.`organisation_title`
-												FROM `".AUTH_DATABASE."`.`user_organisations` uo
+								$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
+												FROM `".AUTH_DATABASE."`.`user_access` ua
 												JOIN `" . AUTH_DATABASE . "`.`organisations` o
-												ON uo.`organisation_id` = o.`organisation_id`												
-												WHERE uo.`proxy_id` = " . $db->qstr($ENTRADA_USER->getId());
+												ON ua.`organisation_id` = o.`organisation_id`												
+												WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getId());
 													
 								$results	= $db->GetAll($query);
 								if ($results) {
@@ -958,11 +950,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								<?php
 									$initial_permissions = array();
 									
-									$query		= "	SELECT o.`organisation_id`, o.`organisation_title`
-												FROM `".AUTH_DATABASE."`.`user_organisations` uo
+									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
+												FROM `".AUTH_DATABASE."`.`user_access` ua
 												JOIN `" . AUTH_DATABASE . "`.`organisations` o
-												ON uo.`organisation_id` = o.`organisation_id`												
-												WHERE uo.`proxy_id` = " . $db->qstr($ENTRADA_USER->getId());
+												ON ua.`organisation_id` = o.`organisation_id`												
+												WHERE ua.`user_id` = " . $db->qstr($PROXY_ID);
 													
 									$organisations	= $db->GetAll($query);
 									

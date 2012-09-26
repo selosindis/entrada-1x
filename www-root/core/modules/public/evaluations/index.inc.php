@@ -161,7 +161,7 @@ if ($evaluations && $view != "review") {
 	?>
 	<h1>Evaluations and Assessments available for review</h1>
 	<?php
-	if ($review_evaluations) {
+	if ($evaluations) {
 		$sidebar_html  = "<ul class=\"menu\">\n";
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/evaluations?view=attempt\">View My Evaluations Available for Completion</a></li>\n";
 		$sidebar_html .= "</ul>\n";
@@ -205,6 +205,13 @@ if ($evaluations && $view != "review") {
 	<?php
 } else {
 	if (!isset($evaluations) || !$evaluations) {
+		if ($review_evaluations) {
+			$sidebar_html  = "<ul class=\"menu\">\n";
+			$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/evaluations?view=review\">View Completed Evaluations Available for Review</a></li>\n";
+			$sidebar_html .= "</ul>\n";
+
+			new_sidebar_item("Evaluations Review", $sidebar_html, "view-review", "open", "1.9");
+		}
 		?>
 		<div class="display-generic">
 			There are no evaluations or assessments <strong>assigned to you</strong> in the system at this time.

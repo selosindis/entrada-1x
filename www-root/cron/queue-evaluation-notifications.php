@@ -30,7 +30,8 @@ $query = "SELECT * FROM `evaluations` AS a
 			ON a.`eform_id` = b.`eform_id`
 			JOIN `evaluations_lu_targets` AS c
 			ON b.`target_id` = c.`target_id`
-			WHERE a.`evaluation_start` <= ".$db->qstr(strtotime("-1 day"))."
+			WHERE a.`evaluation_start` >= ".$db->qstr(strtotime("-1 day"))."
+			AND a.`evaluation_start` <= ".$db->qstr(time())."
 			AND a.`evaluation_finish` >= ".$db->qstr((time() - (ONE_WEEK * 10)))."
 			AND c.`target_shortname` NOT IN ('preceptor', 'rotation_core', 'rotation_elective')
 			

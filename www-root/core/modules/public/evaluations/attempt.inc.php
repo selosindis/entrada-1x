@@ -385,7 +385,7 @@ if ($RECORD_ID) {
 													$url = ENTRADA_URL."/evaluations";
 
 													$SUCCESS++;
-													$SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($evaluation_record["evaluation_title"])."</strong> evaluation.<br /><br />You will now be redirected back to the learning event; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+													$SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($evaluation_record["evaluation_title"])."</strong> evaluation.<br /><br />You will now be redirected back to the evaluations index; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 													$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 15000)";
 												}
@@ -400,7 +400,7 @@ if ($RECORD_ID) {
 												$url = ENTRADA_URL."/evaluations";
 
 												$SUCCESS++;
-												$SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($evaluation_record["evaluation_title"])."</strong> evaluation.<br /><br />You will now be redirected back to the learning event; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+												$SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($evaluation_record["evaluation_title"])."</strong> evaluation.<br /><br />You will now be redirected back to the evaluations index; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 												$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 15000)";
 											}

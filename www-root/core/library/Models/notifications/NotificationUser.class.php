@@ -262,7 +262,7 @@ class NotificationUser {
 				$content_url = ENTRADA_URL."/evaluations?section=attempt&id=".$this->getRecordID();
 			break;
 			case "evaluation_threshold" :
-				$content_url = ENTRADA_URL."/evaluations?section=review&id=".$this->getRecordID()."&proxy_id=".$this->getRecordProxyID();
+				$content_url = ENTRADA_URL."/evaluations?section=review&id=".$this->getRecordID();
 			break;
 			case "event_discussion" :
 			default :

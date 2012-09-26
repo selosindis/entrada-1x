@@ -269,7 +269,7 @@ class Notification {
 							$content_type_shortname = "assessment";
 						} else {
 							$content_type_shortname = "evaluation";
-						}//%UC_CONTENT_TYPE_NAME% %CONTENT_TITLE% %CONTENT_TYPE_NAME%  %CONTENT_TYPE_SHORTNAME%  %CONTENT_TITLE% %URL% %APPLICATION_NAME% %ENTRADA_URL%
+						}
 						$evaluation = $db->GetRow("SELECT * FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($notification_user->getRecordID()));
 						$evaluation_start = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_start"]);
 						$evaluation_finish = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_finish"]);

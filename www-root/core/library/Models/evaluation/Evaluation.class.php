@@ -3000,7 +3000,8 @@ class Evaluation {
 		if ($evaluation_questions) {
 			foreach ($evaluation_questions as $evaluation_question) {
 				$query = "SELECT `response_order` FROM `evaluation_form_responses`
-							WHERE `efquestion_id` = ".$db->qstr($evaluation_question["efquestion_id"]);
+							WHERE `efquestion_id` = ".$db->qstr($evaluation_question["efquestion_id"])."
+							AND `minimum_passing_level` = 1";
 				$minimum_passing_level = $db->GetOne($query);
 				if ($minimum_passing_level) {
 					$query = "SELECT c.`response_order` FROM `evaluation_progress` AS a

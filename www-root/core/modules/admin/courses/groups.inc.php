@@ -27,7 +27,7 @@ if (!defined("PARENT_INCLUDED")) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('electives', 'update')) {
+} elseif (!$ENTRADA_ACL->amIAllowed('group', 'update')) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;

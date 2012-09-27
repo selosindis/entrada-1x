@@ -605,12 +605,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					?>
 					<script type="text/javascript">
 					function initFormOptions() {
-						if ($('scripts-on-open') && $('scripts-on-open').innerHTML) {
-							eval($('scripts-on-open').innerHTML);
-						}
-						if ($('target_type_rotations')) {
+						if ($('target_type_rotations') != undefined) {
 							var target_type = 'rotations';
-							if ($(target_type + '_options')) {
+							if ($(target_type + '_options') != undefined) {
 
 								$(target_type + '_options').addClassName('multiselect-processed');
 
@@ -633,7 +630,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									}
 								});
 
-								if ($(target_type + '_cancel')) {
+								if ($(target_type + '_cancel') != undefined) {
 									$(target_type + '_cancel').observe('click', function(event) {
 										this.container.hide();
 
@@ -644,7 +641,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									}.bindAsEventListener(multiselect[target_type]));
 								}
 
-								if ($(target_type + '_close')) {
+								if ($(target_type + '_close') != undefined) {
 									$(target_type + '_close').observe('click', function(event) {
 										this.container.hide();
 
@@ -656,6 +653,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 								multiselect[target_type].container.show();
 							}
+						}
+						if ($('scripts-on-open') != undefined && $('scripts-on-open').innerHTML) {
+							eval($('scripts-on-open').innerHTML);
 						}
 					}
 						
@@ -687,12 +687,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 										$('evaluation_options').hide();
 									},
 									onComplete : function () {
-										if ($('scripts-on-open') && $('scripts-on-open').innerHTML) {
-											eval($('scripts-on-open').innerHTML);
-										}
-										if ($('target_type_rotations')) {
+										if ($('target_type_rotations') != undefined) {
 											var target_type = 'rotations';
-											if ($(target_type + '_options')) {
+											if ($(target_type + '_options') != undefined) {
 
 												$(target_type + '_options').addClassName('multiselect-processed');
 
@@ -715,7 +712,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 													}
 												});
 
-												if ($(target_type + '_cancel')) {
+												if ($(target_type + '_cancel') != undefined) {
 													$(target_type + '_cancel').observe('click', function(event) {
 														this.container.hide();
 
@@ -726,7 +723,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 													}.bindAsEventListener(multiselect[target_type]));
 												}
 
-												if ($(target_type + '_close')) {
+												if ($(target_type + '_close') != undefined) {
 													$(target_type + '_close').observe('click', function(event) {
 														this.container.hide();
 
@@ -738,6 +735,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 												multiselect[target_type].container.show();
 											}
+										}
+										if ($('scripts-on-open') != undefined && $('scripts-on-open').innerHTML) {
+											eval($('scripts-on-open').innerHTML);
 										}
 									}
 								});
@@ -793,7 +793,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 										if (response.responseText) {
 											$('options_container').insert(response.responseText);
 
-											if ($(target_type + '_options')) {
+											if ($(target_type + '_options') != undefined) {
 
 												$(target_type + '_options').addClassName('multiselect-processed');
 
@@ -816,7 +816,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 													}
 												});
 
-												if ($(target_type + '_cancel')) {
+												if ($(target_type + '_cancel') != undefined) {
 													$(target_type + '_cancel').observe('click', function(event) {
 														this.container.hide();
 
@@ -827,7 +827,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 													}.bindAsEventListener(multiselect[target_type]));
 												}
 
-												if ($(target_type + '_close')) {
+												if ($(target_type + '_close') != undefined) {
 													$(target_type + '_close').observe('click', function(event) {
 														this.container.hide();
 
@@ -887,7 +887,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					}
 
 					function removeTarget(element, target_id) {
-						if ($(element)) {
+						if ($(element) != undefined) {
 							var tr = $(element).parentNode.parentNode;
 							if (tr.hasClassName('category')) {
 								tr.siblings().each( 
@@ -911,12 +911,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								);
 							}
 						}
-						if ($('target_'+element)) {
+						if ($('target_'+element) != undefined) {
 							$('target_'+element).remove();
 						}
 						Sortable.destroy('target_list');
 						Sortable.create('target_list');
-						if ($(element)) {
+						if ($(element) != undefined) {
 							$(element).checked = false;
 						}
 						var target = $('evaluation_target_'+target_id).value.split(',');

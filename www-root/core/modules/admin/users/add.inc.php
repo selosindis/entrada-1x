@@ -1332,12 +1332,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											my_departments.list.push(dept_id);
 											$('input[name=my_departments]').val(JSON.stringify(my_departments));
 											//reset the select list
+											$('#in_departments_' + org_id + ' option[value=' + dept_id + ']').remove();
 											$('select[name^=in_departments_]').val(0);
 										});
 										
 										$('a.remove_dept').live("click", function(event) {
 											event.preventDefault();
-											var dept_id = $(this).closest("li").attr("id").split("_")[1];											
+											var dept_id = $(this).closest("li").attr("id").split("_")[1];
+											var dept_text = $(this).closest("li").text();											
 											var org_id = $(this).closest("ol").attr("id").split("_")[2];
 											$(this).closest("li").remove();
 											if ($('#departments_container_' + org_id).children().size() == 0) {
@@ -1348,6 +1350,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 													my_departments.list.splice(i, 1);
 												} 
 											}
+											$('input[name=my_departments]').val(JSON.stringify(my_departments));
 											//add the dept back to the select list
 											var option = $("<option></option>").text(dept_text);
 											$(option).attr("value", dept_id);

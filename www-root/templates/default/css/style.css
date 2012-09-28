@@ -204,6 +204,12 @@ a.log-out:hover{
 .btn-small{
   padding:2px 10px;
 }
+.btn.active, .btn:active {
+  background:#E9E9E9;
+  -webkit-box-shadow:0 1px 2px rgba(0, 0, 0, 0.1) inset, 0 1px 2px rgba(0, 0, 0, 0.05);
+  -moz-box-shadow:0 1px 2px rgba(0, 0, 0, 0.1) inset, 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow:0 1px 2px rgba(0, 0, 0, 0.1) inset, 0 1px 2px rgba(0, 0, 0, 0.05);
+}
 .alignRight{
   text-align:right;
 }
@@ -250,7 +256,29 @@ span.bread-separator{
   color:#999;
   margin:0 3px;
 }
-
+/*** Departamental Clerkship Schedule ***/
+.select-dep form{
+  padding:15px;
+  background:#FAFAFA;
+  -webkit-border-radius:5px;
+  -moz-border-radius:5px;
+  border-radius:5px;
+  -moz-box-shadow:1px 1px 0 rgba(0,0,0,0.1);
+  -webkit-box-shadow:1px 1px 0 rgba(0,0,0,0.1);
+  box-shadow:1px 1px 0 rgba(0,0,0,0.1);
+}
+.select-dep .control-group {
+  margin-bottom:0;
+}
+.select-dep form label{
+  font-weight:bold;
+}
+form legend.content-subheading{
+  margin-bottom:0;
+  line-height:1.5;
+  border:none;
+}
+/*** End dep clerkship schedule ***/
 /***** Footer *****/
 footer#main-footer .container{
   text-align:center;

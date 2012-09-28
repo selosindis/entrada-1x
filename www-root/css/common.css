@@ -285,7 +285,7 @@ color:#036;
 
 .content-subheading {
 font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
-font-size:12px;
+font-size:13px;
 font-weight:700;
 color:#036;
 }
@@ -954,7 +954,7 @@ font-weight:bold;
 ul.menu li,ul.menu li.off {
 font-size:12px;
 padding-bottom:4px;
-padding-left:17px;
+padding-left:20px;
 background:transparent url(../images/checkbox-off.gif) 0 4px no-repeat;
 }
 
@@ -970,7 +970,10 @@ list-style-type:none;
 background:none;
 padding-left:0;
 }
-
+ul.menu li.on a{
+  color:#444;
+  font-size:12px;
+}
 ul.menu.none li img {
 width:14px;
 height:14px;
@@ -2715,8 +2718,12 @@ padding:4px 0 0;
 ul.menu li.incorrect,ul.menu li.on,td.inner-content-box-body ul li {
 font-size:10px;
 padding-bottom:4px;
-padding-left:17px;
+padding-left:20px;
 background:transparent url(../images/checkbox-on.gif) no-repeat;
+}
+
+ul.menu li.on,ul.menu li.off {
+  background-position:0 2px;  
 }
 
 table.quizResults,table.tableList {
@@ -3810,7 +3817,7 @@ a.paginate_button, a.paginate_active {
  * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Designed and built with all the love in the world @twitter by @mdo and @fat.
- */
+ 
 .nav{margin-left:0;margin-bottom:18px;list-style:none;}
 .nav>li>a{display:block;}
 .nav>li>a:hover{text-decoration:none;background-color:#eeeeee;}
@@ -3870,3 +3877,4 @@ a.paginate_button, a.paginate_active {
 .tabs-right .nav-tabs>li>a{margin-left:-1px;-webkit-border-radius:0 4px 4px 0;-moz-border-radius:0 4px 4px 0;border-radius:0 4px 4px 0;}
 .tabs-right .nav-tabs>li>a:hover{border-color:#eeeeee #eeeeee #eeeeee #dddddd;}
 .tabs-right .nav-tabs .active>a,.tabs-right .nav-tabs .active>a:hover{border-color:#ddd #ddd #ddd transparent;*border-left-color:#ffffff;}
+*/

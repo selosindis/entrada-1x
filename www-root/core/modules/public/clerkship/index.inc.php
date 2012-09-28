@@ -340,19 +340,12 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 		</script>
 
 		<h1>Departmental Clerkship Schedule</h1>
-		<form id="department-change-form" action="<?php echo ENTRADA_URL; ?>/clerkship" method="get">
-		<table style="width: 100%" cellspacing="1" cellpadding="2" border="0" summary="Select Department">
-		<colgroup>
-			<col style="width: 3%" />
-			<col style="width: 25%" />
-			<col style="width: 72%" />
-		</colgroup>
-		<tbody>
-			<tr>
-				<td>&nbsp;</td>
-				<td><label for="department" class="form-required">Select Department:</label></td>
-				<td>
-					<select id="department" name="d" style="width: 95%" onchange="$('department-change-form').submit()">
+		<div class="select-dep clearfix">
+		<form id="department-change-form" action="<?php echo ENTRADA_URL; ?>/clerkship" method="get" class="form-horizontal">
+		<div class="control-group">
+			<label class="control-label form-required" for="department" >Select Department:</label>
+			<div class="controls">
+				<select id="department" name="d" onchange="$('department-change-form').submit()">
 					<option value="">-- Select the Department to Browse --</option>
 					<?php
 					$query = "	SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
@@ -382,11 +375,10 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 					}
 					?>
 					</select>
-				</td>
-			</tr>
-		</tbody>
-		</table>
+			</div> <!-- controls -->
+		</div>  <!-- control-group -->
 		</form>
+		</div><!-- /select-dep -->
 <?php
 		if ($ENTRADA_ACL->amIAllowed('clerkship', 'read')) {
 			/**
@@ -477,7 +469,7 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 					</table>
 				</td>
 				<td style="padding-bottom: 3px; text-align: right; vertical-align: middle; white-space: nowrap">
-					<h1><?php echo html_encode($DATE_INFO["month"]); ?> Schedule</h1>
+					<h3><?php echo html_encode($DATE_INFO["month"]); ?> Schedule</h3>
 				</td>
 			</tr>
 			</table>
@@ -931,61 +923,55 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 		    }
 		}
 		?>
-		<br /><br />
-		<h1>Student Search</h1>
+		<h2>Student Search</h2>
 		<br />
-		<form action="<?php echo ENTRADA_URL; ?>/clerkship?section=results" method="post">
+		<form action="<?php echo ENTRADA_URL; ?>/clerkship?section=results" method="post" class="form-horizontal">
 		<input type="hidden" name="action" value="results" />
-		<table cellspacing="0" cellpadding="0" border="0">
-		<tr>
-			<td colspan="3"><span class="content-subheading">Graduating Year</span></td>
-		</tr>
-		<tr>
-			<td>Select an elective qualifier:</td>			
-			<td style="padding-left: 10px">
-				<select name="qualifier" style="width: 205px">
-					<option value="*">All</option>
-					<option value="deficient">Deficient</option>
-					<option value="attained">Attained</option>
-				</select>
-			</td>
-			<td style="padding-left: 10px">&nbsp;</td>
-		</tr>
-		<tr>
-			<td>Select the graduating year you wish to view students in:</td>
-			<td style="padding-left: 10px">
-				<select name="year" style="width: 205px">
-				<option value="">-- Select Graduating Year --</option>
-				<?php
-				if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-					foreach ($SYSTEM_GROUPS["student"] as $class) {
-						echo "<option value=\"".$class."\">Class of ".html_encode($class)."</option>\n";
-					}
-				}
-				?>
-				</select>
-			</td>
-			<td style="padding-left: 10px"><input type="submit" value="Proceed" class="button" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" /></td>
-		</tr>
-		<tr>
-			<td colspan="3">
-				<br />
-				<b>- OR -</b>
-				<br /><br />
-			</td>
-		</tr>
-		<tr>
-			<td colspan="3"><span class="content-subheading">Student Finder</span></td>
-		</tr>
-		<tr>
-			<td>Enter the first or lastname of the student:</td>			
-			<td style="padding-left: 10px">
-				<input type="text" name="name" value="" style="width: 200px" />
-			</td>
-			<td style="padding-left: 10px"><input type="submit" value="Search" class="button" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" /></td>
-		</tr>
-		<tr>
-		</table>
+		<fieldset>
+			<legend class="content-subheading">Graduating Year</legend>
+			<div class="control-group">
+				<label class="control-label" style="width:335px;text-align:left;">Select an elective qualifier:</label>
+				<div class="controls">
+					<select name="qualifier">
+						<option value="*">All</option>
+						<option value="deficient">Deficient</option>
+						<option value="attained">Attained</option>
+					</select>
+				</div>
+			</div> <!--/control-group -->
+			<div class="control-group">
+					<label class="control-label" style="width:335px;text-align:left;">Select the graduating year you wish to view students in:</label>
+					<div class="controls">
+						<select name="year">
+							<option value="">-- Select Graduating Year --</option>
+							<?php
+							if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
+								foreach ($SYSTEM_GROUPS["student"] as $class) {
+									echo "<option value=\"".$class."\">Class of ".html_encode($class)."</option>\n";
+								}
+							}
+							?>
+						</select>
+					</div>
+			</div> <!--/control-group -->
+			<div class="form-actions" style="padding-left:335px;padding-top:0">
+				<input type="submit" value="Proceed" class="btn"/
+			</div>
+		</fieldset>
+		<hr />
+		<fieldset>
+			<legend class="content-subheading">Student Finder</legend>
+			<div class="control-group">
+				<label class="control-label" style="width:335px;text-align:left;">Enter the first or lastname of the student:</label>
+				<div class="controls">
+					<input type="text" name="name" value="" />
+				</div>
+			</div> <!--/control-group -->
+			<div class="form-actions" style="padding-left:335px;padding-top:0">
+				<input type="submit" value="Search" class="btn"/>
+			</div>
+			
+		</fieldset>
 		</form>
 		<?php
 	}

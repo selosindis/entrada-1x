@@ -206,40 +206,29 @@ if (!defined("PARENT_INCLUDED")) {
 	}
 	?>
 	<h1>Curriculum Search</h1>
-	<form action="<?php echo ENTRADA_URL; ?>/search" method="get">
+	<form action="<?php echo ENTRADA_URL; ?>/search" method="get" class="form-horizontal">
 		<?php
 		if ($SEARCH_MODE == "timeline") {
 			echo "<input type=\"hidden\" name=\"m\" value=\"timeline\" />\n";
 		}
 		?>
-		<table style="width: 100%" cellspacing="1" cellpadding="1" border="0">
-			<colgroup>
-				<col style=" width: 20%" />
-				<col style=" width: 45%" />
-				<col style=" width: 35%" />
-			</colgroup>
-			<tbody>
-				<tr>
-					<td><label for="q" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Boolean Search Term:</label></td>
-					<td colspan="2"><input type="text" id="q" name="q" value="<?php echo html_encode($SEARCH_QUERY); ?>" style="width: 350px" /> <input type="submit" class="button" value="Search" /></td>
-				</tr>
-				<tr>
-					<td>&nbsp;</td>
-					<td colspan="2" class="content-small">
-						Example 1: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "asthma")); ?>" class="content-small">asthma</a><br />
-						Example 2: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "pain+AND+palliative")); ?>" class="content-small">pain AND palliative</a><br />
-						Example 3: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "%22heart+disease%22+NOT+pediatric")); ?>" class="content-small">"heart disease" NOT pediatric</a>
-					</td>
-				</tr>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td>
-						<label for="c" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Graduating Class:</label>
-					</td>
-					<td>
-						<select id="c" name="c" style="width: 250px">
+		<div class="control-group" style="margin-bottom:5px">
+			<label class="control-label">Boolean Search Term:</label>
+			<div class="controls">
+				<input type="text" style="width:300px" id="q" name="q" value="<?php echo html_encode($SEARCH_QUERY); ?>" /> <input type="submit" class="btn" value="Search" />
+			</div>
+		</div>
+		<div class="control-group">
+			<div class="controls content-small">
+				Example 1: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "asthma")); ?>" class="content-small">asthma</a><br />
+				Example 2: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "pain+AND+palliative")); ?>" class="content-small">pain AND palliative</a><br />
+				Example 3: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "%22heart+disease%22+NOT+pediatric")); ?>" class="content-small">"heart disease" NOT pediatric</a>
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label">Graduating Class:</label>
+			<div class="controls">
+				<select id="c" name="c">
 							<option value="0"<?php echo ((!$SEARCH_CLASS) ? " selected=\"selected\"" : ""); ?>>-- All Cohorts --</option>
 								<?php
 								$cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
@@ -247,18 +236,13 @@ if (!defined("PARENT_INCLUDED")) {
 									echo "<option value=\"".$cohort["group_id"]."\"".(($SEARCH_CLASS == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
 								}
 								?>
-						</select>
-					</td>
-					<td>
-						&nbsp;
-					</td>
-				</tr>
-				<tr>
-					<td>
-						<label for="y" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Academic Year:</label>
-					</td>
-					<td>
-						<select id="y" name="y" style="width: 250px" <?php echo (($SEARCH_MODE == "timeline") ? " disabled=\"disabled\"" : ""); ?>>
+				</select>
+			</div>
+		</div> <!--/control-group-->
+		<div class="control-group">
+			<label class="control-label">Academic Year:</label>
+			<div class="controls">
+					<select id="y" name="y" <?php echo (($SEARCH_MODE == "timeline") ? " disabled=\"disabled\"" : ""); ?>>
 							<option value="0"<?php echo ((!$SEARCH_YEAR)? " selected=\"selected\"" : ""); ?>>-- All Years --</option>
 							<?php
 							$start_year = (fetch_first_year() - 3);
@@ -266,14 +250,17 @@ if (!defined("PARENT_INCLUDED")) {
 								echo "<option value=\"".$year."\"".(($SEARCH_YEAR == $year) ? " selected=\"selected\"" : "").">".$year."/".($year + 1)."</option>\n";
 							}
 							?>
-						</select>
-					</td>
-					<td style="text-align: right">
-						<span style="width: 100px; height: 23px"><a href="<?php echo ENTRADA_URL; ?>/search?<?php echo replace_query(array("m" =>  "text")); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/search-mode-text-<?php echo (($SEARCH_MODE != "timeline") ? "on" : "off"); ?>.gif" width="100" height="23" alt="" title="" border="0" /></a></span><span style="width: 100px; height: 23px"><a href="<?php echo ENTRADA_URL; ?>/search?<?php echo replace_query(array("m" =>  "timeline")); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/search-mode-timeline-<?php echo (($SEARCH_MODE == "timeline") ? "on" : "off"); ?>.gif" widtgh="100" height="23" alt="" title="" border="0" /></a></span>
-					</td>
-				</tr>
-			</tbody>
-		</table>
+					</select>
+			</div>
+		</div> <!--/control-group-->
+		<div class="control-group">
+			<div class="controls">
+				<div class="btn-group" data-toggle="buttons-radio">
+					<a href="<?php echo ENTRADA_URL; ?>/search?<?php echo replace_query(array("m" =>  "text")); ?>" class="btn <?php echo (($SEARCH_MODE != "timeline") ? "active" : ""); ?>">Text Results</a>
+					<a href="<?php echo ENTRADA_URL; ?>/search?<?php echo replace_query(array("m" =>  "timeline")); ?>" class="btn <?php echo (($SEARCH_MODE == "timeline") ? "active" : ""); ?>">Timeline</a>
+				</div>
+			</div>
+		</div>
 	</form>
 	<?php
 	if ($SEARCH_QUERY) {

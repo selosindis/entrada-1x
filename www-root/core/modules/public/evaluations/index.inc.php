@@ -44,6 +44,7 @@ if (isset($_GET["view"]) && $_GET["view"] == "review") {
 
 $evaluations = Evaluation::getEvaluatorEvaluations();
 $review_evaluations = Evaluation::getReviewerEvaluations();
+$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";
 
 if ($evaluations && $view != "review") {
 	?>
@@ -66,7 +67,6 @@ if ($evaluations && $view != "review") {
 	echo "	</ul>\n";
 	echo "</div>\n";
 	echo "<br />";
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";
 	$HEAD[] = "<script type=\"text/javascript\">
 	var eTable;
 	jQuery(document).ready(function() {
@@ -158,6 +158,53 @@ if ($evaluations && $view != "review") {
 	</table>
 	<?php
 } elseif ($review_evaluations && $view != "attempt") {
+	$HEAD[] = "<script type=\"text/javascript\">
+	var eTable;
+	jQuery(document).ready(function() {
+		eTable = jQuery('#evaluations').dataTable(
+			{    
+				'sPaginationType': 'full_numbers',
+				'aoColumns' : [ 
+						null,
+						null,
+						{'sType': 'alt-string'},
+						null,
+						null,
+                        { 'bVisible' : false }
+					],
+				'bInfo': false
+			}
+		);
+		eTable.fnFilter('".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "all" ? "" : $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"])."', 5);
+	});
+	
+	function loadTab (value) {
+		if (!$(value).hasClassName('active')) {
+			new Ajax.Request('".ENTRADA_URL."/evaluations', {
+				method: 'get',
+				parameters: {
+								'view_type': value,
+								'ajax': 1
+							}
+			});
+			var filterval = (value == 'all' ? '' : value)
+			eTable.fnFilter(filterval, 5);
+			$$('li.active').each(function (e) {
+				e.removeClassName('active');
+			});
+			$(value).parentNode.addClassName('active');
+		}
+	}
+	</script>";
+	if ($ENTRADA_ACL->amIAllowed(new EvaluationResource(null, true), 'update')) {
+		echo "<div class=\"no-printing\">\n";
+		echo "    <ul class=\"nav nav-tabs\">\n";
+		echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "available" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"available\" onclick=\"loadTab(this.id)\">Display My Evaluations and Assessments</a></li>\n";
+		echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "all" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"all\" onclick=\"loadTab(this.id)\">Display All</a></li>\n";
+		echo "	</ul>\n";
+		echo "</div>\n";
+		echo "<br />";
+	}
 	?>
 	<h1>Evaluations and Assessments available for review</h1>
 	<?php
@@ -176,6 +223,7 @@ if ($evaluations && $view != "review") {
 		<col class="date-small" />
 		<col class="title" />
 		<col class="date-smallest" />
+		<col class="date-smallest" />
 	</colgroup>
 	<thead>
 		<tr>
@@ -184,6 +232,7 @@ if ($evaluations && $view != "review") {
 			<td class="date-small">Close Date</td>
 			<td class="title">Title</td>
 			<td class="date-smallest">Submitted</td>
+			<td class="date-smallest">Status</td>
 		</tr>
 	</thead>
 	<tbody>
@@ -197,6 +246,7 @@ if ($evaluations && $view != "review") {
 		echo "	<td><a href=\"".$url."\" alt=\"".$evaluation["evaluation_finish"]."\">".date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_finish"])."</a></td>\n";
 		echo "	<td><a href=\"".$url."\">".html_encode($evaluation["evaluation_title"])."</a></td>\n";
 		echo "	<td><a href=\"".$url."\">".($evaluation["completed_attempts"] ? ((int)$evaluation["completed_attempts"]) : "0")."</a></td>\n";
+		echo "	<td><a href=\"".$url."\">".(isset($evaluation["admin"]) && $evaluation["admin"] ? "" : "available")."</a></td>\n";
 		echo "</tr>\n";
 	}
 	?>

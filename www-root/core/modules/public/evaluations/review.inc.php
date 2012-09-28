@@ -44,6 +44,22 @@ if (isset($_GET["pid"]) && clean_input($_GET["pid"], "int")) {
 }
 
 if ($RECORD_ID) {
+	?>
+	<script type="text/javascript">
+    document.observe('dom:loaded',function(){
+		$$(".criteria-tooltip").each(function (e) {
+			new Control.Window($(e.id),{  
+				position: 'relative',  
+				hover: true,  
+				offsetLeft: 125,  
+				width: 250,  
+				className: 'criteria-tooltip-box'  
+			});
+		});
+    }); 
+	</script>
+	<?php
+	
 	require_once("Models/evaluation/Evaluation.class.php");
 	$query = "SELECT * FROM `evaluations` AS a
 				JOIN `evaluation_forms` AS b
@@ -69,6 +85,18 @@ if ($RECORD_ID) {
 				if ($evaluation_question_responses) {
 					$evaluation_question["response_ids"] = array();
 					foreach ($evaluation_question_responses as $evaluation_question_response) {
+						if ($evaluation_question_response["criteria_text"]) {
+							?>
+							<div id="criteria-<?php echo $evaluation_question_response["efresponse_id"]; ?>" style="display: none;">
+								<span class="content-small">
+									<strong>Criteria:</strong>
+									<?php
+										echo $evaluation_question_response["criteria_text"];
+									?>
+								</span>
+							</div>
+							<?php
+						}
 						$evaluation_question_response["selections"] = 0;
 						$responses[$evaluation_question_response["efresponse_id"]] = $evaluation_question_response;
 						$evaluation_question["response_ids"][] = $evaluation_question_response["efresponse_id"];
@@ -78,6 +106,9 @@ if ($RECORD_ID) {
 				$questions[$evaluation_question["efquestion_id"]] = $evaluation_question;
 			}
 		}
+	}
+	if ($evaluation && $ENTRADA_ACL->amIAllowed(new EvaluationResource($evaluation["evaluation_id"], true), 'update')) {
+		array_unshift($permissions, array("contact_type" => "reviewer"));
 	}
 	if ($evaluation && isset($permissions) && $permissions) {
 		$available_target_ids = array();
@@ -211,7 +242,7 @@ if ($RECORD_ID) {
 					}
 					$sidebar_html .= "	<li class=\"".(isset($selected_target_id) && $selected_target_id == $target_id ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/evaluations?section=review&id=".$RECORD_ID."&target_id=".$target_id."\">".$available_target["target_title"]."</a></li>\n";
 				}
-				//Should be added in later to allow viewing aggregate of results from a number of evaluation targets.
+				//@todo: Should be added in later to allow viewing aggregate of results from a number of evaluation targets.
 				//$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/evaluations?section=review&id=".$RECORD_ID."&target_id=all\">Show All</a></li>\n";
 				$sidebar_html .= "</ul>\n";
 
@@ -272,7 +303,7 @@ if ($RECORD_ID) {
 					foreach ($question["response_ids"] as $response_id) {
 						$selections = (isset($available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["responses"][$response_id]) ? $available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["responses"][$response_id] : 0);
 						echo "	<tr>\n";
-						echo "		<td>".$responses[$response_id]["response_text"]."</td>\n";
+						echo "		<td><a class=\"criteria-tooltip\" id=\"tooltip-".$response_id."\" href=\"#criteria-".$response_id."\">".$responses[$response_id]["response_text"]."</a></td>\n";
 						echo "		<td>".(isset($available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["responses"]) && count($available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["responses"]) ? round(($selections / $available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["selections"] * 100), 1) : 0)."%</td>\n";
 						echo "		<td>".$selections."</td>\n";
 						echo "	</tr>\n";

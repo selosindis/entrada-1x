@@ -2850,7 +2850,7 @@ class Evaluation {
 	}
 	
 	public static function getReviewerEvaluations() {
-		global $db, $ENTRADA_USER;
+		global $db, $ENTRADA_USER, $ENTRADA_ACL;
 		
 		$query = "SELECT a.*, b.*, c.*, d.* FROM `evaluations` AS a
 					JOIN `evaluation_targets` AS b
@@ -2872,6 +2872,17 @@ class Evaluation {
 					$evaluation["completed_attempts"] = count($progress_records);
 					$evaluation["evaluation_progress"] = $progress_records;
 					$evaluation["permissions"] = $permissions;
+					$evaluation["admin"] = false;
+					$output_evaluations[] = $evaluation;
+				}
+			} elseif ($ENTRADA_ACL->amIAllowed(new EvaluationResource($evaluation["evaluation_id"], true), 'update')) {
+				$permissions = array(array("contact_type" => "reviewer"));
+				$progress_records = Evaluation::getProgressRecordsByPermissions($evaluation["evaluation_id"], $permissions, true);
+				if (isset($progress_records) && count($progress_records)) {
+					$evaluation["completed_attempts"] = count($progress_records);
+					$evaluation["evaluation_progress"] = $progress_records;
+					$evaluation["permissions"] = $permissions;
+					$evaluation["admin"] = true;
 					$output_evaluations[] = $evaluation;
 				}
 			}

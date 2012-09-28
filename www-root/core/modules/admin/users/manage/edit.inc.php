@@ -1098,10 +1098,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											$department_accum["department_id"] = $department_id;
 											$department_accum["department_title"] = $department_title;
 											echo "<br />";
-											$initial_departartments[] = $department_accum;
+											$initial_departments[] = $department_accum;
 										}
 									}
-									$initial_departments = array("dept_list" => $initial_departartments);
+									$initial_departments = array("dept_list" => $initial_departments);
 									$initial_departments = json_encode((object) $initial_departments);
 								?>
 								<input id="my_departments" name="my_departments" type="hidden" value="0" />

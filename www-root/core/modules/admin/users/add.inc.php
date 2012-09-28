@@ -1220,17 +1220,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 													<div id="departments_notice_<?php echo $result["organisation_id"]; ?>" class="content-small"><div style="margin: 5px 0 5px 0"><strong>Note:</strong> Selected departments will appear here.</div></div>
 													<hr />
 													<ol id="departments_container_<?php echo $result["organisation_id"]; ?>" class="sortableList" style="display: none;">
-													<?php
-													if (is_array($PROCESSED_DEPARTMENTS)) {
-														foreach($PROCESSED_DEPARTMENTS as $department_id) {
-															echo "<li id=\"type_".$department_id."\" class=\"\">
-																	<img src=\"".ENTRADA_URL."/images/icon-apartment.gif\">
-																	Department Name HERE
-																	<a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\"></a>																	
-																  </li>";
-														}
-													}
-													?>
 													</ol>													
 												</td>												
 											</tr>

@@ -83,6 +83,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	$previousCourse 		= '';
 	$previousPhase 			= '';
 	$previousCourseNumber	= '';
+	// Used to track course numbers that need to be deleted due to UGME removing them
+	$coursesArray			= array();
 	
 	// Get the default enrollments to be used to determine how many learners were enrolled in an event
 	$defaultEnrollments = getDefaultEnrollment();
@@ -232,6 +234,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						
 						if($db->AutoExecute("ar_undergraduate_teaching", $PROCESSED, "INSERT")) {
 							$EVENT_ID = $db->Insert_Id();
+							$coursesArray[] = $EVENT_ID;
 							application_log("success", "Undergraduate Teaching [".$EVENT_ID."] added to the system.");
 						} else {
 							$ERROR++;
@@ -246,13 +249,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						$PROCESSED["comments"] 			= $checkResult["comments"];
 						
 						$UNDERGRADUATE_TEACHING_ID = $checkResult['undergraduate_teaching_id'];
-						
+						$coursesArray[] = $UNDERGRADUATE_TEACHING_ID;
 						$db->AutoExecute(DATABASE_NAME.".ar_undergraduate_teaching", $PROCESSED, "UPDATE", "`undergraduate_teaching_id`=".$db->qstr($UNDERGRADUATE_TEACHING_ID));
 					}
 				}
 			}
 		}
 	}
+	
+	// Remove any records that no longer need to be in ar_undergraduate_teaching due to UGME removing them
+	if(isset($coursesArray) && count($coursesArray) > 0) {
+		$coursesArray = implode(",", $coursesArray);
+		
+		$query = "DELETE FROM `ar_undergraduate_teaching` 
+		WHERE `undergraduate_teaching_id` NOT IN (".$coursesArray.") 
+		AND `proxy_id` = '".$PROCESSED["proxy_id"]."'";
+		
+		if(!$db->Execute($query)) {
+			application_log("error", "There was an error inserting an undergraduate teaching record. Database said: ".$db->ErrorMsg());
+		}
+	}
+	
 	$fields = "ar_undergraduate_teaching,undergraduate_teaching_id,course_number,course_name,lecture_phase,year_reported";
 	?>
 	<script type="text/javascript" defer="defer">

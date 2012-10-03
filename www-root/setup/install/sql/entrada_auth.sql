@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS `acl_permissions` (
   `update` tinyint(1) DEFAULT NULL,
   `delete` tinyint(1) DEFAULT NULL,
   `assertion` varchar(50) DEFAULT NULL,
-  PRIMARY KEY  (`permission_id`)
+  PRIMARY KEY  (`permission_id`),
+  KEY `entity_type` (`entity_type`,`entity_value`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`, `entity_value`, `app_id`, `create`, `read`, `update`, `delete`, `assertion`) VALUES

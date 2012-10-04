@@ -502,6 +502,7 @@ class User {
 							FROM `" . AUTH_DATABASE . "`.`user_access` a
 							WHERE a.`user_id` = " . $db->qstr($user->getID()) . "
 							AND a.`organisation_id` = " . $db->qstr($user->getActiveOrganisation()) . "
+							AND a.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
 							ORDER BY a.`id` ASC";
 			$result = $db->getRow($query);
 			if ($result) {

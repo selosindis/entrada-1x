@@ -401,8 +401,9 @@ class User {
 					  FROM `" . AUTH_DATABASE . "`.`user_access` a
 					  JOIN `" . AUTH_DATABASE . "`.`organisations` b
 					  ON a.`organisation_id` = b.`organisation_id`
-					  WHERE a.`user_id` = ?";
-		$results = $db->getAll($query, array($this->getActiveId()));
+					  WHERE a.`user_id` = ?
+					  AND a.`app_id` = ?";
+		$results = $db->getAll($query, array($this->getActiveId(), AUTH_APP_ID));
 
 		// Every user should have at least one org.
 		if ($results) {
@@ -524,8 +525,9 @@ class User {
 					  FROM `" . AUTH_DATABASE . "`.`user_access` a
 					  JOIN `" . AUTH_DATABASE . "`.`organisations` b
 					  ON a.`organisation_id` = b.`organisation_id`
-					  WHERE a.`user_id` = ?";
-		$results = $db->getAll($query, array($proxy_id));
+					  WHERE a.`user_id` = ?
+					  AND a.`app_id` = ?";
+		$results = $db->getAll($query, array($proxy_id, AUTH_APP_ID));
 
 		//every user should have at least one org.
 		if ($results) {

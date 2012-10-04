@@ -108,6 +108,7 @@ if ($ENTRADA_USER) {
 					FROM `" . AUTH_DATABASE . "`.`user_access` a
 					WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getID()) . "
 					AND a.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
+					AND a.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
 					ORDER BY a.`id` ASC";
 		$result = $db->getRow($query);
 		if ($result) {
@@ -133,10 +134,11 @@ if ($ENTRADA_USER) {
 			$ENTRADA_USER->setActiveOrganisation($organisation);
 
 			$query = "SELECT a.`group`, a.`role`, a.`id`
-						  FROM `" . AUTH_DATABASE . "`.`user_access` a
-						  WHERE a.`user_id` = " . $ENTRADA_USER->getActiveId() . "
-						  AND a.`organisation_id` = " . $db->qstr($organisation) . "
-						  ORDER BY a.`id` ASC";
+						FROM `" . AUTH_DATABASE . "`.`user_access` a
+						WHERE a.`user_id` = " . $ENTRADA_USER->getActiveId() . "
+						AND a.`organisation_id` = " . $db->qstr($organisation) . "
+						AND a.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
+						ORDER BY a.`id` ASC";
 
 			$result = $db->getRow($query);
 			if ($result) {

@@ -69,6 +69,7 @@ if ($RECORD_ID) {
 	if ($evaluation) {
 		$questions = array();
 		$responses = array();
+		$criteria_response_ids = array();
 		$permissions = Evaluation::getReviewPermissions($evaluation["evaluation_id"]);
 		$query = "SELECT * FROM `evaluation_form_questions`
 					WHERE `eform_id` = ".$db->qstr($evaluation["eform_id"])."
@@ -86,12 +87,14 @@ if ($RECORD_ID) {
 					$evaluation_question["response_ids"] = array();
 					foreach ($evaluation_question_responses as $evaluation_question_response) {
 						if ($evaluation_question_response["criteria_text"]) {
+							$criteria_response_ids[] = $evaluation_question_response["efresponse_id"];
 							?>
 							<div id="criteria-<?php echo $evaluation_question_response["efresponse_id"]; ?>" style="display: none;">
 								<span class="content-small">
 									<strong>Criteria:</strong>
+									<br />
 									<?php
-										echo $evaluation_question_response["criteria_text"];
+										echo nl2br($evaluation_question_response["criteria_text"]);
 									?>
 								</span>
 							</div>
@@ -303,7 +306,7 @@ if ($RECORD_ID) {
 					foreach ($question["response_ids"] as $response_id) {
 						$selections = (isset($available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["responses"][$response_id]) ? $available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["responses"][$response_id] : 0);
 						echo "	<tr>\n";
-						echo "		<td><a class=\"criteria-tooltip\" id=\"tooltip-".$response_id."\" href=\"#criteria-".$response_id."\">".$responses[$response_id]["response_text"]."</a></td>\n";
+						echo "		<td>".(array_search($response_id, $criteria_response_ids) !== false ? "<a class=\"criteria-tooltip\" id=\"tooltip-".$response_id."\" href=\"#criteria-".$response_id."\">".$responses[$response_id]["response_text"]."</a>" : $responses[$response_id]["response_text"])."</td>\n";
 						echo "		<td>".(isset($available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["responses"]) && count($available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["responses"]) ? round(($selections / $available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["selections"] * 100), 1) : 0)."%</td>\n";
 						echo "		<td>".$selections."</td>\n";
 						echo "	</tr>\n";

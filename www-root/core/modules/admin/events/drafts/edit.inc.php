@@ -38,10 +38,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		switch ($temp) {
 			case "csv-example" :
 				
-				$csv_content  = "Original Event,Parent Event,Term,Course Code,Course Name,Date,Start Time,Total Duration,Event Type Durations,Event Types,Event Title,Location,Audience (Cohorts),Audience (Students),Teacher Numbers,Teacher Names"."\n";
-				$csv_content .= "22589,0,Clerkship,MEDS443,Clerkship: Obstetrics and Gynecology,12-04-02,7:30,60,60,Clerkship Seminars,The Abnormal Pap/Cervical Cancer,Kidd 7,Class of 2012,,7390885,Julie Francis"."\n";
-				$csv_content .= "22518,0,Clerkship,MEDS453,Clerkship: Perioperative/Acute Care,12-04-02,8:00,240,240,Other,\"Anesthesia Simulator Session (Datoo, Bharath, Harvey, Wong, Glicksman)\",New Med Bldg Sim Lab 3 Rm 234E,,5588583; 5948964; 5948982; 3598651; 5000040,3489488,Robert Tanzola"."\n";
-				$csv_content .= "21928,0,Term 4,MEDS245,Clinical Foundations: Neurology and Ophthalmology,12-04-02,8:30,60,60,Directed Independent Learning,Neurology Theme of the Week: Multiple Sclerosis,132A,Class of 2014,,7110265; 7315777,Donald Brunet; Heather E. Murray"."\n";
+				$csv_content  = "Original Event,Parent Event,Term,Course Code,Course Name,Date,Start Time,Total Duration,Event Type Durations,Event Types,Event Title,Location,Audience (Cohorts),Audience (Groups),Audience (Students),Teacher Numbers,Teacher Names"."\n";
+				$csv_content .= "22589,0,Clerkship,MEDS443,Clerkship: Obstetrics and Gynecology,12-04-02,7:30,60,60,Clerkship Seminars,The Abnormal Pap/Cervical Cancer,Kidd 7,Class of 2012,,,7390885,Julie Francis"."\n";
+				$csv_content .= "22518,0,Clerkship,MEDS453,Clerkship: Perioperative/Acute Care,12-04-02,8:00,240,240,Other,\"Anesthesia Simulator Session (Datoo, Bharath, Harvey, Wong, Glicksman)\",New Med Bldg Sim Lab 3 Rm 234E,,,5588583; 5948964; 5948982; 3598651; 5000040,3489488,Robert Tanzola"."\n";
+				$csv_content .= "21928,0,Term 4,MEDS245,Clinical Foundations: Neurology and Ophthalmology,12-04-02,8:30,60,60,Directed Independent Learning,Neurology Theme of the Week: Multiple Sclerosis,132A,Class of 2014,,,7110265; 7315777,Donald Brunet; Heather E. Murray"."\n";
 
 				
 				header('Pragma: public');

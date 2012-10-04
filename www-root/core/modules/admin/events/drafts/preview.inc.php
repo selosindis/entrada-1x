@@ -42,11 +42,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		$calendar_start = (int) $_GET["start"];
 		$calendar_end = (int) $_GET["end"];
 		
-		$query = "	SELECT `devent_id`, `event_start`, `event_finish`, `event_title`, `event_location`, `eventtype_id`, `updated_date`
+		$query = "	SELECT `devent_id`, `event_start`, `event_finish`, `event_title`, `event_location`, `updated_date`
 					FROM `draft_events`
 					WHERE `draft_id` = ".$db->qstr($draft_id)."
 					AND `event_start` >= ".$db->qstr($calendar_start)."
 					AND `event_finish` <= ".$db->qstr($calendar_end);
+		
 		$results = $db->GetAll($query);
 		$i = 0;
 		if ($results) {
@@ -57,7 +58,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$output[$i]["end"]		= date("Y-m-d",$result["event_finish"])."T".date("H:iP", $result["event_finish"]);
 				$output[$i]["title"]	= $result["event_title"];
 				$output[$i]["loc"]		= $result["event_location"];
-				$output[$i]["type"]		= $result["eventtype_id"];
+				$output[$i]["type"]		= '1';
 				$output[$i]["updated"]	= $result["updated"];
 				$i++;
 			}
@@ -69,7 +70,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		exit;
 		
 	}
-
+	
+	$query = "	SELECT `devent_id`, `event_start`, `event_finish`, `event_title`, `event_location`, `updated_date`
+				FROM `draft_events` WHERE `draft_id` = ".$db->qstr($draft_id)." ORDER BY `event_start`";
+	
+	if ($results = $db->GetRow($query)) {
+		$start = $results["event_start"];
+	}
+	
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.weekcalendar.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	$JQUERY[] = "<link href=\"".ENTRADA_RELATIVE."/css/jquery/jquery.weekcalendar.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 
@@ -81,7 +89,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	jQuery(document).ready(function() {
 		jQuery('#draftCalendar').weekCalendar({
-			date : new Date(<?php echo ((($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"]) ? $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"] : time()) * 1000); ?>),
+			date : new Date(<?php echo ((($start) ? $start : time()) * 1000); ?>),
 			dateFormat : 'M d, Y',
 			height: function($calendar) {
 				return 600;
@@ -147,7 +155,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				</td>
 				<td style="width: 22px; height: 23px"><img src="<?php echo ENTRADA_URL; ?>/images/cal-next.gif" width="22" height="23" alt="Next Week" title="Next Week" border="0" class="wc-next" onclick="jQuery('#draftCalendar').weekCalendar('nextWeek');" /></td>
 				<td style="width: 30px; height: 23px; text-align: right"><img src="<?php echo ENTRADA_URL; ?>/images/cal-home.gif" width="23" height="23" alt="Reset to this week" title="Reset to this week" border="0" class="wc-today" onclick="jQuery('#draftCalendar').weekCalendar('today');" /></td>
-				<td style="width: 30px; height: 23px; text-align: right"><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" width="23" height="23" alt="Show Calendar" title="Show Calendar" onclick="showCalendar('', document.getElementById('dstamp'), document.getElementById('dstamp'), '<?php echo html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]); ?>', 'calendar-holder', 8, 8, 1)" style="cursor: pointer" id="calendar-holder" /></td>
 			</tr>
 			</table>
 		</td>
@@ -162,4 +169,5 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		<input style="float:right;" type="button" value="Return" onclick="window.location = '<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts?section=edit&draft_id=<?php echo $draft_id; ?>';" />
 	</form>
 	<?php
+
 }

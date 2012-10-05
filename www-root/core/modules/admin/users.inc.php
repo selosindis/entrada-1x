@@ -42,7 +42,6 @@ if (!defined("PARENT_INCLUDED")) {
 ?>
 <link href="<?php echo ENTRADA_RELATIVE; ?>/css/jquery.multiselect.css" rel="stylesheet" type="text/css" media="all" />
 <script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery.multiselect.min.js"></script>
-<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/common.js"></script>
 <?php
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users", "title" => $MODULES[strtolower($MODULE)]["title"]);
 

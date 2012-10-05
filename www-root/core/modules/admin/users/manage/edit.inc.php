@@ -908,23 +908,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									 ?>
 						<tr>
 							<td colspan="3">
-								<table class="org_table">
+								<table class="org_table" style="width:100%">									
+									<tbody>
 										<tr>
 											<td style="padding-top:10px">
 											<label for="organisations"><strong>Organisation</strong></label><br />
-											<select id="organisations" name="organisations" style="width:250px">
+											<select id="organisations" name="organisations" style="width:200px">
 										<?php
 											foreach($results as $result) {
 												echo build_option($result["organisation_id"], ucfirst($result["organisation_title"]), $selected);															
 											}														
 										?>
-											</select>->
+											</select>
 											</td>
-											<td style="padding-top:10px">
+											<td style="padding-top:10px;">
 											<label for="groups"><strong>Groups</strong></label><br />
 											<select id="groups" name="groups" style="width:200px">
 												<option value="0">Select a Group</option>
-											</select>->
+											</select>
 											</td>
 											<td style="padding-top:10px">
 											<label for="roles"><strong>Role</strong></label><br />
@@ -936,8 +937,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										<tr>
 											<td>&nbsp;</td>
 											<td>&nbsp;</td>
-											<td style="text-align: right;"><input id="add_permissions" name="add_permissions" type="button" value="Add" /></td>
+											<td style="text-align: right;"><br /><input id="add_permissions" name="add_permissions" type="button" value="Add" /></td>
 										</tr>
+									</tbody>
 								</table>
 								<hr />
 							</td>
@@ -955,7 +957,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												FROM `".AUTH_DATABASE."`.`user_access` ua
 												JOIN `" . AUTH_DATABASE . "`.`organisations` o
 												ON ua.`organisation_id` = o.`organisation_id`												
-												WHERE ua.`user_id` = " . $db->qstr($PROXY_ID);
+												WHERE ua.`user_id` = " . $db->qstr($PROXY_ID). "
+												AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
 													
 									$organisations	= $db->GetAll($query);
 									
@@ -963,7 +966,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									
 								?>
 									
-									<table class="tableList" style="display: block; width: 100%;" id="<?php echo "perm_organisation_" . $org["organisation_id"]; ?>" >
+									<table class="tableList" style="width: 100%;" id="<?php echo "perm_organisation_" . $org["organisation_id"]; ?>" >
 										<caption><h2 style="text-align: left;"><?php echo $org["organisation_title"]; ?></h2></caption>
 										<colgroup>
 											<col style="width: 15%" />

@@ -216,6 +216,74 @@ class Notification {
 						$notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-logbook-rotation-".($notification_user->getProxyID() == $notification_user->getRecordProxyID() ? "student" : "admin").".xml");
 						$notification_body = str_replace($search, $replace, $notification_body);
 					break;
+					case "evaluation" :
+					case "evaluation_overdue" :
+						$search = array("%UC_CONTENT_TYPE_NAME%",
+										"%CONTENT_TYPE_NAME%",
+										"%CONTENT_TYPE_SHORTNAME%",
+										"%UC_CONTENT_TYPE_SHORTNAME%",
+										"%EVALUATOR_FULLNAME%",
+										"%CONTENT_TITLE%",
+										"%CONTENT_BODY%",
+										"%CONTENT_START%",
+										"%CONTENT_FINISH%",
+										"%MANDATORY_STRING%",
+										"%URL%",
+										"%APPLICATION_NAME%",
+										"%ENTRADA_URL%");
+						if (strpos($notification_user->getContentTypeName(), "assessment") !== false) {
+							$content_type_shortname = "assessment";
+						} else {
+							$content_type_shortname = "evaluation";
+						}
+						$evaluation = $db->GetRow("SELECT * FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($record_id));
+						$mandatory = $evaluation["evaluation_mandatory"];
+						$evaluation_start = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_start"]);
+						$evaluation_finish = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_finish"]);
+						$replace = array(	html_encode(ucwords($notification_user->getContentTypeName())),
+											html_encode($notification_user->getContentTypeName()),
+											html_encode($content_type_shortname),
+											html_encode(ucfirst($content_type_shortname)),
+											html_encode(get_account_data("wholename", $notification_user->getProxyID())),
+											html_encode($notification_user->getContentTitle()),
+											html_encode($notification_user->getContentBody($record_id)),
+											html_encode($evaluation_start),
+											html_encode($evaluation_finish),
+											html_encode((isset($mandatory) && $mandatory ? "mandatory" : "non-mandatory")),
+											html_encode($notification_user->getContentURL()),
+											html_encode(APPLICATION_NAME),
+											html_encode(ENTRADA_URL));
+						$notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-evaluation-".($evaluation["evaluation_finish"] >= time() || $evaluation["evaluation_start"] >= strtotime("-1 day") ? "release" : "overdue").".xml");
+						$notification_body = str_replace($search, $replace, $notification_body);
+					break;
+					case "evaluation_threshold" :
+						$search = array("%UC_CONTENT_TYPE_NAME%",
+										"%CONTENT_TYPE_NAME%",
+										"%CONTENT_TYPE_SHORTNAME%",
+										"%EVALUATOR_FULLNAME%",
+										"%CONTENT_TITLE%",
+										"%URL%",
+										"%APPLICATION_NAME%",
+										"%ENTRADA_URL%");
+						if (strpos($notification_user->getContentTypeName(), "assessment") !== false) {
+							$content_type_shortname = "assessment";
+						} else {
+							$content_type_shortname = "evaluation";
+						}
+						$evaluation = $db->GetRow("SELECT * FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($notification_user->getRecordID()));
+						$evaluation_start = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_start"]);
+						$evaluation_finish = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_finish"]);
+						$replace = array(	html_encode(ucwords($notification_user->getContentTypeName())),
+											html_encode($notification_user->getContentTypeName()),
+											html_encode($content_type_shortname),
+											html_encode(get_account_data("wholename", $proxy_id)),
+											html_encode($notification_user->getContentTitle()),
+											html_encode($notification_user->getContentURL()."&pid=".$record_id),
+											html_encode(APPLICATION_NAME),
+											html_encode(ENTRADA_URL));
+						$notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-evaluation-threshold.xml");
+						$notification_body = str_replace($search, $replace, $notification_body);
+					break;
 					default :
 						$search = array("%UC_CONTENT_TYPE_NAME%",
 										"%CONTENT_TYPE_NAME%",

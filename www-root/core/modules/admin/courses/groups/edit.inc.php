@@ -51,6 +51,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			if((isset($_POST["add_group_id"])) && ((int) trim($_POST["add_group_id"])) && strlen($_POST["group_members"])) {
 				$PROCESSED["cgroup_id"] = (int) trim($_POST["add_group_id"]);
 			}
+			if ((isset($_POST["associated_tutor"]))) {
+				$associated_tutors = explode(",", $_POST["associated_tutor"]);
+				foreach($associated_tutors as $contact_order => $proxy_id) {
+					if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+						$PROCESSED["associated_tutors"][(int) $contact_order] = $proxy_id;	
+					}
+				}
+			}
 		case 1 :
 		default :
 			switch ($ACTION) {
@@ -142,7 +150,36 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						add_success("Successfully ".$_POST["coa"]."d the selected group member.");
 					}
 				} 
-					$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&gid=".$_GROUP_ID."\\'', 2000)";				
+					$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&gid=".$GROUP_ID."\\'', 2000)";				
+				break;
+			case 'managetutors':
+				$query = "DELETE FROM `course_group_contacts` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID);
+				if ($db->Execute($query)) {
+					if ((is_array($PROCESSED["associated_tutors"])) && (count($PROCESSED["associated_tutors"]))) {
+						foreach($PROCESSED["associated_tutors"] as $contact_order => $proxy_id) {
+							$contact_details =  array(	"cgroup_id" => $GROUP_ID, 
+														"proxy_id" => $proxy_id, 
+														"contact_order" => (int) $contact_order, 
+														"updated_date" => time(), 
+														"updated_by" => $ENTRADA_USER->getID());
+							if (!$db->AutoExecute("course_group_contacts", $contact_details, "INSERT")) {
+								add_error("There was an error while trying to attach an <strong>Associated Tutor</strong> to this course group.<br /><br />The system administrator was informed of this error; please try again later.");
+
+								application_log("error", "Unable to insert a new course_group_contact record while managing a course group. Database said: ".$db->ErrorMsg());
+							}
+						}
+						if (!has_error()) {
+							add_success("Successfully updated the tutors for the selected course group.");
+						}
+					} else {
+						add_success("Successfully removed all tutors from the selected course group.");
+					}
+				} else {
+					add_error("There was an error while trying to remove the <strong>Associated Tutor(s)</strong> from this course group.<br /><br />The system administrator was informed of this error; please try again later.");
+
+					application_log("error", "Unable to remove a course_group_contact record while managing a course group. Database said: ".$db->ErrorMsg());
+				}
+				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&gid=".$GROUP_ID."\\'', 2000)";				
 				break;
 			case 'delete':
 				$removed = array();
@@ -288,9 +325,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 									<thead>
 										<tr>
 											<td class="modified" style="font-size: 12px">&nbsp;</td>
-											<td class="community_title style="font-size: 12px">Name</td>
-											<td class="community_shortname style="font-size: 12px">Group</td>
-											<td class="community_shortname style="font-size: 12px">Role</td>
+											<td class="community_title" style="font-size: 12px">Name</td>
+											<td class="community_shortname" style="font-size: 12px">Group</td>
+											<td class="community_shortname" style="font-size: 12px">Role</td>
 											<td class="attachment" style="font-size: 12px">&nbsp;</td>
 										</tr>
 									</thead>
@@ -362,9 +399,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 									<thead>
 										<tr>
 											<td class="modified" style="font-size: 12px">&nbsp;</td>
-											<td class="community_title style="font-size: 12px">Group Name</td>
-											<td class="community_shortname style="font-size: 12px">Number of members</td>
-											<td class="community_opened style="font-size: 12px">Updated Date</td>
+											<td class="community_title" style="font-size: 12px">Group Name</td>
+											<td class="community_shortname" style="font-size: 12px">Number of members</td>
+											<td class="community_opened" style="font-size: 12px">Updated Date</td>
 											<td class="attachment" style="font-size: 12px">&nbsp;</td>
 										</tr>
 									</thead>

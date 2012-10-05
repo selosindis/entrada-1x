@@ -51,9 +51,6 @@ if (!defined("PARENT_INCLUDED")) {
 		
 			application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
 		} else {
-			if (!$ENTRADA_ACL->amIAllowed("evaluation", "update", false) && (count($modules) < 2 || $modules[1] != "reports")) {
-				header("Location: ".ENTRADA_URL."/admin/evaluations/reports?section=student-clerkship-evaluations");
-			}
 			if ($ENTRADA_ACL->amIAllowed("evaluation", "update", false)) {
 				$sidebar_html  = "<ul class=\"menu\">";
 				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/evaluations\">Manage Evaluations</a></li>\n";
@@ -64,6 +61,7 @@ if (!defined("PARENT_INCLUDED")) {
 				new_sidebar_item("Manage Evaluations", $sidebar_html, "evaluation-nav", "open");
 			}
 			$PREFERENCES = preferences_load($MODULE);
+			require_once("Models/evaluation/Evaluation.class.php");
 			
 			$module_file = $router->getRoute();
 			if ($module_file) {

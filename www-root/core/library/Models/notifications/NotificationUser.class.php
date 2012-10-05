@@ -141,12 +141,29 @@ class NotificationUser {
 	 * @return bool
 	 */
 	public function getContentTypeName() {
+		global  $db;
 		switch ($this->content_type) {
 			case "event_discussion" :
 				$content_type_name = "event discussion";
 			break;
 			case "logbook_rotation" :
 				$content_type_name = "logbook rotation";
+			break;
+			case "evaluation" :
+			case "evaluation_overdue" :
+			case "evaluation_threshold" :
+				$query = "SELECT `target_title` FROM `evaluations_lu_targets` AS a
+							JOIN `evaluation_forms` AS b
+							ON a.`target_id` = b.`target_id`
+							JOIN `evaluations` AS c
+							ON b.`eform_id` = c.`eform_id`
+							WHERE c.`evaluation_id` = ".$db->qstr($this->record_id);
+				$target_title = $db->GetOne($query);
+				if ($target_title) {
+					$content_type_name = strtolower($target_title);
+				} else {
+					$content_type_name = "evaluation";
+				}
 			break;
 			default :
 				$content_type_name = "content";
@@ -175,6 +192,13 @@ class NotificationUser {
 					$content_title = $db->GetOne($query);
 				}
 			break;
+			case "evaluation" :
+			case "evaluation_threshold" :
+			case "evaluation_overdue" :
+				$query = "SELECT `evaluation_title` FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($this->record_id);
+				if ($evaluation_title = $db->GetOne($query)) {
+					$content_title = $evaluation_title;
+				}
 			case "event_discussion" :
 			default :
 				$query = "SELECT `event_title`, `event_start` FROM `events` WHERE `event_id` = ".$db->qstr($this->record_id);
@@ -201,6 +225,16 @@ class NotificationUser {
 							WHERE `lrcomment_id` = ".$db->qstr($content_id);
 				$content_body = $db->GetOne($query);
 			break;
+			case "evaluation" :
+			case "evaluation_threshold" :
+			case "evaluation_overdue" :
+				$query = "SELECT `evaluation_description` FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($this->record_id);
+				if ($evaluation_description = $db->GetOne($query)) {
+					$content_body = $evaluation_description;
+				} else {
+					$content_body = "No description found.";
+				}
+			break;
 			case "event_discussion" :
 			default :
 				$query = "SELECT `discussion_comment` FROM `event_discussions` WHERE `ediscussion_id` = ".$db->qstr($content_id);
@@ -222,6 +256,13 @@ class NotificationUser {
 		switch ($this->content_type) {
 			case "logbook_rotation" :
 				$content_url = ENTRADA_URL."/clerkship/logbook?section=view&core=".$this->getRecordID().($this->getRecordProxyID() != $this->getProxyID() ? "&id=".$this->getRecordProxyID() : "");
+			break;
+			case "evaluation" :
+			case "evaluation_overdue" :
+				$content_url = ENTRADA_URL."/evaluations?section=attempt&id=".$this->getRecordID();
+			break;
+			case "evaluation_threshold" :
+				$content_url = ENTRADA_URL."/evaluations?section=review&id=".$this->getRecordID();
 			break;
 			case "event_discussion" :
 			default :

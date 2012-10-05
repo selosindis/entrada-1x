@@ -411,14 +411,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				<div id="course-details-section">
 					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
 					<input type="hidden" name="type" value="text" />
-					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
+					<table class="table" cellspacing="0" cellpadding="2" border="0">
 						<colgroup>
-							<col width="22%" />
-							<col width="78%" />
+							<col width="40%" />
+							<col width="60%" />
 						</colgroup>
 						<tfoot>
 							<tr>
-								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
+								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" class="btn"/></td>
 							</tr>
 						</tfoot>
 						<tbody>
@@ -554,7 +554,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</colgroup>
 						<tfoot>
 							<tr>
-								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
+								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" class="btn" /></td>
 							</tr>
 						</tfoot>
 						<tbody>
@@ -628,9 +628,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<h3>Attached Files</h3>
 						</div>
 						<div style="float: right; margin-bottom: 5px">
-							<ul class="page-action">
-								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')">Add A File</a></li>
-							</ul>
+							
+								<a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')" class="btn btn-primary">Add A File</a>
+							
 						</div>
 						<div class="clear"></div>
 						<?php
@@ -705,9 +705,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<h3>Attached Links</h3>
 						</div>
 						<div style="float: right; margin-bottom: 5px">
-							<ul class="page-action">
-								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')">Add A Link</a></li>
-							</ul>
+							
+								<a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')" class="btn btn-primary">Add A Link</a>
+							
 						</div>
 						<div class="clear"></div>
 						<?php

@@ -200,9 +200,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	if ($ENTRADA_ACL->amIAllowed('course', 'create', false)) {
 		?>
 		<div style="float: right">
-			<ul class="page-action">
-				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="strong-green">Add New <?php echo $module_singular_name; ?></a></li>
-			</ul>
+				<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Add New <?php echo $module_singular_name; ?></a>
 		</div>
 		<div style="clear: both"></div>
 		<?php
@@ -320,7 +318,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			<tr>
 				<td></td>
 				<td colspan="5" style="padding-top: 10px">
-					<input type="submit" class="button" value="Delete Selected" />
+					<input type="submit" class="btn" value="Delete Selected" />
 				</td>
 			</tr>
 		</tfoot>

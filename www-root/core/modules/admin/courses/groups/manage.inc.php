@@ -148,13 +148,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			courses_subnavigation($course_details,"groups");
 			?>
 			<span class="content-heading">Manage Groups Edit</span>
-			<br> </br>
-			<div style=" width: 484px">
 				<div style="float: right">
-					<ul class="page-action">
-						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : ""); ?>?section=add&id=<?php echo $COURSE_ID ?>" class="strong-green">Add Group</a></li>
-					</ul>
-				</div>
+	
+						<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : ""); ?>?section=add&id=<?php echo $COURSE_ID ?>" class="btn btn-primary">Add Group</a></li>
 			</div>
 			<h2 style="margin-top: 10px">Manage Groups</h2>
 			<div style=" width: 484px">

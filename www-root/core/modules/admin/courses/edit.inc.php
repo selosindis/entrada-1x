@@ -750,7 +750,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						echo display_error();
 					}
 					?>
-					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="editCourseForm" onsubmit="selIt()">
+					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="editCourseForm" onsubmit="selIt()" class="form-horizontal">
 					<h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
 					<div id="course-details-section">
 						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Course Details">
@@ -889,11 +889,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									?>
 									</select>
 									<div style="float: left; display: inline">
-										<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
+										<input type="button" id="clinical_presentations_list_state_btn" class="btn" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
 									</div>
 									<div style="float: right; display: inline">
-										<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
-										<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+										<input type="button" id="clinical_presentations_list_remove_btn" class="btn" onclick="delIt()" value="Remove" />
+										<input type="button" id="clinical_presentations_list_add_btn" class="btn" onclick="addIt()" style="display: none" value="Add" />
 									</div>
 									<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
 										<h2>Clinical Presentations List</h2>
@@ -1398,7 +1398,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										}
 										?>
 										</select>
-										<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" name="fullname" class="type_select" id="student_<?php echo $key;?>_name" autocomplete="off"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_<?php echo $key;?>" value="Add" style="vertical-align: middle" />
+										<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" name="fullname" class="type_select" id="student_<?php echo $key;?>_name" autocomplete="off"/><input style="display:none;" type="button" class="btn type_select" id="add_associated_student_<?php echo $key;?>" value="Add" style="vertical-align: middle" />
 										<div class="autocomplete" id="student_<?php echo $key;?>_name_auto_complete" style="margin-left:200px;"></div>
 										<div id="student_<?php echo $key;?>">(Example: Thorn, Brandon)</div>
 										<input type="hidden" name="group_audience_members[]" id="group_audience_members_<?php echo $key;?>" value="<?php echo implode(',',$group_ids[$key]);?>"/>
@@ -1431,7 +1431,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						jQuery('#period_item_'+period_id).append('<h4>Associated Students</h4><ul id="student_'+period_id+'_list" class="menu" style="margin-top: 15px;width:390px;"></ul>');
 						jQuery('#period_item_'+period_id).append('<select class="audience_type_select" id="audience_type_select_'+period_id+'" onchange="showSelect('+period_id+',this.options[this.selectedIndex].value)"><option value="0">-- Select Audience Type --</option></option><option value="cohort">Cohort</option><option value="individual">Individual</option></select>');
 						jQuery('#period_item_'+period_id).append('<select style="display:none;" class="type_select" id="cohort_select_'+period_id+'" onchange="addAudience('+period_id+',this.options[this.selectedIndex].text,\'cohort\',this.options[this.selectedIndex].value)"><option value="0">-- Add Cohort --</option>'+getGroupOptions()+'</select>');
-						jQuery('#period_item_'+period_id).append('<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" name="fullname" type="text" class="type_select" id="student_'+period_id+'_name" autocomplete=\"off\")"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_'+period_id+'" onclick="addItem(student_'+period_id+')" value="Add" style="vertical-align: middle" />');
+						jQuery('#period_item_'+period_id).append('<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" name="fullname" type="text" class="type_select" id="student_'+period_id+'_name" autocomplete=\"off\")"/><input style="display:none;" type="button" class="btn type_select" id="add_associated_student_'+period_id+'" onclick="addItem(student_'+period_id+')" value="Add" style="vertical-align: middle" />');
 						jQuery('#period_item_'+period_id).append('<div class="autocomplete" id="student_'+period_id+'_name_auto_complete" style="margin-left:200px;"></div>');
 						jQuery('#period_item_'+period_id).append('<div id="student_'+period_id+'">(Example: Thorn, Brandon)</div>');
 						jQuery('#period_item_'+period_id).append('<input type="hidden" name="group_audience_members[]" id="group_audience_members_'+period_id+'"/>');
@@ -1582,7 +1582,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 						<tr>
 							<td style="width: 25%; text-align: left">
-								<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/courses'" />
+								<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/courses'" />
 							</td>
 							<td style="width: 75%; text-align: right; vertical-align: middle">
 								<span class="content-small">After saving:</span>
@@ -1591,7 +1591,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another course</option>
 								<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to course list</option>
 								</select>
-								<input type="submit" class="button" value="Save" />
+								<input type="submit" class="btn btn-primary" value="Save" />
 							</td>
 						</tr>
 						</table>

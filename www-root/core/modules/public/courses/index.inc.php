@@ -138,7 +138,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$course_resources_section		= true;
 				?>
 				<div class="no-printing" style="text-align: right">
-					<form>
+					<form class="form-horizontal">
 					<label for="course-quick-select" class="content-small"><?php echo $module_singular_name; ?> Quick Select:</label>
 					<select id="course-quick-select" name="course-quick-select" style="width: 300px" onchange="window.location='<?php echo ENTRADA_URL; ?>/courses?id='+this.options[this.selectedIndex].value">
 					<option value="">-- Select a <?php echo $module_singular_name; ?> --</option>
@@ -163,17 +163,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				<h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
 				<div id="course-details-section">
 					<?php
-					echo "<table summary=\"Course Details\">\n";
+					echo "<table summary=\"Course Details\" class=\"table\">\n";
 					echo "	<colgroup>\n";
-					echo "		<col style=\"width: 22%\" />\n";
-					echo "		<col style=\"width: 78%\" />\n";
+					echo "		<col style=\"width:30%\" />\n";
+					echo "		<col style=\"width: 70%\" />\n";
 					echo "	</colgroup>\n";
 					echo "	<tbody>\n";
 
 					if ($course_url = clean_input($course_details["course_url"], array("notags", "nows"))) {
 						echo "	<tr>\n";
-						echo "		<td>External Website</td>\n";
-						echo "		<td><a href=\"".html_encode($course_url)."\" target=\"_blank\">View <strong>".html_encode($course_details["course_name"])."</strong> Website</a></td>\n";
+						echo "		<td><strong>External Website</strong></td>\n";
+						echo "		<td><a href=\"".html_encode($course_url)."\" target=\"_blank\">View <strong>".html_encode($course_details["course_name"])." Website</a></strong></td>\n";
 						echo "	</tr>\n";
 						echo "	<tr>\n";
 						echo "		 <td colspan=\"2\">&nbsp;</td>\n";
@@ -181,7 +181,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
 
 					echo "		<tr>\n";
-					echo "			<td style=\"vertical-align: top\">" . $module_singular_name . " Directors</td>\n";
+					echo "			<td style=\"vertical-align: top\"><strong>" . $module_singular_name . " Directors</strong></td>\n";
 					echo "			<td>\n";
 										$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
 													FROM `course_contacts` AS a
@@ -202,7 +202,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					echo "			</td>\n";
 					echo "		</tr>\n";
 					echo "		<tr>\n";
-					echo "			<td style=\"vertical-align: top\">Curriculum Coordinators</td>\n";
+					echo "			<td style=\"vertical-align: top\"><strong>Curriculum Coordinators</strong></td>\n";
 					echo "			<td>\n";
 										$squery = "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
 													FROM `course_contacts` AS a
@@ -224,21 +224,21 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					echo "		</tr>\n";
 					if((int) $course_details["pcoord_id"]) {
 						echo "	<tr>\n";
-						echo "		<td>Program Coordinator</td>\n";
+						echo "		<td><strong>Program Coordinator</strong></td>\n";
 						echo "		<td><a href=\"mailto:".get_account_data("email", $course_details["pcoord_id"])."\">".get_account_data("fullname", $course_details["pcoord_id"])."</a></td>\n";
 						echo "	</tr>\n";
 					}
 
 					if((int) $course_details["evalrep_id"]) {
 						echo "	<tr>\n";
-						echo "		<td>Evaluation Rep</td>\n";
+						echo "		<td><strong>Evaluation Rep</strong></td>\n";
 						echo "		<td><a href=\"mailto:".get_account_data("email", $course_details["evalrep_id"])."\">".get_account_data("fullname", $course_details["evalrep_id"])."</a></td>\n";
 						echo "	</tr>\n";
 					}
 
 					if((int) $course_details["studrep_id"]) {
 						echo "	<tr>\n";
-						echo "		<td>Student Rep</td>\n";
+						echo "		<td><strong>Student Rep</strong></td>\n";
 						echo "		<td><a href=\"mailto:".get_account_data("email", $course_details["studrep_id"])."\">".get_account_data("fullname", $course_details["studrep_id"])."</a></td>\n";
 						echo "	</tr>\n";
 					}
@@ -325,7 +325,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											</script>
 											<?php
 						echo "				<h3>Curriculum Objectives</h3>";
-						echo "				<strong>The learner will be able to:</strong>";
+						echo "				<p>The learner will be able to:</p>";
 						echo "				<div id=\"objectives_list\">\n".course_objectives_in_list($objectives, $top_level_id,$top_level_id)."\n</div>\n";
 						echo "			</td>\n";
 						echo "		</tr>\n";
@@ -548,11 +548,20 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		new_sidebar_item("Our Curriculum", $sidebar_html, "curriculum-search-bar", "open");
 		if ($COURSE_LIST) {
 		?>
-		<div style="text-align: right">
-			<form>
-				<div>
-					<label for="course-quick-select" class="content-small"><?php echo $module_singular_name; ?> Quick Select:</label>
-					<select id="course-quick-select" name="course-quick-select" style="width: 300px" onchange="window.location='<?php echo ENTRADA_URL; ?>/courses?org=<?php echo $ORGANISATION_ID;?>&id='+this.options[this.selectedIndex].value">
+		<div class="row-fluid">
+			<div class="span6">
+			<?php $query	= "SELECT * FROM `curriculum_lu_types` WHERE `curriculum_type_active` = '1' ORDER BY `curriculum_type_order` ASC";
+			$terms	= $db->GetAll($query);
+				if ($terms) {
+					echo "<h2>". $module_singular_name . " Listing</h2>\n";
+			}
+			?>
+			</div>
+			<form class="span6 form-horizontal" style="float:right;margin-bottom:0;">
+				<div class="control-group">
+					<label for="course-quick-select" class="control-label content-small"><?php echo $module_singular_name; ?> Quick Select:</label>
+					<div class="controls">
+					<select id="course-quick-select" name="course-quick-select" onchange="window.location='<?php echo ENTRADA_URL; ?>/courses?org=<?php echo $ORGANISATION_ID;?>&id='+this.options[this.selectedIndex].value">
 					<option value="">-- Select a <?php echo $module_singular_name; ?> --</option>
 					<?php
 					foreach ($COURSE_LIST as $course_id => $course_name) {
@@ -560,16 +569,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
 					?>
 					</select>
+					</div><!--/controls-->
 				</div>
 			</form>
-		</div>
+		</div> <!--/row-fluid-->
 		<?php
 		}
 		$query	= "SELECT * FROM `curriculum_lu_types` WHERE `curriculum_type_active` = '1' ORDER BY `curriculum_type_order` ASC";
 		$terms	= $db->GetAll($query);
 		$course_flag = false;
 		if ($terms) {
-			echo "<h2>". $module_singular_name . " Listing</h2>\n";
+		//	echo "<h2>". $module_singular_name . " Listing</h2>\n";
 			echo "<ol class=\"curriculum-layout\">\n";
 			foreach ($terms as $term) {
 				$courses = courses_fetch_courses(true, true, $term["curriculum_type_id"]);

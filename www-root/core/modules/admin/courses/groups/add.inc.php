@@ -56,7 +56,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 	
 	$course_details = $db->GetRow("SELECT * FROM `courses` WHERE `course_id` = ".$db->qstr($COURSE_ID));
 	courses_subnavigation($course_details,"groups");
-	echo "<h1>Add Group</h1>\n";
+	echo "<h2>Add Group</h2>\n";
 	
 	// Error Checking
 	switch($STEP) {
@@ -406,7 +406,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						<col style="width: 77%" />
 					</colgroup>
 					<tr>
-						<td colspan="3"><h2>Group Details</h2></td>
+						<td colspan="3"><h3>Group Details</h3></td>
 					</tr>
 					<tr class="prefixR">
 						<td></td>

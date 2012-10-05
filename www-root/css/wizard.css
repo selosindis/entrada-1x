@@ -56,7 +56,7 @@ table.tableList, table.DataTable {
 width:100%;
 border-collapse:collapse;
 }
-
+/*
 table.tableList thead tr td {
 height:20px;
 vertical-align:middle;
@@ -302,7 +302,7 @@ width:20px;
 text-align:center;
 border-left:none;
 }
-
+*/
 #control_overlay {
 background-color:#000;
 }

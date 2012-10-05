@@ -118,9 +118,9 @@ if (!defined("IN_COURSE_GROUPS")) {
 	?>
 	<h1>Manage <?php echo $module_singular_name; ?> Groups</h1>
 		<div style="float: right">
-			<ul class="page-action">
-				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : ""); ?>?section=add&id=<?php echo $COURSE_ID; ?>" class="strong-green">Add Group</a></li>
-			</ul>
+			
+				<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : ""); ?>?section=add&id=<?php echo $COURSE_ID; ?>" class="btn btn-primary">Add Group</a>
+			
 		</div>
 		<div style="clear: both"></div> 
 
@@ -245,12 +245,12 @@ if (!defined("IN_COURSE_GROUPS")) {
 	?>
 	<style type="text/css">
 	.dynamic-tab-pane-control .tab-page {
-		height: 100px;
+		height: 120px;
 	}
 	</style>
 	<div class="tab-pane" id="user-tabs">
 		<div class="tab-page">
-			<h2 class="tab">Group Search</h2>
+			<h3 class="tab">Group Search</h3>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/courses/groups" method="get">
 			<input type="hidden" name="id" value="<?php echo $COURSE_ID;?>"/>	
 			<input type="hidden" name="type" value="search" />
@@ -265,9 +265,9 @@ if (!defined("IN_COURSE_GROUPS")) {
 					<td colspan="3">&nbsp;</td>
 				</tr>
 				<tr>
-					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Search" />
-						<input type="button" class="button" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/courses/groups?id=<?php echo $COURSE_ID ?>'"/>
+					<td colspan="3" style="border-top: 1px #DDD solid; padding-top: 5px; text-align: right">
+						<input type="submit" class="btn" value="Search" />
+						<input type="button" class="btn" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/courses/groups?id=<?php echo $COURSE_ID ?>'"/>
 					</td>
 				</tr>
 			</tfoot>

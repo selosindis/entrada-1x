@@ -366,7 +366,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	</style>
 	<div class="tab-pane" id="user-tabs">
 		<div class="tab-page">
-			<h2 class="tab">Newest Users</h2>
+			<h3 class="tab">Newest Users</h3>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/users" method="get">
 			<input type="hidden" name="type" value="browse-newest" />
 			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Browse Newest Users">

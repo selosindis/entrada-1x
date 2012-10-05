@@ -583,21 +583,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			}
 			?>
 
-			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="addCourseForm" onsubmit="selIt()">
+			<form class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="addCourseForm" onsubmit="selIt()">
 			<h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
-			<div id="course-details-section">
-				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Course Details">
-				<colgroup>
-					<col style="width: 3%" />
-					<col style="width: 22%" />
-					<col style="width: 75%" />
-				</colgroup>
-				<tbody>
-					<tr>
-						<td></td>
-						<td style="vertical-align: top"><label for="curriculum_type_id" class="form-nrequired">Curriculum Category</label></td>
-						<td>
-							<select id="curriculum_type_id" name="curriculum_type_id" style="width: 250px" onchange="loadCurriculumPeriods(this.options[this.selectedIndex].value)">
+			<div class="control-group">
+				<label for="curriculum_type_id" class="control-label form-nrequired">Curriculum Category:</label>
+				<div class="controls">
+					<select id="curriculum_type_id" name="curriculum_type_id" style="width: 250px" onchange="loadCurriculumPeriods(this.options[this.selectedIndex].value)">
 							<option value="0"<?php echo (((!isset($PROCESSED["curriculum_type_id"])) || (!(int) $PROCESSED["curriculum_type_id"])) ? " selected=\"selected\"" : ""); ?>>- Select Curriculum Category -</option>
 							<?php
 							$query = "	SELECT a.* FROM `curriculum_lu_types` AS a 
@@ -613,58 +604,51 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								}
 							}
 							?>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td></td>
-						<td><label for="course_name" class="form-required"><?php echo $module_singular_name; ?> Name</label></td>
-						<td><input type="text" id="course_name" name="course_name" value="<?php echo html_encode($PROCESSED["course_name"]); ?>" maxlength="85" style="width: 243px" /></td>
-					</tr>
-					<tr>
-						<td></td>
-						<td><label for="course_code" class="form-required"><?php echo $module_singular_name; ?> Code</label></td>
-						<td><input type="text" id="course_code" name="course_code" value="<?php echo html_encode($PROCESSED["course_code"]); ?>" maxlength="16" style="width: 243px" /></td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td></td>
-						<td style="vertical-align: top"><span class="form-nrequired">Reminder Notifications</span></td>
-						<td style="vertical-align: top">
-							<input type="radio" name="notifications" id="notification_on" value="1"<?php echo (((!isset($PROCESSED["notifications"])) || ((isset($PROCESSED["notifications"])) && ($PROCESSED["notifications"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="notification_on">Send e-mail notifications to faculty for events under this course.</label><br />
-							<input type="radio" name="notifications" id="notification_off" value="0"<?php echo (((isset($PROCESSED["notifications"])) && (!(int) $PROCESSED["notifications"])) ? " checked=\"checked\"" : ""); ?> /> <label for="notification_off"><strong>Do not</strong> send e-mail notifications to faculty for events under this course.</label>
-						</td>
-					</tr>
-					<tr>
-						<td></td>
-						<td style="vertical-align: top"><span class="form-nrequired"><?php echo $module_singular_name; ?> Permissions</span></td>
-						<td style="vertical-align: top">
-							<input type="radio" name="permission" id="visibility_on" value="open"<?php echo (((!isset($PROCESSED["permission"])) || ((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "open"))) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_on">This course is <strong>open</strong> and visible to all logged in users.</label><br />
+					</select>
+				</div> <!--/controls-->
+			</div> <!--/control-group-->
+			<div class="control-group">
+				<label for="course_name" class="control-label form-required"><?php echo $module_singular_name; ?>Name:</label>
+				<div class="controls">
+					<input type="text" id="course_name" name="course_name" value="<?php echo html_encode($PROCESSED["course_name"]); ?>" />
+				</div> <!--/controls-->
+			</div> <!--/control-group-->
+			
+			<div class="control-group">
+				<label for="course_code" class="control-label form-required"><?php echo $module_singular_name; ?>Code:</label>
+				<div class="controls">
+					<input type="text" id="course_code" name="course_code" value="<?php echo html_encode($PROCESSED["course_code"]); ?>"/>
+				</div> <!--/controls-->
+			</div> <!--/control-group-->
+			
+			<div class="control-group">
+				<label class="control-label form-nrequired">Reminder Notifications:</label>
+				<div class="controls">
+					<input type="radio" name="notifications" id="notification_on" value="1"<?php echo (((!isset($PROCESSED["notifications"])) || ((isset($PROCESSED["notifications"])) && ($PROCESSED["notifications"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="notification_on">Send e-mail notifications to faculty for events under this course.</label><br />
+					<input type="radio" name="notifications" id="notification_off" value="0"<?php echo (((isset($PROCESSED["notifications"])) && (!(int) $PROCESSED["notifications"])) ? " checked=\"checked\"" : ""); ?> /> <label for="notification_off"><strong>Do not</strong> send e-mail notifications to faculty for events under this course.</label>
+				</div> <!--/controls-->
+			</div> <!--/control-group-->
+			
+			<div class="control-group">
+				<label class="control-label form-nrequired"><?php echo $module_singular_name; ?>Permissions:</label>
+				<div class="controls">
+					<input type="radio" name="permission" id="visibility_on" value="open"<?php echo (((!isset($PROCESSED["permission"])) || ((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "open"))) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_on">This course is <strong>open</strong> and visible to all logged in users.</label><br />
 							<input type="radio" name="permission" id="visibility_off" value="closed"<?php echo (((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "closed")) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_off">This course is <strong>private</strong> and only visible to logged in users enrolled in the course.</label>
-						</td>
-					</tr>
-					<?php
+				</div> <!--/controls-->
+			</div> <!--/control-group-->
+			<?php
 					if (true) {
 						?>
-					<tr>
-						<td></td>
-						<td style="vertical-align: top"><span class="form-nrequired">Audience Sync</span></td>
-						<td style="vertical-align: top">
-							<input type="radio" name="sync_ldap" id="sync_off" value="0"<?php echo ((((!isset($PROCESSED["sync_ldap"])) || isset($PROCESSED["sync_ldap"])) && (!(int)$PROCESSED["sync_ldap"])) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_off">The audience will be managed manually and <strong>should not</strong> be synced with the LDAP server.</label><br />
-							<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_on">This course <strong>should</strong> have its audience synced with the LDAP server.</label><br />
-							<br />
-							<div class="content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>
-						</td>
-					</tr>
-					<?php }?>
-				</tbody>
-				</table>
-			</div>
+			<div class="control-group">
+				<label class="control-label form-nrequired"><?php echo $module_singular_name; ?>Audience Sync:</label>
+				<div class="controls">
+					<input type="radio" name="sync_ldap" id="sync_off" value="0"<?php echo ((((!isset($PROCESSED["sync_ldap"])) || isset($PROCESSED["sync_ldap"])) && (!(int)$PROCESSED["sync_ldap"])) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_off">The audience will be managed manually and <strong>should not</strong> be synced with the LDAP server.</label><br />
+					<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_on">This course <strong>should</strong> have its audience synced with the LDAP server.</label><br />
+					<br />
+					<div class="content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>
+				</div> <!--/controls-->
+			</div> <!--/control-group-->
+			<?php }?>
 
 			<?php				
 
@@ -693,23 +677,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
 				}
 				?>
-				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
-				<colgroup>
-					<col width="3%" />
-					<col width="22%" />
-					<col width="75%" />
-				</colgroup>
-				<tbody>
-					<tr>
-						<td>&nbsp;</td>
-						<td style="vertical-align: top">
-							Clinical Presentations
-							<div class="content-small" style="margin-top: 5px">
-								<strong>Note:</strong> For more detailed information please refer to the <a href="http://apps.mcc.ca/objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Presentations for the Qualifying Examination</a>.
-							</div>
-						</td>
-						<td id="mandated_objectives_section">
-							<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
+				<div class="control-group">
+					<label class="control-label form-nrequired">
+						Clinical Presentations:
+								<div class="content-small" style="margin-top: 5px">
+									<strong>Note:</strong> For more detailed information please refer to the <a href="http://apps.mcc.ca/objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Presentations for the Qualifying Examination</a>.
+								</div>
+					</label>
+				<div class="controls">
+					<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
 							<?php
 							if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
 								foreach ($clinical_presentations as $objective_id => $presentation_name) {
@@ -719,14 +695,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							?>
 							</select>
 							<div style="float: left; display: inline">
-								<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
+								<input type="button" id="clinical_presentations_list_state_btn" class="btn" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
 							</div>
 							<div style="float: right; display: inline">
-								<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
-								<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+								<input type="button" id="clinical_presentations_list_remove_btn" class="btn" onclick="delIt()" value="Remove" />
+								<input type="button" id="clinical_presentations_list_add_btn" class="btn" onclick="addIt()" style="display: none" value="Add" />
 							</div>
 							<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
-								<h2>Clinical Presentations List</h2>
+								<h3>Clinical Presentations List</h3>
 								<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
 								<?php
 								if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) {	
@@ -756,19 +732,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									});
 								}
 							</script>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td>
-									<label for="objective_select" class="form-nrequired">Curriculum Objectives</label>
-								</td>
-								<td>
-									<?php
-									if (!empty($course_objectives["objectives"])) {
+				</div> <!--/controls-->
+			</div> <!--/control-group-->
+			<div class="control-group">
+				<label for="objective_select" class="control-label form-nrequired">Curriculum Objectives:</label>
+				<div class="controls">
+					<?php
+							if (!empty($course_objectives["objectives"])) {
 										?>
 										<select id="objective_select" onchange="showMultiSelect()">
 										<option value="">- Select Competency -</option>
@@ -814,13 +784,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										<?php
 									}
 									?>
-								</td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td>&nbsp;</td>
-								<td>
-									<span class="content-small"><strong>Helpful Tip:</strong> Select a competency from the select box above, and a list of course and curricular objectives will then be displayed. Once you have selected an objective it will be placed in the list below and you may leave it as primary or change the importance to secondary or tertiary.</span>
+				</div>
+			</div> <!--/control-group -->
+			<div class="control-group">
+				<div class="controls">
+					<span class="content-small"><strong>Helpful Tip:</strong> Select a competency from the select box above, and a list of course and curricular objectives will then be displayed. Once you have selected an objective it will be placed in the list below and you may leave it as primary or change the importance to secondary or tertiary.</span>
 									<?php echo $objective_select; ?>
 									<script type="text/javascript">
 										var multiselect = [];
@@ -863,37 +831,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											return false;
 										}
 									</script>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="2">&nbsp;</td>
-								<td style="padding-top: 5px;">
-									<div id="objectives_list">
-									<?php echo course_objectives_in_list($course_objectives,$top_level_id, $top_level_id, true, false, 1, false, true, "primary", true); ?>
-									</div>
-								</td>
-							</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>							
-				</tbody>
-				</table>
+				</div>
+			</div> <!--/control-group-->
+			<div class="control-group">
+				<div class="controls">
+					<div id="objectives_list">
+						<?php echo course_objectives_in_list($course_objectives,$top_level_id, $top_level_id, true, false, 1, false, true, "primary", true); ?>
+					</div>
+				</div>
+			</div>
+			
+				
 			</div>
 					
 			<h2 title="Course Contacts Section"><?php echo $module_singular_name; ?> Contacts</h2>
-			<div id="course-contacts-section">
-				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Course Contacts">
-				<colgroup>
-					<col style="width: 3%" />
-					<col style="width: 22%" />
-					<col style="width: 75%" />
-				</colgroup>
-				<tbody>
-					<tr>
-						<td></td>
-						<td style="vertical-align: top"><label for="director_name" class="form-nrequired"><?php echo $module_singular_name; ?> Directors</label></td>
-						<td>
-							<script type="text/javascript">
+			<div class="control-group">
+				<label for="director_name" class="control-label form-nrequired"><?php echo $module_singular_name; ?> Directors</label>
+				<div class="controls">
+					<script type="text/javascript">
 							var sortables = new Array();
 							function updateOrder(type) {
 								$('associated_'+type).value = Sortable.sequence(type+'_list');
@@ -988,7 +943,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							?>
 							<div class="autocomplete" id="director_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('director_name', 'director_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=director', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'director'); copyItem('director');}});</script>
 							<input type="hidden" id="associated_director" name="associated_director" />
-							<input type="button" class="button-sm" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
+							<input type="button" class="btn" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
 							<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 							<ul id="director_list" class="menu" style="margin-top: 15px">
 								<?php
@@ -1005,16 +960,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</ul>
 							<input type="hidden" id="director_ref" name="director_ref" value="" />
 							<input type="hidden" id="director_id" name="director_id" value="" />
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td></td>
-						<td style="vertical-align: top"><label for="coordinator_name" class="form-nrequired">Curriculum Coordinators</label></td>
-						<td>
-							<input type="text" id="coordinator_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('coordinator')" onblur="addItemNoError('coordinator')" />
+				</div>
+			</div> <!--/control-group-->
+			<div class="control-group">
+				<label for="coordinator_name" class="control-label form-nrequired">Curriculum Coordinators:</label>
+				<div class="controls">
+					<input type="text" id="coordinator_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('coordinator')" onblur="addItemNoError('coordinator')" />
 							<script type="text/javascript">
 								$('coordinator_name').observe('keypress', function(event){
 								    if (event.keyCode == Event.KEY_RETURN) {
@@ -1029,7 +980,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							?>
 							<div class="autocomplete" id="coordinator_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('coordinator_name', 'coordinator_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=coordinator', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'coordinator'); copyItem('coordinator');}});</script>
 							<input type="hidden" id="associated_coordinator" name="associated_coordinator" />
-							<input type="button" class="button-sm" onclick="addItem('coordinator');" value="Add" style="vertical-align: middle" />
+							<input type="button" class="btn" onclick="addItem('coordinator');" value="Add" style="vertical-align: middle" />
 							<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 							<ul id="coordinator_list" class="menu" style="margin-top: 15px">
 								<?php
@@ -1046,18 +997,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</ul>
 							<input type="hidden" id="coordinator_ref" name="coordinator_ref" value="" />
 							<input type="hidden" id="coordinator_id" name="coordinator_id" value="" />
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					
-					<!-- Listing the Program Coordinator for the selected course -->
-					<tr>
-						<td></td>
-						<td><label for="programcoodinator_id" class="form-nrequired">Program Coordinator</label></td>
-						<td>
-						<?php
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="programcoodinator_id" class="control-label form-nrequired">Program Coordinator:</label>
+				<div class="controls">
+					<?php
 							if ((is_array($programcoodinators)) && (count($programcoodinators))) {
 								echo "<select id=\"pcoord_id\" name=\"pcoord_id\" style=\"width: 95%\">\n";
 								echo "<option value=\"\"".((!isset($PROCESSED["pcoord_id"])) ? " selected=\"selected\"" : "").">-- To Be Announced --</option>\n";
@@ -1067,28 +1012,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								echo "</select>\n";
 							} else {
 								echo "<input type=\"hidden\" id=\"pcoord_id\" name=\"pcoord_id\" value=\"0\" />\n";
-								echo "Program Coordinator Information Not Available\n";
+								echo "<p class=\"info-not-available\">Program Coordinator Information Not Available</p>\n";
 							}
-							?>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2">&nbsp;</td>
-						<td>
-							<span class="content-small"><strong>Important:</strong> Program Coordinators will be able to add, edit or remove learning events in this course.</span>
-						</td>
-					</tr>
-
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-
-					<!-- Listing the Evaluation Rep for the selected course -->
-					<tr>
-						<td></td>
-						<td><label for="evaluationrep_id" class="form-nrequired">Evaluation Rep.</label></td>
-						<td>
-							<?php
+					?>
+				<p><span class="content-small"><strong>Important:</strong> Program Coordinators will be able to add, edit or remove learning events in this course.</span></p>
+				</div>
+			</div>
+			
+			<div class="control-group">
+				<label for="evaluationrep_id" class="control-label form-nrequired">Evaluation Rep.</label>
+				<div class="controls">
+					<?php
 							if ((is_array($evaluationreps)) && (count($evaluationreps))) {
 								echo "<select id=\"evalrep_id\" name=\"evalrep_id\" style=\"width: 95%\">\n";
 								echo "<option value=\"\"".((!isset($PROCESSED["evalrep_id"])) ? " selected=\"selected\"" : "").">-- To Be Announced --</option>\n";
@@ -1098,18 +1032,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								echo "</select>\n";
 							} else {
 								echo "<input type=\"hidden\" id=\"evalrep_id\" name=\"evalrep_id\" value=\"0\" />\n";
-								echo "Evaluation Representative Information Not Available\n";
+								echo "<p class=\"info-not-available\">Evaluation Representative Information Not Available</p>\n";
 							}
-							?>
-						</td>
-					</tr>
-
-					<!-- Listing the Student Rep for the selected course -->
-					<tr>
-						<td></td>
-						<td><label for="studentrep_id" class="form-nrequired">Student Rep.</label></td>
-						<td>
-							<?php
+					?>
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="studentrep_id" class="control-label form-nrequired">Student Rep.</label>
+				<div class="controls">
+					<?php
 							if ((is_array($studentreps)) && (count($studentreps))) {
 								echo "<select id=\"studrep_id\" name=\"studrep_id\" style=\"width: 95%\">\n";
 								echo "<option value=\"\"".((!isset($PROCESSED["studrep_id"])) ? " selected=\"selected\"" : "").">-- To Be Announced --</option>\n";
@@ -1119,30 +1050,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								echo "</select>\n";
 							} else {
 								echo "<input type=\"hidden\" id=\"studrep_id\" name=\"studrep_id\" value=\"0\" />\n";
-								echo "Student Representative Information Not Available\n";
+								echo "<p class=\"info-not-available\">Student Representative Information Not Available</p>\n";
 							}
 						?>
-						</td>
-					</tr>
-				</tbody>
-				</table>
+				</div>
 			</div>
-		
 			<!-- Course Audience-->	
 			<h2><?php echo $module_singular_name; ?> Enrollment</h2>
-			<div>
-				<table>
-					<colgroup>
-						<col style="width: 3%" />
-						<col style="width: 22%" />
-						<col style="width: 75%" />
-					</colgroup>
-					<tbody>			
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="period" class="form-nrequired">Enrollment Periods</label></td>
-							<td>
-								<div id="curriculum_type_periods" style="margin-left:53px;width:558px;">
+			<div class="control-group">
+				<label for="period" class="control-label form-nrequired">Enrollment Periods:</label>
+				<div class="controls">
+					<div id="curriculum_type_periods" style="margin-left:53px;width:558px;">
 									<?php 
 									if ($PROCESSED["curriculum_type_id"]) {
 											$query = "SELECT * FROM `curriculum_periods` WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"]." AND `active` = 1 AND `finish_date` >= ".$db->qstr(time()));
@@ -1165,13 +1083,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									}
 									?>
 								</div>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+				</div>
+			</div>
+			
+		
+			<!-- Course Audience-->	
+			<div>
 				<div id="period_list">
-
-					<h1 style="font-size:14px;">Active Periods</h1>
+					<h2>Active Periods</h2>
 					<?php 
 					if (isset($PROCESSED["periods"])) {
 						foreach ($PROCESSED["periods"] as $key=>$period) {
@@ -1408,25 +1327,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					});
 				}
 			</script>
-			
-			<div style="padding-top: 25px">
-				<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-				<tr>
-					<td style="width: 25%; text-align: left">
-						<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/courses'" />
-					</td>
-					<td style="width: 75%; text-align: right; vertical-align: middle">
-						<span class="content-small">After saving:</span>
+			<div class="row-fluid">
+				<div class="span3">
+					<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/courses'" />
+				</div>
+				<div class="span9">
+					<div style="float:right">
+					<span class="content-small">After saving:</span>
 						<select id="post_action" name="post_action">
 						<option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Add content to course</option>
 						<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another course</option>
 						<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to course list</option>
 						</select>
-						<input type="submit" class="button" value="Save" />
-					</td>
-				</tr>
-				</table>
+						<input type="submit" class="btn btn-primary" value="Save" />
+					</div>
+				</div> <!--/span9-->
 			</div>
+			
 			</form>
 			<?php
 			break;

@@ -24,10 +24,10 @@ padding:3px 6px;
 border:1px solid #CCC;
 border-bottom:0;
 z-index:3;
-top:-2px;
+top:-3px;
 background:#FFF;
 margin:1px -6px -2px 0;
-padding:2px 6px 5px;
+padding:2px 16px 5px;
 }
 
 .dynamic-tab-pane-control .tab-row .tab .error,.dynamic-tab-pane-control .tab-row .tab.selected .error {

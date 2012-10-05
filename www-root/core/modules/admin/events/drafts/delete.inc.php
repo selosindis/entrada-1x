@@ -79,13 +79,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	switch($STEP) {
 		case 2 :
 			$removed = array();
-			$query = "	SELECT a.`draft_id`, a.`name` AS a.`draft_title` 
+			$query = "	SELECT a.`draft_id`, a.`name` AS `draft_title` 
 						FROM `drafts` AS a
 						JOIN `draft_creators` AS b
 						ON a.`draft_id` = b.`draft_id`
 						WHERE a.`draft_id` IN (".implode(', ', $DRAFT_IDS).")
 						AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 			$drafts = $db->GetAssoc($query);
+			
 			foreach($DRAFT_IDS as $draft_id) {
 				$allow_removal = false;
 				
@@ -114,15 +115,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 						$query = "	DELETE FROM `draft_events` WHERE `draft_id` = ".$db->qstr($draft_id);
 						$db->Execute($query);
-
-						$query = "	DELETE FROM `draft_creators` WHERE `draft_id` = ".$db->qstr($draft_id);
-						$db->Execute($query);
-
-						$query = "	DELETE FROM `drafts` WHERE `draft_id` = ".$db->qstr($draft_id);
-						if ($db->Execute($query)) {
-							$removed[$draft_id]["draft_title"] = $drafts[$draft_id];
-						}
 						
+					}
+					
+					$query = "	DELETE FROM `draft_creators` WHERE `draft_id` = ".$db->qstr($draft_id);
+					$db->Execute($query);
+					
+					$query = "	DELETE FROM `drafts` WHERE `draft_id` = ".$db->qstr($draft_id);
+					if ($db->Execute($query)) {
+						$removed[] = $drafts[$draft_id];
 					}
 				}
 			}
@@ -131,10 +132,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 			if($total_removed = @count($removed)) {
 				$SUCCESS++;
-				$SUCCESSSTR[$SUCCESS]  = "You have successfully removed ".$total_removed." drafts".(($total_removed != 1) ? "s" : "")." from the system:";
+				$SUCCESSSTR[$SUCCESS]  = "You have successfully removed ".$total_removed." draft".(($total_removed != 1) ? "s" : "")." from the system:";
 				$SUCCESSSTR[$SUCCESS] .= "<div style=\"padding-left: 15px; padding-bottom: 15px; font-family: monospace\">\n";
-				foreach($removed as $result) {
-					$SUCCESSSTR[$SUCCESS] .= html_encode($result["draft_title"])."<br />";
+				foreach($removed as $title) {
+					$SUCCESSSTR[$SUCCESS] .= html_encode($title)."<br />";
 				}
 				$SUCCESSSTR[$SUCCESS] .= "</div>\n";
 				$SUCCESSSTR[$SUCCESS] .= "You will be automatically redirected to the event index in 5 seconds, or you can <a href=\"".ENTRADA_URL."/admin/events\">click here</a> if you do not wish to wait.";

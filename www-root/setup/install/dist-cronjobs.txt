@@ -15,3 +15,4 @@
 59 23 * * 0 /usr/bin/php -f ENTRADA_ABSOLUTE/cron/import-draft-schedule.php > /dev/null 2>&1
 59 23 * * * /usr/bin/php -f ENTRADA_ABSOLUTE/cron/check_grade_thresholds.php > /dev/null 2>&1
 59 23 * * * /usr/bin/php -f ENTRADA_ABSOLUTE/cron/observership-confirmations.php > /dev/null 2>&1
+35 2 * * * /usr/bin/php -f ENTRADA_ABSOLUTE/cron/queue-evaluation-notifications.php > /dev/null 2>&1

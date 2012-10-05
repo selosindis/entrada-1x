@@ -24,7 +24,7 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  * 
 */
-
+ini_set("display_errors", 1);
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -41,13 +41,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$RECORD_ID = 0;
-
 	if (isset($_GET["record"]) && ($tmp_input = clean_input($_GET["record"], "int"))) {
 		$RECORD_ID = $tmp_input;
 	} elseif (isset($_POST["record"]) && ($tmp_input = clean_input($_POST["record"], "int"))) {
 		$RECORD_ID = $tmp_input;
 	}
-
 	if ($FORM_ID && $RECORD_ID) {
 		$query = "	SELECT a.`form_title`, a.`form_description`, b.*
 					FROM `evaluation_forms` AS a
@@ -58,10 +56,79 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					AND b.`efquestion_id` = ".$db->qstr($RECORD_ID);
 		$question_record = $db->GetRow($query);
 		if ($question_record && $ENTRADA_ACL->amIAllowed(new EvaluationFormResource($FORM_ID), "update")) {
-			if ($ALLOW_QUESTION_MODIFICATIONS) {
-				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$quiz_record["quiz_id"], "title" => limit_chars($quiz_record["quiz_title"], 32));
-				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit-question&id=".$FORM_ID, "title" => "Edit Quiz Question");
+			if ($question_record["questiontype_id"] == 3) {
+				$query = "SELECT `efrubric_id` FROM `evaluation_form_rubric_questions`
+							WHERE `efquestion_id` = ".$db->qstr($RECORD_ID);
+				$efrubric_id = $db->GetOne($query);
+				if ($efrubric_id) {
+					$query = "SELECT * FROM `evaluation_form_rubrics`
+								WHERE `efrubric_id` = ".$db->qstr($efrubric_id);
+					$rubric = $db->GetRow($query);
+					if ($rubric) {
+						$question_record["question_title"] = $rubric["rubric_title"];
+						$PROCESSED["rubric_title"] = $rubric["rubric_title"];
+						$PROCESSED["rubric_description"] = $rubric["rubric_description"];
+					}
+					$query = "SELECT * FROM `evaluation_form_rubric_questions` AS a
+								JOIN `evaluation_form_questions` AS b
+								ON a.`efquestion_id` = b.`efquestion_id`
+								WHERE a.`efrubric_id` = ".$db->qstr($efrubric_id)."
+								AND b.`questiontype_id` = 3
+								ORDER BY b.`question_order` ASC";
+					$categories = $db->GetAll($query);
+					if ($categories) {
+						$PROCESSED["evaluation_form_categories"] = array();
+						$PROCESSED["evaluation_form_category_criteria"] = array();
+						foreach ($categories as $index => $category) {
+							if (!isset($PROCESSED["allow_comments"])) {
+								$PROCESSED["allow_comments"] = $category["allow_comments"];
+							}
+							$PROCESSED["evaluation_form_categories"][$index + 1] = array();
+							$PROCESSED["evaluation_form_categories"][$index + 1]["category"] = $category["question_text"];
 
+							$query = "SELECT * FROM `evaluation_form_responses`
+										WHERE `efquestion_id` = ".$db->qstr($category["efquestion_id"])."
+										ORDER BY `response_order` ASC";
+							$columns = $db->GetAll($query);
+							if ($columns) {
+								$PROCESSED["evaluation_form_responses"] = array();
+								$PROCESSED["evaluation_form_category_criteria"][$index + 1] = array();
+								$PROCESSED["columns_count"] = count($columns);
+								foreach ($columns as $cindex => $column) {
+
+									$PROCESSED["evaluation_form_responses"][$cindex + 1] = $column;
+
+									$query = "SELECT * FROM `evaluation_form_response_criteria`
+												WHERE `efresponse_id` = ".$db->qstr($column["efresponse_id"]);
+									$criteria = $db->GetRow($query);
+									if ($criteria) {
+										$PROCESSED["evaluation_form_category_criteria"][$index + 1][$cindex + 1] = array();
+										$PROCESSED["evaluation_form_category_criteria"][$index + 1][$cindex + 1]["criteria"] = $criteria["criteria_text"];
+									}
+								}
+							}
+						}
+						$PROCESSED["categories_count"] = count($categories);
+					}
+				}
+			}
+			if ($ALLOW_QUESTION_MODIFICATIONS) {
+				if (isset($question_record["question_title"]) && $question_record["question_title"]) {
+					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$question_record["efquestion_id"], "title" => limit_chars($question_record["question_title"], 32));
+				}
+				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit-question&id=".$FORM_ID, "title" => "Edit Evaluation Question");
+				/**
+				 * Required field "questiontype_id" / Question Type
+				 * Currently only multile choice questions are supported, although
+				 * this is something we will be expanding on shortly.
+				 */
+				if ((isset($_POST["questiontype_id"])) && ($tmp_input = clean_input($_POST["questiontype_id"], array("trim", "int")))) {
+					$PROCESSED["questiontype_id"] = $tmp_input;
+				} elseif ((isset($_GET["qtype_id"])) && ($tmp_input = clean_input($_GET["qtype_id"], array("trim", "int")))) {
+					$PROCESSED["questiontype_id"] = $tmp_input;
+				} else {
+					$PROCESSED["questiontype_id"] = $question_record["questiontype_id"];
+				}
 				// Error Checking
 				switch ($STEP) {
 					case 2 :
@@ -69,25 +136,62 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						 * Add the eform_id of the form this question will be added to.
 						 */
 						$PROCESSED["eform_id"] = $question_record["eform_id"];
+						//If Rubric question type.
+						switch ($PROCESSED["questiontype_id"]) {
+							case 3 :
+								/**
+								 * Required field "rubric_title" / Rubric Title.
+								 */
+								if ((isset($_POST["rubric_title"])) && ($tmp_input = clean_input($_POST["rubric_title"], array("trim")))) {
+									$PROCESSED["rubric_title"] = $tmp_input;
+								} else {
+									add_error("The <strong>Rubric Title</strong> field is required.");
+								}
+								/**
+								 * Non-required field "rubric_description" / Rubric Description.
+								 */
+								if ((isset($_POST["rubric_description"])) && ($tmp_input = clean_input($_POST["rubric_description"], array("trim", "allowedtags")))) {
+									$PROCESSED["rubric_description"] = $tmp_input;
+								} else {
+									$PROCESSED["rubric_description"] = "";
+								}
 
-						/**
-						 * Required field "questiontype_id" / Question Type
-						 * Currently only multile choice questions are supported, although
-						 * this is something we will be expanding on shortly.
-						 */
-						if ((isset($_POST["questiontype_id"])) && ($tmp_input = clean_input($_POST["questiontype_id"], array("trim", "int")))) {
-							$PROCESSED["questiontype_id"] = 1;
-						} else {
-							$PROCESSED["questiontype_id"] = 1;
-						}
-
-						/**
-						 * Required field "question_text" / Form Question.
-						 */
-						if ((isset($_POST["question_text"])) && ($tmp_input = clean_input($_POST["question_text"], array("trim", "allowedtags")))) {
-							$PROCESSED["question_text"] = $tmp_input;
-						} else {
-							add_error("The <strong>Form Question</strong> field is required.");
+								if ((isset($_POST["categories_count"])) && ($tmp_input = clean_input($_POST["categories_count"], array("int")))) {
+									$PROCESSED["categories_count"] = $tmp_input;
+								}
+								
+								if ((isset($_POST["allow_comments"])) && $_POST["allow_comments"]) {
+									$PROCESSED["allow_comments"] = true;
+								} else {
+									$PROCESSED["allow_comments"] = false;
+								}
+							break;
+							case 1 :
+							default :
+								
+								if ((isset($_POST["responses_count"])) && ($tmp_input = clean_input($_POST["responses_count"], array("int")))) {
+									$PROCESSED["responses_count"] = $tmp_input;
+								}
+								
+								/**
+								 * Required field "question_text" / Form Question.
+								 */
+								if ((isset($_POST["allow_comments"])) && $_POST["allow_comments"]) {
+									$PROCESSED["allow_comments"] = true;
+								} else {
+									$PROCESSED["allow_comments"] = false;
+								}
+							case 2 :
+							case 4 :
+								/**
+								 * Required field "question_text" / Form Question.
+								 */
+								if ((isset($_POST["question_text"])) && ($tmp_input = clean_input($_POST["question_text"], array("trim", "allowedtags")))) {
+									$PROCESSED["question_text"] = $tmp_input;
+								} else {
+									add_error("The <strong>Form Question</strong> field is required.");
+								}
+							break;
 						}
 
 						/**
@@ -143,31 +247,70 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								}
 							}
 						}
+						if ((isset($_POST["category"])) && (is_array($_POST["category"]))) {
+							$i = 1;
+							$PROCESSED["evaluation_form_categories"] = array();
+							foreach ($_POST["category"] as $category_key => $category) {
+								$PROCESSED["evaluation_form_category_criteria"][$i] = array();
+								$category_key = clean_input($category_key, "int");
 
+								$category = clean_input($category, array("trim"));
+
+								if (($category_key) && ($category != "")) {
+									if (is_array($PROCESSED["evaluation_form_categories"]) && !empty($PROCESSED["evaluation_form_categories"])) {
+										foreach ($PROCESSED["evaluation_form_categories"] as $value) {
+											if ($value["category"] == $category) {
+												add_error("You cannot have more than one <strong>identical category</strong> in a rubric.");
+											}
+										}
+									}
+
+									$PROCESSED["evaluation_form_categories"][$i]["category"] = $category;
+									$PROCESSED["evaluation_form_categories"][$i]["category_order"] = $i;
+									if ((isset($_POST["criteria"][$i])) && (is_array($_POST["criteria"][$i]))) {
+										$j = 1;
+										foreach ($_POST["criteria"][$i] as $criteria_key => $criteria) {
+											$criteria_key = clean_input($criteria_key, "int");
+
+											$criteria = clean_input($criteria, array("trim"));
+
+											if ($criteria_key) {
+												if ($criteria != "" && is_array($PROCESSED["evaluation_form_category_criteria"][$i]) && !empty($PROCESSED["evaluation_form_category_criteria"][$i])) {
+													foreach ($PROCESSED["evaluation_form_category_criteria"][$i] as $value) {
+														if ($value["criteria"] == $criteria) {
+															add_error("You cannot have more than one <strong>identical criteria</strong> in a category.");
+														}
+													}
+												}
+
+												$PROCESSED["evaluation_form_category_criteria"][$i][$j]["criteria"] = $criteria;
+												$PROCESSED["evaluation_form_category_criteria"][$i][$j]["criteria_order"] = $j;
+
+												$j++;
+											}
+										}
+									}
+
+									$i++;
+								}
+							}
+						}
 						/**
 						 * There must be at least 2 possible responses to proceed.
 						 */
-						if (count($PROCESSED["evaluation_form_responses"]) < 4) {
-							add_error("You must provide 4 responses in the <strong>Available Responses</strong> section.");
+						if (count($PROCESSED["evaluation_form_responses"]) < 2 && $PROCESSED["questiontype_id"] != 2 && $PROCESSED["questiontype_id"] != 4) {
+							add_error("You must provide 2 responses in the <strong>Available Responses</strong> section.");
 						}
 
-						/**
-						 * You must specify the minimum passing level
-						 */
-						if (!$minimum_passing_level_found) {
-							add_error("You must specify which of the responses is the <strong>minimum passing level</strong>.");
+						if ($PROCESSED["questiontype_id"] == 1 || $PROCESSED["questiontype_id"] == 3) {
+							/**
+							 * You must specify the minimum passing level
+							 */
+							if (!$minimum_passing_level_found) {
+								add_error("You must specify which of the responses is the <strong>minimum passing level</strong>.");
+							}
 						}
 
-						/**
-						 * Get the next order of this question from the evaluation_form_questions table.
-						 */
-						$query	= "SELECT MAX(`question_order`) AS `next_order` FROM `evaluation_form_questions` WHERE `eform_id` = ".$db->qstr($FORM_ID);
-						$result = $db->GetRow($query);
-						if ($result) {
-							$PROCESSED["question_order"] = ($result["next_order"] + 1);
-						} else {
-							$PROCESSED["question_order"] = 0;
-						}
 
 						if (isset($_POST["post_action"])) {
 							switch ($_POST["post_action"]) {
@@ -188,64 +331,191 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 						if (!has_error()) {
 							if($ENTRADA_ACL->amIAllowed(new EvaluationFormQuestionResource(null, $question_record["eform_id"]), "create")) {
-								if ($db->AutoExecute("evaluation_form_questions", $PROCESSED, "UPDATE", "`efquestion_id` = ".$db->qstr($RECORD_ID))) {
+								if ($PROCESSED["questiontype_id"] == 3) {
 									/**
-									 * Add the question responses to the evaluation_form_responses table.
-									 * Ummm... we really need to switch to InnoDB tables to get transaction support.
+									 * Get the next order of this question from the evaluation_form_questions table.
 									 */
-									if ((is_array($PROCESSED["evaluation_form_responses"])) && (count($PROCESSED["evaluation_form_responses"]))) {
-										/**
-										 * Delete the old responses and add the updated ones.
-										 */
-										$db->Execute("DELETE FROM `evaluation_form_responses` WHERE `efquestion_id` = ".$db->qstr($RECORD_ID));
+									$query	= "SELECT MIN(b.`question_order`) AS `first_order` FROM `evaluation_form_rubric_questions` AS a
+												JOIN `evaluation_form_questions` AS b
+												ON a.`efquestion_id` = b.`efquestion_id`
+												WHERE a.`efrubric_id` = ".$db->qstr($efrubric_id);
+									$result = $db->GetRow($query);
+									if ($result) {
+										$PROCESSED["question_order"] = ($result["first_order"]);
+									} else {
+										$PROCESSED["question_order"] = 1;
+									}
+									$starting_order = $PROCESSED["question_order"];
+									$updated_question_ids_string = "";
 
-										foreach ($PROCESSED["evaluation_form_responses"] as $form_question_response) {
-											$PROCESSED = array (
-															"efquestion_id" => $RECORD_ID,
-															"response_text" => $form_question_response["response_text"],
-															"response_order" => $form_question_response["response_order"],
-															"response_is_html" => $form_question_response["response_is_html"],
-															"minimum_passing_level"	=> $form_question_response["minimum_passing_level"]
-															);
+									if ($db->AutoExecute("evaluation_form_rubrics", $PROCESSED, "UPDATE", "efrubric_id = ".$efrubric_id)) {
+										$query = "SELECT b.* FROM `evaluation_form_rubric_questions` AS a
+													JOIN `evaluation_form_questions` AS b
+													ON a.`efquestion_id` = b.`efquestion_id`
+													WHERE a.`efrubric_id` = ".$db->qstr($efrubric_id)."
+													ORDER BY b.`question_order` ASC";
+										$categories = $db->GetAll($query);
+										foreach ($categories as $category) {
+											$db->Execute("DELETE FROM `evaluation_form_questions` WHERE `efquestion_id` = ".$db->qstr($category["efquestion_id"]));
+											$db->Execute("DELETE FROM `evaluation_form_responses` WHERE `efquestion_id` = ".$db->qstr($category["efquestion_id"]));
+											$db->Execute("DELETE FROM `evaluation_form_rubric_questions` WHERE `efquestion_id` = ".$db->qstr($category["efquestion_id"]));
+										}
+										foreach ($PROCESSED["evaluation_form_categories"] as $index => $category) {
+											$PROCESSED_QUESTION = array("eform_id" => $FORM_ID,
+																		"questiontype_id" => 3,
+																		"question_text" => $PROCESSED["evaluation_form_categories"][$index]["category"],
+																		"question_order" => $PROCESSED["question_order"],
+																		"allow_comments" => $PROCESSED["allow_comments"]);
+											$efquestion_id = 0;
+											$PROCESSED["question_order"]++;
+											if ($db->AutoExecute("evaluation_form_questions", $PROCESSED_QUESTION, "INSERT") && ($efquestion_id = $db->Insert_Id()) &&
+													$db->AutoExecute("evaluation_form_rubric_questions", array("efrubric_id" => $efrubric_id, "efquestion_id" => $efquestion_id), "INSERT")) {
+												$updated_question_ids_string .= ($updated_question_ids_string ? ", " : "").$db->qstr($efquestion_id);
+												/**
+												 * Add the question responses to the evaluation_form_responses table.
+												 * Ummm... we really need to switch to InnoDB tables to get transaction support.
+												 */
+												if ((is_array($PROCESSED["evaluation_form_responses"])) && (count($PROCESSED["evaluation_form_responses"]))) {
+													foreach ($PROCESSED["evaluation_form_responses"] as $subindex => $form_question_response) {
+														$PROCESSED_RESPONSE = array (
+																		"efquestion_id" => $efquestion_id,
+																		"response_text" => $form_question_response["response_text"],
+																		"response_order" => $form_question_response["response_order"],
+																		"response_is_html" => $form_question_response["response_is_html"],
+																		"minimum_passing_level"	=> $form_question_response["minimum_passing_level"]
+																		);
+														$efresponse_id = 0;
+														if ($db->AutoExecute("evaluation_form_responses", $PROCESSED_RESPONSE, "INSERT") && ($efresponse_id = $db->Insert_Id())) {
+															/**
+															 * Add the responses criteria to the evaluation_form_rubric_criteria table.
+															 */
+															if ((isset($PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"])) && ($PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"] || $PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"] === "")) {
+																$PROCESSED_CRITERIA = array (
+																				"efresponse_id" => $efresponse_id,
+																				"criteria_text" => $PROCESSED["evaluation_form_category_criteria"][$index][$subindex]["criteria"],
+																				);
 
-											if (!$db->AutoExecute("evaluation_form_responses", $PROCESSED, "INSERT")) {
-												add_error("There was an error while trying to attach a <strong>Question Response</strong> to this form question.<br /><br />The system administrator was informed of this error; please try again later.");
+																if (!$db->AutoExecute("evaluation_form_response_criteria", $PROCESSED_CRITERIA, "INSERT")) {
+																	add_error("There was an error while trying to attach a <strong>Criteria</strong> to this form question.<br /><br />The system administrator was informed of this error; please try again later.");
 
-												application_log("error", "Unable to insert a new evaluation_form_responses record while adding a new evaluation form question [".$efquestion_id."] to eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
+																	application_log("error", "Unable to insert a new evaluation_form_rubric_criteria record while adding a new evaluation form question [".$efquestion_id."] to eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
+																}
+															}
+														} else {
+															add_error("There was an error while trying to attach a <strong>Question Response</strong> to this form question.<br /><br />The system administrator was informed of this error; please try again later.");
+
+															application_log("error", "Unable to insert a new evaluation_form_responses record while adding a new evaluation form question [".$efquestion_id."] to eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
+														}
+													}
+												}
+											} else {
+												add_error("There was a problem inserting this evaluation form question. The system administrator was informed of this error; please try again later.");
+
+												application_log("error", "There was an error inserting an evaluation form question to eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
 											}
 										}
+										if (!has_error()) {
+											$query = "SELECT * FROM `evaluation_form_questions` 
+														WHERE `efquestion_id` NOT IN (".$updated_question_ids_string.") 
+														AND `question_order` >= ".$db->qstr($starting_order)." 
+														AND `eform_id` = ".$db->qstr($FORM_ID)."
+														ORDER BY `question_order` ASC";
+											$moving_questions = $db->GetAll($query);
+											if ($moving_questions) {
+												foreach ($moving_questions as $question) {
+													$question["question_order"] = $PROCESSED["question_order"];
+													$PROCESSED["question_order"]++;
+													$db->AutoExecute("evaluation_form_questions", $question, "UPDATE", "efquestion_id = ".$question["efquestion_id"]);
+												}
+											}
+											
+											switch ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
+												case "new" :
+													$url = ENTRADA_URL."/admin/evaluations/forms/questions?id=".$FORM_ID."&section=add";
+													$msg = "You will now be redirected to add another question to this evaluation form; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+												break;
+												case "index" :
+													$url = ENTRADA_URL."/admin/evaluations/forms";
+													$msg = "You will now be redirected back to the evaluation form index page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+												break;
+												case "content" :
+												default :
+													$url = ENTRADA_URL."/admin/evaluations/forms?section=edit&id=".$FORM_ID;
+													$msg = "You will now be redirected back to the evaluation form; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+												break;
+											}
+											$SUCCESS++;
+											$SUCCESSSTR[] = "You have successfully added this question to the <strong>".html_encode($FORM_RECORD["form_title"])."</strong> evaluation form.<br /><br />".$msg;
+											$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
+
+
+											application_log("success", "New evaluation form question [".$efquestion_id."] added to eform_id [".$FORM_ID."].");
+										}
+									} else {
+										add_error("There was a problem inserting this evaluation form rubric. The system administrator was informed of this error; please try again later.");
+
+										application_log("error", "There was an error inserting an evaluation form rubric to eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
 									}
-
-									switch ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
-										case "new" :
-											$url = ENTRADA_URL."/admin/evaluations/forms/questions?id=".$FORM_ID."&section=add";
-											$msg = "You will now be redirected to add another question to this evaluation form; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-										break;
-										case "index" :
-											$url = ENTRADA_URL."/admin/evaluations/forms";
-											$msg = "You will now be redirected back to the evaluation form index page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-										break;
-										case "content" :
-										default :
-											$url = ENTRADA_URL."/admin/evaluations/forms?section=edit&id=".$FORM_ID;
-											$msg = "You will now be redirected back to the evaluation form; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-										break;
-									}
-
-									$SUCCESS++;
-									$SUCCESSSTR[] = "You have successfully added this question to the <strong>".html_encode($question_record["form_title"])."</strong> evaluation form.<br /><br />".$msg;
-									$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
-									/**
-									 * Unset the arrays used to construct this error checking.
-									 */
-									unset($PROCESSED);
-
-									application_log("success", "New evaluation form question [".$efquestion_id."] added to eform_id [".$FORM_ID."].");
 								} else {
-									add_error("There was a problem inserting this evaluation form question. The system administrator was informed of this error; please try again later.");
+									if ($db->AutoExecute("evaluation_form_questions", $PROCESSED, "UPDATE", "`efquestion_id` = ".$db->qstr($RECORD_ID))) {
+										/**
+										 * Add the question responses to the evaluation_form_responses table.
+										 * Ummm... we really need to switch to InnoDB tables to get transaction support.
+										 */
+										if ((is_array($PROCESSED["evaluation_form_responses"])) && (count($PROCESSED["evaluation_form_responses"]))) {
+											/**
+											 * Delete the old responses and add the updated ones.
+											 */
+											$db->Execute("DELETE FROM `evaluation_form_responses` WHERE `efquestion_id` = ".$db->qstr($RECORD_ID));
 
-									application_log("error", "There was an error inserting an evaluation form question to eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
+											foreach ($PROCESSED["evaluation_form_responses"] as $form_question_response) {
+												$PROCESSED = array (
+																"efquestion_id" => $RECORD_ID,
+																"response_text" => $form_question_response["response_text"],
+																"response_order" => $form_question_response["response_order"],
+																"response_is_html" => $form_question_response["response_is_html"],
+																"minimum_passing_level"	=> $form_question_response["minimum_passing_level"]
+																);
+
+												if (!$db->AutoExecute("evaluation_form_responses", $PROCESSED, "INSERT")) {
+													add_error("There was an error while trying to attach a <strong>Question Response</strong> to this form question.<br /><br />The system administrator was informed of this error; please try again later.");
+
+													application_log("error", "Unable to insert a new evaluation_form_responses record while adding a new evaluation form question [".$efquestion_id."] to eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
+												}
+											}
+										}
+
+										switch ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
+											case "new" :
+												$url = ENTRADA_URL."/admin/evaluations/forms/questions?id=".$FORM_ID."&section=add";
+												$msg = "You will now be redirected to add another question to this evaluation form; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+											break;
+											case "index" :
+												$url = ENTRADA_URL."/admin/evaluations/forms";
+												$msg = "You will now be redirected back to the evaluation form index page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+											break;
+											case "content" :
+											default :
+												$url = ENTRADA_URL."/admin/evaluations/forms?section=edit&id=".$FORM_ID;
+												$msg = "You will now be redirected back to the evaluation form; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+											break;
+										}
+
+										$SUCCESS++;
+										$SUCCESSSTR[] = "You have successfully added this question to the <strong>".html_encode($question_record["form_title"])."</strong> evaluation form.<br /><br />".$msg;
+										$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
+
+										/**
+										 * Unset the arrays used to construct this error checking.
+										 */
+										unset($PROCESSED);
+
+										application_log("success", "Evaluation form question [".$RECORD_ID."] updated for eform_id [".$FORM_ID."].");
+									} else {
+										add_error("There was a problem inserting this evaluation form question. The system administrator was informed of this error; please try again later.");
+
+										application_log("error", "There was an error inserting an evaluation form question to eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
+									}
 								}
 							} else {
 								add_error("You do not have permission to create this evaluation form question. The system administrator was informed of this error; please try again later.");
@@ -260,33 +530,49 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					break;
 					case 1 :
 					default :
-						$PROCESSED = $question_record;
-						$PROCESSED["evaluation_form_responses"] = array();
+						switch ($question_record["questiontype_id"]) {
+							case 3 :
+							break;
+							case 2 :
+							case 4 :
+								$PROCESSED = $question_record;
+							break;
+							case 1 :
+							default :
+								$PROCESSED = $question_record;
+								$PROCESSED["evaluation_form_responses"] = array();
 
-						$query = "	SELECT a.*
-									FROM `evaluation_form_responses` AS a
-									WHERE a.`efquestion_id` = ".$db->qstr($RECORD_ID)."
-									ORDER BY a.`response_order` ASC";
-						$results = $db->GetAll($query);
-						if ($results) {
-							$i = 1;
+								$query = "	SELECT a.*
+											FROM `evaluation_form_responses` AS a
+											WHERE a.`efquestion_id` = ".$db->qstr($RECORD_ID)."
+											ORDER BY a.`response_order` ASC";
+								$results = $db->GetAll($query);
+								if ($results) {
+									$i = 1;
+									$minimum_passed = false;
+									$PROCESSED["responses_count"] = count($results);
 
-							foreach ($results as $result) {
-								$PROCESSED["evaluation_form_responses"][$i]["response_order"] = $result["response_order"];
-								$PROCESSED["evaluation_form_responses"][$i]["response_correct"] = $result["response_correct"];
-								$PROCESSED["evaluation_form_responses"][$i]["response_is_html"] = $result["response_is_html"];
-								$PROCESSED["evaluation_form_responses"][$i]["minimum_passing_level"] = $result["minimum_passing_level"];
+									foreach ($results as $result) {
+										if ($result["minimum_passing_level"]) {
+											$minimum_passed = true;
+										}
+										$PROCESSED["evaluation_form_responses"][$i]["response_order"] = $result["response_order"];
+										$PROCESSED["evaluation_form_responses"][$i]["response_correct"] = ($minimum_passed ? true : false);
+										$PROCESSED["evaluation_form_responses"][$i]["response_is_html"] = $result["response_is_html"];
+										$PROCESSED["evaluation_form_responses"][$i]["minimum_passing_level"] = $result["minimum_passing_level"];
 
-								if ($result["response_is_html"]) {
-									$response_text = clean_input($result["response_text"], array("trim", "allowedtags"));
-								} else {
-									$response_text = clean_input($result["response_text"], array("trim"));
+										if ($result["response_is_html"]) {
+											$response_text = clean_input($result["response_text"], array("trim", "allowedtags"));
+										} else {
+											$response_text = clean_input($result["response_text"], array("trim"));
+										}
+
+										$PROCESSED["evaluation_form_responses"][$i]["response_text"] = $response_text;
+
+										$i++;
+									}
 								}
-
-								$PROCESSED["evaluation_form_responses"][$i]["response_text"] = $response_text;
-
-								$i++;
-							}
+							break;
 						}
 					break;
 				}
@@ -309,9 +595,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						if (has_error() || has_notice()) {
 							echo display_status_messages();
 						}
+						require_once("javascript/evaluations.js.php");
 						?>
 						<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations/forms/questions?id=<?php echo $FORM_ID; ?>&amp;section=edit&amp;record=<?php echo $RECORD_ID; ?>&amp;step=2" method="post" id="editEvaluationFormQuestionForm">
-						<input type="hidden" name="questiontype_id" value="1" />
 						<table style="width: 100%; margin-bottom: 25px" cellspacing="0" cellpadding="2" border="0" summary="Edit Evaluation Form Question">
 						<colgroup>
 							<col style="width: 20%" />
@@ -341,64 +627,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							</tr>
 						</tfoot>
 						<tbody id="form-content-add-question">
-							<tr>
-								<td style="vertical-align: top">
-									<label for="question_text" class="form-required">Question Text</label>
-								</td>
-								<td>
-									<textarea id="question_text" class="expandable" name="question_text" style="width: 98%; height:0"><?php echo ((isset($PROCESSED["question_text"])) ? clean_input($PROCESSED["question_text"], "encode") : ""); ?></textarea>
-								</td>
-							</tr>
-							<tr>
-								<td style="padding-top: 5px; vertical-align: top">
-									<label for="response_text_0" class="form-required">Available Responses</label>
-								</td>
-								<td style="padding-top: 5px">
-									<table class="form-question" cellspacing="0" cellpadding="2" border="0" summary="Form Question Responses">
-									<colgroup>
-										<col style="width: 3%" />
-										<col style="width: 77%" />
-										<col style="width: 20%" />
-									</colgroup>
-									<thead>
-										<tr>
-											<td colspan="2">&nbsp;</td>
-											<td class="center" style="font-weight: bold; font-size: 11px">Minimum Pass</td>
-										</tr>
-									</thead>
-									<tbody>
-										<?php
-										foreach (range(1, 4) as $number) {
-											$minimum_passing_level = (((!isset($PROCESSED["evaluation_form_responses"][$number]["minimum_passing_level"]) && ($number == 1)) || (isset($PROCESSED["evaluation_form_responses"][$number]["minimum_passing_level"]) && (int) $PROCESSED["evaluation_form_responses"][$number]["minimum_passing_level"])) ? true : false);
-											?>
-											<tr>
-												<td style="padding-top: 13px">
-													<label for="response_text_<?php echo $number; ?>" class="form-required"><?php echo $number; ?></label>
-												</td>
-												<td style="padding-top: 10px">
-													<input type="text" id="response_text_<?php echo $number; ?>" name="response_text[<?php echo $number; ?>]" style="width: 99%" value="<?php echo ((isset($PROCESSED["evaluation_form_responses"][$number]["response_text"])) ? clean_input($PROCESSED["evaluation_form_responses"][$number]["response_text"], "encode") : ""); ?>" />
-												</td>
-												<td class="minimumPass center" style="padding-top: 10px">
-													<input type="radio" name="minimum_passing_level" id="fail_indicator_<?php echo $number; ?>" value="<?php echo $number; ?>"<?php echo (($minimum_passing_level) ? " checked=\"true\"" : ""); ?> />
-												</td>
-											</tr>
-											<?php
-										}
-										?>
-									</tbody>
-									</table>
-									<script type="text/javascript">
-									$$('table.form-question td.minimumPass input[type=radio]').each(function (el) {
-										$(el).observe('click', alterMinimumPass);
-									});
-
-									function alterMinimumPass(event) {
-										// @todo Mark all responses prior to and including selected as failed.
-										return;
-									}
-									</script>
-								</td>
-							</tr>
+							<?php
+								echo Evaluation::getEditQuestionControls($PROCESSED);
+							?>
 						</tbody>
 						</table>
 						</form>

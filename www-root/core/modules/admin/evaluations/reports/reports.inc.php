@@ -142,6 +142,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						AND ev.`evaluator_value` = a.`group_id`
 						AND a.`member_active` = '1'
 						AND ev.`evaluation_id` = ".$db->qstr($report["evaluation"])."
+						UNION
+						SELECT a.`proxy_id` `evaluator`
+						FROM `course_group_members` a , `evaluation_evaluators` ev
+						WHERE ev.`evaluator_type` = 'cgroup_id'
+						AND ev.`evaluator_value` = a.`cgroup_id`
+						AND a.`active` = '1'
+						AND ev.`evaluation_id` = ".$db->qstr($report["evaluation"])."
 					) t";
 		$evaluators	= $db->GetOne($query);
 

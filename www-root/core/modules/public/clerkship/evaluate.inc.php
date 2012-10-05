@@ -563,7 +563,7 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 														if ($answers[$i]["answer_type"] == $FIELD_ANSWERTYPE["radio"]["value"]) {
 															if ($answers[$i]["answer_value"] != 0) { 
 																echo "<td align=\"center\">\n";
-																echo "	<input type=\"radio\" id=\"".$evaluate["form_id"]."_".$answers[$i]["question_id"]."_answer_".$i."\" name=\"form[".$evaluate["form_id"]."][".$answers[$i]["question_id"]."][answer]\" value=\"".html_encode($answers[$i]["answer_id"])."\"".(($_POST["form"][$evaluate["form_id"]][$answers[$i]["question_id"]]["answer"] == $answers[$i]["answer_id"]) ? " checked=\"checked\"" : "")." />\n";
+																echo "	<input type=\"radio\" id=\"".$evaluate["form_id"]."_".$answers[$i]["question_id"]."_answer_".$i."\" name=\"form[".$evaluate["form_id"]."][".$answers[$i]["question_id"]."][answer]\" value=\"".html_encode($answers[$i]["answer_id"])."\"".((isset($_POST["form"][$evaluate["form_id"]][$answers[$i]["question_id"]]["answer"]) && $_POST["form"][$evaluate["form_id"]][$answers[$i]["question_id"]]["answer"] == $answers[$i]["answer_id"]) ? " checked=\"checked\"" : "")." />\n";
 																echo "</td>\n";
 															}
 														} 

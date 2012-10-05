@@ -12,7 +12,8 @@ CREATE TABLE IF NOT EXISTS `acl_permissions` (
   `update` tinyint(1) DEFAULT NULL,
   `delete` tinyint(1) DEFAULT NULL,
   `assertion` varchar(50) DEFAULT NULL,
-  PRIMARY KEY  (`permission_id`)
+  PRIMARY KEY  (`permission_id`),
+  KEY `entity_type` (`entity_type`,`entity_value`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`, `entity_value`, `app_id`, `create`, `read`, `update`, `delete`, `assertion`) VALUES
@@ -114,7 +115,9 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('annualreportadmin', NULL, 'group:role', 'medtech:admin', NULL, 1, 1, 1, 1, NULL),
 ('gradebook', NULL, 'group', 'student', NULL, NULL, 1, NULL, NULL, NULL),
 ('metadata', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('evaluation', NULL, 'group', 'faculty', 1, 0, 1, 0, 0, 'IsEvaluated');
+('evaluation', NULL, 'group', 'faculty', 1, 0, 1, 0, 0, 'IsEvaluated'),
+('evaluation', NULL, 'group', 'faculty', 1, 1, 1, 1, NULL, 'EvaluationReviewer'),
+('evaluationform', NULL, 'group', 'faculty', 1, 1, 1, 1, NULL, 'EvaluationFormAuthor');
 
 CREATE TABLE IF NOT EXISTS `departments` (
   `department_id` int(12) unsigned NOT NULL AUTO_INCREMENT,

@@ -901,7 +901,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												FROM `".AUTH_DATABASE."`.`user_access` ua
 												JOIN `" . AUTH_DATABASE . "`.`organisations` o
 												ON ua.`organisation_id` = o.`organisation_id`												
-												WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getId());
+												WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getId()). "
+												AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
 													
 								$results	= $db->GetAll($query);
 								if ($results) {

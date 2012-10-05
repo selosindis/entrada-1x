@@ -891,7 +891,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 								?>
 								</tbody>
-								<?php if (!is_draft) { ?>
+								<?php if (!$is_draft) { ?>
 								<tbody>
 									<tr>
 										<td>&nbsp;</td>

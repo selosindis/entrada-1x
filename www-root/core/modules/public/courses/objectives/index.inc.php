@@ -67,12 +67,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				<tr style="height: 200px;">
 					<td class="modified">&nbsp;</td>
 					<td class="title" style="padding-bottom: 20px; border-right: none;"><h3>Courses</h3></td>
-					<td class="title middle bottom" style="padding: 0 0 10px 10px;white-space:normal!important;text-align:left;"><h3 class="vertical-text" style="<?= ($is_ie) ? "height:200px;" : "" ; ?>white-space:normal!important;">Competencies</h3></td>
+					<td class="title middle bottom" style="padding: 0 0 10px 10px;white-space:normal!important;text-align:left;"><h3 class="vertical-text" style="<?php echo ($is_ie) ? "height:200px;" : "" ; ?>white-space:normal!important;">Competencies</h3></td>
 
 					<?php
 						foreach ($objectives["competencies"] as $competency_id => $competency) {
 							?>
-							<td class="title middle bottom" <?= ($is_ie) ? "style=\"white-space:normal!important;\"" : "" ; ?>><div class="vertical-text" <?= ($is_ie) ? "style=\"white-space:normal!important;height:200px;\"" : "" ; ?>><a href="<?= ENTRADA_URL; ?>/courses/objectives?section=competency-courses&id=<?= $competency_id; ?>" style="text-decoration: none;<?= ($is_ie) ? "height:200px;display:block;\"" : "" ; ?>"><?= $competency ?></a></div></td>
+							<td class="title middle bottom" <?php echo ($is_ie) ? "style=\"white-space:normal!important;\"" : "" ; ?>><div class="vertical-text" <?php echo ($is_ie) ? "style=\"white-space:normal!important;height:200px;\"" : "" ; ?>><a href="<?php echo ENTRADA_URL; ?>/courses/objectives?section=competency-courses&id=<?php echo $competency_id; ?>" style="text-decoration: none;<?php echo ($is_ie) ? "height:200px;display:block;" : "" ; ?>"><?php echo $competency; ?></a></div></td>
 							<?php
 						}
 					?>
@@ -85,7 +85,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						echo "<tr>";
 					}
 					if (isset($course["total_in_term"]) && $course["total_in_term"]) { ?>
-						<td class="term" style="border-bottom: 5px solid white;" rowspan="<?= $course["total_in_term"] ; ?>"><div class="vertical-text" <?= ($is_ie) ? "style=\"height:100px\"" : "" ; ?>><?= $course["term_name"]; ?></div></td>
+						<td class="term" style="border-bottom: 5px solid white;" rowspan="<?php echo $course["total_in_term"] ; ?>"><div class="vertical-text" <?php echo ($is_ie) ? "style=\"height:100px\"" : "" ; ?>><?php echo $course["term_name"]; ?></div></td>
 					<?php } ?>
 						<td class="objectives" colspan="2"><?php echo "<a href=\"".ENTRADA_URL."/courses/objectives?section=course-objectives&cid=".$course_id."\" style=\"text-decoration: none;\">".html_encode($course["course_name"])."</a>"; ?></td>
 						<?php

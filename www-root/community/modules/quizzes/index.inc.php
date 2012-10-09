@@ -139,7 +139,7 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 				echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($quiz_record["quiz_title"])."\" title=\"View results of ".html_encode($quiz_record["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 			}
 			if ($COMMUNITY_ADMIN && $_SESSION["details"]["group"] != "student") {
-				echo "		<a onclick=\"openDialog('".ENTRADA_URL."/api/quiz-wizard.api.php?action=edit&type=community_page&id=".$COMMUNITY_ID."&qid=".$quiz_record["aquiz_id"]."')\" title=\"Click to edit ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold; cursor: pointer;\">".html_encode($quiz_record["quiz_title"])."</a>";
+				echo "		<a onclick=\"openDialog('".ENTRADA_URL."/api/quiz-wizard.api.php?action=edit&type=community_page&id=".$PAGE_ID."&qid=".$quiz_record["aquiz_id"]."')\" title=\"Click to edit ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold; cursor: pointer;\">".html_encode($quiz_record["quiz_title"])."</a>";
 			} else {
 				if ($allow_attempt) {
 					echo "		<a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?section=attempt&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";

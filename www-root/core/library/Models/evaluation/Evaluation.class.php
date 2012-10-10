@@ -628,7 +628,7 @@ class Evaluation {
 									ORDER BY a.`response_order` ASC";
 						$responses = $db->GetAll($query);
 						if ($responses) {
-							$response_width = floor(100 / count($responses));
+							$response_width = floor(100 / count($responses)) - 1;
 
 							foreach ($responses as $response) {
 								echo "<div style=\"width: ".$response_width."%\">\n";

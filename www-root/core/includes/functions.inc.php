@@ -15167,6 +15167,46 @@ function groups_get_enrolled_course_ids($proxy_id = 0, $only_active_groups = fal
 }
 
 /**
+ * This function returns the groups the enrolled in by a given proxy_id
+ *
+ * @param int $proxy_id
+ * @return array $group
+ */
+function groups_get_enrolled_group_ids($proxy_id = 0, $only_active_groups = false) {
+	global $db, $ENTRADA_USER;
+	
+	$proxy_id = (int) $proxy_id;
+	$only_active_groups = (bool) $only_active_groups;
+	
+	$group_ids = array();
+	
+	if ($proxy_id) {
+		$query = "			SELECT a.group_id FROM `groups` AS a
+							JOIN `group_members` AS b
+							ON b.`group_id` = a.`group_id`
+							JOIN `group_organisations` AS c
+							ON c.`group_id` = a.`group_id`
+							WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
+							AND (b.`start_date` = 0
+							OR b.`start_date` <= UNIX_TIMESTAMP())
+							AND (b.`finish_date` = 0 OR b.`finish_date` >= UNIX_TIMESTAMP())
+							AND b.`member_active` = '1'
+							AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+
+
+
+		$group_list = $db->CacheGetAll(CACHE_TIMEOUT, $query);
+		if ($group_list) {
+			foreach ($group_list as $group) {
+				$group_ids[] = (int) $group["group_id"];
+			}
+		}
+	}
+	
+	return $group_ids;
+}
+
+/**
  * This function returns the cohort records related to the given organisation_id
  *
  * @param int $organisation_id

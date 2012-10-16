@@ -23,6 +23,7 @@ CREATE TABLE IF NOT EXISTS `system_roles` (
 ENGINE = MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `system_roles` (`role_name`, `groups_id`) VALUES
+(2016,1),
 (2015,1),
 (2014,1),
 (2013,1),
@@ -53,7 +54,7 @@ INSERT INTO `system_roles` (`role_name`, `groups_id`) VALUES
 (2000,2),
 (1999,2),
 (1998,2),
-(1997,2), 
+(1997,2),
 ('faculty',3),
 ('lecturer',3),
 ('director',3),
@@ -67,7 +68,7 @@ INSERT INTO `system_roles` (`role_name`, `groups_id`) VALUES
 ('admin',6),
 ('communityinvite',7);
 
-CREATE  TABLE IF NOT EXISTS `system_group_organisation` (
+CREATE TABLE IF NOT EXISTS `system_group_organisation` (
   `groups_id` INT NOT NULL ,
   `organisation_id` INT(12) UNSIGNED NOT NULL ,
   PRIMARY KEY (`groups_id`, `organisation_id`) )

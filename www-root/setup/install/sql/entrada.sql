@@ -1478,6 +1478,7 @@ CREATE TABLE IF NOT EXISTS `community_mailing_lists` (
   `community_id` int(12) NOT NULL DEFAULT '0',
   `list_name` varchar(64) NOT NULL,
   `list_type` enum('announcements','discussion','inactive') NOT NULL DEFAULT 'inactive',
+  `last_checked` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`cmlist_id`),
   KEY `community_id` (`community_id`,`list_name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;

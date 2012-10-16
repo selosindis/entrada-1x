@@ -15005,7 +15005,7 @@ function generateMaskConditions($organisation, $group, $role, $user) {
 	return implode(" OR ", $mask_strs);
 }
 
-function generateAccessConditions($organisation, $group, $role, $proxy_id) {
+function generateAccessConditions($organisation, $group, $role, $proxy_id, $table_prefix = NULL) {
 	global $db;
 	$masks = array();
 	$masks['`organisation_id`'] = $organisation;
@@ -15018,7 +15018,7 @@ function generateAccessConditions($organisation, $group, $role, $proxy_id) {
 	$mask_strs = array();
 
 	foreach ($masks as $field=>$condition) {
-		$mask_strs[] = $field."=".$db->qstr($condition);
+		$mask_strs[] = (($table_prefix != NULL) ? $table_prefix."." : "").$field."=".$db->qstr($condition);
 	}
 	if ($mask_strs) {
 		return implode(" AND ",$mask_strs);

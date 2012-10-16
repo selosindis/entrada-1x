@@ -58,7 +58,7 @@ class Evaluation {
 				?>
 					<tr>
 						<td style="vertical-align: top">
-							<label for="rubric_title" class="form-required">Rubric Title</label>
+							<label for="rubric_title" class="form-nrequired">Rubric Title</label>
 						</td>
 						<td>
 							<input type="text" id="rubric_title" name="rubric_title" style="width: 330px;" value="<?php echo ((isset($question_data["rubric_title"])) ? clean_input($question_data["rubric_title"], "encode") : ""); ?>">
@@ -483,7 +483,7 @@ class Evaluation {
 								$rubric_table_open = true;
 								echo "<li id=\"question_".$question["efquestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">\n";
 								echo "<span id=\"question_text_".$question["efquestion_id"]."\" style=\"display: none;\">".$rubric["rubric_title"].(stripos($rubric["rubric_title"], "rubric") === false ? " Rubric" : "")."</span>";
-								echo "<h2>".$rubric["rubric_title"]."<span style=\"font-weight: normal; margin-left: 10px; padding-right: 30px;\" class=\"content-small\">".$rubric["rubric_description"]."</span></h2>\n";
+								echo (isset($rubric["rubric_title"]) && $rubric["rubric_title"] ? "<h2>".$rubric["rubric_title"] : "")."<span style=\"font-weight: normal; margin-left: 10px; padding-right: 30px;\" class=\"content-small\">".$rubric["rubric_description"]."</span>".(isset($rubric["rubric_title"]) && $rubric["rubric_title"] ? "</h2>\n" : "\n");
 								if ($allow_question_modifications) {
 									echo "<div class=\"rubric-controls\">\n";
 									echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$form_id."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";

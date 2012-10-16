@@ -69,8 +69,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					if ((isset($_POST["form_title"])) && ($tmp_input = clean_input($_POST["form_title"], array("notags", "trim")))) {
 						$PROCESSED["form_title"] = $tmp_input;
 					} else {
-						$ERROR++;
-						$ERRORSTR[] = "The <strong>Form Title</strong> field is required.";
+						$PROCESSED["rubric_title"] = "";
 					}
 
 					/**

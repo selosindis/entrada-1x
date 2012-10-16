@@ -870,52 +870,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				}
 			}
 			</script>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=add&amp;step=2" method="post" name="addEvaluationForm" id="addEvaluationForm">
-				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Creating An Evaluation">
-					<colgroup>
-						<col style="width: 3%" />
-						<col style="width: 20%" />
-						<col style="width: 77%" />
-					</colgroup>
-					<tfoot>
-						<tr>
-							<td colspan="3" style="padding-top: 50px">
-								<input type="button" class="fleft" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/evaluations'" />
-								<input type="submit" class="fright" value="Proceed" />
-								<div class="clear"></div>
-							</td>
-						</tr>
-					</tfoot>
-					<tbody>
-						<tr>
-							<td colspan="3"><h2>Evaluation Details</h2></td>
-						</tr>
-						<tr>
-							<td></td>
-							<td><label for="evaluation_title" class="form-required">Evaluation Title</label></td>
-							<td><input type="text" id="evaluation_title" name="evaluation_title" value="<?php echo html_encode($PROCESSED["evaluation_title"]); ?>" maxlength="255" style="width: 95%" /></td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td style="vertical-align: top">
-								<label for="evaluation_description" class="form-nrequired">Special Instructions</label>
-								<div class="content-small" style="margin-right:3px"><strong>Note:</strong> Special instructions will appear at the top of the evaluation form.</div>
-							</td>
-							<td>
-								<textarea id="evaluation_description" name="evaluation_description" class="expandable" style="width: 94%; height:50px" cols="50" rows="15"><?php echo html_encode($PROCESSED["evaluation_description"]); ?></textarea>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3"><h2>Evaluation Form Options</h2></td>
-						</tr>
-						<tr>
-							<td></td>
-							<td><label for="eform_id" class="form-required">Evaluation Form</label></td>
-							<td>
-								<select id="eform_id" name="eform_id" style="width:328px">
+			<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=add&amp;step=2" method="post" name="addEvaluationForm" id="addEvaluationForm" class="form-horizontal">
+			<h2>Evaluation Details</h2>
+			<div class="control-group">
+				<label for="evaluation_title" class="form-required control-label">Evaluation Title:</label>
+				<div class="controls">
+					<input type="text" id="evaluation_title" name="evaluation_title" value="<?php echo html_encode($PROCESSED["evaluation_title"]); ?>" maxlength="255" style="width: 95%" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="evaluation_description" class="form-nrequired control-label">Special Instructions:</label>
+				<div class="controls">
+					<textarea id="evaluation_description" name="evaluation_description" class="expandable" style="width: 95%; height:50px" cols="50" rows="15"><?php echo html_encode($PROCESSED["evaluation_description"]); ?></textarea>
+				</div>
+			</div>
+			<h2>Evaluation Form Options</h2>
+			<div class="control-group">
+				<label for="eform_id" class="form-required control-label">Evaluation Form:</label>
+				<div class="controls">
+					<select id="eform_id" name="eform_id" style="width:328px">
 								<option value="0"> -- Select Evaluation Form -- </option>
 								<?php
 								$query	= "	SELECT a.*, b.`target_shortname`, b.`target_title`
@@ -943,71 +916,62 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								}
 								?>
 								</select>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-					</tbody>
-					<tbody id="evaluation_options"<?php echo ((!$PROCESSED["eform_id"]) ? " style=\"display: none\"" : ""); ?>>
+				</div>
+			</div> <!--/control-grup-->
+			<div class="control-group">
+				<label for="evaluation_description" class="form-nrequired control-label">Special Instructions:</label>
+				<div class="controls">
+					<textarea id="evaluation_description" name="evaluation_description" class="expandable" style="width: 95%; height:50px" cols="50" rows="15"><?php echo html_encode($PROCESSED["evaluation_description"]); ?></textarea>
+				</div>
+			</div>
+			<div id="evaluation_options"<?php echo ((!$PROCESSED["eform_id"]) ? " style=\"display: none\"" : ""); ?>>
 					<?php
 					if ($PROCESSED["eform_id"]) {
 						require_once(ENTRADA_ABSOLUTE."/core/modules/admin/evaluations/api-form-options.inc.php");
 					}
 					?>
-					</tbody>
-					<tbody>
-						<tr>
-							<td></td>
-							<td style="vertical-align: top">
-								<label for="evaluation_mandatory" class="form-required">Evaluation Mandatory</label>
-							</td>
-							<td>
-								<input type="checkbox" id="evaluation_mandatory" name="evaluation_mandatory"<?php echo (!isset($PROCESSED["evaluation_mandatory"]) || $PROCESSED["evaluation_mandatory"] ? " checked=\"checked\"" : ""); ?> />
-								<div style="float: right; width: 91%" class="content-small">Require this evaluation be completed by all evaluators.</div>
-							</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td style="vertical-align: top">
-								<label for="allow_target_review" class="form-required">Allow Target Review</label>
-							</td>
-							<td>
-								<input type="checkbox" id="allow_target_review" name="allow_target_review"<?php echo (!isset($PROCESSED["allow_target_review"]) || $PROCESSED["allow_target_review"] ? " checked=\"checked\"" : ""); ?> />
-								<div style="float: right; width: 91%" class="content-small">Allow targets (or users with "ownership" permissions of the target) to review the results for this evaluation.</div>
-							</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td><label for="min_submittable" class="form-required">Min Submittable</label></td>
-							<td>
-								<input type="text" id="min_submittable" name="min_submittable" value="<?php echo (isset($PROCESSED["min_submittable"]) ? $PROCESSED["min_submittable"] : 1); ?>" maxlength="2" style="width: 30px; margin-right: 10px" />
-								<span class="content-small"><strong>Tip:</strong> The minimum number of times each evaluator must complete this evaluation.</span>
-							</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td><label for="max_submittable" class="form-required">Max Submittable</label></td>
-							<td>
-								<input type="text" id="max_submittable" name="max_submittable" value="<?php echo (isset($PROCESSED["max_submittable"]) ? $PROCESSED["max_submittable"] : 1); ?>" maxlength="2" style="width: 30px; margin-right: 10px" />
-								<span class="content-small"><strong>Tip:</strong> The maximum number of times each evaluator may complete this evaluation.</span>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="2">&nbsp;</td>
-							<td id="submittable_notice">&nbsp;</td>
-						</tr>
-						<?php echo generate_calendars("evaluation", "Evaluation", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["evaluation_finish"])) ? $PROCESSED["evaluation_finish"] : 0)); ?>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td style="vertical-align: top;">
-								<label for="evaluation_reviewers" class="form-nrequired">Evaluation Reviewers</label>
-							</td>
-							<td>
-								<input type="text" id="reviewer_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
+			</div>
+			<div class="control-group">
+				<label for="evaluation_mandatory" class="form-required control-label">Evaluation Mandatory:</label>
+				<div class="controls">
+					<label class="checkbox">
+						<input type="checkbox" id="evaluation_mandatory" name="evaluation_mandatory"<?php echo (!isset($PROCESSED["evaluation_mandatory"]) || $PROCESSED["evaluation_mandatory"] ? " checked=\"checked\"" : ""); ?> />
+						Require this evaluation be completed by all evaluators.
+					</label>
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="allow_target_review" class="form-required control-label">Allow Target Review:</label>
+				<div class="controls">
+					<label class="checkbox">
+						<input type="checkbox" id="allow_target_review" name="allow_target_review"<?php echo (!isset($PROCESSED["allow_target_review"]) || $PROCESSED["allow_target_review"] ? " checked=\"checked\"" : ""); ?> />
+						Allow targets (or users with "ownership" permissions of the target) to review the results for this evaluation.
+					</label>
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="min_submittable" class="form-required control-label">Min Submittable:</label>
+				<div class="controls">
+					<input type="text" id="min_submittable" name="min_submittable" value="<?php echo (isset($PROCESSED["min_submittable"]) ? $PROCESSED["min_submittable"] : 1); ?>" maxlength="2" style="width: 30px; margin-right: 10px" />
+					<span class="content-small"><strong>Tip:</strong> The minimum number of times each evaluator must complete this evaluation.</span>	
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="max_submittable" class="form-required control-label">Max Submittable:</label>
+				<div class="controls">
+					<input type="text" id="max_submittable" name="max_submittable" value="<?php echo (isset($PROCESSED["max_submittable"]) ? $PROCESSED["max_submittable"] : 1); ?>" maxlength="2" style="width: 30px; margin-right: 10px" />
+					<span class="content-small"><strong>Tip:</strong> The maximum number of times each evaluator may complete this evaluation.</span>
+				</div>
+			</div>
+			<div class="control-group">
+				<table>
+				<?php echo generate_calendars("evaluation", "Evaluation", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["evaluation_finish"])) ? $PROCESSED["evaluation_finish"] : 0)); ?>
+				</table>
+			</div>
+			<div class="control-group">
+				<label for="evaluation_reviewers" class="control-label form-nrequired">Evaluation Reviewers:</label>
+				<div class="controls">
+					<input type="text" id="reviewer_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
 								<?php
 								$ONLOAD[] = "reviewer_list = new AutoCompleteList({ type: 'reviewer', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=facultyorstaff', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
 								?>
@@ -1030,15 +994,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								</ul>
 								<input type="hidden" id="reviewer_ref" name="reviewer_ref" value="" />
 								<input type="hidden" id="reviewer_id" name="reviewer_id" value="" />
-							</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td style="vertical-align: top;">
-								<label for="threshold_notifications_type" class="form-nrequired">Mandatory Threshold Notifications</label>
-							</td>
-							<td>
-								<select  name="threshold_notifications_type" id="threshold_notifications_type">
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="threshold_notifications_type" class="form-nrequired control-label">Mandatory Threshold Notifications:</label>
+				<div class="controls">
+					<select  name="threshold_notifications_type" id="threshold_notifications_type">
 									<option value="disabled"<?php echo (!isset($PROCESSED["threshold_notifications_type"]) || !$PROCESSED["threshold_notifications_type"] || $PROCESSED["threshold_notifications_type"] == "disabled" ? " checked=\"checked\"" : ""); ?>>-- Disabled --</option>
 									<option value="reviewers"<?php echo ($PROCESSED["threshold_notifications_type"] == "reviewers" ? " selected=\"selected\"" : ""); ?>>Evaluation Reviewers</option>
 									<option value="authors"<?php echo ($PROCESSED["threshold_notifications_type"] == "authors" ? " selected=\"selected\"" : ""); ?>>Evaluation Form Authors</option>
@@ -1049,14 +1010,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								<div class="content-small">
 									<strong>Note</strong>: When set to a value other than Disabled, notifications will be sent out to the identified user(s) whenever an evaluation is submitted in which a question is answered below the <strong>Minimum Pass</strong> set for that question. 
 								</div>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3"><h2>Time Release Options</h2></td>
-						</tr>
-						<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-					</tbody>
+				</div>
+			</div>
+			<h2>Time Release Options</h2>
+			<div class="control-group">
+				<table>
+					<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
 				</table>
+			</div>
+			<div class="form-actions">
+				<input type="submit" class="btn btn-primary" value="Proceed" />
+				<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/evaluations'" />
+			</div>
+				
 			</form>
 			<script type="text/javascript">
 			document.observe("dom:loaded", function() {

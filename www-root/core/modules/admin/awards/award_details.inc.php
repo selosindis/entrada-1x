@@ -142,11 +142,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 <div class="clear">&nbsp;</div>
 </form>
 <div id="add_award_recipient_link" style="float: right;<?php if (!$show_add_recipient_form) { echo "display:none;"; }   ?>">
-<ul class="page-action">
-	<li><a id="add_award_recipient"
-		href="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&show=add_recipient&id=<?php echo $award_id; ?>"
-		class="strong-green">Add Award Recipient</a></li>
-</ul>
+	<a id="add_award_recipient" ref="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&show=add_recipient&id=<?php echo $award_id; ?>" class="btn btn-primary">Add Award Recipient</a>
 </div>
 <div class="clear">&nbsp;</div>
 <h2>Award Recipients</h2>

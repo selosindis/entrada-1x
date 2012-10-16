@@ -43,9 +43,7 @@ if (!defined("IN_EVALUATIONS")) {
 	if ($ENTRADA_ACL->amIAllowed("evaluation", "create", false)) {
 		?>
 		<div style="float: right">
-			<ul class="page-action">
-				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="strong-green">Add New Evaluation</a></li>
-			</ul>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Add New Evaluation</a>
 		</div>
 		<div style="clear: both"></div>
 		<?php

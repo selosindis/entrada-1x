@@ -330,29 +330,23 @@ if (!defined("IN_CLERKSHIP")) {
 					default :
 						?>
 					<div class="tab-page">
-						<h2 class="tab">Student Search</h2>
-						<div class="content-heading">Student Search</div>
-						<br />
+						<h3 class="tab">Student Search</h3>
+						<span class="content-subheading">Graduating Year</span>
 						<form action="<?php echo ENTRADA_URL; ?>/admin/clerkship" method="post">
 						<input type="hidden" name="action" value="results" />
-						<table cellspacing="0" cellpadding="0" border="0">
-						<tr>
-							<td colspan="3"><span class="content-subheading">Graduating Year</span></td>
-						</tr>
-						<tr>
-							<td>Select an elective qualifier:</td>			
-							<td style="padding-left: 10px">
+						<div class="control-group">
+							<label class="control-label">Select an elective qualifier:</label>
+							<div class="controls">
 								<select name="qualifier" style="width: 205px">
 									<option value="*">All</option>
 									<option value="deficient">Deficient</option>
 									<option value="attained">Attained</option>
 								</select>
-							</td>
-							<td style="padding-left: 10px">&nbsp;</td>
-						</tr>
-						<tr>
-							<td>Select the graduating year you wish to view students in:</td>
-							<td style="padding-left: 10px">
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label">Select the graduating year you wish to view students in:</label>
+							<div class="controls">
 								<select name="year" style="width: 205px">
 								<option value="">-- Select Graduating Year --</option>
 								<?php
@@ -363,30 +357,21 @@ if (!defined("IN_CLERKSHIP")) {
 								}
 								?>
 								</select>
-							</td>
-							<td style="padding-left: 10px"><input type="submit" value="Proceed" class="button" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" /></td>
-						</tr>
-						<tr>
-							<td colspan="3">
-								<br />
-								<b>- OR -</b>
-								<br /><br />
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3"><span class="content-subheading">Student Finder</span></td>
-						</tr>
-						<tr>
-							<td>Enter the first or lastname of the student:</td>			
-							<td style="padding-left: 10px">
-								<input type="text" name="name" value="" style="width: 200px" />
-							</td>
-							<td style="padding-left: 10px"><input type="submit" value="Search" class="button" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" /></td>
-						</tr>
-						<tr>
-						</table>
+							</div>
+						</div>
+						
+						<input type="submit" value="Proceed" class="button"/>
+						<hr/>
+						<span class="content-subheading">Student Finder</span>
+						<div class="control-group">
+							<label class="control-label">Enter the first or lastname of the student:</label>
+							<div class="controls">
+								<input type="text" name="name" value="" style="margin-bottom:0"/>
+							</div>
+						</div>
+						<input type="submit" value="Search" class="button" />
+						
 						</form>
-						<br /><br />
 					</div>
 						<?php
 					break;

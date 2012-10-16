@@ -353,9 +353,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	<h1><?php echo $MODULES[strtolower($MODULE)]["title"]; ?></h1>
 
 	<div style="float: right">
-		<ul class="page-action">
-			<li><a href="<?php echo ENTRADA_URL; ?>/admin/users?section=add" class="strong-green">Add New User</a></li>
-		</ul>
+		
+			<a href="<?php echo ENTRADA_URL; ?>/admin/users?section=add" class="btn btn-primary">Add New User</a>
+		
 	</div>
 	<div style="clear: both"></div>
 
@@ -403,7 +403,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			</form>
 		</div>
 		<div class="tab-page">
-			<h2 class="tab">User Search</h2>
+			<h3 class="tab">User Search</h3>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/users" method="get">
 			<input type="hidden" name="type" value="search" />
 			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Search For User">
@@ -453,7 +453,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			</form>
 		</div>
 		<div class="tab-page">
-			<h2 class="tab">Browse Groups</h2>
+			<h3 class="tab">Browse Groups</h3>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/users" method="get">
 			<input type="hidden" name="type" value="browse-group" />
 			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Browse By Groups">
@@ -492,7 +492,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			</form>
 		</div>
 		<div class="tab-page">
-			<h2 class="tab">Browse Departments</h2>
+			<h3 class="tab">Browse Departments</h3>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/users" method="get">
 			<input type="hidden" name="type" value="browse-dept" />
 			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Browse By Department">
@@ -581,7 +581,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 		
 		if ($results) {
 			?>
-			<div style="margin-top: 10px; background-color: #FAFAFA; padding: 3px; border: 1px #9D9D9D solid; border-bottom: none">
+			<div style="margin-top: 10px; background-color: #FAFAFA; padding: 3px; border-bottom: none;font-size:11px;">
 				<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
 				<?php echo "Found ".$total_rows." user".(($total_rows != 1) ? "s" : "")." matching &quot;<strong>".($search_query_text)."</strong>&quot; in the user management system."; ?>
 			</div>

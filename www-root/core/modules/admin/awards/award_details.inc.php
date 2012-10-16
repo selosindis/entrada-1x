@@ -69,24 +69,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 <h1>Award: <?php  echo $award->getTitle(); ?></h1>
 <div class="tab-pane" id="award-details-tabs">
 <div class="tab-page" style="padding-bottom: 80px">
-<h2 class="tab">Award Details</h2>
+<h3 class="tab">Award Details</h3>
 <h2>Award Details</h2>
-
-		<?php echo award_details_edit($award); ?></div>
+<?php echo award_details_edit($award); ?></div>
 <div class="tab-page" style="padding-bottom: 80px">
-<h2 class="tab">Award Recipients</h2>
-
+<h3 class="tab">Award Recipients</h3>
 		<?php
 		$show_add_recipient_form =  ($_GET['show'] != "add_recipient");
 		?>
-
-
-<form id="add_award_recipient_form" name="add_award_recipient_form"
-	action="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award_id; ?>&tab=recipients"
+	<form id="add_award_recipient_form" name="add_award_recipient_form" action="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award_id; ?>&tab=recipients"
 	method="post"
 	<?php if ($show_add_recipient_form) { echo "style=\"display:none;\""; }   ?>>
-<input type="hidden" name="action" value="add_award_recipient"></input>
-<input type="hidden" name="award_id" value="<?php echo $award_id; ?>"></input>
+	<input type="hidden" name="action" value="add_award_recipient"></input>
+	<input type="hidden" name="award_id" value="<?php echo $award_id; ?>"></input>
 
 	
 <table class="award_recipients" style="width:100%;">
@@ -109,9 +104,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 		</tr>
 	</tfoot>
 	<tbody>
-	
-
-
 		<tr>
 			<td>&nbsp;</td>
 			<td><label for="internal_award_user_name" class="form-required">Student:</label>
@@ -147,8 +139,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 		</tr>
 	</tbody>
 </table>
-
-
 <div class="clear">&nbsp;</div>
 </form>
 <div id="add_award_recipient_link" style="float: right;<?php if (!$show_add_recipient_form) { echo "display:none;"; }   ?>">
@@ -158,14 +148,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 		class="strong-green">Add Award Recipient</a></li>
 </ul>
 </div>
-
-
 <div class="clear">&nbsp;</div>
 <h2>Award Recipients</h2>
-
-
-
-
 <div id="award_recipients"><?php echo award_recipients_list($award);?></div>
 <script language="javascript">
 	

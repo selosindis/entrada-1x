@@ -3526,27 +3526,27 @@ function generate_calendar($fieldname, $display_name = "", $required = false, $c
 	}
 	$output .= "<tr>\n";
 	if ($optional) {
-		$output .= "	<td style=\"vertical-align: top\"><input type=\"checkbox\" name=\"".$fieldname."\" id=\"".$fieldname."\" value=\"1\"".(($time) ? " checked=\"checked\"" : "").(($required) ? " readonly=\"readonly\"" : "")." onclick=\"".(($required) ? "this.checked = true" : "dateLock('".$fieldname."')")."\" style=\"vertical-align: middle\" /></td>\n";
+		$output .= "	<td style=\"vertical-align: middle\"><input type=\"checkbox\" name=\"".$fieldname."\" id=\"".$fieldname."\" value=\"1\"".(($time) ? " checked=\"checked\"" : "").(($required) ? " readonly=\"readonly\"" : "")." onclick=\"".(($required) ? "this.checked = true" : "dateLock('".$fieldname."')")."\" style=\"vertical-align: middle\" /></td>\n";
 	} else {
 		$output .= "	<td style=\"vertical-align: top\">&nbsp;</td>\n";
 	}
-	$output .= "	<td style=\"vertical-align: top; padding-top: 4px\"><label id=\"".$fieldname."_text\" for=\"".$fieldname."\" class=\"".($required ? "form-required" : "form-nrequired")."\">".html_encode($display_name)."</label></td>\n";
+	$output .= "	<td style=\"vertical-align: top; padding-top: 4px\"><label style=\"width:130px;text-align:right;margin-right:18px;\" id=\"".$fieldname."_text\" for=\"".$fieldname."\" class=\"".($required ? "form-required" : "form-nrequired")."\">".html_encode($display_name).":</label></td>\n";
 	$output .= "	<td style=\"vertical-align: top\" id=\"".$fieldname."_row\">\n";
-	$output .= "		<input type=\"text\" name=\"".$fieldname."_date\" id=\"".$fieldname."_date\" value=\"".$time_date."\" $readonly autocomplete=\"off\" ".(!$disabled ? "onfocus=\"showCalendar('', this, this, '', '".$fieldname."_date', 0, 20, 1)\"" : "")."style=\"width: 170px; vertical-align: middle\" />&nbsp;";
+	$output .= "		<input type=\"text\" name=\"".$fieldname."_date\" id=\"".$fieldname."_date\" value=\"".$time_date."\" $readonly autocomplete=\"off\" ".(!$disabled ? "onfocus=\"showCalendar('', this, this, '', '".$fieldname."_date', 0, 20, 1)\"" : "")."style=\" vertical-align: middle\" />&nbsp;";
 
 	if (!$disabled) {
 		$output .= "	<a href=\"javascript: showCalendar('', document.getElementById('".$fieldname."_date'), document.getElementById('".$fieldname."_date'), '', '".$fieldname."_date', 0, 20, 1)\" title=\"Show Calendar\" onclick=\"if (!document.getElementById('".$fieldname."').checked) { return false; }\"><img src=\"".ENTRADA_URL."/images/cal-calendar.gif\" width=\"23\" height=\"23\" alt=\"Show Calendar\" title=\"Show Calendar\" border=\"0\" style=\"vertical-align: middle\" /></a>";
 	}
 	if ($use_times) {
 		$output .= "		&nbsp;@&nbsp;".(((bool) $add_line_break) ? "<br />" : "");
-		$output .= "		<select name=\"".$fieldname."_hour\" id=\"".$fieldname."_hour\" onchange=\"updateTime('".$fieldname."')\" style=\"vertical-align: middle\">\n";
+		$output .= "		<select class=\"input-small\" name=\"".$fieldname."_hour\" id=\"".$fieldname."_hour\" onchange=\"updateTime('".$fieldname."')\" style=\"vertical-align: middle\">\n";
 		foreach (range(0, 23) as $hour) {
 			$output .= "	<option value=\"".(($hour < 10) ? "0" : "").$hour."\"".(($hour == $time_hour) ? " selected=\"selected\"" : "").">".(($hour < 10) ? "0" : "").$hour."</option>\n";
 		}
 
 		$output .= "		</select>\n";
 		$output .= "		:";
-		$output .= "		<select name=\"".$fieldname."_min\" id=\"".$fieldname."_min\" onchange=\"updateTime('".$fieldname."')\" style=\"vertical-align: middle\">\n";
+		$output .= "		<select class=\"input-small\" name=\"".$fieldname."_min\" id=\"".$fieldname."_min\" onchange=\"updateTime('".$fieldname."')\" style=\"vertical-align: middle\">\n";
 		foreach (range(0, 59) as $minute) {
 			$output .= "	<option value=\"".(($minute < 10) ? "0" : "").$minute."\"".(($minute == $time_min) ? " selected=\"selected\"" : "").">".(($minute < 10) ? "0" : "").$minute."</option>\n";
 		}

@@ -55,61 +55,38 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 	?>
 	</div>
 	<h1>Awards Listing</h1>
-	<?php
-	$show_new_award_form = (isset($_GET["show"]) && ($_GET["show"] == "add_new_award") ? true : false);
-	?>
-	<form id="new_award_form" action="<?php echo ENTRADA_URL; ?>/admin/awards" method="post"<?php echo ((!$show_new_award_form) ? " style=\"display: none;\"" : ""); ?>>
-		<input type="hidden" name="action" value="new_award" />
-		<table class="award_details" style="width: 100%;">
-			<colgroup>
-				<col width="3%"></col>
-				<col width="25%"></col>
-				<col width="72%"></col>
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td colspan="2">
-						<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/awards'" />
-					</td>
-					<td style="text-align: right; padding-top: 5px;">
-						<input type="submit" class="button" value="Add Award" />
-					</td>
-				</tr>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td>
-						<label for="award_title" class="form-required">Title</label>
-					</td>
-					<td colspan="2">
-						<input id="award_title" name="award_title" type="text" maxlength="4096" style="width: 250px; vertical-align: middle;" ></input>	
-					</td>
-				</tr>
-				<tr>
-					<td style="vertical-align:top;">
-						<label for="award_terms" class="form-required">Terms of Award</label>
-					</td>
-					<td colspan="2">
-						<textarea id="award_terms" name="award_terms" style="width: 60%; height: 100px;" cols="65" rows="20"></textarea>	
-					</td>
+	
+		<?php
+			$show_new_award_form = (isset($_GET["show"]) && ($_GET["show"] == "add_new_award") ? true : false);
+		?>	
 
-				</tr>
-			</tbody>
-		</table>
+	<div id="add_new_award_link" style="margin-bottom:18px; float: right;<?php if ($show_new_award_form) { echo " display: none;"; } ?>">
+			<a id="add_new_award" href="<?php echo ENTRADA_URL; ?>/admin/awards?show=add_new_award" class="btn btn-primary">Add Award</a>
+	</div>
+	<form class="form-horizontal" id="new_award_form" action="<?php echo ENTRADA_URL; ?>/admin/awards" method="post"<?php echo ((!$show_new_award_form) ? " style=\"display: none;\"" : ""); ?>>
+		
+		
+		<input type="hidden" name="action" value="new_award" />
+		<div class="control-group">
+			<label for="award_title" class="control-label form-required">Title:</label>
+			<div class="controls">
+				<input id="award_title" name="award_title" type="text" maxlength="4096"></input>	
+			</div>
+		</div>
+		<div class="control-group">
+			<label for="award_title" class="control-label form-required">Terms of Award:</label>
+			<div class="controls">
+				<textarea id="award_terms" name="award_terms" cols="65" rows="5"></textarea>	
+			</div>
+		</div>
+		<div class="form-actions">
+			<input type="submit" class="btn btn-primary" value="Add Award" />	
+		</div>
+		
 	</form>
 	<div class="clear"></div>
 	
-	<div id="add_new_award_link" style="float: right;<?php if ($show_new_award_form) { echo " display: none;"; } ?>">
-		<ul class="page-action">
-			<li><a id="add_new_award" href="<?php echo ENTRADA_URL; ?>/admin/awards?show=add_new_award" class="strong-green">Add Award</a></li>
-		</ul>
-	</div>
+
 	<div class="clear"></div>
 	
 	<div id="awards_listing">

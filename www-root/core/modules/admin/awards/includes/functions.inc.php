@@ -147,11 +147,11 @@ function awards_list($awards = array()) {
 					echo $award_terms; ?>	
 				</td>
 				<td class="controls">
-					<form class="remove_award_form" action="<?php echo ENTRADA_URL; ?>/admin/awards?id=<?php echo $award_id; ?>" method="post" >
+					<form style="margin-bottom:0" class="remove_award_form" action="<?php echo ENTRADA_URL; ?>/admin/awards?id=<?php echo $award_id; ?>" method="post" >
 						<input type="hidden" name="award_id" value="<?php echo clean_input($award->getID(), array("notags", "specialchars")); ?>"></input>
 						<input type="hidden" name="action" value="remove_award"></input>
 						
-						<input type="image" src="<?php echo ENTRADA_URL ?>/images/action-delete.gif"></input> 
+						<input style="width:16px" type="image" src="<?php echo ENTRADA_URL ?>/images/action-delete.gif"></input> 
 					</form>
 				</td>
 			</tr>

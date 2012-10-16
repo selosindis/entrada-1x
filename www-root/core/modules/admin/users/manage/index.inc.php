@@ -83,7 +83,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				echo display_notice();
 			}
 			?>
-			<h1 style="margin-top: 0px">User Overview</h1>
+			<h2 style="margin-top: 0px">User Overview</h2>
 			<div style="display: block" id="opened_details">
 				<table style="width: 100%; border: 1px #CCCCCC solid" cellspacing="0" cellpadding="1">
 					<tr>

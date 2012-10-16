@@ -912,79 +912,56 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				});
 			}
 			</script>
-
-
-			<form id="addUser" action="<?php echo ENTRADA_URL; ?>/admin/users?section=add&amp;step=2" method="post" onsubmit="$('username').enable()">
-				<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="New Profile">
-					<colgroup>
-						<col style="width: 3%" />
-						<col style="width: 25%" />
-						<col style="width: 72%" />
-					</colgroup>
-					<tfoot>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="submit" class="button" value="Add User" />
-							</td>
-						</tr>
-					</tfoot>
-					<tbody>
-						<tr>
-							<td colspan="3">
-								<h2>Account Details</h2>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="number" class="form-nrequired">Staff / Student Number</label></td>
-							<td>
-								<input type="text" id="number" name="number" value="<?php echo ((isset($PROCESSED["number"])) ? html_encode($PROCESSED["number"]) : ""); ?>" style="width: 250px" maxlength="25" onblur="findExistingUser('number', this.value)" />
+			
+			<form id="addUser" action="<?php echo ENTRADA_URL; ?>/admin/users?section=add&amp;step=2" method="post" onsubmit="$('username').enable()" class="form-horizontal">
+			<h2>Account Details</h2>
+			<div class="control-group">
+				<label for="number" class="form-nrequired control-label">Staff / Student Number:</label>
+				<div class="controls">
+					<input type="text" id="number" name="number" value="<?php echo ((isset($PROCESSED["number"])) ? html_encode($PROCESSED["number"]) : ""); ?>" style="width: 250px" maxlength="25" onblur="findExistingUser('number', this.value)" />
 								<span id="number-searching" class="content-small" style="display: none;"><img src="<?php echo ENTRADA_RELATIVE ?>/images/indicator.gif" /> Searching system for this number... </span>
 								<span id="number-default" class="content-small">(<strong>Important:</strong> Required when ever possible)</span>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="username" class="form-required">Username</label></td>
-							<td>
-								<input type="text" id="username" name="username" value="<?php echo ((isset($PROCESSED["username"])) ? html_encode($PROCESSED["username"]) : ""); ?>" style="width: 250px" maxlength="25" onblur="findExistingUser('username', this.value)" />
-								<span id="username-searching" class="content-small" style="display: none;"><img src="<?php echo ENTRADA_RELATIVE ?>/images/indicator.gif" /> Searching system for this username... </span>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="password" class="form-required">Password</label></td>
-							<td><input type="text" id="password" name="password" value="<?php echo ((isset($PROCESSED["password"])) ? html_encode($PROCESSED["password"]) : generate_password(8)); ?>" style="width: 250px" maxlength="25" /></td>
-						</tr>
-						<tr>
-							<td colspan="3">
-								<h2>Account Options</h2>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td style="vertical-align: top"><label for="account_active" class="form-required">Account Status</label></td>
-							<td>
-								<select id="account_active" name="account_active" style="width: 209px">
-									<option value="true"<?php echo (((!isset($PROCESSED_ACCESS["account_active"])) || ($PROCESSED_ACCESS["account_active"] == "true")) ? " selected=\"selected\"" : ""); ?>>Active</option>
-									<option value="false"<?php echo (($PROCESSED_ACCESS["account_active"] == "false") ? " selected=\"selected\"" : ""); ?>>Disabled</option>
-								</select>
-							</td>
-						</tr>
-									<?php echo generate_calendars("access", "Access", true, true, ((isset($PROCESSED["access_starts"])) ? $PROCESSED["access_starts"] : time()), true, false, 0); ?>
-						<tr>
-							<td colspan="3">
-								<h2>Personal Information</h2>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="prefix" class="form-nrequired">Prefix</label></td>
-							<td>
-								<select id="prefix" name="prefix" style="width: 55px; vertical-align: middle; margin-right: 5px">
+				</div>
+			</div>
+			<!--- End control-group ---->
+			
+			<div class="control-group">
+				<label class="control-label form-required" for="username">Username:</label>
+				<div class="controls">
+					<input type="text" id="username" name="username" value="<?php echo ((isset($PROCESSED["username"])) ? html_encode($PROCESSED["username"]) : ""); ?>" style="width: 250px" maxlength="25" onblur="findExistingUser('username', this.value)" />
+					<span id="username-searching" class="content-small" style="display: none;"><img src="<?php echo ENTRADA_RELATIVE ?>/images/indicator.gif" /> Searching system for this username... </span>
+				</div>
+			</div>
+			
+			<!--- End control-group ---->
+			<div class="control-group">
+				<label for="password" class="form-required control-label">Password:</label>
+				<div class="controls"><input type="text" id="password" name="password" value="<?php echo ((isset($PROCESSED["password"])) ? html_encode($PROCESSED["password"]) : generate_password(8)); ?>" style="width: 250px" maxlength="25" /></div>
+			</div>
+			<!--- End control-group ---->
+			
+			<h2>Account Options</h2>
+			<div class="control-group">
+				<label for="account_active" class="control-label form-required">Account Status</label>
+				<div class="controls">
+					<select id="account_active" name="account_active" style="width: 209px">
+						<option value="true"<?php echo (((!isset($PROCESSED_ACCESS["account_active"])) || ($PROCESSED_ACCESS["account_active"] == "true")) ? " selected=\"selected\"" : ""); ?>>Active</option>
+						<option value="false"<?php echo (($PROCESSED_ACCESS["account_active"] == "false") ? " selected=\"selected\"" : ""); ?>>Disabled</option>
+					</select>
+				</div>
+			</div>
+			<!--- End control-group ---->
+			<div class="control-group">
+					<table>
+					<?php echo generate_calendars("access", "Access", true, true, ((isset($PROCESSED["access_starts"])) ? $PROCESSED["access_starts"] : time()), true, false, 0); ?>
+				</table>
+				</div>
+			
+			<h2>Personal Information</h2>
+			<div class="control-group">
+				<label for="prefix" class="control-label form-nrequired">Prefix</label>
+				<div class="controls">
+					<select id="prefix" name="prefix" class="input-small">
 									<option value=""<?php echo ((!$result["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
 									<?php
 									if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
@@ -993,66 +970,60 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										}
 									}
 									?>
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="firstname" class="form-required">Firstname</label></td>
-							<td><input type="text" id="firstname" name="firstname" value="<?php echo ((isset($PROCESSED["firstname"])) ? html_encode($PROCESSED["firstname"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="35" /></td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="lastname" class="form-required">Lastname</label></td>
-							<td><input type="text" id="lastname" name="lastname" value="<?php echo ((isset($PROCESSED["lastname"])) ? html_encode($PROCESSED["lastname"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="35" /></td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="email" class="form-required">Primary E-Mail</label></td>
-							<td>
-								<input type="text" id="email" name="email" value="<?php echo ((isset($PROCESSED["email"])) ? html_encode($PROCESSED["email"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
-								<span class="content-small">(<strong>Important:</strong> Official e-mail accounts only)</span>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="email_alt" class="form-nrequired">Alternative E-Mail</label></td>
-							<td><input type="text" id="email_alt" name="email_alt" value="<?php echo ((isset($PROCESSED["email_alt"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" /></td>
-						</tr>
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="telephone" class="form-nrequired">Telephone Number</label></td>
-							<td>
-								<input type="text" id="telephone" name="telephone" value="<?php echo ((isset($PROCESSED["telephone"])) ? html_encode($PROCESSED["telephone"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
-								<span class="content-small">(<strong>Example:</strong> 613-533-6000 x74918)</span>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="fax" class="form-nrequired">Fax Number</label></td>
-							<td>
-								<input type="text" id="fax" name="fax" value="<?php echo ((isset($PROCESSED["fax"])) ? html_encode($PROCESSED["fax"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
-								<span class="content-small">(<strong>Example:</strong> 613-533-3204)</span>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="country_id" class="form-required">Country</label></td>
-							<td>
-								<?php
+					</select>
+				</div>
+			</div>
+			<!--- End control-group ---->
+			<div class="control-group">
+				<label for="firstname" class="control-label form-required">Firstname:</label>
+				<div class="controls"><input type="text" id="firstname" name="firstname" value="<?php echo ((isset($PROCESSED["firstname"])) ? html_encode($PROCESSED["firstname"]) : ""); ?>" maxlength="35" /></div>
+			</div>
+			<!--- End control-group ---->
+			<div class="control-group">
+				<label for="lastname" class="control-label form-required">Lastname:</label>
+				<div class="controls">
+					<input type="text" id="lastname" name="lastname" value="<?php echo ((isset($PROCESSED["lastname"])) ? html_encode($PROCESSED["lastname"]) : ""); ?>"  maxlength="35" />
+				</div>
+			</div>
+			<!--- End control-group ---->
+			<div class="control-group">
+				<label for="email" class="control-label form-required">Primary E-Mail:</label>
+				<div class="controls">
+					<input type="text" id="email" name="email" value="<?php echo ((isset($PROCESSED["email"])) ? html_encode($PROCESSED["email"]) : ""); ?>"  maxlength="128" />
+					<span class="content-small">(<strong>Important:</strong> Official e-mail accounts only)</span>
+				</div>
+			</div>
+			<!--- End control-group ---->
+			<div class="control-group">
+				<label for="email_alt" class="control-label form-nrequired">Alternative E-Mail:</label>
+				<div class="controls">
+					<input type="text" id="email_alt" name="email_alt" value="<?php echo ((isset($PROCESSED["email_alt"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>"  maxlength="128" />
+				</div>
+			</div>
+			<!--- End control-group ---->
+			<div class="control-group">
+				<label for="telephone" class="control-label form-nrequired">Telephone Number:</label>
+				<div class="controls">
+					<input type="text" id="telephone" name="telephone" value="<?php echo ((isset($PROCESSED["telephone"])) ? html_encode($PROCESSED["telephone"]) : ""); ?>"  maxlength="25" />
+					<span class="content-small">(<strong>Example:</strong> 613-533-6000 x74918)</span>
+				</div>
+			</div>
+			<!--- End control-group ---->
+			<div class="control-group">
+				<label for="fax" class="control-label form-nrequired">Fax Number:</label>
+				<div class="controls">
+					<input type="text" id="fax" name="fax" value="<?php echo ((isset($PROCESSED["fax"])) ? html_encode($PROCESSED["fax"]) : ""); ?>"  maxlength="25" />
+					<span class="content-small">(<strong>Example:</strong> 613-533-3204)</span>
+				</div>
+			</div>
+			<!--- End control-group ---->
+			<div class="control-group">
+				<label for="country_id" class="control-label form-required">Country:</label>
+				<div class="controls">
+					<?php
 								$countries = fetch_countries();
 								if ((is_array($countries)) && (count($countries))) {
-									echo "<select id=\"country_id\" name=\"country_id\" style=\"width: 256px\" onchange=\"provStateFunction();\">\n";
+									echo "<select id=\"country_id\" name=\"country_id\" onchange=\"provStateFunction();\">\n";
 									echo "<option value=\"0\">-- Select Country --</option>\n";
 									foreach ($countries as $country) {
 										echo "<option value=\"".(int) $country["countries_id"]."\"".(((!isset($PROCESSED["country_id"]) && ($country["countries_id"] == DEFAULT_COUNTRY_ID)) || ($PROCESSED["country_id"] == $country["countries_id"])) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
@@ -1063,66 +1034,52 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									echo "Country information not currently available.\n";
 								}
 								?>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label id="prov_state_label" for="prov_state_div" class="form-nrequired">Province / State</label></td>
-							<td>
-								<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="city" class="form-nrequired">City</label></td>
-							<td>
-								<input type="text" id="city" name="city" value="<?php echo ((isset($PROCESSED["city"])) ? html_encode($PROCESSED["city"]) : "Kingston"); ?>" style="width: 250px; vertical-align: middle" maxlength="35" />
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="address" class="form-nrequired">Address</label></td>
-							<td>
-								<input type="text" id="address" name="address" value="<?php echo ((isset($PROCESSED["address"])) ? html_encode($PROCESSED["address"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="255" />
-							</td>
-						</tr>
-
-
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="postcode" class="form-nrequired">Postal Code</label></td>
-							<td>
-								<input type="text" id="postcode" name="postcode" value="<?php echo ((isset($PROCESSED["postcode"])) ? html_encode($PROCESSED["postcode"]) : "K7L 3N6"); ?>" style="width: 250px; vertical-align: middle" maxlength="7" />
-								<span class="content-small">(<strong>Example:</strong> K7L 3N6)</span>
-							</td>
-						</tr>
-
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td style="vertical-align: top"><label for="office_hours">Office Hours</label></td>
-							<td>
-								<textarea id="office_hours" name="office_hours" style="width: 254px; height: 40px;" maxlength="100"><?php echo (isset($PROCESSED["office_hours"]) && $PROCESSED["office_hours"] ? html_encode($PROCESSED["office_hours"]) : ""); ?></textarea>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td style="vertical-align: top"><label for="notes" class="form-nrequired">General Comments</label></td>
-							<td>
-								<textarea id="notes" class="expandable" name="notes" style="width: 246px; height: 75px"><?php echo ((isset($PROCESSED["notes"])) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">
-								<h2>Permissions</h2>
-							</td>
-						</tr>
-						<?php
+				</div>
+			</div>
+			<!--- End control-group ---->
+			<div class="control-group">
+				<label id="prov_state_label" for="prov_state_div" class="control-label form-nrequired">Province / State:</label>
+				<div id="prov_state_div controls" class="content-small" style="margin-left:20px;display:inline-block;">Please select a <strong>Country</strong> from above first.</div>
+				
+			</div>
+			<!--- End control-group ---->
+			<div class="control-group">
+				<label for="city" class="control-label form-nrequired">City:</label>
+				<div class="controls">
+					<input type="text" id="city" name="city" value="<?php echo ((isset($PROCESSED["city"])) ? html_encode($PROCESSED["city"]) : "Kingston"); ?>" maxlength="35" />
+				</div>
+			</div>
+			<!--- End control-group ---->
+			<div class="control-group">
+				<label for="address" class="control-label form-nrequired">Address:</label>
+				<div class="controls">
+					<input type="text" id="address" name="address" value="<?php echo ((isset($PROCESSED["address"])) ? html_encode($PROCESSED["address"]) : ""); ?>"  maxlength="255" />
+				</div>
+			</div>
+			<!--- End control-group ---->
+			<div class="control-group">
+				<label for="postcode" class="control-label form-nrequired">Postal Code:</label>
+				<div class="controls">
+					<input type="text" id="postcode" name="postcode" value="<?php echo ((isset($PROCESSED["postcode"])) ? html_encode($PROCESSED["postcode"]) : "K7L 3N6"); ?>" maxlength="7" />
+					<span class="content-small">(<strong>Example:</strong> K7L 3N6)</span>
+				</div>
+			</div>
+			
+			<div class="control-group">
+				<label for="office_hours" class="control-label form-nrequired">Office Hours:</label>
+				<div class="controls">
+					<textarea id="office_hours" name="office_hours" style="height: 40px;" maxlength="100"><?php echo (isset($PROCESSED["office_hours"]) && $PROCESSED["office_hours"] ? html_encode($PROCESSED["office_hours"]) : ""); ?></textarea>
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="notes" class="control-label form-nrequired">General Comments</label>
+				<div class="controls">
+					<textarea id="notes" class="expandable" name="notes" height: 75px"><?php echo ((isset($PROCESSED["notes"])) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
+				</div>
+			</div>
+			<!--- End control-group ---->
+			<h2>Permissions</h2>
+			<?php
 								$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title` 
 												FROM `".AUTH_DATABASE."`.`user_access` ua
 												JOIN `" . AUTH_DATABASE . "`.`organisations` o
@@ -1132,73 +1089,57 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								$results	= $db->GetAll($query);
 								if ($results) {
 									 ?>
-						<tr>
-							<td colspan="3">
-								<table class="org_table">
-										<tr>
-											<td style="padding-top:10px">
-											<label for="organisations"><strong>Organisation</strong></label><br />
-											<select id="organisations" name="organisations" style="width:250px">
+			<div class="row-fluid">
+				<div class="span4">
+					<label for="organisations">Organisation:</label><br />
+					<select id="organisations" name="organisations">
 										<?php
 											foreach($results as $result) {
 												echo build_option($result["organisation_id"], ucfirst($result["organisation_title"]), $selected);															
 											}														
 										?>
-											</select>->
-											</td>
-											<td style="padding-top:10px">
-											<label for="groups"><strong>Groups</strong></label><br />
-											<select id="groups" name="groups" style="width:200px">
+					</select>
+				</div>
+				<div class="span4">
+					<label for="groups">Groups:</label><br />
+											<select id="groups" name="groups" >
 												<option value="0">Select a Group</option>
-											</select>->
-											</td>
-											<td style="padding-top:10px">
-											<label for="roles"><strong>Role</strong></label><br />
-											<select id="roles" name="roles" style="width:200px">
+											</select>
+				</div>
+				<div class="span3">
+					<label for="roles">Role:</label><br />
+											<select id="roles" name="roles" style="width:115px">
 												<option value="0">Select a Role</option>
 											</select>
-											</td>
-										</tr>
-										<tr>
-											<td>&nbsp;</td>
-											<td>&nbsp;</td>
-											<td style="text-align: right;"><input id="add_permissions" name="add_permissions" type="button" value="Add" /></td>
-										</tr>
-								</table>
-								<hr />
-							</td>
-						</tr>			
-						<?php } ?>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td colspan="3">
-								<?php 
+				</div>
+				<div class="span1">
+					<input id="add_permissions" name="add_permissions" type="button" value="Add" class="btn" style="margin-top:20px"/>
+				</div>
+				
+			</div>
+			
+				<?php } ?>
+				<hr/>
+				<div class="row-fluid">
+					<?php 
 									foreach($results as $result) { ?>
-									<table class="tableList" style="display: none; width: 100%;" id="<?php echo "perm_organisation_" . $result["organisation_id"]; ?>" >
-										<caption><h2 style="text-align: left;"><?php echo $result["organisation_title"]; ?></h2></caption>
+					<table class="table tableList" style="display: none; width: 100%;" id="<?php echo "perm_organisation_" . $result["organisation_id"]; ?>" >
+						<caption><h2 style="text-align: left;"><?php echo $result["organisation_title"]; ?></h2></caption>
 										<colgroup>
 											<col style="width: 15%" />
 											<col style="width: 15%" />
 											<col style="width: 60%" />
 											<col style="width: 10%" />
 										</colgroup>										
-										<thead>
-											<tr>												
-												<th></th>
-												<th></th>
-												<th></th>
-											</tr>
-										</thead>
+										
 										<tbody>											
 											<tr>
-												<td colspan="3"><h3>Profiles</h3></td>
+												<td colspan="4"><h3>Profiles</h3></td>
 											</tr>
-										</tbody>
-										<tfoot>
+										
+
 											<tr>
-												<td colspan="3"><h3>Options</h3></td>
+												<td colspan="4"><h3>Options</h3></td>
 											</tr>
 											<tr>	
 												<td></td>												
@@ -1223,21 +1164,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 													</ol>													
 												</td>												
 											</tr>
-										</tfoot>
-										<tbody>
 										</tbody>
-									</table>
-									<br />
-								<?php
+					</table>
+					<?php
 									}									
 								?>
-								<input id="my_departments" name="my_departments" type="hidden" value="0" />
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">
-								<h2>Notification Options</h2>
-							</td>
+					<input id="my_departments" name="my_departments" type="hidden" value="0" />
+				</div>
+				<h2>Notification Options</h2>
+				<table>
+					<tr>
 						</tr>
 						<tr>
 							<td><input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle" onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" /></td>
@@ -1247,9 +1183,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							<td>&nbsp;</td>
 							<td colspan="2">
 								<div id="send_notification_msg" style="display: block">
-									<label for="notification_message" class="form-required">Notification Message</label><br />
-									<textarea id="notification_message" name="notification_message" rows="10" cols="65" style="width: 100%; height: 200px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_NEW_USER_NOTIFICATION); ?></textarea>
-									<span class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</span>
+									<label for="notification_message" class="form-required">Notification Message:</label><br />
+									<textarea id="notification_message" name="notification_message" rows="10" cols="65" style="width: 95%; height: 200px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_NEW_USER_NOTIFICATION); ?></textarea>
+									<div class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</div>
 								</div>
 							</td>
 						</tr>
@@ -1259,7 +1195,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					</tbody>
 				</table>
 				<input id="permissions" name="permissions" type="hidden" value="" />
+				<div class="left" style="margin-left:20px">
+					<input type="submit" class="btn btn-primary" value="Add User" />
+				</div>
 			</form>
+			
 			<div style="display: none;" id="entry_grad_year_container">
 				<div id="grad_year_container" style="float: left; margin-right: 20px;">
 					<label for="grad_year" class="form-required" style="display: block;">Expected Graduation Year</label>&nbsp;

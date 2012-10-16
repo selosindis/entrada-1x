@@ -508,7 +508,7 @@ if (!defined("PARENT_INCLUDED")) {
 	?>
 	<div class="tab-pane" id="people-search-tabs">
 		<div class="tab-page">
-			<h2 class="tab">People Search</h2>
+			<h3 class="tab">People Search</h3>
 			<style type="text/css">
 			#advanced_mode, #basic_mode {
 				margin-left: 20px;
@@ -572,7 +572,7 @@ if (!defined("PARENT_INCLUDED")) {
 						<input type="text" id="q" name="q" value="<?php echo html_encode($plaintext_query); ?>" style="width: 300px" />
 						
 						<span id="advanced_mode" onclick="toggle_search('basic')" style="display: none">
-							<img style="margin-top: 3px" src="<?php echo ENTRADA_URL; ?>/images/arrow-asc.gif" width="9" height="7" alt="Advanced Search" /> <span>Advanced Search</span>
+							<img src="<?php echo ENTRADA_URL; ?>/images/arrow-asc.gif" width="9" height="7" alt="Advanced Search" /> <span>Advanced Search</span>
 						</span>
 						<span id="basic_mode" onclick="toggle_search('advanced')">
 							<img style="margin-top: 5px" src="<?php echo ENTRADA_URL; ?>/images/arrow-desc.gif" width="9" height="7" alt="Basic Search" /> <span>Advanced Search</span>
@@ -642,7 +642,7 @@ if (!defined("PARENT_INCLUDED")) {
 			</form>
 		</div>
 		<div class="tab-page">
-			<h2 class="tab">Browse People</h2>
+			<h3 class="tab">Browse People</h3>
 			<form id="browse-group_form" action="<?php echo ENTRADA_URL; ?>/people" method="get">
 			<input type="hidden" name="type" value="browse-group" />
 			<input type="hidden" name="pv" id="browse-group_pv" value="<?php echo ($page_current ? $page_current : 1);?>" />
@@ -683,7 +683,7 @@ if (!defined("PARENT_INCLUDED")) {
 			</form>
 		</div>
 		<div class="tab-page">
-			<h2 class="tab">Browse Departments</h2>
+			<h3 class="tab">Browse Departments</h3>
 			<form id="browse-dept_form" action="<?php echo ENTRADA_URL; ?>/people" method="get">
 			<input type="hidden" name="type" value="browse-dept" />
 			<input type="hidden" name="pv" id="browse-dept_pv" value="<?php echo ($page_current ? $page_current : 1);?>" />
@@ -813,7 +813,7 @@ if (!defined("PARENT_INCLUDED")) {
 			echo "	<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
 			echo "	<tbody>\n";
 			echo "		<tr>\n";
-			echo "			<td style=\"font-size: 14px; font-weight: bold; color: #003366\">People Search Results:</td>\n";
+			echo "			<td style=\"font-size: 12px; font-weight: bold; padding-left:10px\">People Search Results:</td>\n";
 			echo "			<td style=\"text-align: right; font-size: 10px; color: #666666; overflow: hidden; white-space: nowrap\">".$total_rows." Result".(($total_rows != 1) ? "s" : "")." Found. Results ".($limit_parameter + 1)." - ".((($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] + $limit_parameter) <= $total_rows) ? ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] + $limit_parameter) : $total_rows)." for &quot;<strong>".$search_query."</strong>&quot; shown below.</td>\n";
 			echo "		</tr>\n";
 			echo "		</tbody>\n";
@@ -824,7 +824,7 @@ if (!defined("PARENT_INCLUDED")) {
 				echo "<div id=\"result-".$result["id"]."\" style=\"width: 100%; padding: 5px 0px 5px 5px; line-height: 16px; text-align: left; border-bottom: 1px solid rgb(204, 204, 204);".($key % 2 == 1 ? "background-color: rgb(238, 238, 238);" : "")."\">\n";
 				echo "	<table style=\"width: 100%;\" class=\"profile-card\">\n";
 				echo "	<colgroup>\n";
-				echo "		<col style=\"width: 15%\" />\n";
+				echo "		<col style=\"width: 10%\" />\n";
 				echo "		<col style=\"width: 25%\" />\n";
 				echo "		<col style=\"width: 38%\" />\n";
 				echo "		<col style=\"width: 22%\" />\n";

@@ -928,13 +928,15 @@ class Evaluation {
 							}
 						}
 						if (!isset($target_data["associated_cgroup_ids"]) && !isset($target_data["associated_cohort_ids"]) && !isset($target_data["associated_proxy_ids"])) {
-							foreach ($target_data["evaluation_targets"] as $target) {
-								if ($target["target_type"] == "cgroup_id") {
-									$target_data["associated_cgroup_ids"][] = $target["target_value"];
-								} elseif ($target["target_type"] == "cohort") {
-									$target_data["associated_cohort_ids"][] = $target["target_value"];
-								} elseif ($target["target_type"] == "proxy_id") {
-									$target_data["associated_proxy_ids"][] = $target["target_value"];
+							if (isset($target_data["evaluation_targets"]) && is_array($target_data["evaluation_targets"])) {
+								foreach ($target_data["evaluation_targets"] as $target) {
+									if ($target["target_type"] == "cgroup_id") {
+										$target_data["associated_cgroup_ids"][] = $target["target_value"];
+									} elseif ($target["target_type"] == "cohort") {
+										$target_data["associated_cohort_ids"][] = $target["target_value"];
+									} elseif ($target["target_type"] == "proxy_id") {
+										$target_data["associated_proxy_ids"][] = $target["target_value"];
+									}
 								}
 							}
 						}

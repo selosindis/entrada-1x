@@ -706,7 +706,7 @@ if ($COMMUNITY_ID) {
 				?>
 <div class="tab-pane" id="community_members_div">
 	<div class="tab-page members">
-		<h2 class="tab">Members</h2>
+		<h3 class="tab">Members</h3>
 		<h2 style="margin-top: 0px">Community Members</h2>
 							<?php
 							if ($MAILING_LISTS["active"]) {
@@ -807,7 +807,7 @@ if ($COMMUNITY_ID) {
 							?>
 	</div>
 	<div class="tab-page members">
-		<h2 class="tab">Administrators</h2>
+		<h3 class="tab">Administrators</h3>
 		<h2 style="margin-top: 0px">Community Administrators</h2>
 							<?php
 							/**
@@ -903,8 +903,9 @@ if ($COMMUNITY_ID) {
 											});
 										</script>";
 								?>
-		<form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("section" => "members", "type" => "admins", "step" => 2)); ?>" method="post">
-			<table class="tableList membersTableList" id="adminsTable" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Community Administrators">
+		<div class="row-fluid">
+		<form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("section" => "members", "type" => "admins", "step" => 2)); ?>" method="post" class="form-horizontal">
+			<table class="table tableList membersTableList" id="adminsTable" style="width:95%" cellspacing="0" cellpadding="2" border="0" summary="Community Administrators">
 				<colgroup>
 					<col class="modified" />
 					<col class="date" />
@@ -954,37 +955,18 @@ if ($COMMUNITY_ID) {
 								application_log("error", "Someone [".$ENTRADA_USER->getID()."] accessed the Manage Members page in a community [".$COMMUNITY_ID."] with no administrators present.");
 							}
 							?>
+		</div><!--/row-fluid-->
 	</div>
 	<div class="tab-page members">
-		<h2 class="tab">Add Members</h2>
+		<h3 class="tab">Add Members</h3>
 		<h2 style="margin-top: 0px">Add Members</h2>
-		<form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("section" => "members", "type" => "add", "step" => 2)); ?>" method="post">
-			<table style="margin-top: 10px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Member">
-				<colgroup>
-					<col style="width: 45%" />
-					<col style="width: 10%" />
-					<col style="width: 45%" />
-				</colgroup>
-				<tfoot>
-					<tr>
-						<td colspan="3" style="padding-top: 15px; text-align: right">
-							<input type="submit" class="button" value="Add Members" style="vertical-align: middle" />
-						</td>
-					</tr>
-				</tfoot>
-				<tbody>
-					<tr><td></td></tr>
-					<tr>
-						<td colspan="3" style="vertical-align: top">
-								<p>
-									If you would like to add users that already exist in the system to this community yourself, you can do so by clicking the checkbox beside their name from the list below.
-									Once you have reviewed the list at the bottom and are ready, click the <strong>Proceed</strong> button at the bottom to complete the process.
-								</p>
-						</td>
-					</tr>			
-					<tr>
-						<td colspan="2" style="vertical-align: top">
-							<div class="member-add-type" id="existing-member-add-type">
+		<form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("section" => "members", "type" => "add", "step" => 2)); ?>" method="post" class="form-horizontal">
+		<div class="row-fluid">
+			<p>If you would like to add users that already exist in the system to this community yourself, you can do so by clicking the checkbox beside their name from the list below.
+									Once you have reviewed the list at the bottom and are ready, click the <strong>Proceed</strong> button at the bottom to complete the process.</p>
+		</div>
+		<div class="row-fluid">
+			<div class="span7 member-add-type" id="existing-member-add-type">
 													<?php
 													$nmembers_query			= "";
 													$nmembers_results		= false;
@@ -1149,19 +1131,21 @@ if ($COMMUNITY_ID) {
 
 								<input class="multi-picklist" id="community_members" name="community_members" style="display: none;">
 							</div>
-						</td>
-						<td style="vertical-align: top; padding-left: 20px;">
-							<input id="acc_community_members" style="display: none;" name="acc_community_members"/>
-							<h3>Members to be Added on Submission</h3>
-							<div id="community_members_list"></div>
-						</td>
-					</tr>
-				</tbody>
-			</table>
+			<div class="span5">
+				<input id="acc_community_members" style="display: none;" name="acc_community_members"/>
+				<h3>Members to be Added on Submission</h3>
+				<div id="community_members_list"></div>
+			</div>
+		</div>
+		<div class="row-fluid">
+			<div style="text-align:right;margin-top:20px;">
+				<input type="submit" class="button" value="Add Members"/>
+			</div>
+		</div>
 		</form>
 	</div>
 	<div class="tab-page members">
-		<h2 class="tab">Add Guest Members</h2>
+		<h3 class="tab">Add Guest Members</h3>
 		<h2 style="margin-top: 0px">Add Guest Members</h2>
 		<form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("section" => "members", "type" => "addguest", "step" => 2)); ?>" method="post">
 			<div class="member-add-type" id="guest-member-add-type">
@@ -1174,15 +1158,15 @@ if ($COMMUNITY_ID) {
 					</colgroup>
 					<div id="validation-message"></div>
 					<tr>
-						<td><label id="guest_first_text" class="form-required" for="guest_member_first">First Name</label></td>
+						<td><label id="guest_first_text" class="form-required" for="guest_member_first">First Name:</label></td>
 						<td><input id="guest_member_first" type="text" style="width: 203px;" maxlength="255" value="<?php echo $PROCESSED['firstname'];?>" name="firstname"/></td>
 					</tr>
 					<tr>
-						<td><label id="guest_last_text" class="form-required" for="guest_member_last">Last Name</label></td>
+						<td><label id="guest_last_text" class="form-required" for="guest_member_last">Last Name:</label></td>
 						<td><input id="guest_member_last" type="text" style="width: 203px;" maxlength="255" value="<?php echo $PROCESSED['lastname'];?>" name="lastname"/></td>
 					</tr>
 					<tr>
-						<td><label id="guest_email_text" class="form-required" for="guest_email">E-mail Address</label></td>
+						<td><label id="guest_email_text" class="form-required" for="guest_email">E-mail Address:</label></td>
 						<td><input id="guest_member_email" type="text" style="width: 203px;" maxlength="255" value="<?php echo $PROCESSED['email'];?>" name="email"/></td>
 					</tr>
 					<tr>

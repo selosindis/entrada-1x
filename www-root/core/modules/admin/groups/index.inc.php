@@ -113,13 +113,11 @@ if (!defined("IN_GROUPS")) {
 
 	?>
 	<h1>Manage Groups</h1>
+	<div class="row-fluid">
 		<div style="float: right">
-			<ul class="page-action">
-				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="strong-green">Add Group</a></li>
-			</ul>
+			<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Add Group</a>
 		</div>
-		<div style="clear: both"></div> 
-
+	</div>
 	<?php 
 	/**
 	 * Update requested order to sort by.
@@ -245,46 +243,26 @@ if (!defined("IN_GROUPS")) {
 //	Zend_Debug::dump($scheduler_groups);
 
 	?>
-	<style type="text/css">
-	.dynamic-tab-pane-control .tab-page {
-		height: 100px;
-	}
+	
 	</style>
 	<div class="tab-pane" id="user-tabs">
 		<div class="tab-page">
-			<h2 class="tab">Group Search</h2>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/groups" method="get">
-			<input type="hidden" name="type" value="search" />
-			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Search for Groups">
-			<colgroup>
-				<col style="width: 3%" />
-				<col style="width: 25%" />
-				<col style="width: 72%" />
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Search" />
-						<input type="button" class="button" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/groups'"/>
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td>&nbsp;</td>
-					<td style="vertical-align: top"><label for="q" class="form-required">Group Search:</label></td>
-					<td>
-						<input type="text" id="q" name="q" value="<?php echo html_encode($search_query); ?>" style="width: 350px" />
+			<h3 class="tab">Group Search</h3>
+			<form action="<?php echo ENTRADA_URL; ?>/admin/groups" method="get" class="form-horizontal">
+			<div class="control-group">
+				<label for="q" class="form-required control-label">Group Search:</label>
+				<div class="controls">
+					<input type="text" id="q" name="q" value="<?php echo html_encode($search_query); ?>" style="width: 350px" />
 						<div class="content-small" style="margin-top: 10px">
 							<strong>Note:</strong> You can search for Group name.
 						</div>
-					</td>
-				</tr>
-			</tbody>
-			</table>
+				</div>
+			</div>
+			<div class="form-actions">
+				<input type="submit" class="button" value="Search" />
+				<input type="button" class="button" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/groups'"/>
+			</div>
+			<input type="hidden" name="type" value="search" />
 			</form>
 		</div>
 	</div>
@@ -343,37 +321,7 @@ if (!defined("IN_GROUPS")) {
 				</tr>
 			</thead>
 			<?php if ($ENTRADA_ACL->amIAllowed("group", "delete", false) or $ENTRADA_ACL->amIAllowed("group", "update", false)) : ?>
-			<tfoot>
-				<tr>
-					<td />
-						<?php
-						$colspan = 4;
-						if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) {
-							$colspan--;
-							?>
-							<td style="padding-top: 10px"><input type="submit" class="button" value="Delete Selected"  onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=manage'" /></td>
-							<?php
-						}
-						if ($ENTRADA_ACL->amIAllowed("group", "update", false)) {
-							$colspan--;
-							?>
-							<td style="padding-top: 10px">
-								<input type="submit" class="button" value="Edit Selected" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=edit'" />
-							</td>
-							<?php
-						}
-						if ($ENTRADA_ACL->amIAllowed("group", "read", false)) {
-							$colspan--;
-							?>
-							<td style="padding-top: 10px">
-								<input type="submit" class="button" value="Export" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=csv'" />
-							</td>
-							<?php
-						}
-						echo "<td colspan=\"$colspan\" />";
-						?>
-				</tr>
-			</tfoot>
+			
 			<?php endif; ?>
 			<tbody>
 			<?php
@@ -392,6 +340,36 @@ if (!defined("IN_GROUPS")) {
 			?>
 			</tbody>
 		</table>
+		<div class="row-fluid" style="margin-top:10px;">
+				<?php
+						$colspan = 4;
+						//delete
+						if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) {
+							$colspan--;
+							?>
+							<input type="submit" class="button btn-util" value="Delete Selected"  onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=manage'" />
+						<?php
+						}
+						//update
+						if ($ENTRADA_ACL->amIAllowed("group", "update", false)) {
+							$colspan--;
+							?>
+							
+								<input type="submit" class="button btn-util" value="Edit Selected" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=edit'" />
+							
+							<?php
+						}
+						if ($ENTRADA_ACL->amIAllowed("group", "read", false)) {
+							$colspan--;
+							?>
+							
+								<input type="submit" class="button btn-util" value="Export" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=csv'" />
+							
+							<?php
+						}
+						
+						?>
+		</div>
 		<?php if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) : ?>
 		</form>
 		<?php

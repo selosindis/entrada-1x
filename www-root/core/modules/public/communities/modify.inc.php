@@ -754,7 +754,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						<form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("action" => "modify", "step" => 2)); ?>" method="post">
 							<div class="tab-pane" id="community-modify-tabs">
 								<div class="tab-page">
-									<h2 class="tab">Statistics</h2>
+									<h3 class="tab">Statistics</h3>
 									<h2 style="margin-top: 0px">Community Statistics</h2>
 									<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Basic Community Statistics">
 										<colgroup>
@@ -951,7 +951,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 										});
 										
 									</script>
-									<h2 class="tab">Details</h2>
+									<h3 class="tab">Details</h3>
 									<h2 style="margin-top: 0px">Community Details</h2>
 									<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Modifying Community Details">
 										<colgroup>
@@ -1129,7 +1129,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									</table>
 								</div>
 								<div class="tab-page">
-									<h2 class="tab">Modules</h2>
+									<h3 class="tab">Modules</h3>
 									<h2 style="margin-top: 0px">Community Modules</h2>
 									<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Modifying Community Modules">
 										<colgroup>
@@ -1184,7 +1184,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									</table>
 								</div>
 								<div class="tab-page">
-									<h2 class="tab">Permissions</h2>
+									<h3 class="tab">Permissions</h3>
 									<h2 style="margin-top: 0px">Community Permissions</h2>
 									<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Modifying Community Permissions">
 										<colgroup>
@@ -1334,7 +1334,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								if ($MAILING_LISTS["active"]) {
 									?>
 									<div class="tab-page">
-										<h2 class="tab">Mailing List</h2>
+										<h3 class="tab">Mailing List</h3>
 										<h2 style="margin-top: 0px">Community Mailing List</h2>
 										<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Modifying Community Mailing List">
 											<colgroup>
@@ -1382,7 +1382,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								}
 									?>
 								<div class="tab-page">
-									<h2 class="tab">Deactivate</h2>
+									<h3 class="tab">Deactivate</h3>
 									<h2 style="margin-top: 0px">Deactivate Community</h2>
 
 									<script type="text/javascript">
@@ -1403,8 +1403,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 										<strong>Please note</strong> that once you deactivate this community all of the content (photos, calendar, etc) within the community will no longer be accessible to you or any other members of the community. Deactivating this community will also deactivate any Sub-Communities / Groups that have been created under this community.
 									</div>
 
-									<input type="checkbox" id="confirmed-deactivation" value="" style="vertical-align: middle" /> <label for="confirmed-deactivation" class="form-required">I understand that deactivating this community will render everything inside it inaccessible.</label>
-									<div style="margin-top: 15px; margin-bottom: 50px; padding-left: 25px">
+									<label class="checkbox form-required" for="confirmed-deactivation">
+										<input type="checkbox" id="confirmed-deactivation" value="" />I understand that deactivating this community will render everything inside it inaccessible.
+									</label>
+									 
+									<div style="margin-top: 15px; margin-bottom: 50px;">
 										<input type="button" class="button" onclick="validateDeactivate()" value="Deactivate Now" />
 									</div>
 								</div>

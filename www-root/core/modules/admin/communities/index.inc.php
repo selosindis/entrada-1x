@@ -259,38 +259,28 @@ if (!defined("IN_COMMUNITIES")) {
 	?>
 
 	<h2>Community Search</h2>
-	<form action="<?php echo ENTRADA_URL; ?>/admin/communities" method="get">
-	<input type="hidden" name="type" value="search" />
-	<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Search For Community">
-	<colgroup>
-		<col style="width: 17%" />
-		<col style="width: 48%" />
-		<col style="width: 35%" />
-	</colgroup>
-	<tbody>
-		<tr>
-			<td style="vertical-align: top"><label for="q" class="form-required">Community Search</label></td>
-			<td style="vertical-align: top">
-				<input type="text" id="q" name="q" value="<?php echo html_encode($search_query); ?>" style="width: 325px" />
-				<div class="content-small" style="margin-top: 10px">
-					<strong>Note:</strong> You can search for community title, or Category title.
-				</div>
-			</td>
-			<td style="vertical-align: top">
+	<div class="well">
+		<form action="<?php echo ENTRADA_URL; ?>/admin/communities" method="get" class="form-horizontal">
+		<input type="hidden" name="type" value="search" />
+		<div class="control-group">
+			<label for="q" class="form-required control-label">Community Search:</label>
+			<div class="controls">
+				<input type="text" id="q" name="q" value="<?php echo html_encode($search_query); ?>" />
 				<input type="submit" class="button" value="Search" />
-				<?php
-				if ($search_query != "") {
-					?>
-					<input type="button" class="button" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/communities'"/>
 					<?php
-				}
-				?>
-			</td>
-		</tr>
-	</tbody>
-	</table>
-	</form>
-	<br /><br />
+					if ($search_query != "") {
+						?>
+						<input type="button" class="button" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/communities'"/>
+						<?php
+					}
+					?>
+					<div class="content-small" style="margin-top: 10px">
+						<strong>Note:</strong> You can search for community title, or Category title.
+					</div>
+			</div>
+		</div>
+		</form>
+	</div>
 	<?php
 	if ($scheduler_communities["total_pages"] > 1) {
 		echo "<div class=\"fright\" style=\"margin-bottom: 10px\">\n";

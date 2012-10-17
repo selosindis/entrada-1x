@@ -49,6 +49,14 @@ select{
 .nav-tabs > li > a {
   text-align:center;
 }
+.well{
+  background-color:#FAFAFA;
+  border:1px solid #DDD;
+   border: 1px solid rgba(0, 0, 0, 0.075);
+  -moz-box-shadow:0 2px 0 rgba(0, 0, 0, 0.03);
+  -webkit-box-shadow:0 2px 0 rgba(0, 0, 0, 0.03);
+  box-shadow:0 2px 0 rgba(0, 0, 0, 0.03);
+}
 .icon{
   background-image:url("../images/icons-sprite.png");
   background-repeat:no-repeat;
@@ -60,6 +68,7 @@ select{
 .icon-logout{
   background-position:left top;
 }
+
 #content{
   border-radius:5px;
   -moz-box-shadow:0 0 3px rgba(0,0,0,0.1);

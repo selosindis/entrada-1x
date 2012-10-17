@@ -2452,12 +2452,10 @@ background-image:top center;
 background-repeat:repeat-x;
 text-align:right;
 position:relative;
-height:20px;
-padding:5px 10px;
+
 }
 
 .inline .select_multiple_submit {
-border-bottom:1px solid #999;
 text-align:left;
 }
 
@@ -2474,8 +2472,8 @@ width:130px;
 background-color:#FFF;
 background-image:url(../images/delete.x.gif);
 background-repeat:no-repeat;
-background-position:114px 3px;
-margin-right:18px;
+background-position:119px 6px;
+
 z-index:0;
 }
 
@@ -2504,8 +2502,11 @@ position:absolute;
 top:0;
 left:0;
 z-index:500;
-border:1px solid #999;
-background-color:#FFF;
+border:1px solid #EEE;
+background-color:#fafafa;
+padding:2%;
+width:96% !important;
+
 }
 
 .select_multiple_container.inline {
@@ -2575,9 +2576,11 @@ background-color:#FCFCFC;
 }
 
 table.select_multiple_table tr.odd {
-background-color:#F7F7F7;
+background-color:#FFF;
 }
-
+td.select_multiple_name_category label{
+  font-weight:bold;
+}
 table.select_multiple_table tr.selected {
 background-image:none;
 background-color:#D9E9FE;

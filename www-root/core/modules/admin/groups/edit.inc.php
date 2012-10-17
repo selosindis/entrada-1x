@@ -253,38 +253,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				<input type="hidden" name="members" value="1" />
 			</form>
 			<br />
-			<form action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "type" => "add", "step" => 2)); ?>" method="post">
-				<div id="additions">
-					<h2 style="margin-top: 10px">Add Members</h2>
-					<table style="margin-top: 1px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Member">
-						<colgroup>
-							<col style="width: 45%" />
-							<col style="width: 10%" />
-							<col style="width: 45%" />
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="3" style="padding-top: 15px; text-align: right">
-									<input type="submit" class="button" value="Proceed" style="vertical-align: middle" />
-								</td>
-							</tr>
-						</tfoot>
-						<tbody>
-							<tr>
-								<td colspan="3" style="vertical-align: top">
-									If you would like to add users that already exist in the system to this group yourself, you can do so by clicking the checkbox beside their name from the list below.
+			
+			<h2 style="margin-top: 10px">Add Members</h2>
+					<p>
+				If you would like to add users that already exist in the system to this group yourself, you can do so by clicking the checkbox beside their name from the list below.
 									Once you have reviewed the list at the bottom and are ready, click the <strong>Proceed</strong> button at the bottom to complete the process.
-								</td>
-							</tr>
-							<tr>
-								<td colspan="2" />
-								<td>
-									<div id="group_name_title"></div>
-								</td>
-							</tr>			
-							<tr>
-								<td colspan="2" style="vertical-align: top">
-									<div class="member-add-type" id="existing-member-add-type">
+			</p>
+			<form action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "type" => "add", "step" => 2)); ?>" method="post" class="form-horizontal">
+			<div class="row-fluid">
+				<div id="group_name_title"></div>
+			</div>
+			<div class="row-fluid">
+				<div class="span7">
+					<div class="member-add-type" id="existing-member-add-type">
 									<?php
 										$nmembers_results	= false;
 	
@@ -388,9 +369,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 										<input id="group_members_index" name="group_members_index" style="display: none;">
 										<input id="group_member_ids" name="group_member_ids" value="<?php  echo (isset($added_proxy_ids) && $added_proxy_ids ? implode(",", $added_proxy_ids) : "") ?>" style="display: none;">
 									</div>
-								</td>
-								<td style="vertical-align: top; padding-left: 20px;">
-									<h3>Members to be Added on Submission</h3>
+				</div>
+				<div class="span5">
+					<h3>Members to be Added on Submission</h3>
 									<div id="group_members_list">
 									<?php
 										if ($added_people) {
@@ -410,13 +391,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 										}
 									?>
 									</div>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-					<input type="hidden" id="add_group_id" name="add_group_id" value="" />
-				</form>
+				</div> <!--/span5-->
 			</div>
+			<div class="row-fluid">
+				<div class="pull-right">
+					<input type="submit" class="button" value="Proceed" />
+				</div>
+			</div>
+			<input type="hidden" id="add_group_id" name="add_group_id" value="" />
+			</form>
+			
 				
 		<?php			
 //		} else {

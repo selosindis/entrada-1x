@@ -80,12 +80,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
 		?>
-		<div style="float: right">
-			<ul class="page-action">
-				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="strong-green">Add New Event</a></li>
-			</ul>
+		<div class="row-fluid">
+			<div class="pull-right">
+				<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Add New Event</a>
+			</div>
 		</div>
-		<div style="clear: both"></div>
 		<?php
 	}
 

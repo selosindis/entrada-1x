@@ -44,6 +44,7 @@ if(!defined("PARENT_INCLUDED")) {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/annualreport", "title" => "Annual Report");
 	
 	if (($router) && ($router->initRoute())) {
+		$ENTRADA_USER->setClinical(getClinicalFromProxy($ENTRADA_USER->getActiveId()));
 		$PREFERENCES = preferences_load($MODULE);
 		/**
 		 * Include required js files and css files for use with jquery and flexigrid.

@@ -581,7 +581,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					
 					$query = "	SELECT * FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `audience_active` = 1";
 					$audience = $db->GetAll($query);
-					
+					$PROCESSED["periods"] = array();
+
 					if ($audience) {
 						foreach ($audience as $member) {
 							$PROCESSED["periods"][$member["cperiod_id"]][]=$member;

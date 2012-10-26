@@ -8962,10 +8962,10 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	$output = array();
 	$query = "	SELECT DISTINCT(a.`course_id`), a.`course_name`, a.`course_code`, a.`course_active`, a.`organisation_id`
 				FROM `courses` AS a";
-	if ($ENTRADA_USER->getGroup() == "student") {
-	$query .= "	LEFT JOIN `course_audience` AS b
+	if ($ENTRADA_USER->getActiveRole() != "admin" || $ENTRADA_USER->getActiveRole() != "director") {
+		$query .= "	LEFT JOIN `course_audience` AS b
 				ON a.`course_id` = b.`course_id`
-				LEFT JOIN `groups` AS c
+				JOIN `groups` AS c
 				ON b.`audience_type` = 'group_id'
 				AND b.`audience_value` = c.`group_id`
 				LEFT JOIN `group_members` AS d
@@ -8973,7 +8973,7 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	}
 	$query .= " WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 
-	if ($ENTRADA_USER->getGroup() == "student") {
+	if ($ENTRADA_USER->getActiveRole() != "admin" || $ENTRADA_USER->getActiveRole() != "director") {
 		$query .="	AND (
 						d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 						OR a.`permission` = 'open'
@@ -8993,7 +8993,7 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	$results = $db->GetAll($query);
 	if ($results) {
 		foreach ($results as $result) {
-				if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $ENTRADA_USER->getOrganisationId()), "read")) {
+				if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $ENTRADA_USER->getActiveOrganisation()), "read")) {
 					$output[] = $result;
 				}
 		}
@@ -9474,28 +9474,32 @@ function course_fetch_course_audience($course_id = 0, $organisation_id = false,$
 				switch ($result["audience_type"]) {
 					case "cohort" :	// Cohorts
 					case "group_id" : // Course Groups
-						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname FROM
-									`group_members` a
+						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname, d.`eattendance_id` AS `has_attendance` 
+									FROM `group_members` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
 									ON a.`proxy_id` = u.`id`
 									AND a.`group_id` = ".$db->qstr($result["audience_value"])."
 									JOIN `".AUTH_DATABASE."`.`user_access` ua
 									ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
-									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")".($organisation_id?
-									"WHERE u.`organisation_id` = ".$db->qstr($organisation_id):"");
-
+									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")
+									LEFT JOIN `event_attendance` d
+									ON u.`id` = d.`proxy_id` "
+									.($organisation_id?
+									"WHERE u.`organisation_id` = ".$db->qstr($organisation_id):"");			
 						$group_audience = $db->getAll($query);
 						if ($group_audience) {
 							$course_audience = array_merge($course_audience,$group_audience);
 						}
 					break;
 					case "proxy_id" : // Learners
-						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname FROM
+						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname, d.`eattendance_id` AS `has_attendance` FROM
 									`".AUTH_DATABASE."`.`user_data` u
 									JOIN `".AUTH_DATABASE."`.`user_access` ua
 									ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
 									WHERE u.`id` = ".$db->qstr($result["audience_value"])."
-									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")".($organisation_id?
+									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")
+									LEFT JOIN `event_attendance` d
+									ON u.`id` = d.`proxy_id` ".($organisation_id?
 									" AND u.`organisation_id` = ".$db->qstr($organisation_id):"");
 						$user_audience = $db->getAll($query);
 						if ($user_audience) {
@@ -11189,10 +11193,30 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		}
 	}
 
-	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $results_per_page);
+	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $results_per_page);	
+	$learning_events = $db->GetAll($query_events);	
 
-	$learning_events = $db->GetAll($query_events);
 	if ($learning_events) {
+		if ($ENTRADA_USER->getActiveRole() != "admin" || $ENTRADA_USER->getActiveRole() != "director") {
+			$i = 0;
+			foreach ($learning_events as $event) {		
+				if ($event["course_id"]) {
+					$query = "	SELECT * 
+								FROM `courses`
+								WHERE `course_id` = ".$db->qstr($event["course_id"]);					
+					$result = $db->GetRow($query);					
+					if ($result["permission"] == "open") {						
+						$event_resource = new EventResource($event["event_id"], $event["course_id"], $ENTRADA_USER->getActiveOrganisation());
+					} else {											
+						$event_resource = new EventClosedResource($event["event_id"], $event["course_id"], $ENTRADA_USER->getActiveOrganisation());
+					}
+				}				
+				if (!$ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {					
+					unset($learning_events[$i]);
+				}
+				$i++;
+			}
+		}
 		if ($user_group == "student") {
 			$event_ids = array();
 			foreach ($learning_events as $event) {

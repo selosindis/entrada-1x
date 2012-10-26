@@ -109,7 +109,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 			echo display_error();
 		} else {
-			if ($ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $ENTRADA_USER->getOrganisationId()), "read")) {
+			if ($ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $ENTRADA_USER->getActiveOrganisation), "read")) {
 				add_statistic($MODULE, "view", "course_id", $COURSE_ID);
 
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE."?".replace_query(array("id" => $course_details["course_id"])), "title" => $course_details["course_name"].(($course_details["course_code"]) ? ": ".$course_details["course_code"] : ""));

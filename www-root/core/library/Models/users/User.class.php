@@ -73,7 +73,10 @@ class User {
 			$default_access_id,
 			$access_id,
 			$group,
-			$role;
+			$role,
+			$active_group,
+			$active_role;
+
 
 	/**
 	 * lookup array for formatting user information
@@ -562,6 +565,8 @@ class User {
 						if (!isset($_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) || !$_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) {
 							$_SESSION["permissions"][$user->getAccessId()]["organisation_id"] = $result["organisation_id"];
 							$user->setActiveOrganisation($result["organisation_id"]);
+							$user->setActiveRole($result["role"]);
+							$user->setActiveGroup($result["group"]);
 						}
 						$user->setDefaultAccessId($result["id"]);
 					}
@@ -628,6 +633,42 @@ class User {
 		return Departments::getByUser($this->user_id);
 	}
 	
+		/**
+	 * Returns the active group for the active organisation.  
+	 * 
+	 * @return array
+	 */
+	public function getActiveGroup() {
+		return $active_group;
+	}
+	
+	/**
+	 * Sets the active group.
+	 * 
+	 * @param type $string
+	 */
+	public function setActiveGroup($group) {
+		$this->active_group = $group;
+	}
+	
+	/**
+	 * Returns the active role for the active organisation.  
+	 * 
+	 * @return array
+	 */
+	public function getActiveRole() {
+		return $active_role;			
+	}
+	
+	/**
+	 * Sets the active role.
+	 * 
+	 * @param type string
+	 */
+	public function setActiveRole($role) {
+		$this->active_role = $role;
+	}
+	
 	/**
 	 * Returns the access group to which this user belongs e.g. student, faculty, ... 
 	 * @return string
@@ -648,6 +689,15 @@ class User {
 			return;
 		}
 		return $this->role; 
+	}
+	
+	/**
+	 * Sets the active role.
+	 * 
+	 * @param type string
+	 */
+	public function setRole($role) {
+		$this->role = $role;
 	}
 	
 	/**

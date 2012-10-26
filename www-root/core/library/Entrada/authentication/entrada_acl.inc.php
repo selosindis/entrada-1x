@@ -28,6 +28,7 @@ class Entrada_ACL extends ACL_Factory {
 					"eventcontent"
 				)
 			),
+			"eventclosed",
 			"evaluation" => array (
 				"evaluationform" => array (
 					"evaluationformquestion"
@@ -540,7 +541,7 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
 			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
 
-			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`userr_access`
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
 						WHERE `id` = ".$db->qstr($access_id);
 			$user_id = $db->GetOne($query);
 		}
@@ -578,6 +579,124 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 
 			return true;
 		}
+	}
+}
+
+/**
+ * Event Enrollment Assertion
+ *
+ * Used to assert that proxy_id is enrolled in a particular event based on their membership status
+ * in the corresponding event audience.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Don Zuiker <don.zuiker@queensu.ca>
+ * @copyright Copyright 2012 Queen's University. All Rights Reserved.
+ */
+class EventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
+
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {		
+		global $db;
+		//If asserting is off then return true right away
+		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+
+		if (isset($resource->event_id)) {
+			$event_id = $resource->event_id;
+		} else if (isset($acl->_entrada_last_query->event_id)) {
+			$event_id = $acl->_entrada_last_query->event_id;
+		} else {
+			// Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if ($resource_type !== "event") {
+				// This only asserts for users on events.
+				return false;
+			}
+
+			$event_id = preg_replace("/[^0-9]+/", "", $resource_id);
+		}
+		
+		if (isset($resource->course_id)) {
+			$course_id = $resource->course_id;
+		} else if (isset($acl->_entrada_last_query->course_id)) {
+			$course_id = $acl->_entrada_last_query->course_id;
+		} else {
+			// Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if ($resource_type !== "event") {
+				// This only asserts for users on events.
+				return false;
+			}
+
+			$course_id = preg_replace("/[^0-9]+/", "", $resource_id);
+		}
+		
+		$role_id = $role->getRoleId();
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
+
+		if (!isset($user_id) || !$user_id) {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
+		}		
+		return $this->_checkEventEnrollment($user_id, $event_id, $course_id);
+	}
+
+	/**
+	 * Checks if the $user_id is an active member of the corresponding
+	 * event.
+	 *
+	 * @param string|integer $user_id The proxy_id to be checked
+	 * @param string|integer $event_id The event id to be checked
+	 * @param string|integer $course_id The course id to be checked
+	 * @return boolean
+	 */
+	static function _checkEventEnrollment($user_id, $event_id, $course_id) {
+		global $db;
+
+		$query = "	SELECT *
+					FROM `events` e
+					JOIN `event_audience` ea ON e.`event_id` = ea.`event_id`
+					WHERE e.`event_id` = " . $db->qstr($event_id) . "
+					AND ea.`audience_type` = 'proxy_id'
+					AND ea.`audience_value` = " . $db->qstr($user_id);	
+				
+		$result = $db->GetRow($query);
+		
+		if ($result) {
+			return true;
+		} 
+
+		$query = "	SELECT *
+					FROM `course_audience` AS b
+					JOIN `groups` AS c ON b.`audience_type` = 'group_id'
+					AND b.`audience_value` = c.`group_id`
+					LEFT JOIN `group_members` AS d
+					ON d.`group_id` = c.`group_id`
+					WHERE d.`proxy_id` = " . $db->qstr($user_id) . "
+					AND b.`course_id` = " . $db->qstr($course_id) . "
+					AND d.`member_active` = 1";
+
+		$result = $db->GetRow($query);
+
+		if ($result) {				
+			return true;
+		} else {
+			return false;
+		}
+		return false;
 	}
 }
 
@@ -1400,7 +1519,7 @@ class ClerkshipAssertion implements Zend_Acl_Assert_Interface {
 			return false;
 		}
 
-		if ((time() < $end_timestamp = mktime(0, 0, 0, 7, 13, $GRAD_YEAR)) && (time() >= strtotime("-23 months", $end_timestamp))) {
+		if ((time() < $end_timestamp = mktime(0, 0, 0, 7, 13, intval($GRAD_YEAR))) && (time() >= strtotime("-23 months", $end_timestamp))) {
 			return true;
 		} else {
 			return false;
@@ -1893,6 +2012,60 @@ class EventResource extends EntradaAclResource {
 	 */
 	public function getResourceId() {
 		return "event".($this->specific ? $this->event_id : "");
+	}
+}
+
+/**
+ * Smart event resource object for the EntradaACL.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>
+ * @copyright Copyright 2010 Queen's University. All Rights Reserved.
+ */
+class EventClosedResource extends EntradaAclResource {
+	/**
+	 * The event ID this resource represents
+	 * @var integer
+	 */
+	var $event_id;
+
+	/**
+	 * The course ID for the course this event belongs to
+	 * @var integer
+	 */
+	var $course_id;
+
+	/**
+	 * This event's parent course's organisation ID, used for ResourceOrganisationAssertion.
+	 * @see ResourceOrganisationAssertion()
+	 * @var integer
+	 */
+	var $organisation_id;
+
+	/**
+	 * Creates this event resource with the supplied information
+	 * @param integer $event_id This event's ID
+	 * @param integer $course_id This event's parent course's ID
+	 * @param integer $organisation_id This event's parent course's organisation ID
+	 * @param boolean $assert Wheather or not to use assertions when looking at rules
+	 */
+	function __construct($event_id, $course_id= null, $organisation_id = null, $assert = null) {
+		$this->course_id = $course_id;
+		$this->event_id = $event_id;
+		$this->organisation_id = $organisation_id;
+		if (isset($assert)) {
+			$this->assert = $assert;
+		}
+	}
+
+	/**
+	 * ACL method for keeping track. Required by Zend_Acl_Resource_Interface.
+	 * Will return based on specifc property of this resource instance.
+	 * @return string
+	 */
+	public function getResourceId() {
+		return "eventclosed".($this->specific ? $this->event_id : "");
 	}
 }
 

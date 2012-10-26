@@ -8848,20 +8848,20 @@ function courses_subnavigation($course_details, $tab="details") {
 	echo "<div class=\"no-printing\">\n";
     echo "    <ul class=\"nav nav-tabs\">\n";
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-        echo "<li".($tab=="groups"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">" . $module_singular_name . " Groups</a></li>\n";
-	}
-	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
         echo "<li".($tab=="details"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">" . $module_singular_name . " Details</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
         echo "<li".($tab=="content"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px;\">" . $module_singular_name . " Content</a></li>\n";
 	}
-	if($ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-        echo "<li".($tab=="gradebook"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\" style=\"font-size: 10px;\">" . $module_singular_name . " Gradebook</a></li>";
-	}
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
 		echo "<li".($tab=="enrolment"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">" . $module_singular_name . " Enrolment</a></li>\n";
 	}
+	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
+        echo "<li".($tab=="groups"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">" . $module_singular_name . " Groups</a></li>\n";
+	}
+	if($ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
+        echo "<li".($tab=="gradebook"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\" style=\"font-size: 10px;\">" . $module_singular_name . " Gradebook</a></li>";
+	}	
 	echo "	</ul>\n";
 
 	echo "</div>\n";
@@ -9428,10 +9428,12 @@ function events_subnavigation($event_info,$tab='content'){
 	echo "<div class=\"no-printing\">\n";
 	echo "	<ul class=\"nav nav-tabs\">";
 	if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'update')) {
-		echo "		<li".($tab=='edit'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $event_info['event_id'], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Details</a></li>";
+		echo "		<li".($tab=='edit'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $event_info['event_id'], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Event Details</a></li>";
 	}
-	echo "		<li".($tab=='content'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $event_info['event_id'], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Content</a></li>";
-	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"],"step"=>false))."\" style=\"font-size: 10px; margin-right: 8px\">Manage Event Attendance</a></li>";
+	echo "		<li".($tab=='content'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $event_info['event_id'], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">Event Content</a></li>";
+
+	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"],"step"=>false))."\" style=\"font-size: 10px; margin-right: 8px\">Event Attendance</a></li>";
+
 	echo "	</ul>";
 	echo "</div>\n";
 

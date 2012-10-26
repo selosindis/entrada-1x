@@ -186,10 +186,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			}
 			
 			if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) { ?>				
-				<div style="float: right">
-					<ul class="page-action">
-						<li><a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="strong-green">Add New Assessment</a></li>
-					</ul>
+				<div class="pull-right">
+						<a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="btn btn-primary">Add New Assessment</a>
 				</div>
 				<h2>Assessments</h2>
 				<div style="clear: both"></div>
@@ -387,11 +385,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			//Assignment
 			if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) {
 				?>
-				<h1></h1>
-				<div style="float: right">
-					<ul class="page-action">
-						<li><a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="strong-green">Add New Assignment</a></li>
-					</ul>
+				<div class="pull-right">
+						<a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="btn btn-primary">Add New Assignment</a>
 				</div>
 				<h2>Assignments</h2>				
 				<div style="clear: both"></div>

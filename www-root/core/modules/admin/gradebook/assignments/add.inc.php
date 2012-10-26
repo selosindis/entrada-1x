@@ -451,28 +451,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					echo display_error();
 				}
 				?>
-				<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assignments?<?php echo replace_query(array("step" => 2)); ?>" method="post">
+				<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assignments?<?php echo replace_query(array("step" => 2)); ?>" method="post" class="form-horizontal">
 					<h2>Assignment Details</h2>
-					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Assignment">
-						<colgroup>
-							<col style="width: 3%" />
-							<col style="width: 22%" />
-							<col style="width: 75%" />
-						</colgroup>
-						<tbody>
-							
-							<tr>
-								<td></td>
-								<td><label class="form-nrequired">Assignment Name</label></td>
-								<td>
-									<input type="text" name="assignment_title" style="width: 243px" value="<?php echo ($PROCESSED["assignment_title"]?$PROCESSED["assignment_title"]:"");?>"/>
-								</td>
-							</tr>							
-							<tr>
-								<td></td>
-								<td style="vertical-align: top;"><label class="form-nrequired">Associated Assessment</label></td>
-								<td>
-									<select name="assessment_id" id="assessment-selector" style="width: 250px">
+					<div class="control-group">
+						<label class="control-label form-nrequired">Assignment Name:</label>
+						<div class="controls">
+							<input type="text" name="assignment_title" value="<?php echo ($PROCESSED["assignment_title"]?$PROCESSED["assignment_title"]:"");?>"/>
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label form-nrequired">Associated Assessment</label>
+						<div class="controls">
+							<select name="assessment_id" id="assessment-selector">
 										<option value="0">No Assessment</option>
 										<option value="N" selected="selected">New Assessment</option>
 										<?php 
@@ -486,13 +476,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										?>
 									</select>
 									<div class="content-small">The assessment determines how the assignment should be marked. You can either select one if it already exists, or create a new one now.</div>
-								</td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td style="vertical-align:top">Assignment Contacts</td>
-								<td>
-								<script type="text/javascript">															
+						</div>
+					</div> <!--/control-group-->
+					<div class="control-group">
+						<label class="control-label form-nrequired">Assignment Contacts:</label>
+						<div class="controls">
+							<script type="text/javascript">															
 									jQuery('#assessment-section').hide();
 
 									jQuery(document).ready(function(){
@@ -622,20 +611,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									</ul>
 									<input type="hidden" id="director_ref" name="director_ref" value="" />
 									<input type="hidden" id="director_id" name="director_id" value="" />
-								</td>
-							</tr>							
-							<tr>
-								<td>&nbsp;</td>
-								<td style="vertical-align: top">Assignment Description</td>
-								<td>
-									<textarea id="assignment_description" name="assignment_description" style="width: 100%; height: 150px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($PROCESSED["assignment_description"], array("font")))); ?></textarea>
-								</td>
-							</tr>
-							<tr>
-								<td></td>
-								<td style="vertical-align: top;"><label class="form-nrequired">Allow Revisions</label></td>
-								<td>
-									<table>
+						</div>
+					</div> <!--/control-group-->
+					<div class="control-group">
+						<label class="control-label form-nrequired">Assignment Description:</label>
+						<div class="controls">
+							<textarea id="assignment_description" name="assignment_description" style="width: 100%; height: 150px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($PROCESSED["assignment_description"], array("font")))); ?></textarea>
+						</div>
+					</div>
+					<div class="control-group">
+						<label class="control-label form-nrequired">Allow Revisions:</label>
+						<div class="controls">
+							<table>
 										<tbody>
 												<tr>
 													<td style="vertical-align: top"><input type="radio" name="assignment_uploads" value="allow" style="vertical-align: middle" checked="checked"></td>
@@ -654,12 +641,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 															
 										</tbody>
 									</table>
-								</td>
-							</tr>
-							<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-							<?php echo generate_calendars("due", "", false, false,  0, true, false,  ((isset($PROCESSED["due_date"])) ? $PROCESSED["due_date"] : 0)); ?>
-						</tbody>
-					</table>
+						</div>
+					</div>
+					<div class="control-group">
+						<table><tr>
+						<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+						<?php echo generate_calendars("due", "", false, false,  0, true, false,  ((isset($PROCESSED["due_date"])) ? $PROCESSED["due_date"] : 0)); ?>
+						</tr></table>
+					</div>
+					
 					<div id="assessment-section">
 				<h2>Assessment Details</h2>
 					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Assessment">
@@ -792,7 +782,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<tbody id="assessment_options" style="display: none;">
 						<tr>
 							<td></td>
-							<td style="vertical-align: top;"><label class="form-nrequired">Extended Options</label></td>
+							<td style="vertical-align: top;"><label class="form-nrequired">Extended Options:</label></td>
 							<td>
 								<?php 
 								if ($assessment_options) {
@@ -810,9 +800,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<tbody>
 						<tr>
 							<td></td>
-							<td><label for="marking_scheme_id" class="form-required">Marking Scheme</label></td>
+							<td><label for="marking_scheme_id" class="form-required">Marking Scheme:</label></td>
 							<td>
-								<select id="marking_scheme_id" name="marking_scheme_id" style="width: 203px">
+								<select id="marking_scheme_id" name="marking_scheme_id">
 								<?php
 								foreach ($MARKING_SCHEMES as $scheme) {
 									echo "<option value=\"".$scheme["id"]."\"".(($PROCESSED["marking_scheme_id"] == $scheme["id"]) ? " selected=\"selected\"" : "").">".$scheme["name"]."</option>";	
@@ -823,7 +813,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						</tr>
 						<tr id="numeric_marking_scheme_details" style="display: none;">
 							<td></td>
-							<td><label for="numeric_grade_points_total" class="form-required">Maximum Points</label></td>
+							<td><label for="numeric_grade_points_total" class="form-required">Maximum Points:</label></td>
 							<td>
 								<input type="text" id="numeric_grade_points_total" name="numeric_grade_points_total" value="<?php echo html_encode($PROCESSED["numeric_grade_points_total"]); ?>" maxlength="5" style="width: 50px" />
 								<span class="content-small"><strong>Tip:</strong> Maximum points possible for this assessment (i.e. <strong>20</strong> for &quot;X out of 20).</span>
@@ -831,9 +821,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						</tr>
 						<tr>
 							<td></td>
-							<td><label for="type" class="form-required">Assessment Type</label></td>
+							<td><label for="type" class="form-required">Assessment Type:</label></td>
 							<td>
-								<select id="type" name="type" style="width: 203px">
+								<select id="type" name="type">
 								<?php
 								foreach ($ASSESSMENT_TYPES as $type) {
 									echo "<option value=\"".$type."\"".(($PROCESSED["type"] == $type) ? " selected=\"selected\"" : "").">".$type."</option>";
@@ -962,7 +952,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to assessment list</option>
 									<option value="parent"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "parent") ? " selected=\"selected\"" : ""); ?>>Return to all gradebooks list</option>
 								</select>
-								<input type="submit" class="button" value="Save" />
+								<input type="submit" class="btn btn-primary" value="Save" />
 							</td>
 						</tr>
 					</table>

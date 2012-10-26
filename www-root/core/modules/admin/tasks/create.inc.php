@@ -140,65 +140,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	
 	<?php display_status_messages(); ?>
 	
-	<form id="new_task_form" action="<?php echo ENTRADA_URL; ?>/admin/tasks?section=create" method="post">
-		<table class="task_form">
-			<colgroup>
-				<col width="3%"></col>
-				<col width="25%"></col>
-				<col width="72%"></col>
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="3" style="padding-top: 25px">
-						<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-							<tr>
-								<td style="width: 25%; text-align: left">
-									<input type="button" class="button" value="<? echo $translate->translate("task_button_cancel"); ?>" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/tasks'" />
-								</td>
-								<td style="width: 75%; text-align: right; vertical-align: middle">
-									<span class="content-small">After saving:</span>
-									<select id="post_action" name="post_action">
-										<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another task</option>
-										<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to task list</option>
-									</select>
-									<input type="hidden" name="action" value="Save" />
-									<input type="submit" class="button" value="<? echo $translate->translate("task_button_save"); ?>" />
-								</td>
-							</tr>
-						</table>
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td>&nbsp;</td>
-					<td >
-						<label for="title" class="form-required"><?php echo $translate->translate("task_field_title"); ?></label>
-					</td>
-					<td >
-						<input id="title" name="title" type="text" maxlength="255" style="width: 250px; vertical-align: middle;" value="<?php echo html_encode($PROCESSED["title"]); ?>"></input>	
-					</td>
-				</tr>
-				<?php
+	<form id="new_task_form" action="<?php echo ENTRADA_URL; ?>/admin/tasks?section=create" method="post" class="form-horizontal">
+	<div class="control-group">
+		<label for="title" class="control-label form-required"><?php echo $translate->translate("task_field_title"); ?>:</label>
+		<div class="controls">
+			<input id="title" name="title" type="text" maxlength="255" value="<?php echo html_encode($PROCESSED["title"]); ?>"></input>	
+		</div>
+	</div>
+	<div class="control-group">
+	<table>
+		<tr>
+			<?php
 					echo generate_calendar("deadline",$translate->translate("task_field_deadline"),false,$PROCESSED['deadline'],true,false,false,false,false);
 				?>
-				<tr>
-					<td>&nbsp;</td>
-					<td >
-						<label for="time_required" class="form-nrequired"><?php echo $translate->translate("task_field_time_required"); ?></label>
-					</td>
-					<td >
-						<input id="time_required" name="time_required" type="text" maxlength="4096" style="width: 5em; vertical-align: middle;" value="<?php echo $PROCESSED['time_required']; ?>"></input>	<?php echo $translate->translate("task_misc_minutes"); ?>
-					</td>
-				</tr>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td></td>
-					<td><label for="course_id" class="form-nrequired"><?php echo $translate->translate("task_field_course"); ?></label></td>
-					<td>
-						<select id="course_id" name="course_id" style="width: 95%">
+		</tr>
+	</table>
+	</div>
+	<div class="control-group">
+		<label for="time_required" class="control-label form-nrequired"><?php echo $translate->translate("task_field_time_required"); ?>:</label>
+		<div class="controls">
+			<input id="time_required" name="time_required" type="text" maxlength="4096" value="<?php echo $PROCESSED['time_required']; ?>"></input>	<?php echo $translate->translate("task_misc_minutes"); ?>
+		</div>
+	</div>
+	<div class="control-group">
+		<label for="course_id" class="control-label form-nrequired"><?php echo $translate->translate("task_field_course"); ?>:</label>
+		<div class="controls">
+			<select id="course_id" name="course_id" style="width: 95%">
 						<option value="0"><?php echo $translate->translate("task_option_course_none"); ?></option>
 						<?php
 						$query		= "	SELECT * FROM `courses` 
@@ -214,14 +181,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 							}
 						}
 						?>
-						</select>
-					</td>
-				</tr>
-				<tr class="task_faculty">
-					<td>&nbsp;</td>
-					<td style="vertical-align: top"><label for="associated_faculty_ids" class="form-nrequired"><?php echo $translate->translate("task_field_associated_faculty"); ?></label></td>
-					<td>
-						<input type="text" id="faculty_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
+			</select>
+		</div>
+	</div>
+	<div class="control-group">
+		<label for="associated_faculty_ids" class="control-label form-nrequired"><?php echo $translate->translate("task_field_associated_faculty"); ?>:</label>
+		<div class="controls">
+			<input type="text" id="faculty_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
 						<?php
 							$ONLOAD[] = "window.faculty_list = new AutoCompleteList({ type: 'faculty', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
 						?>
@@ -244,35 +210,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						</ul>
 						<input type="hidden" id="faculty_ref" name="faculty_ref" value="" />
 						<input type="hidden" id="faculty_id" name="faculty_id" value="" />
-					</td>
-				</tr>
-				
-				<tr>
-					<td colspan="3">
-						<h2><?php echo $translate->translate("task_heading_description"); ?></h2>
-					</td>
-				</tr>
-				<tr>
-					<td>&nbsp;</td>
-					<td colspan="2">
-						<textarea id="description" name="description" style="width: 100%; height: 100px;" cols="65" rows="20"><?php echo html_encode(trim(strip_selected_tags($PROCESSED['description'], array("font")))); ?></textarea>	
-					</td>
-				</tr>
-				<tr>
-					<td colspan="3"><h2><?php echo $translate->translate("task_heading_recipients"); ?></h2></td>
-				</tr>
-				<tr>
-					<td style="vertical-align: top"><input type="radio" name="task_recipient_type" id="task_recipient_type_<?php echo TASK_RECIPIENT_CLASS; ?>" value="<?php echo TASK_RECIPIENT_CLASS; ?>" onclick="selectTaskRecipientsOption('<?php echo TASK_RECIPIENT_CLASS; ?>')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == TASK_RECIPIENT_CLASS) ? " checked=\"checked\"" : ""); ?> /></td>
-					<td colspan="2" style="padding-bottom: 15px">
-						<label for="task_recipient_type_<?php echo TASK_RECIPIENT_CLASS; ?>" class="radio-group-title"><?php echo $translate->translate("task_field_recipients_class"); ?></label>
-						<div class="content-small"><?php echo $translate->translate("task_instructions_recipients_class"); ?></div>
-					</td>
-				</tr>
-				<tr class="task_recipient <?php echo TASK_RECIPIENT_CLASS; ?>_recipient">
-					<td></td>
-					<td><label for="associated_cohorts" class="form-required"><?php echo $translate->translate("task_field_cohort"); ?></label></td>
-					<td>
-						<select id="associated_cohorts" name="associated_cohorts" style="width: 203px">
+		</div>
+	</div> <!--/control-group-->
+	<h2><?php echo $translate->translate("task_heading_description"); ?></h2>
+	<div class="control-group">
+			<textarea id="description" name="description" style="width: 100%; height: 100px;" cols="65" rows="20"><?php echo html_encode(trim(strip_selected_tags($PROCESSED['description'], array("font")))); ?></textarea>	
+	</div>
+	<h2><?php echo $translate->translate("task_heading_recipients"); ?></h2>
+	
+	<div class="control-group">
+		<label class="radio-group-title" for="task_recipient_type_<?php echo TASK_RECIPIENT_CLASS; ?>">
+			<input type="radio" name="task_recipient_type" id="task_recipient_type_<?php echo TASK_RECIPIENT_CLASS; ?>" value="<?php echo TASK_RECIPIENT_CLASS; ?>" onclick="selectTaskRecipientsOption('<?php echo TASK_RECIPIENT_CLASS; ?>')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == TASK_RECIPIENT_CLASS) ? " checked=\"checked\"" : ""); ?> /> <?php echo $translate->translate("task_field_recipients_class"); ?>
+		</label>
+		<div class="content-small"><?php echo $translate->translate("task_instructions_recipients_class"); ?></div>
+		<div class="controls">
+			
+		</div>
+	</div>
+	<div  class="task_recipient <?php echo TASK_RECIPIENT_CLASS; ?>_recipient control-group ">
+		<label for="associated_cohorts" class="control-label form-required"><?php echo $translate->translate("task_field_cohort"); ?>:</label>
+		<div class="controls">
+			<select id="associated_cohorts" name="associated_cohorts">
 						<?php
 						$active_cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
 						if (isset($active_cohorts) && !empty($active_cohorts)) {
@@ -281,24 +239,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 							}
 						}
 						?>
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td style="vertical-align: top"><input type="radio" name="task_recipient_type" id="task_recipient_type_<?php echo TASK_RECIPIENT_USER; ?>" value="<?php echo TASK_RECIPIENT_USER; ?>" onclick="selectTaskRecipientsOption('<?php echo TASK_RECIPIENT_USER; ?>')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == TASK_RECIPIENT_USER) ? " checked=\"checked\"" : ""); ?> /></td>
-					<td colspan="2" style="padding-bottom: 15px">
-						<label for="task_recipient_type_<?php echo TASK_RECIPIENT_USER; ?>" class="radio-group-title"><?php echo $translate->translate("task_field_recipients_students"); ?></label> 
-						<div class="content-small"><?php echo $translate->translate("task_instructions_recipients_students"); ?></div>
-					</td>
-				</tr>
-				<tr class="task_recipient <?php echo TASK_RECIPIENT_USER; ?>_recipient">
-					<td></td>
-					<td style="vertical-align: top"><label for="associated_proxy_ids" class="form-required"><?php echo $translate->translate("task_field_associated_students"); ?></label></td>
-					<td>
-						<input type="text" id="individual_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
+			</select>
+		</div>
+	</div>
+	<div class="control-group">
+		<label for="task_recipient_type_<?php echo TASK_RECIPIENT_USER; ?>" class="radio-group-title">
+			<input type="radio" name="task_recipient_type" id="task_recipient_type_<?php echo TASK_RECIPIENT_USER; ?>" value="<?php echo TASK_RECIPIENT_USER; ?>" onclick="selectTaskRecipientsOption('<?php echo TASK_RECIPIENT_USER; ?>')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == TASK_RECIPIENT_USER) ? " checked=\"checked\"" : ""); ?> /> <?php echo $translate->translate("task_field_recipients_students"); ?>
+		</label>
+		<div class="content-small"><?php echo $translate->translate("task_instructions_recipients_students"); ?></div>
+	</div>
+	<div class="control-group task_recipient <?php echo TASK_RECIPIENT_USER; ?>_recipient"">
+		<label for="associated_proxy_ids" class="control-label form-required"><?php echo $translate->translate("task_field_associated_students"); ?>:</label>
+		<div class="controls">
+			<input type="text" id="individual_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
 						<?php
 							$ONLOAD[] = "window.individual_list = new AutoCompleteList({ type: 'individual', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=student', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
 						?>
@@ -321,24 +274,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						</ul>
 						<input type="hidden" id="individual_ref" name="individual_ref" value="" />
 						<input type="hidden" id="individual_id" name="individual_id" value="" />
-					</td>
-				</tr>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<?php if (/*disabled*/false && $ENTRADA_ACL->amIAllowed(new TaskResource(null, null, $ORGANISATION_ID), 'create')) { ?>
-				<tr>
-					<td style="vertical-align: top"><input type="radio" name="task_recipient_type" id="task_recipient_type_<?php echo TASK_RECIPIENT_ORGANISATION; ?>" value="<?php echo TASK_RECIPIENT_ORGANISATION; ?>" onclick="selectTaskRecipientsOption('<?php echo TASK_RECIPIENT_ORGANISATION; ?>')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == TASK_RECIPIENT_ORGANISATION) ? " checked=\"checked\"" : ""); ?> /></td>
-					<td colspan="2" style="padding-bottom: 15px">
-						<label for="task_recipient_type_<?php echo TASK_RECIPIENT_ORGANISATION; ?>" class="radio-group-title"><?php echo $translate->translate("task_field_recipients_organisation"); ?></label>
-						<div class="content-small"><?php echo $translate->translate("task_instructions_recipients_organisation"); ?></div>
-					</td>
-				</tr>
-				<tr class="task_recipient <?php echo TASK_RECIPIENT_ORGANISATION; ?>_recipient">
-					<td></td>
-					<td><label for="associated_organisation_id" class="form-required"><?php echo $translate->translate("task_field_organisation"); ?></label></td>
-					<td>
-						<select id="associated_organisation_id" name="associated_organisation_id" style="width: 203px">
+		</div>
+	</div> <!--/control-group-->
+	<?php if (/*disabled*/false && $ENTRADA_ACL->amIAllowed(new TaskResource(null, null, $ORGANISATION_ID), 'create')) { ?>
+	<div class="control-group">
+		<label class="radio radio-group-title" for="task_recipient_type_<?php echo TASK_RECIPIENT_ORGANISATION; ?>">
+			<input type="radio" name="task_recipient_type" id="task_recipient_type_<?php echo TASK_RECIPIENT_ORGANISATION; ?>" value="<?php echo TASK_RECIPIENT_ORGANISATION; ?>" onclick="selectTaskRecipientsOption('<?php echo TASK_RECIPIENT_ORGANISATION; ?>')" style="vertical-align: middle"<?php echo (($PROCESSED["task_recipient_type"] == TASK_RECIPIENT_ORGANISATION) ? " checked=\"checked\"" : ""); ?> /> <?php echo $translate->translate("task_field_recipients_organisation"); ?>
+		</label>
+		<div class="content-small"><?php echo $translate->translate("task_instructions_recipients_organisation"); ?></div>
+	</div>
+	<div class="control-group task_recipient <?php echo TASK_RECIPIENT_ORGANISATION; ?>_recipient">
+		<label for="associated_organisation_id" class="control-group form-required"><?php echo $translate->translate("task_field_organisation"); ?></label>
+		<div class="controls">
+			<select id="associated_organisation_id" name="associated_organisation_id">
 							<?php
 							$organisations = Organisations::get();
 							if ($organisations) {
@@ -351,91 +299,99 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 								}
 							}
 							?>
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<?php } ?>
-				<tr>
-					<td colspan="3"><h2 class="collapsed" title="<?php echo $translate->translate("task_heading_completion_options"); ?>"><?php echo $translate->translate("task_heading_completion_options"); ?></h2></td>
-				</tr>
-			</tbody>
-			<tbody id="<?php echo strtolower(str_replace(" ", "-",$translate->translate("task_heading_completion_options"))); ?>">
-				<tr>
-					<td>&nbsp;</td>
-					<td><?php echo $translate->translate("task_field_faculty_selection"); ?></td>
-					<td><select id="faculty_selection_policy" name="faculty_selection_policy" style="width: 203px">
+			</select>
+		</div>
+	</div>
+	<?php } ?>
+	<h2 class="collapsed" title="<?php echo $translate->translate("task_heading_completion_options"); ?>"><?php echo $translate->translate("task_heading_completion_options"); ?></h2>
+	<div id="<?php echo strtolower(str_replace(" ", "-",$translate->translate("task_heading_completion_options"))); ?>">
+		<div class="control-group">
+			<label class="control-label"><?php echo $translate->translate("task_field_faculty_selection"); ?>:</label>
+			<div class="controls">
+				<select id="faculty_selection_policy" name="faculty_selection_policy">
 							<?php
 							foreach (array(TASK_FACULTY_SELECTION_OFF, TASK_FACULTY_SELECTION_ALLOW, TASK_FACULTY_SELECTION_REQUIRE) as $policy) {
 								echo build_option($policy, $translate->translate("task_option_faculty_selection_".$policy), $PROCESSED["faculty_selection_policy"] == $policy);
 							}
 							?>
-						</select>
-					</td>
-				</tr>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td>&nbsp;</td>
-					<td><?php echo $translate->translate("task_field_completion_comments"); ?></td>
-					<td><select id="completion_comment_policy" name="completion_comment_policy" style="width: 203px">
+				</select>
+			</div>
+		</div>
+		
+		<div class="control-group">
+			<label class="control-label"><?php echo $translate->translate("task_field_completion_comments"); ?>:</label>
+			<div class="controls">
+				<select id="completion_comment_policy" name="completion_comment_policy">
 							<?php
 							foreach (array(TASK_COMMENT_NONE, TASK_COMMENT_ALLOW, TASK_COMMENT_REQUIRE) as $policy) {
 								echo build_option($policy, $translate->translate("task_option_complete_".$policy), $PROCESSED["completion_comment_policy"] == $policy);
 							}
 							?>
 						</select>
-					</td>
-				</tr>
-				<tr>
-					<td>&nbsp;</td>
-					<td><?php echo $translate->translate("task_field_rejection_comments"); ?></td>
-					<td><select id="rejection_comment_policy" name="rejection_comment_policy" style="width: 203px">
+			</div>
+		</div>
+		
+		<div class="control-group">
+			<label class="control-label"><?php echo $translate->translate("task_field_rejection_comments"); ?>:</label>
+			<div class="controls">
+				<select id="rejection_comment_policy" name="rejection_comment_policy">
 							<?php
 							foreach (array(TASK_COMMENT_NONE, TASK_COMMENT_ALLOW, TASK_COMMENT_REQUIRE) as $policy) {
 								echo build_option($policy, $translate->translate("task_option_complete_".$policy), $PROCESSED["rejection_comment_policy"] == $policy);
 							}
 							?>
 						</select>
-					</td>
-				</tr>
-			</tbody>
-			<tbody>
-				<tr>
-					<td colspan="3"><h2 class="collapsed" title="<?php echo $translate->translate("task_heading_verification_options"); ?>"><?php echo $translate->translate("task_heading_verification_options"); ?></h2></td>
-				</tr>
-			</tbody>
-			<tbody id="<?php echo strtolower(str_replace(" ", "-",$translate->translate("task_heading_verification_options"))); ?>">
-				<tr>
-					<td style="vertical-align: top"><input type="radio" name="task_verification_type" id="task_verification_type_<?php echo TASK_VERIFICATION_NONE; ?>" value="<?php echo TASK_VERIFICATION_NONE; ?>" onclick="selectTaskVerificationOption('<?php echo TASK_VERIFICATION_NONE; ?>', event)" style="vertical-align: middle"<?php echo (($PROCESSED["task_verification_type"] == TASK_VERIFICATION_NONE) ? " checked=\"checked\"" : ""); ?> /></td>
-					<td colspan="2" style="padding-bottom: 15px">
-						<label for="task_verification_type_<?php echo TASK_VERIFICATION_NONE; ?>" class="radio-group-title"><?php echo $translate->translate("task_field_verification_none"); ?></label>
-						<div class="content-small"><?php echo $translate->translate("task_instructions_verification_none"); ?></div>
-					</td>
-				</tr>
-				<tr class="<?php echo TASK_VERIFICATION_FACULTY; ?>_anchor">
-					<td style="vertical-align: top"><input type="radio" name="task_verification_type" id="task_verification_type_<?php echo TASK_VERIFICATION_FACULTY; ?>" value="<?php echo TASK_VERIFICATION_FACULTY; ?>" onclick="selectTaskVerificationOption('<?php echo TASK_VERIFICATION_FACULTY; ?>', event)" style="vertical-align: middle"<?php echo (($PROCESSED["task_verification_type"] == TASK_VERIFICATION_FACULTY) ? " checked=\"checked\"" : ""); ?> /></td>
-					<td colspan="2" style="padding-bottom: 15px">
-						<label for="task_verification_type_<?php echo TASK_VERIFICATION_FACULTY; ?>" class="radio-group-title"><?php echo $translate->translate("task_field_verification_faculty"); ?></label>
-						<div class="content-small"><?php echo $translate->translate("task_instructions_verification_faculty"); ?></div>
-					</td>
-				</tr>
-				<tr>
-					<td style="vertical-align: top"><input type="radio" name="task_verification_type" id="task_verification_type_<?php echo TASK_VERIFICATION_OTHER; ?>" value="<?php echo TASK_VERIFICATION_OTHER; ?>" onclick="selectTaskVerificationOption('<?php echo TASK_VERIFICATION_OTHER; ?>', event)" style="vertical-align: middle"<?php echo (($PROCESSED["task_verification_type"] == TASK_VERIFICATION_OTHER) ? " checked=\"checked\"" : ""); ?> /></td>
-					<td colspan="2" style="padding-bottom: 15px">
-						<label for="task_verification_type_<?php echo TASK_VERIFICATION_OTHER; ?>" class="radio-group-title"><?php echo $translate->translate("task_field_verification_other"); ?></label> 
-						<div class="content-small"><?php echo $translate->translate("task_instructions_verification_other"); ?></div>
-					</td>
-				</tr>
-				<tr class="task_verification <?php echo TASK_VERIFICATION_OTHER; ?>_verification <?php echo TASK_VERIFICATION_OTHER; ?>_anchor">
-					<td></td>
-					<td style="vertical-align: top"><label for="verifier_proxy_ids" class="form-required"><?php echo $translate->translate("task_field_verification_other_names"); ?></label></td>
-					<td>
-						<input type="text" id="verifier_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
-						<?php
+			</div>
+		</div>
+		</div>
+		<h2 class="collapsed" title="<?php echo $translate->translate("task_heading_verification_options"); ?>"><?php echo $translate->translate("task_heading_verification_options"); ?></h2>
+		<div id="<?php echo strtolower(str_replace(" ", "-",$translate->translate("task_heading_verification_options"))); ?>">
+			<!-- 1 --->
+			<div class="control-group">
+				<label for="task_verification_type_<?php echo TASK_VERIFICATION_NONE; ?>" class="radio radio-group-title">
+					<input type="radio" name="task_verification_type" id="task_verification_type_<?php echo TASK_VERIFICATION_NONE; ?>" value="<?php echo TASK_VERIFICATION_NONE; ?>" onclick="selectTaskVerificationOption('<?php echo TASK_VERIFICATION_NONE; ?>', event)" style="vertical-align: middle"<?php echo (($PROCESSED["task_verification_type"] == TASK_VERIFICATION_NONE) ? " checked=\"checked\"" : ""); ?> /> <?php echo $translate->translate("task_field_verification_none"); ?>
+				</label>
+				<div class="content-small"><?php echo $translate->translate("task_instructions_verification_none"); ?></div>
+			</div>
+			<div class="control-group <?php echo TASK_VERIFICATION_FACULTY; ?>_anchor">
+				<label for="task_verification_type_<?php echo TASK_VERIFICATION_FACULTY; ?>" class="radio radio-group-title">
+					<input type="radio" name="task_verification_type" id="task_verification_type_<?php echo TASK_VERIFICATION_FACULTY; ?>" value="<?php echo TASK_VERIFICATION_FACULTY; ?>" onclick="selectTaskVerificationOption('<?php echo TASK_VERIFICATION_FACULTY; ?>', event)" style="vertical-align: middle"<?php echo (($PROCESSED["task_verification_type"] == TASK_VERIFICATION_FACULTY) ? " checked=\"checked\"" : ""); ?> /> <?php echo $translate->translate("task_field_verification_faculty"); ?>
+				</label>
+				<div class="content-small"><?php echo $translate->translate("task_instructions_verification_faculty"); ?></div>
+			</div>
+			<div class="active_verification_options">
+						<h3><?php echo $translate->translate("task_field_notification_types"); ?></h3>
+						<table>
+							<colgroup>
+								<col width="3%"></col>
+								<col width="25%"></col>
+								<col width="72%"></col>
+							</colgroup>
+							<tbody>
+								<tr>
+									<td><input type="checkbox" name="task_verification_notification[]" value="<?php echo TASK_VERIFICATION_NOTIFICATION_EMAIL; ?>" <?php if ($PROCESSED['task_verification_notification'] && ($PROCESSED['task_verification_notification'] & TASK_VERIFICATION_NOTIFICATION_EMAIL) ) { echo "checked='checked'"; } ?> /></td>
+									<td colspan="2"><?php echo $translate->translate("task_field_verification_notificaiton_email"); ?></td>
+								</tr>
+								<tr>
+									<td><input type="checkbox" name="task_verification_notification[]" disabled="disabled" value="<?php echo TASK_VERIFICATION_NOTIFICATION_DASHBOARD; ?>"  <?php if ($PROCESSED['task_verification_notification'] && ($PROCESSED['task_verification_notification'] & TASK_VERIFICATION_NOTIFICATION_DASHBOARD) ) { echo "checked='checked'"; } ?> /></td>
+									<td colspan="2"><?php echo $translate->translate("task_field_verification_notification_dashboard"); ?></td>
+								</tr>
+								<tr><td colspan="3">&nbsp;</td></tr>
+							</tbody>
+						</table>
+				</div>
+			
+			<div class="control-group">
+				<label for="task_verification_type_<?php echo TASK_VERIFICATION_OTHER; ?>" class="radio radio-group-title">
+					<input type="radio" name="task_verification_type" id="task_verification_type_<?php echo TASK_VERIFICATION_OTHER; ?>" value="<?php echo TASK_VERIFICATION_OTHER; ?>" onclick="selectTaskVerificationOption('<?php echo TASK_VERIFICATION_OTHER; ?>', event)" style="vertical-align: middle"<?php echo (($PROCESSED["task_verification_type"] == TASK_VERIFICATION_OTHER) ? " checked=\"checked\"" : ""); ?> /> <?php echo $translate->translate("task_field_verification_other"); ?>
+				</label>
+				<div class="content-small"><?php echo $translate->translate("task_instructions_verification_other"); ?></div>
+			</div>
+			<div class="task_verification <?php echo TASK_VERIFICATION_OTHER; ?>_verification <?php echo TASK_VERIFICATION_OTHER; ?>_anchor control-group">
+				<label for="verifier_proxy_ids" class="form-required"><?php echo $translate->translate("task_field_verification_other_names"); ?>:</label>
+					<input type="text" id="verifier_name" name="fullname" size="30" autocomplete="off" /> 
+				
+				<?php
 							$ONLOAD[] = "window.verifier_list = new AutoCompleteList({ type: 'verifier', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=facultyorstaff', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif', limit: 1})";
 						?>
 						<div class="autocomplete" id="verifier_name_auto_complete"></div><script type="text/javascript"></script>
@@ -456,40 +412,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						</ul>
 						<input type="hidden" id="verifier_ref" name="verifier_ref" value="" />
 						<input type="hidden" id="verifier_id" name="verifier_id" value="" />
-					</td>
-				</tr>
-				<tr class="active_verification_options">
-					<td>&nbsp;</td>
-					<td colspan="2">
-						<h3><?php echo $translate->translate("task_field_notification_types"); ?></h3>
-						<table>
-							<colgroup>
-								<col width="3%"></col>
-								<col width="25%"></col>
-								<col width="72%"></col>
-							</colgroup>
-							<tbody>
-								<tr>
-									<td><input type="checkbox" name="task_verification_notification[]" value="<?php echo TASK_VERIFICATION_NOTIFICATION_EMAIL; ?>" <?php if ($PROCESSED['task_verification_notification'] && ($PROCESSED['task_verification_notification'] & TASK_VERIFICATION_NOTIFICATION_EMAIL) ) { echo "checked='checked'"; } ?> /></td>
-									<td colspan="2"><?php echo $translate->translate("task_field_verification_notificaiton_email"); ?></td>
-								</tr>
-								<tr>
-									<td><input type="checkbox" name="task_verification_notification[]" disabled="disabled" value="<?php echo TASK_VERIFICATION_NOTIFICATION_DASHBOARD; ?>"  <?php if ($PROCESSED['task_verification_notification'] && ($PROCESSED['task_verification_notification'] & TASK_VERIFICATION_NOTIFICATION_DASHBOARD) ) { echo "checked='checked'"; } ?> /></td>
-									<td colspan="2"><?php echo $translate->translate("task_field_verification_notification_dashboard"); ?></td>
-								</tr>
-								<tr><td colspan="3">&nbsp;</td></tr>
-							</tbody>
-						</table>
-					</td>
-				</tr>
-			</tbody>
-			<tbody>
-				<tr>
-					<td colspan="3"><h2><?php echo $translate->translate("task_heading_time_release_options"); ?></h2></td>
-				</tr>
-					<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_start"])) ? $PROCESSED["release_start"] : time()), true, false, ((isset($PROCESSED["release_finish"])) ? $PROCESSED["release_finish"] : 0)); ?>
-			</tbody>
-		</table>
+			
+		</div>
+		
+	</div> <!--/container-->
+	<h2><?php echo $translate->translate("task_heading_time_release_options"); ?></h2>
+	<table>
+		<tr>
+			<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_start"])) ? $PROCESSED["release_start"] : time()), true, false, ((isset($PROCESSED["release_finish"])) ? $PROCESSED["release_finish"] : 0)); ?>
+		</tr>
+	</table>
+	<div class="row-fluid" style="margin-top:20px;">
+		<input type="button" class="button" value="<? echo $translate->translate("task_button_cancel"); ?>" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/tasks'" />
+		<div class="pull-right">
+			<span class="content-small">After saving:</span>
+			<select id="post_action" name="post_action">
+				<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another task</option>
+				<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to task list</option>
+			</select>
+			<input type="hidden" name="action" value="Save" />
+			<input type="submit" class="btn btn-primary" value="<? echo $translate->translate("task_button_save"); ?>" />
+		</div>
+	</div>
+	
 	</form>
 	<script type="text/javascript">
 		function selectTaskRecipientsOption(type) {

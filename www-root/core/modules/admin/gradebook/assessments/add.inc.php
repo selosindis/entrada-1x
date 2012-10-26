@@ -440,8 +440,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						echo display_error();
 					}
 					?>
-					<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="selIt()">
+					<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="selIt()" class="form-horizontal">
 						<h2>Assessment Details</h2>
+						
 						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Assessment">
 							<colgroup>
 								<col style="width: 3%" />
@@ -451,7 +452,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<tbody>
 								<tr>
 									<td></td>
-									<td><label class="form-nrequired">Course Name</label></td>
+									<td><label class="form-nrequired">Course Name:</label></td>
 									<td>
 										<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
 									</td>
@@ -466,7 +467,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</tr>
 								<tr>
 									<td><input type="radio" name="associated_audience" id="course_list" value ="<?php echo $course_list["group_id"];?>" checked="checked"/></td>
-									<td><label for="course_list" class="form-required">Course List</label></td>
+									<td><label for="course_list" class="radio form-required">Course List</label></td>
 									<td>
 										<span class="radio-group-title">All Learners in the <?php echo $course_details["course_code"];?> Course List Group</span>
 										<div class="content-small">This assessment is intended for all learners that are members of the <?php echo $course_details["course_code"];?> Course List.</div>
@@ -479,8 +480,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									<td colspan="3">&nbsp;</td>
 								</tr>
 								<tr>
-									<td><input type="radio" name="associated_audience" id="manual_select" value="manual_select"<?php echo (!$course_list?" checked=\"checked\"":"");?>/></td>
-									<td><label for="cohort" class="form-required">Cohort</label></td>
+									<td></td>
+									<td><label for="cohort" class="radio form-required"> <input type="radio" name="associated_audience" id="manual_select" value="manual_select"<?php echo (!$course_list?" checked=\"checked\"":"");?>/> Cohort</label></td>
 									<td>
 										<select id="cohort" name="cohort" style="width: 250px">
 										<?php
@@ -499,12 +500,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</tr>
 								<tr>
 									<td></td>
-									<td><label for="name" class="form-required">Assessment Name</label></td>
+									<td><label for="name" class="form-required">Assessment Name:</label></td>
 									<td><input type="text" id="name" name="name" value="<?php echo html_encode($PROCESSED["name"]); ?>" maxlength="64" style="width: 243px" /></td>
 								</tr>
 								<tr>
 									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="description" class="form-nrequired">Assessment Description</label></td>
+									<td style="vertical-align: top"><label for="description" class="form-nrequired">Assessment Description:</label></td>
 									<td><textarea id="description" name="description" class="expandable" style="width: 99%; height: 150px"><?php echo html_encode($PROCESSED["description"]); ?></textarea></td>
 								</tr>
 								<tr>
@@ -512,7 +513,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</tr>
 								<tr>
 									<td></td>
-									<td><label for="grade_weighting" class="form-nrequired">Assessment Weighting</label></td>
+									<td><label for="grade_weighting" class="form-nrequired">Assessment Weighting:</label></td>
 									<td>
 										<input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (int) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="5" style="width: 40px" autocomplete="off" />
 										<span class="content-small"><strong>Tip:</strong> The percentage or numeric value of the final grade this assessment is worth.</span>
@@ -520,7 +521,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</tr>
 								<tr>
 									<td></td>
-									<td><label for="grade_threshold" class="form-nrequired">Assessment Threshold (%)</label></td>
+									<td><label for="grade_threshold" class="form-nrequired">Assessment Threshold (%):</label></td>
 									<td>
 										<input type="text" id="grade_threshold" name="grade_threshold" value="<?php echo (float) html_encode($PROCESSED["grade_threshold"]); ?>" maxlength="5" style="width: 40px" autocomplete="off" />
 										<span class="content-small"><strong>Tip:</strong> If a student receives a grade below the threshold the coordinator / director are notified.</span>
@@ -545,7 +546,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</tr>
 								<tr>
 									<td></td>
-									<td><label for="assessment_characteristic" class="form-required">Characteristic</label></td>
+									<td><label for="assessment_characteristic" class="form-required">Characteristic:</label></td>
 									<td>
 										<select id="assessment_characteristic" name="assessment_characteristic">
 											<option value="">-- Select Assessment Characteristic --</option>
@@ -598,9 +599,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<tbody>
 								<tr>
 									<td></td>
-									<td><label for="marking_scheme_id" class="form-required">Marking Scheme</label></td>
+									<td><label for="marking_scheme_id" class="form-required">Marking Scheme:</label></td>
 									<td>
-										<select id="marking_scheme_id" name="marking_scheme_id" style="width: 203px">
+										<select id="marking_scheme_id" name="marking_scheme_id">
 										<?php
 										foreach ($MARKING_SCHEMES as $scheme) {
 											echo "<option value=\"".$scheme["id"]."\"".(($PROCESSED["marking_scheme_id"] == $scheme["id"]) ? " selected=\"selected\"" : "").">".$scheme["name"]."</option>";	
@@ -611,7 +612,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</tr>
 								<tr id="numeric_marking_scheme_details" style="display: none;">
 									<td></td>
-									<td><label for="numeric_grade_points_total" class="form-required">Maximum Points</label></td>
+									<td><label for="numeric_grade_points_total" class="form-required">Maximum Points:</label></td>
 									<td>
 										<input type="text" id="numeric_grade_points_total" name="numeric_grade_points_total" value="<?php echo html_encode($PROCESSED["numeric_grade_points_total"]); ?>" maxlength="5" style="width: 50px" />
 										<span class="content-small"><strong>Tip:</strong> Maximum points possible for this assessment (i.e. <strong>20</strong> for &quot;X out of 20).</span>
@@ -619,9 +620,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</tr>
 								<tr>
 									<td></td>
-									<td><label for="type" class="form-required">Assessment Type</label></td>
+									<td><label for="type" class="form-required">Assessment Type:</label></td>
 									<td>
-										<select id="type" name="type" style="width: 203px">
+										<select id="type" name="type">
 										<?php
 										foreach ($ASSESSMENT_TYPES as $type) {
 											echo "<option value=\"".$type."\"".(($PROCESSED["type"] == $type) ? " selected=\"selected\"" : "").">".$type."</option>";
@@ -636,10 +637,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							</tbody>
 							<tbody>
 								<tr>
-									<td colspan="3"><input type="radio" name="show_learner_option" value="0" id="show_learner_option_0" <?php echo (($PROCESSED["show_learner"] == 0)) ? " checked=\"checked\"" : "" ?> style="margin-right: 5px;" /><label class="form-nrequired" for="show_learner_option_0">Don't Show this Assessment in Learner Gradebook</label></td>
+									<td colspan="3">
+										<label class="radio form-nrequired" for="show_learner_option_0">
+											<input type="radio" name="show_learner_option" value="0" id="show_learner_option_0" <?php echo (($PROCESSED["show_learner"] == 0)) ? " checked=\"checked\"" : "" ?> /> Don't Show this Assessment in Learner Gradebook
+										</label>
+									</td>
+									
 								</tr>
 								<tr>
-									<td colspan="3"><input type="radio" name="show_learner_option" value="1" id="show_learner_option_1" <?php echo (($PROCESSED["show_learner"] == 1)) ? " checked=\"checked\"" : "" ?> style="margin-right: 5px;" /><label class="form-nrequired" for="show_learner_option_1">Show this Assessment in Learner Gradebook</label></td>
+									<td colspan="3">
+										<label class="radio form-nrequired" for="show_learner_option_1">
+										<input type="radio" name="show_learner_option" value="1" id="show_learner_option_1" <?php echo (($PROCESSED["show_learner"] == 1)) ? " checked=\"checked\"" : "" ?> style="margin-right: 5px;" />Show this Assessment in Learner Gradebook</label></td>
 								</tr>
 								<tr>
 									<td colspan="3">&nbsp;</td>
@@ -657,10 +665,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							</tbody>
 							<tbody>
 								<tr>
-									<td><input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /></td>
-									<td colspan="2">
-										<label for="narrative_assessment" class="form-nrequired">This is a <strong>narrative assessment</strong>.</label>
+									<td colspan="3">
+										<label class="checkbox form-nrequired" for="narrative_assessment">
+										<input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /> This is a <strong>narrative assessment</strong>.
 									</td>
+									
 								</tr>
 							</tbody>
 						</table>
@@ -790,11 +799,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
 										</div>
 										<div style="float: right; display: inline">
-											<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
-											<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+											<input type="button" id="clinical_presentations_list_remove_btn" class="btn" onclick="delIt()" value="Remove" />
+											<input type="button" id="clinical_presentations_list_add_btn" class="btn" onclick="addIt()" style="display: none" value="Add" />
 										</div>
-										<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
-											<h2>Clinical Presentations List</h2>
+										<div id="clinical_presentations_list" style="clear: both; padding-top: 20px; display: none">
+											<h3>Clinical Presentations List</h3>
 											<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
 											<?php
 											if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {	
@@ -864,7 +873,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to assessment list</option>
 											<option value="parent"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "parent") ? " selected=\"selected\"" : ""); ?>>Return to all gradebooks list</option>
 										</select>
-										<input type="submit" class="button" value="Save" />
+										<input type="submit" class="btn btn-primary" value="Save" />
 									</td>
 								</tr>
 							</table>

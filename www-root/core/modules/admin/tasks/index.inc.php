@@ -50,15 +50,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 	?>
 	
 	<h1>Manage Tasks</h1>
-	
-	<div id="add_new_task_link" style="float: right;">
-	<ul class="page-action">
-		<li><a id="add_new_task"
-			href="<?php echo ENTRADA_URL; ?>/admin/tasks?section=create"
-			class="strong-green">Add new task</a></li>
-	</ul>
+	<div class="row-fluid">
+		<div class="pull-right">
+			<a href="<?php echo ENTRADA_URL; ?>/admin/tasks?section=create" class="btn btn-primary">Add new task</a>
+		</div>
 	</div>
-	<div class="clear">&nbsp;</div>
 	<?php 
 	if (count($tasks) > 0 ) {
 	?>

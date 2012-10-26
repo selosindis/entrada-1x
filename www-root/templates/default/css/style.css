@@ -309,6 +309,26 @@ p.info-not-available{
   font-size:11px;
   color:#999;
 }
+/*** MSPR page ****/
+.mspr-box form{
+  margin-bottom:0;
+
+}
+.mspr-box{
+  min-height:95px;
+}
+span.or{
+  color:#646253;
+  display:inline-block;
+  background:#faf8ec;
+  border-radius:50px;
+  padding:15px;
+  font-style:italic;
+  font-weight:bold;
+}
+label#deadline_text{
+  width:143px !important;
+}
 /***** Footer *****/
 footer#main-footer .container{
   text-align:center;

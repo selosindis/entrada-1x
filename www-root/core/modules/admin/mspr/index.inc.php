@@ -356,32 +356,47 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 			?>
 			
 			<h1>Manage MSPRs</h1>
-			<div class="instructions">
+			<div class="instructions alert alert-info">
 			From the options below, either choose a class to manage and press "Go" to view options specific to the selected class; or, click "Manage All MSPRs requiring attention" to view those awaiting staff approval.
-			</div><br />
-			<div style="display:inline-block; width:35%; margin:1em 0 1em 1em; background-color:WhiteSmoke; padding:2ex 2em;vertical-align:top;height:16ex;">
-				<form method="get">
-					<input type="hidden" name="mode" value="year" />
-					Choose Class to manage: 
-					<br /><br />
-					<div style="margin-left:2em;">
-						<select name="year">
-						<?php 
-						
-						//because we ned the current school year, we have to rig it a bit. 
-						$cur_year = (int) date("Y");
-						if (date("n") > 8) $cur_year += 1;
-						foreach ($results as $result) {
-							$year = $result['grad_year'];
-							echo build_option($year, $year, $year == $cur_year);	
-						}
-						?>
-						</select><br /><br />
-						<input type="submit"  value="Go"></input>
+			</div>
+			<div class="row-fluid">
+				<div class="span5">
+					<div class="well mspr-box">
+						<div class="inner-box">
+							<form method="get" class="form-horizontal">
+								<input type="hidden" name="mode" value="year" />
+								<div class="control-group">
+									<label>Choose Class to manage:</label>
+											<select name="year">
+											<?php 
+											
+											//because we ned the current school year, we have to rig it a bit. 
+											$cur_year = (int) date("Y");
+											if (date("n") > 8) $cur_year += 1;
+											foreach ($results as $result) {
+												$year = $result['grad_year'];
+												echo build_option($year, $year, $year == $cur_year);	
+											}
+											?>
+											</select>
+								</div>
+									<input type="submit"  class="btn" value="Go"></input>
+										
+								</form>
+						</div>
 					</div>
-				</form>
-			</div><div style="display:inline-block;width:2em;line-height:16ex;vertical-align:middle; margin:1em;">OR</div><div style="display:inline-block; width:35%; margin:1em 1em 1em 0; background-color:WhiteSmoke;padding:2ex 2em;vertical-align:top;height:16ex;">
-			<a href="?mode=all">Manage All MSPRs requiring attention</a></div>
+				</div>
+				<div class="span2" style="text-align:center">
+					<span class="or" style="margin-top:35px">OR</span>
+				</div>
+				<div class="span5">
+					<div class="well mspr-box" style="text-align:center;font-size:1.2em;font-weight:500">
+						<div class="inner-box">
+							<a href="?mode=all" style="margin-top:30px;display:inline-block">Manage All MSPRs requiring attention</a>
+						</div>
+					</div>
+				</div>
+			</div>
 		<?php
 	}
 }

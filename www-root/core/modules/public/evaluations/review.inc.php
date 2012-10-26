@@ -139,6 +139,7 @@ if ($RECORD_ID) {
 									$course["responses"][$response["efquestion_id"]]["responses"][$response["efresponse_id"]] = 0;
 								}
 								$course["target_title"] = $course["course_name"]." - ".$course["course_code"];
+								$course["sort_title"] = $course["course_name"]." - ".$course["course_code"];
 								$available_targets[$target_id] = $course;
 							}
 						break;
@@ -154,6 +155,7 @@ if ($RECORD_ID) {
 									$user["responses"][$response["efquestion_id"]]["responses"][$response["efresponse_id"]] = 0;
 								}
 								$user["target_title"] = $user["firstname"]." ".$user["lastname"];
+								$user["sort_title"] = $user["lastname"].", ".$user["firstname"];
 								$available_targets[$target_id] = $user;
 							}
 						break;
@@ -174,6 +176,7 @@ if ($RECORD_ID) {
 										$clerkship_preceptor["responses"][$response["efquestion_id"]]["responses"][$response["efresponse_id"]] = 0;
 									}
 									$clerkship_preceptor["target_title"] = $clerkship_preceptor["firstname"]." ".$clerkship_preceptor["lastname"];
+									$clerkship_preceptor["sort_title"] = $clerkship_preceptor["lastname"].", ".$clerkship_preceptor["firstname"];
 									$available_targets[$target_id] = $clerkship_preceptor;
 								}
 							} else {
@@ -190,6 +193,7 @@ if ($RECORD_ID) {
 										$clerkship_event["responses"][$response["efquestion_id"]]["responses"][$response["efresponse_id"]] = 0;
 									}
 									$clerkship_event["target_title"] = $clerkship_event["event_title"]." [".$clerkship_event["rotation_title"]."]";
+									$clerkship_event["sort_title"] = $clerkship_event["rotation_title"].", ".$clerkship_event["event_title"];
 									$available_targets[$target_id] = $clerkship_event;
 								}
 							}
@@ -233,6 +237,12 @@ if ($RECORD_ID) {
 			}
 		}
 		if ($available_targets) {
+			
+			function sort_by_title ($a, $b) {
+				return strcmp($a["sort_title"], $b["sort_title"]);
+			}
+			usort($available_targets, "sort_by_title");
+			
 			if (count($available_targets) > 1) {
 				$sidebar_html  = "<ul class=\"menu\">\n";
 				foreach ($available_targets as $target_id => $available_target) {

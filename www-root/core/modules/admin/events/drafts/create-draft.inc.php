@@ -98,7 +98,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									FROM `events` AS a
 									WHERE a.`course_id` = ".$db->qstr($course_id)."
 									AND a.`event_start` >= ".$db->qstr($PROCESSED["draft_start_date"])."
-									AND a.`event_finish` <= ".$db->qstr($PROCESSED["draft_finish_date"]); 
+									AND a.`event_finish` <= ".$db->qstr($PROCESSED["draft_finish_date"])."
+									ORDER BY a.`event_start`"; 
 						$events = $db->GetAll($query);
 
 						$date_diff = (int) ($PROCESSED["new_start_day"] - $events[0]["event_start"]);
@@ -107,63 +108,62 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$event["draft_id"] = $draft_id;
 
 							// adds the offset time to the event year and week, preserves the day of the week
-							$event["event_start"]  = strtotime((date("o", $event["event_start"] + $date_diff))."-W".date("W", $event["event_start"] + $date_diff)."-".date("w", $event["event_start"])." ".date("H:i",$event["event_start"]));
-							$event["event_finish"] = strtotime((date("o", $event["event_finish"] + $date_diff))."-W".date("W", $event["event_finish"] + $date_diff)."-".date("w", $event["event_finish"])." ".date("H:i",$event["event_finish"]));
-
-
+							$event["event_start"]  = strtotime((date("o", ($event["event_start"] + $date_diff)))."-W".date("W", ($event["event_start"] + $date_diff))."-".date("w", $event["event_start"])." ".date("H:i",$event["event_start"]));
+							$event["event_finish"] = strtotime((date("o", ($event["event_finish"] + $date_diff)))."-W".date("W", ($event["event_finish"] + $date_diff))."-".date("w", $event["event_finish"])." ".date("H:i",$event["event_finish"]));
+							
 							if (!$db->AutoExecute("draft_events", $event, 'INSERT')) {
 								add_error("An error occured, an administrator has been notified. Please try again later.");
 								application_log("error", "An error occured when inserting an event into a draft event schedule. DB said: ".$db->ErrorMsg());
 							} else {
 								$devent_id = $db->Insert_ID();
-							}
+							
 
-							// copy the audience for the event
-							$query = "	SELECT * 
-										FROM `event_audience`
-										WHERE `event_id` = ".$db->qstr($event["event_id"]);
-							$audiences = $db->GetAll($query);
-							if ($audiences) {
-								foreach ($audiences as $audience) {
-									$audience["devent_id"] = $devent_id;
-									if (!$db->AutoExecute("draft_audience", $audience, 'INSERT')) {
-										add_error("An error occured, an administrator has been notified. Please try again later.");
-										application_log("error", "An error occured when inserting a draft event audience into a draft event schedule. DB said: ".$db->ErrorMsg());
+								// copy the audience for the event
+								$query = "	SELECT * 
+											FROM `event_audience`
+											WHERE `event_id` = ".$db->qstr($event["event_id"]);
+								$audiences = $db->GetAll($query);
+								if ($audiences) {
+									foreach ($audiences as $audience) {
+										$audience["devent_id"] = $devent_id;
+										if (!$db->AutoExecute("draft_audience", $audience, 'INSERT')) {
+											add_error("An error occured, an administrator has been notified. Please try again later.");
+											application_log("error", "An error occured when inserting a draft event audience into a draft event schedule. DB said: ".$db->ErrorMsg());
+										}
 									}
 								}
-							}
 
-							// copy the contacts for the event
-							$query = "	SELECT * 
-										FROM `event_contacts`
-										WHERE `event_id` = ".$db->qstr($event["event_id"]);
-							$contacts = $db->GetAll($query);
-							if ($contacts) {
-								foreach ($contacts as $contact) {
-									$contact["devent_id"] = $devent_id;
-									if (!$db->AutoExecute("draft_contacts", $contact, 'INSERT')) {
-										add_error("An error occured, an administrator has been notified. Please try again later.");
-										application_log("error", "An error occured when inserting a draft event contact into a draft event schedule. DB said: ".$db->ErrorMsg());
+								// copy the contacts for the event
+								$query = "	SELECT * 
+											FROM `event_contacts`
+											WHERE `event_id` = ".$db->qstr($event["event_id"]);
+								$contacts = $db->GetAll($query);
+								if ($contacts) {
+									foreach ($contacts as $contact) {
+										$contact["devent_id"] = $devent_id;
+										if (!$db->AutoExecute("draft_contacts", $contact, 'INSERT')) {
+											add_error("An error occured, an administrator has been notified. Please try again later.");
+											application_log("error", "An error occured when inserting a draft event contact into a draft event schedule. DB said: ".$db->ErrorMsg());
+										}
 									}
 								}
-							}
 
-							// copy the eventtypes for the event
-							$query = "	SELECT * 
-										FROM `event_eventtypes`
-										WHERE `event_id` = ".$db->qstr($event["event_id"]);
-							$eventtypes = $db->GetAll($query);
-							if ($eventtypes) {
-								foreach ($eventtypes as $eventtype) {
-									$eventtype["devent_id"] = $devent_id;
-									if (!$db->AutoExecute("draft_eventtypes", $eventtype, 'INSERT')) {
-										add_error("An error occured, an administrator has been notified. Please try again later.");
-										application_log("error", "An error occured when inserting a draft eventtype into a draft event schedule. DB said: ".$db->ErrorMsg());
+								// copy the eventtypes for the event
+								$query = "	SELECT * 
+											FROM `event_eventtypes`
+											WHERE `event_id` = ".$db->qstr($event["event_id"]);
+								$eventtypes = $db->GetAll($query);
+								if ($eventtypes) {
+									foreach ($eventtypes as $eventtype) {
+										$eventtype["devent_id"] = $devent_id;
+										if (!$db->AutoExecute("draft_eventtypes", $eventtype, 'INSERT')) {
+											add_error("An error occured, an administrator has been notified. Please try again later.");
+											application_log("error", "An error occured when inserting a draft eventtype into a draft event schedule. DB said: ".$db->ErrorMsg());
+										}
 									}
 								}
 							}
 						}
-
 
 					}
 				}

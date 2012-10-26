@@ -2247,15 +2247,20 @@ border:0;
 #form-questions-list > li > div.question,
 #form-questions-list > div > div.question {
 position:relative;
-width:90%;
 font-weight:700;
 margin-bottom:5px;
+}
+
+#form-questions-list > li > div.question-handle,
+#form-questions-list > div > div.question-handle {
+width:90%;
 cursor:move;
 }
 
 #form-questions-list > li > div.responses,
 #form-questions-list > div > div.responses {
 position:relative;
+height: 40px;
 }
 
 #form-questions-list > li > div.responses > div,
@@ -2369,7 +2374,7 @@ padding: 5px 5px 2px 5px;
 }
 
 .select_multiple_area_container {
-position:relative;
+position:relative !important;
 }
 
 .select_multiple_submit {
@@ -3763,6 +3768,43 @@ a.paginate_button, a.paginate_active {
     color: #333333 !important;
     margin: 0 3px;
     padding: 2px 5px;
+}
+
+table.rubric {
+	width: 100%;
+}
+
+table.rubric td, table.rubric th {
+	padding: 10px 5px 10px 5px;
+	border-left: medium none;
+	border-right: 1px solid #EBEBEB;
+	border-bottom: 1px solid #EBEBEB;
+}
+
+div.rubric-controls {
+	text-align: right;
+	margin-top: -50px;
+	background: none !important;
+}
+
+ul#reviewer_list li, ul#tutor_list li, ul#evalfaculty_list li {
+	margin-top: 10px;
+	width: 350px;
+}
+
+a.criteria-tooltip {
+	cursor: pointer;
+	text-decoration: none;
+}
+
+div.criteria-tooltip-box {
+	border:1px solid #CCCCCC;
+	background-color:#FFFFFF;
+	width:250px;
+	font-family:'Lucida Grande',Verdana;
+	font-size:12px;
+	color:#333;
+	padding: 5px 10px 2px 10px;
 }
 
 /*!

@@ -36,7 +36,6 @@
  * @version $Id: add.inc.php 317 2009-01-19 19:26:35Z simpson $
  * 
 */
-
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	/**
 	 * @exception 0: Unable to start processing request.
@@ -59,107 +58,195 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	echo 0;
 	exit;
 } else {
-	if ($FORM_ID) {
-		$query = "	SELECT a.*
-					FROM `evaluation_forms` AS a
-					WHERE a.`eform_id` = ".$db->qstr($FORM_ID)."
-					AND a.`form_active` = '1'";
-		$form_record = $db->GetRow($query);
-		if ($form_record && $ENTRADA_ACL->amIAllowed(new EvaluationFormResource($form_record["eform_id"]), "update")) {
-			if ($ALLOW_QUESTION_MODIFICATIONS) {
-				/**
-				 * Clears all open buffers so we can return a simple REST response.
-				 */
-				ob_clear_open_buffers();
+	ob_clear_open_buffers();
+	if (isset($_GET["efquestion_id"]) && ($tmp_input = clean_input($_GET["efquestion_id"], "int"))) {
+		$EFQUESTION_ID = $tmp_input;
+	} elseif (isset($_POST["efquestion_id"]) && ($tmp_input = clean_input($_POST["efquestion_id"], "int"))) {
+		$EFQUESTION_ID = $tmp_input;
+	} else {
+		$EFQUESTION_ID = false;
+	}
+	
+	if (isset($_POST["step"]) && ((int)$_POST["step"])) {
+		$STEP = clean_input($_POST["step"], "int");
+	}
+	if ($FORM_ID && $EFQUESTION_ID) {
+		switch ($STEP) {
+			case 2 :
+				/** 
+				* Fetch the Clinical Presentation details.
+				*/
+				$clinical_presentations_list	= array();
+				$clinical_presentations			= array();
 
-				if ((isset($_POST["result"])) && ($tmp_input = clean_input($_POST["result"], array("trim", "notags")))) {
-					/**
-					 * Turns a formatted string (result[]=23&result[]12&result[]=26) into an array
-					 * and places it in the $result variable.
-					 */
-					parse_str($tmp_input, $result);
-					$order = 0;
-					if ((isset($result["order"])) && (is_array($result["order"]))) {
-						foreach ($result["order"] as $efquestion_id) {
-							$query = "SELECT `efrubric_id` FROM `evaluation_form_rubric_questions` WHERE `efquestion_id` = ".$db->qstr($efquestion_id);
-							$rubric_id = $db->GetOne($query);
-							if ($rubric_id) {
-								$query = "SELECT b.* FROM `evaluation_form_rubric_questions` AS a
-											JOIN `evaluation_form_questions` AS b
-											ON a.`efquestion_id` = b.`efquestion_id`
-											WHERE a.`efrubric_id` = ".$db->qstr($rubric_id);
-								$questions = $db->GetAll($query);
-								foreach ($questions as $question) {
-									$order++;
-									if($ENTRADA_ACL->amIAllowed(new EvaluationFormQuestionResource($question["efquestion_id"], $form_record["eform_id"]), "update")) {
-										if(!$db->AutoExecute("evaluation_form_questions", array("question_order" => (int) $order), "UPDATE", "`efquestion_id` = ".$db->qstr($question["efquestion_id"]))) {
-
-											$ERROR++;
-											application_log("error", "Unable to update eform_id [".$FORM_ID."] question [".$efquestion_id."] order [".$order."] when reordering evaluation form questions. Database said: ".$db->ErrorMsg());
-										}
-									} else {
-										$ERROR++;
-										application_log("error", "Unable to update eform_id [".$FORM_ID."] question [".$efquestion_id."] order [".$order."] when reordering evaluation form questions due to a lack of permissions.");
-									}
-								}
-							} else {
-								$order++;
-								if($ENTRADA_ACL->amIAllowed(new EvaluationFormQuestionResource($efquestion_id, $form_record["eform_id"]), "update")) {
-									if(!$db->AutoExecute("evaluation_form_questions", array("question_order" => (int) $order), "UPDATE", "`efquestion_id` = ".$db->qstr($efquestion_id))) {
-
-										$ERROR++;
-										application_log("error", "Unable to update eform_id [".$FORM_ID."] question [".$efquestion_id."] order [".$order."] when reordering evaluation form questions. Database said: ".$db->ErrorMsg());
-									}
-								} else {
-									$ERROR++;
-									application_log("error", "Unable to update eform_id [".$FORM_ID."] question [".$efquestion_id."] order [".$order."] when reordering evaluation form questions due to a lack of permissions.");
+				$results = fetch_clinical_presentations();
+				if ($results) {
+					foreach ($results as $result) {
+						$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
+					}
+				} else {
+					$clinical_presentations_list = false;
+				}
+				if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
+					if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
+						foreach ($_POST["clinical_presentations"] as $objective_id) {
+							if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
+									$query	= "SELECT a.`objective_id`
+												FROM `global_lu_objectives` AS a
+												JOIN `objective_organisation` AS b
+												WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+												AND a.`objective_active` = '1'
+												AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+												ORDER BY a.`objective_order` ASC";
+								$result	= $db->GetRow($query);
+								if ($result) {
+									$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
 								}
 							}
 						}
-
-						if ($ERROR) {
-							application_log("error", "Unable to update question order in evaluation form [".$form_record["eform_id"]."]. Database said: ".$db->ErrorMsg());
-
-							/**
-							 * @exception 405: There were errors in the update SQL execution, check the error_log.
-							 */
-							echo 405;
-						} else {
-							application_log("success", "Questions for evaluation form [".$form_record["eform_id"]."] were successfully reordered.");
-
-							/**
-							 * @exception 200: There were no errors, everything was updated successfully.
-							 */
-							echo 200;
-						}
-						exit;
 					} else {
-						/**
-						 * @exception 404: Order array is empty, unable to process.
-						 */
-						echo 404;
-						exit;
+						$clinical_presentations = array();
+					}
+				}
+				/**
+				 * Insert Clinical Presentations.
+				 */
+				$query = "DELETE FROM `evaluation_form_question_objectives` WHERE `efquestion_id` = ".$db->qstr($EFQUESTION_ID);
+				if ($db->Execute($query)) {
+					if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+						foreach ($clinical_presentations as $objective_id => $presentation_name) {
+							if (!$db->AutoExecute("evaluation_form_question_objectives", array("efquestion_id" => $EFQUESTION_ID, "objective_id" => $objective_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
+								$ERROR++;
+								application_log("error", "Unable to insert a new clinical presentation to the database when editing an evaluation form question. Database said: ".$db->ErrorMsg());
+							}
+						}
+					}
+				}
+				header("Location: ".ENTRADA_URL."/admin/evaluations/forms?section=edit&id=".$FORM_ID."&success=".($ERROR ? "false" : "true"));
+				
+			break;
+			case 1 :
+			default :
+				/**
+				 * Fetch the Clinical Presentation details.
+				 */
+				$clinical_presentations_list = array();
+				$clinical_presentations = array();
+
+				require_once("Models/evaluation/Evaluation.class.php");
+
+				$results = Evaluation::getClinicalPresentations();
+				if ($results) {
+					foreach ($results as $result) {
+						$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
+					}
+				}
+
+				if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
+					if (((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"])))) {
+						foreach ($_POST["clinical_presentations"] as $objective_id) {
+							if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
+								$query	= "SELECT a.`objective_id`
+											FROM `global_lu_objectives` AS a
+											JOIN `evaluation_form_question_objectives` AS b
+											ON b.`efquestion_id` = ".$db->qstr($EFQUESTION_ID)."
+											AND a.`objective_id` = b.`objective_id`
+											JOIN `objective_organisation` AS c
+											ON a.`objective_id` = c.`objective_id`
+											WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+											AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+											AND b.`objective_type` = 'event'
+											AND a.`objective_active` = '1'";
+								$result	= $db->GetRow($query);
+								if ($result) {
+									$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
+								}
+							}
+						}
+					} else {
+						$clinical_presentations = array();
+					}
+					if ($clinical_presentations && count($clinical_presentations)) {
+						$query = "DELETE FROM `evaluation_form_question_objectives` WHERE `efquestion_id` = ".$db->qstr($EFQUESTION_ID);
+						$db->Execute($query);
+						foreach ($clinical_presentations as $clinical_presentation) {
+							$evaluation_form_question_objective = array("efquestion_id" => $EFQUESTION_ID,
+																		"objective_id" => $clinical_presentation["objective_id"],
+																		"updated_date" => time(),
+																		"updated_by" => $ENTRADA_USER->getID());
+							if (!$db->AutoExecute("evaluation_form_question_objectives", $evaluation_form_question_objective, "INSERT")) {
+								application_log("error", "Unable to insert a new evalution_form_question_objectives record while updating an evaluation form question's associated clinical presentations. Database said: ".$db->ErrorMsg());
+							} else {
+								history_log($EFQUESTION_ID, "Updated evaluation form question clinical presentations.");
+							}
+						}
 					}
 				} else {
-					/**
-					 * @exception 403: Unable to find a valid order array.
-					 */
-					echo 403;
-					exit;
+					$query = "	SELECT `objective_id`
+								FROM `evaluation_form_question_objectives`
+								WHERE `efquestion_id` = ".$db->qstr($EFQUESTION_ID);
+					$results = $db->GetAll($query);
+					if ($results) {
+						foreach ($results as $result) {
+							$clinical_presentations[$result["objective_id"]] = $clinical_presentations_list[$result["objective_id"]];
+						}
+					}
 				}
-			} else {
-				/**
-				 * @exception 402: Cannot update question order, because it's in use.
-				 */
-				echo 402;
-				exit;
-			}
-		} else {
-			/**
-			 * @exception 401: Cannot update question order because quiz could not be found.
-			 */
-			echo 401;
-			exit;
+				?>
+				<h2>Associated MCC Presentations</h2>
+				<form method="POST" action="<?php echo ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$FORM_ID."&efquestion_id=".$EFQUESTION_ID; ?>" onsubmit="selIt()">
+					<input type="hidden" name="step" value="2" />
+					<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
+					<?php
+					if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+						foreach ($clinical_presentations as $objective_id => $presentation_name) {
+							echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+						}
+					}
+					?>
+					</select>
+					<input type="hidden" value="1" name="clinical_presentations_submit" />
+					<div style="float: right; display: inline">
+						<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
+						<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" value="Add" />
+					</div>
+					<div id="clinical_presentations_list" style="clear: both; padding-top: 3px;">
+						<h2>Clinical Presentations List</h2>
+						<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
+						<?php
+						foreach ($clinical_presentations_list as $objective_id => $presentation_name) {
+							if (!array_key_exists($objective_id, $clinical_presentations)) {
+								echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+							}
+						}
+						?>
+						</select>
+					</div>
+					<div id="scripts-on-open" style="display: none;">
+					if ($('PickList')) {
+						$('PickList').observe('keypress', function(event) {
+							if (event.keyCode == Event.KEY_DELETE) {
+								delIt();
+							}
+						});
+					}
+
+					if ($('SelectList')) {
+						$('SelectList').observe('keypress', function(event) {
+							if (event.keyCode == Event.KEY_RETURN) {
+								addIt();
+							}
+						});
+					}
+					</div>
+					<hr style="margin-top: 60px;" />
+					<div id="footer">
+						<button id="close-button" onclick="Control.Modal.close()">Cancel</button>
+						<input style="float: right;" type="submit" value="Save Changes" />
+					</div>
+				</form>
+				<?php
+			break;
 		}
 	} else {
 		/**
@@ -168,6 +255,5 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		echo 400;
 		exit;
 	}
-}
-echo 0;
+};
 exit;

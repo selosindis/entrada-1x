@@ -529,7 +529,12 @@ class Evaluation {
 							if ($criteriae) {
 								$criteria_width = floor(100 / (count($criteriae) + 1));
 								echo "		<td style=\"width: ".$criteria_width."%\">\n";
-								echo "			".$question["question_text"];
+								echo "			<div class=\"td-stretch\" style=\"position: relative; width: 100%; vertical-align: middle;\">\n";
+								if ($allow_question_modifications) {
+									echo "				<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" style=\"position: absolute; top: 10px; right: 10px;\" /></a>";
+								}
+								echo "				<div style=\"position: relative; top: 50%;\">".$question["question_text"]."</div>\n";
+								echo "			</div>\n";
 								echo "		</td>\n";
 								foreach ($criteriae as $criteria) {
 									echo "<td style=\"width: ".$criteria_width."%; vertical-align: top;\" >\n";
@@ -569,6 +574,7 @@ class Evaluation {
 							echo "<div class=\"controls\">\n";
 							echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$form_id."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
 							echo "	<a id=\"question_delete_".$question["efquestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
+							echo "	<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" /></a>";
 							echo "</div>\n";
 						}
 						echo "	<div id=\"question_text_".$question["efquestion_id"]."\" for=\"".$question["efquestion_id"]."_comment\" class=\"question".($allow_question_modifications ? " question-handle" : "")."\">\n";
@@ -609,6 +615,7 @@ class Evaluation {
 							echo "<div class=\"controls\">\n";
 							echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$form_id."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
 							echo "	<a id=\"question_delete_".$question["efquestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
+							echo "	<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" /></a>";
 							echo "</div>\n";
 						}
 						echo "	<div id=\"question_text_".$question["efquestion_id"]."\" class=\"question".($allow_question_modifications ? " question-handle" : "")."\">\n";
@@ -678,6 +685,12 @@ class Evaluation {
 				</div>
 			</div>
 			<script type="text/javascript" defer="defer">
+				
+				jQuery('.td-stretch').each(function(){
+					var heightToSet =  jQuery(this).parent().innerHeight();
+					jQuery(this).height(heightToSet);
+				});
+
 				var deleteQuestion_id = 0;
 
 				Sortable.create('form-questions-list', { handles : $$('#form-questions-list div.question'), onUpdate : updateFormQuestionOrder });
@@ -3213,6 +3226,68 @@ class Evaluation {
 		}
 		
 		return $evaluators_output;
+	}
+	
+	
+	public static function getClinicalPresentations($parent_id = 0, $presentations = array(), $efquestion_id = 0, $presentation_ids = false, $org_id = 0) {
+		global $db, $ENTRADA_USER, $translate;
+
+		$org_id = ($org_id == 0 ? $ENTRADA_USER->getActiveOrganisation() : (int) $org_id );
+
+		if ($efquestion_id) {
+			$presentation_ids = array();
+
+			$query = "	SELECT `objective_id`
+						FROM `evaluation_form_question_objectives`
+						WHERE `efquestion_id` = ".$db->qstr($efquestion_id);
+			$allowed_objectives = $db->GetAll($query);
+			if ($allowed_objectives) {
+				foreach ($allowed_objectives as $presentation) {
+					$presentation_ids[] = $presentation["objective_id"];
+				}
+			}
+		}
+
+		if ($parent_id) {
+			$query = "	SELECT a.*
+						FROM `global_lu_objectives` AS a
+						JOIN `objective_organisation` AS b
+						ON a.`objective_id` = b.`objective_id`
+						WHERE `objective_active` = '1'
+						AND `objective_parent` = ".$db->qstr($parent_id)."
+						AND b.`organisation_id` = ".$db->qstr($org_id);
+		} else {
+			$objective_name = $translate->_("events_filter_controls");
+			$objective_name = $objective_name["cp"]["global_lu_objectives_name"];
+
+			$query = "	SELECT a.*
+						FROM `global_lu_objectives` AS a
+						JOIN `objective_organisation` AS b
+						ON a.`objective_id` = b.`objective_id`
+						WHERE a.`objective_active` = '1'
+						AND b.`organisation_id` = ".$db->qstr($org_id)."
+						AND a.`objective_name` = ".$db->qstr($objective_name);
+		}
+
+		$results = $db->GetAll($query);
+		if ($results) {
+			foreach ($results as $result) {
+				if ($parent_id) {
+					$presentations[] = $result;
+				}
+				$presentations = Evaluation::getClinicalPresentations($result["objective_id"], $presentations, 0, (isset($presentation_ids) && $presentation_ids ? $presentation_ids : array()), $org_id);
+			}
+		}
+
+		if (!$parent_id && is_array($presentation_ids)) {
+			foreach ($presentations as $key => $presentation) {
+				if (array_search($presentation["objective_id"], $presentation_ids) === false) {
+					unset($presentations[$key]);
+				}
+			}
+		}
+
+		return $presentations;
 	}
 }
 

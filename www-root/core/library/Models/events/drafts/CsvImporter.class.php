@@ -166,7 +166,7 @@ class CsvImporter {
 			foreach ($eventtype_durations as $duration) {
 				$query = "	SELECT `eventtype_id`
 							FROM `events_lu_eventtypes`
-							WHERE LCASE(`eventtype_title`) = ".$db->qstr(strtolower(clean_input($eventtypes[$i], "striptags")));
+							WHERE LCASE(`eventtype_title`) = ".$db->qstr(strtolower(clean_input($eventtypes[$i], array("striptags", "trim"))));
 				$results = $db->GetRow($query);
 				if ($results) {
 					$output[$event_id]["eventtypes"][$i]["type"] = $results["eventtype_id"];

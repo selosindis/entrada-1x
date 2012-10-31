@@ -9481,11 +9481,9 @@ function course_fetch_course_audience($course_id = 0, $organisation_id = false,$
 									AND a.`group_id` = ".$db->qstr($result["audience_value"])."
 									JOIN `".AUTH_DATABASE."`.`user_access` ua
 									ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
-									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")
-									LEFT JOIN `event_attendance` d
-									ON u.`id` = d.`proxy_id` "
+									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.") "
 									.($organisation_id?
-									"WHERE u.`organisation_id` = ".$db->qstr($organisation_id):"");			
+									"WHERE u.`organisation_id` = ".$db->qstr($organisation_id):"");	
 						$group_audience = $db->getAll($query);
 						if ($group_audience) {
 							$course_audience = array_merge($course_audience,$group_audience);
@@ -11489,7 +11487,27 @@ function events_fetch_event_audience_attendance($event_id = 0) {
 
 				switch ($result["audience_type"]) {
 					case "course_id" : // Course Audience
-						$course_audience = course_fetch_course_audience($result["audience_value"]);
+						$query = "	SELECT *
+									FROM `course_audience`
+									WHERE `course_id`";
+						$ca_result = $db->GetRow($query);
+						
+						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname, d.`eattendance_id` AS `has_attendance` 
+									FROM `group_members` a
+									JOIN `".AUTH_DATABASE."`.`user_data` u
+									ON a.`proxy_id` = u.`id`
+									AND a.`group_id` = ".$db->qstr($ca_result["audience_value"])."
+									JOIN `".AUTH_DATABASE."`.`user_access` ua
+									ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
+									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")
+									LEFT JOIN `event_attendance` d
+									ON u.`id` = d.`proxy_id` "
+									.($organisation_id?
+									"WHERE u.`organisation_id` = ".$db->qstr($organisation_id):"") . "
+									AND d.`event_id` = " . $db->qstr($event_id);	
+						$course_audience = $db->getAll($query);
+						$course_audience = array_unique($course_audience,SORT_REGULAR);
+						usort($course_audience,"audience_sort");
 						if ($course_audience) {
 							$event_audience = array_merge($event_audience,$course_audience);
 						}

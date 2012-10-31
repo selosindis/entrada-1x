@@ -2825,6 +2825,16 @@ class Evaluation {
 								}
 							}
 						break;
+						case "student" :
+							$query = "SELECT * FROM `evaluation_progress`
+										WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
+										AND `target_record_id` = ".$db->qstr($ENTRADA_USER->getID())."
+										AND `progress_value` = 'complete'";
+							$progress_record = $db->GetRow($query);
+							if ($progress_record) {
+								$permissions[] = array("target_record_id" => $ENTRADA_USER->getID(), "contact_type" => "target");
+							}
+						break;
 						case "self" :
 							$skip_evaluator_check = false;
 							$query = "SELECT * FROM `evaluation_evaluators`

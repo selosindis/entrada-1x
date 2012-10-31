@@ -678,24 +678,54 @@ class EventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 		if ($result) {
 			return true;
 		} 
-
+		
 		$query = "	SELECT *
-					FROM `course_audience` AS b
-					JOIN `groups` AS c ON b.`audience_type` = 'group_id'
-					AND b.`audience_value` = c.`group_id`
-					LEFT JOIN `group_members` AS d
-					ON d.`group_id` = c.`group_id`
-					WHERE d.`proxy_id` = " . $db->qstr($user_id) . "
-					AND b.`course_id` = " . $db->qstr($course_id) . "
-					AND d.`member_active` = 1";
+					FROM `event_audience`
+					WHERE `event_id` = " . $db->qstr($event_id);
+
+		$result = $db->GetRow($query);
+		
+		if ($result["audience_type"] == "course_id") { 
+		
+			$query = "	SELECT *
+						FROM `course_audience` AS b
+						JOIN `groups` AS c ON b.`audience_type` = 'group_id'
+						AND b.`audience_value` = c.`group_id`
+						LEFT JOIN `group_members` AS d
+						ON d.`group_id` = c.`group_id`									
+						WHERE d.`proxy_id` = " . $db->qstr($user_id) . "
+						AND b.`course_id` = " . $db->qstr($course_id) . "										
+						AND d.`member_active` = 1";
+
+			$result = $db->GetRow($query);
+
+			if ($result) {				
+				return true;
+			}
+		}
+		
+		$query = "	SELECT *
+					FROM `course_contacts` AS cc					
+					WHERE cc.`proxy_id` = " . $db->qstr($user_id) . "
+					AND cc.`course_id` = " . $db->qstr($course_id);					
 
 		$result = $db->GetRow($query);
 
 		if ($result) {				
 			return true;
-		} else {
-			return false;
 		}
+		
+		$query = "	SELECT *
+					FROM `event_contacts` AS ec					
+					WHERE ec.`proxy_id` = " . $db->qstr($user_id) . "
+					AND ec.`event_id` = " . $db->qstr($event_id);					
+
+		$result = $db->GetRow($query);
+
+		if ($result) {				
+			return true;
+		}
+		
 		return false;
 	}
 }

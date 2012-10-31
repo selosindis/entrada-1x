@@ -8962,7 +8962,7 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	$output = array();
 	$query = "	SELECT DISTINCT(a.`course_id`), a.`course_name`, a.`course_code`, a.`course_active`, a.`organisation_id`
 				FROM `courses` AS a";
-	if ($ENTRADA_USER->getActiveRole() != "admin" || $ENTRADA_USER->getActiveRole() != "director") {
+	if (strtolower($ENTRADA_USER->getActiveRole()) != "admin" && strtolower($ENTRADA_USER->getActiveRole()) != "director") {
 		$query .= "	LEFT JOIN `course_audience` AS b
 				ON a.`course_id` = b.`course_id`
 				JOIN `groups` AS c
@@ -8973,7 +8973,7 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	}
 	$query .= " WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 
-	if ($ENTRADA_USER->getActiveRole() != "admin" || $ENTRADA_USER->getActiveRole() != "director") {
+	if (strtolower($ENTRADA_USER->getActiveRole()) != "admin" && strtolower($ENTRADA_USER->getActiveRole()) != "director") {
 		$query .="	AND (
 						d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 						OR a.`permission` = 'open'
@@ -11195,9 +11195,8 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 
 	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $results_per_page);	
 	$learning_events = $db->GetAll($query_events);	
-
-	if ($learning_events) {
-		if ($ENTRADA_USER->getActiveRole() != "admin" || $ENTRADA_USER->getActiveRole() != "director") {
+	if ($learning_events) {				
+		if (strtolower($ENTRADA_USER->getActiveRole()) != "admin") {			
 			$i = 0;
 			foreach ($learning_events as $event) {		
 				if ($event["course_id"]) {
@@ -11210,7 +11209,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 					} else {											
 						$event_resource = new EventClosedResource($event["event_id"], $event["course_id"], $ENTRADA_USER->getActiveOrganisation());
 					}
-				}				
+				}							
 				if (!$ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {					
 					unset($learning_events[$i]);
 				}

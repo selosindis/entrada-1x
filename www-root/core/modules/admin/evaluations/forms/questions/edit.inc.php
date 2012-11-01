@@ -139,12 +139,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						switch ($PROCESSED["questiontype_id"]) {
 							case 3 :
 								/**
-								 * Required field "rubric_title" / Rubric Title.
+								 * Non-required field "rubric_title" / Rubric Title.
 								 */
 								if ((isset($_POST["rubric_title"])) && ($tmp_input = clean_input($_POST["rubric_title"], array("trim")))) {
 									$PROCESSED["rubric_title"] = $tmp_input;
 								} else {
-									add_error("The <strong>Rubric Title</strong> field is required.");
+									$PROCESSED["rubric_title"] = "";
 								}
 								/**
 								 * Non-required field "rubric_description" / Rubric Description.

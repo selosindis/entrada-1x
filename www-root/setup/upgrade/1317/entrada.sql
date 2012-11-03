@@ -7,4 +7,4 @@ CREATE TABLE IF NOT EXISTS `evaluation_form_question_objectives` (
   PRIMARY KEY (`efqobjective_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-UPDATE `settings` SET `value` = '1403' WHERE `shortname` = 'version_db';
+UPDATE `settings` SET `value` = '1317' WHERE `shortname` = 'version_db';

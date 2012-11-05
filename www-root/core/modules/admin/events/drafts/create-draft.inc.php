@@ -281,6 +281,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									echo "	<select class=\"multi-picklist\" id=\"SelectList\" name=\"other_courses_list\" multiple=\"multiple\" size=\"15\" style=\"width: 100%\">\n";
 											if ((is_array($course_list)) && (count($course_list))) {
 												foreach ($course_list as $course_id => $course) {
+													if (!is_array($PROCESSED["course_ids"])) {
+														$PROCESSED["course_ids"] = array();
+													}
 													if (!in_array($course_id, $PROCESSED["course_ids"])) {
 														echo "<option value=\"".(int) $course_id."\">".html_encode($course_list[$course_id]["code"] . " - " . $course_list[$course_id]["name"])."</option>\n";
 													}

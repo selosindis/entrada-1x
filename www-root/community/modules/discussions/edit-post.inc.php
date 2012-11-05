@@ -116,10 +116,8 @@ if ($RECORD_ID) {
 						 * Non-required field "anonymous" / Should posts be displayed anonymously to non-admins
 						 */
 						if (defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && (isset($_POST["anonymous"])) && ((int) $_POST["anonymous"])) {
-							echo 'I made it here';
 							$PROCESSED["anonymous"]	= 1;
 						} else {
-							echo 'I did not make it there';
 							$PROCESSED["anonymous"]	= 0;
 						}	
 						

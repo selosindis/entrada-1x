@@ -28,13 +28,12 @@ require_once("Entrada/authentication/aclfactory.inc.php");
 require_once("Entrada/authentication/entrada_acl.inc.php");
 
 if (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] && isset($_SESSION["details"])) {
-	if (isset($ENTRADA_CACHE)) {
-		if (!($ENTRADA_CACHE->test("acl_".$ENTRADA_USER->getID()))) {
-			//Cache Miss, construct the ACL
+	if ((isset($ENTRADA_CACHE)) && (!DEVELOPMENT_MODE)) {
+		if (!($ENTRADA_CACHE->test("acl_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID()))) {
 			$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
-			$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$ENTRADA_USER->getID());
+			$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
 		} else {
-			$ENTRADA_ACL = $ENTRADA_CACHE->load("acl_".$ENTRADA_USER->getID());
+			$ENTRADA_ACL = $ENTRADA_CACHE->load("acl_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
 		}
 	} else {
 		$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);

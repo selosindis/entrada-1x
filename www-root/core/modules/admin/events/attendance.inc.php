@@ -40,7 +40,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/CardReader.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/windows/window.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+	$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/windows/default.css\" rel=\"stylesheet\" type=\"text/css\" />";
+	$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/windows/medtech.css\" rel=\"stylesheet\" type=\"text/css\" />";	
 	?>
 	<script type="text/javascript">
 		var EVENT_LIST_STATIC_TOTAL_DURATION = true;
@@ -104,7 +107,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 															"updated_by"=>$ENTRADA_USER->getID()
 															);
 								if ($db->AutoExecute("event_attendance",$attendance_record,"INSERT")) {
-									echo htmlspecialchars(json_encode(array('success'=>'Successfully added attendance.','proxy_id'=>$proxy_id)), ENT_NOQUOTES);
+									$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($proxy_id);
+									$user_details = $db->GetRow($query);
+									echo htmlspecialchars(json_encode(array('success'=>'Successfully added attendance'.($user_details?' for '.$user_details["firstname"].' '.$user_details["lastname"]:'').'.','proxy_id'=>$proxy_id)), ENT_NOQUOTES);
 									exit;												
 								} else {
 									echo htmlspecialchars(json_encode(array('error'=>'Error occurred updating record.')), ENT_NOQUOTES);
@@ -113,7 +118,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							} else {
 								$query = "DELETE FROM `event_attendance` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `proxy_id` = ".$db->qstr($proxy_id);
 								if ($db->Execute($query)) {
-									echo htmlspecialchars(json_encode(array('success'=>'Successfully removed attendance.','proxy_id'=>$proxy_id)), ENT_NOQUOTES);
+									$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($proxy_id);
+									$user_details = $db->GetRow($query);
+									echo htmlspecialchars(json_encode(array('success'=>'Successfully removed attendance'.($user_details?' for '.$user_details["firstname"].' '.$user_details["lastname"]:'').'.','proxy_id'=>$proxy_id)), ENT_NOQUOTES);
 									exit;												
 								} else {
 									echo htmlspecialchars(json_encode(array('error'=>'Error occurred updating record.')), ENT_NOQUOTES);
@@ -170,6 +177,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					echo display_error();
 				}
 				?>
+				<div style="float: right">
+					<ul class="page-action">
+						<li class="last"><a href="#" onclick="javascript:openDialog('http://google.com');" class="strong-green">Kiosk Mode</a></li>
+					</ul>
+				</div>
 				<a name="event-attendance-section"></a>
 				<h2 title="Event Resources Section">Event Attendance</h2>
 				<div id="event-attendance-section">					
@@ -209,8 +221,128 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					
 						<input type="button" class="button" value="Download CSV" onclick="window.location = '<?php echo ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $EVENT_ID,"download"=>"csv"));?>'"/>
 				</div>
-				
+				<div class="kiosk-modal" style="display:none;">
+						<div id="modal_message">You can now swipe student card.</div>
+						<div id="modal_icon"><img src="<?php echo ENTRADA_URL."/images/large_check.png";?>" id="modal_icon_img" title="Success" alt ="Success" style="height:400px;"/></div>
+						<div id="modal_response"></div>
+				</div>
+				<style>
+					#modal_message,#modal_icon,#modal_response{
+						display:block;
+						clear:both;
+						text-align: center;
+					}
+					#modal_message{
+						margin-top:10px;
+						font-size:2em;						
+					}
+					#requestDialog_top,#modal_response{
+						font-size:2em;
+					}
+				</style>
 				<script type="text/javascript">
+				var kiosk_mode = false;
+				var loading = false;
+				var check_url = '<?php echo ENTRADA_URL."/images/large_check.png";?>';
+				var x_url = '<?php echo ENTRADA_URL."/images/large_x.png";?>';
+				var loading_url = '<?php echo ENTRADA_URL."/images/loading_med.gif";?>';
+				var swipe_msg = 'You can now swipe student card.';
+				var number = 119;
+				var scan_message = '<div id="modal_message">You can now swipe student card.</div><div id="modal_icon"><img src="'+check_url+'" id="modal_icon_img" title="Success" alt ="Success" style="height:400px;"/></div><div id="modal_response"></div>';
+				var valid = true;
+				
+				jQuery(function () {
+					var reader = new CardReader();
+					reader.observe(window);
+					reader.validate(function(value){	
+						return kiosk_mode;
+					});
+					reader.cardError(function(){
+						if(kiosk_mode){
+							jQuery('#modal_icon_img').attr('src',x_url);
+							jQuery('#modal_icon_img').attr('title','Error');
+							jQuery('#modal_icon_img').attr('alt','Error');							
+							jQuery('#modal_response').html('Card Read Error');
+						}else{
+							alert('Error reading swipe. Please click Kiosk Mode to capture card swipes.');
+						}
+					});
+					reader.cardRead(function(data){			
+						number = data.substring(0,data.length-2);
+						processSwipe(number);
+					});
+				});
+				
+				function openDialog(url){
+					kiosk_mode = true;
+					jQuery('#modal_message').html(swipe_msg);
+					jQuery('#modal_response').html('');
+					jQuery('#modal_icon_img').attr('src',check_url);
+					jQuery('#modal_icon_img').attr('title','Error');
+					jQuery('#modal_icon_img').attr('alt','Error');	
+					jQuery(".kiosk-modal").dialog({
+						 width: 800 , 
+						 height: 600,
+						 position: 'center',
+						 draggable: false,
+						 resizable: false,
+						 modal : true,
+						 show: 'fade',
+						 hide: 'fade',
+						 title: 'Attendance Kiosk Mode',
+						 close: function(){
+								kiosk_mode = false;
+								}
+					});					
+
+				}
+				
+				function processSwipe(number){
+					if(kiosk_mode){		
+						var attending;
+						jQuery.ajax({
+							type: "POST",
+							url: "<?php echo ENTRADA_URL;?>/admin/events?section=attendance&id=<?php echo $EVENT_ID;?>&step=2",
+							data: "number="+number+"&attending=2",
+							beforeSend: function(){
+										jQuery('#modal_message').html('Loading...');
+										jQuery('#modal_icon_img').attr('src',loading_url);
+										jQuery('#modal_icon_img').attr('title','Loading');
+										jQuery('#modal_icon_img').attr('alt','Loading');							
+										jQuery('#modal_response').hide();
+									},
+							success: function(data){
+								jQuery('#modal_message').html(swipe_msg);
+								try{
+									var result = jQuery.parseJSON(data);
+									if(result.error){
+										jQuery('#modal_icon_img').attr('src',x_url);
+										jQuery('#modal_icon_img').attr('title','Error');
+										jQuery('#modal_icon_img').attr('alt','Error');							
+										jQuery('#modal_response').html(result.error);
+
+									}else{
+										jQuery('#modal_icon_img').attr('src',check_url);
+										jQuery('#modal_icon_img').attr('title','Success');
+										jQuery('#modal_icon_img').attr('alt','Success');
+										jQuery('#modal_response').html(result.success);										
+										jQuery('#learner-'+result.proxy_id).toggleCheck();
+									}
+								}catch(e){
+									jQuery('#modal_icon_img').attr('src',x_url);
+									jQuery('#modal_icon_img').attr('title','Error');
+									jQuery('#modal_icon_img').attr('alt','Error');							
+									jQuery('#modal_response').html('Unknown error while adding user.');
+								}
+								jQuery('#modal_response').show();
+							}
+						});
+					}else{
+					
+					}
+					return false;
+				}
+				
 				$$('select.ed_select_off').each(function(el) {
 					$(el).disabled = true;
 					$(el).fade({ duration: 0.3, to: 0.25 });

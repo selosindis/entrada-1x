@@ -465,14 +465,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<select name="assessment_id" id="assessment-selector">
 										<option value="0">No Assessment</option>
 										<option value="N" selected="selected">New Assessment</option>
-										<?php 
-											$query = "SELECT * FROM `assessments` WHERE `course_id` = ".$db->qstr($COURSE_ID);
-											$course_assessments = $db->GetAll($query);
-											if($course_assessments){
-												foreach($course_assessments as $course_assessment){
-													?><option value="<?php echo $course_assessment["assessment_id"];?>"<?php echo ($PROCESSED["assessment_id"] && $PROCESSED["assessment_id"] == $course_assessment["assessment_id"]?" checked=\"checked\"":"");?>><?php echo $course_assessment["name"];?></option><?php
+										<?php
+											$query = "	SELECT a.`group_id`, a.`group_name` FROM `groups` a 
+														JOIN `assessments` b
+														ON a.`group_id` = b.`cohort`
+														WHERE b.`course_id` = ".$db->qstr($COURSE_ID)."
+														GROUP BY a.`group_id`";
+											if($groups = $db->GetAll($query)){
+												foreach($groups as $group){
+													$query = "SELECT * FROM `assessments` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `cohort` = ".$db->qstr($group["group_id"]);
+													$course_assessments = $db->GetAll($query);
+													if($course_assessments){
+														echo '<optgroup label="'.$group["group_name"].'">';
+														foreach($course_assessments as $course_assessment){
+															?><option value="<?php echo $course_assessment["assessment_id"];?>"<?php echo ($PROCESSED["assessment_id"] && $PROCESSED["assessment_id"] == $course_assessment["assessment_id"]?" checked=\"checked\"":"");?>><?php echo $course_assessment["name"];?></option><?php
+														}
+														echo '</optgroup>';
+													}	
 												}
-											}	
+											}
+
 										?>
 									</select>
 									<div class="content-small">The assessment determines how the assignment should be marked. You can either select one if it already exists, or create a new one now.</div>

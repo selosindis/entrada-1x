@@ -25,7 +25,7 @@
  *
  * $Id: search.inc.php 1171 2010-05-01 14:39:27Z ad29 $
  */
-
+error_reporting(E_ALL);
 if (!defined("PARENT_INCLUDED")) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -35,7 +35,6 @@ if (!defined("PARENT_INCLUDED")) {
 	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
-
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 /**
@@ -61,11 +60,9 @@ if (!defined("PARENT_INCLUDED")) {
 	if ((isset($_GET["q"])) && ($tmp_input = clean_input($_GET["q"]))) {
 		$SEARCH_QUERY	= $tmp_input;
 
-/*
 		if (strlen($SEARCH_QUERY) < 4) {
 			$SEARCH_QUERY = str_pad($SEARCH_QUERY, 4, "*");
 		}
-*/
 	}
 
 	/**
@@ -103,17 +100,47 @@ if (!defined("PARENT_INCLUDED")) {
 		}
 
 		if ($SEARCH_MODE == "standard") {
-			$query_counter = "	SELECT COUNT(DISTINCT(a.`event_id`)) AS `total_rows`
-								FROM `events` AS a
-								LEFT JOIN `event_audience` AS b
-								ON b.`event_id` = a.`event_id`
-								LEFT JOIN `courses` AS c
-								ON a.`course_id` = c.`course_id`
-								WHERE (a.`parent_id` IS NULL OR a.`parent_id` = '0')
-								AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'cohort' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
-								(($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION != 'all' ? " c.`organisation_id` = ".$db->qstr((int) $SEARCH_ORGANISATION)." AND" : "").
-								(($SEARCH_YEAR) ? " (`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
-								MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)";
+
+            $index = Zend_Search_Lucene::open(SEARCH_INDEX_PATH.'/events');
+            $query = Zend_Search_Lucene_Search_QueryParser::parse($SEARCH_QUERY);
+
+
+//            $query->addSubquery(new Zend_Search_Lucene_Search_Query_Term(new Zend_Search_Lucene_Index_Term('cohort', 'audience_type')), true);
+            if ($SEARCH_CLASS) {
+                $query->addSubquery(new Zend_Search_Lucene_Search_Query_Term(new Zend_Search_Lucene_Index_Term((int) $SEARCH_CLASS, 'audience_value')), true);
+            }
+            if ($SEARCH_ORGANISATION && $SEARCH_ORGANISATION != 'all') {
+                $query->addSubquery(new Zend_Search_Lucene_Search_Query_Term(new Zend_Search_Lucene_Index_Term($SEARCH_ORGANISATION, 'organisation_id')), true);
+            }
+            if ($SEARCH_YEAR) {
+                $query->addSubquery(new Zend_Search_Lucene_Search_Query_Range(
+                    new Zend_Search_Lucene_Index_Term($SEARCH_DURATION["start"], 'event_start'),
+                    new Zend_Search_Lucene_Index_Term($SEARCH_DURATION["end"], 'event_start'),
+                    true
+                ), true);
+            }
+
+
+            $result = $index->find($query);
+
+            $hits = array();
+            foreach ($result as $hit) {
+                $hits[]= $hit->event_id;
+            }
+
+            $TOTAL_ROWS = count($result);
+
+//			$query_counter = "	SELECT COUNT(DISTINCT(a.`event_id`)) AS `total_rows`
+//								FROM `events` AS a
+//								LEFT JOIN `event_audience` AS b
+//								ON b.`event_id` = a.`event_id`
+//								LEFT JOIN `courses` AS c
+//								ON a.`course_id` = c.`course_id`
+//								WHERE (a.`parent_id` IS NULL OR a.`parent_id` = '0')
+//								AND".(($SEARCH_CLASS) ? " b.`audience_type` = 'cohort' AND b.`audience_value` = ".$db->qstr((int) $SEARCH_CLASS)." AND" : "").
+//								(($SEARCH_ORGANISATION) && $SEARCH_ORGANISATION != 'all' ? " c.`organisation_id` = ".$db->qstr((int) $SEARCH_ORGANISATION)." AND" : "").
+//								(($SEARCH_YEAR) ? " (`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).") AND" : "")."
+//								MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE)";
 
 			$query_search = "	SELECT a.*, b.`audience_type`, b.`audience_value` AS `event_cohort`, MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE) AS `rank`
 								FROM `events` AS a
@@ -130,13 +157,23 @@ if (!defined("PARENT_INCLUDED")) {
 								ORDER BY `rank` DESC, `event_start` DESC
 								LIMIT %s, %s";
 
+            $query_search = "	SELECT a.*, b.`audience_type`, b.`audience_value` AS `event_cohort`, MATCH (`event_title`, `event_description`, `event_goals`, `event_objectives`, `event_message`) AGAINST (".$db->qstr(str_replace(array("%", " AND ", " NOT "), array("%%", " +", " -"), $SEARCH_QUERY))." IN BOOLEAN MODE) AS `rank`
+								FROM `events` AS a
+								LEFT JOIN `event_audience` AS b
+								ON b.`event_id` = a.`event_id`
+								LEFT JOIN `courses` AS c
+								ON a.`course_id` = c.`course_id`
+								WHERE a.event_id IN (".implode(',', $hits).")
+								LIMIT %s, %s";
+
+
 			/**
 			 * Get the total number of results using the generated queries above and calculate the total number
 			 * of pages that are available based on the results per page preferences.
 			 */
-			$result = ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query_counter) : $db->GetRow($query_counter));
+			//$result = ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query_counter) : $db->GetRow($query_counter));
 			if ($result) {
-				$TOTAL_ROWS	= $result["total_rows"];
+			//	$TOTAL_ROWS	= $result["total_rows"];
 
 				if ($TOTAL_ROWS <= $RESULTS_PER_PAGE) {
 					$TOTAL_PAGES = 1;
@@ -169,29 +206,40 @@ if (!defined("PARENT_INCLUDED")) {
 	}
 	?>
 	<h1>Curriculum Search</h1>
-	<form action="<?php echo ENTRADA_URL; ?>/search" method="get" class="form-horizontal">
+	<form action="<?php echo ENTRADA_URL; ?>/search" method="get">
 		<?php
 		if ($SEARCH_MODE == "timeline") {
 			echo "<input type=\"hidden\" name=\"m\" value=\"timeline\" />\n";
 		}
 		?>
-		<div class="control-group" style="margin-bottom:5px">
-			<label class="control-label">Boolean Search Term:</label>
-			<div class="controls">
-				<input type="text" style="width:300px" id="q" name="q" value="<?php echo html_encode($SEARCH_QUERY); ?>" /> <input type="submit" class="btn" value="Search" />
-			</div>
-		</div>
-		<div class="control-group">
-			<div class="controls content-small">
-				Example 1: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "asthma")); ?>" class="content-small">asthma</a><br />
-				Example 2: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "pain+AND+palliative")); ?>" class="content-small">pain AND palliative</a><br />
-				Example 3: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "%22heart+disease%22+NOT+pediatric")); ?>" class="content-small">"heart disease" NOT pediatric</a>
-			</div>
-		</div>
-		<div class="control-group">
-			<label class="control-label">Graduating Class:</label>
-			<div class="controls">
-				<select id="c" name="c">
+		<table style="width: 100%" cellspacing="1" cellpadding="1" border="0">
+			<colgroup>
+				<col style=" width: 20%" />
+				<col style=" width: 45%" />
+				<col style=" width: 35%" />
+			</colgroup>
+			<tbody>
+				<tr>
+					<td><label for="q" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Boolean Search Term:</label></td>
+					<td colspan="2"><input type="text" id="q" name="q" value="<?php echo html_encode($SEARCH_QUERY); ?>" style="width: 350px" /> <input type="submit" class="button" value="Search" /></td>
+				</tr>
+				<tr>
+					<td>&nbsp;</td>
+					<td colspan="2" class="content-small">
+						Example 1: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "asthma")); ?>" class="content-small">asthma</a><br />
+						Example 2: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "pain+AND+palliative")); ?>" class="content-small">pain AND palliative</a><br />
+						Example 3: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "%22heart+disease%22+NOT+pediatric")); ?>" class="content-small">"heart disease" NOT pediatric</a>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="3">&nbsp;</td>
+				</tr>
+				<tr>
+					<td>
+						<label for="c" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Graduating Class:</label>
+					</td>
+					<td>
+						<select id="c" name="c" style="width: 250px">
 							<option value="0"<?php echo ((!$SEARCH_CLASS) ? " selected=\"selected\"" : ""); ?>>-- All Cohorts --</option>
 								<?php
 								$cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
@@ -199,13 +247,18 @@ if (!defined("PARENT_INCLUDED")) {
 									echo "<option value=\"".$cohort["group_id"]."\"".(($SEARCH_CLASS == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
 								}
 								?>
-				</select>
-			</div>
-		</div> <!--/control-group-->
-		<div class="control-group">
-			<label class="control-label">Academic Year:</label>
-			<div class="controls">
-					<select id="y" name="y" <?php echo (($SEARCH_MODE == "timeline") ? " disabled=\"disabled\"" : ""); ?>>
+						</select>
+					</td>
+					<td>
+						&nbsp;
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<label for="y" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Academic Year:</label>
+					</td>
+					<td>
+						<select id="y" name="y" style="width: 250px" <?php echo (($SEARCH_MODE == "timeline") ? " disabled=\"disabled\"" : ""); ?>>
 							<option value="0"<?php echo ((!$SEARCH_YEAR)? " selected=\"selected\"" : ""); ?>>-- All Years --</option>
 							<?php
 							$start_year = (fetch_first_year() - 3);
@@ -213,17 +266,14 @@ if (!defined("PARENT_INCLUDED")) {
 								echo "<option value=\"".$year."\"".(($SEARCH_YEAR == $year) ? " selected=\"selected\"" : "").">".$year."/".($year + 1)."</option>\n";
 							}
 							?>
-					</select>
-			</div>
-		</div> <!--/control-group-->
-		<div class="control-group">
-			<div class="controls">
-				<div class="btn-group" data-toggle="buttons-radio">
-					<a href="<?php echo ENTRADA_URL; ?>/search?<?php echo replace_query(array("m" =>  "text")); ?>" class="btn <?php echo (($SEARCH_MODE != "timeline") ? "active" : ""); ?>">Text Results</a>
-					<a href="<?php echo ENTRADA_URL; ?>/search?<?php echo replace_query(array("m" =>  "timeline")); ?>" class="btn <?php echo (($SEARCH_MODE == "timeline") ? "active" : ""); ?>">Timeline</a>
-				</div>
-			</div>
-		</div>
+						</select>
+					</td>
+					<td style="text-align: right">
+						<span style="width: 100px; height: 23px"><a href="<?php echo ENTRADA_URL; ?>/search?<?php echo replace_query(array("m" =>  "text")); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/search-mode-text-<?php echo (($SEARCH_MODE != "timeline") ? "on" : "off"); ?>.gif" width="100" height="23" alt="" title="" border="0" /></a></span><span style="width: 100px; height: 23px"><a href="<?php echo ENTRADA_URL; ?>/search?<?php echo replace_query(array("m" =>  "timeline")); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/search-mode-timeline-<?php echo (($SEARCH_MODE == "timeline") ? "on" : "off"); ?>.gif" widtgh="100" height="23" alt="" title="" border="0" /></a></span>
+					</td>
+				</tr>
+			</tbody>
+		</table>
 	</form>
 	<?php
 	if ($SEARCH_QUERY) {

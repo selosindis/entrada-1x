@@ -226,12 +226,12 @@ if ($ACTION == "login") {
 			$_SESSION["details"]["private_hash"] = $result["PRIVATE_HASH"];
 			$_SESSION["details"]["allow_podcasting"] = false;
 
-			if ((isset($ENTRADA_CACHE)) && (!DEVELOPMENT_MODE)) {				
-				if (!($ENTRADA_CACHE->test("acl_".$ENTRADA_USER->getID()))) {
+			if ((isset($ENTRADA_CACHE)) && (!DEVELOPMENT_MODE)) {
+				if (!($ENTRADA_CACHE->test("acl_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID()))) {
 					$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
-					$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_".$ENTRADA_USER->getID());
+					$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
 				} else {
-					$ENTRADA_ACL = $ENTRADA_CACHE->load("acl_".$ENTRADA_USER->getID());
+					$ENTRADA_ACL = $ENTRADA_CACHE->load("acl_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
 				}
 			} else {
 				$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);

@@ -241,7 +241,7 @@ GOOGLENOTIFICATION;
  */
 define("DEFAULT_WEATHER_FETCH", "http://weather.yahooapis.com/forecastrss?u=c&w=%LOCATIONCODE%");
 
-$WEATHER_LOCATION_CODES = array("4145" => "Kingston, Ontario");				// These are the weather.com weather city / airport weather codes that are fetched and stored for use on the Dashboard.
+$WEATHER_LOCATION_CODES = array("4145" => "Kingston, Ontario");					// These are the weather.com weather city / airport weather codes that are fetched and stored for use on the Dashboard.
 
 define("LOG_DIRECTORY", $config->entrada_storage . "/logs");					// Full directory path to the logs directory without a trailing slash.
 
@@ -267,8 +267,8 @@ define("ANNUALREPORT_STORAGE", $config->entrada_storage."/annualreports");		// F
 
 define("STORAGE_USER_PHOTOS", $config->entrada_storage . "/user-photos");		// Full directory path where user profile photos are stored without trailing slash.
 define("FILE_STORAGE_PATH", $config->entrada_storage . "/event-files");			// Full directory path where off-line files are stored without trailing slash.
-define("MSPR_STORAGE",$config->entrada_storage . "/msprs");					//Full directory path where student Medical School Performance Reports should be sotred
-define("SEARCH_INDEX_PATH",$config->entrada_storage . "/search-indexes");					//Full directory path where student Medical School Performance Reports should be sotred
+define("MSPR_STORAGE",$config->entrada_storage . "/msprs");						//Full directory path where student Medical School Performance Reports should be sotred
+define("SEARCH_INDEX_PATH",$config->entrada_storage . "/search-indexes");		//Full directory path where student Medical School Performance Reports should be sotred
 
 define("SENDMAIL_PATH", "/usr/sbin/sendmail -t -i");							// Full path and parametres to sendmail.
 
@@ -276,7 +276,7 @@ define("DEBUG_MODE", true);														// Some places have extra debug code to
 define("SHOW_LOAD_STATS", false);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.4.0DEV");										// The current filesystem version of Entrada.
+define("APPLICATION_VERSION", "1.4.0");											// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada: An eLearning Ecosystem";

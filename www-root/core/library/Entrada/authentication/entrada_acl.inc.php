@@ -716,9 +716,12 @@ class EventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 		}
 		
 		$query = "	SELECT *
-					FROM `event_contacts` AS ec					
+					FROM `event_contacts` AS ec	
+					JOIN `events` as e
+					ON e.`event_id` = ec.`event_id`
 					WHERE ec.`proxy_id` = " . $db->qstr($user_id) . "
-					AND ec.`event_id` = " . $db->qstr($event_id);					
+					AND ec.`event_id` = " . $db->qstr($event_id) . "
+					AND e.`course_id` = " . $db->qstr($course_id);					
 
 		$result = $db->GetRow($query);
 

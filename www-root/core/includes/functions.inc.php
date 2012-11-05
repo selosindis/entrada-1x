@@ -8965,7 +8965,7 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	if (strtolower($ENTRADA_USER->getActiveRole()) != "admin" && strtolower($ENTRADA_USER->getActiveRole()) != "director") {
 		$query .= "	LEFT JOIN `course_audience` AS b
 				ON a.`course_id` = b.`course_id`
-				JOIN `groups` AS c
+				LEFT JOIN `groups` AS c
 				ON b.`audience_type` = 'group_id'
 				AND b.`audience_value` = c.`group_id`
 				LEFT JOIN `group_members` AS d

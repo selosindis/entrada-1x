@@ -91,10 +91,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_POLLS"))) {
 	<h1><?php echo $MODULES[strtolower($MODULE)]["title"]; ?></h1>
 
 	<?php if($ENTRADA_ACL->amIAllowed('poll', 'create')) : ?>
-		<div style="float: right">
-			<ul class="page-action">
-				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="strong-green">Add New Poll</a></li>
-			</ul>
+		<div class="row-fluid">
+			<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Add New Poll</a>
 		</div>
 		<div style="clear: both"></div>
 	<?php endif; ?>

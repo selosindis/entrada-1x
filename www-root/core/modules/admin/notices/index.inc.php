@@ -100,12 +100,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 	<?php
 	if ($ENTRADA_ACL->amIAllowed("notice", "create", false)) {
 		?>
-		<div style="float: right">
-			<ul class="page-action">
-				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="strong-green">Add New Notice</a></li>
-			</ul>
+		<div class="row-fluid">	
+			<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="pull-right btn btn-primary">Add New Notice</a>
 		</div>
-		<div style="clear: both"></div>
 		<?php
 	}
 

@@ -238,54 +238,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 				echo display_error();
 			}
 			?>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/notices?section=add&amp;step=2" method="post">
+			<form action="<?php echo ENTRADA_URL; ?>/admin/notices?section=add&amp;step=2" method="post" class="form-horizontal">
 				<input type="hidden" id="org_id" name="org_id" value="<?php echo (int) $ENTRADA_USER->getActiveOrganisation(); ?>" />
-				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Notice">
-					<colgroup>
-						<col style="width: 3%" />
-						<col style="width: 20%" />
-						<col style="width: 77%" />
-					</colgroup>
-					<thead>
-						<tr>
-							<td colspan="3"><h2>Notice Details</h2></td>
-						</tr>
-					</thead>
-					<tbody id="audience-options">
-						<?php
+				<h2>Notice Details</h2>
+				<?php
 						if ($PROCESSED["organisation_id"]) {
 							require_once(ENTRADA_ABSOLUTE."/core/modules/admin/notices/api-audience-options.inc.php");
 						}
 						?>
-					</tbody>
-					<tbody>
+				<div class="control-group">
+					<label for="notice_summary" class="form-required">Notice Summary:</label>
+					<textarea id="notice_summary" name="notice_summary" cols="60" rows="10" style="width:100%"><?php echo ((isset($PROCESSED["notice_summary"])) ? html_encode(trim($PROCESSED["notice_summary"])) : ""); ?></textarea>
+				</div>
+				<h2>Time Release Options</h2>
+				<div class="row-fluid">
+					<table>
 						<tr>
-							<td></td>
-							<td style="vertical-align: top"><label for="notice_summary" class="form-required">Notice Summary</label></td>
-							<td style="vertical-align: top">
-								<textarea id="notice_summary" name="notice_summary" cols="60" rows="10" style="width: 100%; height: 200px"><?php echo ((isset($PROCESSED["notice_summary"])) ? html_encode(trim($PROCESSED["notice_summary"])) : ""); ?></textarea>
-							</td>
+							<?php echo generate_calendars("display", "", true, true, ((isset($PROCESSED["display_from"])) ? $PROCESSED["display_from"] : time()), true, true, ((isset($PROCESSED["display_until"])) ? $PROCESSED["display_until"] : strtotime("+5 days 23:59:59"))); ?>
 						</tr>
-						<tr>
-							<td colspan="3"><h2>Time Release Options</h2></td>
-						</tr>
-						<?php echo generate_calendars("display", "", true, true, ((isset($PROCESSED["display_from"])) ? $PROCESSED["display_from"] : time()), true, true, ((isset($PROCESSED["display_until"])) ? $PROCESSED["display_until"] : strtotime("+5 days 23:59:59"))); ?>
-						<tr>
-							<td colspan="3" style="padding-top: 25px">
-								<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-								<tr>
-									<td style="width: 25%; text-align: left">
-										<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>'" />
-									</td>
-									<td style="width: 75%; text-align: right; vertical-align: middle">
-										<input type="submit" class="button" value="Save" />
-									</td>
-								</tr>
-								</table>
-							</td>
-						</tr>
-					</tbody>
-				</table>
+					</table>
+				</div>
+				<div class="row-fluid" style="margin-top:10px">
+					<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>'" />
+					<div class="pull-right">
+						<input type="submit" class="btn btn-primary" value="Save" />
+					</div>
+				</div>
+
 			</form>
 
 			<script type="text/javascript">

@@ -172,7 +172,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_POLLS"))) {
 							echo display_error();
 						}
 						?>
-						<form action="<?php echo ENTRADA_URL; ?>/admin/polls?section=edit&amp;id=<?php echo $POLL_ID; ?>&amp;step=2" method="post">
+						<form action="<?php echo ENTRADA_URL; ?>/admin/polls?section=edit&amp;id=<?php echo $POLL_ID; ?>&amp;step=2" method="post" class="form-horizontal">
 						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Poll">
 						<colgroup>
 							<col style="width: 3%" />

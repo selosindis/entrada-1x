@@ -497,7 +497,7 @@ if ($RECORD_ID) {
 										if (count($evaluation_targets) == 1) {
 											echo "<input type=\"hidden\" id=\"evaluation_target\" name=\"evaluation_target\" value=\"".$evaluation_targets[0]["etarget_id"]."\" />";
 											if ($PROCESSED["target_shortname"] == "teacher") {
-												echo "<input type=\"hidden\" id=\"target_record_id\" name=\"evaluation_target\" value=\"".$evaluation_targets[0]["proxy_id"]."\" />";
+												echo "<input type=\"hidden\" id=\"target_record_id\" name=\"target_record_id\" value=\"".$evaluation_targets[0]["proxy_id"]."\" />";
 												$target_name = $evaluation_targets[0]["firstname"]." ".$evaluation_targets[0]["lastname"];
 											} elseif ($PROCESSED["target_shortname"] == "course") {
 												echo "<input type=\"hidden\" id=\"target_record_id\" name=\"target_record_id\" value=\"".$evaluation_targets[0]["course_id"]."\" />";

@@ -199,7 +199,9 @@ class CsvImporter {
 		// event audience, not required	but needs to be verified
 		if (!empty($event_audiences_cohort)) {
 			foreach ($event_audiences_cohort as $i => $cohort) {
-				$event_audiences_cohort[$i] = $db->qstr(strtolower(clean_input($cohort, array("trim", "striptags"))));
+				if (!empty($cohort)) {
+					$event_audiences_cohort[$i] = $db->qstr(strtolower(clean_input($cohort, array("trim", "striptags"))));
+				}
 			}
 			$query = "	SELECT `group_id`, `group_name`
 						FROM `groups`
@@ -215,7 +217,9 @@ class CsvImporter {
 		
 		if (!empty($event_audiences_groups)) {
 			foreach ($event_audiences_groups as $i => $group) {
-				$event_audiences_groups[$i] = $db->qstr(strtolower(clean_input($group, array("trim", "striptags"))));
+				if (!empty($group)) {
+					$event_audiences_groups[$i] = $db->qstr(strtolower(clean_input($group, array("trim", "striptags"))));
+				}
 			}
 			
 			$query = "	SELECT `cgroup_id`, `course_id`, `group_name`
@@ -235,11 +239,13 @@ class CsvImporter {
 		
 		if (!empty($event_audiences_students)) {
 			foreach ($event_audiences_students as $i => $student) {
-				$event_audiences_students[$i] = $db->qstr((int) $student);
+				if (!empty($student)) {
+					$event_audiences_students[$i] = $db->qstr((int) $student);
+				}
 			}
 			$query = "	SELECT `id`
 						FROM `".AUTH_DATABASE."`.`user_data` 
-						WHERE `number` IN ('".implode(", ", $event_audiences_students)."')";
+						WHERE `number` IN (".implode(", ", $event_audiences_students).")";
 			$results = $db->GetAll($query);
 			if ($results) {
 				foreach ($results as $result) {
@@ -248,13 +254,20 @@ class CsvImporter {
 			}
 		}
 		
+		if (empty($output[$event_id]["audiences"]["cohorts"]) && empty($output[$event_id]["audiences"]["groups"]) && empty($output[$event_id]["audiences"]["students"])) {
+			$err["errors"][] = "Event missing audience.";
+			$skip_row = true;
+		}
+		
 		if (!empty($event_teachers)) {
 			foreach ($event_teachers as $teacher) {
-				$event_teachers[$teacher] = $db->qstr((int) $teacher);
+				if (!empty($teacher)) {
+					$event_teachers[$teacher] = $db->qstr((int) $teacher);
+				}
 			}
 			$query = "	SELECT `id`
 						FROM `".AUTH_DATABASE."`.`user_data` 
-						WHERE `number` IN ('".implode(", ", $event_teachers)."')";
+						WHERE `number` IN (".implode(", ", $event_teachers).")";
 			$results = $db->GetAll($query);
 			if ($results) {
 				foreach ($results as $result) {

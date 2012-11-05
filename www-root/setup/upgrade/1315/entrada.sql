@@ -104,4 +104,4 @@ INSERT INTO `evaluations_lu_questiontypes` (`questiontype_id`, `questiontype_sho
 
 UPDATE `evaluations_lu_targets` SET `target_active` = 1 WHERE `target_shortname` IN ('student', 'rotation_core', 'rotation_elective', 'preceptor', 'peer', 'self');
 
-UPDATE `settings` SET `value` = '1401' WHERE `shortname` = 'version_db';
+UPDATE `settings` SET `value` = '1315' WHERE `shortname` = 'version_db';

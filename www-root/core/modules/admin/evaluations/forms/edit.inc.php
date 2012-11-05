@@ -160,10 +160,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				case 2 :
 				case 1 :
 				default :
+					
+					if (isset($_GET["success"]) && $_GET["success"]) {
+						if ($_GET["success"] == "true") {
+							echo display_success(array("The <strong>MCC Presentations</strong> for the selected question have been updated successfully."));
+						} else {
+							echo display_error(array("There was an error while attempting to update the <strong>MCC Presentations</strong> for the selected question. Please contact a system administrator if this problem persists."));
+						}
+					}
+					
 					if (!$ALLOW_QUESTION_MODIFICATIONS) {
 						echo display_notice(array("Please note this evaluation form has alreay been used in an evaluation, therefore the questions cannot be modified.<br /><br />If you would like to make modifications to the form you must copy it first <em>(using the Copy Form button below)</em> and then make your modifications."));
 					}
 
+					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 			
@@ -396,7 +406,42 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							</div>
 						</form>
 					</div>
+					<a id="false-link" href="#placeholder"></a>
+					<div id="placeholder" style="display: none; padding: 10px 20px 10px 20px; min-width: 400px;"></div>
 					<script type="text/javascript" defer="defer">
+						var ajax_url = '';
+						var modalDialog;
+						document.observe('dom:loaded', function() {
+							modalDialog = new Control.Modal($('false-link'), {
+								position:		'center',
+								overlayOpacity:	0.75,
+								closeOnClick:	'overlay',
+								className:		'modal',
+								fade:			true,
+								fadeDuration:	0.30,
+								beforeOpen: function(request) {
+									eval($('scripts-on-open').innerHTML);
+								}
+							});
+						});
+				
+						function openDialog (url) {
+							if (url && url != ajax_url) {
+								ajax_url = url;
+								new Ajax.Request(ajax_url, {
+									method: 'get',
+									onComplete: function(transport) {
+										modalDialog.container.update(transport.responseText);
+										modalDialog.open();
+									}
+								});
+							} else {
+								$('scripts-on-open').update();
+								modalDialog.open();
+							}
+						}
+
+						
 						// Modal control for deleting form.
 						new Control.Modal('form-control-disable', {
 							overlayOpacity:	0.75,

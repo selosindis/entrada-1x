@@ -534,16 +534,14 @@ class User {
 						  AND a.`app_id` = ?";
 			$results = $db->getAll($query, array($proxy_id, AUTH_APP_ID));
 
-			//every user should have at least one org.
-			$organisation_list = array();
+			//every user should have at least one org.			
 			if ($results) {				
+				$organisation_list = array();
 				foreach ($results as $result) {
 					$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
 				}
 				$user->setAllOrganisations($organisation_list);
 			}
-			$user->setAllOrganisations($organisation_list);
-		}
 
 		//get all of the users groups and roles for each organisation
 		$query = "SELECT b.`organisation_id`, b.`organisation_title`, a.`group`, a.`role`, a.`id`
@@ -591,6 +589,8 @@ class User {
 			$user->setActiveGroup($result["group"]);
 			$user->setActiveRole($result["role"]);
 		}
+		
+	}
 		
 		return $user;
 	}

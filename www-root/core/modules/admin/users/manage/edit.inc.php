@@ -909,8 +909,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 													AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
 								}
 													
-								$results	= $db->GetAll($query);
-								if ($results) {
+								$all_orgs	= $db->GetAll($query);
+								if ($all_orgs) {
 									 ?>
 						<tr>
 							<td colspan="3">
@@ -921,8 +921,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											<label for="organisations"><strong>Organisation</strong></label><br />
 											<select id="organisations" name="organisations" style="width:200px">
 										<?php
-											foreach($results as $result) {
-												echo build_option($result["organisation_id"], ucfirst($result["organisation_title"]), $selected);															
+											foreach($all_orgs as $a_org) {
+												echo build_option($a_org["organisation_id"], ucfirst($a_org["organisation_title"]), $selected);															
 											}														
 										?>
 											</select>
@@ -959,16 +959,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								<?php
 									$initial_permissions = array();
 									
-									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
-												FROM `".AUTH_DATABASE."`.`user_access` ua
-												JOIN `" . AUTH_DATABASE . "`.`organisations` o
-												ON ua.`organisation_id` = o.`organisation_id`												
-												WHERE ua.`user_id` = " . $db->qstr($PROXY_ID). "
-												AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
-													
-									$organisations	= $db->GetAll($query);
-									
-									foreach($organisations as $org) {
+									foreach($all_orgs as $org) {
 									
 								?>
 									
@@ -989,7 +980,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										</thead>
 										<tbody>											
 											<tr>
-												<td colspan="3"><h3>Profiles</h3></td>
+												<td colspan="4"><h3>Profiles</h3></td>
 											</tr>
 									<?php
 									$query		= "	SELECT ua.*, o.`organisation_id`, o.`organisation_title`, ud.`clinical`, ud.`entry_year`, ud.`grad_year`
@@ -1039,7 +1030,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											$initial_acl["grad_year"] = $result["grad_year"];
 											$initial_permissions[] = $initial_acl;											
 											
-											echo "<tr id=\"" . $result["organisation_id"] . "_" . $group_id . "_" . $role_id . "\"><td></td><td>" . $result["group"] . " / " . $result["role"] . "
+											echo "<tr id=\"" . $result["organisation_id"] . "_" . $group_id . "_" . $role_id . "\"><td></td><td>" . ucfirst($result["group"]) . " / " . ucfirst($result["role"]) . "
 												  </td><td>" . $options . "</td><td><a class=\"remove_perm\" href=\"\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\"></a></td></tr>";
 											
 											}
@@ -1130,7 +1121,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						<tr>
 							<td>&nbsp;</td>
 							<td colspan="2">
-								<div id="send_notification_msg" style="display: block">
+								<div id="send_notification_msg" style="display: none;">
 									<label for="notification_message" class="form-required">Notification Message</label><br />
 									<textarea id="notification_message" name="notification_message" rows="10" cols="65" style="width: 100%; height: 200px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_NEW_USER_NOTIFICATION); ?></textarea>
 									<span class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</span>

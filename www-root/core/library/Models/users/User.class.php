@@ -562,6 +562,8 @@ class User {
 						if (!isset($_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) || !$_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) {
 							$_SESSION["permissions"][$user->getAccessId()]["organisation_id"] = $result["organisation_id"];
 							$user->setActiveOrganisation($result["organisation_id"]);
+							$user->setActiveRole($result["role"]);
+							$user->setActiveGroup($result["group"]);						
 						}
 						$user->setDefaultAccessId($result["id"]);
 					}
@@ -570,6 +572,8 @@ class User {
 				if ((!isset($_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) || !$_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) && isset($results[0]["organisation_id"]) && $results[0]["organisation_id"]) {
 					$_SESSION["permissions"][$user->getAccessId()]["organisation_id"] = $results[0]["organisation_id"];
 					$user->setActiveOrganisation($results[0]["organisation_id"]);
+					$user->setActiveRole($results[0]["role"]);
+					$user->setActiveGroup($results[0]["group"]);
 				}
 				$user->setOrganisationGroupRole($org_group_role);
 			}
@@ -629,6 +633,58 @@ class User {
 	}
 	
 	/**
+	 * Returns the active group for the active organisation.  
+	 * 
+	 * @return array
+	 */
+	public function getActiveGroup() {
+		if ($this->active_group) {
+			return $this->active_group;
+		}
+		else if ($_SESSION["permissions"][$this->getAccessId()]["group"]) {
+			return $_SESSION["permissions"][$this->getAccessId()]["group"];
+		}
+		else {
+			return $this->group;
+		}
+	}
+	
+	/**
+	 * Sets the active group.
+	 * 
+	 * @param type $string
+	 */
+	public function setActiveGroup($group) {
+		$this->active_group = $group;
+	}
+	
+	/**
+	 * Returns the active role for the active organisation.  
+	 * 
+	 * @return array
+	 */
+	public function getActiveRole() {
+		if ($this->active_role) {
+			return $this->active_role;
+		}
+		else if ($_SESSION["permissions"][$this->getAccessId()]["role"]) {
+			return $_SESSION["permissions"][$this->getAccessId()]["role"];
+		}
+		else {
+			return $this->role;
+		}			
+	}
+	
+	/**
+	 * Sets the active role.
+	 * 
+	 * @param type string
+	 */
+	public function setActiveRole($role) {
+		$this->active_role = $role;
+	}
+	
+	/**
 	 * Returns the access group to which this user belongs e.g. student, faculty, ... 
 	 * @return string
 	 */
@@ -648,6 +704,15 @@ class User {
 			return;
 		}
 		return $this->role; 
+	}
+	
+	/**
+	 * Sets the active role.
+	 * 
+	 * @param type string
+	 */
+	public function setRole($role) {
+		$this->role = $role;
 	}
 	
 	/**

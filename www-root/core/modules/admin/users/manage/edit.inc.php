@@ -897,12 +897,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							</td>
 						</tr>
 						<?php							
-								$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
-												FROM `".AUTH_DATABASE."`.`user_access` ua
-												JOIN `" . AUTH_DATABASE . "`.`organisations` o
-												ON ua.`organisation_id` = o.`organisation_id`												
-												WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getId()). "
-												AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
+								if (strtolower($ENTRADA_USER->getActiveGroup()) == "medtech" && strtolower($ENTRADA_USER->getActiveRole()) == "admin") {
+									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title` 
+													FROM `" . AUTH_DATABASE . "`.`organisations` o";
+								} else {
+									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
+													FROM `".AUTH_DATABASE."`.`user_access` ua
+													JOIN `" . AUTH_DATABASE . "`.`organisations` o
+													ON ua.`organisation_id` = o.`organisation_id`												
+													WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getId()). "
+													AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
+								}
 													
 								$results	= $db->GetAll($query);
 								if ($results) {
@@ -994,7 +999,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												JOIN `".AUTH_DATABASE."`.`user_data` ud
 												ON ua.`user_id` = ud.`id`
 												AND ua.`organisation_id` = " . $db->qstr($org["organisation_id"]) . "
-												WHERE ua.`user_id` = " . $db->qstr($PROXY_ID);
+												WHERE ua.`user_id` = " . $db->qstr($PROXY_ID) ."
+												AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
 													
 									$results	= $db->GetAll($query);
 								
@@ -1118,7 +1124,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							</td>
 						</tr>
 						<tr>
-							<td><input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle" onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" /></td>
+							<td><input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"])) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle" onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" /></td>
 							<td colspan="2"><label for="send_notification" class="form-nrequired">Send this new user a password reset e-mail after adding them.</label></td>
 						</tr>
 						<tr>

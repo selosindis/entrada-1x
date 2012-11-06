@@ -11483,33 +11483,54 @@ function events_fetch_event_audience_attendance($event_id = 0) {
 		if ($results) {
 			$event_audience = array();
 			foreach ($results as $result) {
-
-
 				switch ($result["audience_type"]) {
 					case "course_id" : // Course Audience
-						$query = "	SELECT *
-									FROM `course_audience`
-									WHERE `course_id`";
-						$ca_result = $db->GetRow($query);
-						
-						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname, d.`eattendance_id` AS `has_attendance` 
-									FROM `group_members` a
-									JOIN `".AUTH_DATABASE."`.`user_data` u
-									ON a.`proxy_id` = u.`id`
-									AND a.`group_id` = ".$db->qstr($ca_result["audience_value"])."
-									JOIN `".AUTH_DATABASE."`.`user_access` ua
-									ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
-									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")
-									LEFT JOIN `event_attendance` d
-									ON u.`id` = d.`proxy_id` "
-									.($organisation_id?
-									"WHERE u.`organisation_id` = ".$db->qstr($organisation_id):"") . "
-									AND d.`event_id` = " . $db->qstr($event_id);	
-						$course_audience = $db->getAll($query);
-						$course_audience = array_unique($course_audience,SORT_REGULAR);
-						usort($course_audience,"audience_sort");
-						if ($course_audience) {
-							$event_audience = array_merge($event_audience,$course_audience);
+						$query = "SELECT *
+									FROM `course_audience` AS a
+									JOIN `courses` AS b 
+									ON a.`course_id` = b.`course_id`
+									AND a.`course_id` = " . $result["audience_value"] . "
+									AND a.`audience_active` = 1
+									JOIN `curriculum_periods` AS c
+									ON b.`curriculum_type_id` = c.`curriculum_type_id` 
+									AND UNIX_TIMESTAMP() BETWEEN c.`start_date` AND c.`finish_date`";						
+						$ca_result = $db->GetAll($query);
+						foreach($ca_result as $ca) {						
+							if ($ca["audience_type"] == "group_id") {
+								$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname, d.`eattendance_id` AS `has_attendance` 
+											FROM `group_members` a
+											JOIN `".AUTH_DATABASE."`.`user_data` u
+											ON a.`proxy_id` = u.`id`
+											AND a.`group_id` = ".$db->qstr($ca["audience_value"])."
+											JOIN `".AUTH_DATABASE."`.`user_access` ua
+											ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
+											AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")
+											LEFT JOIN `event_attendance` d
+											ON u.`id` = d.`proxy_id` "
+											.($organisation_id?
+											"WHERE u.`organisation_id` = ".$db->qstr($organisation_id):"") . "
+											AND d.`event_id` = " . $db->qstr($event_id);		
+							} elseif ($ca["audience_type"] == "proxy_id") {
+								$query = "	SELECT DISTINCT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname, d.`eattendance_id` AS `has_attendance` 
+											FROM `course_audience` a
+											JOIN `".AUTH_DATABASE."`.`user_data` u
+											ON a.`audience_value` = u.`id`
+											AND a.`audience_value` = ".$db->qstr($ca["audience_value"])."
+											JOIN `".AUTH_DATABASE."`.`user_access` ua
+											ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
+											AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")
+											LEFT JOIN `event_attendance` d
+											ON u.`id` = d.`proxy_id` "
+											.($organisation_id?
+											"WHERE u.`organisation_id` = ".$db->qstr($organisation_id):"") . "
+											AND d.`event_id` = " . $db->qstr($event_id);	
+							}						
+							$course_audience = $db->getAll($query);
+							$course_audience = array_unique($course_audience,SORT_REGULAR);
+							usort($course_audience,"audience_sort");
+							if ($course_audience) {
+								$event_audience = array_merge($event_audience,$course_audience);
+							}
 						}
 					break;
 					case "group_id" : // Course Groups

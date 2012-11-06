@@ -46,7 +46,7 @@ $community_name	= "";
 $community_url	= "";
 
 $logged_in		= (((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) ? true : false);
-$user_proxy_id 	= (isset($ENTRADA_USER) ? $ENTRADA_USER->getID() : 0);
+$user_proxy_id 	= (isset($ENTRADA_USER) && $ENTRADA_USER ? $ENTRADA_USER->getID() : 0);
 
 /**
  * Check for PATH_INFO to process the url and get the module.

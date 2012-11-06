@@ -556,7 +556,6 @@ class User {
 					ORDER BY a.`id` ASC";
 
 		$results = $db->getAll($query, array($proxy_id, time(), time(), AUTH_APP_ID));		
-
 		if ($results) {			
 			$org_group_role = array();
 			foreach ($results as $result) {
@@ -661,6 +660,16 @@ class User {
 	}
 	
 	/**
+	 * Sets the active role.
+	 * 
+	 * @param type string
+	 */
+	public function setActiveRole($role) {
+		$this->active_role = $role;
+	}
+	
+	
+	/**
 	 * Sets the active group.
 	 * 
 	 * @param type $string
@@ -684,15 +693,6 @@ class User {
 		else {
 			return $this->role;
 		}			
-	}
-	
-	/**
-	 * Sets the active role.
-	 * 
-	 * @param type string
-	 */
-	public function setActiveRole($role) {
-		$this->active_role = $role;
 	}
 	
 	/**

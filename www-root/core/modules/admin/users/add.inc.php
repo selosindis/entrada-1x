@@ -1483,6 +1483,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											}
 											$('input[name=permissions]').val(JSON.stringify(permissions));
 											
+											if (org_id == $('#organisations').val()) {
+												//add the group back to the select list
+												var group_role = $(this).closest("tr").children()[1];
+												group_role = $(group_role).text();
+												var group_text = $.trim(group_role.split("/")[0]);														
+												var option = $("<option></option>").text(group_text);
+												$(option).attr("value", group_id);
+												$('#groups').append(option);
+
+												//now resort the select list by group title
+												var my_options = $('#groups option');
+												my_options.sort(function(a,b) {
+													if (a.text > b.text) return 1;
+													else if (a.text < b.text) return -1;
+													else return 0
+												});
+											}
+											
 											var myTable = $(this).closest("table");											
 											$(this).closest("tr").remove();													
 											if ($(myTable)[0].rows.length <= 4) {												

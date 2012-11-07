@@ -1285,12 +1285,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							$("#groups").append('<option value=\"0\">Select a Group</option>')
 							var url = "<?php echo ENTRADA_URL . "/api/organisation-groups.api.php"; ?>";
 							$.get(	url, { organisation_id: $(this).val() },
-									function(data){
+									function(data){										
 										for (var key in data) {
 											if (data.hasOwnProperty(key)) {
 											$("#groups").append('<option value=\"' + key + '\">' + data[key]+ '</option>');															
 											}
 										}
+										filterGroups();
 									}, "json");
 						});										
 						$('select[name=groups]').live("change", function() {
@@ -1310,8 +1311,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$('#organisations option:first').attr('selected', true).change();
 
 						<?php echo "var permissions = " . $initial_permissions . ";"; ?>	
-						$('input[name=permissions]').val(JSON.stringify(permissions));
-						
+						$('input[name=permissions]').val(JSON.stringify(permissions));					
 
 						$("input[name=add_permissions]").live("click", function() {	
 							var group_id = $('#groups').val();
@@ -1401,6 +1401,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							}
 							$('input[name=permissions]').val(JSON.stringify(permissions));
 
+							if (org_id == $('#organisations').val()) {
+								//add the group back to the select list
+								var group_role = $(this).closest("tr").children()[1];
+								group_role = $(group_role).text();
+								var group_text = $.trim(group_role.split("/")[0]);														
+								var option = $("<option></option>").text(group_text);
+								$(option).attr("value", group_id);
+								$('#groups').append(option);
+
+								//now resort the select list by group title
+								var my_options = $('#groups option');
+								my_options.sort(function(a,b) {
+									if (a.text > b.text) return 1;
+									else if (a.text < b.text) return -1;
+									else return 0
+								});
+							}
+
 							var myTable = $(this).closest("table");											
 							$(this).closest("tr").remove();
 							if ($(myTable)[0].rows.length <= 4) {								
@@ -1417,6 +1435,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								$(this).hide();
 							}
 						});
+						function filterGroups() {
+							if ($('#groups option').length > 0) {
+								var current_org = $('#organisations').val();								
+								for (i = 0; i < permissions.acl.length; i++) {									
+									if (permissions.acl[i].org_id == current_org) {										
+										$('#groups option[value=' + permissions.acl[i].group_id + ']').remove();
+									}
+								}
+								//now resort the option list
+								var my_options = $('#groups option');
+								my_options.sort(function(a,b) {
+									if (a.text > b.text) return 1;
+									else if (a.text < b.text) return -1;
+									else return 0
+								});
+							}
+						}
 					});
 					</script>
 					<?php

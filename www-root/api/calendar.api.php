@@ -297,7 +297,7 @@ if ($user_proxy_id) {
 					}
 
 					$events[] = array (
-								"drid" => $drid,
+								"drid" => $event["event_id"],
 								"id" => $event["event_id"],
 								"start"	=> date("c", $event["event_start"]),
 								"end" => date("c", $event["event_finish"]),

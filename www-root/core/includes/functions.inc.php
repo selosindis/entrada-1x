@@ -10694,8 +10694,8 @@ function events_fetch_sorting_query($sort_by = "", $sort_order = "ASC") {
  * filter settings and results that can be iterated through by these views.
  */
 function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_role = "", $organisation_id = 0, $sort_by = "", $sort_order = "", $date_type = "", $timestamp_start = 0, $timestamp_finish = 0, $filters = array(), $pagination = true, $current_page = 1, $results_per_page = 15, $community_id = false) {
-	global $db, $ENTRADA_ACL, $ENTRADA_USER;
-
+	global $db, $ENTRADA_ACL, $ENTRADA_USER, $ENTRADA_CACHE;
+	
 	$output = array(
 				"duration_start" => 0,
 				"duration_end" => 0,
@@ -10822,6 +10822,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 						`courses`.`organisation_id`,
 						`courses`.`course_code`,
 						`courses`.`course_name`,
+						`courses`.`permission`,
 						`curriculum_lu_types`.`curriculum_type_id`,
 						`curriculum_lu_types`.`curriculum_type_name` AS `event_phase`,
 						`curriculum_lu_types`.`curriculum_type_name` AS `event_term`,
@@ -11123,7 +11124,9 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							GROUP BY `events`.`event_id`";
 	}
 
-	$query_events .= " ORDER BY %s".($pagination ? " LIMIT %s, %s" : "");
+	$query_events .= " ORDER BY %s";
+	$limitless_query_events = $query_events;
+	$query_events .= ($pagination ? " LIMIT %s, %s" : "");
 
 	/**
 	 * Get the total number of results using the generated queries above and calculate the total number
@@ -11175,34 +11178,16 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		$output["rid"] = 0;
 	}
 
-	/**
-	 * Provide the previous query so we can have previous / next event links on the details page.
-	 */
-	if (session_id()) {
-		if ($community_id == false) {
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["query"] = $query_events;
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["total_rows"] = $output["total_rows"];
-
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"] = $query_events;
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"] = $output["total_rows"];
-		} else {
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"] = $query_events;
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_rows"] = $output["total_rows"];
-		}
-	}
-
-	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $results_per_page);	
+	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $results_per_page);
+	$limitless_query_events = sprintf($limitless_query_events, $sort_by);
+	
 	$learning_events = $db->GetAll($query_events);	
 	if ($learning_events) {				
 		if (strtolower($ENTRADA_USER->getActiveRole()) != "admin") {			
 			$i = 0;
 			foreach ($learning_events as $event) {		
-				if ($event["course_id"]) {
-					$query = "	SELECT * 
-								FROM `courses`
-								WHERE `course_id` = ".$db->qstr($event["course_id"]);					
-					$result = $db->GetRow($query);					
-					if ($result["permission"] == "open") {						
+				if ($event["course_id"]) {				
+					if ($event["permission"] == "open") {						
 						$event_resource = new EventResource($event["event_id"], $event["course_id"], $ENTRADA_USER->getActiveOrganisation());
 					} else {											
 						$event_resource = new EventClosedResource($event["event_id"], $event["course_id"], $ENTRADA_USER->getActiveOrganisation());
@@ -11261,8 +11246,105 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		}
 		$output["events"] = $learning_events;
 	}
+	
+	/**
+	 * Provide the previous query so we can have previous / next event links on the details page.
+	 */
+	if (session_id()) {
+		
+		$stored_query = false;
+		if (($community_id && isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"]) || (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"])) {
+			if ($community_id == false) {
+				$stored_query = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"];
+			} else {
+				$stored_query = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"];
+			}
+		}
+		
+		$current_result_ids_map = $ENTRADA_CACHE->load(($community_id ? "community_".$community_id."_" : "")."events_map_".AUTH_APP_ID."_".$ENTRADA_USER->getID());
+		
+		if (!$stored_query || $stored_query != $limitless_query_events || !isset($current_result_ids_map) || !$current_result_ids_map) {
+			$all_events = $db->GetAll($limitless_query_events);
+			$result_ids_map = array();
+			if ($all_events) {
+				foreach ($all_events as $map_event) {
+					if (strtolower($ENTRADA_USER->getActiveRole()) != "admin") {				
+						if ($map_event["permission"] == "closed") {
+							$event_resource = new EventClosedResource($map_event["event_id"], $map_event["course_id"], $ENTRADA_USER->getActiveOrganisation());
+							if ($ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {
+								$result_ids_map[] = $map_event["event_id"];
+							}
+						} else {
+							$result_ids_map[] = $map_event["event_id"];
+						}
+					} else {
+						$result_ids_map[] = $map_event["event_id"];
+					}
+				}
+			}
+			$ENTRADA_CACHE->save($result_ids_map, ($community_id ? "community_".$community_id."_" : "")."events_map_".AUTH_APP_ID."_".$ENTRADA_USER->getID(), array("events", "community"), 10800);
+		} else {
+			$result_ids_map = $current_result_ids_map;
+		}
+		$output["result_ids_map"] = $result_ids_map;
+		
+		if ($community_id == false) {
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["query"] = $query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["limitless_query"] = $limitless_query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["total_rows"] = $output["total_rows"];
+
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"] = $query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"] = $limitless_query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"] = $output["total_rows"];
+		} else {
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"] = $query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"] = $limitless_query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_rows"] = $output["total_rows"];
+		}
+	}
 
 	return $output;
+}
+
+function events_fetch_transversal_ids ($event_id, $community_id) {
+	global $ENTRADA_CACHE, $ENTRADA_USER;
+	
+	$transversal_ids = array();
+
+	$result_ids_map = $ENTRADA_CACHE->load(($community_id ? "community_".$community_id."_" : "")."events_map_".AUTH_APP_ID."_".$ENTRADA_USER->getID());
+	if (!$result_ids_map || !count($result_ids_map)) {
+		$learning_events = events_fetch_filtered_events(
+				$ENTRADA_USER->getActiveId(),
+				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"],
+				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"],
+				$ENTRADA_USER->getActiveOrganisation(),
+				$_SESSION[APPLICATION_IDENTIFIER][($community_id ? "community_page" : "events")]["sb"],
+				$_SESSION[APPLICATION_IDENTIFIER][($community_id ? "community_page" : "events")]["so"],
+				$_SESSION[APPLICATION_IDENTIFIER][($community_id ? "community_page" : "events")]["dtype"],
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"],
+				0,
+				($community_id && isset($_SESSION[APPLICATION_IDENTIFIER]["community_page"][$COMMUNITY_ID]["filters"]) ? $_SESSION[APPLICATION_IDENTIFIER]["community_page"][$COMMUNITY_ID]["filters"] : $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]),
+				true,
+				1,
+				15,
+				($community_id ? $community_id : false));
+		if (!($result_ids_map = $ENTRADA_CACHE->load(($community_id ? "community_".$community_id."_" : "")."events_map_".AUTH_APP_ID."_".$ENTRADA_USER->getID()))) {
+			$result_ids_map = array();
+			foreach ($learning_events["events"] as $event) {
+				$result_ids_map[] = $event["event_id"];
+			}
+		}
+	}
+	if (($result_id = array_search($event_id, $result_ids_map)) !== false) {
+		if ($result_id > 0) {
+			$transversal_ids["prev"] = $result_ids_map[($result_id - 1)];
+		}
+		if ($result_id < (count($result_ids_map) - 1)) {
+			$transversal_ids["next"] = $result_ids_map[($result_id + 1)];
+		}
+	}
+	
+	return $transversal_ids;
 }
 
 /**

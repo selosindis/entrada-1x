@@ -209,8 +209,8 @@ class Observership implements Editable {
 		extract($input_arr);
 		global $db;
 		$query = "insert into `student_observerships` (`student_id`, `title`,`site`,`location`,`preceptor_proxy_id`,`preceptor_firstname`, `preceptor_lastname`, `start`, `end`, `preceptor_prefix`, `preceptor_email`, `status`, `unique_id`, `notice_sent`) value (?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
-		if(!$db->Execute($query, array($user_id, $title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end, $preceptor_prefix, $preceptor_email, 'UNCONFIRMED', hash("sha256", uniqid("obs-", true)), uniqid()))) {
-			add_error("Failed to create new Observership.".$db->ErrorMsg());
+		if(!$db->Execute($query, array($user_id, $title, $site, $location, $preceptor_proxy_id, $preceptor_firstname, $preceptor_lastname, $start, $end, $preceptor_prefix, $preceptor_email, 'CONFIRMED', hash("sha256", uniqid("obs-", true)), uniqid()))) {
+			add_error("Failed to create new Observership.");
 			application_log("error", "Unable to update a student_observerships record. Database said: ".$db->ErrorMsg());
 		} else {
 			add_success("Successfully added new Observership.");

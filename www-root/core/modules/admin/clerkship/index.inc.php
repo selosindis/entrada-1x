@@ -52,7 +52,7 @@ if (!defined("IN_CLERKSHIP")) {
 	
 	$query = "	SELECT a.*
 				FROM `".CLERKSHIP_DATABASE."`.`events` AS a
-				JOIN `".CLERKSHIP_DATABASE."`.`electives` AS a
+				JOIN `".CLERKSHIP_DATABASE."`.`electives` AS b
 				ON a.`event_id` = b.`event_id`
 				WHERE a.`event_type`= 'elective'
 				AND a.`event_status` = 'approval'

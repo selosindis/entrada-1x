@@ -271,7 +271,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					/**
 					 * Required field "city" / City.
 					 */
-					if ((isset($_POST["city"])) && ($city = clean_input($_POST["city"], array("notags", "trim"))) && strpos($city, ",") !== false) {
+					if ((isset($_POST["city"])) && ($city = clean_input($_POST["city"], array("notags", "trim"))) && strpos($city, ",") === false) {
 						$PROCESSED["city"] = $city;
 					} else {
 						$ERROR++;

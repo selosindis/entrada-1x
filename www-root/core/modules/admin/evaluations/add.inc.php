@@ -127,6 +127,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			} else {
 				$PROCESSED["allow_target_review"] = false;
 			}
+			
+			/**
+			 * Non-required field "show_comments" / Show Comments
+			 */
+			if (isset($_POST["show_comments"]) && ($_POST["show_comments"])) {
+				$PROCESSED["show_comments"] = true;
+			} else {
+				$PROCESSED["show_comments"] = false;
+			}
 
 			/**
 			 * Required field "min_submittable" / Min Submittable
@@ -975,6 +984,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							<td>
 								<input type="checkbox" id="allow_target_review" name="allow_target_review"<?php echo (!isset($PROCESSED["allow_target_review"]) || $PROCESSED["allow_target_review"] ? " checked=\"checked\"" : ""); ?> />
 								<div style="float: right; width: 91%" class="content-small">Allow targets (or users with "ownership" permissions of the target) to review the results for this evaluation.</div>
+							</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td style="vertical-align: top">
+								<label for="show_comments" class="form-required">Show Comments in Review</label>
+							</td>
+							<td>
+								<input type="checkbox" id="show_comments" name="show_comments"<?php echo (!isset($PROCESSED["show_comments"]) || $PROCESSED["show_comments"] ? " checked=\"checked\"" : ""); ?> />
+								<div style="float: right; width: 91%" class="content-small">When reviewing this evaluation, show comments to reviewers (or targets able to review results).</div>
 							</td>
 						</tr>
 						<tr>

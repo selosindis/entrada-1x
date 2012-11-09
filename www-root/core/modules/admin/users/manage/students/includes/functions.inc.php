@@ -16,6 +16,8 @@ class MSPRAdminController {
 	}
 	
 	public function process() {
+		global $ENTRADA_USER;
+		
 		$user = $this->_user;
 		$translator = $this->_translator;
 		$type = $this->type;

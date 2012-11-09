@@ -30,8 +30,8 @@ require_once("init.inc.php");
 global $ENTRADA_ACTIVE_TEMPLATE;
 
 $search = array("%CONTACT_NAME%", "%APARTMENT_TITLE%", "%OCCUPANTS_AND_DATES%", "%REGIONALED_CONTACT%", "%REGIONALED_EMAIL%", "%APPLICATION_NAME%");
-
-$months = Array (time(), time()+2629743, time()+(2629743*2));
+$date = time();
+$months = Array ($date, $date+2629743, $date+(2629743*2), $date+(2629743*3));
 $previous_contact = ((($apartments[0]["super_full"] != $apartments[0]["keys_full"]) & (!empty($apartments[0]["keys_full"]))) ? $apartments[0]["keys_full"] : $apartments[0]["super_full"] );
 $previous_email = ((($apartments[0]["super_full"] != $apartments[0]["keys_full"]) & (!empty($apartments[0]["keys_full"]))) ? $apartments[0]["keys_email"] : $apartments[0]["super_email"] );
 $msg_body = "";
@@ -51,7 +51,7 @@ $query = "	SELECT `apartment_id`,
 					b.`region_name`
 				FROM `".CLERKSHIP_DATABASE."`.`apartments`
 				JOIN `".CLERKSHIP_DATABASE."`.`regions` AS b
-					ON `apartments`.`region_id` = b.`region_id`
+				ON `apartments`.`region_id` = b.`region_id`
 				WHERE `apartments`.`available_finish` >= ".$db->qstr(time())."
 				OR `apartments`.`available_finish` = 0
 				ORDER BY `apartments`.`region_id`, `keys_full`";
@@ -84,8 +84,8 @@ foreach ($apartments as $apartment) {
 				LEFT JOIN `".AUTH_DATABASE."`.`user_data` as b 
 				ON a.`proxy_id` = b.`id` 
 				WHERE a.`apartment_id` = ".$apartment['apartment_id']."
-				AND MONTH(FROM_UNIXTIME(a.`inhabiting_start`)) IN (MONTH(FROM_UNIXTIME('".implode("')), MONTH(FROM_UNIXTIME('", $months)."')))
-				AND YEAR(FROM_UNIXTIME(a.`inhabiting_start`)) IN (YEAR(FROM_UNIXTIME('".implode("')), YEAR(FROM_UNIXTIME('", $months)."')))
+				AND MONTH(FROM_UNIXTIME(a.`inhabiting_finish`)) IN (MONTH(FROM_UNIXTIME('".implode("')), MONTH(FROM_UNIXTIME('", $months)."')))
+				AND YEAR(FROM_UNIXTIME(a.`inhabiting_finish`)) IN (YEAR(FROM_UNIXTIME('".implode("')), YEAR(FROM_UNIXTIME('", $months)."')))
 				ORDER BY a.`inhabiting_start` ASC;";
 	
 	$occupants = $db->GetAll($query);
@@ -129,7 +129,6 @@ $messages[$contact_id]["contact_name"] =  $previous_contact;
 $messages[$contact_id]["contact_email"] =  $previous_email;
 $messages[$contact_id]["region"] =  $previous_region;
 $messages[$contact_id]["body"] = $msg_body;
-		
 		
 foreach ($messages as $message_id => $message) {
 	if (!isset($occupants_email)) {

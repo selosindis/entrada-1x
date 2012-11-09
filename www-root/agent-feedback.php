@@ -90,6 +90,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 
 		<link href="<?php echo ENTRADA_URL; ?>/images/favicon.ico" rel="shortcut icon" type="image/x-icon" />
 		<link href="<?php echo ENTRADA_URL; ?>/w3c/p3p.xml" rel="P3Pv1" type="text/xml" />
+		<link href="<?php echo ENTRADA_RELATIVE; ?>/css/jquery/jquery-ui.css" media="screen" rel="stylesheet" type="text/css" />
+		<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.min.js"></script>
+		<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery-ui.min.js"></script>
+		<script type="text/javascript">jQuery.noConflict();</script>
 
 		%HEAD%
 

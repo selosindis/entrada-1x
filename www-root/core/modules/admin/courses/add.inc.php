@@ -700,6 +700,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<col width="75%" />
 				</colgroup>
 				<tbody>
+					<?php if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) { ?>
 					<tr>
 						<td>&nbsp;</td>
 						<td style="vertical-align: top">
@@ -761,6 +762,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
+					<?php } ?>
 							<tr>
 								<td>&nbsp;</td>
 								<td>

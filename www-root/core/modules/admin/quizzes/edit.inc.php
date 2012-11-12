@@ -197,18 +197,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 					?>
-					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=edit&amp;id=<?php echo $RECORD_ID; ?>" method="post" id="editQuizForm" onsubmit="picklist_select('proxy_id')">
+					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=edit&amp;id=<?php echo $RECORD_ID; ?>" method="post" id="editQuizForm" onsubmit="picklist_select('proxy_id')" class="form-horizontal">
+					
 					<input type="hidden" name="step" value="2" />
-					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Quiz">
-					<colgroup>
-						<col style="width: 3%" />
-						<col style="width: 20%" />
-						<col style="width: 77%" />
-					</colgroup>
-					<thead>
-						<tr>
-							<td colspan="3">
-								<a name="quiz_information_section"></a><h2 id="quiz_information_section" title="Quiz Information">Quiz Information</h2>
+					<a name="quiz_information_section"></a><h2 id="quiz_information_section" title="Quiz Information">Quiz Information</h2>
 								<?php
 								if ($SUCCESS) {
 									fade_element("out", "display-success-box");
@@ -224,37 +216,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									echo display_error();
 								}
 								?>
-							</td>
-						</tr>
-					</thead>
-					<tbody id="quiz-information">
-						<tr>
-							<td></td>
-							<td><label for="quiz_title" class="form-required">Quiz Title</label></td>
-							<td><input type="text" id="quiz_title" name="quiz_title" value="<?php echo html_encode($PROCESSED["quiz_title"]); ?>" maxlength="64" style="width: 96%" /></td>
-						</tr>
-						<tr>
-							<td></td>
-							<td style="vertical-align: top">
-								<label for="quiz_description" class="form-nrequired">Quiz Description</label>
-							</td>
-							<td>
-								<textarea id="quiz_description" name="quiz_description" style="width: 550px; height: 125px" cols="70" rows="10"><?php echo clean_input($PROCESSED["quiz_description"], array("trim", "encode")); ?></textarea>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td style="vertical-align: top">
-								<label for="associated_proxy_ids" class="form-required">Quiz Authors</label>
-								<div class="content-small" style="margin-top: 15px">
+					<div class="control-group">
+						<label for="quiz_title" class="control-label form-required">Quiz Title:</label>
+						<div class="controls">
+							<input type="text" id="quiz_title" name="quiz_title" value="<?php echo html_encode($PROCESSED["quiz_title"]); ?>" maxlength="64" style="width: 96%" />
+						</div>
+					</div>
+					<div class="control-group">
+						<label for="quiz_description" class="control-label form-nrequired">Quiz Description:</label>
+						<div class="controls">
+							<textarea id="quiz_description" name="quiz_description" style="height: 125px" cols="70" rows="10"><?php echo clean_input($PROCESSED["quiz_description"], array("trim", "encode")); ?></textarea>
+						</div>
+					</div>
+					<div class="control-group">
+						<label for="associated_proxy_ids" class="control-label form-required">Quiz Authors:
+						<div class="content-small" style="margin-top: 15px">
 									<strong>Tip:</strong> Select any other individuals you would like to give access to assigning or modifying this quiz.
 								</div>
-							</td>
-							<td style="vertical-align: top">
-								<input type="text" id="author_name" name="fullname" size="30" autocomplete="off" style="width: 203px" />
+						</label>
+						<div class="controls">
+							<input type="text" id="author_name" name="fullname" size="30" autocomplete="off" style="width: 203px" />
 								<?php
 								$ONLOAD[] = "author_list = new AutoCompleteList({ type: 'author', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=facultyorstaff', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
 								?>
@@ -294,22 +275,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								</ul>
 								<input type="hidden" id="author_ref" name="author_ref" value="" />
 								<input type="hidden" id="author_id" name="author_id" value="" />
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3" style="padding: 25px 0px 25px 0px">
-								<div style="float: left">
-									<button href="#disable-quiz-confirmation-box" id="quiz-control-disable">Disable Quiz</button>
-								</div>
-								<div style="float: right; text-align: right">
-									<button href="#copy-quiz-confirmation-box" id="quiz-control-copy">Copy Quiz</button>
-									<input type="submit" class="button" value="Save Changes" />
-								</div>
-								<div class="clear"></div>
-							</td>
-						</tr>
-					</tbody>
-					</table>
+						</div>			
+					</div>
+					<div class="row-fluid">
+						<button href="#disable-quiz-confirmation-box" id="quiz-control-disable" class="btn">Disable Quiz</button>
+						<button href="#copy-quiz-confirmation-box" id="quiz-control-copy" class="btn">Copy Quiz</button>
+						<div class="pull-right">
+							<input type="submit" class="btn btn-primary" value="Save Changes" />
+						</div>		
+					</div>
 					</form>
 
 					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Quiz Questions">
@@ -331,10 +305,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								<?php
 								if ($ALLOW_QUESTION_MODIFICATIONS) {
 									?>
-									<div style="padding-bottom: 2px">
-										<ul class="page-action">
-											<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>">Add New Question</a></li>
-										</ul>
+									<div class="row-fluid" style="margin-bottom:10px;">
+										<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>" class="btn">Add New Question</a>
 									</div>
 									<?php
 								}
@@ -587,9 +559,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								} else {
 									?>
 									<div style="margin-bottom: 10px">
-										<ul class="page-action">
-											<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=attach&amp;id=<?php echo $RECORD_ID; ?>">Attach To Learning Event</a></li>
-										</ul>
+										<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=attach&amp;id=<?php echo $RECORD_ID; ?>" class="btn">Attach To Learning Event</a>
 									</div>
 									<?php
 									$query		= "	SELECT a.*, b.`event_id`, b.`course_id`, b.`eventtype_id`, b.`event_title`, b.`event_start`, b.`event_duration`, c.`course_name`, c.`course_code`
@@ -686,9 +656,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								} else {
 									?>
 									<div style="margin-bottom: 10px">
-										<ul class="page-action">
-											<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=attach&amp;community=true&amp;id=<?php echo $RECORD_ID; ?>">Attach To Community Page</a></li>
-										</ul>
+										<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=attach&amp;community=true&amp;id=<?php echo $RECORD_ID; ?>" class="btn">Attach To Community Page</a>
 									</div>
 									<?php
 									$query		= "	SELECT a.*, b.`community_id`, b.`community_url`, b.`community_title`, CONCAT('[', b.`community_title`, '] ', bp.`menu_title`) AS `page_title`, bp.`page_url`
@@ -786,9 +754,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								} else {
 									?>
 									<div style="margin-bottom: 10px">
-										<ul class="page-action">
-											<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=attach&amp;assessment=true&amp;id=<?php echo $RECORD_ID; ?>">Attach To Gradebook Assessment</a></li>
-										</ul>
+										
+										<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=attach&amp;assessment=true&amp;id=<?php echo $RECORD_ID; ?>" class="btn">Attach To Gradebook Assessment</a>
+										
 									</div>
 									<?php
 									

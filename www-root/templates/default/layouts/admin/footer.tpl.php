@@ -11,25 +11,21 @@
  *
 */
 ?>
-			</div>
-		</td>
-	</tr>
-</tbody>
-<tbody class="no-printing">
-	<tr>
-		<td style="width: 200px">&nbsp;</td>
-		<td style="width: 750px; padding-left: 5px; padding-top: 10px">
+			</div><!--/inner-content-->
+		</div> <!--/span9-->
+	</div> <!--/row-fluid-->
+</div> <!--/#page -->
+	<footer id="main-footer">
+		<div class="no-printing container">
 			<span class="copyright">%LASTUPDATED%<?php echo COPYRIGHT_STRING; ?></span> <a href="<?php echo ENTRADA_URL; ?>/privacy_policy" class="copyright">Privacy Policy</a>.
 			<?php
 			$time_end	= getmicrotime();
-			if(SHOW_LOAD_STATS) {
+			if (SHOW_LOAD_STATS) {
 				echo "<br /><span class=\"copyright\">Rendered and loaded page in ".round(($time_end - $time_start), 4)." seconds.</span>\n";
 			}
 			?>
-		</td>
-	</tr>
-	</tbody>
-</table>
+		</div>
+	</footer>
 <?php if (((!defined("DEVELOPMENT_MODE")) || (!(bool) DEVELOPMENT_MODE)) && (defined("GOOGLE_ANALYTICS_CODE")) && (GOOGLE_ANALYTICS_CODE != "")) : ?>
 	<script type="text/javascript">
 		var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");

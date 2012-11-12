@@ -360,7 +360,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						</tbody>
 						</table>
 
-						<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post" id="addQuizQuestionForm">
+						<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post" id="addQuizQuestionForm" class="form-horizontal">
 						<input type="hidden" name="questiontype_id" value="1" />
 						<table style="width: 100%; margin-bottom: 25px" cellspacing="0" cellpadding="2" border="0" summary="Add Quiz Question">
 						<colgroup>
@@ -390,7 +390,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 									<tr>
 										<td style="width: 25%; text-align: left">
-											<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=edit&amp;id=<?php echo $RECORD_ID; ?>'" />
+											<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=edit&amp;id=<?php echo $RECORD_ID; ?>'" />
 										</td>
 										<td style="width: 75%; text-align: right; vertical-align: middle">
 											<span class="content-small">After saving:</span>
@@ -400,7 +400,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 												<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to quiz index</option>
 											</select>
 
-											<input type="submit" class="button" value="Proceed" />
+											<input type="submit" class="btn btn-primary" value="Proceed" />
 										</td>
 									</tr>
 									</table>
@@ -447,7 +447,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 													<label for="response_text_<?php echo $number; ?>" class="form-<?php echo (($number > 2) ? "n" : ""); ?>required"><?php echo chr($number + 96); ?>)</label>
 												</td>
 												<td style="padding-top: 10px">
-													<textarea class="expandable" id="response_text_<?php echo $number; ?>" name="response_text[<?php echo $number; ?>]" style="width: 99%; height: 0px"><?php echo ((isset($PROCESSED["quiz_question_responses"][$number]["response_text"])) ? clean_input($PROCESSED["quiz_question_responses"][$number]["response_text"], "encode") : ""); ?></textarea>
+													<textarea class="expandable" id="response_text_<?php echo $number; ?>" name="response_text[<?php echo $number; ?>]" style="width: 99%; height: 20px"><?php echo ((isset($PROCESSED["quiz_question_responses"][$number]["response_text"])) ? clean_input($PROCESSED["quiz_question_responses"][$number]["response_text"], "encode") : ""); ?></textarea>
 												</td>
 												<td class="center" style="padding-top: 10px">
 													<input type="checkbox" id="response_is_html_<?php echo $number; ?>" name="response_is_html[<?php echo $number; ?>]" value="1"<?php echo (((isset($PROCESSED["quiz_question_responses"][$number]["response_is_html"])) && ($PROCESSED["quiz_question_responses"][$number]["response_is_html"] == 1)) ? " checked=\"true\"" : ""); ?> onclick="toggleEditor('response_text_<?php echo $number; ?>')" />

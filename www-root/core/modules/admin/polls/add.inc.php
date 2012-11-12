@@ -161,8 +161,75 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_POLLS"))) {
 				echo display_error();
 			}
 			?>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/polls?section=add&amp;step=2" method="post">
-			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Poll">
+			
+			<form action="<?php echo ENTRADA_URL; ?>/admin/polls?section=add&amp;step=2" method="post" class="form-horizontal">
+			<h2>Poll Details</h2>
+			<div class="control-group">
+				<label for="poll_target" class="control-label form-required">Target Audience:</label>
+				<div class="controls">
+					<select id="poll_target" name="poll_target" style="width: 300px">
+					<?php
+					if(is_array($POLL_TARGETS)) {
+						foreach($POLL_TARGETS as $key => $target_name) {
+							echo "<option value=\"".$key."\"".((isset($PROCESSED["poll_target"]) && $PROCESSED["poll_target"] == $key) ? " selected=\"selected\"" : "").">".$target_name."</option>\n";
+						}
+					} else {
+						echo "<option value=\"all\" selected=\"selected\">-- Poll everyone --</option>\n";
+					}
+					?>
+					</select>
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="poll_question" class="control-label form-required">Poll Question:</label>
+				<div class="controls">
+					<textarea id="poll_question" name="poll_question" cols="60" rows="7" style="width: 90%; height: 70px"><?php echo ((isset($PROCESSED["poll_question"])) ? html_encode(trim($PROCESSED["poll_question"])) : ""); ?></textarea>
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="poll_answer_1" class="control-label form-required">Answer 1:</label>
+				<div class="controls">
+					<input type="text" id="poll_answer_1" name="poll_answer_1" style="width: 90%" value="<?php echo ((isset($PROCESSED_ANSWERS[0])) ? html_encode(trim($PROCESSED_ANSWERS[0])) : ""); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="poll_answer_2" class="control-label form-required">Answer 2:</label>
+				<div class="controls">
+					<input type="text" id="poll_answer_2" name="poll_answer_2" style="width: 90%" value="<?php echo ((isset($PROCESSED_ANSWERS[1])) ? html_encode(trim($PROCESSED_ANSWERS[1])) : ""); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="poll_answer_3" class="control-label form-required">Answer 3:</label>
+				<div class="controls">
+					<input type="text" id="poll_answer_3" name="poll_answer_3" style="width: 90%" value="<?php echo ((isset($PROCESSED_ANSWERS[2])) ? html_encode(trim($PROCESSED_ANSWERS[2])) : ""); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="poll_answer_4" class="control-label form-required">Answer 4:</label>
+				<div class="controls">
+					<input type="text" id="poll_answer_4" name="poll_answer_4" style="width: 90%" value="<?php echo ((isset($PROCESSED_ANSWERS[3])) ? html_encode(trim($PROCESSED_ANSWERS[3])) : ""); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="poll_answer_5" class="control-label form-required">Answer 5:</label>
+				<div class="controls">
+					<input type="text" id="poll_answer_5" name="poll_answer_5" style="width: 90%" value="<?php echo ((isset($PROCESSED_ANSWERS[4])) ? html_encode(trim($PROCESSED_ANSWERS[4])) : ""); ?>" />
+				</div>
+			</div>
+			<h2>Time Release Options</h2>
+			<table>
+				<tr>
+					<?php echo generate_calendars("poll", "", true, true, ((isset($PROCESSED["poll_from"])) ? $PROCESSED["poll_from"] : time()), true, false, ((isset($PROCESSED["poll_until"])) ? $PROCESSED["poll_until"] : 0)); ?>
+				</tr>
+			</table>
+			
+			<div class="row-fluid" style="margin:10px 0">
+				<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>'" />
+				<div class="pull-right">
+					<input type="submit" class="btn btn-primary" value="Save" />
+				</div>
+			</div>
+		<!--	<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Poll">
 			<colgroup>
 				<col style="width: 3%" />
 				<col style="width: 20%" />
@@ -238,7 +305,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_POLLS"))) {
 					</table>
 				</td>
 			</tr>
-			</table>
+			</table>-->
 			</form>
 			<?php
 		break;

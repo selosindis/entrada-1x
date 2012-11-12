@@ -329,6 +329,9 @@ span.or{
 label#deadline_text{
   width:143px !important;
 }
+ul.quiz-questions-list {
+  margin:0;
+}
 /***** Footer *****/
 footer#main-footer .container{
   text-align:center;

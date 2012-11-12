@@ -918,12 +918,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								</select>
 				</div>
 			</div> <!--/control-grup-->
-			<div class="control-group">
-				<label for="evaluation_description" class="form-nrequired control-label">Special Instructions:</label>
-				<div class="controls">
-					<textarea id="evaluation_description" name="evaluation_description" class="expandable" style="width: 95%; height:50px" cols="50" rows="15"><?php echo html_encode($PROCESSED["evaluation_description"]); ?></textarea>
-				</div>
-			</div>
+			
 			<div id="evaluation_options"<?php echo ((!$PROCESSED["eform_id"]) ? " style=\"display: none\"" : ""); ?>>
 					<?php
 					if ($PROCESSED["eform_id"]) {

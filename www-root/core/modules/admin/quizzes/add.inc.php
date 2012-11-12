@@ -164,60 +164,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				echo display_error();
 			}
 			?>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add&amp;step=2" method="post" id="addQuizForm">
-			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Quiz">
-			<colgroup>
-				<col style="width: 3%" />
-				<col style="width: 20%" />
-				<col style="width: 77%" />
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="3" style="padding-top: 50px">
-						<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-						<tr>
-							<td style="width: 25%; text-align: left">
-								<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>'" />
-							</td>
-							<td style="width: 75%; text-align: right; vertical-align: middle">
-								<input type="submit" class="button" value="Proceed" />
-							</td>
-						</tr>
-						</table>
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td colspan="3"><h2>Quiz Information</h2></td>
-				</tr>
-				<tr>
-					<td></td>
-					<td><label for="quiz_title" class="form-required">Quiz Title</label></td>
-					<td><input type="text" id="quiz_title" name="quiz_title" value="<?php echo html_encode($PROCESSED["quiz_title"]); ?>" maxlength="64" style="width: 95%" /></td>
-				</tr>
-				<tr>
-					<td></td>
-					<td style="vertical-align: top">
-						<label for="quiz_description" class="form-nrequired">Quiz Description</label>
-					</td>
-					<td>
-						<textarea id="quiz_description" name="quiz_description" style="width: 550px; height: 125px" cols="70" rows="10"><?php echo clean_input($PROCESSED["quiz_description"], array("trim", "allowedtags", "encode")); ?></textarea>
-					</td>
-				</tr>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td>&nbsp;</td>
-					<td style="vertical-align: top">
-						<label for="associated_proxy_ids" class="form-required">Quiz Authors</label>
-						<div class="content-small" style="margin-top: 15px">
-							<strong>Tip:</strong> Select any other individuals you would like to give access to assigning or modifying this quiz.
-						</div>
-					</td>
-					<td style="vertical-align: top">
-						<input type="text" id="author_name" name="fullname" size="30" autocomplete="off" style="width: 203px" />
+			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add&amp;step=2" method="post" id="addQuizForm" class="form-horizontal">
+			<h2>Quiz Information</h2>
+			<div class="control-group">
+				<label for="quiz_title" class="control-label form-required">Quiz Title:</label>
+				<div class="controls">
+					<input type="text" id="quiz_title" name="quiz_title" value="<?php echo html_encode($PROCESSED["quiz_title"]); ?>" maxlength="64" style="width: 95%" />
+				</div>
+			</div>
+			
+			<div class="control-group">
+				<label for="quiz_description" class="control-label form-nrequired">Quiz Description:</label>
+				<div class="controls">
+					<textarea id="quiz_description" name="quiz_description" style="height: 125px" cols="70" rows="10"><?php echo clean_input($PROCESSED["quiz_description"], array("trim", "allowedtags", "encode")); ?></textarea>
+				</div>
+			</div>
+			
+			<div class="control-group">
+				<label for="quiz_description" class="control-label form-nrequired">Quiz Authors:
+				<div class="content-small" style="margin-top: 15px">
+					<strong>Tip:</strong> Select any other individuals you would like to give access to assigning or modifying this quiz.
+				</div>
+				</label>
+				
+				<div class="controls">
+					<input type="text" id="author_name" name="fullname" size="30" autocomplete="off" style="width: 203px" />
 						<?php
 						$ONLOAD[] = "author_list = new AutoCompleteList({ type: 'author', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=facultyorstaff', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
 						?>
@@ -257,10 +228,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						</ul>
 						<input type="hidden" id="author_ref" name="author_ref" value="" />
 						<input type="hidden" id="author_id" name="author_id" value="" />
-					</td>
-				</tr>
-			</tbody>
-			</table>
+				</div><!--/controls-->
+			</div><!--control-group-->
+			<div class="row-fluid">
+				<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>'" />
+				<div class="pull-right">
+					<input type="submit" class="btn btn-primary" value="Proceed" />
+				</div>
+			</div>
+			
 			</form>
 			<?php
 		break;

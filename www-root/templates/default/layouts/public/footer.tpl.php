@@ -12,11 +12,10 @@
 */
 ?>
 				
-				</div><!--/inner-content-->
-				</div> <!--/span9-->
+			</div><!--/inner-content-->
+		</div> <!--/span9-->
 	</div> <!--/row-fluid-->
 </div> <!--/#page -->
-	<!--	</div> -->
 	<footer id="main-footer">
 		<div class="no-printing container">
 			<span class="copyright">%LASTUPDATED%<?php echo COPYRIGHT_STRING; ?></span> <a href="<?php echo ENTRADA_URL; ?>/privacy_policy" class="copyright">Privacy Policy</a>.
@@ -28,10 +27,6 @@
 			?>
 		</div>
 	</footer>
-	<!--</div> /system-content
-	<div class="clear"></div>
-</div>
-</div>-->
 <?php
 if (((!defined("DEVELOPMENT_MODE")) || (!(bool) DEVELOPMENT_MODE)) && (defined("GOOGLE_ANALYTICS_CODE")) && (GOOGLE_ANALYTICS_CODE != "")) {
 	?>

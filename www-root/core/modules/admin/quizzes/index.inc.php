@@ -155,10 +155,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 	
 	<h1><?php echo $MODULES[strtolower($MODULE)]["title"]; ?></h1>
 	
+	<div class="row-fluid">
+		<div class="pull-right">
+			<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Create New Quiz</a>
+		</div>
+	</div>
+	
 	<div style="float: right; padding-bottom: 10px;">
-		<ul class="page-action">
-			<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add">Create New Quiz</a></li>
-		</ul>
+		
 
 		<?php
 		if ($total_pages > 1) {

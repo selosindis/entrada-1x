@@ -1312,207 +1312,225 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					float: right;
 				}
 			</style>
-							<script type="text/javascript">
-									jQuery(document).ready(function($) {
-										var my_departments = {};
-										my_departments.list = [];
-										
-										$('select[name^=in_departments_]').live("change", function() {
-											var dept_id = $(this).val();											
-											var org_id = $(this).attr("id").split("_")[2];
-											var remove_link = "<a class=\"remove_dept\" href=\"\"><img src=\"" + "<?php echo ENTRADA_URL; ?>" + "/images/action-delete.gif\"></a>";
-											var content = "<li id=\"dept_" + dept_id + "\"><img src=\"" + "<?php echo ENTRADA_URL; ?>" + "/images/icon-apartment.gif\">" + $(this).find(":selected").text() + remove_link + "</li>";											
-											$('#departments_container_' + org_id).append(content);			
-											$('#departments_notice_' + org_id).hide();
-											$('#departments_container_' + org_id).show();
-											my_departments.list.push(dept_id);
-											$('input[name=my_departments]').val(JSON.stringify(my_departments));
-											//reset the select list
-											$('#in_departments_' + org_id + ' option[value=' + dept_id + ']').remove();
-											$('select[name^=in_departments_]').val(0);
-										});
-										
-										$('a.remove_dept').live("click", function(event) {
-											event.preventDefault();
-											var dept_id = $(this).closest("li").attr("id").split("_")[1];
-											var dept_text = $(this).closest("li").text();											
-											var org_id = $(this).closest("ol").attr("id").split("_")[2];
-											$(this).closest("li").remove();
-											if ($('#departments_container_' + org_id).children().size() == 0) {
-												$('#departments_notice_' + org_id).show();
-											}											
-											for(var i=0; i<my_departments.list.length; i++) {
-												if (my_departments.list[i] == dept_id) {													
-													my_departments.list.splice(i, 1);
-												} 
-											}
-											$('input[name=my_departments]').val(JSON.stringify(my_departments));
-											//add the dept back to the select list
-											var option = $("<option></option>").text(dept_text);
-											$(option).attr("value", dept_id);
-											$('#in_departments_' + org_id).append(option);
+			<script type="text/javascript">
+				jQuery(document).ready(function($) {
+					var my_departments = {};
+					my_departments.list = [];
 
-											//now resort the select list by dept title
-											var my_options = $('#in_departments_' + org_id + ' option');
-											my_options.sort(function(a,b) {
-												if (a.text > b.text) return 1;
-												else if (a.text < b.text) return -1;
-												else return 0
-											});
-											$('#in_departments_' + org_id).empty().append( my_options );
-											$('select[name^=in_departments_]').val(0);
-										});
-										
-										$('select[name=organisations]').live("change", function() {
-											$('select[name=groups]').children().remove();
-											$("#groups").append('<option value=\"0\">Select a Group</option>')
-											var url = "<?php echo ENTRADA_URL . "/api/organisation-groups.api.php"; ?>";
-											$.get(	url, { organisation_id: $(this).val() },
-													function(data){
-														for (var key in data) {
-														  if (data.hasOwnProperty(key)) {
-															$("#groups").append('<option value=\"' + key + '\">' + data[key]+ '</option>');															
-														  }
-														}
-													}, "json");
-										});										
-										$('select[name=groups]').live("change", function() {
-											$('select[name=roles]').children().remove();
-											$("#roles").append('<option value=\"0\">Select a Role</option>')
-											var url = "<?php echo ENTRADA_URL . "/api/organisation-roles.api.php"; ?>";
-											$.get(	url, { organisation_id: $('#organisations option:selected').val(), group_id: $(this).val() },
-													function(data){
-														for (var key in data) {
-														  if (data.hasOwnProperty(key)) {
-															$("#roles").append('<option value=\"' + key + '\">' + data[key]+ '</option>');															
-														  }
-														}
-													}, "json");
-										});
-										
-										$('#organisations option:first').attr('selected', true).change();
-										
-										var permissions = {}; //JSON objects to hold array of JSON objects containing this new user's permissions
-										permissions.acl = []; 
-										
-										$("input[name=add_permissions]").live("click", function() {	
-											var group_id = $('#groups').val();
-											var role_id = $('#roles').val();
-											var org_id = $('#organisations').val();
-											
-											if (org_id == null || org_id == 0) {
-												alert("Please select an organisation");
-											} else if (group_id == null || group_id == 0) {
-												alert("Please select a group.");
-											} else if (role_id == null || role_id == 0) {
-												alert("Please select a role.")
-											} else {
-												var group_text = $('#groups option[value=' + group_id + ']').text();	
-												$('#groups option[value=' + group_id + ']').remove();
-												var role_text = $('#roles option[value=' + role_id + ']').text();
-												$('select[name=roles]').children().remove();
-												var options = "";
-												var clinical = 0;
-												var entry_year = 0;
-												var grad_year = 0;												
-												if (group_text == "Faculty") {												
-													options = "<input id=\"clinical_"  + org_id + "\" name=\"clinical_"  + org_id + "\" type=\"checkbox\" checked /><label for=\"clincal" + org_id + "\">This new user is a <strong>clinical</strong> faculty member.</label>";
-													clinical = 1;
-												} else if (group_text == "Student") {
-													options = $('#entry_grad_year_container').html();
-													entry_year = $('#entry_year').val();
-													grad_year = $('#grad_year').val();
-												}					
-												$('#perm_organisation_' + $('#organisations').val() + ' > tbody:last').append('<tr id=\"' + org_id + '_' + group_id + '_' + role_id + '\"><td></td><td>' + group_text + " / " + role_text + '</td><td>' + options + '</td><td><a class=\"remove_perm\" href=\"\"><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif"></a></td></tr>');
-												$('#perm_organisation_' + $('#organisations').val()).show();
+					$('select[name^=in_departments_]').live("change", function() {
+						var dept_id = $(this).val();											
+						var org_id = $(this).attr("id").split("_")[2];
+						var remove_link = "<a class=\"remove_dept\" href=\"\"><img src=\"" + "<?php echo ENTRADA_URL; ?>" + "/images/action-delete.gif\"></a>";
+						var content = "<li id=\"dept_" + dept_id + "\"><img src=\"" + "<?php echo ENTRADA_URL; ?>" + "/images/icon-apartment.gif\">" + $(this).find(":selected").text() + remove_link + "</li>";											
+						$('#departments_container_' + org_id).append(content);			
+						$('#departments_notice_' + org_id).hide();
+						$('#departments_container_' + org_id).show();
+						my_departments.list.push(dept_id);
+						$('input[name=my_departments]').val(JSON.stringify(my_departments));
+						//reset the select list
+						$('#in_departments_' + org_id + ' option[value=' + dept_id + ']').remove();
+						$('select[name^=in_departments_]').val(0);
+					});
 
-												var temp_permissions = {"org_id" : org_id, "group_id" : group_id, "role_id" : role_id, "clinical" : clinical, "entry_year" : entry_year, "grad_year" : grad_year};
-												permissions.acl.push(temp_permissions);
-												$('input[name=permissions]').val(JSON.stringify(permissions));
-											}
-										});
-										
-										$('input[id^=clinical_]').live("change", function() {
-											var org_id = $(this).attr("id").split("_")[1];
-											for (i = 0; i < permissions.acl.length; i++) {												
-												//check the permissions array for the faculty role for this org
-												if (permissions.acl[i].org_id == org_id
-													&& permissions.acl[i].group_id == 3) {
-													if ($(this).is(':checked')) {														
-														permissions.acl[i].clinical = 1;
-													} else {
-														permissions.acl[i].clinical = 0;
-													}
-												}
-											}
-											$('input[name=permissions]').val(JSON.stringify(permissions));
-										});
-										
-										$('select[id=entry_year]').live("change", function() {
-											var org_id = $(this).closest('table').attr("id").split("_")[2]
-											for (i = 0; i < permissions.length; i++) {
-												if (permissions[i].org_id == org_id) {
-													permissions[i].entry_year = $(this).val();
-												}
-											}
-											$('input[name=permissions]').val(JSON.stringify(permissions));
-										});
-										
-										$('select[id=grad_year]').live("change", function() {
-											var org_id = $(this).closest('table').attr("id").split("_")[2];											
-											for (i = 0; i < permissions.length; i++) {
-												if (permissions[i].org_id == org_id) {
-													permissions[i].grad_year = $(this).val();
-												}
-											}
-											$('input[name=permissions]').val(JSON.stringify(permissions));
-										});
-										
-										$("a.remove_perm").live("click", function(e) {											
-											e.preventDefault();
-											var row_id = $(this).closest("tr").attr("id");	
-											var org_id = row_id.split("_")[0];
-											var group_id = row_id.split("_")[1];
-											var role_id = row_id.split("_")[2];
-											for(var i=0; i<permissions.acl.length; i++) {
-												if (permissions.acl[i].org_id == org_id &&
-													permissions.acl[i].group_id == group_id &&
-													permissions.acl[i].role_id == role_id) {
-													permissions.acl.splice(i, 1);
-												} 
-											}
-											$('input[name=permissions]').val(JSON.stringify(permissions));
-											
-											if (org_id == $('#organisations').val()) {
-												//add the group back to the select list
-												var group_role = $(this).closest("tr").children()[1];
-												group_role = $(group_role).text();
-												var group_text = $.trim(group_role.split("/")[0]);														
-												var option = $("<option></option>").text(group_text);
-												$(option).attr("value", group_id);
-												$('#groups').append(option);
+					$('a.remove_dept').live("click", function(event) {
+						event.preventDefault();
+						var dept_id = $(this).closest("li").attr("id").split("_")[1];
+						var dept_text = $(this).closest("li").text();											
+						var org_id = $(this).closest("ol").attr("id").split("_")[2];
+						$(this).closest("li").remove();
+						if ($('#departments_container_' + org_id).children().size() == 0) {
+							$('#departments_notice_' + org_id).show();
+						}											
+						for(var i=0; i<my_departments.list.length; i++) {
+							if (my_departments.list[i] == dept_id) {													
+								my_departments.list.splice(i, 1);
+							} 
+						}
+						$('input[name=my_departments]').val(JSON.stringify(my_departments));
+						//add the dept back to the select list
+						var option = $("<option></option>").text(dept_text);
+						$(option).attr("value", dept_id);
+						$('#in_departments_' + org_id).append(option);
 
-												//now resort the select list by group title
-												var my_options = $('#groups option');
-												my_options.sort(function(a,b) {
-													if (a.text > b.text) return 1;
-													else if (a.text < b.text) return -1;
-													else return 0
-												});
-											}
-											
-											var myTable = $(this).closest("table");											
-											$(this).closest("tr").remove();													
-											if ($(myTable)[0].rows.length <= 4) {												
-												$("#department_callback" + org_id).children().remove();
-												$(myTable).hide();
-												my_departments.list.splice(0,my_departments.dept_list.length);
-												$('input[name=my_departments]').val(0);
-												$('#departments_container_' + org_id).children().remove();
-											}
-										});																			
-									});
-								</script>
+						//now resort the select list by dept title
+						var my_options = $('#in_departments_' + org_id + ' option');
+						my_options.sort(function(a,b) {
+							if (a.text > b.text) return 1;
+							else if (a.text < b.text) return -1;
+							else return 0
+						});
+						$('#in_departments_' + org_id).empty().append( my_options );
+						$('select[name^=in_departments_]').val(0);
+					});
+
+					$('select[name=organisations]').live("change", function() {
+						$('select[name=groups]').children().remove();
+						$("#groups").append('<option value=\"0\">Select a Group</option>')
+						var url = "<?php echo ENTRADA_URL . "/api/organisation-groups.api.php"; ?>";
+						$.get(	url, { organisation_id: $(this).val() },
+								function(data){
+									for (var key in data) {
+										if (data.hasOwnProperty(key)) {
+										$("#groups").append('<option value=\"' + key + '\">' + data[key]+ '</option>');															
+										}
+									}
+									filterGroups();
+								}, "json");
+					});										
+					$('select[name=groups]').live("change", function() {
+						$('select[name=roles]').children().remove();
+						$("#roles").append('<option value=\"0\">Select a Role</option>')
+						var url = "<?php echo ENTRADA_URL . "/api/organisation-roles.api.php"; ?>";
+						$.get(	url, { organisation_id: $('#organisations option:selected').val(), group_id: $(this).val() },
+								function(data){
+									for (var key in data) {
+										if (data.hasOwnProperty(key)) {
+										$("#roles").append('<option value=\"' + key + '\">' + data[key]+ '</option>');															
+										}
+									}
+								}, "json");
+					});
+
+					$('#organisations option:first').attr('selected', true).change();
+
+					var permissions = {}; //JSON objects to hold array of JSON objects containing this new user's permissions
+					permissions.acl = []; 
+
+					$("input[name=add_permissions]").live("click", function() {	
+						var group_id = $('#groups').val();
+						var role_id = $('#roles').val();
+						var org_id = $('#organisations').val();
+
+						if (org_id == null || org_id == 0) {
+							alert("Please select an organisation");
+						} else if (group_id == null || group_id == 0) {
+							alert("Please select a group.");
+						} else if (role_id == null || role_id == 0) {
+							alert("Please select a role.")
+						} else {
+							var group_text = $('#groups option[value=' + group_id + ']').text();	
+							$('#groups option[value=' + group_id + ']').remove();
+							var role_text = $('#roles option[value=' + role_id + ']').text();
+							$('select[name=roles]').children().remove();
+							var options = "";
+							var clinical = 0;
+							var entry_year = 0;
+							var grad_year = 0;												
+							if (group_text == "Faculty") {												
+								options = "<input id=\"clinical_"  + org_id + "\" name=\"clinical_"  + org_id + "\" type=\"checkbox\" checked /><label for=\"clincal" + org_id + "\">This new user is a <strong>clinical</strong> faculty member.</label>";
+								clinical = 1;
+							} else if (group_text == "Student") {
+								options = $('#entry_grad_year_container').html();
+								entry_year = $('#entry_year').val();
+								grad_year = $('#grad_year').val();
+							}					
+							$('#perm_organisation_' + $('#organisations').val() + ' > tbody:last').append('<tr id=\"' + org_id + '_' + group_id + '_' + role_id + '\"><td></td><td>' + group_text + " / " + role_text + '</td><td>' + options + '</td><td><a class=\"remove_perm\" href=\"\"><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif"></a></td></tr>');
+							$('#perm_organisation_' + $('#organisations').val()).show();
+
+							var temp_permissions = {"org_id" : org_id, "group_id" : group_id, "role_id" : role_id, "clinical" : clinical, "entry_year" : entry_year, "grad_year" : grad_year};
+							permissions.acl.push(temp_permissions);
+							$('input[name=permissions]').val(JSON.stringify(permissions));
+						}
+					});
+
+					$('input[id^=clinical_]').live("change", function() {
+						var org_id = $(this).attr("id").split("_")[1];
+						for (i = 0; i < permissions.acl.length; i++) {												
+							//check the permissions array for the faculty role for this org
+							if (permissions.acl[i].org_id == org_id
+								&& permissions.acl[i].group_id == 3) {
+								if ($(this).is(':checked')) {														
+									permissions.acl[i].clinical = 1;
+								} else {
+									permissions.acl[i].clinical = 0;
+								}
+							}
+						}
+						$('input[name=permissions]').val(JSON.stringify(permissions));
+					});
+
+					$('select[id=entry_year]').live("change", function() {
+						var org_id = $(this).closest('table').attr("id").split("_")[2]
+						for (i = 0; i < permissions.length; i++) {
+							if (permissions[i].org_id == org_id) {
+								permissions[i].entry_year = $(this).val();
+							}
+						}
+						$('input[name=permissions]').val(JSON.stringify(permissions));
+					});
+
+					$('select[id=grad_year]').live("change", function() {
+						var org_id = $(this).closest('table').attr("id").split("_")[2];											
+						for (i = 0; i < permissions.length; i++) {
+							if (permissions[i].org_id == org_id) {
+								permissions[i].grad_year = $(this).val();
+							}
+						}
+						$('input[name=permissions]').val(JSON.stringify(permissions));
+					});
+
+					$("a.remove_perm").live("click", function(e) {											
+						e.preventDefault();
+						var row_id = $(this).closest("tr").attr("id");	
+						var org_id = row_id.split("_")[0];
+						var group_id = row_id.split("_")[1];
+						var role_id = row_id.split("_")[2];
+						for(var i=0; i<permissions.acl.length; i++) {
+							if (permissions.acl[i].org_id == org_id &&
+								permissions.acl[i].group_id == group_id &&
+								permissions.acl[i].role_id == role_id) {
+								permissions.acl.splice(i, 1);
+							} 
+						}
+						$('input[name=permissions]').val(JSON.stringify(permissions));
+
+						if (org_id == $('#organisations').val()) {
+							//add the group back to the select list
+							var group_role = $(this).closest("tr").children()[1];
+							group_role = $(group_role).text();
+							var group_text = $.trim(group_role.split("/")[0]);														
+							var option = $("<option></option>").text(group_text);
+							$(option).attr("value", group_id);
+							$('#groups').append(option);
+
+							//now resort the select list by group title
+							var my_options = $('#groups option');
+							my_options.sort(function(a,b) {
+								if (a.text > b.text) return 1;
+								else if (a.text < b.text) return -1;
+								else return 0
+							});
+						}
+
+						var myTable = $(this).closest("table");											
+						$(this).closest("tr").remove();													
+						if ($(myTable)[0].rows.length <= 4) {												
+							$("#department_callback" + org_id).children().remove();
+							$(myTable).hide();
+							my_departments.list.splice(0,my_departments.dept_list.length);
+							$('input[name=my_departments]').val(0);
+							$('#departments_container_' + org_id).children().remove();
+						}
+					});	
+					function filterGroups() {
+						if ($('#groups option').length > 0) {
+							var current_org = $('#organisations').val();								
+							for (i = 0; i < permissions.acl.length; i++) {									
+								if (permissions.acl[i].org_id == current_org) {										
+									$('#groups option[value=' + permissions.acl[i].group_id + ']').remove();
+								}
+							}
+							//now resort the option list
+							var my_options = $('#groups option');
+							my_options.sort(function(a,b) {
+								if (a.text > b.text) return 1;
+								else if (a.text < b.text) return -1;
+								else return 0
+							});
+						}
+					}
+				});
+				</script>
 			<?php
 		break;
 	} //end display switch

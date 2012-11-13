@@ -11182,16 +11182,13 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	$limitless_query_events = sprintf($limitless_query_events, $sort_by);
 	
 	$learning_events = $db->GetAll($query_events);	
+	
 	if ($learning_events) {				
 		if (strtolower($ENTRADA_USER->getActiveRole()) != "admin") {			
 			$i = 0;
-			foreach ($learning_events as $event) {		
-				if ($event["course_id"]) {				
-					if ($event["permission"] == "open") {						
-						$event_resource = new EventResource($event["event_id"], $event["course_id"], $ENTRADA_USER->getActiveOrganisation());
-					} else {											
-						$event_resource = new EventClosedResource($event["event_id"], $event["course_id"], $ENTRADA_USER->getActiveOrganisation());
-					}
+			foreach ($learning_events as $event) {
+				if ($event["course_id"]) {	
+					$event_resource = new EventResource($event["event_id"], $event["course_id"], $event["organisation_id"]);
 				}							
 				if (!$ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {					
 					unset($learning_events[$i]);
@@ -11268,13 +11265,9 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 			$result_ids_map = array();
 			if ($all_events) {
 				foreach ($all_events as $map_event) {
-					if (strtolower($ENTRADA_USER->getActiveRole()) != "admin") {				
-						if ($map_event["permission"] == "closed") {
-							$event_resource = new EventClosedResource($map_event["event_id"], $map_event["course_id"], $ENTRADA_USER->getActiveOrganisation());
-							if ($ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {
-								$result_ids_map[] = $map_event["event_id"];
-							}
-						} else {
+					if (strtolower($ENTRADA_USER->getActiveRole()) != "admin") {	
+						$event_resource = new EventResource($map_event["event_id"], $map_event["course_id"], $map_event["organisation_id"]);
+						if ($ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {
 							$result_ids_map[] = $map_event["event_id"];
 						}
 					} else {

@@ -529,15 +529,15 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 			$course_id = preg_replace("/[^0-9]+/", "", $resource_id);
 		}
 		
-		$role_id = $role->getRoleId();
-		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
-
 		$query = "SELECT `permission` FROM `course` WHERE `course_id` = ".$db->qstr($course_id);
 		$course_permission = $db->GetOne($query);
 		
 		if ($course_permission == "open") {
 			return true;
-		} else {
+		} else {			
+			$role_id = $role->getRoleId();
+			$access_id = preg_replace('/[^0-9]+/', "", $role_id);
+		
 			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
 						WHERE `id` = ".$db->qstr($access_id);
 			$user_id = $db->GetOne($query);

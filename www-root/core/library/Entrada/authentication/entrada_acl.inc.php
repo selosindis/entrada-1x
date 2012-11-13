@@ -251,7 +251,12 @@ class Entrada_ACL extends ACL_Factory {
 		global $ENTRADA_USER;
 
 		$user = new EntradaUser("user".$ENTRADA_USER->getAccessId());
-		$user->details = $_SESSION["details"];
+		$current_details = $_SESSION["details"];
+		$current_details["access_id"] = $ENTRADA_USER->getAccessId();
+		$current_details["role"] = $ENTRADA_USER->getActiveRole();
+		$current_details["group"] = $ENTRADA_USER->getActiveGroup();
+		$current_details["organisation_id"] = $ENTRADA_USER->getActiveOrganisation();
+		$user->details = $current_details;
 
 		return $this->isAllowed($user, $resource, $action, $assert);
 	}
@@ -509,7 +514,7 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 		global $db;
 		//If asserting is off then return true right away
 		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
-			return true;
+			return false;
 		}
 
 		if (isset($resource->course_id)) {
@@ -563,28 +568,62 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 	 * @return boolean
 	 */
 	static function _checkCourseEnrollment($user_id, $course_id) {
-		global $db;
+        global $db;
 
-		$query = "SELECT * FROM `community_courses` WHERE `course_id` = ".$db->qstr($course_id);
-		$result = $db->GetRow($query);
-		if ($result) {
-			$query = "SELECT * FROM `community_members` WHERE `community_id` = ".$db->qstr($result["community_id"])." AND `proxy_id` = ".$db->qstr($user_id)." AND `member_active` = 1";
-			$result = $db->GetRow($query);
-			if ($result) {
-				return true;
-			} else {
-				return false;
-			}
-		} else {
-			/**
-			 * If there is no course website associated with this course, then
-			 * allow them access to the course because there is no enrollment
-			 * defined.
-			 */
+        $query = "SELECT * FROM `community_courses` WHERE `course_id` = " . $db->qstr($course_id);
+        $result = $db->GetRow($query);
+        if ($result) {
+            $query = "SELECT * FROM `community_members` WHERE `community_id` = " . $db->qstr($result["community_id"]) . " AND `proxy_id` = " . $db->qstr($user_id) . " AND `member_active` = 1";
+            $result = $db->GetRow($query);
+            if ($result) {
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            $query = "    SELECT *
+                        FROM `courses`
+                        WHERE `course_id` = " . $db->qstr($course_id);
+            $result = $db->GetRow($query);
 
-			return true;
-		}
-	}
+            if ($result["permission"] == "open") {
+                return true;
+            } else {
+                $query = "    SELECT *
+                            FROM `course_audience`
+                            WHERE `course_id` = " . $db->qstr($course_id);
+                $results = $db->GetAll($query);
+                if ($results) {
+                    foreach ($results as $result) {
+                        switch ($result["audience_type"]) {
+                            case "proxy_id":
+                                if ($result["audience_value"] == $user_id) {
+                                    return true;
+                                }
+                                break;
+                            case "group_id":
+                                $query = "    SELECT *
+                                            FROM `group_members`
+                                            WHERE `group_id` = ".$db->qstr($result["audience_value"]) . "
+                                            AND `proxy_id` = " . $db->qstr($user_id) . "
+                                            AND `member_active` = 1
+                                            AND ((UNIX_TIMESTAMP() BETWEEN `start_date` AND `finish_date`) OR (start_date = 0 AND finish_date = 0)
+                                            OR (start_date IS NULL AND finish_date IS NULL))";
+                                $result = $db->GetRow($query);
+
+                                if ($result) {
+                                    return true;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+    }
 }
 
 class NotEventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
@@ -826,73 +865,91 @@ class EventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 	 * @return boolean
 	 */
 	static function _checkEventEnrollment($user_id, $event_id, $course_id) {
-		global $db;
+        global $db;
 
-		$query = "	SELECT *
-					FROM `events` e
-					JOIN `event_audience` ea ON e.`event_id` = ea.`event_id`
-					WHERE e.`event_id` = " . $db->qstr($event_id) . "
-					AND ea.`audience_type` = 'proxy_id'
-					AND ea.`audience_value` = " . $db->qstr($user_id);	
-				
-		$result = $db->GetRow($query);
-		
-		if ($result) {
-			return true;
-		} 
-		
-		$query = "	SELECT *
-					FROM `event_audience`
-					WHERE `event_id` = " . $db->qstr($event_id);
+            $query = "    SELECT *
+                        FROM `courses`
+                        WHERE `course_id` = ".$db->qstr($course_id);
+            $result = $db->GetRow($query);
 
-		$result = $db->GetRow($query);
-		
-		if ($result["audience_type"] == "course_id") { 
-		
-			$query = "	SELECT *
-						FROM `course_audience` AS b
-						JOIN `groups` AS c ON b.`audience_type` = 'group_id'
-						AND b.`audience_value` = c.`group_id`
-						LEFT JOIN `group_members` AS d
-						ON d.`group_id` = c.`group_id`									
-						WHERE d.`proxy_id` = " . $db->qstr($user_id) . "
-						AND b.`course_id` = " . $db->qstr($course_id) . "										
-						AND d.`member_active` = 1";
+            if ($result["permission"] == "open") {
+                //return false so that the course resource acl permission is tested.
+                return false;
+            }
 
-			$result = $db->GetRow($query);
+        $query = "    SELECT *
+                    FROM `event_audience`
+                    WHERE `event_id` = " . $db->qstr($event_id);
+        $results = $db->GetAll($query);
 
-			if ($result) {				
-				return true;
-			}
-		}
-		
-		$query = "	SELECT *
-					FROM `course_contacts` AS cc					
-					WHERE cc.`proxy_id` = " . $db->qstr($user_id) . "
-					AND cc.`course_id` = " . $db->qstr($course_id);					
+        if ($results) {
+            foreach($results as $result) {
+                switch($result["audience_type"]) {
+                    case "proxy_id":
+                        if ($result["audience_value"] == $user_id) {
+                            return true;
+                        }
+                        break;
+                    case "group_id":
+                        $query = "    SELECT *
+                                    FROM `group_members`
+                                    WHERE `group_id` = ".$db->qstr($event["audience_value"]) . "
+                                    AND `proxy_id` = " . $db->qstr($user_id) . "
+                                    AND `member_active` = 1";
+                        $result = $db->GetRow($query);
+                        if ($result) {
+                            return true;
+                        }
+                        break;
+                    case "cgroup_id":
+                        $query = "    SELECT *
+                                    FROM `course_group_audience` cga
+                                    JOIN `curriculum_periods` cp
+                                    ON cga.`cperiod_id` = cp.`cperiod_id`
+                                    WHERE cga.`cgroup_id` = ".$db->qstr($event["audience_value"]) . "
+                                    AND cga.`proxy_id` = " . $db->qstr($user_id) . "
+                                    AND    cga.`active` = 1
+                                    AND UNIX_TIMESTAMP() BETWEEN cp.`start_date` AND cp.`finish_date`";
+                        $result = $db->GetRow($query);
+                        if ($result) {
+                            return true;
+                        }
+                        break;
+                    case "course_id":
+                        //hand off to course enrollment checking.
+                        return false;
+                    default:
+                        break;
+                }
+            }
+        }
+        $query = "    SELECT *
+                    FROM `course_contacts` AS cc
+                    WHERE cc.`proxy_id` = " . $db->qstr($user_id) . "
+                    AND cc.`course_id` = " . $db->qstr($course_id);
 
-		$result = $db->GetRow($query);
+        $result = $db->GetRow($query);
 
-		if ($result) {				
-			return true;
-		}
-		
-		$query = "	SELECT *
-					FROM `event_contacts` AS ec	
-					JOIN `events` as e
-					ON e.`event_id` = ec.`event_id`
-					WHERE ec.`proxy_id` = " . $db->qstr($user_id) . "
-					AND ec.`event_id` = " . $db->qstr($event_id) . "
-					AND e.`course_id` = " . $db->qstr($course_id);					
+        if ($result) {
+            return true;
+        }
 
-		$result = $db->GetRow($query);
+        $query = "    SELECT *
+                    FROM `event_contacts` AS ec
+                    JOIN `events` as e
+                    ON e.`event_id` = ec.`event_id`
+                    WHERE ec.`proxy_id` = " . $db->qstr($user_id) . "
+                    AND ec.`event_id` = " . $db->qstr($event_id) . "
+                    AND e.`course_id` = " . $db->qstr($course_id);
 
-		if ($result) {				
-			return true;
-		}
-		
-		return false;
-	}
+        $result = $db->GetRow($query);
+
+        if ($result) {
+            return true;
+        }
+
+        return false;
+    }
 }
 
 /**

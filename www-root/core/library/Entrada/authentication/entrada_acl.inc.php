@@ -549,6 +549,7 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 				$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
 							WHERE `id` = ".$db->qstr($access_id);
 				$user_id = $db->GetOne($query);
+			}
 		}
 		return !($this->_checkCourseEnrollment($user_id, $course_id));
 	}

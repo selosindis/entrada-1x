@@ -534,27 +534,20 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 			$course_id = preg_replace("/[^0-9]+/", "", $resource_id);
 		}
 		
-		$query = "SELECT `permission` FROM `course` WHERE `course_id` = ".$db->qstr($course_id);
-		$course_permission = $db->GetOne($query);
-		
-		if ($course_permission == "open") {
-			return true;
-		} else {			
-			$role_id = $role->getRoleId();
-			$access_id = preg_replace('/[^0-9]+/', "", $role_id);
-		
+		$role_id = $role->getRoleId();
+		$access_id = preg_replace('/[^0-9]+/', "", $role_id);
+
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
+
+		if (!isset($user_id) || !$user_id) {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
 			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
 						WHERE `id` = ".$db->qstr($access_id);
 			$user_id = $db->GetOne($query);
-
-			if (!isset($user_id) || !$user_id) {
-				$role_id = $acl->_entrada_last_query_role->getRoleId();
-				$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
-
-				$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
-							WHERE `id` = ".$db->qstr($access_id);
-				$user_id = $db->GetOne($query);
-			}
 		}
 		return !($this->_checkCourseEnrollment($user_id, $course_id));
 	}
@@ -569,27 +562,33 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 	 */
 	static function _checkCourseEnrollment($user_id, $course_id) {
         global $db;
+		
+		$query = "	SELECT *
+					FROM `courses`
+					WHERE `course_id` = " . $db->qstr($course_id);
+		$result = $db->GetRow($query);
 
-        $query = "SELECT * FROM `community_courses` WHERE `course_id` = " . $db->qstr($course_id);
-        $result = $db->GetRow($query);
-        if ($result) {
-            $query = "SELECT * FROM `community_members` WHERE `community_id` = " . $db->qstr($result["community_id"]) . " AND `proxy_id` = " . $db->qstr($user_id) . " AND `member_active` = 1";
-            $result = $db->GetRow($query);
-            if ($result) {
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            $query = "    SELECT *
-                        FROM `courses`
-                        WHERE `course_id` = " . $db->qstr($course_id);
-            $result = $db->GetRow($query);
-
-            if ($result["permission"] == "open") {
-                return true;
-            } else {
-                $query = "    SELECT *
+		if ($result["permission"] == "open") {
+			return true;
+		} else {
+			$query = "	SELECT * 
+						FROM `community_courses` 
+						WHERE `course_id` = " . $db->qstr($course_id);
+			$result = $db->GetRow($query);
+			if ($result) {
+				$query = "	SELECT * 
+							FROM `community_members` 
+							WHERE `community_id` = " . $db->qstr($result["community_id"]) . " 
+							AND `proxy_id` = " . $db->qstr($user_id) . " 
+							AND `member_active` = 1";
+				$result = $db->GetRow($query);
+				if ($result) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+                $query = "  SELECT *
                             FROM `course_audience`
                             WHERE `course_id` = " . $db->qstr($course_id);
                 $results = $db->GetAll($query);
@@ -602,7 +601,7 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
                                 }
                                 break;
                             case "group_id":
-                                $query = "    SELECT *
+                                $query = "  SELECT *
                                             FROM `group_members`
                                             WHERE `group_id` = ".$db->qstr($result["audience_value"]) . "
                                             AND `proxy_id` = " . $db->qstr($user_id) . "

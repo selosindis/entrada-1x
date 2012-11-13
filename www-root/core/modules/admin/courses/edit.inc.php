@@ -884,13 +884,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</td>
 								<td id="mandated_objectives_section">
 									<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
-									<?php
-									if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
-										foreach ($clinical_presentations as $objective_id => $presentation_name) {
+								<?php	foreach ($clinical_presentations as $objective_id => $presentation_name) {
 											echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
-										}
-									}
-									?>
+										}?>
 									</select>
 									<div style="float: left; display: inline">
 										<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
@@ -936,7 +932,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<tr>
 								<td colspan="3">&nbsp;</td>
 							</tr>
-							<?php } ?>
+							<?php }	?>
 							<tr>
 								<td>&nbsp;</td>
 								<td>

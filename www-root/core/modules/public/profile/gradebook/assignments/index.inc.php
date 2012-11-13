@@ -115,26 +115,21 @@ if (true) {
 			</tr>
 		</thead>
 		<tbody>
-		<?php
-		
-		//$query = "SELECT a.*, b.`course_code` FROM	`assignments` AS a JOIN `courses` AS b ON a.`course_id` = b.`course_id` WHERE `assignment_active` = '1'";
+		<?php		
+		$courses = groups_get_enrolled_course_ids($ENTRADA_USER->getID());
 		$query = "	SELECT c.`course_code`, e.`assignment_id`, e.`assignment_title`,e.`due_date`, h.`grade_id` AS `grade_id`, h.`value` AS `grade_value`, i.`grade_weighting` AS `submitted_date`
 							FROM `assignments` AS e
 							JOIN `courses` AS c
 							ON e.`course_id` = c.`course_id`
 							LEFT JOIN `assessments` AS f							
-							ON e.`assessment_id` = f.`assessment_id`
-							JOIN `groups` AS g 
-							ON f.`cohort` = g.`group_id`
-							JOIN `group_members` AS m
-							ON g.`group_id` = m.`group_id`
-							AND m.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+							ON e.`assessment_id` = f.`assessment_id`							
 							LEFT JOIN `assessment_grades` AS h 
-							ON m.`proxy_id` = h.`proxy_id`
+							ON h.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 							AND h.`assessment_id` = e.`assessment_id`
 							LEFT JOIN `assessment_exceptions` AS i
-							ON m.`proxy_id` = i.`proxy_id`
-							AND h.`assessment_id` = i.`assessment_id`;";
+							ON h.`proxy_id` = i.`proxy_id`
+							AND h.`assessment_id` = i.`assessment_id`
+							WHERE c.`course_id` IN (".(implode(',',$courses)).")";
 		$results = $db->GetAll($query);
 		if($results){
 			foreach ($results as $result) {

@@ -71,7 +71,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	$user_email = $_SESSION["details"]["email"];
 	$user_role = $_SESSION["details"]["role"];
 	$user_group = $_SESSION["details"]["group"];
-	$user_organisation_id = $_SESSION["details"]["organisation_id"];
+	$user_organisation_id = $ENTRADA_USER->getActiveOrganisation();
 } else {
 	/**
 	 * If the are not already authenticated, check to see if they have provided
@@ -82,7 +82,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		 * @todo Add a setUserHashAuthentication() method to the authentication client and server so we can use the
 		 * web-service instead of querying the data directly to authenticate a private-hash.
 		 */
-		$query = "SELECT a.`id`, a.`username`, a.`firstname`, a.`lastname`, a.`email`, a.`grad_year`, b.`role`, b.`group`, a.`organisation_id`, b.`access_expires`
+		$query = "SELECT a.`id`, a.`username`, a.`firstname`, a.`lastname`, a.`email`, a.`grad_year`, b.`role`, b.`group`, b.`organisation_id`, b.`access_expires`
 					FROM `".AUTH_DATABASE."`.`user_data` AS a
 					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 					ON b.`user_id` = a.`id`

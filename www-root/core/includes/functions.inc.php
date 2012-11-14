@@ -10916,7 +10916,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							case "student" :
 								if (($user_group != "student") || ($filter_value == $proxy_id)) {
 									// Students' enrolled in courses only
-									$course_ids = groups_get_explicitly_enrolled_course_ids((int) $filter_value);
+									$course_ids = groups_get_explicitly_enrolled_course_ids((int) $filter_value, false, $organisation_id);
 									if ($course_ids) {
 										$where_student_course_ids = $course_ids;
 									}
@@ -15311,7 +15311,7 @@ function groups_get_enrolled_course_ids($proxy_id = 0, $only_active_groups = fal
  * @param int $proxy_id
  * @return array $group
  */
-function groups_get_explicitly_enrolled_course_ids($proxy_id = 0, $only_active_groups = false) {
+function groups_get_explicitly_enrolled_course_ids($proxy_id = 0, $only_active_groups = false, $organisation_id = 0) {
 	global $db, $ENTRADA_USER;
 	
 	$proxy_id = (int) $proxy_id;
@@ -15319,11 +15319,15 @@ function groups_get_explicitly_enrolled_course_ids($proxy_id = 0, $only_active_g
 	
 	$course_ids = array();
 	
+	if (!$organisation_id) {
+		$organisation_id = $ENTRADA_USER->getActiveOrganisation();
+	}
+	
 	if ($proxy_id) {
 				$query = "	SELECT a.course_id FROM courses AS a
 					LEFT JOIN course_audience AS b
 					ON a.course_id = b.course_id
-					WHERE a.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+					WHERE a.`organisation_id` = ".$db->qstr($organisation_id)."
 					AND (
 						(
 							(
@@ -15335,11 +15339,11 @@ function groups_get_explicitly_enrolled_course_ids($proxy_id = 0, $only_active_g
 									JOIN `group_organisations` AS c
 									ON c.`group_id` = a.`group_id`
 									WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
-									AND (b.`start_date` = 0
+									AND (b.`start_date` IS NULL OR b.`start_date` = 0
 									OR b.`start_date` <= UNIX_TIMESTAMP())
-									AND (b.`finish_date` = 0 OR b.`finish_date` >= UNIX_TIMESTAMP())
+									AND (b.`finish_date` IS NULL OR b.`finish_date` = 0 OR b.`finish_date` >= UNIX_TIMESTAMP())
 									AND b.`member_active` = '1'
-									AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+									AND c.`organisation_id` = ".$db->qstr($organisation_id)."
 								)
 							)
 							OR (

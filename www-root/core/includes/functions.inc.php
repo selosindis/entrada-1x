@@ -8973,7 +8973,7 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	}
 	$query .= " WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 
-	if (strtolower($ENTRADA_USER->getActiveGroup == "student")) {
+	if (strtolower($ENTRADA_USER->getActiveGroup() == "student")) {
 		$query .="	AND (
 						d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 						OR a.`permission` = 'open'

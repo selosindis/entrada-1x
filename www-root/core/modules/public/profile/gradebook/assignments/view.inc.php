@@ -43,6 +43,7 @@ if ($RECORD_ID) {
 		if ($iscontact) {
 			$USER_ID = $tmp;
 		} elseif ($assignment && $ENTRADA_ACL->amIAllowed(new CourseResource($assignment["course_id"], $assignment["organisation_id"]), "update")) {
+			$iscontact = true;
 			$USER_ID = $tmp;
 		}else {
 			$USER_ID = false;
@@ -55,7 +56,6 @@ if ($RECORD_ID) {
 	}	
 	
 	if ($USER_ID) {
-
 		if($assignment){
 			$course_ids = groups_get_enrolled_course_ids($USER_ID);
 			if(in_array($assignment["course_id"],$course_ids)){
@@ -124,7 +124,8 @@ if ($RECORD_ID) {
 						}
 
 						if (($file_version) && (is_array($file_version))) {
-							if ((@file_exists($download_file = FILE_STORAGE_PATH."/A".$file_version["afversion_id"])) && (@is_readable($download_file))) {
+							$download_file = FILE_STORAGE_PATH."/A".$file_version["afversion_id"];
+							if ((@file_exists($download_file)) && (@is_readable($download_file))) {
 								/**
 								 * This must be done twice in order to close both of the open buffers.
 								 */
@@ -161,14 +162,14 @@ if ($RECORD_ID) {
 								add_statistic("community:".$COMMUNITY_ID.":shares", "file_download", "csfile_id", $RECORD_ID);
 								echo @file_get_contents($download_file, FILE_BINARY);
 								exit;
-							}
+							}							
 						}
 
 
 
 						if ((!$ERROR) || (!$NOTICE)) {
 							$ERROR++;
-							$ERRORSTR[] = "<strong>Unable to download the selected file.</strong><br /><br />The file you have selected cannot be downloaded at this time, ".(($LOGGED_IN) ? "please try again later." : "Please log in to continue.");
+							$ERRORSTR[] = "<strong>Unable to download the selected file.</strong><br /><br />The file you have selected cannot be downloaded at this time, please try again later.";
 						}
 
 						if ($NOTICE) {

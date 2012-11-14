@@ -27,7 +27,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("gradebook", "create", false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("gradebook", "update", false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -42,6 +42,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		$ASSIGNMENT_ID = $tmp_id;
 		$query = "SELECT * FROM `assignment_contacts` WHERE `assignment_id` = ".$db->qstr($ASSIGNMENT_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 		$IS_CONTACT = $db->GetRow($query);
+		if(!$IS_CONTACT){
+			$query = "	SELECT a.`course_id`,a.`organisation_id`
+						FROM `courses` a
+						JOIN `assigments` b
+						ON a.`course_id` = b.`course_id`
+						WHERE b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID);
+			$course_details = $db->GetRow($query);
+			if($course_details){
+				if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]),"update",false)){
+					$IS_CONTACT = true;
+				}
+			}							
+		}		
 	}
 	
 	if ($COURSE_ID) {

@@ -8973,7 +8973,7 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	}
 	$query .= " WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 
-	if (strtolower($ENTRADA_USER->getActiveRole()) != "admin" && strtolower($ENTRADA_USER->getActiveRole()) != "director") {
+	if (strtolower($ENTRADA_USER->getActiveGroup == "student")) {
 		$query .="	AND (
 						d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 						OR a.`permission` = 'open'
@@ -8982,6 +8982,7 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 						)
 					)";
 	}
+	
 	if ($only_active_courses) {
         $query .="    AND a.`course_active`='1'";
 	}
@@ -8990,10 +8991,11 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	}
 
 	$query .= "	ORDER BY".($order_by_course_code ? " a.`course_code`," : "")." a.`course_name` ASC";
+	
 	$results = $db->GetAll($query);
 	if ($results) {
 		foreach ($results as $result) {
-				if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $ENTRADA_USER->getActiveOrganisation()), "read")) {
+				if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "read")) {
 					$output[] = $result;
 				}
 		}

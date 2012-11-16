@@ -69,7 +69,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		<thead>
 			<tr>
 				<td class="modified">&nbsp;</td>
-				<td class="general">"Form Type</td>
+				<td class="general">Form Type</td>
 				<td class="title">Evaluation Form Title</td>
 			</tr>
 		</thead>

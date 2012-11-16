@@ -20,6 +20,7 @@
  * @author Organisation: University of Calgary
  * @author Unit: School of Medicine
  * @author Developer:  Howard Lu <yhlu@ucalgary.ca>
+ * @author Developer:  James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 University of Calgary. All Rights Reserved.
  *
 */
@@ -141,6 +142,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						$PROCESSED["allow_target_review"] = true;
 					} else {
 						$PROCESSED["allow_target_review"] = false;
+					}
+			
+					/**
+					 * Non-required field "show_comments" / Show Comments
+					 */
+					if (isset($_POST["show_comments"]) && ($_POST["show_comments"])) {
+						$PROCESSED["show_comments"] = true;
+					} else {
+						$PROCESSED["show_comments"] = false;
 					}
 
 					/**
@@ -445,25 +455,49 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							 * Insert the target records into the evaluation_targets table.
 							 */
 							if (!empty($PROCESSED["evaluation_targets"])) {
-								$db->Execute("DELETE FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID));
-								foreach ($PROCESSED["evaluation_targets"] as $target_value) {
-									$record = array(
-										"evaluation_id" => $EVALUATION_ID,
-										"target_id" => $evaluation_target_id,
-										"target_value" => $target_value["target_value"],
-										"target_type" => $target_value["target_type"],
-										"target_active" => 1,
-										"updated_date" => time(),
-										"updated_by" => $ENTRADA_USER->getID()
-									);
-									
-									if ($evaluation_target_type == "peer") {
-										$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => $record["target_type"], "evaluator_value" => $record["target_value"]);
+								$query = "SELECT * FROM `evaluation_targets` WHERE `evaluation_id` = ".$db->qstr($EVALUATION_ID);
+								$existing_targets = $db->GetAll($query);
+								$temp_new_targets = array();
+								$temp_old_targets = array();
+								foreach ($PROCESSED["evaluation_targets"] as $key => $target) {
+									$temp_new_targets[$key] = $target["target_value"]."-".$target["target_type"];
+								}
+								foreach ($existing_targets as $existing_target) {
+									$temp_old_targets[$existing_target["etarget_id"]] = $existing_target["target_value"]."-".$existing_target["target_type"];
+								}
+								$added_targets = array();
+								$removed_targets_string = "";
+								foreach ($temp_old_targets as $etarget_id => $existing_target) {
+									if (array_search($existing_target, $temp_new_targets) === false) {
+										$removed_targets_string .= ($removed_targets_string ? ", " : "").$db->qstr($etarget_id);
 									}
+								}
+								foreach ($temp_new_targets as $key => $new_target) {
+									if (array_search($existing_target, $temp_new_targets) === false) {
+										$added_targets[] = $PROCESSED["evaluation_targets"][$key];
+									}
+								}
+								$db->Execute("DELETE FROM `evaluation_targets` WHERE `etarget_id` IN (".$removed_targets_string.")");
+								if ($added_targets) {
+									foreach ($added_targets as $target_value) {
+										$record = array(
+											"evaluation_id" => $EVALUATION_ID,
+											"target_id" => $evaluation_target_id,
+											"target_value" => $target_value["target_value"],
+											"target_type" => $target_value["target_type"],
+											"target_active" => 1,
+											"updated_date" => time(),
+											"updated_by" => $ENTRADA_USER->getID()
+										);
 
-									if (!$db->AutoExecute("evaluation_targets", $record, "INSERT") || (!$etarget_id = $db->Insert_Id())) {
-										add_error("Unable to attach a target to this evaluation. The system administrator has been notified of this error, please try again later.");
-										application_log("Unable to attach target_id [".$evaluation_target_id."] / target_value [".$target_value["target_value"]."] to evaluation_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
+										if ($evaluation_target_type == "peer") {
+											$PROCESSED["evaluation_evaluators"][] = array("evaluator_type" => $record["target_type"], "evaluator_value" => $record["target_value"]);
+										}
+
+										if (!$db->AutoExecute("evaluation_targets", $record, "INSERT") || (!$etarget_id = $db->Insert_Id())) {
+											add_error("Unable to attach a target to this evaluation. The system administrator has been notified of this error, please try again later.");
+											application_log("Unable to attach target_id [".$evaluation_target_id."] / target_value [".$target_value["target_value"]."] to evaluation_id [".$EVALUATION_ID."]. Database said: ".$db->ErrorMsg());
+										}
 									}
 								}
 							}
@@ -1079,6 +1113,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									<td>
 										<input type="checkbox" id="allow_target_review" name="allow_target_review"<?php echo (!isset($PROCESSED["allow_target_review"]) || $PROCESSED["allow_target_review"] ? " checked=\"checked\"" : ""); ?> />
 										<div style="float: right; width: 91%" class="content-small">Allow targets (or users with "ownership" permissions of the target) to review the results for this evaluation.</div>
+									</td>
+								</tr>
+								<tr>
+									<td></td>
+									<td style="vertical-align: top">
+										<label for="show_comments" class="form-required">Show Comments in Review</label>
+									</td>
+									<td>
+										<input type="checkbox" id="show_comments" name="show_comments"<?php echo (!isset($PROCESSED["show_comments"]) || $PROCESSED["show_comments"] ? " checked=\"checked\"" : ""); ?> />
+										<div style="float: right; width: 91%" class="content-small">When reviewing this evaluation, show comments to reviewers (or targets able to review results).</div>
 									</td>
 								</tr>
 								<tr>

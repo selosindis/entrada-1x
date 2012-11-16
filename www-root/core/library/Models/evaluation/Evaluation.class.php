@@ -58,7 +58,7 @@ class Evaluation {
 				?>
 					<tr>
 						<td style="vertical-align: top">
-							<label for="rubric_title" class="form-required">Rubric Title</label>
+							<label for="rubric_title" class="form-nrequired">Rubric Title</label>
 						</td>
 						<td>
 							<input type="text" id="rubric_title" name="rubric_title" style="width: 330px;" value="<?php echo ((isset($question_data["rubric_title"])) ? clean_input($question_data["rubric_title"], "encode") : ""); ?>">
@@ -483,7 +483,7 @@ class Evaluation {
 								$rubric_table_open = true;
 								echo "<li id=\"question_".$question["efquestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">\n";
 								echo "<span id=\"question_text_".$question["efquestion_id"]."\" style=\"display: none;\">".$rubric["rubric_title"].(stripos($rubric["rubric_title"], "rubric") === false ? " Rubric" : "")."</span>";
-								echo "<h2>".$rubric["rubric_title"]."<span style=\"font-weight: normal; margin-left: 10px; padding-right: 30px;\" class=\"content-small\">".$rubric["rubric_description"]."</span></h2>\n";
+								echo (isset($rubric["rubric_title"]) && $rubric["rubric_title"] ? "<h2>".$rubric["rubric_title"] : "")."<span style=\"font-weight: normal; margin-left: 10px; padding-right: 30px;\" class=\"content-small\">".$rubric["rubric_description"]."</span>".(isset($rubric["rubric_title"]) && $rubric["rubric_title"] ? "</h2>\n" : "\n");
 								if ($allow_question_modifications) {
 									echo "<div class=\"rubric-controls\">\n";
 									echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$form_id."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
@@ -628,7 +628,7 @@ class Evaluation {
 									ORDER BY a.`response_order` ASC";
 						$responses = $db->GetAll($query);
 						if ($responses) {
-							$response_width = floor(100 / count($responses));
+							$response_width = floor(100 / count($responses)) - 1;
 
 							foreach ($responses as $response) {
 								echo "<div style=\"width: ".$response_width."%\">\n";
@@ -928,13 +928,15 @@ class Evaluation {
 							}
 						}
 						if (!isset($target_data["associated_cgroup_ids"]) && !isset($target_data["associated_cohort_ids"]) && !isset($target_data["associated_proxy_ids"])) {
-							foreach ($target_data["evaluation_targets"] as $target) {
-								if ($target["target_type"] == "cgroup_id") {
-									$target_data["associated_cgroup_ids"][] = $target["target_value"];
-								} elseif ($target["target_type"] == "cohort") {
-									$target_data["associated_cohort_ids"][] = $target["target_value"];
-								} elseif ($target["target_type"] == "proxy_id") {
-									$target_data["associated_proxy_ids"][] = $target["target_value"];
+							if (isset($target_data["evaluation_targets"]) && is_array($target_data["evaluation_targets"])) {
+								foreach ($target_data["evaluation_targets"] as $target) {
+									if ($target["target_type"] == "cgroup_id") {
+										$target_data["associated_cgroup_ids"][] = $target["target_value"];
+									} elseif ($target["target_type"] == "cohort") {
+										$target_data["associated_cohort_ids"][] = $target["target_value"];
+									} elseif ($target["target_type"] == "proxy_id") {
+										$target_data["associated_proxy_ids"][] = $target["target_value"];
+									}
 								}
 							}
 						}
@@ -2821,6 +2823,16 @@ class Evaluation {
 									$permissions[] = array("target_value" => $ENTRADA_USER->getID(), "target_type" => "proxy_id", "contact_type" => "faculty");
 									break;
 								}
+							}
+						break;
+						case "student" :
+							$query = "SELECT * FROM `evaluation_progress`
+										WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
+										AND `target_record_id` = ".$db->qstr($ENTRADA_USER->getID())."
+										AND `progress_value` = 'complete'";
+							$progress_record = $db->GetRow($query);
+							if ($progress_record) {
+								$permissions[] = array("target_record_id" => $ENTRADA_USER->getID(), "contact_type" => "target");
 							}
 						break;
 						case "self" :

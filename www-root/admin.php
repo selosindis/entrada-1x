@@ -133,6 +133,12 @@ $router->setSection($SECTION);
 
 define("PARENT_INCLUDED", true);
 
+if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"] && isset($ENTRADA_USER)) {
+	if (($cached_user = $ENTRADA_CACHE->load("user_".AUTH_APP_ID."_".$ENTRADA_USER->getID())) && $cached_user != $ENTRADA_USER) {
+		$ENTRADA_CACHE->save($ENTRADA_USER, "user_".AUTH_APP_ID."_".$ENTRADA_USER->getID(), array("auth"), 300);
+	}
+}
+
 require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/admin/header.tpl.php");
 if (($router) && ($route = $router->initRoute($MODULE))) {
 	/**

@@ -138,6 +138,20 @@ if($EVALUATION_ID) {
         if($ERROR) {
                 echo display_error();
         }
+		
+		
+		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";
+		$HEAD[] = "<script type=\"text/javascript\">
+		jQuery(document).ready(function() {
+			jQuery('#attempts').dataTable(
+				{    
+					'bPaginate': false,
+					'bInfo': false
+				}
+			);
+		});
+		</script>";
+		
         if ($ENTRADA_ACL->amIAllowed(new EventResource($evaluation_details["evaluation_id"]), 'update')) {
             echo "<div class=\"no-printing\">\n";
             echo "	<div style=\"float: right; margin-top: 8px\">\n";
@@ -179,7 +193,7 @@ if($EVALUATION_ID) {
 	            $evaluation_evaluators = $db->GetAll($query);
 	        	if ($evaluation_evaluators) {
 	                ?>
-	                <table class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Members">
+	                <table id="attempts" class="tableList" style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Members">
 	                <colgroup>
                         <col class="modified" />
                         <col class="target" />

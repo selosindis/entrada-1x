@@ -15020,7 +15020,7 @@ function generateAccessConditions($organisation, $group, $role, $proxy_id, $tabl
 	$mask_strs = array();
 
 	foreach ($masks as $field=>$condition) {
-		$mask_strs[] = (($table_prefix != NULL) ? $table_prefix."." : "").$field."=".$db->qstr($condition);
+		$mask_strs[] = (($table_prefix != NULL && !strstr($field, "a.")) ? $table_prefix."." : "").$field."=".$db->qstr($condition);
 	}
 	if ($mask_strs) {
 		return implode(" AND ",$mask_strs);

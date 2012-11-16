@@ -69,6 +69,7 @@ if ($RECORD_ID) {
 	if ($evaluation) {
 		$questions = array();
 		$responses = array();
+		$criteria_response_ids = array();
 		$permissions = Evaluation::getReviewPermissions($evaluation["evaluation_id"]);
 		$query = "SELECT * FROM `evaluation_form_questions`
 					WHERE `eform_id` = ".$db->qstr($evaluation["eform_id"])."
@@ -86,12 +87,14 @@ if ($RECORD_ID) {
 					$evaluation_question["response_ids"] = array();
 					foreach ($evaluation_question_responses as $evaluation_question_response) {
 						if ($evaluation_question_response["criteria_text"]) {
+							$criteria_response_ids[] = $evaluation_question_response["efresponse_id"];
 							?>
 							<div id="criteria-<?php echo $evaluation_question_response["efresponse_id"]; ?>" style="display: none;">
 								<span class="content-small">
 									<strong>Criteria:</strong>
+									<br />
 									<?php
-										echo $evaluation_question_response["criteria_text"];
+										echo nl2br($evaluation_question_response["criteria_text"]);
 									?>
 								</span>
 							</div>
@@ -107,7 +110,7 @@ if ($RECORD_ID) {
 			}
 		}
 	}
-	if ($evaluation && $ENTRADA_ACL->amIAllowed(new EvaluationResource($evaluation["evaluation_id"], true), 'update')) {
+	if ($evaluation && $ENTRADA_ACL->amIAllowed(new EvaluationResource(null, true), 'update')) {
 		array_unshift($permissions, array("contact_type" => "reviewer"));
 	}
 	if ($evaluation && isset($permissions) && $permissions) {
@@ -136,6 +139,7 @@ if ($RECORD_ID) {
 									$course["responses"][$response["efquestion_id"]]["responses"][$response["efresponse_id"]] = 0;
 								}
 								$course["target_title"] = $course["course_name"]." - ".$course["course_code"];
+								$course["sort_title"] = $course["course_name"]." - ".$course["course_code"];
 								$available_targets[$target_id] = $course;
 							}
 						break;
@@ -151,6 +155,7 @@ if ($RECORD_ID) {
 									$user["responses"][$response["efquestion_id"]]["responses"][$response["efresponse_id"]] = 0;
 								}
 								$user["target_title"] = $user["firstname"]." ".$user["lastname"];
+								$user["sort_title"] = $user["lastname"].", ".$user["firstname"];
 								$available_targets[$target_id] = $user;
 							}
 						break;
@@ -171,6 +176,7 @@ if ($RECORD_ID) {
 										$clerkship_preceptor["responses"][$response["efquestion_id"]]["responses"][$response["efresponse_id"]] = 0;
 									}
 									$clerkship_preceptor["target_title"] = $clerkship_preceptor["firstname"]." ".$clerkship_preceptor["lastname"];
+									$clerkship_preceptor["sort_title"] = $clerkship_preceptor["lastname"].", ".$clerkship_preceptor["firstname"];
 									$available_targets[$target_id] = $clerkship_preceptor;
 								}
 							} else {
@@ -187,6 +193,7 @@ if ($RECORD_ID) {
 										$clerkship_event["responses"][$response["efquestion_id"]]["responses"][$response["efresponse_id"]] = 0;
 									}
 									$clerkship_event["target_title"] = $clerkship_event["event_title"]." [".$clerkship_event["rotation_title"]."]";
+									$clerkship_event["sort_title"] = $clerkship_event["rotation_title"].", ".$clerkship_event["event_title"];
 									$available_targets[$target_id] = $clerkship_event;
 								}
 							}
@@ -230,6 +237,12 @@ if ($RECORD_ID) {
 			}
 		}
 		if ($available_targets) {
+			
+			function sort_by_title ($a, $b) {
+				return strcmp($a["sort_title"], $b["sort_title"]);
+			}
+			usort($available_targets, "sort_by_title");
+			
 			if (count($available_targets) > 1) {
 				$sidebar_html  = "<ul class=\"menu\">\n";
 				foreach ($available_targets as $target_id => $available_target) {
@@ -303,7 +316,7 @@ if ($RECORD_ID) {
 					foreach ($question["response_ids"] as $response_id) {
 						$selections = (isset($available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["responses"][$response_id]) ? $available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["responses"][$response_id] : 0);
 						echo "	<tr>\n";
-						echo "		<td><a class=\"criteria-tooltip\" id=\"tooltip-".$response_id."\" href=\"#criteria-".$response_id."\">".$responses[$response_id]["response_text"]."</a></td>\n";
+						echo "		<td>".(array_search($response_id, $criteria_response_ids) !== false ? "<a class=\"criteria-tooltip\" id=\"tooltip-".$response_id."\" href=\"#criteria-".$response_id."\">".$responses[$response_id]["response_text"]."</a>" : $responses[$response_id]["response_text"])."</td>\n";
 						echo "		<td>".(isset($available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["responses"]) && count($available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["responses"]) ? round(($selections / $available_targets[$selected_target_id]["questions"][$question["efquestion_id"]]["selections"] * 100), 1) : 0)."%</td>\n";
 						echo "		<td>".$selections."</td>\n";
 						echo "	</tr>\n";

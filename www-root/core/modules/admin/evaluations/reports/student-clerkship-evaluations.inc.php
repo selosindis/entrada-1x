@@ -23,7 +23,6 @@
  * @copyright Copyright 2011 Queen's University. All Rights Reserved.
  *
 */
-ini_set("display_errors", 1);
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {

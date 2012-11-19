@@ -62,7 +62,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			$default_organisation = $db->GetRow($query);
 
 			$organisation_names = array();
-			$query = "SELECT `organisation_id` FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($PROXY_ID);
+			$query = "	SELECT `organisation_id` 
+						FROM `".AUTH_DATABASE."`.`user_access` 
+						WHERE `user_id` = ".$db->qstr($PROXY_ID). "
+						AND `app_id` = " . $db->qstr(AUTH_APP_ID);
 			$results = $db->GetAll($query);
 			if ($results) {
 				foreach ($results as $result) {

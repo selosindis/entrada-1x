@@ -464,11 +464,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						LEFT JOIN `".AUTH_DATABASE."`.`user_access`
 						ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
 						LEFT JOIN `".AUTH_DATABASE."`.`organisations`
-						ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+						ON `".AUTH_DATABASE."`.`user_access`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
 						WHERE `".AUTH_DATABASE."`.`user_access`.`group` = 'faculty'
 						AND (`".AUTH_DATABASE."`.`user_access`.`role` = 'director' OR `".AUTH_DATABASE."`.`user_access`.`role` = 'admin')
 						AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
 						AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
+						AND `".AUTH_DATABASE."`.`user_access`.`organisation_id` = " . $ENTRADA_USER->getActiveOrganisation() . "
 						ORDER BY `fullname` ASC";
 			$results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
 			if ($results) {
@@ -526,10 +527,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						LEFT JOIN `".AUTH_DATABASE."`.`user_access`
 						ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
 						LEFT JOIN `".AUTH_DATABASE."`.`organisations`
-						ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+						ON `".AUTH_DATABASE."`.`user_access`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
 						WHERE `".AUTH_DATABASE."`.`user_access`.`role` = 'pcoordinator'
 						AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
 						AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
+						AND `".AUTH_DATABASE."`.`user_access`.`organisation_id` = " . $ENTRADA_USER->getActiveOrganisation() . "
 						ORDER BY `fullname` ASC";
 			$results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
 			if ($results) {
@@ -700,6 +702,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<col width="75%" />
 				</colgroup>
 				<tbody>
+					<?php if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) { ?>
 					<tr>
 						<td>&nbsp;</td>
 						<td style="vertical-align: top">
@@ -761,6 +764,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
+					<?php } ?>
 							<tr>
 								<td>&nbsp;</td>
 								<td>

@@ -73,7 +73,10 @@ class User {
 			$default_access_id,
 			$access_id,
 			$group,
-			$role;
+			$role,
+			$active_group,
+			$active_role;
+
 
 	/**
 	 * lookup array for formatting user information
@@ -552,35 +555,29 @@ class User {
 						AND a.`app_id` = ?
 						ORDER BY a.`id` ASC";
 
+			$results = $db->getAll($query, array($proxy_id, time(), time(), AUTH_APP_ID));		
 
-			$results = $db->getAll($query, array($proxy_id, time(), time(), AUTH_APP_ID));
-
-			if ($results) {
+			if ($results) {			
 				$org_group_role = array();
 				foreach ($results as $result) {
 					if ((!isset($user->default_access_id) || !$user->default_access_id) && $result["organisation_id"] == $user->getOrganisationId()) {
 						if (!isset($_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) || !$_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) {
 							$_SESSION["permissions"][$user->getAccessId()]["organisation_id"] = $result["organisation_id"];
-							$user->setActiveOrganisation($result["organisation_id"]);
-							$user->setActiveRole($result["role"]);
-							$user->setActiveGroup($result["group"]);						
+							$user->setActiveOrganisation($result["organisation_id"]);												
 						}
 						$user->setDefaultAccessId($result["id"]);
-					}
+					} 
 					$org_group_role[$result["organisation_id"]][html_encode($result["group"])] = array(html_encode($result["role"]), $result["id"]);
 				}
 				if ((!isset($_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) || !$_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) && isset($results[0]["organisation_id"]) && $results[0]["organisation_id"]) {
 					$_SESSION["permissions"][$user->getAccessId()]["organisation_id"] = $results[0]["organisation_id"];
-					$user->setActiveOrganisation($results[0]["organisation_id"]);
-					$user->setActiveRole($results[0]["role"]);
-					$user->setActiveGroup($results[0]["group"]);
+					$user->setActiveOrganisation($results[0]["organisation_id"]);				
 				}
 				$user->setOrganisationGroupRole($org_group_role);
 			}
 			
 			$ENTRADA_CACHE->save($user, "user_".AUTH_APP_ID."_".$proxy_id, array("auth"), 300);
 		}
-
 		return $user;
 	}
 	
@@ -632,16 +629,13 @@ class User {
 		return Departments::getByUser($this->user_id);
 	}
 	
-	/**
+		/**
 	 * Returns the active group for the active organisation.  
 	 * 
 	 * @return array
 	 */
 	public function getActiveGroup() {
-		if ($this->active_group) {
-			return $this->active_group;
-		}
-		else if ($_SESSION["permissions"][$this->getAccessId()]["group"]) {
+		if ($_SESSION["permissions"][$this->getAccessId()]["group"]) {
 			return $_SESSION["permissions"][$this->getAccessId()]["group"];
 		}
 		else {
@@ -664,10 +658,7 @@ class User {
 	 * @return array
 	 */
 	public function getActiveRole() {
-		if ($this->active_role) {
-			return $this->active_role;
-		}
-		else if ($_SESSION["permissions"][$this->getAccessId()]["role"]) {
+		if ($_SESSION["permissions"][$this->getAccessId()]["role"]) {
 			return $_SESSION["permissions"][$this->getAccessId()]["role"];
 		}
 		else {

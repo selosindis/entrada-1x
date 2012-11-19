@@ -772,6 +772,8 @@ if ($community_courses) {
 				$filters["course"][] = (int) trim($course_id, '\'');
 			}
 			
+			$_SESSION[APPLICATION_IDENTIFIER]["community_page"][$COMMUNITY_ID]["filters"] = $filters;
+			
 			$results = events_fetch_filtered_events(
 					$ENTRADA_USER->getActiveId(),
 					$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"],
@@ -840,7 +842,7 @@ if ($community_courses) {
 					foreach($results["events"] as $result) {
 						if(((!$result["release_date"]) || ($result["release_date"] <= time())) && ((!$result["release_until"]) || ($result["release_until"] >= time()))) {
 							$attachments	= attachment_check($result["event_id"]);
-							$url			= ENTRADA_URL."/events?rid=".$rid."&community=".$COMMUNITY_ID;
+							$url			= ENTRADA_URL."/events?rid=".$result["event_id"]."&community=".$COMMUNITY_ID;
 							$is_modified	= false;
 
 							/**

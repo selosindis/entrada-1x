@@ -93,7 +93,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	/**
 	 * Redirect guests and students users away from the admin section.
 	 */
-	if (in_array($_SESSION["details"]["group"], array("guest", "student"))) {
+	if (in_array($ENTRADA_USER->getActiveGroup(), array("guest", "student"))) {
 		header("Location: ".ENTRADA_URL);
 		exit;
 	}

@@ -192,7 +192,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 			if (isset($_GET["search-type"]) && $_GET["search-type"]) {
 				if ($_GET["search-type"] == "all") {
-					$query_counter	= "	SELECT COUNT(a.`id`) AS `total_rows`
+					$query_counter	= "	SELECT count(*) as `total_rows` FROM (SELECT COUNT(a.`id`) AS `total_rows`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
@@ -201,7 +201,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										OR a.`username` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`email` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`firstname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
-										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")";
+										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
+										GROUP BY a.`id`) as t";					
 					$query_search	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -212,10 +213,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										OR a.`email` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`firstname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
+										GROUP BY a.`id`
 										ORDER BY `fullname` ASC
-										LIMIT %s, %s";
+										LIMIT %s, %s";					
 				} elseif ($_GET["search-type"] == "active") {
-					$query_counter	= "	SELECT COUNT(a.`id`) AS `total_rows`
+					$query_counter	= "	SELECT count(*) as `total_rows` FROM (SELECT COUNT(a.`id`) AS `total_rows`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
@@ -228,7 +230,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										OR a.`username` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`email` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`firstname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
-										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")";
+										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
+										GROUP BY a.`id`) as t";
 					$query_search	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -243,10 +246,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										OR a.`email` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`firstname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
+										GROUP BY a.`id`
 										ORDER BY `fullname` ASC
 										LIMIT %s, %s";
 				} elseif ($_GET["search-type"] == "inactive") {
-					$query_counter	= "	SELECT COUNT(a.`id`) AS `total_rows`
+					$query_counter	= "	SELECT count(*) as `total_rows` FROM (SELECT COUNT(a.`id`) AS `total_rows`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
@@ -259,7 +263,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										OR a.`username` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`email` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`firstname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
-										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")";
+										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
+										GROUP BY a.`id`) as t";
 					$query_search	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -274,10 +279,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										OR a.`email` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`firstname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
+										GROUP BY a.`id`
 										ORDER BY `fullname` ASC
 										LIMIT %s, %s";
 				} elseif ($_GET["search-type"] == "new") {
-					$query_counter	= "	SELECT COUNT(a.`id`) AS `total_rows`
+					$query_counter	= "	SELECT count(*) as `total_rows` FROM (SELECT COUNT(a.`id`) AS `total_rows`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
@@ -287,7 +293,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										OR a.`username` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`email` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`firstname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
-										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")";
+										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
+										GROUP BY a.`id`) as t";
 					$query_search	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -299,6 +306,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										OR a.`email` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`firstname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
+										GROUP BY a.`id`
 										ORDER BY `fullname` ASC
 										LIMIT %s, %s";
 				}
@@ -319,6 +327,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	 * of pages that are available based on the results per page preferences.
 	 */
 	$result = ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query_counter) : $db->GetRow($query_counter));
+
 	if ($result) {
 		$total_rows	= $result["total_rows"];
 
@@ -577,6 +586,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 		 */
 		$limit_parameter = (int) (($results_per_page * $page_current) - $results_per_page);
 		$query	= sprintf($query_search, $limit_parameter, $results_per_page);
+		
 		$results	= $db->GetAll($query);
 		
 		if ($results) {

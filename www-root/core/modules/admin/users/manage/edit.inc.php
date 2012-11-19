@@ -897,34 +897,41 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							</td>
 						</tr>
 						<?php							
-								$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
-												FROM `".AUTH_DATABASE."`.`user_access` ua
-												JOIN `" . AUTH_DATABASE . "`.`organisations` o
-												ON ua.`organisation_id` = o.`organisation_id`												
-												WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getId());
+								if (strtolower($ENTRADA_USER->getActiveGroup()) == "medtech" && strtolower($ENTRADA_USER->getActiveRole()) == "admin") {
+									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title` 
+													FROM `" . AUTH_DATABASE . "`.`organisations` o";
+								} else {
+									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
+													FROM `".AUTH_DATABASE."`.`user_access` ua
+													JOIN `" . AUTH_DATABASE . "`.`organisations` o
+													ON ua.`organisation_id` = o.`organisation_id`												
+													WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getId()). "
+													AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
+								}
 													
-								$results	= $db->GetAll($query);
-								if ($results) {
+								$all_orgs	= $db->GetAll($query);
+								if ($all_orgs) {
 									 ?>
 						<tr>
 							<td colspan="3">
-								<table class="org_table">
+								<table class="org_table" style="width:100%">									
+									<tbody>
 										<tr>
 											<td style="padding-top:10px">
 											<label for="organisations"><strong>Organisation</strong></label><br />
-											<select id="organisations" name="organisations" style="width:250px">
+											<select id="organisations" name="organisations" style="width:200px">
 										<?php
-											foreach($results as $result) {
-												echo build_option($result["organisation_id"], ucfirst($result["organisation_title"]), $selected);															
+											foreach($all_orgs as $a_org) {
+												echo build_option($a_org["organisation_id"], ucfirst($a_org["organisation_title"]), $selected);															
 											}														
 										?>
-											</select>->
+											</select>
 											</td>
-											<td style="padding-top:10px">
+											<td style="padding-top:10px;">
 											<label for="groups"><strong>Groups</strong></label><br />
 											<select id="groups" name="groups" style="width:200px">
 												<option value="0">Select a Group</option>
-											</select>->
+											</select>
 											</td>
 											<td style="padding-top:10px">
 											<label for="roles"><strong>Role</strong></label><br />
@@ -936,8 +943,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										<tr>
 											<td>&nbsp;</td>
 											<td>&nbsp;</td>
-											<td style="text-align: right;"><input id="add_permissions" name="add_permissions" type="button" value="Add" /></td>
+											<td style="text-align: right;"><br /><input id="add_permissions" name="add_permissions" type="button" value="Add" /></td>
 										</tr>
+									</tbody>
 								</table>
 								<hr />
 							</td>
@@ -951,19 +959,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								<?php
 									$initial_permissions = array();
 									
-									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
-												FROM `".AUTH_DATABASE."`.`user_access` ua
-												JOIN `" . AUTH_DATABASE . "`.`organisations` o
-												ON ua.`organisation_id` = o.`organisation_id`												
-												WHERE ua.`user_id` = " . $db->qstr($PROXY_ID);
-													
-									$organisations	= $db->GetAll($query);
-									
-									foreach($organisations as $org) {
+									foreach($all_orgs as $org) {
 									
 								?>
 									
-									<table class="tableList" style="display: block; width: 100%;" id="<?php echo "perm_organisation_" . $org["organisation_id"]; ?>" >
+									<table class="tableList" style="width: 100%;" id="<?php echo "perm_organisation_" . $org["organisation_id"]; ?>" >
 										<caption><h2 style="text-align: left;"><?php echo $org["organisation_title"]; ?></h2></caption>
 										<colgroup>
 											<col style="width: 15%" />
@@ -980,7 +980,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										</thead>
 										<tbody>											
 											<tr>
-												<td colspan="3"><h3>Profiles</h3></td>
+												<td colspan="4"><h3>Profiles</h3></td>
 											</tr>
 									<?php
 									$query		= "	SELECT ua.*, o.`organisation_id`, o.`organisation_title`, ud.`clinical`, ud.`entry_year`, ud.`grad_year`
@@ -990,7 +990,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												JOIN `".AUTH_DATABASE."`.`user_data` ud
 												ON ua.`user_id` = ud.`id`
 												AND ua.`organisation_id` = " . $db->qstr($org["organisation_id"]) . "
-												WHERE ua.`user_id` = " . $db->qstr($PROXY_ID);
+												WHERE ua.`user_id` = " . $db->qstr($PROXY_ID) ."
+												AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
 													
 									$results	= $db->GetAll($query);
 								
@@ -1029,7 +1030,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											$initial_acl["grad_year"] = $result["grad_year"];
 											$initial_permissions[] = $initial_acl;											
 											
-											echo "<tr id=\"" . $result["organisation_id"] . "_" . $group_id . "_" . $role_id . "\"><td></td><td>" . $result["group"] . " / " . $result["role"] . "
+											echo "<tr id=\"" . $result["organisation_id"] . "_" . $group_id . "_" . $role_id . "\"><td></td><td>" . ucfirst($result["group"]) . " / " . ucfirst($result["role"]) . "
 												  </td><td>" . $options . "</td><td><a class=\"remove_perm\" href=\"\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\"></a></td></tr>";
 											
 											}
@@ -1114,13 +1115,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							</td>
 						</tr>
 						<tr>
-							<td><input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle" onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" /></td>
+							<td><input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"])) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle" onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" /></td>
 							<td colspan="2"><label for="send_notification" class="form-nrequired">Send this new user a password reset e-mail after adding them.</label></td>
 						</tr>
 						<tr>
 							<td>&nbsp;</td>
 							<td colspan="2">
-								<div id="send_notification_msg" style="display: block">
+								<div id="send_notification_msg" style="display: none;">
 									<label for="notification_message" class="form-required">Notification Message</label><br />
 									<textarea id="notification_message" name="notification_message" rows="10" cols="65" style="width: 100%; height: 200px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_NEW_USER_NOTIFICATION); ?></textarea>
 									<span class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</span>
@@ -1284,12 +1285,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							$("#groups").append('<option value=\"0\">Select a Group</option>')
 							var url = "<?php echo ENTRADA_URL . "/api/organisation-groups.api.php"; ?>";
 							$.get(	url, { organisation_id: $(this).val() },
-									function(data){
+									function(data){										
 										for (var key in data) {
 											if (data.hasOwnProperty(key)) {
 											$("#groups").append('<option value=\"' + key + '\">' + data[key]+ '</option>');															
 											}
 										}
+										filterGroups();
 									}, "json");
 						});										
 						$('select[name=groups]').live("change", function() {
@@ -1309,8 +1311,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$('#organisations option:first').attr('selected', true).change();
 
 						<?php echo "var permissions = " . $initial_permissions . ";"; ?>	
-						$('input[name=permissions]').val(JSON.stringify(permissions));
-						
+						$('input[name=permissions]').val(JSON.stringify(permissions));					
 
 						$("input[name=add_permissions]").live("click", function() {	
 							var group_id = $('#groups').val();
@@ -1400,6 +1401,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							}
 							$('input[name=permissions]').val(JSON.stringify(permissions));
 
+							if (org_id == $('#organisations').val()) {
+								//add the group back to the select list
+								var group_role = $(this).closest("tr").children()[1];
+								group_role = $(group_role).text();
+								var group_text = $.trim(group_role.split("/")[0]);														
+								var option = $("<option></option>").text(group_text);
+								$(option).attr("value", group_id);
+								$('#groups').append(option);
+
+								//now resort the select list by group title
+								var my_options = $('#groups option');
+								my_options.sort(function(a,b) {
+									if (a.text > b.text) return 1;
+									else if (a.text < b.text) return -1;
+									else return 0
+								});
+							}
+
 							var myTable = $(this).closest("table");											
 							$(this).closest("tr").remove();
 							if ($(myTable)[0].rows.length <= 4) {								
@@ -1416,6 +1435,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								$(this).hide();
 							}
 						});
+						function filterGroups() {
+							if ($('#groups option').length > 0) {
+								var current_org = $('#organisations').val();								
+								for (i = 0; i < permissions.acl.length; i++) {									
+									if (permissions.acl[i].org_id == current_org) {										
+										$('#groups option[value=' + permissions.acl[i].group_id + ']').remove();
+									}
+								}
+								//now resort the option list
+								var my_options = $('#groups option');
+								my_options.sort(function(a,b) {
+									if (a.text > b.text) return 1;
+									else if (a.text < b.text) return -1;
+									else return 0
+								});
+							}
+						}
 					});
 					</script>
 					<?php

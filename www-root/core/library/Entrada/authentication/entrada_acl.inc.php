@@ -32,7 +32,7 @@ class Entrada_ACL extends ACL_Factory {
 				"evaluationform" => array (
 					"evaluationformquestion"
 				),
-			),
+			),			
 			"gradebook" => array(
 				"assessment"
 			),
@@ -251,7 +251,12 @@ class Entrada_ACL extends ACL_Factory {
 		global $ENTRADA_USER;
 
 		$user = new EntradaUser("user".$ENTRADA_USER->getAccessId());
-		$user->details = $_SESSION["details"];
+		$current_details = $_SESSION["details"];
+		$current_details["access_id"] = $ENTRADA_USER->getAccessId();
+		$current_details["role"] = $ENTRADA_USER->getActiveRole();
+		$current_details["group"] = $ENTRADA_USER->getActiveGroup();
+		$current_details["organisation_id"] = $ENTRADA_USER->getActiveOrganisation();
+		$user->details = $current_details;
 
 		return $this->isAllowed($user, $resource, $action, $assert);
 	}
@@ -509,7 +514,7 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 		global $db;
 		//If asserting is off then return true right away
 		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
-			return true;
+			return false;
 		}
 
 		if (isset($resource->course_id)) {
@@ -528,9 +533,9 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 
 			$course_id = preg_replace("/[^0-9]+/", "", $resource_id);
 		}
-
+		
 		$role_id = $role->getRoleId();
-		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+		$access_id = preg_replace('/[^0-9]+/', "", $role_id);
 
 		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
 					WHERE `id` = ".$db->qstr($access_id);
@@ -540,12 +545,11 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 			$role_id = $acl->_entrada_last_query_role->getRoleId();
 			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
 
-			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`userr_access`
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
 						WHERE `id` = ".$db->qstr($access_id);
 			$user_id = $db->GetOne($query);
 		}
-
-		return $this->_checkCourseEnrollment($user_id, $course_id);
+		return !($this->_checkCourseEnrollment($user_id, $course_id));
 	}
 
 	/**
@@ -557,28 +561,394 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 	 * @return boolean
 	 */
 	static function _checkCourseEnrollment($user_id, $course_id) {
-		global $db;
-
-		$query = "SELECT * FROM `community_courses` WHERE `course_id` = ".$db->qstr($course_id);
+        global $db;
+		
+		$query = "	SELECT *
+					FROM `courses`
+					WHERE `course_id` = " . $db->qstr($course_id);
 		$result = $db->GetRow($query);
-		if ($result) {
-			$query = "SELECT * FROM `community_members` WHERE `community_id` = ".$db->qstr($result["community_id"])." AND `proxy_id` = ".$db->qstr($user_id)." AND `member_active` = 1";
+
+		if ($result["permission"] == "open") {
+			return true;
+		} else {
+			$query = "	SELECT * 
+						FROM `community_courses` 
+						WHERE `course_id` = " . $db->qstr($course_id);
 			$result = $db->GetRow($query);
 			if ($result) {
-				return true;
+				$query = "	SELECT * 
+							FROM `community_members` 
+							WHERE `community_id` = " . $db->qstr($result["community_id"]) . " 
+							AND `proxy_id` = " . $db->qstr($user_id) . " 
+							AND `member_active` = 1";
+				$result = $db->GetRow($query);
+				if ($result) {
+					return true;
+				} else {
+					return false;
+				}
 			} else {
+                $query = "  SELECT *
+                            FROM `course_audience`
+                            WHERE `course_id` = " . $db->qstr($course_id);
+                $results = $db->GetAll($query);
+                if ($results) {
+                    foreach ($results as $result) {
+                        switch ($result["audience_type"]) {
+                            case "proxy_id":
+                                if ($result["audience_value"] == $user_id) {
+                                    return true;
+                                }
+                                break;
+                            case "group_id":
+                                $query = "  SELECT *
+                                            FROM `group_members`
+                                            WHERE `group_id` = ".$db->qstr($result["audience_value"]) . "
+                                            AND `proxy_id` = " . $db->qstr($user_id) . "
+                                            AND `member_active` = 1
+                                            AND ((UNIX_TIMESTAMP() BETWEEN `start_date` AND `finish_date`) OR (start_date = 0 AND finish_date = 0)
+                                            OR (start_date IS NULL AND finish_date IS NULL))";
+                                $result = $db->GetRow($query);
+
+                                if ($result) {
+                                    return true;
+                                }
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                }
+                return false;
+            }
+        }
+    }
+}
+
+class NotEventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {		
+		global $db;
+		//If asserting is off then return false right away
+		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return false;
+		}
+
+		if (isset($resource->event_id)) {
+			$event_id = $resource->event_id;
+		} else if (isset($acl->_entrada_last_query->event_id)) {
+			$event_id = $acl->_entrada_last_query->event_id;
+		} else {
+			// Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if ($resource_type !== "event") {
+				// This only asserts for users on events.
 				return false;
 			}
-		} else {
-			/**
-			 * If there is no course website associated with this course, then
-			 * allow them access to the course because there is no enrollment
-			 * defined.
-			 */
 
+			$event_id = preg_replace("/[^0-9]+/", "", $resource_id);
+		}
+		
+		if (isset($resource->course_id)) {
+			$course_id = $resource->course_id;
+		} else if (isset($acl->_entrada_last_query->course_id)) {
+			$course_id = $acl->_entrada_last_query->course_id;
+		} else {
+			// Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if ($resource_type !== "event") {
+				// This only asserts for users on events.
+				return false;
+			}
+
+			$course_id = preg_replace("/[^0-9]+/", "", $resource_id);
+		}
+		
+		$role_id = $role->getRoleId();
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
+
+		if (!isset($user_id) || !$user_id) {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
+		}		
+		return !($this->_checkEventEnrollment($user_id, $event_id, $course_id));
+	}
+
+	/**
+	 * Checks if the $user_id is an active member of the corresponding
+	 * event.
+	 *
+	 * @param string|integer $user_id The proxy_id to be checked
+	 * @param string|integer $event_id The event id to be checked
+	 * @param string|integer $course_id The course id to be checked
+	 * @return boolean
+	 */
+	static function _checkEventEnrollment($user_id, $event_id, $course_id) {
+        global $db;
+
+            $query = "    SELECT *
+                        FROM `courses`
+                        WHERE `course_id` = ".$db->qstr($course_id);
+            $result = $db->GetRow($query);
+
+            if ($result["permission"] == "open") {
+                //return false so that the course resource acl permission is tested.
+                return true;
+            }
+
+        $query = "    SELECT *
+                    FROM `event_audience`
+                    WHERE `event_id` = " . $db->qstr($event_id);
+        $results = $db->GetAll($query);
+
+        if ($results) {
+            foreach($results as $result) {
+                switch($result["audience_type"]) {
+                    case "proxy_id":
+                        if ($result["audience_value"] == $user_id) {
+                            return true;
+                        }
+                        break;
+                    case "group_id":
+                        $query = "    SELECT *
+                                    FROM `group_members`
+                                    WHERE `group_id` = ".$db->qstr($event["audience_value"]) . "
+                                    AND `proxy_id` = " . $db->qstr($user_id) . "
+                                    AND `member_active` = 1";
+                        $result = $db->GetRow($query);
+                        if ($result) {
+                            return true;
+                        }
+                        break;
+                    case "cgroup_id":
+                        $query = "    SELECT *
+                                    FROM `course_group_audience` cga
+                                    JOIN `curriculum_periods` cp
+                                    ON cga.`cperiod_id` = cp.`cperiod_id`
+                                    WHERE cga.`cgroup_id` = ".$db->qstr($event["audience_value"]) . "
+                                    AND cga.`proxy_id` = " . $db->qstr($user_id) . "
+                                    AND    cga.`active` = 1
+                                    AND UNIX_TIMESTAMP() BETWEEN cp.`start_date` AND cp.`finish_date`";
+                        $result = $db->GetRow($query);
+                        if ($result) {
+                            return true;
+                        }
+                        break;
+                    case "course_id":
+                        //hand off to course enrollment checking.
+                        return true;
+                    default:
+                        break;
+                }
+            }
+        }
+        $query = "    SELECT *
+                    FROM `course_contacts` AS cc
+                    WHERE cc.`proxy_id` = " . $db->qstr($user_id) . "
+                    AND cc.`course_id` = " . $db->qstr($course_id);
+
+        $result = $db->GetRow($query);
+
+        if ($result) {
+            return true;
+        }
+
+        $query = "    SELECT *
+                    FROM `event_contacts` AS ec
+                    JOIN `events` as e
+                    ON e.`event_id` = ec.`event_id`
+                    WHERE ec.`proxy_id` = " . $db->qstr($user_id) . "
+                    AND ec.`event_id` = " . $db->qstr($event_id) . "
+                    AND e.`course_id` = " . $db->qstr($course_id);
+
+        $result = $db->GetRow($query);
+
+        if ($result) {
+            return true;
+        }
+
+        return false;
+    }	
+}
+
+/**
+ * Event Enrollment Assertion
+ *
+ * Used to assert that proxy_id is enrolled in a particular event based on their membership status
+ * in the corresponding event audience.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Don Zuiker <don.zuiker@queensu.ca>
+ * @copyright Copyright 2012 Queen's University. All Rights Reserved.
+ */
+class EventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
+
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {		
+		global $db;
+		//If asserting is off then return true right away
+		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
 			return true;
 		}
+
+		if (isset($resource->event_id)) {
+			$event_id = $resource->event_id;
+		} else if (isset($acl->_entrada_last_query->event_id)) {
+			$event_id = $acl->_entrada_last_query->event_id;
+		} else {
+			// Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if ($resource_type !== "event") {
+				// This only asserts for users on events.
+				return false;
+			}
+
+			$event_id = preg_replace("/[^0-9]+/", "", $resource_id);
+		}
+		
+		if (isset($resource->course_id)) {
+			$course_id = $resource->course_id;
+		} else if (isset($acl->_entrada_last_query->course_id)) {
+			$course_id = $acl->_entrada_last_query->course_id;
+		} else {
+			// Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if ($resource_type !== "event") {
+				// This only asserts for users on events.
+				return false;
+			}
+
+			$course_id = preg_replace("/[^0-9]+/", "", $resource_id);
+		}
+		
+		$role_id = $role->getRoleId();
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
+
+		if (!isset($user_id) || !$user_id) {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
+		}		
+		return $this->_checkEventEnrollment($user_id, $event_id, $course_id);
 	}
+
+	/**
+	 * Checks if the $user_id is an active member of the corresponding
+	 * event.
+	 *
+	 * @param string|integer $user_id The proxy_id to be checked
+	 * @param string|integer $event_id The event id to be checked
+	 * @param string|integer $course_id The course id to be checked
+	 * @return boolean
+	 */
+	static function _checkEventEnrollment($user_id, $event_id, $course_id) {
+        global $db;
+
+            $query = "    SELECT *
+                        FROM `courses`
+                        WHERE `course_id` = ".$db->qstr($course_id);
+            $result = $db->GetRow($query);
+
+            if ($result["permission"] == "open") {
+                //return false so that the course resource acl permission is tested.
+                return false;
+            }
+
+        $query = "    SELECT *
+                    FROM `event_audience`
+                    WHERE `event_id` = " . $db->qstr($event_id);
+        $results = $db->GetAll($query);
+
+        if ($results) {
+            foreach($results as $result) {
+                switch($result["audience_type"]) {
+                    case "proxy_id":
+                        if ($result["audience_value"] == $user_id) {
+                            return true;
+                        }
+                        break;
+                    case "group_id":
+                        $query = "    SELECT *
+                                    FROM `group_members`
+                                    WHERE `group_id` = ".$db->qstr($event["audience_value"]) . "
+                                    AND `proxy_id` = " . $db->qstr($user_id) . "
+                                    AND `member_active` = 1";
+                        $result = $db->GetRow($query);
+                        if ($result) {
+                            return true;
+                        }
+                        break;
+                    case "cgroup_id":
+                        $query = "    SELECT *
+                                    FROM `course_group_audience` cga
+                                    JOIN `curriculum_periods` cp
+                                    ON cga.`cperiod_id` = cp.`cperiod_id`
+                                    WHERE cga.`cgroup_id` = ".$db->qstr($event["audience_value"]) . "
+                                    AND cga.`proxy_id` = " . $db->qstr($user_id) . "
+                                    AND    cga.`active` = 1
+                                    AND UNIX_TIMESTAMP() BETWEEN cp.`start_date` AND cp.`finish_date`";
+                        $result = $db->GetRow($query);
+                        if ($result) {
+                            return true;
+                        }
+                        break;
+                    case "course_id":
+                        //hand off to course enrollment checking.
+                        return false;
+                    default:
+                        break;
+                }
+            }
+        }
+        $query = "    SELECT *
+                    FROM `course_contacts` AS cc
+                    WHERE cc.`proxy_id` = " . $db->qstr($user_id) . "
+                    AND cc.`course_id` = " . $db->qstr($course_id);
+
+        $result = $db->GetRow($query);
+
+        if ($result) {
+            return true;
+        }
+
+        $query = "    SELECT *
+                    FROM `event_contacts` AS ec
+                    JOIN `events` as e
+                    ON e.`event_id` = ec.`event_id`
+                    WHERE ec.`proxy_id` = " . $db->qstr($user_id) . "
+                    AND ec.`event_id` = " . $db->qstr($event_id) . "
+                    AND e.`course_id` = " . $db->qstr($course_id);
+
+        $result = $db->GetRow($query);
+
+        if ($result) {
+            return true;
+        }
+
+        return false;
+    }
 }
 
 /**
@@ -1400,7 +1770,7 @@ class ClerkshipAssertion implements Zend_Acl_Assert_Interface {
 			return false;
 		}
 
-		if ((time() < $end_timestamp = mktime(0, 0, 0, 7, 13, $GRAD_YEAR)) && (time() >= strtotime("-23 months", $end_timestamp))) {
+		if ((time() < $end_timestamp = mktime(0, 0, 0, 7, 13, intval($GRAD_YEAR))) && (time() >= strtotime("-23 months", $end_timestamp))) {
 			return true;
 		} else {
 			return false;

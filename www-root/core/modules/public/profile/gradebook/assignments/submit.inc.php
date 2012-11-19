@@ -23,11 +23,11 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".COMMUNITY_URL."/javascript/s
 echo "<h1>Submit Assignment</h1>\n";
 
 if ($RECORD_ID) {
-	$query			= "SELECT * FROM `assignments_files` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `file_active` = '1'";
+	$query			= "SELECT * FROM `assignment_files` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `file_active` = '1'";
 	if ($submission	= $db->GetRow($query)) {
 		header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$RECORD_ID);
 	}
-	$query			= "SELECT * FROM `assignments` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `assignment_active` = '1'";
+	$query			= "SELECT * FROM `assignments` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `assignment_active` = '1' AND (`due_date` = 0 OR `due_date` > UNIX_TIMESTAMP())";
 	$folder_record	= $db->GetRow($query);
 	if ($folder_record){// || true) {
 		$course_ids = groups_get_enrolled_course_ids($ENTRADA_USER->getID());
@@ -289,7 +289,7 @@ if ($RECORD_ID) {
 		}
 	} else {
 		application_log("error", "Invalid assignment id was provided. (Assignment Submit)");
-		add_error('Invalid assignment ID provided.');
+		add_error('Invalid assignment ID provided. This assignment may have already expired, or may have been deleted.');
 		echo display_error();
 		//header("Location: ".ENTRADA_URL."/profile/gradebook/assignments");
 		exit;

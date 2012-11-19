@@ -194,7 +194,7 @@ if ($RECORD_ID) {
 								$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&id=".$RECORD_ID, "title" => limit_chars($file_record["file_title"], 32));
 							}
 							$ADD_COMMENT	= true;//shares_module_access($file_record["cshare_id"], "add-comment");
-							$ADD_REVISION	= $assignment["assignment_uploads"]===1?false:true;//shares_file_module_access($file_record["csfile_id"], "add-revision");
+							$ADD_REVISION	= $assignment["assignment_uploads"]==1?false:true;//shares_file_module_access($file_record["csfile_id"], "add-revision");
 							$MOVE_FILE		= false;//shares_file_module_access($file_record["csfile_id"], "move-file");
 							$NAVIGATION		= false;//shares_file_navigation($file_record["cshare_id"], $RECORD_ID);
 							//$community_shares_select = community_shares_in_select($file_record["cshare_id"]);

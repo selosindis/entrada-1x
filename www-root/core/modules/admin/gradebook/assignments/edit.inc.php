@@ -514,8 +514,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										<td style="vertical-align: top;"><label class="form-nrequired">Associated Assessment</label></td>
 										<td>
 											<select name="assessment_id" id="assessment-selector" style="width: 250px">
-												<option value="0">No Assessment</option>
-												<option value="N" selected="selected">New Assessment</option>
+												<option value="0"<?php echo isset($PROCESSED["assessment_id"]) && $PROCESSED["assessment_id"]==0?' selected="selected"':'';?>>No Assessment</option>
+												<option value="N" <?php echo !isset($PROCESSED["assessment_id"])?' selected="selected"':'';?>>New Assessment</option>
 												<?php
 													$query = "	SELECT a.`group_id`, a.`group_name` FROM `groups` a 
 																JOIN `assessments` b

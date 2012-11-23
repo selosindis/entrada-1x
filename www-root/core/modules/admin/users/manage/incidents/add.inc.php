@@ -143,43 +143,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						echo display_notice();	
 					}
 					?>
-					<form action="<?php echo ENTRADA_URL; ?>/admin/users/manage/incidents?section=add&amp;id=<?php echo $PROXY_ID; ?>&amp;step=2" method="post">
-					<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Adding Incident">
-					<colgroup>
-						<col style="width: 3%" />
-						<col style="width: 25%" />
-						<col style="width: 72%" />
-					</colgroup>
-					<tfoot>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="submit" class="button" value="Save" />
-							</td>
-						</tr>
-					</tfoot>
-					<tbody>
-						<tr>
-							<td colspan="3">
-								<h2>Incident Details</h2>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="incident_title" class="form-required">Incident Title</label></td>
-							<td>
-								<input type="text" id="incident_title" name="incident_title" value="<?php echo ((isset($PROCESSED["incident_title"])) ? html_encode($PROCESSED["incident_title"]) : ""); ?>" style="width: 250px" maxlength="64" />
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="incident_severity" class="form-nrequired">Severity</label></td>
-							<td>
+					<h2>Incident Details</h2>
+					<form action="<?php echo ENTRADA_URL; ?>/admin/users/manage/incidents?section=add&amp;id=<?php echo $PROXY_ID; ?>&amp;step=2" method="post" class="form-horizontal">
+						<div class="control-group">
+							<label for="incident_title" class="control-label form-required">Incident Title</label>
+							<div class="controls">
+								<input type="text" id="incident_title" name="incident_title" value="<?php echo ((isset($PROCESSED["incident_title"])) ? html_encode($PROCESSED["incident_title"]) : ""); ?>" maxlength="64" />
+							</div>
+						</div>
+						<div class="control-group">
+							<label for="incident_severity" class="control-label form-nrequired">Severity</label>
+							<div class="controls">
 								<select id="incident_severity" name="incident_severity" style="width: 85px">
 								<?php 
 								for ($i = 1; $i <= 5; $i++) { 
@@ -187,37 +161,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								}
 								?>
 								</select>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="incident_status" class="form-nrequired">Status</label></td>
-							<td>
+							</div>
+						</div>
+						<div class="control-group">
+							<label for="incident_status" class="control-label form-nrequired">Status:</label>
+							<div class="controls">
 								<select id="incident_status" name="incident_status" style="width: 85px">
 									<option value="1"<?php echo (isset($PROCESSED["incident_status"]) && ((int) $PROCESSED["incident_status"]) == 1 ? " selected=\"selected\" " : ""); ?>>Open</option>
 									<option value="0"<?php echo (isset($PROCESSED["incident_status"]) && ((int) $PROCESSED["incident_status"]) == 0 ? " selected=\"selected\" " : ""); ?>>Closed</option>
 								</select>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<?php echo generate_calendars("incident", "Incident", true, true, ((isset($PROCESSED["incident_date"])) ? $PROCESSED["incident_date"] : time()), true, false, ((isset($PROCESSED["follow_up_date"])) ? $PROCESSED["follow_up_date"] : 0), true, false, " Date", " Follow Up"); ?>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td colspan="2"><label for="incident_description" class="form-nrequired">Detailed Incidient Description / Information</label></td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td colspan="2">
+							</div>
+						</div>
+						<div class="control-group">
+							<table>
+								<tr>
+									<?php echo generate_calendars("incident", "Incident", true, true, ((isset($PROCESSED["incident_date"])) ? $PROCESSED["incident_date"] : time()), true, false, ((isset($PROCESSED["follow_up_date"])) ? $PROCESSED["follow_up_date"] : 0), true, false, " Date", " Follow Up"); ?>
+								</tr>
+							</table>
+						</div>
+						<div class="control-group">
+							<label for="incident_description" class="control-label form-nrequired">Detailed Incidient Description / Information</label>
+							<div class="controls">
 								<textarea id="incident_description" name="incident_description" style="width: 99%; height: 200px"><?php echo ((isset($PROCESSED["incident_description"])) ? html_encode($PROCESSED["incident_description"]) : ""); ?></textarea>
-							</td>
-						</tr>
-					</tbody>
-					</table>
+							</div>
+						</div>
+						<div class="pull-right">
+							<input type="submit" class="btn btn-primary" value="Save incident" />
+						</div>
+				
 					</form>
 					<?php
 				break;

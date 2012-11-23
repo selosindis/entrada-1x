@@ -92,26 +92,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	}
 	</style>	
 	<div class="no-printing">
-		<form action="<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&step=2" method="post" onsubmit="selIt()">
-			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
-				<colgroup>
-					<col style="width: 3%" />
-					<col style="width: 20%" />
-					<col style="width: 77%" />
-				</colgroup>
-				<tbody>
+		<h2>Reporting Dates</h2>
+		<form action="<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&step=2" method="post" onsubmit="selIt()" class="form-horizontal">
+			<div class="control-group">
+				<table>
 					<tr>
-						<td colspan="3"><h2>Reporting Dates</h2></td>
+						<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]); ?>
 					</tr>
-					<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]); ?>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td style="vertical-align: top;"><input id="organisation_checkbox" type="checkbox" disabled="disabled" checked="checked"></td>
-						<td style="vertical-align: top;"><label for="organisation_id" class="form-required">Organisation</label></td>
-						<td style="vertical-align: top;">
-							<select id="organisation_id" name="organisation_id" style="width: 177px" onchange="window.location = '<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&org_id=' + $F('organisation_id')">
+				</table>
+			</div>
+			<div class="control-group">
+				<label for="organisation_id" class=" control-label form-required"><input id="organisation_checkbox" type="checkbox" disabled="disabled" checked="checked"> Organisation:</label>
+				<div class="controls">
+					<select id="organisation_id" name="organisation_id" style="width: 177px" onchange="window.location = '<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&org_id=' + $F('organisation_id')">
 							<?php
 							$query = "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
 							$results = $db->GetAll($query);
@@ -133,14 +126,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 								<?php
 							}
 							?>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td></td>
-						<td style="vertical-align: top;"><label class="form-required">Courses Included</label></td>
-						<td style="vertical-align: top;">
-							<?php
+					</select>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label form-required">Courses Included:</label>
+				<div class="controls">
+					<?php
 							echo "<select class=\"multi-picklist\" id=\"PickList\" name=\"course_ids[]\" multiple=\"multiple\" size=\"5\" style=\"width: 100%; margin-bottom: 5px\">\n";
 									if ((is_array($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"])) && (count($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"]))) {
 										foreach ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] as $course_id) {
@@ -149,11 +141,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 									}
 							echo "</select>\n";
 							echo "<div style=\"float: left; display: inline\">\n";
-							echo "	<input type=\"button\" id=\"courses_list_state_btn\" class=\"button\" value=\"Show List\" onclick=\"toggle_list('courses_list')\" />\n";
+							echo "	<input type=\"button\" id=\"courses_list_state_btn\" class=\"btn\" value=\"Show List\" onclick=\"toggle_list('courses_list')\" />\n";
 							echo "</div>\n";
 							echo "<div style=\"float: right; display: inline\">\n";
-							echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"button-remove\" onclick=\"delIt()\" value=\"Remove\" />\n";
-							echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"button-add\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
+							echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"btn\" onclick=\"delIt()\" value=\"Remove\" />\n";
+							echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"btn\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
 							echo "</div>\n";
 							echo "<div id=\"courses_list\" style=\"clear: both; padding-top: 3px; display: none\">\n";
 							echo "	<h2>Courses List</h2>\n";
@@ -180,14 +172,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							echo "	});\n";
 							echo "	</script>\n";
 							?>
-						</td>
-					</tr>
-
-					<tr>
-						<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="button" value="Create Report" /></td>
-					</tr>
-				</tbody>
-			</table>
+				</div>
+			</div>
+			<div class="pull-right">
+				<input type="submit" class="btn btn-primary" value="Create Report" />
+			</div>
+			
 		</form>
 	</div>
 	<?php
@@ -198,7 +188,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		$courses_included	= array();
 		$eventtype_legend	= array();
 		
-		echo "<h1 style=\"page-break-before: avoid\">Course Summary</h1>";
+		echo "<h2 style=\"page-break-before: avoid\">Course Summary</h2>";
 		echo "<div class=\"content-small\" style=\"margin-bottom: 10px\">\n";
 		echo "	<strong>Date Range:</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." <strong>to</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).".";
 		echo "</div>\n";

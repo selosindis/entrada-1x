@@ -26,11 +26,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 } else {
 	if ($PROXY_ID && $user_record) {
 		?>
-				<h1 style="margin-top: 0px">Manage Incidents</h1>
-
-							<ul class="page-action">
-								<li><a href="<?php echo ENTRADA_URL."/admin/users/manage/incidents?section=add&id=".$PROXY_ID; ?>">Add New Incident</a></li>
-							</ul>
+				<h1>Manage Incidents</h1>
+				<div class="clearfix">		
+					<a href="<?php echo ENTRADA_URL."/admin/users/manage/incidents?section=add&id=".$PROXY_ID; ?>" class="btn btn-primary">Add New Incident</a>
+				</div>
+							
 
 							<?php
 							$query = "	SELECT a.*, CONCAT_WS(', ', b.lastname, b.firstname) as `reported_by`

@@ -56,7 +56,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	</style>
 	<h1><?php echo $MODULES[strtolower($MODULE)]["title"]; ?></h1>
 
-	<h2 style="color: #669900">Learning Event Reports</h2>
+	<h2>Learning Event Reports</h2>
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=event-types-by-course">Learning Event Types by Course</a><br />
@@ -72,7 +72,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		</li>
 	</ol>
 
-	<h2 style="color: #669900">Teaching Event Reports</h2>
+	<h2>Teaching Event Reports</h2>
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=teaching-report-by-course">Teaching Report By Course (hourly)</a><br />
@@ -92,7 +92,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		</li>
 	</ol>
 
-	<h2 style="color: #669900">Learner Incident Reports</h2>
+	<h2>Learner Incident Reports</h2>
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=incident-report-by-follow-up">Open Incidents By Follow-Up Date</a><br />
@@ -104,7 +104,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		</li>
 	</ol>
 
-	<h2 style="color: #669900">Usage Reports</h2>
+	<h2>Usage Reports</h2>
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=report-on-podcasting">Podcast Usage Report</a><br />
@@ -112,7 +112,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		</li>
 	</ol>
 
-	<h2 style="color: #669900">Assessment Reports</h2>
+	<h2>Assessment Reports</h2>
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports?section=assessments">Assessment Summary Report</a><br />
@@ -124,7 +124,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		</li>
 	</ol>
 
-	<h2 style="color: #669900">External Reporting</h2>
+	<h2>External Reporting</h2>
 	<ol class="system-reports">
 		<li>
 			<a href="<?php echo ENTRADA_URL; ?>/admin/reports/aamc">AAMC Curriculum Inventory Reporting</a><br />

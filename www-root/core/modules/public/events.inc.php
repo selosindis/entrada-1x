@@ -50,74 +50,18 @@ if (!defined("PARENT_INCLUDED")) {
 	/**
 	 * Check to see if they are trying to view an event using an event_id.
 	 */
-	if ((isset($_GET["id"])) && ($tmp_input = clean_input($_GET["id"], array("nows", "int")))) {
+	if ((isset($_GET["rid"])) && ($tmp_input = clean_input($_GET["rid"], array("nows", "int")))) {
 		$EVENT_ID = $tmp_input;
-	}
-
-	/**
-	 * Check to see if they are tring to view an event using a result set id (either from the
-	 * dashboard (drid) or from the events page (rid).
-	 */
-	if (isset($_GET["drid"])) {
-		$RESULT_ID = (int) trim($_GET["drid"]);
-
-		if (($RESULT_ID) || ($RESULT_ID === 0)) {
-			if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["query"])) {
-				$query = sprintf($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["query"], "`events`.`event_start` ASC", $RESULT_ID, 1);
-				$result	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
-				if ($result) {
-					$USE_QUERY = true;
-
-					$EVENT_ID = (int) $result["event_id"];
-					$RESULT_TOTAL_ROWS = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["total_rows"];
-
-					$_SERVER["QUERY_STRING"] = replace_query(array("rid" => false));
-				}
-			}
-
-			if (!$USE_QUERY) {
-				$_SERVER["QUERY_STRING"] = replace_query(array("drid" => false));
-			}
+		$transverse = true;
+		if (isset($_GET["community"]) && ((int)$_GET["community"])) {
+			$community_id = ((int)$_GET["community"]);
 		}
-	} elseif (isset($_GET["rid"])) {
-		$RESULT_ID = (int) trim($_GET["rid"]);
-
-		if ($RESULT_ID || ($RESULT_ID === 0)) {
-			$sort_by = events_fetch_sorting_query($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"], $_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]);
-			
-			if (isset($_GET["community"]) && $community_id = ((int)$_GET["community"])) {
-				if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"])) {
-					$query	= sprintf($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"], $sort_by, $RESULT_ID, 1);
-
-					$result	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
-					if ($result) {
-						$USE_QUERY = true;
-	
-						$EVENT_ID = (int) $result["event_id"];
-						$RESULT_TOTAL_ROWS = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_rows"];
-	
-						$_SERVER["QUERY_STRING"] = replace_query(array("drid" => false));
-					}
-				}
-			} else {
-				if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"])) {
-					$query = sprintf($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"], $sort_by, $RESULT_ID, 1);
-					$result	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
-					if ($result) {
-						$USE_QUERY = true;
-
-						$EVENT_ID = (int) $result["event_id"];
-						$RESULT_TOTAL_ROWS = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"];
-
-						$_SERVER["QUERY_STRING"] = replace_query(array("drid" => false));
-					}
-				}
-			}
-
-			if (!$USE_QUERY) {
-				$_SERVER["QUERY_STRING"] = replace_query(array("rid" => false));
-			}
-		}
+	} elseif ((isset($_GET["drid"])) && ($tmp_input = clean_input($_GET["drid"], array("nows", "int")))) {
+		$EVENT_ID = $tmp_input;
+		$transverse = true;
+	} elseif ((isset($_GET["id"])) && ($tmp_input = clean_input($_GET["id"], array("nows", "int")))) {
+		$EVENT_ID = $tmp_input;
+		$transverse = false;
 	}
 
 
@@ -335,17 +279,20 @@ if (!defined("PARENT_INCLUDED")) {
 						</script>
 						<?php
 					}
-
+					
+					if ($transverse) {
+						$transversal_ids = events_fetch_transversal_ids($EVENT_ID, ($community_id ? $community_id : false));
+					}
 					echo "<div class=\"no-printing\">\n";
-					if (($USE_QUERY) && ($RESULT_TOTAL_ROWS > 1)) {
+					if (($transverse) && count($transversal_ids)) {
 						$back_click = "";
 						$next_click = "";
 						
 						echo "<table style=\"width: 100%; height: 23px\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
 						echo "<tr>\n";
 						echo "	<td style=\"width: 22px; height: 23px\">";
-						if ($RESULT_ID > 0) {
-							$back_click = ENTRADA_URL."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($RESULT_ID - 1)));
+						if (isset($transversal_ids["prev"])) {
+							$back_click = ENTRADA_URL."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($transversal_ids["prev"])));
 							
 							echo "<a id=\"back_event\" href=\"".$back_click."\" title=\"Previous Event\"><img src=\"".ENTRADA_RELATIVE."/images/cal-back.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Previous Event\" title=\"Previous Event\" /></a>";
 						} else {
@@ -354,8 +301,8 @@ if (!defined("PARENT_INCLUDED")) {
 						echo "	</td>\n";
 						echo "	<td id=\"swipe-location\" style=\"width: 100%; height: 23px; background: url('".ENTRADA_RELATIVE."/images/cal-table-bg.gif') #FFFFFF repeat-x; text-align: center; font-size: 10px; color: #666666; white-space: nowrap; overflow: hidden\">".html_encode($event_info["event_title"])."</td>\n";
 						echo "	<td style=\"width: 22px; height: 23px\">";
-						if ($RESULT_ID < ($RESULT_TOTAL_ROWS - 1)) {
-							$next_click = ENTRADA_URL."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($RESULT_ID + 1)));
+						if (isset($transversal_ids["next"])) {
+							$next_click = ENTRADA_URL."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($transversal_ids["next"])));
 							
 							echo "<a id=\"next_event\" href=\"".$next_click."\" title=\"Next Event\"><img src=\"".ENTRADA_RELATIVE."/images/cal-next.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Next Event\" title=\"Next Event\" /></a>";
 						} else {
@@ -1071,7 +1018,7 @@ if ($topic_results) { ?>
 						echo "<div class=\"content-small\">There are no comments or discussions on this event. <strong>Start a conversation</strong>, leave your comment below.</div>\n";
 					}
 					echo "	<br /><br />";
-					echo "	<form action=\"".ENTRADA_RELATIVE."/discussions?action=add".(($USE_QUERY) ? "&amp;".((isset($_GET["drid"])) ? "drid" : "rid")."=".$RESULT_ID : "")."\" method=\"post\">\n";
+					echo "	<form action=\"".ENTRADA_RELATIVE."/discussions?action=add".(($USE_QUERY) ? "&amp;".((isset($_GET["drid"])) ? "drid" : "rid")."=".$EVENT_ID : "")."\" method=\"post\">\n";
 					echo "		<input type=\"hidden\" name=\"event_id\" value=\"".$EVENT_ID."\" />\n";
 					echo "		<label for=\"discussion_comment\" class=\"content-subheading\">Leave a Comment</label>\n";
 					echo "		<div class=\"content-small\">Posting comment as <strong>".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]."</strong></div>\n";
@@ -1164,17 +1111,17 @@ if ($topic_results) { ?>
 				<?php
 				switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dtype"]) {
 					case "day" :
-						echo "Found ".$learning_events["total_rows"]." event".(($learning_events["total_rows"] != 1) ? "s" : "")." that take place on <strong>".date("D, M jS, Y", $learning_events["duration_start"])."</strong>.\n";
+						echo "Found ".count($learning_events["result_ids_map"])." event".((count($learning_events["result_ids_map"]) != 1) ? "s" : "")." that take place on <strong>".date("D, M jS, Y", $learning_events["duration_start"])."</strong>.\n";
 					break;
 					case "month" :
-						echo "Found ".$learning_events["total_rows"]." event".(($learning_events["total_rows"] != 1) ? "s" : "")." that take place during <strong>".date("F", $learning_events["duration_start"])."</strong> of <strong>".date("Y", $learning_events["duration_start"])."</strong>.\n";
+						echo "Found ".count($learning_events["result_ids_map"])." event".((count($learning_events["result_ids_map"]) != 1) ? "s" : "")." that take place during <strong>".date("F", $learning_events["duration_start"])."</strong> of <strong>".date("Y", $learning_events["duration_start"])."</strong>.\n";
 					break;
 					case "year" :
-						echo "Found ".$learning_events["total_rows"]." event".(($learning_events["total_rows"] != 1) ? "s" : "")." that take place during <strong>".date("Y", $learning_events["duration_start"])."</strong>.\n";
+						echo "Found ".count($learning_events["result_ids_map"])." event".((count($learning_events["result_ids_map"]) != 1) ? "s" : "")." that take place during <strong>".date("Y", $learning_events["duration_start"])."</strong>.\n";
 					break;
 					default :
 					case "week" :
-						echo "Found ".$learning_events["total_rows"]." event".(($learning_events["total_rows"] != 1) ? "s" : "")." from <strong>".date("D, M jS, Y", $learning_events["duration_start"])."</strong> to <strong>".date("D, M jS, Y", $learning_events["duration_end"])."</strong>.\n";
+						echo "Found ".count($learning_events["result_ids_map"])." event".((count($learning_events["result_ids_map"]) != 1) ? "s" : "")." from <strong>".date("D, M jS, Y", $learning_events["duration_start"])."</strong> to <strong>".date("D, M jS, Y", $learning_events["duration_end"])."</strong>.\n";
 					break;
 				}
 				?>
@@ -1204,7 +1151,7 @@ if ($topic_results) { ?>
 					foreach ($learning_events["events"] as $result) {
 						if (((!$result["release_date"]) || ($result["release_date"] <= time())) && ((!$result["release_until"]) || ($result["release_until"] >= time()))) {
 							$attachments = attachment_check($result["event_id"]);
-							$url = ENTRADA_RELATIVE."/events?rid=".$rid;
+							$url = ENTRADA_RELATIVE."/events?rid=".$result["event_id"];
 							$is_modified = false;
 
 							/**

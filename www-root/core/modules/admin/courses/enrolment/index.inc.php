@@ -525,7 +525,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 					</ul>
 				</div>			
 				<h2>Individual Members</h2>
-				<form id="delete_form_0"action="<?php echo ENTRADA_URL; ?>/admin/courses/enrolment?section=manage&amp;step=2&amp;id=<?php echo $COURSE_ID;?>&amp;org_id=<?php echo $ORGANIATION_ID;?>&amp;group_id=0" method="post">
+				<form id="delete_form_0"action="<?php echo ENTRADA_URL; ?>/admin/courses/enrolment?section=manage&amp;step=2&amp;id=<?php echo $COURSE_ID;?>&amp;org_id=<?php echo $ORGANISATION_ID;?>&amp;group_id=0" method="post">
 					<table class="tableList" cellspacing="1" cellpadding="1">
 						<colgroup>
 							<col style="width: 6%" />

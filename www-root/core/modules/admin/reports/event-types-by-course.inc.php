@@ -77,44 +77,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		$event_title_search = clean_input($_POST["event_title_search"], "notags");
 	}
 	?>
-	<style type="text/css">
-	h1 {
-		page-break-before:	always;
-		border-bottom:		2px #CCCCCC solid;
-		font-size:			24px;
-	}
-	
-	h2 {
-		font-weight:		normal;
-		border:				0px;
-		font-size:			18px;
-	}
-	
-	div.top-link {
-		float: right;
-	}
+
 	</style>	
 	<div class="no-printing">
-		<form action="<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&step=2" method="post" onsubmit="selIt()">
-			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
-				<colgroup>
-					<col style="width: 3%" />
-					<col style="width: 20%" />
-					<col style="width: 77%" />
-				</colgroup>
-				<tbody>
-					<tr>
-						<td colspan="3"><h2>Reporting Dates</h2></td>
-					</tr>
+		<h2>Reporting Dates</h2>
+		<form action="<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&step=2" method="post" onsubmit="selIt()" class="form-horizontal">
+		<div class="control-group">
+			<table>
+				<tr>
 					<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]); ?>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td></td>
-						<td style="vertical-align: top;"><label class="form-required">Courses Included</label></td>
-						<td style="vertical-align: top;">
-							<?php
+				</tr>
+			</table>
+		</div>
+		<div class="control-group">
+			<label class="form-required">Courses Included</label>
+			<div class="controls">
+				<?php
 							echo "<select class=\"multi-picklist\" id=\"PickList\" name=\"course_ids[]\" multiple=\"multiple\" size=\"5\" style=\"width: 100%; margin-bottom: 5px\">\n";
 									if ((is_array($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"])) && (count($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"]))) {
 										foreach ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] as $course_id) {
@@ -126,8 +104,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							echo "	<input type=\"button\" id=\"courses_list_state_btn\" class=\"button\" value=\"Show List\" onclick=\"toggle_list('courses_list')\" />\n";
 							echo "</div>\n";
 							echo "<div style=\"float: right; display: inline\">\n";
-							echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"button-remove\" onclick=\"delIt()\" value=\"Remove\" />\n";
-							echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"button-add\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
+							echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"btn\" onclick=\"delIt()\" value=\"Remove\" />\n";
+							echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"btn\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
 							echo "</div>\n";
 							echo "<div id=\"courses_list\" style=\"clear: both; padding-top: 3px; display: none\">\n";
 							echo "	<h2>Courses List</h2>\n";
@@ -154,27 +132,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							echo "	});\n";
 							echo "	</script>\n";
 							?>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td style="vertical-align: top; padding-top: 6px"><label for="event_title_search" class="form-nrequired">Search <strong>Event Titles</strong> for</label></td>
-						<td style="vertical-align: top;">
-							<input type="text" value="<?php echo (isset($event_title_search) && $event_title_search ? $event_title_search : ""); ?>" name="event_title_search" id="event_title_search" style="width: 70%" />
-							<div class="content-small" style="width: 70%">
+			</div>
+		</div>
+		<div class="control-group">
+			<label for="event_title_search" class="control-label form-nrequired">Search <strong>Event Titles</strong> for</label>
+			<div class="controls">
+					<input type="text" value="<?php echo (isset($event_title_search) && $event_title_search ? $event_title_search : ""); ?>" name="event_title_search" id="event_title_search" style="width: 70%" />
+						<div class="content-small" style="width: 70%">
 								<strong>Please Note:</strong> You can leave this blank to include all events, or provide a search term (i.e. Unit 1) to include only those events in the report.
-							</div>
-						</td>
-					</tr>
-
-					<tr>
-						<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="button" value="Create Report" /></td>
-					</tr>
-				</tbody>
-			</table>
+						</div>
+			</div>
+		</div>
+		<div class="pull-right">
+			<input type="submit" class="btn btn-primary" value="Create Report" />
+		</div>
+		
 		</form>
 	</div>
 	<?php
@@ -185,7 +157,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		$courses_included	= array();
 		$eventtype_legend	= array();
 		
-		echo "<h1 style=\"page-break-before: avoid\">Learning Event Types by Course</h1>";
+		echo "<h2 style=\"page-break-before: avoid\">Learning Event Types by Course</h2>";
 		echo "<div class=\"content-small\" style=\"margin-bottom: 10px\">\n";
 		echo "	<strong>Date Range:</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." <strong>to</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).".";
 		echo "</div>\n";
@@ -240,7 +212,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		if (count($output)) {
 			foreach ($output as $course_id => $result) {
 				?>
-				<h1><?php echo html_encode($courses_included[$course_id]); ?></h1>
+				<h2><?php echo html_encode($courses_included[$course_id]); ?></h2>
 				<?php
 				$STATISTICS					= array();
 				$STATISTICS["labels"]		= array();

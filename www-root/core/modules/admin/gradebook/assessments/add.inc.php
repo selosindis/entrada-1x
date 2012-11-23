@@ -458,7 +458,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									</td>
 								</tr>
 								<?php 					
-								$query = "SELECT * FROM `groups` WHERE `group_type` = 'course_list' AND `group_value` = ".$db->qstr($COURSE_ID);
+								$query = "SELECT * FROM `groups` WHERE `group_type` = 'course_list' AND `group_value` = ".$db->qstr($COURSE_ID)." AND `group_active` = '1'";
 								$course_list = $db->GetRow($query);
 								if($course_list){
 									?>

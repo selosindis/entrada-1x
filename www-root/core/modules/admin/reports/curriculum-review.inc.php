@@ -74,25 +74,93 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		$event_title_search = clean_input($_POST["event_title_search"], "notags");
 	}
 	?>
-	<style type="text/css">
-	h1 {
-		page-break-before:	always;
-		border-bottom:		2px #CCCCCC solid;
-		font-size:			24px;
-	}
 	
-	h2 {
-		font-weight:		normal;
-		border:				0px;
-		font-size:			18px;
-	}
-	
-	div.top-link {
-		float: right;
-	}
-	</style>	
 	<div class="no-printing">
-		<form action="<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&step=2" method="post" onsubmit="selIt()">
+		<form action="<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&step=2" method="post" onsubmit="selIt()" class="form-horizontal">
+			<h2>Reporting Dates</h2>
+			<div class="control-group">
+				<table>
+					<tr>
+						<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]); ?>
+					</tr>
+				</table>
+			</div>
+			<div class="control-group">
+				<label for="organisation_id" class="control-label form-required"><input id="organisation_checkbox" type="checkbox" disabled="disabled" checked="checked"> Organisation:</label>
+				<div class="controls">
+					<select id="organisation_id" name="organisation_id" style="width: 177px" onchange="window.location = '<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&org_id=' + $F('organisation_id')">
+							<?php
+							$query = "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
+							$results = $db->GetAll($query);
+							$all_organisations = false;
+							if ($results) {
+								$all_organisations = true;
+								foreach ($results as $result) {
+									if ($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
+										echo "<option value=\"".(int) $result["organisation_id"]."\"".(($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] == $result["organisation_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
+									} else {
+										$all_organisations = false;
+									}
+								}
+							}
+
+							if ($all_organisations) {
+								?>
+								<option value="-1" <?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] == -1) ? " selected=\"selected\"" : ""); ?>>All organisations</option>
+								<?php
+							}
+							?>
+							</select>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="form-required control-label">Courses Included</label>
+				<div class="controls">
+					<?php
+							echo "<select class=\"multi-picklist\" id=\"PickList\" name=\"course_ids[]\" multiple=\"multiple\" size=\"5\" style=\"width: 100%; margin-bottom: 5px\">\n";
+									if ((is_array($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"])) && (count($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"]))) {
+										foreach ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] as $course_id) {
+											echo "<option value=\"".(int) $course_id."\">".html_encode($course_list[$course_id]["code"] . " - " . $course_list[$course_id]["name"])."</option>\n";
+										}
+									}
+							echo "</select>\n";
+							echo "<div style=\"float: left; display: inline\">\n";
+							echo "	<input type=\"button\" id=\"courses_list_state_btn\" class=\"btn\" value=\"Show List\" onclick=\"toggle_list('courses_list')\" />\n";
+							echo "</div>\n";
+							echo "<div style=\"float: right; display: inline\">\n";
+							echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"btn\" onclick=\"delIt()\" value=\"Remove\" />\n";
+							echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"btn\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
+							echo "</div>\n";
+							echo "<div id=\"courses_list\" style=\"clear: both; padding-top: 3px; display: none\">\n";
+							echo "	<h2>Courses List</h2>\n";
+							echo "	<select class=\"multi-picklist\" id=\"SelectList\" name=\"other_courses_list\" multiple=\"multiple\" size=\"15\" style=\"width: 100%\">\n";
+									if ((is_array($course_list)) && (count($course_list))) {
+										foreach ($course_list as $course_id => $course) {
+											if (!in_array($course_id, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"])) {
+												echo "<option value=\"".(int) $course_id."\">".html_encode($course_list[$course_id]["code"] . " - " . $course_list[$course_id]["name"])."</option>\n";
+											}
+										}
+									}
+							echo "	</select>\n";
+							echo "	</div>\n";
+							echo "	<script type=\"text/javascript\">\n";
+							echo "	\$('PickList').observe('keypress', function(event) {\n";
+							echo "		if (event.keyCode == Event.KEY_DELETE) {\n";
+							echo "			delIt();\n";
+							echo "		}\n";
+							echo "	});\n";
+							echo "	\$('SelectList').observe('keypress', function(event) {\n";
+							echo "	    if (event.keyCode == Event.KEY_RETURN) {\n";
+							echo "			addIt();\n";
+							echo "		}\n";
+							echo "	});\n";
+							echo "	</script>\n";
+							?>
+				</div>
+			</div>
+			<div class="pull-right">
+				<input type="submit" class="btn btn-primary" value="Create Report" />
+			</div>
 			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
 				<colgroup>
 					<col style="width: 3%" />

@@ -558,29 +558,29 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</tr>
 						</tfoot>
 						<tbody>
+							<?php
+							$query = "	SELECT b.*
+										FROM `course_objectives` AS a
+										JOIN `global_lu_objectives` AS b
+										ON a.`objective_id` = b.`objective_id`
+										JOIN `objective_organisation` AS c
+										ON b.`objective_id` = c.`objective_id`
+										WHERE a.`objective_type` = 'event'
+										AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+										AND b.`objective_active` = '1'
+										AND a.`course_id` = ".$db->qstr($COURSE_ID)."
+										GROUP BY b.`objective_id`
+										ORDER BY b.`objective_order`";
+							$results = $db->GetAll($query);
+																			
+							if ($results) { ?>
 							<tr>
 								<td colspan="2">&nbsp;</td>
 							</tr>
 							<tr>
-								<td colspan="2">
-									<?php
-									echo "<h3>Clinical Presentations</h3>";
-									 
-									$query = "	SELECT b.*
-												FROM `course_objectives` AS a
-												JOIN `global_lu_objectives` AS b
-												ON a.`objective_id` = b.`objective_id`
-												JOIN `objective_organisation` AS c
-												ON b.`objective_id` = c.`objective_id`
-												WHERE a.`objective_type` = 'event'
-												AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-												AND b.`objective_active` = '1'
-												AND a.`course_id` = ".$db->qstr($COURSE_ID)."
-												GROUP BY b.`objective_id`
-												ORDER BY b.`objective_order`";
-									$results = $db->GetAll($query);
-																			
-									if ($results) {
+								<td colspan="2">							
+										<?php 
+										echo "<h3>Clinical Presentations</h3>";
 										echo "<ul class=\"objectives\">\n";
 										foreach ($results as $result) {
 											if ($result["objective_name"]) {
@@ -588,15 +588,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											}
 										}
 										echo "</ul>\n";
-									} else {
-										echo "<div class=\"display-notice\">While clinical presentations may be used to illustrate concepts in this course, there are no specific presentations from the Medical Council of Canada that have been selected.</div>";
-									}
-									?>
+										?>
 								</td>
 							</tr>
 							<tr>
 								<td colspan="2">&nbsp;</td>
 							</tr>
+							<?php } ?>
 							<tr>
 								<td colspan="2">
 									<div id="objectives_list">

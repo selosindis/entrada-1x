@@ -581,7 +581,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					
 					$query = "	SELECT * FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `audience_active` = 1";
 					$audience = $db->GetAll($query);
-					
+					$PROCESSED["periods"] = array();
+
 					if ($audience) {
 						foreach ($audience as $member) {
 							$PROCESSED["periods"][$member["cperiod_id"]][]=$member;
@@ -593,11 +594,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								LEFT JOIN `".AUTH_DATABASE."`.`user_access`
 								ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
 								LEFT JOIN `".AUTH_DATABASE."`.`organisations`
-								ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+								ON `".AUTH_DATABASE."`.`user_access`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
 								WHERE `".AUTH_DATABASE."`.`user_access`.`group` = 'faculty'
 								AND (`".AUTH_DATABASE."`.`user_access`.`role` = 'director' OR `".AUTH_DATABASE."`.`user_access`.`role` = 'admin')
 								AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
 								AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
+								AND `".AUTH_DATABASE."`.`user_access`.`organisation_id` = " . $ENTRADA_USER->getActiveOrganisation() . "
 								ORDER BY `fullname` ASC";
 					$results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
 					if ($results) {
@@ -672,10 +674,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								LEFT JOIN `".AUTH_DATABASE."`.`user_access`
 								ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
 								LEFT JOIN `".AUTH_DATABASE."`.`organisations`
-								ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+								ON `".AUTH_DATABASE."`.`user_access`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
 								WHERE `".AUTH_DATABASE."`.`user_access`.`role` = 'pcoordinator'
 								AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
 								AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
+								AND `".AUTH_DATABASE."`.`user_access`.`organisation_id` = " . $ENTRADA_USER->getActiveOrganisation() . "
 								ORDER BY `fullname` ASC";
 					$results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
 					if ($results) {
@@ -881,13 +884,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</td>
 								<td id="mandated_objectives_section">
 									<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
-									<?php
-									if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
-										foreach ($clinical_presentations as $objective_id => $presentation_name) {
+								<?php	foreach ($clinical_presentations as $objective_id => $presentation_name) {
 											echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
-										}
-									}
-									?>
+										}?>
 									</select>
 									<div style="float: left; display: inline">
 										<input type="button" id="clinical_presentations_list_state_btn" class="btn" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
@@ -933,7 +932,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<tr>
 								<td colspan="3">&nbsp;</td>
 							</tr>
-							<?php } ?>
+							<?php }	?>
 							<tr>
 								<td>&nbsp;</td>
 								<td>

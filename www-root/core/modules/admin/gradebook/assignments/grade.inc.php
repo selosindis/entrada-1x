@@ -68,7 +68,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			if ($assignment) {				
 				$COHORT = $assignment["cohort"];
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => $assignment["assignment_title"]);
-				courses_subnavigation($course_details);
+				courses_subnavigation($course_details,"gradebook");
 
 				echo "<div class=\"content-small\">";
 				if ($COURSE_ID) {
@@ -115,7 +115,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 //							ON b.`id` = i.`proxy_id`
 //							AND h.`assessment_id` = i.`assessment_id`
 //							ORDER BY b.`lastname` ASC, b.`firstname` ASC";
-				$query = "	SELECT a.id AS `proxy_id`, CONCAT_WS(', ',a.`lastname`,a.`firstname`) AS `fullname`, c.`assessment_id`, a.`updated_date` AS `submitted_date`, b.`afile_id`, d.`grade_id`, d.`value` AS `grade_value`, f.`handler`, g.`grade_weighting`
+				$query = "	SELECT a.id AS `proxy_id`, CONCAT_WS(', ',a.`lastname`,a.`firstname`) AS `fullname`, c.`assessment_id`, b.`updated_date` AS `submitted_date`, b.`afile_id`, d.`grade_id`, d.`value` AS `grade_value`, f.`handler`, g.`grade_weighting`
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
 							JOIN `assignment_files` AS b
 							ON a.`id` = b.`proxy_id`

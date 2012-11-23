@@ -144,6 +144,8 @@ if ($COURSE_ID) {
 			</tbody>
 		</table>
 		<?php
+	}else{
+		echo display_notice("No grades are available for any assessments in this course.");
 	}
 } else {
 	$ERROR++;

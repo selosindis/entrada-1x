@@ -453,6 +453,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				?>
 				<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assignments?<?php echo replace_query(array("step" => 2)); ?>" method="post" class="form-horizontal">
 					<h2>Assignment Details</h2>
+<<<<<<< HEAD
 					<div class="control-group">
 						<label class="control-label form-nrequired">Assignment Name:</label>
 						<div class="controls">
@@ -465,6 +466,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<select name="assessment_id" id="assessment-selector">
 										<option value="0">No Assessment</option>
 										<option value="N" selected="selected">New Assessment</option>
+=======
+					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Assignment">
+						<colgroup>
+							<col style="width: 3%" />
+							<col style="width: 22%" />
+							<col style="width: 75%" />
+						</colgroup>
+						<tbody>
+							
+							<tr>
+								<td></td>
+								<td><label class="form-nrequired">Assignment Name</label></td>
+								<td>
+									<input type="text" name="assignment_title" style="width: 243px" value="<?php echo ($PROCESSED["assignment_title"]?$PROCESSED["assignment_title"]:"");?>"/>
+								</td>
+							</tr>							
+							<tr>
+								<td></td>
+								<td style="vertical-align: top;"><label class="form-nrequired">Associated Assessment</label></td>
+								<td>
+									<select name="assessment_id" id="assessment-selector" style="width: 250px">
+										<option value="0"<?php echo isset($PROCESSED["assessment_id"]) && $PROCESSED["assessment_id"]==0?' selected="selected"':'';?>>No Assessment</option>
+										<option value="N" <?php echo !isset($PROCESSED["assessment_id"])?' selected="selected"':'';?>>New Assessment</option>
+>>>>>>> develop
 										<?php
 											$query = "	SELECT a.`group_id`, a.`group_name` FROM `groups` a 
 														JOIN `assessments` b

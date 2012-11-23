@@ -50,21 +50,12 @@ if(!defined("PARENT_INCLUDED")) {
 
 	if((isset($_GET["event_id"])) && ((int) trim($_GET["event_id"]))) {
 		$EVENT_ID = (int) trim($_GET["event_id"]);
+	} elseif((isset($_GET["rid"])) && ((int) trim($_GET["rid"]))) {
+		$EVENT_ID = (int) trim($_POST["event_id"]);
+	} elseif((isset($_GET["drid"])) && ((int) trim($_GET["drid"]))) {
+		$EVENT_ID = (int) trim($_POST["event_id"]);
 	} elseif((isset($_POST["event_id"])) && ((int) trim($_POST["event_id"]))) {
 		$EVENT_ID = (int) trim($_POST["event_id"]);
-	}
-
-	if(isset($_GET["rid"])) {
-		$RESULT_ID	= (int) trim($_GET["rid"]);
-
-		if(isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"])) {
-			$USE_QUERY = true;
-		}
-	} elseif(isset($_GET["drid"])) {
-		$RESULT_ID	= (int) trim($_GET["drid"]);
-		if(isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["query"])) {
-			$USE_QUERY = true;
-		}
 	}
 
 	switch($ACTION) {

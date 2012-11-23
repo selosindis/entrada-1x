@@ -8972,8 +8972,8 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	$output = array();
 	$query = "	SELECT DISTINCT(a.`course_id`), a.`course_name`, a.`course_code`, a.`course_active`, a.`organisation_id`
 				FROM `courses` AS a";
-	if ($ENTRADA_USER->getGroup() == "student") {
-	$query .= "	LEFT JOIN `course_audience` AS b
+	if (strtolower($ENTRADA_USER->getActiveRole()) != "admin" && strtolower($ENTRADA_USER->getActiveRole()) != "director") {
+		$query .= "	LEFT JOIN `course_audience` AS b
 				ON a.`course_id` = b.`course_id`
 				LEFT JOIN `groups` AS c
 				ON b.`audience_type` = 'group_id'
@@ -8983,7 +8983,7 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	}
 	$query .= " WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 
-	if ($ENTRADA_USER->getGroup() == "student") {
+	if (strtolower($ENTRADA_USER->getActiveGroup() == "student")) {
 		$query .="	AND (
 						d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 						OR a.`permission` = 'open'
@@ -8992,6 +8992,7 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 						)
 					)";
 	}
+	
 	if ($only_active_courses) {
         $query .="    AND a.`course_active`='1'";
 	}
@@ -9000,10 +9001,11 @@ function courses_fetch_courses($only_active_courses = true, $order_by_course_cod
 	}
 
 	$query .= "	ORDER BY".($order_by_course_code ? " a.`course_code`," : "")." a.`course_name` ASC";
+	
 	$results = $db->GetAll($query);
 	if ($results) {
 		foreach ($results as $result) {
-				if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $ENTRADA_USER->getOrganisationId()), "read")) {
+				if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "read")) {
 					$output[] = $result;
 				}
 		}
@@ -9484,28 +9486,30 @@ function course_fetch_course_audience($course_id = 0, $organisation_id = false,$
 				switch ($result["audience_type"]) {
 					case "cohort" :	// Cohorts
 					case "group_id" : // Course Groups
-						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname FROM
-									`group_members` a
+						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname, d.`eattendance_id` AS `has_attendance` 
+									FROM `group_members` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
 									ON a.`proxy_id` = u.`id`
 									AND a.`group_id` = ".$db->qstr($result["audience_value"])."
 									JOIN `".AUTH_DATABASE."`.`user_access` ua
 									ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
-									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")".($organisation_id?
-									"WHERE u.`organisation_id` = ".$db->qstr($organisation_id):"");
-
+									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.") "
+									.($organisation_id?
+									"WHERE u.`organisation_id` = ".$db->qstr($organisation_id):"");	
 						$group_audience = $db->getAll($query);
 						if ($group_audience) {
 							$course_audience = array_merge($course_audience,$group_audience);
 						}
 					break;
 					case "proxy_id" : // Learners
-						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname FROM
+						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname, d.`eattendance_id` AS `has_attendance` FROM
 									`".AUTH_DATABASE."`.`user_data` u
 									JOIN `".AUTH_DATABASE."`.`user_access` ua
 									ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
 									WHERE u.`id` = ".$db->qstr($result["audience_value"])."
-									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")".($organisation_id?
+									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")
+									LEFT JOIN `event_attendance` d
+									ON u.`id` = d.`proxy_id` ".($organisation_id?
 									" AND u.`organisation_id` = ".$db->qstr($organisation_id):"");
 						$user_audience = $db->getAll($query);
 						if ($user_audience) {
@@ -10706,8 +10710,8 @@ function events_fetch_sorting_query($sort_by = "", $sort_order = "ASC") {
  * filter settings and results that can be iterated through by these views.
  */
 function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_role = "", $organisation_id = 0, $sort_by = "", $sort_order = "", $date_type = "", $timestamp_start = 0, $timestamp_finish = 0, $filters = array(), $pagination = true, $current_page = 1, $results_per_page = 15, $community_id = false) {
-	global $db, $ENTRADA_ACL, $ENTRADA_USER;
-
+	global $db, $ENTRADA_ACL, $ENTRADA_USER, $ENTRADA_CACHE;
+	
 	$output = array(
 				"duration_start" => 0,
 				"duration_end" => 0,
@@ -10834,6 +10838,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 						`courses`.`organisation_id`,
 						`courses`.`course_code`,
 						`courses`.`course_name`,
+						`courses`.`permission`,
 						`curriculum_lu_types`.`curriculum_type_id`,
 						`curriculum_lu_types`.`curriculum_type_name` AS `event_phase`,
 						`curriculum_lu_types`.`curriculum_type_name` AS `event_term`,
@@ -10925,7 +10930,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							case "student" :
 								if (($user_group != "student") || ($filter_value == $proxy_id)) {
 									// Students' enrolled in courses only
-									$course_ids = groups_get_enrolled_course_ids((int) $filter_value);
+									$course_ids = groups_get_explicitly_enrolled_course_ids((int) $filter_value, false, $organisation_id);
 									if ($course_ids) {
 										$where_student_course_ids = $course_ids;
 									}
@@ -11135,7 +11140,9 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							GROUP BY `events`.`event_id`";
 	}
 
-	$query_events .= " ORDER BY %s".($pagination ? " LIMIT %s, %s" : "");
+	$query_events .= " ORDER BY %s";
+	$limitless_query_events = $query_events;
+	$query_events .= ($pagination ? " LIMIT %s, %s" : "");
 
 	/**
 	 * Get the total number of results using the generated queries above and calculate the total number
@@ -11187,26 +11194,24 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		$output["rid"] = 0;
 	}
 
-	/**
-	 * Provide the previous query so we can have previous / next event links on the details page.
-	 */
-	if (session_id()) {
-		if ($community_id == false) {
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["query"] = $query_events;
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["total_rows"] = $output["total_rows"];
-
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"] = $query_events;
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"] = $output["total_rows"];
-		} else {
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"] = $query_events;
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_rows"] = $output["total_rows"];
-		}
-	}
-
 	$query_events = sprintf($query_events, $sort_by, $limit_parameter, $results_per_page);
-
-	$learning_events = $db->GetAll($query_events);
-	if ($learning_events) {
+	$limitless_query_events = sprintf($limitless_query_events, $sort_by);
+	
+	$learning_events = $db->GetAll($query_events);	
+	
+	if ($learning_events) {				
+		if (strtolower($ENTRADA_USER->getActiveRole()) != "admin") {			
+			$i = 0;
+			foreach ($learning_events as $event) {
+				if ($event["course_id"]) {	
+					$event_resource = new EventResource($event["event_id"], $event["course_id"], $event["organisation_id"]);
+				}							
+				if (!$ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {					
+					unset($learning_events[$i]);
+				}
+				$i++;
+			}
+		}
 		if ($user_group == "student") {
 			$event_ids = array();
 			foreach ($learning_events as $event) {
@@ -11254,8 +11259,101 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		}
 		$output["events"] = $learning_events;
 	}
+	
+	/**
+	 * Provide the previous query so we can have previous / next event links on the details page.
+	 */
+	if (session_id()) {
+		
+		$stored_query = false;
+		if (($community_id && isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"]) || (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"])) {
+			if ($community_id == false) {
+				$stored_query = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"];
+			} else {
+				$stored_query = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"];
+			}
+		}
+		
+		$current_result_ids_map = $ENTRADA_CACHE->load(($community_id ? "community_".$community_id."_" : "")."events_map_".AUTH_APP_ID."_".$ENTRADA_USER->getID());
+		
+		if (!$stored_query || $stored_query != $limitless_query_events || !isset($current_result_ids_map) || !$current_result_ids_map) {
+			$all_events = $db->GetAll($limitless_query_events);
+			$result_ids_map = array();
+			if ($all_events) {
+				foreach ($all_events as $map_event) {
+					if (strtolower($ENTRADA_USER->getActiveRole()) != "admin") {	
+						$event_resource = new EventResource($map_event["event_id"], $map_event["course_id"], $map_event["organisation_id"]);
+						if ($ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {
+							$result_ids_map[] = $map_event["event_id"];
+						}
+					} else {
+						$result_ids_map[] = $map_event["event_id"];
+					}
+				}
+			}
+			$ENTRADA_CACHE->save($result_ids_map, ($community_id ? "community_".$community_id."_" : "")."events_map_".AUTH_APP_ID."_".$ENTRADA_USER->getID(), array("events", "community"), 10800);
+		} else {
+			$result_ids_map = $current_result_ids_map;
+		}
+		$output["result_ids_map"] = $result_ids_map;
+		
+		if ($community_id == false) {
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["query"] = $query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["limitless_query"] = $limitless_query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["total_rows"] = $output["total_rows"];
+
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"] = $query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"] = $limitless_query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"] = $output["total_rows"];
+		} else {
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"] = $query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"] = $limitless_query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_rows"] = $output["total_rows"];
+		}
+	}
 
 	return $output;
+}
+
+function events_fetch_transversal_ids ($event_id, $community_id) {
+	global $ENTRADA_CACHE, $ENTRADA_USER;
+	
+	$transversal_ids = array();
+
+	$result_ids_map = $ENTRADA_CACHE->load(($community_id ? "community_".$community_id."_" : "")."events_map_".AUTH_APP_ID."_".$ENTRADA_USER->getID());
+	if (!$result_ids_map || !count($result_ids_map)) {
+		$learning_events = events_fetch_filtered_events(
+				$ENTRADA_USER->getActiveId(),
+				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"],
+				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"],
+				$ENTRADA_USER->getActiveOrganisation(),
+				$_SESSION[APPLICATION_IDENTIFIER][($community_id ? "community_page" : "events")]["sb"],
+				$_SESSION[APPLICATION_IDENTIFIER][($community_id ? "community_page" : "events")]["so"],
+				$_SESSION[APPLICATION_IDENTIFIER][($community_id ? "community_page" : "events")]["dtype"],
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"],
+				0,
+				($community_id && isset($_SESSION[APPLICATION_IDENTIFIER]["community_page"][$COMMUNITY_ID]["filters"]) ? $_SESSION[APPLICATION_IDENTIFIER]["community_page"][$COMMUNITY_ID]["filters"] : $_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]),
+				true,
+				1,
+				15,
+				($community_id ? $community_id : false));
+		if (!($result_ids_map = $ENTRADA_CACHE->load(($community_id ? "community_".$community_id."_" : "")."events_map_".AUTH_APP_ID."_".$ENTRADA_USER->getID()))) {
+			$result_ids_map = array();
+			foreach ($learning_events["events"] as $event) {
+				$result_ids_map[] = $event["event_id"];
+			}
+		}
+	}
+	if (($result_id = array_search($event_id, $result_ids_map)) !== false) {
+		if ($result_id > 0) {
+			$transversal_ids["prev"] = $result_ids_map[($result_id - 1)];
+		}
+		if ($result_id < (count($result_ids_map) - 1)) {
+			$transversal_ids["next"] = $result_ids_map[($result_id + 1)];
+		}
+	}
+	
+	return $transversal_ids;
 }
 
 /**
@@ -11476,13 +11574,54 @@ function events_fetch_event_audience_attendance($event_id = 0) {
 		if ($results) {
 			$event_audience = array();
 			foreach ($results as $result) {
-
-
 				switch ($result["audience_type"]) {
 					case "course_id" : // Course Audience
-						$course_audience = course_fetch_course_audience($result["audience_value"]);
-						if ($course_audience) {
-							$event_audience = array_merge($event_audience,$course_audience);
+						$query = "SELECT *
+									FROM `course_audience` AS a
+									JOIN `courses` AS b 
+									ON a.`course_id` = b.`course_id`
+									AND a.`course_id` = " . $result["audience_value"] . "
+									AND a.`audience_active` = 1
+									JOIN `curriculum_periods` AS c
+									ON b.`curriculum_type_id` = c.`curriculum_type_id` 
+									AND UNIX_TIMESTAMP() BETWEEN c.`start_date` AND c.`finish_date`";						
+						$ca_result = $db->GetAll($query);
+						foreach($ca_result as $ca) {						
+							if ($ca["audience_type"] == "group_id") {
+								$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname, d.`eattendance_id` AS `has_attendance` 
+											FROM `group_members` a
+											JOIN `".AUTH_DATABASE."`.`user_data` u
+											ON a.`proxy_id` = u.`id`
+											AND a.`group_id` = ".$db->qstr($ca["audience_value"])."
+											JOIN `".AUTH_DATABASE."`.`user_access` ua
+											ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
+											AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")
+											LEFT JOIN `event_attendance` d
+											ON u.`id` = d.`proxy_id` "
+											.($organisation_id?
+											"WHERE u.`organisation_id` = ".$db->qstr($organisation_id):"") . "
+											AND d.`event_id` = " . $db->qstr($event_id);		
+							} elseif ($ca["audience_type"] == "proxy_id") {
+								$query = "	SELECT DISTINCT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname, d.`eattendance_id` AS `has_attendance` 
+											FROM `course_audience` a
+											JOIN `".AUTH_DATABASE."`.`user_data` u
+											ON a.`audience_value` = u.`id`
+											AND a.`audience_value` = ".$db->qstr($ca["audience_value"])."
+											JOIN `".AUTH_DATABASE."`.`user_access` ua
+											ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
+											AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")
+											LEFT JOIN `event_attendance` d
+											ON u.`id` = d.`proxy_id` "
+											.($organisation_id?
+											"WHERE u.`organisation_id` = ".$db->qstr($organisation_id):"") . "
+											AND d.`event_id` = " . $db->qstr($event_id);	
+							}						
+							$course_audience = $db->getAll($query);
+							$course_audience = array_unique($course_audience,SORT_REGULAR);
+							usort($course_audience,"audience_sort");
+							if ($course_audience) {
+								$event_audience = array_merge($event_audience,$course_audience);
+							}
 						}
 					break;
 					case "group_id" : // Course Groups
@@ -15178,6 +15317,107 @@ function groups_get_enrolled_course_ids($proxy_id = 0, $only_active_groups = fal
 	}
 
 	return $course_ids;
+}
+
+/**
+ * This function returns the courses that the proxy id is explicitely enrolled in
+ *
+ * @param int $proxy_id
+ * @return array $group
+ */
+function groups_get_explicitly_enrolled_course_ids($proxy_id = 0, $only_active_groups = false, $organisation_id = 0) {
+	global $db, $ENTRADA_USER;
+	
+	$proxy_id = (int) $proxy_id;
+	$only_active_groups = (bool) $only_active_groups;
+	
+	$course_ids = array();
+	
+	if (!$organisation_id) {
+		$organisation_id = $ENTRADA_USER->getActiveOrganisation();
+	}
+	
+	if ($proxy_id) {
+				$query = "	SELECT a.course_id FROM courses AS a
+					LEFT JOIN course_audience AS b
+					ON a.course_id = b.course_id
+					WHERE a.`organisation_id` = ".$db->qstr($organisation_id)."
+					AND (
+						(
+							(
+								audience_type = 'group_id'
+								AND audience_value IN(
+									SELECT a.group_id FROM `groups` AS a
+									JOIN `group_members` AS b
+									ON b.`group_id` = a.`group_id`
+									JOIN `group_organisations` AS c
+									ON c.`group_id` = a.`group_id`
+									WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
+									AND (b.`start_date` IS NULL OR b.`start_date` = 0
+									OR b.`start_date` <= UNIX_TIMESTAMP())
+									AND (b.`finish_date` IS NULL OR b.`finish_date` = 0 OR b.`finish_date` >= UNIX_TIMESTAMP())
+									AND b.`member_active` = '1'
+									AND c.`organisation_id` = ".$db->qstr($organisation_id)."
+								)
+							)
+							OR (
+								audience_type='proxy_id'
+								AND audience_value = ".$db->qstr($proxy_id)."
+							)
+						)
+						AND audience_active = '1'
+					)";
+
+
+		$course_list = $db->CacheGetAll(CACHE_TIMEOUT, $query);
+		if ($course_list) {
+			foreach ($course_list as $course) {
+				$course_ids[] = (int) $course["course_id"];
+			}
+		}
+	}
+	
+	return $course_ids;
+}
+
+/**
+ * This function returns the groups the enrolled in by a given proxy_id
+ *
+ * @param int $proxy_id
+ * @return array $group
+ */
+function groups_get_enrolled_group_ids($proxy_id = 0, $only_active_groups = false) {
+	global $db, $ENTRADA_USER;
+	
+	$proxy_id = (int) $proxy_id;
+	$only_active_groups = (bool) $only_active_groups;
+	
+	$group_ids = array();
+	
+	if ($proxy_id) {
+		$query = "			SELECT a.group_id FROM `groups` AS a
+							JOIN `group_members` AS b
+							ON b.`group_id` = a.`group_id`
+							JOIN `group_organisations` AS c
+							ON c.`group_id` = a.`group_id`
+							WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
+							AND (b.`start_date` = 0
+							OR b.`start_date` <= UNIX_TIMESTAMP())
+							AND (b.`finish_date` = 0 OR b.`finish_date` >= UNIX_TIMESTAMP())
+							AND b.`member_active` = '1'
+							AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+
+
+
+		$group_list = $db->CacheGetAll(CACHE_TIMEOUT, $query);
+		if ($group_list) {
+			foreach ($group_list as $group) {
+				$group_ids[] = (int) $group["group_id"];
+			}
+		}
+	}
+	
+	return $group_ids;
 }
 
 /**

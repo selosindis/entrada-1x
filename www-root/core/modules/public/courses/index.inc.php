@@ -109,7 +109,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 			echo display_error();
 		} else {
-			if ($ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $ENTRADA_USER->getOrganisationId()), "read")) {
+			if ($ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $ENTRADA_USER->getActiveOrganisation), "read")) {
 				add_statistic($MODULE, "view", "course_id", $COURSE_ID);
 
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE."?".replace_query(array("id" => $course_details["course_id"])), "title" => $course_details["course_name"].(($course_details["course_code"]) ? ": ".$course_details["course_code"] : ""));
@@ -329,9 +329,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						echo "				<div id=\"objectives_list\">\n".course_objectives_in_list($objectives, $top_level_id,$top_level_id)."\n</div>\n";
 						echo "			</td>\n";
 						echo "		</tr>\n";
-						echo "		<tr>\n";
-						echo "			<td colspan=\"2\">\n";
-						echo "				<h3>Clinical Presentations</h3>";
 						$query = "	SELECT b.*
 									FROM `course_objectives` AS a
 									JOIN `global_lu_objectives` AS b
@@ -346,6 +343,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									ORDER BY b.`objective_order`";
 						$results = $db->GetAll($query);
 						if ($results) {
+						echo "		<tr>\n";
+						echo "			<td colspan=\"2\">\n";
+						echo "				<h3>Clinical Presentations</h3>";							
 							echo "				<ul class=\"objectives\">\n";
 							$HEAD[] = "
 								<script type=\"text/javascript\" defer=\"defer\">
@@ -368,11 +368,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								});
 								</script>";
 							echo "				</ul>\n";
-						} else {
-							echo "<div class=\"display-notice\">While medical presentations may be used to illustrate concepts in this course, there are no specific presentations from the Medical Council of Canada that have been selected.</div>";
-						}
 						echo "			</td>\n";
-						echo "		</tr>\n";
+						echo "		</tr>\n";							
+						}
 					//}
 					echo "		</tbody>";
 					echo "	</table>";

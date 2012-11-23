@@ -526,11 +526,14 @@ switch ($MODULE) {
 						ORDER BY a.`evaluation_finish` ASC";
 
 			$evaluations = $db->GetAll($query);
-			foreach ($evaluations as $evaluation) {
-				$completed_attempts = evaluations_fetch_attempts($evaluation["evaluation_id"]);
-				if ($evaluation["min_submittable"] > $completed_attempts) {
-					header("Location: ".ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"]);
-					exit;
+			if ($evaluations) {
+				foreach ($evaluations as $evaluation) {
+					require_once("Models/evaluation/Evaluation.class.php");
+					$overdue = Evaluation::getUserOverdueEvaluation($evaluation, array("eevaluator_id" => $evaluation["eevaluator_id"]), array("id" => $ENTRADA_USER->getID()));
+					if ($overdue) {
+						header("Location: ".ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"]);
+						exit;
+					}
 				}
 			}
 		}

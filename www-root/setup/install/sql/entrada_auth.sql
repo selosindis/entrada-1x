@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS `acl_permissions` (
 
 INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`, `entity_value`, `app_id`, `create`, `read`, `update`, `delete`, `assertion`) VALUES
 ('community', NULL, NULL, NULL, 1, 1, 1, NULL, NULL, 'NotGuest'),
-('course', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'ResourceOrganisation&NotGuest'),
+('course', NULL, 'group', 'student', NULL, NULL, 0, NULL, NULL, 'CourseEnrollment'),
+('course', NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, 'ResourceOrganisation&NotGuest'),
 ('dashboard', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'NotGuest'),
 ('discussion', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'NotGuest'),
 ('library', NULL, NULL, NULL, 1, NULL, 1, NULL, NULL, 'NotGuest'),
@@ -34,6 +35,7 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('evaluationformquestion', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
 ('event', NULL, 'role', 'pcoordinator', 1, 1, NULL, NULL, NULL, 'CourseOwner'),
 ('event', NULL, 'role', 'pcoordinator', 1, NULL, NULL, 1, 1, 'EventOwner'),
+('event', NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, 'EventEnrollment&NotGuest'),
 ('eventcontent', NULL, 'role', 'pcoordinator', 1, NULL, NULL, 1, NULL, 'EventOwner'),
 ('coursecontent', NULL, 'role', 'director', 1, NULL, NULL, 1, NULL, 'CourseOwner'),
 ('coursecontent', NULL, 'role', 'lecturer', 1, NULL, NULL, 1, NULL, 'CourseOwner'),

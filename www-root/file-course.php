@@ -150,7 +150,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					echo str_replace(array("%DEFAULT_CHARSET%", "%ENTRADA_URL%", "%TITLE%", "%BODY%"), array(DEFAULT_CHARSET, ENTRADA_URL, $TITLE, $BODY), $template_html);
 				}
 				exit;
-			} 
+			}
 		} else {
 			$TITLE	= "Not Found";
 			$BODY	= display_notice(array("The file you are trying to download does not exist in our system. This file may have been removed by the course director or system administrator or the file identifier may have been mistyped in the URL."));

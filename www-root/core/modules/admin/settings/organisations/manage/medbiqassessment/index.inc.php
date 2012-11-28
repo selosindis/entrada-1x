@@ -36,10 +36,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQASSESSMENT"))) {
 } else {
 	?>
 	<h1>Manage Medbiquitos Assessment Methods</h1>
-	<div style="float: right">
-		<ul class="page-action">
-			<li><a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/medbiqassessment?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="strong-green">Add New Medbiquitos Assessment Method</a></li>
-		</ul>
+	<div class="clearfix">
+		<div class="pull-right">
+			<a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/medbiqassessment?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="btn btn-primary">Add New Medbiquitos Assessment Method</a>
+		</div>
 	</div><br/>
 	<?php
 

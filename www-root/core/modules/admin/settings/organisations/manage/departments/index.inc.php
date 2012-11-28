@@ -39,11 +39,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 } else {
 ?>
 	<h1>Manage Departments</h1>
-	<div style="text-align: right">
-		<ul class="page-action">
-			<li><a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/departments?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="strong-green">Add New Department</a></li>
-		</ul>
-	</div><br />
+	<div class="clearfix">
+		<div class="pull-right">
+			<a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/departments?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="btn btn-primary">Add New Department</a>
+		</div>
+	</div>
 	<?php
 
 	/*

@@ -37,10 +37,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	?>
 	<?php
 		if($ENTRADA_ACL->amIAllowed("configuration", "create")){?>
-		<div style="float: right">
-			<ul class="page-action">
-				<li><a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations?section=add" class="strong-green">Add New Organisation</a></li>
-			</ul>
+		<div class="pull-right">
+				<a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations?section=add" class="btn btn-primary">Add New Organisation</a>
 		</div>	
 	<?php
 		}

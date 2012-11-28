@@ -355,42 +355,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			</script>
 
 			<h1>Add Organisation</h1>
-			<form id="addOrganisationForm" action="<?php echo ENTRADA_URL; ?>/admin/settings/organisations?section=add&amp;step=2" method="post">
-				<table style="width: 100%" summary="Add Organisation Form">
-					<colgroup>
-						<col style="width: 25%" />
-						<col style="width: 75%" />
-					</colgroup>
-					<tfoot>
-						<tr>
-							<td colspan="2" style="padding-top: 25px;text-align: right;padding-right:45px;">
-								<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings'" />
-								<input type="submit" class="button" value="Save" />
-							</td>
-						</tr>
-					</tfoot>
-					<tbody>
-						<tr>
-							<td><label for="name_id" class="form-required">Organisation Name</label></td>
-							<td>
-								<input type="text" id="organisation_title" name="organisation_title" value="<?php echo html_encode($PROCESSED["organisation_title"]); ?>" style="width: 350px" />
-							</td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top"><label for="description_id" class="form-nrequired">Description</label></td>
-							<td>
-								<textarea class="expandable" id="organisation_desc" name="organisation_desc" style="width: 345px; height: 75px"><?php echo html_encode($PROCESSED["organisation_desc"]); ?></textarea>
-							</td>
-						</tr>
-
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-
-						<tr>
-							<td><label for="countries_id" class="form-required">Country</label></td>
-							<td>
-							<?php
+			<form id="addOrganisationForm" action="<?php echo ENTRADA_URL; ?>/admin/settings/organisations?section=add&amp;step=2" method="post" class="form-horizontal">
+			<div class="control-group">
+				<label for="name_id" class="control-label form-required">Organisation Name:</label>
+				<div class="controls">
+					<input type="text" id="organisation_title" name="organisation_title" value="<?php echo html_encode($PROCESSED["organisation_title"]); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="description_id" class="control-label form-nrequired">Description:</label>
+				<div class="controls">
+					<textarea class="expandable" id="organisation_desc" name="organisation_desc"><?php echo html_encode($PROCESSED["organisation_desc"]); ?></textarea>
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="countries_id" class="control-label form-required">Country</label>
+				<div class="controls">
+					<?php
 							$countries = fetch_countries();
 							if ((is_array($countries)) && (count($countries))) {
 								echo "<select id=\"countries_id\" name=\"countries_id\" style=\"width: 256px\" onchange=\"provStateFunction(this.value); updateAptData();\">\n";
@@ -403,75 +384,70 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 								echo "Country information not currently available.\n";
 							}
 							?>
-							</td>
-						</tr>
-						<tr>
-							<td><label for="province_id" class="form-required">Province / State</label></td>
-							<td>
-								<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
-							</td>
-						</tr>
-						<tr>
-							<td><label for="city_id" class="form-required">City</label></td>
-							<td>
-								<input type="text" id="organisation_city" name="organisation_city" size="100" style="width: 350px; vertical-align: middle" value="<?php echo html_encode($PROCESSED["organisation_city"]); ?>" />
-							</td>
-						</tr>
-						<tr>
-							<td><label for="postal_id" class="form-required">Postal Code</label></td>
-							<td>
-								<input type="text" id="organisation_postcode" name="organisation_postcode" value="<?php echo html_encode($PROCESSED["organisation_postcode"]); ?>" maxlength="16" style="width: 350px" />
-							</td>
-						</tr>
-						<tr>
-							<td><label for="address1_id" class="form-required">Address 1</label></td>
-							<td>
-								<input type="text" id="organisation_address1" name="organisation_address1" value="<?php echo html_encode($PROCESSED["organisation_address1"]); ?>" style="width: 350px" />
-							</td>
-						</tr>
-						<tr>
-							<td><label for="address2_id">Address 2</label></td>
-							<td>
-								<input type="text" id="organisation_address2" name="organisation_address2" value="<?php echo html_encode($PROCESSED["organisation_address2"]); ?>" style="width: 350px" />
-							</td>
-						</tr>
-						<tr>
-							<td><label for="telephone_id" class="form-required">Telephone</label></td>
-							<td>
-								<input type="text" id="organisation_telephone" name="organisation_telephone" value="<?php echo html_encode($PROCESSED["organisation_telephone"]); ?>" maxlength="32" style="width: 350px" />
-							</td>
-						</tr>
-						<tr>
-							<td><label for="fax_id">Fax</label></td>
-							<td>
-								<input type="text" id="organisation_fax" name="organisation_fax" value="<?php echo html_encode($PROCESSED["organisation_fax"]); ?>" maxlength="32" style="width: 350px" />
-							</td>
-						</tr>
-						<tr>
-							<td><label for="email_id">E-Mail Address</label></td>
-							<td>
-								<input type="text" id="organisation_email" name="organisation_email" value="<?php echo html_encode($PROCESSED["organisation_email"]); ?>" style="width: 350px" />
-							</td>
-						</tr>
-						<tr>
-							<td><label for="url_id" class="form-nrequired">Website</label></td>
-							<td>
-								<input type="text" id="organisation_url" name="organisation_url" value="<?php echo html_encode($PROCESSED["organisation_url"]); ?>" style="width: 350px" />
-							</td>
-						</tr>
-
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-
-						<tr>
-							<td><label for="template" class="form-required">Interface Template</label></td>
-							<td>
-								<?php
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="province_id" class="control-label form-required">Province / State:</label>
+				<div class="controls">
+					<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="city_id" class="control-label form-required">City:</label>
+				<div class="controls">
+					<input type="text" id="organisation_city" name="organisation_city" value="<?php echo html_encode($PROCESSED["organisation_city"]); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="postal_id" class="control-label form-required">Postal Code:</label>
+				<div class="controls">
+					<input type="text" id="organisation_postcode" name="organisation_postcode" value="<?php echo html_encode($PROCESSED["organisation_postcode"]); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="address1_id" class="control-label form-required">Address 1:</label>
+				<div class="controls">
+					<input type="text" id="organisation_address1" name="organisation_address1" value="<?php echo html_encode($PROCESSED["organisation_address1"]); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="address2_id" class="control-label">Address 2:</label>
+				<div class="controls">
+					<input type="text" id="organisation_address2" name="organisation_address2" value="<?php echo html_encode($PROCESSED["organisation_address2"]); ?>"/>
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="telephone_id" class="control-label form-required">Telephone:</label>
+				<div class="controls">
+					<input type="text" id="organisation_telephone" name="organisation_telephone" value="<?php echo html_encode($PROCESSED["organisation_telephone"]); ?>"/>
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="fax_id" class="control-label">Fax:</label>
+				<div class="controls">
+					<input type="text" id="organisation_fax" name="organisation_fax" value="<?php echo html_encode($PROCESSED["organisation_fax"]); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="email_id" class="control-label">E-Mail Address:</label>
+				<div class="controls">
+					<input type="text" id="organisation_email" name="organisation_email" value="<?php echo html_encode($PROCESSED["organisation_email"]); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="url_id" class="control-label form-nrequired">Website:</label>
+				<div class="controls">
+					<input type="text" id="organisation_url" name="organisation_url" value="<?php echo html_encode($PROCESSED["organisation_url"]); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="template" class="control-label form-required">Interface Template:</label>
+				<div class="controls">
+					<?php
 								$templates = fetch_templates();
 								if ($templates && is_array($templates) && !empty($templates)) {
 									?>
-									<select id="template" name="template" style="width: 256px">
+									<select id="template" name="template">
 									<?php
 									foreach ($templates as $template) {
 										?>
@@ -485,49 +461,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 									echo html_encode($PROCESSED["template"]) . " (not modifiable for this organisation)";
 								}
 								?>
-							</td>
-						</tr>
-
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-
-						<tr>
-							<td><label for="aamc_institution_id" class="form-nrequired">AAMC Institution ID</label></td>
-							<td>
-								<input type="text" id="aamc_institution_id" name="aamc_institution_id" value="<?php echo html_encode($PROCESSED["aamc_institution_id"]); ?>" style="width: 350px" />
-							</td>
-						</tr>
-						<tr>
-							<td><label for="aamc_institution_name" class="form-nrequired">AAMC Institution Name</label></td>
-							<td>
-								<input type="text" id="aamc_institution_name" name="aamc_institution_name" value="<?php echo html_encode($PROCESSED["aamc_institution_name"]); ?>" style="width: 350px" />
-							</td>
-						</tr>
-
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-
-						<tr>
-							<td><label for="aamc_program_id" class="form-nrequired">AAMC Program ID</label></td>
-							<td>
-								<input type="text" id="aamc_program_id" name="aamc_program_id" value="<?php echo html_encode($PROCESSED["aamc_program_id"]); ?>" style="width: 350px" />
-							</td>
-						</tr>
-						<tr>
-							<td><label for="aamc_program_name" class="form-nrequired">AAMC Program Name</label></td>
-							<td>
-								<input type="text" id="aamc_program_name" name="aamc_program_name" value="<?php echo html_encode($PROCESSED["aamc_program_name"]); ?>" style="width: 350px" />
-							</td>
-						</tr>
-
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-
-					</tbody>
-				</table>
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="aamc_institution_id" class="control-label form-nrequired">AAMC Institution ID:</label>
+				<div class="controls">
+					<input type="text" id="aamc_institution_id" name="aamc_institution_id" value="<?php echo html_encode($PROCESSED["aamc_institution_id"]); ?>"/>
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="aamc_institution_name" class="control-label form-nrequired">AAMC Institution Name:</label>
+				<div class="controls">
+					<input type="text" id="aamc_institution_name" name="aamc_institution_name" value="<?php echo html_encode($PROCESSED["aamc_institution_name"]); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="aamc_program_id" class="control-label form-nrequired">AAMC Program ID:</label>
+				<div class="controls">
+					<input type="text" id="aamc_program_id" name="aamc_program_id" value="<?php echo html_encode($PROCESSED["aamc_program_id"]); ?>"/>
+				</div>
+			</div>
+			<div class="control-group">
+				<label for="aamc_program_name" class="control-label form-nrequired">AAMC Program Name:</label>
+				<div class="controls">
+					<input type="text" id="aamc_program_name" name="aamc_program_name" value="<?php echo html_encode($PROCESSED["aamc_program_name"]); ?>"/>
+				</div>
+			</div>
+			<div class="control-group">
+				<div class="pull-right">
+					<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings'" />
+					<input type="submit" class="btn btn-primary" value="Save" />
+				</div>
+			</div>
+			
 			</form>
 			<?php
 		break;

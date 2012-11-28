@@ -332,6 +332,13 @@ label#deadline_text{
 ul.quiz-questions-list {
   margin:0;
 }
+/* Flexgrid */
+.flexigrid div.pDiv input,.flexigrid div.pDiv select {
+  width:auto;
+  height:auto;
+  padding:2px;
+  line-height:1;
+}
 /***** Footer *****/
 footer#main-footer .container{
   text-align:center;

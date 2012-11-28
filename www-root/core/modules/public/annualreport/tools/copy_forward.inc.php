@@ -238,39 +238,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		}
     }
 	?>
-	<style type="text/css">
-	h1 {
-		page-break-before:	always;
-		border-bottom:		2px #CCCCCC solid;
-		font-size:			24px;
-	}
-	
-	h2 {
-		font-weight:		normal;
-		border:				0px;
-		font-size:			18px;
-	}
-	
-	div.top-link {
-		float: right;
-	}
-	
-	label {
-	    display: block;
-	    padding-left: 15px;
-	    text-indent: -15px;
-	}
-	input {
-	    width: 13px;
-	    height: 13px;
-	    padding: 0;
-	    margin:0;
-	    vertical-align: bottom;
-	    position: relative;
-	    top: -1px;
-	    *overflow: hidden;
-	}
-	</style>
+
 	<SCRIPT LANGUAGE="JavaScript">
 		function selectAll() {
 	    	jQuery("input[type='checkbox']:not([disabled='disabled'])").attr('checked', true);
@@ -316,7 +284,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				</tr>
 				<tr>
 					<td></td>
-					<td><label for="copy_from" class="form-required">Copy From</label></td>
+					<td><label for="copy_from" class="form-required">Copy From:</label></td>
 					<td><select name="copy_from" id="copy_from" style="vertical-align: middle">
 					<?php
 						$getProfileDatesQuery = "	SELECT DISTINCT `year_reported` 
@@ -337,7 +305,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				</tr>
 				<tr>
 					<td></td>
-					<td><label for="copy_to" class="form-required">Copy To</label></td>
+					<td><label for="copy_to" class="form-required">Copy To:</label></td>
 					<td><select name="copy_to" id="copy_to" style="vertical-align: middle">
 					<?php
 						$copy_to = array();
@@ -381,8 +349,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								<?php
 									echo "<tr class=\"details\">
 										<td>
-											<input type=\"button\" name=\"checkAll\" value=\"Check All\" onclick=\"selectAll();\"/>
-											<input type=\"button\" name=\"unCheckAll\" value=\"Uncheck All\" onclick=\"deselectAll();\"/>
+											<input class=\"btn\" type=\"button\" name=\"checkAll\" value=\"Check All\" onclick=\"selectAll();\"/>
+											<input class=\"btn\" type=\"button\" name=\"unCheckAll\" value=\"Uncheck All\" onclick=\"deselectAll();\"/>
 										</td>
 									</tr>
 									<tr>
@@ -404,7 +372,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					</td>
 				</tr>
 				<tr>
-					<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="button" value="Copy Forward" /></td>
+					<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="btn btn-primary" value="Copy Forward" /></td>
 				</tr>
 			</tbody>
 			</table>

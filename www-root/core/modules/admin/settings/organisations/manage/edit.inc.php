@@ -366,7 +366,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				</script>
 
 				<h1>Edit <?php echo html_encode($ORGANISATION["organisation_title"]); ?></h1>
-				<form id="editOrganisationForm" action="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage?section=edit&amp;org=<?php echo $ORGANISATION_ID; ?>&amp;step=2" method="post">
+				<form id="editOrganisationForm" action="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage?section=edit&amp;org=<?php echo $ORGANISATION_ID; ?>&amp;step=2" method="post" class="form-horizontal">
 					<table style="width: 100%" summary="Edit Organisation Form">
 						<colgroup>
 							<col style="width: 25%" />

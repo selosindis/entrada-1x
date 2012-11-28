@@ -36,10 +36,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 } else {
 ?>
 	<h1>Manage topics</h1>
-	<div style="float: right">
-		<ul class="page-action">
-			<li><a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/hottopics?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="strong-green">Add New Hot Topic</a></li>
-		</ul>
+	<div class="clearfix">
+		<div class="pull-right">
+			<a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/hottopics?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="btn btn-primary">Add New Hot Topic</a>
+		</div>
 	</div>
 	<?php
 

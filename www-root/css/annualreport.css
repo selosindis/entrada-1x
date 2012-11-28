@@ -274,19 +274,6 @@ table.tableListReport tr td.attachment {
 	border-left:		none;
 }
 
-h1 {
-	font-family:'Century Gothic', Helvetica, Arial, sans-serif;
-	font-size:26px;
-	font-weight:400;
-	color:#036;
-}
-
-h2 {
-	font-family:'Century Gothic', Helvetica, Arial, sans-serif;
-	font-size:18px;
-	color:#036;
-	border-bottom:2px #CCC solid;
-}
 
 .highlight {
 	background-color:	#FFFFCC;
@@ -319,12 +306,6 @@ div.bread-crumb-trail ul {
 	padding-top:		4px;
 }
 
-div.bread-crumb-trail ul li {
-	display:			inline;
-	list-style-type:	none;
-	padding-left:		15px;
-	vertical-align:	middle;
-}
 
 ul.unIndentedList {
 	margin-left:		0px;

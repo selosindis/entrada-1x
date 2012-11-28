@@ -158,104 +158,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							?>
 				</div>
 			</div>
-			<div class="pull-right">
-				<input type="submit" class="btn btn-primary" value="Create Report" />
+			<div class="row-fluid">
+				<div class="pull-right">
+					<input type="submit" class="btn btn-primary" value="Create Report" />
+				</div>
 			</div>
-			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
-				<colgroup>
-					<col style="width: 3%" />
-					<col style="width: 20%" />
-					<col style="width: 77%" />
-				</colgroup>
-				<tbody>
-					<tr>
-						<td colspan="3"><h2>Reporting Dates</h2></td>
-					</tr>
-					<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]); ?>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td style="vertical-align: top;"><input id="organisation_checkbox" type="checkbox" disabled="disabled" checked="checked"></td>
-						<td style="vertical-align: top;"><label for="organisation_id" class="form-required">Organisation</label></td>
-						<td style="vertical-align: top;">
-							<select id="organisation_id" name="organisation_id" style="width: 177px" onchange="window.location = '<?php echo ENTRADA_RELATIVE; ?>/admin/reports?section=<?php echo $SECTION; ?>&org_id=' + $F('organisation_id')">
-							<?php
-							$query = "SELECT `organisation_id`, `organisation_title` FROM `".AUTH_DATABASE."`.`organisations`";
-							$results = $db->GetAll($query);
-							$all_organisations = false;
-							if ($results) {
-								$all_organisations = true;
-								foreach ($results as $result) {
-									if ($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "read")) {
-										echo "<option value=\"".(int) $result["organisation_id"]."\"".(($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] == $result["organisation_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["organisation_title"])."</option>\n";
-									} else {
-										$all_organisations = false;
-									}
-								}
-							}
-
-							if ($all_organisations) {
-								?>
-								<option value="-1" <?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["organisation_id"] == -1) ? " selected=\"selected\"" : ""); ?>>All organisations</option>
-								<?php
-							}
-							?>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td></td>
-						<td style="vertical-align: top;"><label class="form-required">Courses Included</label></td>
-						<td style="vertical-align: top;">
-							<?php
-							echo "<select class=\"multi-picklist\" id=\"PickList\" name=\"course_ids[]\" multiple=\"multiple\" size=\"5\" style=\"width: 100%; margin-bottom: 5px\">\n";
-									if ((is_array($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"])) && (count($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"]))) {
-										foreach ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"] as $course_id) {
-											echo "<option value=\"".(int) $course_id."\">".html_encode($course_list[$course_id]["code"] . " - " . $course_list[$course_id]["name"])."</option>\n";
-										}
-									}
-							echo "</select>\n";
-							echo "<div style=\"float: left; display: inline\">\n";
-							echo "	<input type=\"button\" id=\"courses_list_state_btn\" class=\"button\" value=\"Show List\" onclick=\"toggle_list('courses_list')\" />\n";
-							echo "</div>\n";
-							echo "<div style=\"float: right; display: inline\">\n";
-							echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"button-remove\" onclick=\"delIt()\" value=\"Remove\" />\n";
-							echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"button-add\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
-							echo "</div>\n";
-							echo "<div id=\"courses_list\" style=\"clear: both; padding-top: 3px; display: none\">\n";
-							echo "	<h2>Courses List</h2>\n";
-							echo "	<select class=\"multi-picklist\" id=\"SelectList\" name=\"other_courses_list\" multiple=\"multiple\" size=\"15\" style=\"width: 100%\">\n";
-									if ((is_array($course_list)) && (count($course_list))) {
-										foreach ($course_list as $course_id => $course) {
-											if (!in_array($course_id, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_ids"])) {
-												echo "<option value=\"".(int) $course_id."\">".html_encode($course_list[$course_id]["code"] . " - " . $course_list[$course_id]["name"])."</option>\n";
-											}
-										}
-									}
-							echo "	</select>\n";
-							echo "	</div>\n";
-							echo "	<script type=\"text/javascript\">\n";
-							echo "	\$('PickList').observe('keypress', function(event) {\n";
-							echo "		if (event.keyCode == Event.KEY_DELETE) {\n";
-							echo "			delIt();\n";
-							echo "		}\n";
-							echo "	});\n";
-							echo "	\$('SelectList').observe('keypress', function(event) {\n";
-							echo "	    if (event.keyCode == Event.KEY_RETURN) {\n";
-							echo "			addIt();\n";
-							echo "		}\n";
-							echo "	});\n";
-							echo "	</script>\n";
-							?>
-						</td>
-					</tr>
-
-					<tr>
-						<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="button" value="Create Report" /></td>
-					</tr>
-				</tbody>
-			</table>
 		</form>
 	</div>
 	<?php
@@ -266,7 +173,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 		$courses_included	= array();
 		$eventtype_legend	= array();
 		
-		echo "<h1 style=\"page-break-before: avoid\">Curriculum Review Report</h1>";
+		echo "<h2 style=\"page-break-before: avoid\">Curriculum Review Report</h2>";
 		echo "<div class=\"content-small\" style=\"margin-bottom: 10px\">\n";
 		echo "	<strong>Date Range:</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"])." <strong>to</strong> ".date(DEFAULT_DATE_FORMAT, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]).".";
 		echo "</div>\n";

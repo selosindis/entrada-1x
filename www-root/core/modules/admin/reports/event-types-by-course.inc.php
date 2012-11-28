@@ -143,10 +143,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 						</div>
 			</div>
 		</div>
-		<div class="pull-right">
-			<input type="submit" class="btn btn-primary" value="Create Report" />
+		<div class="row-fluid">
+			<div class="pull-right">
+				<input type="submit" class="btn btn-primary" value="Create Report" />
+			</div>
 		</div>
-		
 		</form>
 	</div>
 	<?php

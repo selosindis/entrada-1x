@@ -45,10 +45,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 	echo "<h1>Manage Objectives</h1>";
 	if($ENTRADA_ACL->amIAllowed('objective', 'create', false)) { 
 		?>
-		<div style="float: right">
-			<ul class="page-action">
-				<li><a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/objectives?section=add&amp;org=<?php echo $ORGANISATION_ID; ?>&amp;step=1" class="strong-green">Add New Objective</a></li>
-			</ul>
+		<div class="clearfix">
+			<div class="pull-right">
+				<a href="<?php echo ENTRADA_URL; ?>/admin/settings/organisations/manage/objectives?section=add&amp;org=<?php echo $ORGANISATION_ID; ?>&amp;step=1" class="btn btn-primary">Add New Objective</a>
+			</div>
 		</div>
 		<div style="clear: both"></div>
 		<?php 

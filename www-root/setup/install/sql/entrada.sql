@@ -2243,6 +2243,7 @@ CREATE TABLE IF NOT EXISTS `events` (
   `release_until` bigint(64) NOT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
+  `draft_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`event_id`),
   KEY `course_id` (`course_id`),
   KEY `region_id` (`region_id`),

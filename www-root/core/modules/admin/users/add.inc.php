@@ -36,7 +36,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
-} else {	
+} else {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users?".replace_query(array("section" => "add")), "title" => "Adding User");
 
 	$PROCESSED_ACCESS = array();
@@ -49,19 +49,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 	// Error Checking
 	switch ($STEP) {
-		case 2 :			
+		case 2 :
 			$permissions_only = false;
-			$permissions = json_decode($_POST["permissions"], true);			
+			$permissions = json_decode($_POST["permissions"], true);
 			$permissions = json_decode($permissions["acl"], true);
-			
-			$in_departments = json_decode($_POST["my_departments"], true); 
+
+			$in_departments = json_decode($_POST["my_departments"], true);
 			$in_departments = json_decode($in_departments["list"], true);
-			
+
 			/**
 			 * Required field "organisation_id" / Organisation.
 			 */
-			if (isset($permissions[0]["org_id"]) && $default_organisation_id = clean_input($permissions[0]["org_id"], array("trim", "int"))) {								
-				$PROCESSED["organisation_id"] = $default_organisation_id;				
+			if (isset($permissions[0]["org_id"]) && $default_organisation_id = clean_input($permissions[0]["org_id"], array("trim", "int"))) {
+				$PROCESSED["organisation_id"] = $default_organisation_id;
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "As least one <strong>Organisation</strong> is required.";
@@ -261,6 +261,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					}
 
 					/**
+					 * Non-Required field "gender" / Gender.
+					 */
+					if (isset($_POST["gender"]) && in_array((int) $_POST["gender"], array(1, 2))) {
+						$PROCESSED["gender"] = (int) $_POST["gender"];
+					}
+
+					if (!isset($PROCESSED["gender"])) {
+						$PROCESSED["gender"] = 0;
+					}
+
+					/**
 					 * Required field "email" / Primary E-Mail.
 					 */
 					if ((isset($_POST["email"])) && ($email = clean_input($_POST["email"], "trim", "lower"))) {
@@ -394,22 +405,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 			if ($ENTRADA_ACL->amIAllowed(new UserResource(null, $PROCESSED["organisation_id"]), 'create')) {
 				if ($permissions_only) {
-					foreach ($permissions as $perm) {			
+					foreach ($permissions as $perm) {
 						if (!$perm["org_id"]) {
 							$ERROR++;
-							$ERRORSTR[] = "Please assign an organisation for all permissions.";									
+							$ERRORSTR[] = "Please assign an organisation for all permissions.";
 						} elseif (!$perm["group_id"]) {
 							$ERROR++;
 							$ERRORSTR[] = "Please assign a group for all permissions.";
 						} elseif (!$perm["role_id"]) {
 							$ERROR++;
 							$ERRORSTR[] = "Please assign a role for all permissions.";
-						} else {							
+						} else {
 							$query = "SELECT g.`group_name`, r.`role_name`
 									FROM `" . AUTH_DATABASE . "`.`system_groups` g, `" . AUTH_DATABASE . "`.`system_roles` r,
 										`" . AUTH_DATABASE . "`.`system_group_organisation` gho, `" . AUTH_DATABASE . "`.`organisations` o
 									WHERE gho.`groups_id` = " . $perm["group_id"] . " AND g.`id` = " . $perm["group_id"] . " AND
-									r.`id` = " . $perm["role_id"] . " AND o.`organisation_id` = " . $perm["org_id"];								
+									r.`id` = " . $perm["role_id"] . " AND o.`organisation_id` = " . $perm["org_id"];
 							$group_role = $db->GetRow($query);
 							$PROCESSED_ACCESS["group"] = $group_role["group_name"];
 							$PROCESSED_ACCESS["role"] = $group_role["role_name"];
@@ -418,10 +429,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							if ($PROCESSED_ACCESS["group"] == "faculty") {
 								if (isset($perm["clinical"])) {
 									$PROCESSED["clinical"] = clean_input($perm["clinical"], array("trim", "int"));
-									$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data` 
+									$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
 												SET `clinical` = " . $PROCESSED["clinical"] . "
 												WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
-												LIMIT 1";										
+												LIMIT 1";
 									if (!$db->Execute($query)) {
 										$ERROR++;
 										$ERRORSTR[] = "Failed to set the clinical field." . $query . " DB said: " . $db->ErrorMsg();
@@ -448,7 +459,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										$ERRORSTR[] = "You must provide a valid program entry year";
 									}
 									if (!$ERROR) {
-										$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data` 
+										$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
 													SET `grad_year` = " . $PROCESSED["grad_year"] . ",
 													`entry_year` = " . $PROCESSED["entry_year"] . "
 													WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
@@ -461,7 +472,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								}
 							}
 
-							if ($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {	
+							if ($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
 								if (($PROCESSED_ACCESS["group"] == "medtech") || ($PROCESSED_ACCESS["role"] == "admin")) {
 									application_log("error", "USER NOTICE: A new user (".$PROCESSED["firstname"]." ".$PROCESSED["lastname"].") was added to ".APPLICATION_NAME." as ".$PROCESSED_ACCESS["group"]." > ".$PROCESSED_ACCESS["role"].".");
 								}
@@ -470,9 +481,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								* Handle the inserting of user data into the user_departments table
 								* if departmental information exists in the form.
 								* NOTE: This is also done below (line 375)... arg.
-								*/								
+								*/
 								if (isset($_POST["my_departments"]) && $in_departments = json_decode($_POST["my_departments"], true)) {
-									$in_departments = json_decode($in_departments["list"], true);	
+									$in_departments = json_decode($in_departments["list"], true);
 										if (is_array($in_departments)) {
 										foreach ($in_departments as $key => $department_id) {
 											$department_id = clean_input($department_id, "int");
@@ -494,15 +505,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										}
 									}
 								}
-								
+
 
 								/**
 								* Add user to cohort if they're a student
 								*/
-								if ($PROCESSED_ACCESS["group"] == "student") {						
+								if ($PROCESSED_ACCESS["group"] == "student") {
 									$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."' AND `group_type` = 'cohort' AND `group_active` = 1";
 									$group_id = $db->GetOne($query);
-									if($group_id){			
+									if($group_id){
 										$gmember = array(
 											'group_id' => $group_id,
 											'proxy_id' => $PROCESSED_ACCESS["user_id"],
@@ -542,22 +553,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$PROCESSED["password"] = md5($PROCESSED["password"]);
 						$PROCESSED["email_updated"] = time();
 						if (($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "INSERT")) && ($PROCESSED_ACCESS["user_id"] = $db->Insert_Id())) {
-							foreach ($permissions as $perm) {			
+							foreach ($permissions as $perm) {
 								if (!$perm["org_id"]) {
 									$ERROR++;
-									$ERRORSTR[] = "Please assign an organisation for all permissions.";									
+									$ERRORSTR[] = "Please assign an organisation for all permissions.";
 								} elseif (!$perm["group_id"]) {
 									$ERROR++;
 									$ERRORSTR[] = "Please assign a group for all permissions.";
 								} elseif (!$perm["role_id"]) {
 									$ERROR++;
 									$ERRORSTR[] = "Please assign a role for all permissions.";
-								} else {									
+								} else {
 									$query = "SELECT g.`group_name`, r.`role_name`
 											FROM `" . AUTH_DATABASE . "`.`system_groups` g, `" . AUTH_DATABASE . "`.`system_roles` r,
 												`" . AUTH_DATABASE . "`.`system_group_organisation` gho, `" . AUTH_DATABASE . "`.`organisations` o
 											WHERE gho.`groups_id` = " . $perm["group_id"] . " AND g.`id` = " . $perm["group_id"] . " AND
-											r.`id` = " . $perm["role_id"] . " AND o.`organisation_id` = " . $perm["org_id"];								
+											r.`id` = " . $perm["role_id"] . " AND o.`organisation_id` = " . $perm["org_id"];
 									$group_role = $db->GetRow($query);
 									$PROCESSED_ACCESS["group"] = $group_role["group_name"];
 									$PROCESSED_ACCESS["role"] = $group_role["role_name"];
@@ -582,7 +593,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												$ERRORSTR[] = "You must provide a valid program entry year";
 											}
 											if (!$ERROR) {
-												$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data` 
+												$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
 															SET `grad_year` = " . $PROCESSED["grad_year"] . ",
 															`entry_year` = " . $PROCESSED["entry_year"] . "
 															WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
@@ -598,10 +609,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									if ($PROCESSED_ACCESS["group"] == "faculty") {
 										if (isset($perm["clinical"])) {
 											$PROCESSED["clinical"] = clean_input($perm["clinical"], array("trim", "int"));
-											$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data` 
+											$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
 														SET `clinical` = " . $PROCESSED["clinical"] . "
 														WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
-														LIMIT 1";										
+														LIMIT 1";
 											if (!$db->Execute($query)) {
 												$ERROR++;
 												$ERRORSTR[] = "Failed to set the clinical field." . $query . " DB said: " . $db->ErrorMsg();
@@ -641,9 +652,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											/**
 											* Handle the inserting of user data into the user_departments table
 											* if departmental information exists in the form.
-											*/											
+											*/
 											if (isset($_POST["my_departments"]) && $in_departments = json_decode($_POST["my_departments"], true)) {
-												$in_departments = json_decode($in_departments["list"], true);	
+												$in_departments = json_decode($in_departments["list"], true);
 													if (is_array($in_departments)) {
 													foreach ($in_departments as $key => $department_id) {
 														$department_id = clean_input($department_id, "int");
@@ -664,7 +675,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 														application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into department [".$department_id."]. Database said: ".$db->ErrorMsg());
 													}
 												}
-											}											
+											}
 
 											$url			= ENTRADA_URL."/admin/users";
 
@@ -679,7 +690,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											$ERRORSTR[]	= "Unable to give this new user access permissions to this application. ".$db->ErrorMsg();
 
 											application_log("error", "Error giving new user access to application id [".AUTH_APP_ID."]. Database said: ".$db->ErrorMsg());
-										}					
+										}
 									} else {
 										echo display_error();
 									}
@@ -757,7 +768,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 	// Display Page.
 	switch ($STEP) {
-		case 2 :			
+		case 2 :
 			if ($NOTICE) {
 				echo display_notice();
 			}
@@ -1011,6 +1022,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						</tr>
 						<tr>
 							<td>&nbsp;</td>
+							<td><label for="gender" class="form-nrequired">Gender</label></td>
+							<td>
+								<select name="gender" id="gender" style="width: 256px">
+									<option value="0"<?php echo ($PROCESSED["gender"] == 0 ? " selected=\"selected\"" : ""); ?>>Not Specified</option>
+									<option value="1"<?php echo ($PROCESSED["gender"] == 1 ? " selected=\"selected\"" : ""); ?>>Female</option>
+									<option value="2"<?php echo ($PROCESSED["gender"] == 2 ? " selected=\"selected\"" : ""); ?>>Male</option>
+								</select>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">&nbsp;</td>
+						</tr>
+						<tr>
+							<td>&nbsp;</td>
 							<td><label for="email" class="form-required">Primary E-Mail</label></td>
 							<td>
 								<input type="text" id="email" name="email" value="<?php echo ((isset($PROCESSED["email"])) ? html_encode($PROCESSED["email"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
@@ -1124,22 +1149,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						</tr>
 						<?php
 								if (strtolower($ENTRADA_USER->getActiveGroup()) == "medtech" && strtolower($ENTRADA_USER->getActiveRole()) == "admin") {
-									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title` 
+									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
 													FROM `" . AUTH_DATABASE . "`.`organisations` o";
 								} else {
-									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title` 
+									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
 													FROM `".AUTH_DATABASE."`.`user_access` ua
 													JOIN `" . AUTH_DATABASE . "`.`organisations` o
 													ON ua.`organisation_id` = o.`organisation_id`
 													WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getID()) . "
 													AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);								}
 								$results	= $db->GetAll($query);
-								
+
 								if ($results) {
 									 ?>
 						<tr>
 							<td colspan="3">
-								<table class="org_table" style="width:100%">									
+								<table class="org_table" style="width:100%">
 									<tbody>
 										<tr>
 											<td style="padding-top:10px">
@@ -1147,8 +1172,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											<select id="organisations" name="organisations" style="width:200px">
 										<?php
 											foreach($results as $result) {
-												echo build_option($result["organisation_id"], ucfirst($result["organisation_title"]), $selected);															
-											}														
+												echo build_option($result["organisation_id"], ucfirst($result["organisation_title"]), $selected);
+											}
 										?>
 											</select>
 											</td>
@@ -1174,14 +1199,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</table>
 								<hr />
 							</td>
-						</tr>			
+						</tr>
 						<?php } ?>
 						<tr>
 							<td colspan="3">&nbsp;</td>
 						</tr>
 						<tr>
 							<td colspan="3">
-								<?php 
+								<?php
 									foreach($results as $result) { ?>
 									<table class="tableList" style="display: none; width: 100%;" id="<?php echo "perm_organisation_" . $result["organisation_id"]; ?>" >
 										<caption><h2 style="text-align: left;"><?php echo $result["organisation_title"]; ?></h2></caption>
@@ -1190,15 +1215,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											<col style="width: 15%" />
 											<col style="width: 60%" />
 											<col style="width: 10%" />
-										</colgroup>										
+										</colgroup>
 										<thead>
-											<tr>												
+											<tr>
 												<th></th>
 												<th></th>
 												<th></th>
 											</tr>
 										</thead>
-										<tbody>											
+										<tbody>
 											<tr>
 												<td colspan="3"><h3>Profiles</h3></td>
 											</tr>
@@ -1207,9 +1232,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											<tr>
 												<td colspan="3"><h3>Options</h3></td>
 											</tr>
-											<tr>	
-												<td></td>												
-												<td colspan="2">													
+											<tr>
+												<td></td>
+												<td colspan="2">
 													<label for="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="display: block;">Departments</label><br />
 													<select id="<?php echo "in_departments_" . $result["organisation_id"]; ?>" name="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="">
 														<option value="0">-- Select Departments --</option>
@@ -1227,8 +1252,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 													<div id="departments_notice_<?php echo $result["organisation_id"]; ?>" class="content-small"><div style="margin: 5px 0 5px 0"><strong>Note:</strong> Selected departments will appear here.</div></div>
 													<hr />
 													<ol id="departments_container_<?php echo $result["organisation_id"]; ?>" class="sortableList" style="display: none;">
-													</ol>													
-												</td>												
+													</ol>
+												</td>
 											</tr>
 										</tfoot>
 										<tbody>
@@ -1236,7 +1261,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									</table>
 									<br />
 								<?php
-									}									
+									}
 								?>
 								<input id="my_departments" name="my_departments" type="hidden" value="0" />
 							</td>
@@ -1295,18 +1320,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			</div>
 			<style>
 				td {
-					text-align: left;					
+					text-align: left;
 					white-space: normal;
 				}
 				table.tableList tbody tr td {
-					text-align: left;					
+					text-align: left;
 					white-space: normal;
 				}
-				
+
 				th {
 					color: #11335D; font-family: 'Century Gothic',Helvetica,Arial,sans-serif; font-size: 13px;
 				}
-				
+
 				li a.remove_dept {
 					display: block;
 					float: right;
@@ -1318,11 +1343,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					my_departments.list = [];
 
 					$('select[name^=in_departments_]').live("change", function() {
-						var dept_id = $(this).val();											
+						var dept_id = $(this).val();
 						var org_id = $(this).attr("id").split("_")[2];
 						var remove_link = "<a class=\"remove_dept\" href=\"\"><img src=\"" + "<?php echo ENTRADA_URL; ?>" + "/images/action-delete.gif\"></a>";
-						var content = "<li id=\"dept_" + dept_id + "\"><img src=\"" + "<?php echo ENTRADA_URL; ?>" + "/images/icon-apartment.gif\">" + $(this).find(":selected").text() + remove_link + "</li>";											
-						$('#departments_container_' + org_id).append(content);			
+						var content = "<li id=\"dept_" + dept_id + "\"><img src=\"" + "<?php echo ENTRADA_URL; ?>" + "/images/icon-apartment.gif\">" + $(this).find(":selected").text() + remove_link + "</li>";
+						$('#departments_container_' + org_id).append(content);
 						$('#departments_notice_' + org_id).hide();
 						$('#departments_container_' + org_id).show();
 						my_departments.list.push(dept_id);
@@ -1335,16 +1360,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					$('a.remove_dept').live("click", function(event) {
 						event.preventDefault();
 						var dept_id = $(this).closest("li").attr("id").split("_")[1];
-						var dept_text = $(this).closest("li").text();											
+						var dept_text = $(this).closest("li").text();
 						var org_id = $(this).closest("ol").attr("id").split("_")[2];
 						$(this).closest("li").remove();
 						if ($('#departments_container_' + org_id).children().size() == 0) {
 							$('#departments_notice_' + org_id).show();
-						}											
+						}
 						for(var i=0; i<my_departments.list.length; i++) {
-							if (my_departments.list[i] == dept_id) {													
+							if (my_departments.list[i] == dept_id) {
 								my_departments.list.splice(i, 1);
-							} 
+							}
 						}
 						$('input[name=my_departments]').val(JSON.stringify(my_departments));
 						//add the dept back to the select list
@@ -1371,12 +1396,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								function(data){
 									for (var key in data) {
 										if (data.hasOwnProperty(key)) {
-										$("#groups").append('<option value=\"' + key + '\">' + data[key]+ '</option>');															
+										$("#groups").append('<option value=\"' + key + '\">' + data[key]+ '</option>');
 										}
 									}
 									filterGroups();
 								}, "json");
-					});										
+					});
 					$('select[name=groups]').live("change", function() {
 						$('select[name=roles]').children().remove();
 						$("#roles").append('<option value=\"0\">Select a Role</option>')
@@ -1385,7 +1410,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								function(data){
 									for (var key in data) {
 										if (data.hasOwnProperty(key)) {
-										$("#roles").append('<option value=\"' + key + '\">' + data[key]+ '</option>');															
+										$("#roles").append('<option value=\"' + key + '\">' + data[key]+ '</option>');
 										}
 									}
 								}, "json");
@@ -1394,9 +1419,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					$('#organisations option:first').attr('selected', true).change();
 
 					var permissions = {}; //JSON objects to hold array of JSON objects containing this new user's permissions
-					permissions.acl = []; 
+					permissions.acl = [];
 
-					$("input[name=add_permissions]").live("click", function() {	
+					$("input[name=add_permissions]").live("click", function() {
 						var group_id = $('#groups').val();
 						var role_id = $('#roles').val();
 						var org_id = $('#organisations').val();
@@ -1408,22 +1433,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						} else if (role_id == null || role_id == 0) {
 							alert("Please select a role.")
 						} else {
-							var group_text = $('#groups option[value=' + group_id + ']').text();	
+							var group_text = $('#groups option[value=' + group_id + ']').text();
 							$('#groups option[value=' + group_id + ']').remove();
 							var role_text = $('#roles option[value=' + role_id + ']').text();
 							$('select[name=roles]').children().remove();
 							var options = "";
 							var clinical = 0;
 							var entry_year = 0;
-							var grad_year = 0;												
-							if (group_text == "Faculty") {												
+							var grad_year = 0;
+							if (group_text == "Faculty") {
 								options = "<input id=\"clinical_"  + org_id + "\" name=\"clinical_"  + org_id + "\" type=\"checkbox\" checked /><label for=\"clincal" + org_id + "\">This new user is a <strong>clinical</strong> faculty member.</label>";
 								clinical = 1;
 							} else if (group_text == "Student") {
 								options = $('#entry_grad_year_container').html();
 								entry_year = $('#entry_year').val();
 								grad_year = $('#grad_year').val();
-							}					
+							}
 							$('#perm_organisation_' + $('#organisations').val() + ' > tbody:last').append('<tr id=\"' + org_id + '_' + group_id + '_' + role_id + '\"><td></td><td>' + group_text + " / " + role_text + '</td><td>' + options + '</td><td><a class=\"remove_perm\" href=\"\"><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif"></a></td></tr>');
 							$('#perm_organisation_' + $('#organisations').val()).show();
 
@@ -1435,11 +1460,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 					$('input[id^=clinical_]').live("change", function() {
 						var org_id = $(this).attr("id").split("_")[1];
-						for (i = 0; i < permissions.acl.length; i++) {												
+						for (i = 0; i < permissions.acl.length; i++) {
 							//check the permissions array for the faculty role for this org
 							if (permissions.acl[i].org_id == org_id
 								&& permissions.acl[i].group_id == 3) {
-								if ($(this).is(':checked')) {														
+								if ($(this).is(':checked')) {
 									permissions.acl[i].clinical = 1;
 								} else {
 									permissions.acl[i].clinical = 0;
@@ -1460,7 +1485,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					});
 
 					$('select[id=grad_year]').live("change", function() {
-						var org_id = $(this).closest('table').attr("id").split("_")[2];											
+						var org_id = $(this).closest('table').attr("id").split("_")[2];
 						for (i = 0; i < permissions.length; i++) {
 							if (permissions[i].org_id == org_id) {
 								permissions[i].grad_year = $(this).val();
@@ -1469,9 +1494,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$('input[name=permissions]').val(JSON.stringify(permissions));
 					});
 
-					$("a.remove_perm").live("click", function(e) {											
+					$("a.remove_perm").live("click", function(e) {
 						e.preventDefault();
-						var row_id = $(this).closest("tr").attr("id");	
+						var row_id = $(this).closest("tr").attr("id");
 						var org_id = row_id.split("_")[0];
 						var group_id = row_id.split("_")[1];
 						var role_id = row_id.split("_")[2];
@@ -1480,7 +1505,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								permissions.acl[i].group_id == group_id &&
 								permissions.acl[i].role_id == role_id) {
 								permissions.acl.splice(i, 1);
-							} 
+							}
 						}
 						$('input[name=permissions]').val(JSON.stringify(permissions));
 
@@ -1488,7 +1513,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							//add the group back to the select list
 							var group_role = $(this).closest("tr").children()[1];
 							group_role = $(group_role).text();
-							var group_text = $.trim(group_role.split("/")[0]);														
+							var group_text = $.trim(group_role.split("/")[0]);
 							var option = $("<option></option>").text(group_text);
 							$(option).attr("value", group_id);
 							$('#groups').append(option);
@@ -1502,21 +1527,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							});
 						}
 
-						var myTable = $(this).closest("table");											
-						$(this).closest("tr").remove();													
-						if ($(myTable)[0].rows.length <= 4) {												
+						var myTable = $(this).closest("table");
+						$(this).closest("tr").remove();
+						if ($(myTable)[0].rows.length <= 4) {
 							$("#department_callback" + org_id).children().remove();
 							$(myTable).hide();
 							my_departments.list.splice(0,my_departments.dept_list.length);
 							$('input[name=my_departments]').val(0);
 							$('#departments_container_' + org_id).children().remove();
 						}
-					});	
+					});
 					function filterGroups() {
 						if ($('#groups option').length > 0) {
-							var current_org = $('#organisations').val();								
-							for (i = 0; i < permissions.acl.length; i++) {									
-								if (permissions.acl[i].org_id == current_org) {										
+							var current_org = $('#organisations').val();
+							for (i = 0; i < permissions.acl.length; i++) {
+								if (permissions.acl[i].org_id == current_org) {
 									$('#groups option[value=' + permissions.acl[i].group_id + ']').remove();
 								}
 							}

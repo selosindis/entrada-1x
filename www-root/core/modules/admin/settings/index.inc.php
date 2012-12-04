@@ -44,15 +44,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		</div>	
 	<?php
 		}
-	$query = "	SELECT * FROM `".AUTH_DATABASE."`.`organisations`
+	$query = "	SELECT a.* FROM `".AUTH_DATABASE."`.`organisations` AS a
+				JOIN `".AUTH_DATABASE."`.`user_access` AS b
+				ON a.`organisation_id` = b.`organisation_id`
+				WHERE b.`user_id` = ".$db->qstr($ENTRADA_USER->getID())."
+				GROUP BY a.`organisation_id`
 				ORDER BY `organisation_title` ASC";
-	$results = $db->GetAll($query);
+	$results = $db->GetAssoc($query);
 	if ($results) {
 		$organisations = array();
 
-		foreach($results as $result) {
-			if ($ENTRADA_ACL->amIAllowed(new ConfigurationResource($result["organisation_id"]), "update")) {
-				$organisations[] = $result;
+		foreach($results as $organisation_id => $result) {
+			if ($ENTRADA_ACL->amIAllowed(new ConfigurationResource($organisation_id), "update")) {
+				$organisations[$organisation_id] = $result;
 			}
 		}
 		

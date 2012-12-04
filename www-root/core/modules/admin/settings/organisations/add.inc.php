@@ -177,6 +177,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 								('resourceorganisation'," . $db->qstr($organisation_id) . ", 'organisation:group:role', '" . $organisation_id . ":staff:pcoordinator', NULL, 1, NULL, NULL, NULL, NULL),
 								('resourceorganisation'," . $db->qstr($organisation_id) . ", 'organisation:group:role', '" . $organisation_id . ":staff:admin', NULL, 1, 1, 1, 1, NULL)";
 					if ($db->Execute($query)) {
+						/**
+						 * Select a "template" organisation that we can base the system groups and roles on by default.
+						 */
+						$query = "SELECT `organisation_id` FROM `".ENTRADA_AUTH."`.`organisations` WHERE `organisation_active` = '1' ORDER BY `organisation_id` ASC LIMIT 1";
+						$template_organisation_id = $db->GetOne($query);
+						if ($template_organisation_id) {
+							$query = "SELECT * FROM `".ENTRADA_AUTH."`.`system_group_organisation` WHERE `organisation_id` = ".$db->qstr($template_organisation_id);
+							$results = $db->GetAll($query);
+							if ($results) {
+								foreach ($results as $result) {
+									if (!$db->AutoExecute(ENTRADA_AUTH.".system_group_organisation", array("groups_id" => $result["groups_id"], "organisation_id" => $organisation_id), "INSERT")) {
+										application_log("error", "Unable to attach new organisation_id [".$organisation_id."] to system_group [".$result["groups_id"]."]. Database said: ".$db->ErrorMsg());
+									}
+								}
+							}
+						}
+
 						add_success("You have successfully added <strong>" . html_encode($PROCESSED["organisation_title"]) . "</strong> to the system.<br /><br />You will now be redirected to the organisations index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/settings/organisations\" style=\"font-weight: bold\">click here</a> to continue.");
 
 						$ONLOAD[] = "setTimeout('window.location=\\'" . ENTRADA_URL . "/admin/settings/organisations/\\'', 5000)";

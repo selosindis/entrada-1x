@@ -117,8 +117,8 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('annualreportadmin', NULL, 'group:role', 'medtech:admin', NULL, 1, 1, 1, 1, NULL),
 ('gradebook', NULL, 'group', 'student', NULL, NULL, 1, NULL, NULL, NULL),
 ('metadata', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('evaluation', NULL, 'group', 'faculty', 1, 0, 1, 0, 0, 'IsEvaluated'),
-('evaluation', NULL, 'group', 'faculty', 1, 1, 1, 1, NULL, 'EvaluationReviewer'),
+('evaluation', NULL, 'group', 'faculty', 1, NULL, 1, NULL, NULL, 'IsEvaluated'),
+('evaluation', NULL, 'group', 'faculty', 1, NULL, 1, NULL, NULL, 'EvaluationReviewer'),
 ('evaluationform', NULL, 'group', 'faculty', 1, 1, 1, 1, NULL, 'EvaluationFormAuthor');
 
 CREATE TABLE IF NOT EXISTS `departments` (

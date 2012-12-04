@@ -2,5 +2,4 @@ INSERT INTO `acl_permissions` (`resource_type`,`resource_value`,`entity_type`,`e
 VALUES
 	('eventclosed', NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, 'EventEnrollment&NotGuest');
 
-UPDATE `settings` SET `value` = '1401' WHERE `shortname` = 'version_db';
-UPDATE `settings` SET `value` = '1.4.0' WHERE `shortname` = 'version_entrada';
+UPDATE `settings` SET `value` = '1319' WHERE `shortname` = 'version_db';

@@ -25,10 +25,6 @@ font-size:11px;
 padding-right:5px;
 }
 
-a, a:link{
-  color:#006699;
-}
-
 a.navi {
 font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
 font-size:12px;
@@ -1112,11 +1108,13 @@ border:0;
 
 div.tableListTop {
 background-color:#FAFAFA;
-border:1px #9D9D9D solid;
+border:none;
 border-bottom:none;
--moz-border-radius:10px 10px 0 0;
--webkit-border-radius:10px 10px 0 0;
+-moz-border-radius:5px 5px 0 0;
+-webkit-border-radius:5px 5px 0 0;
+border-radius:5px 5px 0 0;
 padding:3px;
+font-size:11px;
 }
 
 div.userProfile {
@@ -1219,11 +1217,11 @@ font-size:12px;
 width:auto!important;
 color:#333;
 text-decoration:none;
-padding:5px;
+/*padding:5px;*/
 }
 
 table.tableList thead tr td {
-padding: 0px 10px;
+padding: 5px 10px;
 text-shadow:1px 1px 0 rgba(255,255,255,0.75);
 font-size:12px;
 }
@@ -2788,13 +2786,12 @@ text-align:left;
 }
 
 table.tableList thead tr td.sortedASC .noLink,table.tableList thead tr td.sortedASC a,table.tableList thead tr td.sorting_asc .noLink {
-background:transparent url(../images/sort_asc.gif)  right 7px no-repeat;
+background:transparent url(../images/sort_asc.gif)  right 3px no-repeat;
 display:block;
 font-size:12px;
 width:auto!important;
 color:#333;
 text-decoration:none;
-padding:5px;
 }
 
 table.tableList thead tr td.sortedDESC a,table.tableList thead tr td.sortedDESC .noLink,table.tableList thead tr td.sorting_desc .noLink {
@@ -3595,8 +3592,8 @@ width:65%;
 }
 
 #event-sidebar {
-float:right;
-width:33%;
+/*float:right;
+width:33%;*/
 }
 
 #event-sidebar table {

@@ -704,44 +704,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							}
 						}
 						?>
-						<form name="editEventForm" id="editEventForm" action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(array("step" => 2)); ?>" method="post">
-							<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Event">
-								<colgroup>
-									<col style="width: 3%" />
-									<col style="width: 20%" />
-									<col style="width: 77%" />
-								</colgroup>
-								<tfoot>
-									<tr>
-										<td colspan="3" style="padding-top: 25px">
-											<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-												<tr>
-													<td style="width: 25%; text-align: left">
-														<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events<?php echo (($is_draft) ? "/drafts?section=edit&draft_id=".$event_info["draft_id"] : "" ); ?>'" />
-													</td>
-													<td style="width: 75%; text-align: right; vertical-align: middle">
-														<?php if (!$is_draft) { ?><span class="content-small">After saving:</span>
-														<select id="post_action" name="post_action">
-															<option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Add content to event</option>
-															<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another event</option>
-															<option value="copy"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "copy") ? " selected=\"selected\"" : ""); ?>>Add a copy of this event</option>
-															<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to event list</option>
-														</select><?php } else { ?>
-														<input type="hidden" id="post_action" name="post_action" value="draft" />
-														<?php } ?>
-														<input type="submit" class="button" value="Save" />
-													</td>
-												</tr>
-											</table>
-										</td>
-									</tr>
-								</tfoot>
-								<tbody>
-									<tr>
-										<td></td>
-										<td><label for="course_id" class="form-required">Select Course</label></td>
-										<td>
-											<?php
+						<form name="editEventForm" id="editEventForm" action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(array("step" => 2)); ?>" method="post" class="form-horizontal">
+						<div class="control-group">
+							<label for="course_id" class="control-label form-required">Select Course:</label>
+							<div class="controls">
+								<?php
 											$query	= "	SELECT `course_id`, `course_name`, `course_code`, `course_active`
 														FROM `courses`
 														WHERE `organisation_id` = ".$db->qstr($event_info["organisation_id"])."
@@ -777,36 +744,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												echo display_error("You do not have any courses availabe in the system at this time, please add a course prior to adding learning events.");
 											}
 											?>
-										</td>
-									</tr>
-									<tr>
-										<td colspan="3">&nbsp;</td>
-									</tr>
-									<tr>
-										<td></td>
-										<td style="vertical-align: top"><label for="event_title" class="form-required">Event Title</label></td>
-										<td>
-											<div id="course_id_path" class="content-small"><?php echo fetch_course_path($PROCESSED["course_id"]); ?></div>
-											<input type="text" id="event_title" name="event_title" value="<?php echo html_encode($PROCESSED["event_title"]); ?>" maxlength="255" style="width: 95%; font-size: 150%; padding: 3px" />
-										</td>
-									</tr>
-									<tr>
-										<td colspan="3">&nbsp;</td>
-									</tr>
+							</div>
+						</div>
+						<div class="control-group">
+							<label for="event_title" class="control-label form-required">Event Title:</label>
+							<div class="controls">
+								<div id="course_id_path" class="content-small"><?php echo fetch_course_path($PROCESSED["course_id"]); ?></div>
+								<input type="text" id="event_title" name="event_title" value="<?php echo html_encode($PROCESSED["event_title"]); ?>" maxlength="255" style="width: 95%; font-size: 150%; padding: 3px" />
+							</div>
+						</div>
+						<div class="control-group">
+							<table>
+								<tr>
 									<?php echo generate_calendars("event", "Event Date & Time", true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
-									<tr>
-										<td></td>
-										<td><label for="event_location" class="form-nrequired">Event Location</label></td>
-										<td><input type="text" id="event_location" name="event_location" value="<?php echo html_encode($PROCESSED["event_location"]); ?>" maxlength="255" style="width: 200px" /></td>
-									</tr>
-									<tr>
-										<td colspan="3">&nbsp;</td>
-									</tr>
-									<tr>
-										<td></td>
-										<td style="vertical-align: top"><label for="eventtype_ids" class="form-required">Event Types</label></td>
-										<td>
-											<?php
+								</tr>
+							</table>
+						</div>
+						<div class="control-group">
+							<label for="event_location" class="control-label form-nrequired">Event Location:</label>
+							<div class="controls">
+								<input type="text" id="event_location" name="event_location" value="<?php echo html_encode($PROCESSED["event_location"]); ?>" maxlength="255" />
+							</div>
+						</div>
+						<div class="control-group">
+							<label for="eventtype_ids" class="control-label form-required">Event Types:</label>
+							<div class="controls">
+																			<?php
 											$query = "	SELECT a.* FROM `events_lu_eventtypes` AS a
 														LEFT JOIN `eventtype_organisation` AS b
 														ON a.`eventtype_id` = b.`eventtype_id`
@@ -849,16 +812,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											</ol>
 											<div id="total_duration" class="content-small">Total time: 0 minutes.</div>
 											<input id="eventtype_duration_order" name="eventtype_duration_order" style="display: none;">
-										</td>
-									</tr>
-									<tr>
-										<td colspan="3">&nbsp;</td>
-									</tr>
-									<tr>
-										<td></td>
-										<td style="vertical-align: top"><label for="faculty_name" class="form-nrequired">Associated Faculty</label></td>
-										<td>
-											<input type="text" id="faculty_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
+							</div>
+						</div>
+						<div class="control-group">
+							<label for="faculty_name" class="control-label form-nrequired">Associated Faculty:</label>
+							<div class="controls">
+								<input type="text" id="faculty_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
 											<?php
 											$ONLOAD[] = "faculty_list = new AutoCompleteList({ type: 'faculty', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
 											?>
@@ -881,17 +840,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											</ul>
 											<input type="hidden" id="faculty_ref" name="faculty_ref" value="" />
 											<input type="hidden" id="faculty_id" name="faculty_id" value="" />
-										</td>
-									</tr>
-								</tbody>
-								<tbody id="audience-options">
-								<?php
+							</div>
+						</div>
+						<div class="control-group">
+							<?php
 								if ($PROCESSED["course_id"]) {
 									require_once(ENTRADA_ABSOLUTE."/core/modules/admin/events/api-audience-options.inc.php");
 								}
 								?>
-								</tbody>
-								<?php if (!$is_draft) { ?>
+						</div>
+						<div class="control-group">
+							<?php if (!$is_draft) { ?>
 								<tbody>
 									<tr>
 										<td>&nbsp;</td>
@@ -935,13 +894,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									</tr>
 								</tbody>
 								<?php } ?>
-								<tbody>
-									<tr>
-										<td colspan="3"><h2>Time Release Options</h2></td>
-									</tr>
+						</div>
+						<h2>Time Release Options</h2>
+						<div class="control-group">
+							<table>
+								<tr>
 									<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-								</tbody>
+								</tr>
 							</table>
+						</div>
+						<div class="control-group">
+							<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events<?php echo (($is_draft) ? "/drafts?section=edit&draft_id=".$event_info["draft_id"] : "" ); ?>'" />
+							<?php if (!$is_draft) { ?>
+							<div class="pull-right">
+								<span class="content-small">After saving:</span>
+														<select id="post_action" name="post_action">
+															<option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Add content to event</option>
+															<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another event</option>
+															<option value="copy"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "copy") ? " selected=\"selected\"" : ""); ?>>Add a copy of this event</option>
+															<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to event list</option>
+														</select><?php } else { ?>
+														<input type="hidden" id="post_action" name="post_action" value="draft" />
+														<?php } ?>
+														<input type="submit" class="btn btn-primary" value="Save" />
+							</div>						
+						</div>
+							
 						</form>
 
 						<script type="text/javascript">

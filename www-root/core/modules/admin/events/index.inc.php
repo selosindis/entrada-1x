@@ -158,7 +158,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
-							<input type="button" value="Export Results" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/export"; ?>';" />
+							<input type="button" class="btn" value="Export Results" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/export"; ?>';" />
 							<?php
 						}
 						?>

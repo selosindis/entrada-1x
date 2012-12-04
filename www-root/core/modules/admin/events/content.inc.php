@@ -789,27 +789,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				<a name="event-details-section"></a>
 				<h2 title="Event Details Section">Event Details</h2>
 				<div id="event-details-section">
-					<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Event Details">
+					<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Event Details" class="table">
 						<colgroup>
 							<col style="width: 20%" />
 							<col style="width: 80%" />
 						</colgroup>
 						<tfoot>
 							<tr>
-								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
+								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" class="btn" value="Save" /></td>
 							</tr>
 						</tfoot>
 						<tbody>
 							<tr>
-								<td>Event Date &amp; Time</td>
+								<td>Event Date &amp; Time:</td>
 								<td><?php echo date(DEFAULT_DATE_FORMAT, $event_info["event_start"]); ?></td>
 							</tr>
 							<tr>
-								<td>Event Duration</td>
+								<td>Event Duration:</td>
 								<td><?php echo (($event_info["event_duration"]) ? $event_info["event_duration"]." minutes" : "To Be Announced"); ?></td>
 							</tr>
 							<tr>
-								<td>Event Location</td>
+								<td>Event Location:</td>
 								<td><?php echo (($event_info["event_location"]) ? $event_info["event_location"] : "To Be Announced"); ?></td>
 							</tr>
 							<?php
@@ -846,7 +846,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								<td colspan="2">&nbsp;</td>
 							</tr>
 							<tr>
-								<td style="vertical-align: top">Associated Faculty</td>
+								<td style="vertical-align: top">Associated Faculty:</td>
 								<td>
 									<?php
 									$query		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, a.`contact_role`, b.`email`
@@ -871,7 +871,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								<td colspan="2">&nbsp;</td>
 							</tr>
 							<tr>
-								<td style="vertical-align: top"><label for="eventtype_ids" class="form-required">Event Types</label></td>
+								<td style="vertical-align: top"><label for="eventtype_ids" class="form-required">Event Types:</label></td>
 								<td style="padding-bottom: 15px">
 									<select id="eventtype_ids" name="eventtype_ids">
 										<option id="-1"> -- Pick a type to add -- </option>
@@ -905,7 +905,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								</td>
 							</tr>
 							<tr>
-								<td style="vertical-align: top">Event Description</td>
+								<td style="vertical-align: top">Event Description:</td>
 								<td>
 									<textarea id="event_description" name="event_description" style="width: 100%; height: 150px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_description"], array("font")))); ?></textarea>
 								</td>
@@ -924,7 +924,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</colgroup>
 						<tfoot>
 							<tr>
-								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
+								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" class="btn" value="Save" /></td>
 							</tr>
 						</tfoot>
 						<tbody>
@@ -1002,7 +1002,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</colgroup>
 						<tfoot>
 							<tr>
-								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
+								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" class="btn"/></td>
 							</tr>
 						</tfoot>
 						<tbody>
@@ -1040,8 +1040,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
 										</div>
 										<div style="float: right; display: inline">
-											<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
-											<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+											<input type="button" id="clinical_presentations_list_remove_btn" class="btn" onclick="delIt()" value="Remove" />
+											<input type="button" id="clinical_presentations_list_add_btn" class="btn" onclick="addIt()" style="display: none" value="Add" />
 										</div>
 										<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
 											<h2>Clinical Presentations List</h2>
@@ -1111,7 +1111,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										</colgroup>
 										<tfoot>
 											<tr>
-												<td colspan="4" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
+												<td colspan="4" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" class="btn"/></td>
 											</tr>
 										</tfoot>
 										<tr>
@@ -1199,10 +1199,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<div style="float: left; margin-bottom: 5px">
 							<h3>Attached Files</h3>
 						</div>
-						<div style="float: right; margin-bottom: 5px">
-							<ul class="page-action">
-								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A File</a></li>
-							</ul>
+						<div class="pull-right">
+							<a href="#page-top" class="btn" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A File</a>
 						</div>
 						<div class="clear"></div>
 						<?php
@@ -1281,10 +1279,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<div style="float: left; margin-bottom: 5px">
 							<h3>Attached Links</h3>
 						</div>
-						<div style="float: right; margin-bottom: 5px">
-							<ul class="page-action">
-								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A Link</a></li>
-							</ul>
+						<div class="pull-right">
+								<a href="#page-top" class="btn" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A Link</a>
 						</div>
 						<div class="clear"></div>
 						<?php
@@ -1355,11 +1351,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<div style="float: left; margin-bottom: 5px">
 							<h3>Attached Quizzes</h3>
 						</div>
-						<div style="float: right; margin-bottom: 5px">
-							<ul class="page-action">
-								<li><a href="<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add">Create New Quiz</a></li>
-								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Attach Existing Quiz</a></li>
-							</ul>
+						<div class="pull-right">		
+								<a href="<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add" class="btn">Create New Quiz</a>
+								<a href="#page-top" class="btn" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Attach Existing Quiz</a>
 						</div>
 						<div class="clear"></div>
 						<?php

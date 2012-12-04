@@ -177,15 +177,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					echo display_error();
 				}
 				?>
-				<div style="float: right">
-					<ul class="page-action">
-						<li class="last"><a href="#" onclick="javascript:openDialog('http://google.com');" class="strong-green">Kiosk Mode</a></li>
-					</ul>
-				</div>
+
+					<div class="pull-right">
+						<a href="#" onclick="javascript:openDialog('http://google.com');" class="btn btn-primary">Kiosk Mode</a>
+					</div>
 				<a name="event-attendance-section"></a>
 				<h2 title="Event Resources Section">Event Attendance</h2>
 				<div id="event-attendance-section">					
-						<div style="float:right;margin-bottom:5px;">
+						<div class="row-fluid">
 							<label for="number">Student Number:</label> <input type="text" name="number" id="number"/>
 						</div>
 						<table class="tableList" cellspacing="0" summary="List of Attached Files">
@@ -218,8 +217,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										?>
 							</tbody>
 						</table>
-					
+					<div style="margin-top:10px">
 						<input type="button" class="button" value="Download CSV" onclick="window.location = '<?php echo ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $EVENT_ID,"download"=>"csv"));?>'"/>
+					</div>
 				</div>
 				<div class="kiosk-modal" style="display:none;">
 						<div id="modal_message">You can now swipe student card.</div>

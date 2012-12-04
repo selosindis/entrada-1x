@@ -60,10 +60,11 @@ padding:0;
 
 #navigator-interior td {
 color:#EEE;
-background:transparent url(../images/nav_separator.jpg) repeat-y left top;
+/*background:transparent url(../images/nav_separator.jpg) repeat-y left top;*/
 vertical-align:top;
 font-weight:400;
 padding:0 0 0 20px;
+border-right:1px dotted rgba(255,255,255,0.2);
 }
 
 #navigator-interior p {

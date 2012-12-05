@@ -22,34 +22,29 @@
  *
 */
 
-if (!defined("PARENT_INCLUDED")) {
+if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "read", false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "read",false)) {
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	define("IN_CONFIGURATION", true);
-
-	/*
-	 * To change this template, choose Tools | Templates
-	 * and open the template in the editor.
-	 */
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings", "title" => "System Settings");
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
+		
+
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/eventtypes?org=".$ORGANISATION['organisation_id'], "title" => "Manage Event Types");
 
 		$module_file = $router->getRoute();
 		if ($module_file) {
 			require_once($module_file);
 		}
-
 		/**
 		 * Check if preferences need to be updated on the server at this point.
 		 */
@@ -61,4 +56,6 @@ if (!defined("PARENT_INCLUDED")) {
 		header("Location: ".$url);
 		exit;
 	}
+
+
 }

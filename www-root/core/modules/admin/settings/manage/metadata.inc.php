@@ -22,7 +22,7 @@
  *
 */
 
-if (!defined("PARENT_INCLUDED")) {
+if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
@@ -34,17 +34,19 @@ if (!defined("PARENT_INCLUDED")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	define("IN_CONFIGURATION", true);
 
-	/*
-	 * To change this template, choose Tools | Templates
-	 * and open the template in the editor.
-	 */
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings", "title" => "System Settings");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/metadata?org=".$ORGANISATION_ID, "title" => "Manage Meta Data");
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
-
+		
+		if(isset($_GET["step"])){
+			$STEP = $_GET["step"];
+		}
+		else{
+			$STEP = "";
+		}
+		
 		$module_file = $router->getRoute();
 		if ($module_file) {
 			require_once($module_file);

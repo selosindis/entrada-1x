@@ -216,7 +216,6 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 										foreach ($event_links as $link) {
 											unset($link["elink_id"]);
 											$link["event_id"]		= $event_id;
-											$link["updated_date"]	= time();
 											$file["updated_by"]		= $draft_creators[0]["proxy_id"];
 											if ($db->AutoExecute("`event_links`", $link, "INSERT")) {
 												application_log("success", "Successfully inserted link [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
@@ -239,7 +238,6 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 										foreach ($event_objectives as $objective) {
 											unset($objective["eobjective_id"]);
 											$objective["event_id"]		= $event_id;
-											$objective["updated_date"]	= time();
 											$objective["updated_by"]	= $draft_creators[0]["proxy_id"];
 											if ($db->AutoExecute("`event_objectives`", $objective, "INSERT")) {
 												application_log("success", "Successfully inserted objective [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
@@ -262,7 +260,6 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 										foreach ($event_topics as $topic) {
 											unset($topic["eobjective_id"]);
 											$topic["event_id"]		= $event_id;
-											$topic["updated_date"]	= time();
 											$topic["updated_by"]	= $draft_creators[0]["proxy_id"];
 											if ($db->AutoExecute("`event_objectives`", $topic, "INSERT")) {
 												application_log("success", "Successfully inserted topic [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
@@ -286,7 +283,6 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 										foreach ($event_quizzes as $quiz) {
 											unset($quiz["aquiz_id"]);
 											$quiz["content_id"]		= $event_id;
-											$quiz["updated_date"]	= time();
 											$quiz["updated_by"]	= $draft_creators[0]["proxy_id"];
 											if ($db->AutoExecute("`attached_quizzes`", $quiz, "INSERT")) {
 												application_log("success", "Successfully inserted quiz [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");

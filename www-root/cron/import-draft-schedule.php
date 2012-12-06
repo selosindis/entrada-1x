@@ -174,16 +174,27 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 									*/
 									$query = "	SELECT *
 												FROM `event_files`
-												WHERE `event_id` = ".$db->qstr($old_event_id);
+												WHERE `event_id` = ".$db->qstr($old_event_id)."
+												AND `file_category` != 'podcast'";
 									if ($event_files = $db->GetAll($query)) {
 										application_log("notice", "Found ".count($event_files)." event files attached to original event [".$old_event_id."], will be ported over to new event [".$event_id."].");
 										foreach ($event_files as $file) {
+											$old_event_file = (int) $file["efile_id"];
 											unset($file["efile_id"]);
 											$file["event_id"]		= $event_id;
-											$file["updated_date"]	= time();
+											$file["accesses"]		= 0;
 											$file["updated_by"]		= $draft_creators[0]["proxy_id"];
 											if ($db->AutoExecute("`event_files`", $file, "INSERT")) {
 												application_log("success", "Successfully inserted file [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
+												
+												$new_file_id = (int) $db->InsertID();
+												if (copy(FILE_STORAGE_PATH."/".$old_event_file, FILE_STORAGE_PATH."/".$new_file_id)) {
+													application_log("success", "Successfully copied file [".$old_event_file."] to file [".$new_file_id."], for new event [".$event_id."].");
+													$copied_files[] = $processed_file["file_name"];
+												} else {
+													application_log("success", "Failed to copy file [".$old_event_file."] to file [".$new_file_id."].");
+												}
+												
 											} else {
 												$error++;
 												application_log("error", "Error inserting event_files [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
@@ -294,6 +305,8 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 									$count++;
 									$msg[$draft["draft_id"]][] = $event["event_title"]." - ".date("Y-m-d H:i",$event["event_start"]);
 								}
+								
+								unset ($old_event_id);
 							}
 
 						} else {

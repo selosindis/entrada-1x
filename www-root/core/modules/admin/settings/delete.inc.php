@@ -34,17 +34,115 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else{
+	
+	echo "<h1>Manage Organisations</h1>";
+	
 	if (isset($_POST["remove_ids"]) && is_array($_POST["remove_ids"]) && !empty($_POST["remove_ids"])) {
-		foreach ($_POST["remove_ids"] as $id) {
-			$id = (int) $id;
-			if ($id && $ENTRADA_ACL->amIAllowed(new ConfigurationResource($id), "delete") && ($ENTRADA_USER->GetActiveOrganisation() != $id)) {
-				if (!$db->AutoExecute(ENTRADA_AUTH.".organisations", array("organisation_active" => 0), "UPDATE", "organisation_id = ".$id)) {
-					application_log("error", "Unable to deactivate organisation_id [".$id."]. Database said: ".$db->ErrorMsg());
+		
+		if (count($_POST["remove_ids"]) > 0) {
+			foreach ($_POST["remove_ids"] as $id) {
+				if ($tmp = clean_input($id, "numeric")) {
+					$PROCESSED["remove_ids"][] = $tmp;
 				}
 			}
+		} else {
+			$STEP = 1;
 		}
+		
+		if (strtolower($ENTRADA_USER->getActiveGroup()) == "medtech" && strtolower($ENTRADA_USER->getActiveRole()) == "admin") {
+			$query = "	SELECT a.*
+						FROM `" . AUTH_DATABASE . "`.`organisations` AS a
+						WHERE a.`organisation_active` = '1'
+						AND a.`organisation_id` IN ('".implode("','",$PROCESSED["remove_ids"])."')
+						ORDER BY a.`organisation_title` ASC";
+		} else {
+			$query = "	SELECT a.*
+						FROM `".AUTH_DATABASE."`.`organisations` AS a
+						JOIN `".AUTH_DATABASE."`.`user_access` AS b
+						ON a.`organisation_id` = b.`organisation_id`
+						WHERE b.`user_id` = ".$db->qstr($ENTRADA_USER->getID())."
+						AND a.`organisation_active` = '1'
+						AND a.`organisation_id` IN ('".implode("','",$PROCESSED["remove_ids"])."')
+						GROUP BY a.`organisation_id`
+						ORDER BY a.`organisation_title` ASC";
+		}
+		
+		if ($organisations = $db->GetAssoc($query)) {
+			switch ($STEP) {
+				case "2" :
+					foreach ($PROCESSED["remove_ids"] as $id) {
+						$id = (int) $id;
+						if ($id && $ENTRADA_ACL->amIAllowed(new ConfigurationResource($id), "delete") && ($ENTRADA_USER->GetActiveOrganisation() != $id)) {
+							if (!$db->AutoExecute("`".AUTH_DATABASE."`.`organisations`", array("organisation_active" => "0"), "UPDATE", "`organisation_id` = ".$id)) {
+								application_log("error", "Unable to deactivate organisation_id [".$id."]. Database said: ".$db->ErrorMsg());
+								$ERROR++;
+							}
+						} else {
+							application_log("error", "Unable to deactivate organisation_id [".$id."], user did not have delete permission.");
+							$ERROR++;
+						}
+					}
+					if (!$ERROR) {
+						$success_string = "<br /><div style=\"padding-left: 15px; padding-bottom: 15px; font-family: monospace\">\n";
+						foreach($organisations as $organisation_id => $result) {
+							if (in_array($organisation_id, $PROCESSED["remove_ids"])) {
+								$success_string .= html_encode($result["organisation_title"])."<br />";
+							}
+						}
+						$success_string .= "</div>\n";
+						add_success("You have successfully removed the following organisations from the system:<br />".$success_string."You will be automatically redirected to the event index in 5 seconds, or you can <a href=\"".ENTRADA_URL."/admin/settings\">click here</a> if you do not wish to wait.");
+						echo display_success();
+						$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/settings\'', 5000)";
+					} else {
+						add_error("An error occurred when trying to delete an organisation, a system administrator has been informed.");
+						echo display_error();
+						$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/settings\'', 5000)";
+					}
+				break;
+				default :
+					add_notice("Please review the following organisations to ensure that you wish to <strong>permanently delete</strong> them.");
+					echo display_notice();
+					?>
+						<div id="organisations-section">
+							<form action="<?php echo ENTRADA_URL; ?>/admin/settings?section=delete" method="POST">
+								<input type="hidden" name="step" value="2" />
+								<table class="tableList" cellspacing="0" cellpadding="1" border="0" summary="List of Organisations">
+									<colgroup>
+										<col class="modified" />
+										<col class="title" />
+									</colgroup>
+									<thead>
+										<tr>
+											<td class="modified">&nbsp;</td>
+											<td class="title">Title</td>
+										</tr>
+									</thead>
+									<tbody>
+										<?php
+										foreach ($organisations as $organisation_id => $result) {
+											$url = ENTRADA_URL."/admin/settings/manage?org=".(int) $organisation_id;
+
+											echo "<tr>\n";
+											echo "	<td><input type=\"checkbox\" name = \"remove_ids[]\" value = \"".html_encode($organisation_id)."\"".($ENTRADA_USER->GetActiveOrganisation() == $organisation_id ? " disabled=\"disabled\"" : "")." ".(in_array($organisation_id, $PROCESSED["remove_ids"]) ? " checked=\"checked\"" : "")."/></td>\n";
+											echo "	<td><a href=\"".$url."\">".html_encode($result["organisation_title"])."</a></td>\n";
+											echo "</tr>\n";
+										}
+										?>
+									</tbody>
+								</table><br />
+								<input type="submit" class="button" value="Delete Selected" />
+							</form>
+						</div>
+					<?php
+				break;
+			}
+		}
+	} else {
+		add_error("No organisations have been selected for deletion. You will be redirected to the system settings page in 5 seconds, or you may <a href=\"".ENTRADA_URL."/admin/settings\">click here</a> if you do not wish to wait.");
+		echo display_error();
+		$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/settings\'', 5000)";
 	}
 
-	header("Location: ".ENTRADA_URL."/admin/settings");
-	exit;
+
+	
 }

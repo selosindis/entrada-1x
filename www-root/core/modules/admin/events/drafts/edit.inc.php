@@ -477,13 +477,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					$url = "";
 					$accessible = true;
 					$administrator = false;
-					if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update")) {
-						$administrator = true;
-						$url = ENTRADA_URL."/admin/events?section=edit&mode=draft&id=".$result["devent_id"];
-					} else if ($ENTRADA_ACL->amIAllowed(new EventContentResource($result["devent_id"], $result["course_id"], $result["organisation_id"]), "update")) {
-						$url = ENTRADA_URL."/admin/events?section=content&id=".$result["devent_id"];
-					}
-
+					
+					$url = ENTRADA_URL."/admin/events?section=edit&mode=draft&id=".$result["devent_id"];
+					
 					if ((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {
 						$accessible = false;
 					}

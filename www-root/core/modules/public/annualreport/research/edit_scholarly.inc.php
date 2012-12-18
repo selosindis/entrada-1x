@@ -71,16 +71,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Description</strong> field is required.";
 					}
-					if($ENTRADA_USER->getClinical()) {
-						/**
-						 * Required field "category" / Category
-						 */
-						if((isset($_POST["location"])) && ($location = clean_input($_POST["location"], array("notags", "trim")))) {
-							$PROCESSED["location"] = $location;
-						} else {
-							$ERROR++;
-							$ERRORSTR[] = "The <b>Category</b> field is required.";
-						}
+					/**
+					 * Required field "category" / Category
+					 */
+					if((isset($_POST["location"])) && ($location = clean_input($_POST["location"], array("notags", "trim")))) {
+						$PROCESSED["location"] = $location;
+					} else {
+						$ERROR++;
+						$ERRORSTR[] = "The <b>Category</b> field is required.";
 					}
 					/**
 					 * Required field "year_reported" / Year Reported.
@@ -206,9 +204,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>
-					<?php
-						if($ENTRADA_USER->getClinical()) {
-					?>
 					<tr>
 						<td></td>
 						<td style="vertical-align: top"><label for="category" class="form-required">Category</label></td>
@@ -224,12 +219,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						?>
 						</td>
 					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<?php
-						}
-					?>
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>

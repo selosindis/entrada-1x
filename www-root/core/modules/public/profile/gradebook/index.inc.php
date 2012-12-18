@@ -81,12 +81,14 @@ switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
 	break;
 }
 
-$cohort = groups_get_cohort($ENTRADA_USER->getID());
+$group_ids = groups_get_enrolled_group_ids($ENTRADA_USER->getId());
+
+$group_ids_string = implode(', ',$group_ids);
 $query = "	SELECT a.*, COUNT(b.`assessment_id`) AS `assessments` 
 			FROM `courses` AS a
 			JOIN `assessments` AS b
 			ON a.`course_id` = b.`course_id`
-			AND b.`cohort` = ".$db->qstr($cohort["group_id"])."
+			AND b.`cohort` IN (".$group_ids_string.")
 			AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
 			AND (b.`release_until` = '0' OR b.`release_until` > ".$db->qstr(time()).")
 			AND b.`show_learner` = '1'

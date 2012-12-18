@@ -76,12 +76,14 @@ switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
 }
 
 if ($COURSE_ID) {
-	
+	$group_ids = groups_get_enrolled_group_ids($ENTRADA_USER->getId());
+
+	$group_ids_string = implode(', ',$group_ids);	
 	$query = "	SELECT b.*, c.*, d.`handler` 
 				FROM `courses` AS a
 				JOIN `assessments` AS b
 				ON a.`course_id` = b.`course_id`
-				AND b.`cohort` = ".$db->qstr($ENTRADA_USER->getCohort())."
+				AND b.`cohort` IN(".$group_ids_string.")
 				JOIN `assessment_grades` AS c
 				ON b.`assessment_id` = c.`assessment_id`
 				AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."

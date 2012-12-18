@@ -37,7 +37,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	// Meta information for this page.
-	$PAGE_META["title"]			= "Research Add";
+	$PAGE_META["title"]			= "Add Research Grant";
 	$PAGE_META["description"]	= "Research portion of your annual report should be entered / located here.";
 	$PAGE_META["keywords"]		= "";
 	

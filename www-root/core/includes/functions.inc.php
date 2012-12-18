@@ -12750,6 +12750,7 @@ function getContributionTypes() {
 
     $query = "SELECT *
 	FROM `ar_lu_contribution_types`
+	WHERE `visible` = '1'
 	ORDER BY `contribution_type` ASC";
 
     $results = $db->GetAll($query);
@@ -12766,7 +12767,8 @@ function getContributionRoles() {
     global $db;
 
     $query = "SELECT *
-	FROM `ar_lu_contribution_roles`
+	FROM `ar_lu_contribution_roles` 
+	WHERE `visible` = '1'
 	ORDER BY `contribution_role` ASC";
 
     $results = $db->GetAll($query);
@@ -12784,7 +12786,7 @@ function getDegreeTypes() {
 
     $query = "SELECT *
 	FROM `ar_lu_degree_types`
-	WHERE `visible` = '1'
+	WHERE `visible` = '1' OR `visible` = '2'
 	ORDER BY `degree_type` ASC";
 
     $results = $db->GetAll($query);

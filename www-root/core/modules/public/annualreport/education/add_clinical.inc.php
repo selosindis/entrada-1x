@@ -112,6 +112,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				}
 			}
 			/**
+			 * Non-required field "research_percentage" / Research Percentage.
+			 */
+			if((isset($_POST["research_percentage"])) && ($research_percentage = clean_input($_POST["research_percentage"], array("notags", "trim")))) {
+				if($research_percentage) {
+					$PROCESSED["research_percentage"] = 1;
+				} else {
+					$PROCESSED["research_percentage"] = 0;
+				}
+			} else {
+				$PROCESSED["research_percentage"] = 0;	
+			}
+			/**
 			 * Required field "description" / Description			 
 			 */
 			if((isset($_POST["description"])) && ($description = clean_input($_POST["description"], array("notags", "trim")))) {
@@ -226,8 +238,28 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 					}
 				?>
 				</select>
+				<script>
+			    	jQuery(function($) {
+							jQuery('#level').change(function() {
+								if(jQuery(':selected', this).text() == "Clinical Research Fellow") {
+									jQuery('#research_percentage_details').show();
+								} else {
+									jQuery('#research_percentage_details').hide();
+									jQuery('input[name=research_percentage]').attr('checked', false);
+								}
+							}).trigger('change');
+			    	});
+				</script>
 				</td>
 			</tr>
+			<tr id="research_percentage_details" style="display: none;">
+				<td></td>
+				<td><label for="research_percentage">Research > 75%</label></td>
+				<td>
+					<input type="checkbox" id="research_percentage" name="research_percentage" style="vertical-align:0px;">
+					<span class="content-small">Check this box when clinical trainee devotes 75% or more of their time to research</span>
+				</td>
+			</tr>			
 			<tr>
 				<td></td>
 				<td style="vertical-align: top"><label for="level_description" class="form-nrequired">Level Description</label></td>				

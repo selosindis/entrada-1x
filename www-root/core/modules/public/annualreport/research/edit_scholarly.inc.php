@@ -45,9 +45,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		$query	= "SELECT * FROM `ar_scholarly_activity` WHERE `scholarly_activity_id`=".$db->qstr($RESEARCH_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 		$result	= $db->GetRow($query);
 		if($result) {
-			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/research?section=edit_scholarly", "title" => "Edit Scholarly Activity");
+			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/research?section=edit_scholarly", "title" => "Edit Scholarly Research Activity");
 			
-			echo "<h1>Edit Scholarly Activity</h1>\n";
+			echo "<h1>Edit Scholarly Research Activity</h1>\n";
 
 			// Error Checking
 			switch($STEP) {
@@ -71,7 +71,17 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Description</strong> field is required.";
 					}
-					
+					if($ENTRADA_USER->getClinical()) {
+						/**
+						 * Required field "category" / Category
+						 */
+						if((isset($_POST["location"])) && ($location = clean_input($_POST["location"], array("notags", "trim")))) {
+							$PROCESSED["location"] = $location;
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "The <b>Category</b> field is required.";
+						}
+					}
 					/**
 					 * Required field "year_reported" / Year Reported.
 					 */
@@ -193,6 +203,33 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						<td style="vertical-align: top"><label for="description" class="form-required">Description</label></td>
 						<td><input type="text" id="description" name="description" value="<?php echo ((isset($scholarlyResult["description"])) ? html_encode($scholarlyResult["description"]) : html_encode($PROCESSED["description"])); ?>" maxlength="255" style="width: 95%" /></td>						
 					</tr>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<?php
+						if($ENTRADA_USER->getClinical()) {
+					?>
+					<tr>
+						<td></td>
+						<td style="vertical-align: top"><label for="category" class="form-required">Category</label></td>
+						<td>
+						<?php
+							if($PROCESSED["location"] == "External" || $scholarlyResult["location"] == "External") {
+								echo "<input type=\"radio\" id=\"location\" name=\"location\" value=\"Internal\"/> Internal to Queen's<br>
+								<input type=\"radio\" id=\"location\" name=\"location\" value=\"External\" CHECKED /> External";
+							} else {
+								echo "<input type=\"radio\" id=\"location\" name=\"location\" value=\"Internal\" CHECKED /> Internal to Queen's<br>
+								<input type=\"radio\" id=\"location\" name=\"location\" value=\"External\"/> External";
+							}
+						?>
+						</td>
+					</tr>
+					<tr>
+						<td colspan="3">&nbsp;</td>
+					</tr>
+					<?php
+						}
+					?>
 					<tr>
 						<td colspan="3">&nbsp;</td>
 					</tr>

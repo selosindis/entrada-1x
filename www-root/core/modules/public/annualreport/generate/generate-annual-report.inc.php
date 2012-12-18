@@ -1656,14 +1656,8 @@ else
 			<tr>
 				<td class="delete" id="colDelete" width="2%">#</td>
 				<td class="course_name" id="coltype" width="23%">Activity Type</td>
-				<?php
-				if($clinical_value == true) {
-				?>
-					<td class="full_description" id="coldescription" width="50%">Description</td>
-					<td class="full_description" id="coldescription" width="25%">Category</td>
-				<?php } else { ?>
-					<td class="full_description" id="coldescription" width="75%">Description</td>
-				<?php } ?>
+				<td class="full_description" id="coldescription" width="50%">Description</td>
+				<td class="full_description" id="coldescription" width="25%">Category</td>
 			</tr>
 		</thead>
 	<tbody>	
@@ -1674,12 +1668,8 @@ else
 			echo "<tr>\n";
 			echo "	<td class=\"delete\" width=\"2%\">".$ctr."&nbsp;</td>\n";					
 			echo "	<td class=\"course_name\" width=\"23%\">".html_encode($result['scholarly_activity_type'])."&nbsp;</td>";
-			if($clinical_value == true) {			
 				echo "	<td class=\"full_description\" width=\"50%\">".html_encode($result['description'])."&nbsp;</td>\n";
 				echo "	<td class=\"full_description\" width=\"25%\">".html_encode($result['location'])."&nbsp;</td>\n";
-			} else {
-				echo "	<td class=\"full_description\" width=\"75%\">".html_encode($result['description'])."&nbsp;</td>\n";
-			}
 			echo "</tr>";
 			$ctr++;
 		}

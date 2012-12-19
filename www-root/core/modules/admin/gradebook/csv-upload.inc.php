@@ -42,13 +42,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	}
 
 	if ($ASSESSMENT_ID) {
-		   $url = ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("step" => false, "section" => "grade", "assessment_id" => $ASSESSMENT_ID));			
-		   if ($_FILES["file"]["error"] > 0) {
+		   	$url = ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("step" => false, "section" => "grade", "assessment_id" => $ASSESSMENT_ID));			
+		   	if ($_FILES["file"]["error"] > 0) {
 				add_error("Error occurred while uploading file.");
 				//$_FILES["file"]["error"]
-			} elseif($_FILES["file"]["type"] != "text/csv") {
+			} elseif(!in_array($_FILES["file"]["type"], array("text/csv", "application/vnd.ms-excel","text/comma-separated-values","application/csv", "application/excel", "application/vnd.ms-excel", "application/vnd.msexcel","application/octet-stream"))) {
 				add_error("Invalid <strong>file type</strong> uploaded. Must be a CSV file in the proper format.");
-
 			} else {
 
 				$lines = file($_FILES["file"]["tmp_name"]);

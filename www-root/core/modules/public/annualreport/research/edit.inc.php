@@ -46,7 +46,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		
 		$result	= $db->GetRow($query);
 		if($result) {
-			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/research?section=edit", "title" => "Edit Research");
+			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/annualreport/research?section=edit", "title" => "Edit Research Grant");
 			
 			echo "<h1>Edit Research</h1>\n";
 

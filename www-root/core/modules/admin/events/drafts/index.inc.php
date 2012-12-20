@@ -75,6 +75,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		$query = "	SELECT *
 					FROM `drafts`
 					WHERE `draft_id` IN ('".implode("', '", $drafts)."')
+					AND `status` != 'closed'
 					ORDER BY `created` ASC";
 		$drafts = $db->GetAll($query); 
 		?>

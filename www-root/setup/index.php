@@ -58,7 +58,6 @@ if ((isset($_GET["step"])) && ((int) trim($_GET["step"]))) {
  * A list of valid database adapters that Entrada can utilize.
  */
 $DATABASE_ADAPTERS = array(
-	"mysql" => "MySQL",
 	"mysqli" => "MySQL Improved",
 	"pdo_mysql" => "PDO MySQL"
 );

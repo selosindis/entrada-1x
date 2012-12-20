@@ -236,7 +236,7 @@ function shares_file_module_access($csfile_id = 0, $section = "") {
 				 * Don't worry about checking the release dates if the person viewing
 				 * the photo is the photo uploader.
 				 */
-				if ($ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
+				if (!isset($ENTRADA_USER) || !$ENTRADA_USER || $ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
 					if ((!$release_date = (int) $result["release_date"]) || ($release_date <= time())) {
 						if ((!$release_until = (int) $result["release_until"]) || ($release_until > time())) {
 							/**

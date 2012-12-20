@@ -584,43 +584,40 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 				$result = $db->GetRow($query);
 				if ($result) {
 					return true;
-				} else {
-					return false;
 				}
-			} else {
-                $query = "  SELECT *
-                            FROM `course_audience`
-                            WHERE `course_id` = " . $db->qstr($course_id);
-                $results = $db->GetAll($query);
-                if ($results) {
-                    foreach ($results as $result) {
-                        switch ($result["audience_type"]) {
-                            case "proxy_id":
-                                if ($result["audience_value"] == $user_id) {
-                                    return true;
-                                }
-                                break;
-                            case "group_id":
-                                $query = "  SELECT *
-                                            FROM `group_members`
-                                            WHERE `group_id` = ".$db->qstr($result["audience_value"]) . "
-                                            AND `proxy_id` = " . $db->qstr($user_id) . "
-                                            AND `member_active` = 1
-                                            AND ((UNIX_TIMESTAMP() BETWEEN `start_date` AND `finish_date`) OR (start_date = 0 AND finish_date = 0)
-                                            OR (start_date IS NULL AND finish_date IS NULL))";
-                                $result = $db->GetRow($query);
+			}
+			$query = "  SELECT *
+						FROM `course_audience`
+						WHERE `course_id` = " . $db->qstr($course_id);
+			$results = $db->GetAll($query);
+			if ($results) {
+				foreach ($results as $result) {
+					switch ($result["audience_type"]) {
+						case "proxy_id":
+							if ($result["audience_value"] == $user_id) {
+								return true;
+							}
+							break;
+						case "group_id":
+							$query = "  SELECT *
+										FROM `group_members`
+										WHERE `group_id` = ".$db->qstr($result["audience_value"]) . "
+										AND `proxy_id` = " . $db->qstr($user_id) . "
+										AND `member_active` = 1
+										AND ((UNIX_TIMESTAMP() BETWEEN `start_date` AND `finish_date`) OR (start_date = 0 AND finish_date = 0)
+										OR (start_date IS NULL AND finish_date IS NULL))";
+							$result = $db->GetRow($query);
 
-                                if ($result) {
-                                    return true;
-                                }
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                }
-                return false;
-            }
+							if ($result) {
+								return true;
+							}
+							break;
+						default:
+							break;
+					}
+				}
+			}
+			return false;
         }
     }
 }

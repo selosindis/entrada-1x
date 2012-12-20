@@ -107,7 +107,8 @@ class CsvImporter {
 			
 			$query = "	SELECT `devent_id`
 						FROM `draft_events`
-						WHERE `event_id` = ".$db->qstr($event_id);
+						WHERE `event_id` = ".$db->qstr($event_id)."
+						AND `draft_id` = ".$db->qstr($this->draft_id);
 			if ($result = $db->GetRow($query)) {
 				$output[$event_id]["devent_id"] = $result["devent_id"];	
 			}

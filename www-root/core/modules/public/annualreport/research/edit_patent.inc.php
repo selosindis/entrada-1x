@@ -71,7 +71,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Description</strong> field is required.";
 					}
-					
 					/**
 					 * Required field "year_reported" / Year Reported.
 					 */

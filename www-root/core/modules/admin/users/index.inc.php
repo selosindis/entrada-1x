@@ -52,7 +52,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	$query_counter		= "";
 	$query_search		= "";
 	$show_results		= false;
-	
+
 	/**
 	 * Determine the type of search that is requested.
 	 */
@@ -62,7 +62,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/selectchained.js\"></script>\n";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
-	
+
 	$i = count($HEAD);
 	$HEAD[$i]  = "<script type=\"text/javascript\">\n";
 	$HEAD[$i] .= "addListGroup('account_type', 'cs-top');\n";
@@ -82,7 +82,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	$HEAD[$i] .= "</script>\n";
 
 	$ONLOAD[] = "initListGroup('account_type', $('group'), $('role'))";
-			
+
 	switch ($search_type) {
 		case "browse-group" :
 			$browse_group	= false;
@@ -103,14 +103,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			}
 
 			if (!$ERROR) {
-				$query_counter	= "	SELECT COUNT(a.`id`) AS `total_rows`
+				$query_counter	= "	SELECT COUNT(DISTINCT(a.`id`)) AS `total_rows`
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
 									AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 									AND b.`group` = ".$db->qstr($browse_group)."
-									".(($browse_role) ? "AND b.`role` = ".$db->qstr($browse_role) : "");
+									".(($browse_role) ? "AND b.`role` = ".$db->qstr($browse_role) : "")."
+									GROUP BY a.`id`";
 				$query_search	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -119,6 +120,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 									AND b.`group` = ".$db->qstr($browse_group)."
 									".(($browse_role) ? "AND b.`role` = ".$db->qstr($browse_role) : "")."
+									GROUP BY a.`id`
 									ORDER BY `fullname` ASC
 									LIMIT %s, %s";
 			}
@@ -142,7 +144,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			}
 
 			if (!$ERROR) {
-				$query_counter = "	SELECT COUNT(a.`id`) AS `total_rows`
+				$query_counter = "	SELECT COUNT(DISTINCT(a.`id`)) AS `total_rows`
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
@@ -150,7 +152,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									LEFT JOIN `".AUTH_DATABASE."`.`user_departments` AS c
 									ON c.`user_id` = a.`id`
 									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									AND c.`dep_id` = ".$db->qstr($browse_department);
+									AND c.`dep_id` = ".$db->qstr($browse_department)."
+									GROUP BY a.`id`";
 				$query_search = "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -160,6 +163,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									ON c.`user_id` = a.`id`
 									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 									AND c.`dep_id` = ".$db->qstr($browse_department)."
+									GROUP BY a.`id`
 									ORDER BY `fullname` ASC
 									LIMIT %s, %s";
 			}
@@ -172,8 +176,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			if (!$ERROR) {
 				$search_query_text = "Newest ".(int) $browse_number." User".(($browse_number != 1) ? "s" : "");
 
-				$query_counter	= "SELECT ".(int) $browse_number." AS `total_rows`";
-				$query_search	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
+				$query_counter = "	SELECT ".(int) $browse_number." AS `total_rows`";
+				$query_search = "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
@@ -202,7 +206,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										OR a.`email` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`firstname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
-										GROUP BY a.`id`) as t";					
+										GROUP BY a.`id`) as t";
 					$query_search	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -215,7 +219,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
 										GROUP BY a.`id`
 										ORDER BY `fullname` ASC
-										LIMIT %s, %s";					
+										LIMIT %s, %s";
 				} elseif ($_GET["search-type"] == "active") {
 					$query_counter	= "	SELECT count(*) as `total_rows` FROM (SELECT COUNT(a.`id`) AS `total_rows`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -586,9 +590,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 		 */
 		$limit_parameter = (int) (($results_per_page * $page_current) - $results_per_page);
 		$query	= sprintf($query_search, $limit_parameter, $results_per_page);
-		
+
 		$results	= $db->GetAll($query);
-		
+
 		if ($results) {
 			?>
 			<div style="margin-top: 10px; background-color: #FAFAFA; padding: 3px; border: 1px #9D9D9D solid; border-bottom: none">
@@ -631,7 +635,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					if ($result["account_active"] == "false") {
 						$can_login = false;
 					}
-					
+
 					if (($access_starts = (int) $result["access_starts"]) && ($access_starts > time())) {
 						$can_login = false;
 					}

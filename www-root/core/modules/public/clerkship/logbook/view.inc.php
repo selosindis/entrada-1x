@@ -102,6 +102,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			break;
 			case 1 :
 			default :
+				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/windows/window.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+				$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/windows/default.css\" rel=\"stylesheet\" type=\"text/css\" />";
+				$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/windows/medtech.css\" rel=\"stylesheet\" type=\"text/css\" />";
 			    $clinical_rotation	 = clerkship_get_rotation($rotation_id);
 			    $fullname = $db->GetOne("SELECT CONCAT_WS(' ', `firstname`, `lastname`) FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($PROXY_ID));
 			    echo "<h1>".$clinical_rotation["title"]." Rotation Patient Encounters Report</h1>\n";

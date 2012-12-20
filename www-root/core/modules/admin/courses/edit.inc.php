@@ -102,7 +102,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			// Error Checking
 			switch($STEP) {
 				case 2 :
-					if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $ENTRADA_USER->getActiveOrganisation()), "update")) {
+					if ($ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $ENTRADA_USER->getActiveOrganisation()), "update")) {
 						$PROCESSED["organisation_id"] = $ENTRADA_USER->getActiveOrganisation();
 					} else {
 						add_error("You do not have permission to update a course for this organisation. This error has been logged and will be investigated.");

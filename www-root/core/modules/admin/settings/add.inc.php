@@ -372,7 +372,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			</script>
 
 			<h1>Add Organisation</h1>
-			<form id="addOrganisationForm" action="<?php echo ENTRADA_URL; ?>/admin/settings/organisations?section=add&amp;step=2" method="post" class="form-horizontal">
+			<form id="addOrganisationForm" action="<?php echo ENTRADA_URL; ?>/admin/settings?section=add&amp;step=2" method="post" class="form-horizontal">
 			<div class="control-group">
 				<label for="name_id" class="control-label form-required">Organisation Name:</label>
 				<div class="controls">

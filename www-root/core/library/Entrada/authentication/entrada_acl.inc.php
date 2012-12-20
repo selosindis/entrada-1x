@@ -604,8 +604,10 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 										WHERE `group_id` = ".$db->qstr($result["audience_value"]) . "
 										AND `proxy_id` = " . $db->qstr($user_id) . "
 										AND `member_active` = 1
-										AND ((UNIX_TIMESTAMP() BETWEEN `start_date` AND `finish_date`) OR (start_date = 0 AND finish_date = 0)
-										OR (start_date IS NULL AND finish_date IS NULL))";
+										AND (
+											(UNIX_TIMESTAMP() >= `start_date` OR `start_date` = 0) AND 
+											(UNIX_TIMESTAMP() <= `finish_date` OR `finish_date` = 0)
+										)";
 							$result = $db->GetRow($query);
 
 							if ($result) {

@@ -2160,15 +2160,22 @@ class Evaluation {
 															AND b.`target_type` = 'proxy_id'
 															AND b.`evaluation_id` = ".$db->qstr($evaluation_id)."
 															WHERE a.`id` = ".$db->qstr($evaluation_target_record["target_value"])."
-															GROUP BY b.`id`";
+															GROUP BY a.`id`";
 												$evaluation_target_user = $db->GetRow($query);
-												$evaluation_targets[] = $user_data;
+												$evaluation_targets[] = $evaluation_target_user;
 											}
 										}
 									}
 								}
 							break;
 						}
+						$sort_lastname = array();
+						$sort_firstname = array();
+						foreach ($evaluation_targets as $temp_target) {
+							$sort_lastname[] = $temp_target["lastname"];
+							$sort_firstname[] = $temp_target["firstname"];
+						}
+						array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
 					}
 				break;
 				case "preceptor" :
@@ -2299,6 +2306,13 @@ class Evaluation {
 							}
 						}
 					}
+					$sort_lastname = array();
+					$sort_firstname = array();
+					foreach ($evaluation_targets as $temp_target) {
+						$sort_lastname[] = $temp_target["lastname"];
+						$sort_firstname[] = $temp_target["firstname"];
+					}
+					array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
 				break;
 				case "teacher" :
 					$query = "SELECT ".($simple ? "a.`target_value` as `proxy_id`" : "*, a.`target_value` as `proxy_id`")." FROM `evaluation_targets` AS a
@@ -2323,6 +2337,13 @@ class Evaluation {
 							}
 						}
 					}
+					$sort_lastname = array();
+					$sort_firstname = array();
+					foreach ($evaluation_targets as $temp_target) {
+						$sort_lastname[] = $temp_target["lastname"];
+						$sort_firstname[] = $temp_target["firstname"];
+					}
+					array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
 				break;
 				case "course" :
 				default :
@@ -2337,7 +2358,8 @@ class Evaluation {
 									AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
 									AND `progress_value` = 'complete'
 								)" : "")."
-								AND a.`target_active` = 1";
+								AND a.`target_active` = 1
+								ORDER BY b.`course_code` ASC";
 					$evaluation_target_courses = $db->GetAll($query);
 					if ($evaluation_target_courses) {
 						foreach ($evaluation_target_courses as $evaluation_target_course) {
@@ -2808,9 +2830,10 @@ class Evaluation {
 									if (isset($max_submittable) && $max_submittable) {
 										$query = "SELECT `eprogress_id` FROM `evaluation_progress` 
 													WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
+													AND `progress_value` = 'complete'
 													AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 										$eprogress_ids = $db->GetAll($query);
-										if ($eprogress_ids && $max_submittable == count($eprogress_ids)) {
+										if ($eprogress_ids && $max_submittable <= count($eprogress_ids)) {
 											$permissions[] = array("target_record_id" => $ENTRADA_USER->getID(), "contact_type" => "target");
 										}
 									}
@@ -2899,8 +2922,12 @@ class Evaluation {
 					$evaluation["permissions"] = $permissions;
 					$evaluation["admin"] = false;
 					$output_evaluations[] = $evaluation;
+				} elseif(isset($progress_records)) {
+					unset($progress_records);
 				}
-			} elseif ($ENTRADA_ACL->amIAllowed(new EvaluationResource($evaluation["evaluation_id"], true), 'update')) {
+			}
+			
+			if (!isset($progress_records) && $ENTRADA_ACL->amIAllowed(new EvaluationResource($evaluation["evaluation_id"], true), 'update')) {
 				$permissions = array(array("contact_type" => "reviewer"));
 				$progress_records = Evaluation::getProgressRecordsByPermissions($evaluation["evaluation_id"], $permissions, true);
 				if (isset($progress_records) && count($progress_records)) {
@@ -2911,6 +2938,7 @@ class Evaluation {
 					$output_evaluations[] = $evaluation;
 				}
 			}
+			unset($progress_records);
 		}
 		
 		return $output_evaluations;
@@ -3209,6 +3237,7 @@ class Evaluation {
 					FROM `evaluation_forms` AS a
 					JOIN `evaluations_lu_targets` AS b
 					ON a.`target_id` = b.`target_id`
+					WHERE a.`form_active` = 1
 					GROUP BY a.`eform_id`";
 		$temp_evaluation_forms = $db->GetAll($query);
 		foreach ($temp_evaluation_forms as $evaluation_form) {

@@ -127,6 +127,20 @@ if ($RECORD_ID) {
 				 * Get the number of completed attempts this user has made.
 				 */
 				$completed_attempts = evaluations_fetch_attempts($RECORD_ID);
+				
+				$evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID());
+				$max_submittable = $evaluation_record["max_submittable"];
+				if ($evaluation_targets_list) {
+					$evaluation_targets_count = count($evaluation_targets_list);
+					if (array_search($evaluation_record["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation_record["max_submittable"]) {
+						$max_submittable = ($evaluation_targets_count * (int) $evaluation_record["max_submittable"]);
+					} elseif ($evaluation_record["target_shortname"] == "peer" && $evaluation_record["max_submittable"] == 0) {
+						$max_submittable = $evaluation_targets_count;
+					}
+					if (isset($max_submittable) && $max_submittable) {
+						$evaluation_record["max_submittable"] = $max_submittable;
+					}
+				}
 
 				/**
 				 * Providing they can still still make attempts at this evaluation, allow them to continue.

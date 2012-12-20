@@ -133,9 +133,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 															$new_efresponse_ids_string .= ($new_efresponse_ids_string ? ", " : "").($db->qstr($response_criteria["efresponse_id"]));
 														}
 													}
-												} else {
-													$ERROR++;
-													application_log("error", "Unable to find efrubric_id [".$rubric["efrubric_id"]."] evaluation_form_reseponse_criteria record when attempting to copy eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
 												}
 											} else {
 												$ERROR++;
@@ -157,9 +154,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									WHERE `eform_id` = ".$db->qstr($FORM_ID);
 						$evaluation_form_contacts = $db->GetAll($query);
 						if ($evaluation_form_contacts) {
-							foreach ($temp_evaluation_form_contacts as $temp_evaluation_form_contact) {
+							foreach ($evaluation_form_contacts as $evaluation_form_contact) {
 								$temp_evaluation_form_contacts = $evaluation_form_contact;
-								$temp_evaluation_form_contacts["efcontact_id"] = NULL;
+								unset($temp_evaluation_form_contacts["econtact_id"]);
 								$temp_evaluation_form_contacts["eform_id"] = $new_eform_id;
 								if (!$db->AutoExecute("evaluation_form_contacts", $temp_evaluation_form_contacts, "INSERT")) {
 									$ERROR++;

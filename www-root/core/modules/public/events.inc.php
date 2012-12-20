@@ -281,7 +281,7 @@ if (!defined("PARENT_INCLUDED")) {
 					}
 					
 					if ($transverse) {
-						$transversal_ids = events_fetch_transversal_ids($EVENT_ID, ($community_id ? $community_id : false));
+						$transversal_ids = events_fetch_transversal_ids($EVENT_ID, (isset($community_id) && $community_id ? $community_id : false));
 					}
 					echo "<div class=\"no-printing\">\n";
 					if (($transverse) && count($transversal_ids)) {
@@ -1145,7 +1145,6 @@ if ($topic_results) { ?>
 				</thead>
 				<tbody>
 					<?php
-					$rid = $learning_events["rid"];
 					$count_modified = 0;
 
 					foreach ($learning_events["events"] as $result) {
@@ -1176,8 +1175,6 @@ if ($topic_results) { ?>
 							echo "	<td class=\"attachment\">".(($attachments) ? "<img src=\"".ENTRADA_RELATIVE."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" title=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
 							echo "</tr>\n";
 						}
-
-						$rid++;
 					}
 					?>
 				</tbody>

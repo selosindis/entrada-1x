@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS `ar_book_chapter_mono` (
   `source` varchar(200) NOT NULL,
   `author_list` varchar(200) NOT NULL,
   `editor_list` varchar(200) DEFAULT NULL,
+  `category` varchar(10) DEFAULT NULL,
   `epub_url` text,
   `status_date` varchar(8) DEFAULT NULL,
   `epub_date` varchar(8) NOT NULL,
@@ -45,10 +46,11 @@ CREATE TABLE IF NOT EXISTS `ar_clinical_education` (
   `location` varchar(150) NOT NULL DEFAULT '',
   `location_description` varchar(255) DEFAULT NULL,
   `average_hours` int(11) NOT NULL DEFAULT '0',
+  `research_percentage` int(1) DEFAULT '0',
   `description` text NOT NULL,
   `year_reported` int(4) NOT NULL DEFAULT '0',
   `proxy_id` int(11) DEFAULT NULL,
-  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
   PRIMARY KEY (`clinical_education_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -268,6 +270,7 @@ INSERT INTO `ar_lu_consult_locations` (`id`, `consult_location`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_contribution_roles` (
   `id` int(11) NOT NULL auto_increment,
   `contribution_role` varchar(50) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -293,6 +296,7 @@ INSERT INTO `ar_lu_contribution_roles` (`id`, `contribution_role`) VALUES
 CREATE TABLE IF NOT EXISTS `ar_lu_contribution_types` (
   `id` int(11) NOT NULL auto_increment,
   `contribution_type` varchar(50) NOT NULL,
+  `visible` int(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -642,6 +646,7 @@ CREATE TABLE IF NOT EXISTS `ar_non_peer_reviewed_papers` (
   `title` text NOT NULL,
   `source` varchar(200) NOT NULL,
   `author_list` varchar(200) NOT NULL,
+  `category` varchar(10) DEFAULT NULL,
   `epub_url` text,
   `status_date` varchar(8) DEFAULT NULL,
   `epub_date` varchar(8) NOT NULL,
@@ -715,6 +720,7 @@ CREATE TABLE IF NOT EXISTS `ar_peer_reviewed_papers` (
   `title` text NOT NULL,
   `source` varchar(200) NOT NULL,
   `author_list` varchar(200) NOT NULL,
+  `category` varchar(10) DEFAULT NULL,
   `epub_url` text,
   `status_date` varchar(8) DEFAULT NULL,
   `epub_date` varchar(8) NOT NULL,
@@ -845,9 +851,10 @@ CREATE TABLE IF NOT EXISTS `ar_scholarly_activity` (
   `scholarly_activity_id` int(11) NOT NULL auto_increment,
   `scholarly_activity_type` varchar(255) NOT NULL DEFAULT '',
   `description` text NOT NULL,
+  `location` varchar(25) DEFAULT NULL,
   `year_reported` int(4) NOT NULL DEFAULT '0',
   `proxy_id` int(11) DEFAULT NULL,
-  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
   PRIMARY KEY (`scholarly_activity_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -2243,6 +2250,7 @@ CREATE TABLE IF NOT EXISTS `events` (
   `release_until` bigint(64) NOT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
+  `draft_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`event_id`),
   KEY `course_id` (`course_id`),
   KEY `region_id` (`region_id`),

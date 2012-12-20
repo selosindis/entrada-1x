@@ -223,7 +223,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 						<?php
 							$degreeArray = getDegreeTypes();
 							foreach($degreeArray as $degreeListValue) {
-								echo "<option value=\"".$degreeListValue["degree_type"]."\"".((($graduateSupResult["degree"] == $degreeListValue["degree_type"]) || ($PROCESSED["degree"] == $degreeListValue["degree_type"])) ? " selected=\"selected\"" : "").">".$degreeListValue["degree_type"]."</option>\n";
+								if($ENTRADA_USER->getClinical() && $degreeListValue["visible"] == '1') {
+									echo "<option value=\"".$degreeListValue["degree_type"]."\"".((($graduateSupResult["degree"] == $degreeListValue["degree_type"]) || ($PROCESSED["degree"] == $degreeListValue["degree_type"])) ? " selected=\"selected\"" : "").">".$degreeListValue["degree_type"]."</option>\n";
+								} else if(!$ENTRADA_USER->getClinical() && ($degreeListValue["visible"] == '1' || $degreeListValue["visible"] == '2')) {
+									echo "<option value=\"".$degreeListValue["degree_type"]."\"".((($graduateSupResult["degree"] == $degreeListValue["degree_type"]) || ($PROCESSED["degree"] == $degreeListValue["degree_type"])) ? " selected=\"selected\"" : "").">".$degreeListValue["degree_type"]."</option>\n";
+								}
 							}
 							echo "</select>";
 						?>

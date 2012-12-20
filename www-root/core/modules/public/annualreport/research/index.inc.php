@@ -767,7 +767,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 		    }
 		}
 		
-		<?php $fields = "ar_patent_activity,patent_activity_id,patent_activity_type,description,location,year_reported"; ?>
+		<?php $fields = "ar_patent_activity,patent_activity_id,patent_activity_type,description,year_reported"; ?>
 		patent_grid = jQuery("#flex8").flexigrid
 		(
 			{
@@ -775,16 +775,14 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			dataType: 'json',
 			method: 'POST',
 			colModel : [
-				{display: 'Type', name : 'patent_activity_type', width : 150, sortable : true, align: 'left'},
-				{display: 'Description', name : 'description', width : 270, sortable : true, align: 'left'},
-				{display: 'Location', name : 'location', width : 144, sortable : true, align: 'left'},
+				{display: 'Type', name : 'patent_activity_type', width : 175, sortable : true, align: 'left'},
+				{display: 'Description', name : 'description', width : 389, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editPatent}
 				],
 			searchitems : [
 				{display: 'Type', name : 'patent_activity_type'},
 				{display: 'Description', name : 'description'},
-				{display: 'Location', name : 'location'},
 				{display: 'Year', name : 'year_reported', isdefault: true}
 				],
 			sortname: "year_reported",

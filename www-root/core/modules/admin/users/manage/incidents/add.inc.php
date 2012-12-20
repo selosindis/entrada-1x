@@ -28,10 +28,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($PROXY_ID);
 		$user_record = $db->GetRow($query);
 		if ($user_record) {
-			$BREADCRUMB[] = array("url" => "", "title" => "Adding Incident");
-			
+			$BREADCRUMB[] = array("url" => "", "title" => "Add New Incident");
+
 			echo "<h1>Adding Incident</h1>\n";
-		
+
 			// Error Checking
 			switch ($STEP) {
 				case 2 :
@@ -58,7 +58,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					} else {
 						$PROCESSED["incident_severity"] = 1;
 					}
-					
+
 					/*
 					 * Required field "incident_status" / Incident Status.
 					 */
@@ -67,7 +67,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					} else {
 						$PROCESSED["incident_status"] = 0;
 					}
-					
+
 					/**
 					 * Required field "incident_date" / Incident Start (validated through validate_calendars function).
 					 * Non-required field "follow_up_date" / Incident Finish (validated through validate_calendars function).
@@ -76,7 +76,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					if ((isset($incident_date["start"])) && ((int) $incident_date["start"])) {
 						$PROCESSED["incident_date"] = (int) $incident_date["start"];
 					}
-					
+
 					if ((isset($incident_date["finish"])) && ((int) $incident_date["finish"])) {
 						$PROCESSED["follow_up_date"] = (int) $incident_date["finish"];
 					} else {
@@ -100,9 +100,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 							$SUCCESS++;
 							$SUCCESSSTR[] = "You have successfully updated the incident in the system.<br /><br />You will now be redirected to the user edit page for user id [".$PROXY_ID."]; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-							
+
 							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-							
+
 							application_log("success", "Proxy ID [".$ENTRADA_USER->getID()."] successfully updated the incident id [".$INCIDENT_ID."].");
 						} else {
 							$ERROR++;
@@ -111,7 +111,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							application_log("error", "Unable to update user incident [".$INCIDENT_ID."]. Database said: ".$db->ErrorMsg());
 						}
 					}
-					
+
 					if ($ERROR) {
 						$STEP = 1;
 					}
@@ -121,14 +121,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					continue;
 				break;
 			}
-			
+
 			// Display Page.
 			switch ($STEP) {
 				case 2 :
 					if ($NOTICE) {
 						echo display_notice();
 					}
-					
+
 					if ($SUCCESS) {
 						echo display_success();
 					}
@@ -136,11 +136,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				case 1 :
 				default :
 					if ($ERROR) {
-						echo display_error();	
+						echo display_error();
 					}
-					
+
 					if ($NOTICE) {
-						echo display_notice();	
+						echo display_notice();
 					}
 					?>
 					<h2>Incident Details</h2>
@@ -155,8 +155,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							<label for="incident_severity" class="control-label form-nrequired">Severity</label>
 							<div class="controls">
 								<select id="incident_severity" name="incident_severity" style="width: 85px">
-								<?php 
-								for ($i = 1; $i <= 5; $i++) { 
+								<?php
+								for ($i = 1; $i <= 5; $i++) {
 									echo "<option value=\"".$i."\"".(isset($PROCESSED["incident_severity"]) && ((int) $PROCESSED["incident_severity"]) == $i ? " selected=\"selected\"" : (((!isset($PROCESSED["incident_severity"])) && ($i == 3)) ? " selected=\"selected\"" : "")).">".$i."</option>";
 								}
 								?>

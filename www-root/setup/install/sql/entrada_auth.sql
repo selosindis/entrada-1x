@@ -36,6 +36,7 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('event', NULL, 'role', 'pcoordinator', 1, 1, NULL, NULL, NULL, 'CourseOwner'),
 ('event', NULL, 'role', 'pcoordinator', 1, NULL, NULL, 1, 1, 'EventOwner'),
 ('event', NULL, NULL, NULL, NULL, NULL, 1, NULL, NULL, 'EventEnrollment&NotGuest'),
+('event', NULL, 'group', 'student', NULL, NULL, 0, NULL, NULL, 'NotEventEnrollment'),
 ('eventcontent', NULL, 'role', 'pcoordinator', 1, NULL, NULL, 1, NULL, 'EventOwner'),
 ('coursecontent', NULL, 'role', 'director', 1, NULL, NULL, 1, NULL, 'CourseOwner'),
 ('coursecontent', NULL, 'role', 'lecturer', 1, NULL, NULL, 1, NULL, 'CourseOwner'),
@@ -117,8 +118,8 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('annualreportadmin', NULL, 'group:role', 'medtech:admin', NULL, 1, 1, 1, 1, NULL),
 ('gradebook', NULL, 'group', 'student', NULL, NULL, 1, NULL, NULL, NULL),
 ('metadata', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
-('evaluation', NULL, 'group', 'faculty', 1, 0, 1, 0, 0, 'IsEvaluated'),
-('evaluation', NULL, 'group', 'faculty', 1, 1, 1, 1, NULL, 'EvaluationReviewer'),
+('evaluation', NULL, 'group', 'faculty', 1, NULL, 1, NULL, NULL, 'IsEvaluated'),
+('evaluation', NULL, 'group', 'faculty', 1, NULL, 1, NULL, NULL, 'EvaluationReviewer'),
 ('evaluationform', NULL, 'group', 'faculty', 1, 1, 1, 1, NULL, 'EvaluationFormAuthor');
 
 CREATE TABLE IF NOT EXISTS `departments` (

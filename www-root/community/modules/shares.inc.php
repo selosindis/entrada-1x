@@ -236,7 +236,7 @@ function shares_file_module_access($csfile_id = 0, $section = "") {
 				 * Don't worry about checking the release dates if the person viewing
 				 * the photo is the photo uploader.
 				 */
-				if (!isset($ENTRADA_USER) || !$ENTRADA_USER || $ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
+				if (!$LOGGED_IN || $ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
 					if ((!$release_date = (int) $result["release_date"]) || ($release_date <= time())) {
 						if ((!$release_until = (int) $result["release_until"]) || ($release_until > time())) {
 							/**
@@ -421,7 +421,7 @@ function shares_file_navigation($cshare_id = 0, $csfile_id = 0) {
 					AND a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
 					AND a.`file_active` = '1'
 					".((!$LOGGED_IN) ? " AND c.`allow_public_read` = '1'" : (($COMMUNITY_MEMBER) ? ((!$COMMUNITY_ADMIN) ? " AND c.`allow_member_read` = '1'" : "") : " AND c.`allow_troll_read` = '1'"))."
-					".((!$COMMUNITY_ADMIN) ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "")."
+					".((!$COMMUNITY_ADMIN) ? ($LOGGED_IN ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR " : " AND (")."(a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "")."
 					ORDER BY ".$SORT_BY;
 		$results	= $db->GetAll($query);
 		if ($results) {

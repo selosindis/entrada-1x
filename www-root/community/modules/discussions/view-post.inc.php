@@ -206,7 +206,9 @@ if ($RECORD_ID) {
 				?>
 			</div>
 			<?php
-			add_statistic("community:".$COMMUNITY_ID.":discussions", "post_view", "cdtopic_id", $RECORD_ID);
+			if ($LOGGED_IN) {
+				add_statistic("community:".$COMMUNITY_ID.":discussions", "post_view", "cdtopic_id", $RECORD_ID);
+			}
 		} else {
 			if ($ERROR) {
 				echo display_error();

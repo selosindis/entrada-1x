@@ -114,14 +114,15 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 		foreach ($quizzes as $quiz_record) {
 			$quiz_attempts		= 0;
 			$total_questions	= quiz_count_questions($quiz_record["quiz_id"]);
-
-			$query				= "	SELECT *
-							FROM `quiz_progress`
-							WHERE `aquiz_id` = ".$db->qstr($quiz_record["aquiz_id"])."
-							AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
-			$progress_record	= $db->GetAll($query);
-			if ($progress_record) {
-				$quiz_attempts = count($progress_record);
+			if ($LOGGED_IN) {
+				$query				= "	SELECT *
+								FROM `quiz_progress`
+								WHERE `aquiz_id` = ".$db->qstr($quiz_record["aquiz_id"])."
+								AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+				$progress_record	= $db->GetAll($query);
+				if ($progress_record) {
+					$quiz_attempts = count($progress_record);
+				}
 			}
 
 			$exceeded_attempts	= ((((int) $quiz_record["quiz_attempts"] === 0) || ($quiz_attempts < $quiz_record["quiz_attempts"])) ? false : true);

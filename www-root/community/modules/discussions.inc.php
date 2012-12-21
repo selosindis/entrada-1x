@@ -194,7 +194,7 @@ function discussion_topic_module_access($cdtopic_id = 0, $section = "") {
 				 * Don't worry about checking the release dates if the person viewing
 				 * the post is the post author.
 				 */
-				if ($ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
+				if (!$LOGGED_IN || $ENTRADA_USER->getActiveId() != (int) $result["proxy_id"]) {
 					if ((!$release_date = (int) $result["release_date"]) || ($release_date <= time())) {
 						if ((!$release_until = (int) $result["release_until"]) || ($release_until > time())) {
 							/**

@@ -104,7 +104,7 @@ if ($RECORD_ID) {
 					AND `community_id` = ".$db->qstr($COMMUNITY_ID)."
 					AND `topic_active` = '1'
 					AND `cdtopic_parent` = '0'
-					".((!$COMMUNITY_ADMIN) ? " AND ((`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR (`release_date` = '0' OR `release_date` <= ".$db->qstr(time()).") AND (`release_until` = '0' OR `release_until` > ".$db->qstr(time())."))" : "");
+					".((!$COMMUNITY_ADMIN) ? ($LOGGED_IN ? " AND ((`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR " : " AND (")."(`release_date` = '0' OR `release_date` <= ".$db->qstr(time()).") AND (`release_until` = '0' OR `release_until` > ".$db->qstr(time())."))" : "");
 			$result	= $db->GetRow($query);
 			if ($result) {
 				$total_rows	= $result["total_rows"];
@@ -152,9 +152,9 @@ if ($RECORD_ID) {
 					echo "Pages: ".$pagination->GetPageLinks();
 					echo "</div>\n";
 				}
-				?>
+					?>
 				<a href="<?php echo COMMUNITY_URL."/feeds".$COMMUNITY_URL.":".$PAGE_URL."/rss?id=".$RECORD_ID; ?>" class="feeds rss">Subscribe to RSS</a>
-				<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) { ?>
+				<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $LOGGED_IN && $_SESSION["details"]["notifications"]) { ?>
 					<div id="notifications-toggle" style="display: inline;"></div>
 					<script type="text/javascript">
 					function promptNotifications(enabled) {
@@ -196,7 +196,7 @@ if ($RECORD_ID) {
 							}
 						);
 					}
-					
+
 					</script>
 					<?php
 					$ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$RECORD_ID."&type=post&action=view')";
@@ -232,7 +232,7 @@ if ($RECORD_ID) {
 								AND a.`topic_active` = '1'
 								AND (b.`topic_active` IS NULL OR b.`topic_active` = '1')
 								AND a.`cdtopic_parent` = '0'
-								".((!$COMMUNITY_ADMIN) ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "")."
+								".((!$COMMUNITY_ADMIN) ? ($LOGGED_IN ? " AND ((`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR " : " AND (")."(a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "")."
 								GROUP BY a.`cdtopic_id`
 								ORDER BY %s, b.`updated_date` DESC
 								LIMIT %s, %s";
@@ -316,8 +316,9 @@ if ($RECORD_ID) {
 				echo display_notice();
 			}
 		}
-		
-		add_statistic("community:".$COMMUNITY_ID.":discussions", "forum_view", "cdiscussion_id", $RECORD_ID);
+		if ($LOGGED_IN) {
+			add_statistic("community:".$COMMUNITY_ID.":discussions", "forum_view", "cdiscussion_id", $RECORD_ID);
+		}
 		
 	} else {
 		application_log("error", "The provided discussion forum id was invalid [".$RECORD_ID."] (View Forum).");

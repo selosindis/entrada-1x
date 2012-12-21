@@ -412,7 +412,9 @@ if ($RECORD_ID) {
 							}
 						break;
 					} 
-					add_statistic("community_polling", "poll_view", "cpolls_id", $RECORD_ID);
+					if ($LOGGED_IN) {
+						add_statistic("community_polling", "poll_view", "cpolls_id", $RECORD_ID);
+					}
 				} else {
 					$ERROR++;
 					$ERRORSTR[] = "You do not have permission to view the results of this ".$terminology.". Please provide a valid id to proceed.";

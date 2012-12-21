@@ -80,16 +80,28 @@ switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
 		$sort_by = "`assessments` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 	break;
 }
-$cohort = groups_get_cohort($ENTRADA_USER->getID());
-$query = "	SELECT a.*, COUNT(b.`assessment_id`) AS `assessments` 
-			FROM `courses` AS a
-			JOIN `assessments` AS b
-			ON a.`course_id` = b.`course_id`
-			AND b.`cohort` = ".$db->qstr($cohort["group_id"])."
-			GROUP BY a.`course_id`
-			ORDER BY ".$sort_by;
-$results = $db->GetAll($query);
-if (true) {
+
+	$courses = groups_get_enrolled_course_ids($ENTRADA_USER->getID());
+	$query = "	SELECT c.`course_code`, e.`assignment_id`, e.`assignment_title`,e.`due_date`, h.`grade_id` AS `grade_id`, h.`value` AS `grade_value`, i.`grade_weighting` AS `submitted_date`
+						FROM `assignments` AS e
+						JOIN `courses` AS c
+						ON e.`course_id` = c.`course_id`
+						LEFT JOIN `assessments` AS f							
+						ON e.`assessment_id` = f.`assessment_id`							
+						LEFT JOIN `assessment_grades` AS h 
+						ON h.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+						AND h.`assessment_id` = e.`assessment_id`
+						LEFT JOIN `assessment_exceptions` AS i
+						ON h.`proxy_id` = i.`proxy_id`
+						AND h.`assessment_id` = i.`assessment_id`
+						WHERE c.`course_id` IN (".(implode(',',$courses)).")
+						AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+	$assignments = $db->GetAll($query);
+
+	if(!$assginments){
+		echo display_notice("No assignments could be found.");
+		return;
+	}
 	?>
 	<table class="tableList" cellspacing="0" summary="List of Gradebooks">
 		<colgroup>
@@ -103,55 +115,23 @@ if (true) {
 				<td class="modified">&nbsp;</td>
 				<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("title", "Assignment Title"); ?></td>
 				<td class="date-small<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "code") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("code", "Course Code"); ?></td>
-				<?php
-				if (true) {
-					?>
-					<td class="general">Grade</td>
-					<?php
-				}
-				?>
+				<td class="general">Grade</td>
 				<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "assessments") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("assessments", "Due Date"); ?></td>
 
 			</tr>
 		</thead>
 		<tbody>
-		<?php		
-		$courses = groups_get_enrolled_course_ids($ENTRADA_USER->getID());
-		$query = "	SELECT c.`course_code`, e.`assignment_id`, e.`assignment_title`,e.`due_date`, h.`grade_id` AS `grade_id`, h.`value` AS `grade_value`, i.`grade_weighting` AS `submitted_date`
-							FROM `assignments` AS e
-							JOIN `courses` AS c
-							ON e.`course_id` = c.`course_id`
-							LEFT JOIN `assessments` AS f							
-							ON e.`assessment_id` = f.`assessment_id`							
-							LEFT JOIN `assessment_grades` AS h 
-							ON h.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-							AND h.`assessment_id` = e.`assessment_id`
-							LEFT JOIN `assessment_exceptions` AS i
-							ON h.`proxy_id` = i.`proxy_id`
-							AND h.`assessment_id` = i.`assessment_id`
-							WHERE c.`course_id` IN (".(implode(',',$courses)).")";
-		$results = $db->GetAll($query);
-		if($results){
-			foreach ($results as $result) {
-				echo "<tr id=\"gradebook-1\">\n";
-				echo "	<td>&nbsp;</td>\n";
-				echo "	<td><a href=\"".ENTRADA_URL."/".$MODULE."/gradebook/assignments?section=view&amp;id=".$result["assignment_id"]."\">".html_encode($result["assignment_title"])."</a></td>\n";
-				echo "	<td><a href=\"".ENTRADA_URL."/".$MODULE."/gradebook/assignments?section=view&amp;id=".$result["assignment_id"]."\">".html_encode($result["course_code"])."</a></td>\n";
-				echo "	<td><a href=\"".ENTRADA_URL."/".$MODULE."/gradebook/assignments?section=view&amp;id=".$result["assignment_id"]."\">".(isset($result["grade_value"])?$result["grade_value"]:'NA')."</a></td>\n";
-				echo "	<td><a href=\"".ENTRADA_URL."/".$MODULE."/gradebook/assignments?section=view&amp;id=".$result["assignment_id"]."\">".($result["due_date"]==0?'No due date':date('M d,Y h:i a',$result["due_date"]))."</a></td>\n";
-
-				echo "</tr>\n";
+		<?php
+			foreach ($assignments as $result) { ?>
+			<tr id=\"gradebook-1\">
+				<td>&nbsp;</td>
+				<td><a href="<?php echo ENTRADA_URL."/".$MODULE;?>/gradebook/assignments?section=view&amp;id=<?php echo $result["assignment_id"];?>"><?php echo html_encode($result["assignment_title"]);?></a></td>
+				<td><a href="<?php echo ENTRADA_URL."/".$MODULE;?>/gradebook/assignments?section=view&amp;id=<?php echo $result["assignment_id"];?>"><?php echo html_encode($result["course_code"]);?></a></td>
+				<td><a href="<?php echo ENTRADA_URL."/".$MODULE;?>/gradebook/assignments?section=view&amp;id=<?php echo $result["assignment_id"];?>"><?php echo (isset($result["grade_value"])?$result["grade_value"]:'NA');?></a></td>
+				<td><a href="<?php echo ENTRADA_URL."/".$MODULE;?>/gradebook/assignments?section=view&amp;id=<?php echo $result["assignment_id"];?>"><?php echo ($result["due_date"]==0?'No due date':date('M d,Y h:i a',$result["due_date"]));?></a></td>
+			</tr>
+			<?php
 			}
-		}
 		?>
 		</tbody>
 	</table>
-	<?php
-} else {
-	echo "<div class=\"display-notice\">";
-	echo "	<h3>No Course Gradebooks Available</h3>";
-	echo "	There are currently no assessments in the system for your graduating year.";
-	echo "</div>";
-}
-
-?>

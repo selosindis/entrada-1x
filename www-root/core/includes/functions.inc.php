@@ -11089,7 +11089,6 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 
 	$query_events .= " ORDER BY %s";
 	$limitless_query_events = $query_events;
-	$query_events .= ($pagination ? " LIMIT %s, %s" : "");
 
 	$limitless_query_events = sprintf($limitless_query_events, $sort_by);
 
@@ -11154,54 +11153,57 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		$output["page_previous"] = (($output["page_current"] > 1) ? ($output["page_current"] - 1) : false);
 		$output["page_next"] = (($output["page_current"] < $output["total_pages"]) ? ($output["page_current"] + 1) : false);
 		$output["result_ids_map"] = $result_ids_map;
-		
-		$event_ids_string = "";
-		for ($i = (($output["page_current"] - 1) * $results_per_page); $i < ($output["page_current"] * $results_per_page); $i++) {
-			if (($i + 1) > count($result_ids_map)) {
-				break;
+		if ($pagination) {
+			$event_ids_string = "";
+			for ($i = (($output["page_current"] - 1) * $results_per_page); $i < ($output["page_current"] * $results_per_page); $i++) {
+				if (($i + 1) > count($result_ids_map)) {
+					break;
+				}
+				$event_ids_string .= ($event_ids_string ? ", " : "").$db->qstr($result_ids_map[$i]);
 			}
-			$event_ids_string .= ($event_ids_string ? ", " : "").$db->qstr($result_ids_map[$i]);
-		}
 
-		$query_events = "	SELECT `events`.`event_id`,
-							`events`.`course_id`,
-							`events`.`parent_id`,
-							`events`.`event_title`,
-							`events`.`event_description`,
-							`events`.`event_duration`,
-							`events`.`event_message`,
-							`events`.`event_location`,
-							`events`.`event_start`,
-							`events`.`event_finish`,
-							`events`.`release_date`,
-							`events`.`release_until`,
-							`events`.`updated_date`,
-							`event_audience`.`audience_type`,
-							`courses`.`organisation_id`,
-							`courses`.`course_code`,
-							`courses`.`course_name`,
-							`courses`.`permission`,
-							`curriculum_lu_types`.`curriculum_type_id`,
-							`curriculum_lu_types`.`curriculum_type_name` AS `event_phase`,
-							`curriculum_lu_types`.`curriculum_type_name` AS `event_term`,
-							CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
-							FROM `events`
-							LEFT JOIN `event_contacts`
-							ON `event_contacts`.`event_id` = `events`.`event_id`
-							AND `event_contacts`.`contact_order` = '0'
-							LEFT JOIN `event_audience`
-							ON `event_audience`.`event_id` = `events`.`event_id`
-							LEFT JOIN `".AUTH_DATABASE."`.`user_data`
-							ON `".AUTH_DATABASE."`.`user_data`.`id` = `event_contacts`.`proxy_id`
-							LEFT JOIN `courses`
-							ON (`courses`.`course_id` = `events`.`course_id`)
-							LEFT JOIN `curriculum_lu_types`
-							ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
-							WHERE `events`.`event_id` IN (".$event_ids_string.")
-							GROUP BY `events`.`event_id`
-							ORDER BY %s";
-		$query_events = sprintf($query_events, $sort_by);
-		$learning_events = $db->GetAll($query_events);
+			$query_events = "	SELECT `events`.`event_id`,
+								`events`.`course_id`,
+								`events`.`parent_id`,
+								`events`.`event_title`,
+								`events`.`event_description`,
+								`events`.`event_duration`,
+								`events`.`event_message`,
+								`events`.`event_location`,
+								`events`.`event_start`,
+								`events`.`event_finish`,
+								`events`.`release_date`,
+								`events`.`release_until`,
+								`events`.`updated_date`,
+								`event_audience`.`audience_type`,
+								`courses`.`organisation_id`,
+								`courses`.`course_code`,
+								`courses`.`course_name`,
+								`courses`.`permission`,
+								`curriculum_lu_types`.`curriculum_type_id`,
+								`curriculum_lu_types`.`curriculum_type_name` AS `event_phase`,
+								`curriculum_lu_types`.`curriculum_type_name` AS `event_term`,
+								CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
+								FROM `events`
+								LEFT JOIN `event_contacts`
+								ON `event_contacts`.`event_id` = `events`.`event_id`
+								AND `event_contacts`.`contact_order` = '0'
+								LEFT JOIN `event_audience`
+								ON `event_audience`.`event_id` = `events`.`event_id`
+								LEFT JOIN `".AUTH_DATABASE."`.`user_data`
+								ON `".AUTH_DATABASE."`.`user_data`.`id` = `event_contacts`.`proxy_id`
+								LEFT JOIN `courses`
+								ON (`courses`.`course_id` = `events`.`course_id`)
+								LEFT JOIN `curriculum_lu_types`
+								ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
+								WHERE `events`.`event_id` IN (".$event_ids_string.")
+								GROUP BY `events`.`event_id`
+								ORDER BY %s";
+			$query_events = sprintf($query_events, $sort_by);
+			$learning_events = $db->GetAll($query_events);
+		} else {
+			$learning_events = $db->GetAll($limitless_query_events);
+		}
 
 		if ($learning_events) {
 			if (strtolower($ENTRADA_USER->getActiveRole()) != "admin") {

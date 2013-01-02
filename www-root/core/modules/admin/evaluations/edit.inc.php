@@ -473,7 +473,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									}
 								}
 								foreach ($temp_new_targets as $key => $new_target) {
-									if (array_search($existing_target, $temp_new_targets) === false) {
+									if (array_search($new_target, $temp_old_targets) === false) {
 										$added_targets[] = $PROCESSED["evaluation_targets"][$key];
 									}
 								}

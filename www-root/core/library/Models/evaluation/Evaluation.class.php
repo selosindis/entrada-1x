@@ -872,6 +872,12 @@ class Evaluation {
 								$teachers_list[$result["proxy_id"]] = $result["fullname"];
 							}
 						}
+						$target_ids = array();
+						foreach ($target_data["evaluation_targets"] as $temp_target) {
+							if ($temp_target["target_type"] == "proxy_id") {
+								$target_ids[] = $temp_target["target_value"];
+							}
+						}
 						?>
 						<tr>
 							<td></td>
@@ -883,8 +889,10 @@ class Evaluation {
 								<select class="multi-picklist" id="PickList" name="teacher_ids[]" multiple="multiple" size="4" style="width: 100%; margin-bottom: 5px">
 								<?php
 								if ((is_array($target_data["evaluation_targets"])) && (!empty($target_data["evaluation_targets"]))) {
-									foreach ($target_data["evaluation_targets"] as $target) {
-										echo "<option value=\"".(int) $target["target_value"]."\">".html_encode($teachers_list[$target["target_value"]])."</option>\n";
+									foreach ($teachers_list as $proxy_id => $teacher_name) {
+										if (in_array($proxy_id, $target_ids)) {
+											echo "<option value=\"".(int) $proxy_id."\">".html_encode($teacher_name)."</option>\n";
+										}
 									}
 								}
 								?>

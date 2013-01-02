@@ -85,24 +85,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				echo display_notice();
 			}
 			?>
-<<<<<<< HEAD
-			<h2 style="margin-top: 0px">User Overview</h2>
-			<div style="display: block" id="opened_details">
-				<table style="width: 100%; border: 1px #CCCCCC solid" cellspacing="0" cellpadding="1">
-					<tr>
-						<td style="height: 15px; background-image: url('<?php echo APPLICATION_URL; ?>/images/table-head-on.gif'); background-color: #EEEEEE; border-bottom: 1px #CCCCCC solid; padding-left: 5px">
-							User Profile
-						</td>
-					</tr>
-					<tr>
-						<td style="padding: 5px">
-							<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-								<tr>
-									<td style="width: 110px; vertical-align: top; padding-left: 10px">
-										<div style="position: relative">
-										<?php
+
+			<h2 title="User Profile Section">User Profile</h2>
+			<div class="row-fluid">
+				<div class="span2">
+					<?php
 										$uploaded_file_active = $db->GetOne("SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = 1 AND `proxy_id` = ".$db->qstr($user_record["id"]));
-										echo "		<div style=\"position: relative; width: 74px; height: 102px;\" id=\"img-holder-".$user_record["id"]."\" class=\"img-holder\">\n";
+										echo "<div style=\"position: relative; width: 74px; height: 102px;\" id=\"img-holder-".$user_record["id"]."\" class=\"img-holder\">\n";
 
 										$offical_file_active	= false;
 										$uploaded_file_active	= false;
@@ -112,23 +101,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										 */
 										if (@file_exists(STORAGE_USER_PHOTOS."/".$user_record["id"]."-official")) {
 											$offical_file_active	= true;
+		
 										}
-=======
-			<h2 title="User Profile Section">User Profile</h2>
-			<div id="user-profile-section">
-				<table style="width: 100%">
-					<colgroup>
-						<col style="width: 20%" />
-						<col style="width: 80%" />
-					</colgroup>
-					<tbody>
-						<tr>
-							<td style="vertical-align: top">
-								<div style="position: relative">
-								<?php
-								$uploaded_file_active = $db->GetOne("SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = 1 AND `proxy_id` = ".$db->qstr($user_record["id"]));
-								echo "<div style=\"position: relative; width: 74px; height: 102px;\" id=\"img-holder-".$user_record["id"]."\" class=\"img-holder\">\n";
->>>>>>> develop
+									
+
 
 								$offical_file_active	= false;
 								$uploaded_file_active	= false;
@@ -170,10 +146,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								}
 								echo "</div>\n";
 								?>
-								</div>
-							</td>
-							<td style="vertical-align: top">
-								<table class="tableList">
+				</div>
+				<div class="span8">
+					<table class="tableList">
 									<colgroup>
 										<col style="width: 20%" />
 										<col style="width: 80%" />
@@ -224,11 +199,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										?>
 									</tbody>
 								</table>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-			</div>
+				</div> <!--/span10-->
+			</div> <!-- /row-fluid-->
+			
 			<?php
 			$query		= "SELECT a.*, CONCAT_WS(', ', b.lastname, b.firstname) as `reported_by` FROM `".AUTH_DATABASE."`.`user_incidents` as a LEFT JOIN `".AUTH_DATABASE."`.`user_data` as b ON `incident_author_id` = `id` WHERE a.`proxy_id` = ".$db->qstr($PROXY_ID)." AND `incident_status` > 0 ORDER BY `incident_date` ASC";
 			$results	= $db->GetAll($query);

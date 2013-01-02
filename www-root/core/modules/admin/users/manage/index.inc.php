@@ -147,7 +147,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								echo "</div>\n";
 								?>
 				</div>
-				<div class="span8">
+				<div class="span10">
 					<table class="tableList">
 									<colgroup>
 										<col style="width: 20%" />

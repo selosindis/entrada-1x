@@ -10742,7 +10742,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 
 	if (!$results_per_page = (int) $results_per_page) {
 		$results_per_page = 15;
-	}	
+	}
 
 	$filter_clerkship_events = false;
 	if (($user_group == "student") && $ENTRADA_ACL->amIAllowed("clerkship", "read")) {
@@ -10763,7 +10763,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 			$clerkship_start = $clerkship_events[0]["event_start"];
 			$clerkship_finish = $clerkship_events[0]["event_finish"];
 			$time_periods = array();
-			
+
 			foreach ($clerkship_events as $clerkship_event) {
 				if ($clerkship_event["event_start"] < $clerkship_start) {
 					$clerkship_start = $clerkship_event["event_start"];
@@ -10771,7 +10771,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 				if ($clerkship_event["event_finish"] > $clerkship_finish) {
 					$clerkship_finish = $clerkship_event["event_finish"];
 				}
-				
+
 				$filter_clerkship_events = true;
 				if ($clerkship_event["course_id"] && $clerkship_event["rotation_id"] != MAX_ROTATION) {
 					if (array_search($clerkship_event["course_id"], $course_ids) === false) {
@@ -10793,14 +10793,14 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 			$time_periods[] = "OR (`events`.`event_finish` > ".$db->qstr($clerkship_finish).")";
 		}
 	}
-	
+
 	$sort_by = events_fetch_sorting_query($sort_by, $sort_order);
 
 	/**
 	 * This fetches the unix timestamps from the first and last second of the day, week, month, year, etc.
 	 */
 	$display_duration = fetch_timestamps($date_type, $timestamp_start, $timestamp_finish);
-	
+
 	$output["duration_start"] = $display_duration["start"];
 	$output["duration_end"] = $display_duration["end"];
 
@@ -10833,7 +10833,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	 */
 	if (is_array($filters) && !empty($filters)) {
 		$build_query = array();
-		
+
 		$where_teacher = array();
 		$where_student_course_ids = array();	// Students' enrolled in courses only
 		$where_student_cohorts = array();		// Students' cohort events
@@ -10848,11 +10848,11 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		$where_topic = array();
 		$where_department = array();
 		$join_event_contacts = array();
-		
+
 		$contact_sql = "";
 		$objective_sql = "";
 		$topic_sql = "";
-		
+
 		$query_events .= "	LEFT JOIN `event_contacts` AS `primary_teacher`
 							ON `primary_teacher`.`event_id` = `events`.`event_id`
 							AND `primary_teacher`.`contact_order` = '0'
@@ -10894,7 +10894,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 									if ($course_ids) {
 										$where_student_course_ids = $course_ids;
 									}
-									
+
 									// Students' cohort events
 									$cohort = groups_get_cohort((int) $filter_value);
 									if ($cohort) {
@@ -10947,7 +10947,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		if ($where_teacher) {
 			$build_query[] = "(`primary_teacher`.`proxy_id` IN (".implode(", ", $where_teacher).") OR `event_contacts`.`proxy_id` IN (".implode(", ", $where_teacher)."))";
 		}
-		
+
 		if ($where_student_course_ids || $where_student_cohorts || $where_student_proxy_ids || $where_student_cgroup_ids) {
 			$where_student = array();
 
@@ -10955,12 +10955,12 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 				$where_student_course_ids = array_unique($where_student_course_ids);
 				$where_student[] = "(`event_audience`.`audience_type` = 'course_id' AND `event_audience`.`audience_value` IN (".implode(", ", $where_student_course_ids)."))";
 			}
-			
+
 			if ($where_student_cohorts) {
 				$where_student_cohorts = array_unique($where_student_cohorts);
 				$where_student[] = "(`event_audience`.`audience_type` = 'cohort' AND `event_audience`.`audience_value` IN (".implode(", ", $where_student_cohorts)."))";
 			}
-			
+
 			if ($where_student_proxy_ids) {
 				$where_student_proxy_ids = array_unique($where_student_proxy_ids);
 				$where_student[] = "(`event_audience`.`audience_type` = 'proxy_id' AND `event_audience`.`audience_value` IN (".implode(", ", $where_student_proxy_ids)."))";
@@ -10970,18 +10970,18 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 				$where_student_cgroup_ids = array_unique($where_student_cgroup_ids);
 				$where_student[] = "(`event_audience`.`audience_type` = 'group_id' AND `event_audience`.`audience_value` IN (".implode(", ", $where_student_cgroup_ids)."))";
 			}
-			
+
 			$build_query[] = "(".implode(" OR ", $where_student).")";
 		}
 
 		if ($where_cohort) {
 			$build_query[] = "(`event_audience`.`audience_type` = 'cohort' AND `event_audience`.`audience_value` IN (".implode(", ", $where_cohort)."))";
 		}
-		
+
 		if ($where_course) {
 			$build_query[] = "(`events`.`course_id` IN (".implode(", ", $where_course)."))";
 		}
-		
+
 		if ($where_term) {
 			$build_query[] = "(`curriculum_lu_types`.`curriculum_type_id` IN (".implode(", ", $where_term)."))";
 		}
@@ -10989,15 +10989,15 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		if ($where_eventtype) {
 			$build_query[] = "(`event_eventtypes`.`eventtype_id` IN (".implode(", ", $where_eventtype)."))";
 		}
-		
+
 		if ($where_clinical_presentation) {
 			$build_query[] = "(`event_objectives`.`objective_id` IN (".implode(", ", $where_clinical_presentation)."))";
 		}
-		
+
 		if ($where_curriculum_objective) {
 			$build_query[] = "(`event_objectives`.`objective_id` IN (".implode(", ", $where_curriculum_objective)."))";
 		}
-		
+
 		if ($where_topic) {
 			$build_query[] = "(`event_topics`.`topic_id` IN (".implode(", ", $where_topic)."))";
 		}
@@ -11065,11 +11065,11 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		$query_events = str_replace("%CONTACT_JOIN%", $contact_sql, $query_events);
 
 		$query_events = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_events);
-		
+
 		$query_events = str_replace("%TOPIC_JOIN%", $topic_sql, $query_events);
-		
+
 		$query_events .= " GROUP BY `events`.`event_id`";
-	} else {		
+	} else {
 		$query_events .= "	LEFT JOIN `event_contacts`
 							ON `event_contacts`.`event_id` = `events`.`event_id`
 							AND `event_contacts`.`contact_order` = '0'
@@ -11128,7 +11128,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		} else {
 			$result_ids_map = $current_result_ids_map;
 		}
-		
+
 		$output["total_rows"] = count($result_ids_map);
 
 		if ($output["total_rows"] <= $results_per_page) {
@@ -12752,7 +12752,7 @@ function getContributionRoles() {
     global $db;
 
     $query = "SELECT *
-	FROM `ar_lu_contribution_roles` 
+	FROM `ar_lu_contribution_roles`
 	WHERE `visible` = '1'
 	ORDER BY `contribution_role` ASC";
 
@@ -13428,7 +13428,7 @@ function objectives_inlists_conf($identifier = 0, $indent = 0) {
 			if ($has_children) {
 				$output .= "	<a class=\"objective-expand\" onclick=\"showObjectiveChildren('".$result["objective_id"]."')\"><img id=\"objective-".$result["objective_id"]."-arrow\" src=\"".ENTRADA_URL."/images/arrow-right.gif\" style=\"border: none; text-decoration: none;\" /></a>";
 			}
-			$output .= "	&nbsp;<a href=\"".ENTRADA_URL."/admin/settings/manage/objectives?".replace_query(array("org"=>$ORGANISATION_ID,"section" => "edit", "step" => 1, "id" => $result["objective_id"]))."\">";
+			$output .= "	&nbsp;<a href=\"".ENTRADA_RELATIVE."/admin/settings/manage/objectives?".replace_query(array("org"=>$ORGANISATION_ID,"section" => "edit", "step" => 1, "id" => $result["objective_id"]))."\">";
 			$output .= html_encode($result["objective_name"])."</a></span>\n";
 			$output .= "</div>";
 			$output .= objectives_inlists_conf($result["objective_id"], $indent + 1);

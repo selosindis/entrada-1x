@@ -83,7 +83,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	 */
 	$PROCESSED["require_attendance"] = 0;
 	$PROCESSED["random_order"] = 0;
-	
+
 	$modal_onload = array();
 	?>
 	<div id="uploading-window" style="width: 100%; height: 100%;">
@@ -98,7 +98,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		</div>
 	</div>
 	<?php
-	
+
 	if ($QUIZ_TYPE == "event") {
 		if ($RECORD_ID) {
 			$query			= "	SELECT a.*, b.`organisation_id`
@@ -124,12 +124,12 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				}
 				if (!$access_allowed) {
 					$modal_onload[]	= "closeWizard()";
-	
+
 					$ERROR++;
 					$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact the MEdTech Unit at 613-533-6000 x74918 and we can assist you.";
-	
+
 					echo display_error();
-	
+
 					application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to the file wizard.");
 				} else {
 					$quiz_types_record = array();
@@ -140,7 +140,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							$quiz_types_record[$result["quiztype_id"]] = array("quiztype_title" => $result["quiztype_title"], "quiztype_description" => $result["quiztype_description"], "quiztype_order" => $result["quiztype_order"]);
 						}
 					}
-	
+
 					$existing_quiz_relationship = array();
 					$query		= "SELECT `quiz_id` FROM `attached_quizzes` WHERE `content_type` = 'event' AND `content_id` = ".$db->qstr($RECORD_ID);
 					$results	= $db->GetAll($query);
@@ -149,20 +149,20 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							$existing_quiz_relationship[] = $result["quiz_id"];
 						}
 					}
-	
+
 					switch($ACTION) {
 						case "edit" :
 							/**
 							 * Edit quiz form.
 							 */
-	
+
 							if ($AQUIZ_ID) {
 								$query			= "SELECT * FROM `attached_quizzes` WHERE `aquiz_id` = ".$db->qstr($AQUIZ_ID);
 								$equiz_record	= $db->GetRow($query);
-								
+
 								if ($equiz_record) {
 									$PROCESSED = $equiz_record;
-	
+
 									if (isset($_POST["step"])) {
 										/**
 										 * Required field "quiz_title" / Attached Quiz Title.
@@ -172,7 +172,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_title"] = $quiz_record["quiz_title"];
 										}
-	
+
 										/**
 										 * Non-Required field "quiz_notes" / Attached Quiz Instructions.
 										 */
@@ -181,7 +181,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_notes"] = "";
 										}
-	
+
 										/**
 										 * Non-required field "required" / Should completion of this quiz by the learner be considered optional or required?
 										 */
@@ -189,8 +189,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["required"] = 1;
 										} else {
 											$PROCESSED["required"] = 0;
-										}									
-										
+										}
+
 										/**
 										 * Non-required field "random_order" / Should quiz question order be shuffled?
 										 */
@@ -199,7 +199,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["random_order"] = 0;
 										}
-										
+
 										/**
 										 * Required field "quiztype_id" / When should learners be allowed to view the results of the quiz?
 										 */
@@ -208,7 +208,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiztype_id"] = 0;
 										}
-	
+
 										/**
 										 * Non-required field "quiz_timeout" / How much time (in minutes) can the learner spend completing this quiz?
 										 * 0 indicates unlimited
@@ -223,7 +223,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_timeout"] = 0;
 										}
-	
+
 										/**
 										 *
 										 * Non-required field "quiz_attempts" / How many attempts can a learner take at completing this quiz?
@@ -239,7 +239,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_attempts"] = 0;
 										}
-	
+
 										/**
 										 * Required field "timeframe" / When should this quiz be taken in relation to the event?
 										 */
@@ -248,7 +248,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["timeframe"] = "";
 										}
-	
+
 										/**
 										 * Non-required field "require_attendance" / Should completion of this quiz be limited by the learner's event attendance?
 										 */
@@ -256,8 +256,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["require_attendance"] = 1;
 										} else {
 											$PROCESSED["require_attendance"] = 0;
-										}			
-										
+										}
+
 										/**
 										 * Non-required field "release_date" / Accessible Start (validated through validate_calendars function).
 										 * Non-required field "release_until" / Accessible Finish (validated through validate_calendars function).
@@ -280,7 +280,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												$require_finish	= false;
 											break;
 										}
-	
+
 										if (($STEP >= 3) && isset($PROCESSED["quiztype_id"]) && $PROCESSED["quiztype_id"]) {
 											$query = "SELECT `quiztype_code` FROM `quizzes_lu_quiztypes` WHERE `quiztype_id` = ".$db->qstr($PROCESSED["quiztype_id"]);
 											$quiztype = $db->GetOne($query);
@@ -288,20 +288,20 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												$require_finish = true;
 											}
 										}
-										
+
 										$viewable_date = validate_calendars("accessible", $require_start, $require_finish);
 										if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
 											$PROCESSED["release_date"] = (int) $viewable_date["start"];
 										} else {
 											$PROCESSED["release_date"] = 0;
 										}
-	
+
 										if ((isset($viewable_date["finish"])) && ((int) $viewable_date["finish"])) {
 											$PROCESSED["release_until"] = (int) $viewable_date["finish"];
 										} else {
 											$PROCESSED["release_until"] = 0;
 										}
-	
+
 										/**
 										 * If the back button was pressed, we should not error
 										 * check the current step, because someone could be just
@@ -311,7 +311,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										if (isset($_POST["step_back"]) && $_POST["step_back"]) {
 											$STEP = ($STEP - 1);
 										}
-	
+
 										/**
 										 * Error Checking
 										 * This error checking follows a different of a pattern than
@@ -329,7 +329,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													$ERRORSTR[]	= "Please select a proper option when asked when the quiz should be taken in relation to the event.";
 													$STEP		= 3;
 												}
-	
+
 											case 2 :
 												/**
 												 * Required field "quiztype_id" / When should learners be allowed to view the results of the quiz?
@@ -339,7 +339,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													$ERRORSTR[]	= "Please select a proper quiz type when asked what type of quiz this should be considered.";
 													$STEP		= 2;
 												}
-	
+
 											case 1 :
 											default :
 												/**
@@ -350,7 +350,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													$ERRORSTR[] = "The <strong>Attached Quiz Title</strong> field is required.";
 													$STEP		= 1;
 												}
-	
+
 												if ((!isset($PROCESSED["quiz_id"])) || (!$PROCESSED["quiz_id"])) {
 													$ERROR++;
 													$ERRORSTR[] = "You must select an active quiz that you have authored in order to attach it to this learning event.";
@@ -358,7 +358,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												}
 											break;
 										}
-	
+
 										/**
 										 * If the next button was pressed, and we have
 										 * successfully error checked the current step, then go
@@ -372,7 +372,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									} else {
 										$STEP = 1;
 									}
-	
+
 									/**
 									 * If the release_date and release_until variables are set,
 									 * set the additional variables required for validate_calendars().
@@ -399,7 +399,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										$PROCESSED["accessible_finish_hour"]	= 0;
 										$PROCESSED["accessible_finish_min"]		= 0;
 									}
-	
+
 									// Display Edit Step
 									switch($STEP) {
 										case 4 :
@@ -407,7 +407,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["content_id"]	= $RECORD_ID;
 											$PROCESSED["updated_date"]	= time();
 											$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-	
+
 											if ($db->AutoExecute("attached_quizzes", $PROCESSED, "UPDATE", "aquiz_id = ".$db->qstr($AQUIZ_ID))) {
 												$modal_onload[] = "parentReload()";
 												?>
@@ -418,11 +418,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														</div>
 														<div id="body">
 															<h2>Quiz Updated Successfully</h2>
-		
+
 															<div class="display-success">
 																You have successfully updated <strong><?php echo html_encode($PROCESSED["quiz_title"]); ?></strong> under this event.
 															</div>
-		
+
 															To <strong>re-edit this quiz</strong> or <strong>close this window</strong> please use the buttons below.
 														</div>
 														<div id="footer">
@@ -432,11 +432,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													</div>
 												</div>
 												<?php
-												history_log($RECORD_ID, "updated $PROCESSED[quiz_title] event quiz.");
+												history_log($RECORD_ID, "Updated " . $PROCESSED["quiz_title"] . " event quiz.");
 											} else {
 												$ERROR++;
 												$ERRORSTR[] = "There was a problem updating <strong>".html_encode($PROCESSED["quiz_title"])."</strong> under this event. The system administrator was informed of this error; please try again later.";
-	
+
 												application_log("error", "Unable to update an attached quiz [".$PROCESSED["quiz_id"]."] inder event [".$RECORD_ID."]. Database said: ".$db->ErrorMsg());
 												?>
 												<div class="modal-dialog" id="quiz-wizard">
@@ -482,7 +482,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											unset($PROCESSED["accessible_start_date"]);
 											unset($PROCESSED["accessible_start_hour"]);
 											unset($PROCESSED["accessible_start_min"]);
-	
+
 											unset($PROCESSED["accessible_finish"]);
 											unset($PROCESSED["accessible_finish_date"]);
 											unset($PROCESSED["accessible_finish_hour"]);
@@ -506,20 +506,19 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														if ($ERROR) {
 															echo display_error();
 														}
-		
+
 														if ($NOTICE) {
 															echo display_notice();
 														}
 														?>
-														
 														<div class="wizard-question">
 															<div>Is attendance required for this quiz to be completed?</div>
 															<div class="response-area">
-																<input type="radio" id="require_attendance_no" name="require_attendance" value="0"<?php echo (((!isset($PROCESSED["require_attendance"])) || (!$PROCESSED["require_attendance"])) ? " checked=\"checked\"" : ""); ?> /> <label for="required_no">Not Required</label><br />
-																<input type="radio" id="require_attendance_yes" name="require_attendance" value="1"<?php echo (($PROCESSED["require_attendance"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">Required</label><br />
+																<input type="radio" id="require_attendance_no" name="require_attendance" value="0"<?php echo (((!isset($PROCESSED["require_attendance"])) || (!$PROCESSED["require_attendance"])) ? " checked=\"checked\"" : ""); ?> /> <label for="require_attendance_no">Not Required</label><br />
+																<input type="radio" id="require_attendance_yes" name="require_attendance" value="1"<?php echo (($PROCESSED["require_attendance"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="require_attendance_yes">Required</label><br />
 															</div>
 														</div>
-														
+
 														<div class="wizard-question">
 															<div>When should this quiz be taken in relation to the event?</div>
 															<div class="response-area">
@@ -532,7 +531,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 																?>
 															</div>
 														</div>
-		
+
 														<div class="wizard-question">
 															<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Time Release Information">
 															<colgroup>
@@ -549,7 +548,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 																	$quiztype = $db->GetOne($query);
 																	$delayed = ($quiztype == "delayed" ? true : false);
 																}
-																echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true); 
+																echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true);
 															?>
 															</table>
 														</div>
@@ -601,10 +600,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														<div class="wizard-question">
 															<div>Should the order of the questions be shuffled for this quiz?</div>
 															<div class="response-area">
-																<input type="radio" id="random_order_no" name="random_order" value="0"<?php echo (((!isset($PROCESSED["random_order"])) || (!$PROCESSED["random_order"])) ? " checked=\"checked\"" : ""); ?> /> <label for="required_no">Not Shuffled</label><br />
-																<input type="radio" id="random_order_yes" name="random_order" value="1"<?php echo (($PROCESSED["random_order"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">Shuffled</label><br />
+																<input type="radio" id="random_order_no" name="random_order" value="0"<?php echo (((!isset($PROCESSED["random_order"])) || (!$PROCESSED["random_order"])) ? " checked=\"checked\"" : ""); ?> /> <label for="random_order_no">Not Shuffled</label><br />
+																<input type="radio" id="random_order_yes" name="random_order" value="1"<?php echo (($PROCESSED["random_order"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="random_order_yes">Shuffled</label><br />
 															</div>
-														</div>		
+														</div>
 
 														<div class="wizard-question">
 															<div>How much time (in minutes) can the learner spend taking this quiz?</div>
@@ -612,14 +611,14 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 																<input type="text" id="quiz_timeout" name="quiz_timeout" value="<?php echo ((isset($PROCESSED["quiz_timeout"])) ? $PROCESSED["quiz_timeout"] : "0"); ?>" style="width: 50px" maxlength="4" /> min <span class="content-small">(<strong>Hint:</strong> enter 0 to allow <strong>unlimited</strong> time)</span>
 															</div>
 														</div>
-		
+
 														<div class="wizard-question">
 															<div>How many attempts can a learner take at completing this quiz?</div>
 															<div class="response-area">
 																<input type="text" id="quiz_attempts" name="quiz_attempts" value="<?php echo ((isset($PROCESSED["quiz_attempts"])) ? $PROCESSED["quiz_attempts"] : "0"); ?>" style="width: 50px" maxlength="4" /> <span class="content-small">(<strong>Hint:</strong> enter 0 to allow <strong>unlimited</strong> attempts)</span>
 															</div>
 														</div>
-		
+
 														<div class="wizard-question" style="margin-bottom: 0px">
 															<div>When should learners be allowed to view the results of the quiz?</div>
 															<div class="response-area">
@@ -655,7 +654,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											 */
 											load_rte();
 											?>
-											
+
 											<div class="modal-dialog" id="quiz-wizard">
 												<form id="wizard-form" target="upload-frame" action="<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?type=<?php echo $QUIZ_TYPE; ?>&amp;action=edit&amp;id=<?php echo $RECORD_ID; ?>&amp;qid=<?php echo $AQUIZ_ID; ?>" method="post">
 												<input type="hidden" name="step" value="<?php echo $STEP; ?>" />
@@ -717,7 +716,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							/**
 							 * Add quiz form.
 							 */
-	
+
 							/**
 							 * Required field "quiz_id" / Step 1
 							 * Nothing at all can be done without this quiz_id.
@@ -733,7 +732,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								if ($quiz_record) {
 									if ($quiz_record["quiz_active"] == 1) {
 										$PROCESSED["quiz_id"] = $tmp_input;
-	
+
 										/**
 										 * Required field "quiz_title" / Attached Quiz Title.
 										 */
@@ -742,7 +741,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_title"] = $quiz_record["quiz_title"];
 										}
-	
+
 										/**
 										 * Non-Required field "quiz_notes" / Attached Quiz Instructions.
 										 */
@@ -751,7 +750,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_notes"] = "";
 										}
-	
+
 										/**
 										 * Non-required field "required" / Should completion of this quiz by the learner be considered optional or required?
 										 */
@@ -760,7 +759,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["required"] = 0;
 										}
-	
+
 										/**
 										 * Non-required field "random_order" / Should quiz question order be shuffled?
 										 */
@@ -769,7 +768,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["random_order"] = 0;
 										}
-	
+
 										/**
 										 * Required field "quiztype_id" / When should learners be allowed to view the results of the quiz?
 										 */
@@ -778,7 +777,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiztype_id"] = 0;
 										}
-	
+
 										/**
 										 * Non-required field "quiz_timeout" / How much time (in minutes) can the learner spend completing this quiz?
 										 * 0 indicates unlimited
@@ -793,7 +792,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_timeout"] = 0;
 										}
-										
+
 										/**
 										 *
 										 * Non-required field "quiz_attempts" / How many attempts can a learner take at completing this quiz?
@@ -809,7 +808,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_attempts"] = 0;
 										}
-	
+
 										/**
 										 * Required field "timeframe" / When should this quiz be taken in relation to the event?
 										 */
@@ -818,8 +817,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["timeframe"] = "";
 										}
-	
-	
+
+
 										/**
 										 * Non-required field "require_attendance" / Should completion of this quiz be limited by the learner's event attendance?
 										 */
@@ -828,7 +827,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["require_attendance"] = 0;
 										}
-										
+
 										/**
 										 * Non-required field "release_date" / Accessible Start (validated through validate_calendars function).
 										 * Non-required field "release_until" / Accessible Finish (validated through validate_calendars function).
@@ -851,7 +850,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												$require_finish	= false;
 											break;
 										}
-										
+
 										if (($STEP >= 4) && isset($PROCESSED["quiztype_id"]) && $PROCESSED["quiztype_id"]) {
 											$query = "SELECT `quiztype_code` FROM `quizzes_lu_quiztypes` WHERE `quiztype_id` = ".$db->qstr($PROCESSED["quiztype_id"]);
 											$quiztype = $db->GetOne($query);
@@ -859,20 +858,20 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												$require_finish = true;
 											}
 										}
-	
+
 										$viewable_date = validate_calendars("accessible", $require_start, $require_finish);
 										if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
 											$PROCESSED["release_date"] = (int) $viewable_date["start"];
 										} else {
 											$PROCESSED["release_date"] = 0;
 										}
-	
+
 										if ((isset($viewable_date["finish"])) && ((int) $viewable_date["finish"])) {
 											$PROCESSED["release_until"] = (int) $viewable_date["finish"];
 										} else {
 											$PROCESSED["release_until"] = 0;
 										}
-	
+
 										if ((isset($_POST["accessible_start"])) && ($_POST["accessible_start"] == 1)) {
 											$PROCESSED["accessible_start"]		= 1;
 											$PROCESSED["accessible_start_date"]	= clean_input($_POST["accessible_start_date"], "credentials");
@@ -884,7 +883,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["accessible_start_hour"]	= 0;
 											$PROCESSED["accessible_start_min"]	= 0;
 										}
-	
+
 										if ((isset($_POST["accessible_finish"])) && ($_POST["accessible_finish"] == 1)) {
 											$PROCESSED["accessible_finish"]			= 1;
 											$PROCESSED["accessible_finish_date"]	= clean_input($_POST["accessible_finish_date"], "credentials");
@@ -895,14 +894,14 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["accessible_finish_date"]	= "";
 											$PROCESSED["accessible_finish_hour"]	= 0;
 											$PROCESSED["accessible_finish_min"]		= 0;
-	
+
 										}
 									}
 								}
 							} else {
 								$STEP = 1;
 							}
-	
+
 							/**
 							 * If the back button was pressed, we should not error
 							 * check the current step, because someone could be just
@@ -912,7 +911,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							if (isset($_POST["step_back"]) && $_POST["step_back"]) {
 								$STEP = ($STEP - 1);
 							}
-	
+
 							/**
 							 * Error Checking
 							 * This error checking follows a different of a pattern than
@@ -930,7 +929,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										$ERRORSTR[]	= "Please select a proper option when asked when the quiz should be taken in relation to the event.";
 										$STEP		= 4;
 									}
-	
+
 								case 3 :
 									/**
 									 * Required field "quiztype_id" / When should learners be allowed to view the results of the quiz?
@@ -940,7 +939,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										$ERRORSTR[]	= "Please select a proper quiz type when asked what type of quiz this should be considered.";
 										$STEP		= 3;
 									}
-	
+
 								case 2 :
 									/**
 									 * Required field "quiz_title" / Attached Quiz Title.
@@ -959,7 +958,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									}
 								break;
 							}
-	
+
 							/**
 							 * If the next button was pressed, and we have
 							 * successfully error checked the current step, then go
@@ -970,7 +969,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									$STEP = ($STEP + 1);
 								}
 							}
-	
+
 							// Display Add Step
 							switch($STEP) {
 								case 5 :
@@ -979,7 +978,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									$PROCESSED["accesses"]		= 0;
 									$PROCESSED["updated_date"]	= time();
 									$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-	
+
 									if ($db->AutoExecute("attached_quizzes", $PROCESSED, "INSERT")) {
 										$modal_onload[] = "parentReload()";
 										?>
@@ -990,11 +989,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												</div>
 												<div id="body">
 													<h2>Quiz Attached Successfully</h2>
-		
+
 													<div class="display-success">
 														You have successfully attached <strong><?php echo html_encode($PROCESSED["quiz_title"]); ?></strong> to this <?php echo (isset($QUIZ_TYPE) && $QUIZ_TYPE == "community_page" ? "community_page" : "event"); ?>.
 													</div>
-		
+
 													To <strong>attach another quiz</strong> or <strong>close this window</strong> please use the buttons below.
 												</div>
 												<div id="footer">
@@ -1008,7 +1007,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									} else {
 										$ERROR++;
 										$ERRORSTR[] = "There was a problem attaching <strong>".html_encode($PROCESSED["quiz_title"])."</strong> to this event. The system administrator was informed of this error; please try again later.";
-	
+
 										application_log("error", "Unable to attach quiz [".$PROCESSED["quiz_id"]."] to event [".$RECORD_ID."]. Database said: ".$db->ErrorMsg());
 										?>
 										<div class="modal-dialog" id="quiz-wizard">
@@ -1054,7 +1053,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									unset($PROCESSED["accessible_start_date"]);
 									unset($PROCESSED["accessible_start_hour"]);
 									unset($PROCESSED["accessible_start_min"]);
-	
+
 									unset($PROCESSED["accessible_finish"]);
 									unset($PROCESSED["accessible_finish_date"]);
 									unset($PROCESSED["accessible_finish_hour"]);
@@ -1078,20 +1077,20 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												if ($ERROR) {
 													echo display_error();
 												}
-		
+
 												if ($NOTICE) {
 													echo display_notice();
 												}
 												?>
-												
+
 												<div class="wizard-question">
 													<div>Is attendance required for this quiz to be completed?</div>
 													<div class="response-area">
-														<input type="radio" id="require_attendance_no" name="require_attendance" value="0"<?php echo (((!isset($PROCESSED["require_attendance"])) || (!$PROCESSED["require_attendance"])) ? " checked=\"checked\"" : ""); ?> /> <label for="required_no">Not Required</label><br />
-														<input type="radio" id="require_attendance_yes" name="require_attendance" value="1"<?php echo (($PROCESSED["require_attendance"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">Required</label><br />
+														<input type="radio" id="require_attendance_no" name="require_attendance" value="0"<?php echo (((!isset($PROCESSED["require_attendance"])) || (!$PROCESSED["require_attendance"])) ? " checked=\"checked\"" : ""); ?> /> <label for="require_attendance_no">Not Required</label><br />
+														<input type="radio" id="require_attendance_yes" name="require_attendance" value="1"<?php echo (($PROCESSED["require_attendance"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="require_attendance_yes">Required</label><br />
 													</div>
-												</div>			
-												
+												</div>
+
 												<div class="wizard-question">
 													<div>When should this quiz be taken in relation to the event?</div>
 													<div class="response-area">
@@ -1104,7 +1103,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														?>
 													</div>
 												</div>
-		
+
 												<div class="wizard-question">
 													<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Time Release Information">
 													<colgroup>
@@ -1120,8 +1119,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 															$query = "SELECT `quiztype_code` FROM `quizzes_lu_quiztypes` WHERE `quiztype_id` = ".$db->qstr($PROCESSED["quiztype_id"]);
 															$quiztype = $db->GetOne($query);
 															$delayed = ($quiztype == "delayed" ? true : false);
-														} 
-														echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true); 
+														}
+														echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true);
 													?>
 													</table>
 												</div>
@@ -1169,29 +1168,29 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														<input type="radio" id="required_yes" name="required" value="1"<?php echo (($PROCESSED["required"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">Required</label><br />
 													</div>
 												</div>
-												
+
 												<div class="wizard-question">
-													<div>Should the question order be shuffled for this quiz?</div>
+													<div>Should the order of the questions be shuffled for this quiz?</div>
 													<div class="response-area">
-														<input type="radio" id="random_order_no" name="random_order" value="0"<?php echo (((!isset($PROCESSED["random_order"])) || (!$PROCESSED["random_order"])) ? " checked=\"checked\"" : ""); ?> /> <label for="required_no">Not Shuffled</label><br />
-														<input type="radio" id="random_order_yes" name="random_order" value="1"<?php echo (($PROCESSED["random_order"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">Shuffled</label><br />
+														<input type="radio" id="random_order_no" name="random_order" value="0"<?php echo (((!isset($PROCESSED["random_order"])) || (!$PROCESSED["random_order"])) ? " checked=\"checked\"" : ""); ?> /> <label for="random_order_no">Not Shuffled</label><br />
+														<input type="radio" id="random_order_yes" name="random_order" value="1"<?php echo (($PROCESSED["random_order"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="random_order_yes">Shuffled</label><br />
 													</div>
-												</div>												
-		
+												</div>
+
 												<div class="wizard-question">
 													<div>How much time (in minutes) can the learner spend taking this quiz?</div>
 													<div class="response-area">
 														<input type="text" id="quiz_timeout" name="quiz_timeout" value="<?php echo ((isset($PROCESSED["quiz_timeout"])) ? $PROCESSED["quiz_timeout"] : "0"); ?>" style="width: 50px" maxlength="4" /> min <span class="content-small">(<strong>Hint:</strong> enter 0 to allow <strong>unlimited</strong> time)</span>
 													</div>
 												</div>
-		
+
 												<div class="wizard-question">
 													<div>How many attempts can a learner take at completing this quiz?</div>
 													<div class="response-area">
 														<input type="text" id="quiz_attempts" name="quiz_attempts" value="<?php echo ((isset($PROCESSED["quiz_attempts"])) ? $PROCESSED["quiz_attempts"] : "0"); ?>" style="width: 50px" maxlength="4" /> <span class="content-small">(<strong>Hint:</strong> enter 0 to allow <strong>unlimited</strong> attempts)</span>
 													</div>
 												</div>
-		
+
 												<div class="wizard-question" style="margin-bottom: 0px">
 													<div>When should learners be allowed to view the results of the quiz?</div>
 													<div class="response-area">
@@ -1369,7 +1368,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													<?php
 													$NOTICE++;
 													$NOTICESTR[] = "You have not yet created any quizzes to attach to this event.<br /><br />To author a new Quiz, close this window and click the <strong>Manage Quizzes</strong> tab.";
-		
+
 													echo display_notice();
 													?>
 												</div>
@@ -1387,23 +1386,23 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					?>
 					<div id="scripts-on-open" style="display: none;">
 					<?php
-						foreach ($modal_onload as $string) {
-							echo $string.";\n";
-						}
+                    foreach ($modal_onload as $string) {
+                        echo $string.";\n";
+                    }
 					?>
-					function selectedTimeframe(timeframe) {
+					window.selectedTimeframe = function (timeframe) {
 						switch (timeframe) {
 							case 'pre' :
 								$('accessible_start').checked	= false;
 								$('accessible_finish').checked	= true;
-	
+
 								dateLock('accessible_start');
 								dateLock('accessible_finish');
-	
+
 								$('accessible_start_date').value	= '';
 								$('accessible_start_hour').value	= '00';
 								$('accessible_start_min').value		= '00';
-	
+
 								$('accessible_finish_date').value	= '<?php echo date("Y-m-d", $event_record["event_finish"]); ?>';
 								$('accessible_finish_hour').value	= '<?php echo date("G", $event_record["event_finish"]); ?>';
 								$('accessible_finish_min').value	= '<?php echo (int) date("i", $event_record["event_finish"]); ?>';
@@ -1411,14 +1410,14 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							case 'during' :
 								$('accessible_start').checked	= true;
 								$('accessible_finish').checked	= true;
-	
+
 								dateLock('accessible_start');
 								dateLock('accessible_finish');
-	
+
 								$('accessible_start_date').value	= '<?php echo date("Y-m-d", $event_record["event_start"]); ?>';
 								$('accessible_start_hour').value	= '<?php echo date("G", $event_record["event_start"]); ?>';
 								$('accessible_start_min').value		= '<?php echo (int) date("i", $event_record["event_start"]); ?>';
-	
+
 								$('accessible_finish_date').value	= '<?php echo date("Y-m-d", $event_record["event_finish"]); ?>';
 								$('accessible_finish_hour').value	= '<?php echo date("G", $event_record["event_finish"]); ?>';
 								$('accessible_finish_min').value	= '<?php echo (int) date("i", $event_record["event_finish"]); ?>';
@@ -1426,14 +1425,14 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							case 'post' :
 								$('accessible_start').checked	= true;
 								$('accessible_finish').checked	= false;
-	
+
 								dateLock('accessible_start');
 								dateLock('accessible_finish');
-	
+
 								$('accessible_start_date').value	= '<?php echo date("Y-m-d", $event_record["event_start"]); ?>';
 								$('accessible_start_hour').value	= '<?php echo date("G", $event_record["event_start"]); ?>';
 								$('accessible_start_min').value		= '<?php echo (int) date("i", $event_record["event_start"]); ?>';
-	
+
 								$('accessible_finish_date').value	= '';
 								$('accessible_finish_hour').value	= '00';
 								$('accessible_finish_min').value	= '00';
@@ -1441,20 +1440,20 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							default :
 								$('accessible_start').checked	= false;
 								$('accessible_finish').checked	= false;
-	
+
 								dateLock('accessible_start');
 								dateLock('accessible_finish');
-	
+
 								$('accessible_start_date').value	= '';
 								$('accessible_start_hour').value	= '00';
 								$('accessible_start_min').value		= '00';
-	
+
 								$('accessible_finish_date').value	= '';
 								$('accessible_finish_hour').value	= '00';
 								$('accessible_finish_min').value	= '00';
 							break;
 						}
-	
+
 						updateTime('accessible_start');
 						updateTime('accessible_finish');
 					}
@@ -1464,17 +1463,17 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "The provided event identifier does not exist in this system.";
-	
+
 				echo display_error();
-	
+
 				application_log("error", "Quiz wizard was accessed without a valid event id.");
 			}
 		} else {
 			$ERROR++;
 			$ERRORSTR[] = "You must provide an event identifier when using the quiz wizard.";
-	
+
 			echo display_error();
-	
+
 			application_log("error", "Quiz wizard was accessed without any event id.");
 		}
 	} elseif ($QUIZ_TYPE == "community_page") {
@@ -1491,12 +1490,12 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				$result	= $db->GetRow($query);
 				if (!$result) {
 					$modal_onload[]	= "closeWizard()";
-	
+
 					$ERROR++;
 					$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact the MEdTech Unit at 613-533-6000 x74918 and we can assist you.";
-	
+
 					echo display_error();
-	
+
 					application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to the file wizard.");
 				} else {
 					$quiz_types_record = array();
@@ -1507,7 +1506,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							$quiz_types_record[$result["quiztype_id"]] = array("quiztype_title" => $result["quiztype_title"], "quiztype_description" => $result["quiztype_description"], "quiztype_order" => $result["quiztype_order"]);
 						}
 					}
-	
+
 					$existing_quiz_relationship = array();
 					$query		= "SELECT `quiz_id` FROM `attached_quizzes` WHERE `content_type` = 'event' AND `content_id` = ".$db->qstr($RECORD_ID);
 					$results	= $db->GetAll($query);
@@ -1516,20 +1515,20 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							$existing_quiz_relationship[] = $result["quiz_id"];
 						}
 					}
-	
+
 					switch($ACTION) {
 						case "edit" :
 							/**
 							 * Edit quiz form.
 							 */
-	
+
 							if ($AQUIZ_ID) {
 								$query			= "SELECT * FROM `attached_quizzes` WHERE `aquiz_id` = ".$db->qstr($AQUIZ_ID);
 								$equiz_record	= $db->GetRow($query);
-								
+
 								if ($equiz_record) {
 									$PROCESSED = $equiz_record;
-	
+
 									if (isset($_POST["step"])) {
 										/**
 										 * Required field "quiz_title" / Attached Quiz Title.
@@ -1539,7 +1538,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_title"] = $quiz_record["quiz_title"];
 										}
-	
+
 										/**
 										 * Non-Required field "quiz_notes" / Attached Quiz Instructions.
 										 */
@@ -1548,7 +1547,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_notes"] = "";
 										}
-	
+
 										/**
 										 * Non-required field "required" / Should completion of this quiz by the learner be considered optional or required?
 										 */
@@ -1557,7 +1556,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["required"] = 0;
 										}
-	
+
 										/**
 										 * Required field "quiztype_id" / When should learners be allowed to view the results of the quiz?
 										 */
@@ -1566,7 +1565,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiztype_id"] = 0;
 										}
-	
+
 										/**
 										 * Non-required field "quiz_timeout" / How much time (in minutes) can the learner spend completing this quiz?
 										 * 0 indicates unlimited
@@ -1581,7 +1580,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_timeout"] = 0;
 										}
-	
+
 										/**
 										 *
 										 * Non-required field "quiz_attempts" / How many attempts can a learner take at completing this quiz?
@@ -1597,7 +1596,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_attempts"] = 0;
 										}
-	
+
 										/**
 										 * Required field "timeframe" / When should this quiz be taken in relation to the event?
 										 */
@@ -1606,7 +1605,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["timeframe"] = "";
 										}
-	
+
 										/**
 										 * Non-required field "release_date" / Accessible Start (validated through validate_calendars function).
 										 * Non-required field "release_until" / Accessible Finish (validated through validate_calendars function).
@@ -1629,7 +1628,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												$require_finish	= false;
 											break;
 										}
-	
+
 										if (($STEP >= 3) && isset($PROCESSED["quiztype_id"]) && $PROCESSED["quiztype_id"]) {
 											$query = "SELECT `quiztype_code` FROM `quizzes_lu_quiztypes` WHERE `quiztype_id` = ".$db->qstr($PROCESSED["quiztype_id"]);
 											$quiztype = $db->GetOne($query);
@@ -1637,20 +1636,20 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												$require_finish = true;
 											}
 										}
-										
+
 										$viewable_date = validate_calendars("accessible", $require_start, $require_finish);
 										if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
 											$PROCESSED["release_date"] = (int) $viewable_date["start"];
 										} else {
 											$PROCESSED["release_date"] = 0;
 										}
-	
+
 										if ((isset($viewable_date["finish"])) && ((int) $viewable_date["finish"])) {
 											$PROCESSED["release_until"] = (int) $viewable_date["finish"];
 										} else {
 											$PROCESSED["release_until"] = 0;
 										}
-	
+
 										/**
 										 * If the back button was pressed, we should not error
 										 * check the current step, because someone could be just
@@ -1660,7 +1659,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										if (isset($_POST["step_back"]) && $_POST["step_back"]) {
 											$STEP = ($STEP - 1);
 										}
-	
+
 										/**
 										 * Error Checking
 										 * This error checking follows a different of a pattern than
@@ -1679,7 +1678,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													$ERRORSTR[]	= "Please select a proper quiz type when asked what type of quiz this should be considered.";
 													$STEP		= 2;
 												}
-	
+
 											case 1 :
 											default :
 												/**
@@ -1690,7 +1689,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													$ERRORSTR[] = "The <strong>Attached Quiz Title</strong> field is required.";
 													$STEP		= 1;
 												}
-	
+
 												if ((!isset($PROCESSED["quiz_id"])) || (!$PROCESSED["quiz_id"])) {
 													$ERROR++;
 													$ERRORSTR[] = "You must select an active quiz that you have authored in order to attach it to this community page.";
@@ -1698,7 +1697,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												}
 											break;
 										}
-	
+
 										/**
 										 * If the next button was pressed, and we have
 										 * successfully error checked the current step, then go
@@ -1712,7 +1711,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									} else {
 										$STEP = 1;
 									}
-	
+
 									/**
 									 * If the release_date and release_until variables are set,
 									 * set the additional variables required for validate_calendars().
@@ -1739,7 +1738,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										$PROCESSED["accessible_finish_hour"]	= 0;
 										$PROCESSED["accessible_finish_min"]		= 0;
 									}
-	
+
 									// Display Edit Step
 									switch($STEP) {
 										case 4 :
@@ -1747,7 +1746,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["content_id"]	= $RECORD_ID;
 											$PROCESSED["updated_date"]	= time();
 											$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-	
+
 											if ($db->AutoExecute("attached_quizzes", $PROCESSED, "UPDATE", "aquiz_id = ".$db->qstr($AQUIZ_ID))) {
 												$modal_onload[] = "parentReload()";
 												?>
@@ -1758,11 +1757,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														</div>
 														<div id="body">
 															<h2>Quiz Updated Successfully</h2>
-		
+
 															<div class="display-success">
 																You have successfully updated <strong><?php echo html_encode($PROCESSED["quiz_title"]); ?></strong> under this community page.
 															</div>
-		
+
 															To <strong>re-edit this quiz</strong> or <strong>close this window</strong> please use the buttons below.
 														</div>
 														<div id="footer">
@@ -1776,7 +1775,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											} else {
 												$ERROR++;
 												$ERRORSTR[] = "There was a problem updating <strong>".html_encode($PROCESSED["quiz_title"])."</strong> under this community page. The system administrator was informed of this error; please try again later.";
-	
+
 												application_log("error", "Unable to update an attached quiz [".$PROCESSED["quiz_id"]."] under community page [".$RECORD_ID."]. Database said: ".$db->ErrorMsg());
 												?>
 												<div class="modal-dialog" id="quiz-wizard">
@@ -1822,7 +1821,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											unset($PROCESSED["accessible_start_date"]);
 											unset($PROCESSED["accessible_start_hour"]);
 											unset($PROCESSED["accessible_start_min"]);
-	
+
 											unset($PROCESSED["accessible_finish"]);
 											unset($PROCESSED["accessible_finish_date"]);
 											unset($PROCESSED["accessible_finish_hour"]);
@@ -1846,11 +1845,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														if ($ERROR) {
 															echo display_error();
 														}
-		
+
 														if ($NOTICE) {
 															echo display_notice();
 														}
-														?>		
+														?>
 														<div class="wizard-question">
 															<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Time Release Information">
 															<colgroup>
@@ -1867,7 +1866,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 																	$quiztype = $db->GetOne($query);
 																	$delayed = ($quiztype == "delayed" ? true : false);
 																}
-																echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true); 
+																echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true);
 															?>
 															</table>
 														</div>
@@ -1915,21 +1914,29 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 																<input type="radio" id="required_yes" name="required" value="1"<?php echo (($PROCESSED["required"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">Required</label><br />
 															</div>
 														</div>
-		
+
+														<div class="wizard-question">
+															<div>Should the order of the questions be shuffled for this quiz?</div>
+															<div class="response-area">
+																<input type="radio" id="random_order_no" name="random_order" value="0"<?php echo (((!isset($PROCESSED["random_order"])) || (!$PROCESSED["random_order"])) ? " checked=\"checked\"" : ""); ?> /> <label for="random_order_no">Not Shuffled</label><br />
+																<input type="radio" id="random_order_yes" name="random_order" value="1"<?php echo (($PROCESSED["random_order"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="random_order_yes">Shuffled</label><br />
+															</div>
+														</div>
+
 														<div class="wizard-question">
 															<div>How much time (in minutes) can the learner spend taking this quiz?</div>
 															<div class="response-area">
 																<input type="text" id="quiz_timeout" name="quiz_timeout" value="<?php echo ((isset($PROCESSED["quiz_timeout"])) ? $PROCESSED["quiz_timeout"] : "0"); ?>" style="width: 50px" maxlength="4" /> min <span class="content-small">(<strong>Hint:</strong> enter 0 to allow <strong>unlimited</strong> time)</span>
 															</div>
 														</div>
-		
+
 														<div class="wizard-question">
 															<div>How many attempts can a learner take at completing this quiz?</div>
 															<div class="response-area">
 																<input type="text" id="quiz_attempts" name="quiz_attempts" value="<?php echo ((isset($PROCESSED["quiz_attempts"])) ? $PROCESSED["quiz_attempts"] : "0"); ?>" style="width: 50px" maxlength="4" /> <span class="content-small">(<strong>Hint:</strong> enter 0 to allow <strong>unlimited</strong> attempts)</span>
 															</div>
 														</div>
-		
+
 														<div class="wizard-question" style="margin-bottom: 0px">
 															<div>When should learners be allowed to view the results of the quiz?</div>
 															<div class="response-area">
@@ -1947,7 +1954,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														</div>
 													</div>
 													<div id="footer">
-														<input type="hidden" name="go_back" id="go_back" id="go_back" value="0" />
+														<input type="hidden" name="go_back" id="go_back" value="0" />
 														<input type="hidden" name="go_forward" id="go_forward" value="0" />
 														<button id="close-button" onclick="closeWizard()">Close</button>
 														<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
@@ -2026,7 +2033,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							/**
 							 * Add quiz form.
 							 */
-	
+
 							/**
 							 * Required field "quiz_id" / Step 1
 							 * Nothing at all can be done without this quiz_id.
@@ -2042,7 +2049,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								if ($quiz_record) {
 									if ($quiz_record["quiz_active"] == 1) {
 										$PROCESSED["quiz_id"] = $tmp_input;
-	
+
 										/**
 										 * Required field "quiz_title" / Attached Quiz Title.
 										 */
@@ -2051,7 +2058,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_title"] = $quiz_record["quiz_title"];
 										}
-	
+
 										/**
 										 * Non-Required field "quiz_notes" / Attached Quiz Instructions.
 										 */
@@ -2060,7 +2067,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_notes"] = "";
 										}
-	
+
 										/**
 										 * Non-required field "required" / Should completion of this quiz by the learner be considered optional or required?
 										 */
@@ -2069,7 +2076,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["required"] = 0;
 										}
-	
+
 										/**
 										 * Required field "quiztype_id" / When should learners be allowed to view the results of the quiz?
 										 */
@@ -2078,7 +2085,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiztype_id"] = 0;
 										}
-	
+
 										/**
 										 * Non-required field "quiz_timeout" / How much time (in minutes) can the learner spend completing this quiz?
 										 * 0 indicates unlimited
@@ -2093,7 +2100,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_timeout"] = 0;
 										}
-										
+
 										/**
 										 *
 										 * Non-required field "quiz_attempts" / How many attempts can a learner take at completing this quiz?
@@ -2109,7 +2116,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										} else {
 											$PROCESSED["quiz_attempts"] = 0;
 										}
-	
+
 										/**
 										 * Non-required field "release_date" / Accessible Start (validated through validate_calendars function).
 										 * Non-required field "release_until" / Accessible Finish (validated through validate_calendars function).
@@ -2132,7 +2139,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												$require_finish	= false;
 											break;
 										}
-										
+
 										if (($STEP >= 4) && isset($PROCESSED["quiztype_id"]) && $PROCESSED["quiztype_id"]) {
 											$query = "SELECT `quiztype_code` FROM `quizzes_lu_quiztypes` WHERE `quiztype_id` = ".$db->qstr($PROCESSED["quiztype_id"]);
 											$quiztype = $db->GetOne($query);
@@ -2140,20 +2147,20 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												$require_finish = true;
 											}
 										}
-	
+
 										$viewable_date = validate_calendars("accessible", $require_start, $require_finish);
 										if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
 											$PROCESSED["release_date"] = (int) $viewable_date["start"];
 										} else {
 											$PROCESSED["release_date"] = 0;
 										}
-	
+
 										if ((isset($viewable_date["finish"])) && ((int) $viewable_date["finish"])) {
 											$PROCESSED["release_until"] = (int) $viewable_date["finish"];
 										} else {
 											$PROCESSED["release_until"] = 0;
 										}
-	
+
 										if ((isset($_POST["accessible_start"])) && ($_POST["accessible_start"] == 1)) {
 											$PROCESSED["accessible_start"]		= 1;
 											$PROCESSED["accessible_start_date"]	= clean_input($_POST["accessible_start_date"], "credentials");
@@ -2165,7 +2172,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["accessible_start_hour"]	= 0;
 											$PROCESSED["accessible_start_min"]	= 0;
 										}
-	
+
 										if ((isset($_POST["accessible_finish"])) && ($_POST["accessible_finish"] == 1)) {
 											$PROCESSED["accessible_finish"]			= 1;
 											$PROCESSED["accessible_finish_date"]	= clean_input($_POST["accessible_finish_date"], "credentials");
@@ -2176,14 +2183,14 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["accessible_finish_date"]	= "";
 											$PROCESSED["accessible_finish_hour"]	= 0;
 											$PROCESSED["accessible_finish_min"]		= 0;
-	
+
 										}
 									}
 								}
 							} else {
 								$STEP = 1;
 							}
-	
+
 							/**
 							 * If the back button was pressed, we should not error
 							 * check the current step, because someone could be just
@@ -2193,7 +2200,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							if (isset($_POST["step_back"]) && $_POST["step_back"]) {
 								$STEP = ($STEP - 1);
 							}
-	
+
 							/**
 							 * Error Checking
 							 * This error checking follows a different of a pattern than
@@ -2202,7 +2209,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							 */
 							switch($STEP) {
 								case 5 :
-								case 4 :	
+								case 4 :
 								case 3 :
 									/**
 									 * Required field "quiztype_id" / When should learners be allowed to view the results of the quiz?
@@ -2212,7 +2219,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										$ERRORSTR[]	= "Please select a proper quiz type when asked what type of quiz this should be considered.";
 										$STEP		= 3;
 									}
-	
+
 								case 2 :
 									/**
 									 * Required field "quiz_title" / Attached Quiz Title.
@@ -2231,7 +2238,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									}
 								break;
 							}
-	
+
 							/**
 							 * If the next button was pressed, and we have
 							 * successfully error checked the current step, then go
@@ -2242,7 +2249,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									$STEP = ($STEP + 1);
 								}
 							}
-	
+
 							// Display Add Step
 							switch($STEP) {
 								case 5 :
@@ -2251,7 +2258,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									$PROCESSED["accesses"]		= 0;
 									$PROCESSED["updated_date"]	= time();
 									$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-	
+
 									if ($db->AutoExecute("attached_quizzes", $PROCESSED, "INSERT")) {
 										$modal_onload[] = "parentReload()";
 										?>
@@ -2262,11 +2269,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												</div>
 												<div id="body">
 													<h2>Quiz Attached Successfully</h2>
-		
+
 													<div class="display-success">
 														You have successfully attached <strong><?php echo html_encode($PROCESSED["quiz_title"]); ?></strong> to this community page.
 													</div>
-		
+
 													To <strong>attach another quiz</strong> or <strong>close this window</strong> please use the buttons below.
 												</div>
 												<div id="footer">
@@ -2280,7 +2287,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									} else {
 										$ERROR++;
 										$ERRORSTR[] = "There was a problem attaching <strong>".html_encode($PROCESSED["quiz_title"])."</strong> to this community page. The system administrator was informed of this error; please try again later.";
-	
+
 										application_log("error", "Unable to attach quiz [".$PROCESSED["quiz_id"]."] to community page [".$RECORD_ID."]. Database said: ".$db->ErrorMsg());
 										?>
 										<div class="modal-dialog" id="quiz-wizard">
@@ -2326,7 +2333,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									unset($PROCESSED["accessible_start_date"]);
 									unset($PROCESSED["accessible_start_hour"]);
 									unset($PROCESSED["accessible_start_min"]);
-	
+
 									unset($PROCESSED["accessible_finish"]);
 									unset($PROCESSED["accessible_finish_date"]);
 									unset($PROCESSED["accessible_finish_hour"]);
@@ -2350,11 +2357,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												if ($ERROR) {
 													echo display_error();
 												}
-		
+
 												if ($NOTICE) {
 													echo display_notice();
 												}
-												?>		
+												?>
 												<div class="wizard-question">
 													<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Time Release Information">
 													<colgroup>
@@ -2370,8 +2377,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 															$query = "SELECT `quiztype_code` FROM `quizzes_lu_quiztypes` WHERE `quiztype_id` = ".$db->qstr($PROCESSED["quiztype_id"]);
 															$quiztype = $db->GetOne($query);
 															$delayed = ($quiztype == "delayed" ? true : false);
-														} 
-														echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true); 
+														}
+														echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true);
 													?>
 													</table>
 												</div>
@@ -2419,21 +2426,29 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														<input type="radio" id="required_yes" name="required" value="1"<?php echo (($PROCESSED["required"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">Required</label><br />
 													</div>
 												</div>
-		
+
+                                                <div class="wizard-question">
+                                                    <div>Should the order of the questions be shuffled for this quiz?</div>
+                                                    <div class="response-area">
+                                                        <input type="radio" id="random_order_no" name="random_order" value="0"<?php echo (((!isset($PROCESSED["random_order"])) || (!$PROCESSED["random_order"])) ? " checked=\"checked\"" : ""); ?> /> <label for="random_order_no">Not Shuffled</label><br />
+                                                        <input type="radio" id="random_order_yes" name="random_order" value="1"<?php echo (($PROCESSED["random_order"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="random_order_yes">Shuffled</label><br />
+                                                    </div>
+                                                </div>
+
 												<div class="wizard-question">
 													<div>How much time (in minutes) can the learner spend taking this quiz?</div>
 													<div class="response-area">
 														<input type="text" id="quiz_timeout" name="quiz_timeout" value="<?php echo ((isset($PROCESSED["quiz_timeout"])) ? $PROCESSED["quiz_timeout"] : "0"); ?>" style="width: 50px" maxlength="4" /> min <span class="content-small">(<strong>Hint:</strong> enter 0 to allow <strong>unlimited</strong> time)</span>
 													</div>
 												</div>
-		
+
 												<div class="wizard-question">
 													<div>How many attempts can a learner take at completing this quiz?</div>
 													<div class="response-area">
 														<input type="text" id="quiz_attempts" name="quiz_attempts" value="<?php echo ((isset($PROCESSED["quiz_attempts"])) ? $PROCESSED["quiz_attempts"] : "0"); ?>" style="width: 50px" maxlength="4" /> <span class="content-small">(<strong>Hint:</strong> enter 0 to allow <strong>unlimited</strong> attempts)</span>
 													</div>
 												</div>
-		
+
 												<div class="wizard-question" style="margin-bottom: 0px">
 													<div>When should learners be allowed to view the results of the quiz?</div>
 													<div class="response-area">
@@ -2611,7 +2626,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													<?php
 													$NOTICE++;
 													$NOTICESTR[] = "You have not yet created any quizzes to attach to this community page.<br /><br />To author a new Quiz, close this window and click the <strong>Manage Quizzes</strong> tab.";
-		
+
 													echo display_notice();
 													?>
 												</div>
@@ -2629,11 +2644,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					?>
 					<div id="scripts-on-open" style="display: none;">
 					<?php
-						foreach ($modal_onload as $string) {
-							echo $string.";\n";
-						}
+                    foreach ($modal_onload as $string) {
+                        echo $string.";\n";
+                    }
 					?>
-					function selectedTimeframe(timeframe) {
+					window.selectedTimeframe = function (timeframe) {
 						$('accessible_start').checked	= false;
 						$('accessible_finish').checked	= false;
 
@@ -2657,17 +2672,17 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "The provided community identifier does not exist in this system.";
-	
+
 				echo display_error();
-	
+
 				application_log("error", "Quiz wizard was accessed without a valid community page id.");
 			}
 		} else {
 			$ERROR++;
 			$ERRORSTR[] = "You must provide an community page identifier when using the quiz wizard.";
-	
+
 			echo display_error();
-	
+
 			application_log("error", "Quiz wizard was accessed without any community page id.");
 		}
 	}

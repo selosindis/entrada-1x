@@ -1046,6 +1046,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									}
 								break;
 								case 4 :
+									$modal_onload[] = "selectedTimeframe('".$PROCESSED["timeframe"]."')";
+
 									/**
 									 * Unset variables set by this page or they get posted twice.
 									 */

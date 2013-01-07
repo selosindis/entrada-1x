@@ -1,7 +1,7 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
- * 
+ *
  * Entrada is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -104,7 +104,7 @@ if (!defined("PARENT_INCLUDED")) {
 
 		new_sidebar_item("Display Style", $sidebar_html, "display-style", "open");
 	}
-	
+
 
 	if (isset($_GET["organisation_id"]) && ($organisation = ((int) $_GET["organisation_id"]))) {
 		$ORGANISATION_ID = $organisation;
@@ -133,7 +133,7 @@ if (!defined("PARENT_INCLUDED")) {
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/windows/window.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 		$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/windows/default.css\" rel=\"stylesheet\" type=\"text/css\" />";
 		$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/windows/medtech.css\" rel=\"stylesheet\" type=\"text/css\" />";
-		
+
 		?>
 		<script type="text/javascript">
 			function beginQuiz(id) {
@@ -184,10 +184,10 @@ if (!defined("PARENT_INCLUDED")) {
 			} else {
 				if ($ENTRADA_ACL->amIAllowed(new EventResource($EVENT_ID, $event_info['course_id'], $event_info['organisation_id']), 'read')) {
 					add_statistic($MODULE, "view", "event_id", $EVENT_ID);
-					
+
 					$event_contacts = events_fetch_event_contacts($EVENT_ID);
 					$event_audience = events_fetch_event_audience($EVENT_ID);
-					
+
 					$associated_cohorts = array("all");
 					$associated_cohorts_string = "";
 					$query = "SELECT * FROM `event_audience` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `audience_type` = 'cohort'";
@@ -206,7 +206,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$event_quizzes = $event_resources["quizzes"];
 					$event_discussions = $event_resources["discussions"];
 					$event_types = $event_resources["types"];
-					
+
 					// Meta information for this page.
 					$PAGE_META["title"]			= $event_info["event_title"]." - ".APPLICATION_NAME;
 					$PAGE_META["description"]	= trim(str_replace(array("\t", "\n", "\r"), " ", html_encode(strip_tags($event_info["event_goals"]))));
@@ -230,17 +230,17 @@ if (!defined("PARENT_INCLUDED")) {
 
 // @todo simpson This needs to be fixed.
 					if (($_SESSION["details"]["allow_podcasting"]) && ($event_audience_type == "cohort") && (in_array($_SESSION["details"]["allow_podcasting"], $associated_cohorts))) {
-						$sidebar_html = "To upload a podcast: <a href=\"#page-top\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-podcast.api.php?id=".$EVENT_ID."')\">click here</a>";
+						$sidebar_html = "To upload a podcast: <a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-podcast.api.php?id=".$EVENT_ID."')\">click here</a>";
 						new_sidebar_item("Upload A Podcast", $sidebar_html, "podcast_uploading", "open", "2.0");
-						
+
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js\"></script>";
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/wizard.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 						$HEAD[] = "<link href=\"".ENTRADA_URL."/css/wizard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 						$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/javascript/calendar/css/xc2_default.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/config/xc2_default.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_inpage.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-						?>								
-		
+						?>
+
 						<iframe id="upload-frame" name="upload-frame" onload="frameLoad()" style="display: none;"></iframe>
 						<a id="false-link" href="#placeholder"></a>
 						<div id="placeholder" style="display: none"></div>
@@ -260,7 +260,7 @@ if (!defined("PARENT_INCLUDED")) {
 								}
 							});
 						});
-						
+
 						function openDialog (url) {
 							if (url && url != ajax_url) {
 								ajax_url = url;
@@ -279,7 +279,7 @@ if (!defined("PARENT_INCLUDED")) {
 						</script>
 						<?php
 					}
-					
+
 					if ($transverse) {
 						$transversal_ids = events_fetch_transversal_ids($EVENT_ID, (isset($community_id) && $community_id ? $community_id : false));
 					}
@@ -287,13 +287,13 @@ if (!defined("PARENT_INCLUDED")) {
 					if (($transverse) && count($transversal_ids)) {
 						$back_click = "";
 						$next_click = "";
-						
+
 						echo "<table style=\"width: 100%; height: 23px\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
 						echo "<tr>\n";
 						echo "	<td style=\"width: 22px; height: 23px\">";
 						if (isset($transversal_ids["prev"])) {
 							$back_click = ENTRADA_URL."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($transversal_ids["prev"])));
-							
+
 							echo "<a id=\"back_event\" href=\"".$back_click."\" title=\"Previous Event\"><img src=\"".ENTRADA_RELATIVE."/images/cal-back.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Previous Event\" title=\"Previous Event\" /></a>";
 						} else {
 							echo "<img src=\"".ENTRADA_RELATIVE."/images/cal-back-off.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"\" title=\"\" />";
@@ -303,7 +303,7 @@ if (!defined("PARENT_INCLUDED")) {
 						echo "	<td style=\"width: 22px; height: 23px\">";
 						if (isset($transversal_ids["next"])) {
 							$next_click = ENTRADA_URL."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($transversal_ids["next"])));
-							
+
 							echo "<a id=\"next_event\" href=\"".$next_click."\" title=\"Next Event\"><img src=\"".ENTRADA_RELATIVE."/images/cal-next.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Next Event\" title=\"Next Event\" /></a>";
 						} else {
 							echo "<img src=\"".ENTRADA_RELATIVE."/images/cal-next-off.gif\" width=\"22\" height=\"23\" alt=\"\" title=\"\" />";
@@ -327,7 +327,7 @@ if (!defined("PARENT_INCLUDED")) {
 
 					echo "<div class=\"content-small\">".fetch_course_path($event_info["course_id"])."</div>\n";
 					echo "<h1 id=\"page-top\" class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
-					
+
 					echo "<div id=\"event-sidebar\">\n";
 					?>
 					<table>
@@ -351,7 +351,7 @@ if (!defined("PARENT_INCLUDED")) {
 								<td>
 									<?php
 									echo (((int) $event_info["event_duration"]) ? $event_info["event_duration"]." Minutes" : "To Be Announced");
-									
+
 									if ($event_types) {
 										echo "<br /><br />";
 										echo "<div class=\"content-small\">\n";
@@ -378,7 +378,7 @@ if (!defined("PARENT_INCLUDED")) {
 											<?php
 											foreach ($event_contacts["teacher"] as $contact) {
 												echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
-											}									
+											}
 											?>
 											</ul>
 										</td>
@@ -397,7 +397,7 @@ if (!defined("PARENT_INCLUDED")) {
 											<?php
 											foreach ($event_contacts["tutor"] as $contact) {
 												echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
-											}									
+											}
 											?>
 											</ul>
 										</td>
@@ -416,7 +416,7 @@ if (!defined("PARENT_INCLUDED")) {
 											<?php
 											foreach ($event_contacts["ta"] as $contact) {
 												echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
-											}									
+											}
 											?>
 											</ul>
 										</td>
@@ -435,7 +435,7 @@ if (!defined("PARENT_INCLUDED")) {
 											<?php
 											foreach ($event_contacts["auditor"] as $contact) {
 												echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
-											}									
+											}
 											?>
 											</ul>
 										</td>
@@ -446,7 +446,7 @@ if (!defined("PARENT_INCLUDED")) {
 							?>
 							<tr class="spacer">
 								<td colspan="2"><hr></td>
-							</tr>							
+							</tr>
 							<tr>
 								<th>Audience</th>
 								<td>
@@ -461,7 +461,7 @@ if (!defined("PARENT_INCLUDED")) {
 											} else {
 												$css_class = "group";
 											}
-											
+
 											if (is_array($results)) {
 												foreach ($results as $audience) {
 													echo "<li class=\"".$css_class."\">".($audience["link"] ? "<a href=\"".$audience["link"]."\">" : "").$audience["title"].($audience["link"] ? "</a>" : "")."</li>";
@@ -514,24 +514,24 @@ if ($event_audience_type == "cohort") {
 		echo "		</td>\n";
 		echo "	</tr>\n";
 	}
-}					
+}
 					echo "</div>\n";
 
 					echo "<div class=\"event-body\">\n";
-					
+
 					if (clean_input($event_info["event_description"], array("notags", "nows")) != "") {
 						echo "<div class=\"event-description\">";
 						echo trim(strip_selected_tags($event_info["event_description"], array("font")));
 						echo "</div>";
 					}
-					
+
 					if (clean_input($event_info["event_message"], array("notags", "nows")) != "") {
 						echo "<div class=\"event-message\">\n";
 						echo "	<h3>Teacher's Message:</h3>\n";
 						echo	trim(strip_selected_tags($event_info["event_message"], array("font")));
 						echo "</div>\n";
-					}					
-					
+					}
+
 					echo "</div>\n";
 
 					echo "<div style=\"clear: both\" />\n";
@@ -572,7 +572,7 @@ foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
 				$curriculum_objectives["objectives"][$objective_id]["secondary"] = true;
 			} elseif ($curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
 				$curriculum_objectives["objectives"][$objective_id]["tertiary"] = true;
-			} 
+			}
 		}
 		}
 		$show_curriculum_objectives = true;
@@ -621,7 +621,7 @@ if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_o
 			} else {
 				hierarchy = 0;
 			}
-			new Ajax.Updater('objectives_list', '<?php echo ENTRADA_RELATIVE; ?>/api/objectives.api.php', 
+			new Ajax.Updater('objectives_list', '<?php echo ENTRADA_RELATIVE; ?>/api/objectives.api.php',
 				{
 					method:	'post',
 					parameters: 'course_ids=<?php echo $event_info["course_id"] ?>&hierarchy='+hierarchy+'&event_id=<?php echo $EVENT_ID; ?>'
@@ -637,19 +637,19 @@ if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_o
 		echo "</div>\n";
 	}
 	echo "</div>\n";
-} 
+}
 
 $query			= "	SELECT a.`topic_id`,a.`topic_name`, e.`topic_coverage`, e.`topic_time`
-					FROM `events_lu_topics` AS a 
-					LEFT JOIN `topic_organisation` AS b 
-					ON a.`topic_id` = b.`topic_id` 
-					LEFT JOIN `courses` AS c 
-					ON b.`organisation_id` = c.`organisation_id` 
-					LEFT JOIN `events` AS d 
-					ON c.`course_id` = d.`course_id` 
-					JOIN `event_topics` AS e 
-					ON d.`event_id` = e.`event_id` 
-					AND a.`topic_id` = e.`topic_id` 
+					FROM `events_lu_topics` AS a
+					LEFT JOIN `topic_organisation` AS b
+					ON a.`topic_id` = b.`topic_id`
+					LEFT JOIN `courses` AS c
+					ON b.`organisation_id` = c.`organisation_id`
+					LEFT JOIN `events` AS d
+					ON c.`course_id` = d.`course_id`
+					JOIN `event_topics` AS e
+					ON d.`event_id` = e.`event_id`
+					AND a.`topic_id` = e.`topic_id`
 					WHERE d.`event_id` = ".$db->qstr($EVENT_ID);
 
 $topic_results	= $db->GetAll($query);
@@ -688,9 +688,9 @@ if ($topic_results) { ?>
 		?>
 	</table>
 
-				<?php 
-	
-} 
+				<?php
+
+}
 
 					echo "<a name=\"event-resources-section\"></a>";
 					echo "<h2 title=\"Event Resources Section\">Event Resources</h2>\n";
@@ -1026,7 +1026,7 @@ if ($topic_results) { ?>
 					echo "		<div style=\"text-align: right; padding-top: 8px\"><input type=\"submit\" class=\"button\" value=\"Submit\" /></div>\n";
 					echo "	</form>\n";
 					echo "</div>\n";
-					
+
 					/**
 					 * Sidebar item that will provide the links to the different sections within this page.
 					 */
@@ -1079,7 +1079,7 @@ if ($topic_results) { ?>
 		/**
 		 * Fetch all of the events that apply to the current filter set.
 		 */
-		
+
 		$learning_events = events_fetch_filtered_events(
 				$ENTRADA_USER->getActiveId(),
 				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"],
@@ -1098,7 +1098,7 @@ if ($topic_results) { ?>
 		 * Output the filter HTML.
 		 */
 		events_output_filter_controls();
-		
+
 		/**
 		 * Output the calendar controls and pagination.
 		 */

@@ -24,7 +24,7 @@
 
 <widget xmlns="http://www.w3.org/ns/widgets"
         xmlns:rim="http://www.blackberry.com/ns/widgets"
-	version="3.0.0.0" id="Entrada">
+	version="1.1.0.0" id="Entrada">
 
   <name>Entrada</name>
 

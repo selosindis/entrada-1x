@@ -17,19 +17,23 @@ var app = {
 			dhx.env.mobile = true;
 			dhx.env.touch = true;
 			initScheduler();
+			
 			window.url = $('#url').val();
 			var username = '';
 			var password = '';
 					
 			if (window.localStorage.getItem('hash') != null) {
+				var hash = window.localStorage.getItem('hash');
 				$.ajax({
 					url: 'http://' + window.url + '/api/mobile.api.php',
 					type: 'post',
-					data: ({method:'credentials', hash:window.localStorage.getItem('hash')}),
+					data: ({method:'credentials', hash:hash}),
 					dataType: 'text',
 					success:function (data) {
 						if (data == true) {
 							$('#save-password').prop('checked', true);
+							disableUserInfo(false);
+							$('.agenda').addClass("ui-btn-active");
 							loadApp();			
 						} else {
 							navigator.notification.alert('Invalid credentials');
@@ -82,7 +86,6 @@ var app = {
 						data: ({method:'notices', total_notices:total_notices, username:username, password:password, hash:window.localStorage.getItem('hash')}),
 						dataType: 'text',
 						success:function (data) {
-							console.log(data);
 							if (data != 'false') {
 								if ($('.no-notices').length > 0) {
 									$('.no-notices').remove();
@@ -268,6 +271,29 @@ var app = {
 				});
 			}
 			
+			function disableUserInfo (credentialRequired) {
+				if (credentialRequired) {
+					if (!$('#username').val() || !$('#password').val()) {
+						navigator.notification.alert('Please enter your credentials before choosing this option');
+						$('input[name="login-option"]').filter('[value=0]').attr('checked', true);
+					} else {
+						$('#username').attr('disabled', 'disabled');
+						$('#password').attr('disabled', 'disabled');
+					}
+				} else {
+					$('#username').attr('disabled', 'disabled');
+					$('#password').attr('disabled', 'disabled');
+				}
+			}
+			
+			function enableUserInfo () {
+				$('#username').removeAttr('disabled');
+				$('#password').removeAttr('disabled');
+				
+				$('#username').removeClass("ui-disabled mobile-textinput-disabled ui-state-disabled");
+				$('#password').removeClass("ui-disabled mobile-textinput-disabled ui-state-disabled");
+			}
+			
 			$(window).bind("resize", function () {
 				scheduler_size();
 			});
@@ -282,11 +308,11 @@ var app = {
 					data: ({method:'credentials', username:username, password:password}),
 					dataType: 'text',
 					success:function (data) {
-						console.log(data);
 						if (data == true) {
 							$('.close').show();
 							loadApp();
 							$.mobile.changePage('#agenda', {transition: 'flip'});
+							$('.agenda').addClass("ui-btn-active");
 							dhx.Touch.enable();
 							if ($('input[name=login-option]:checked').val() == '1') {
 								fetchHash();
@@ -303,6 +329,23 @@ var app = {
 					} 
 				});
 			});
+	
+			$('input[name="login-option"]').change(function () {
+				if ($(this).attr('value') == 1) {
+					disableUserInfo(true);
+				} else if ($(this).attr('value') == 0) {
+					enableUserInfo();
+				}
+			});
+			
+			$('.settings').bind('touchstart', function() {
+				dhx.Touch.disable();
+			});
+			
+			$('.close').bind('touchstart', function () {
+				$('.agenda').addClass("ui-btn-active");
+			});
+			
 		}); 
     }
 }

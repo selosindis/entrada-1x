@@ -54,20 +54,20 @@
                 <a href="#agenda" data-role="button" data-icon="delete" class="ui-btn-right ui-btn-active close" data-transition="flip">Close</a>
             </div>
             
-            <div data-role="content">	
+            <div data-role="content" id="test">	
                 <h1>Entrada Settings</h1>
                 <div data-role="fieldcontain">
                     <label for="url">Entrada URL:</label>
                     <input type="text" autocorrect="off" autocapitalize="off" name="url" id="url" value="" />
                 </div>
-                <div data-role="fieldcontain">
-                    <label for="username" id="username-label">Username:</label>
-                    <input type="text" autocorrect="off" autocapitalize="off" name="username" id="username" value="" />
-                </div>
-                <div data-role="fieldcontain">
-                    <label for="password" id="password-label">Password:</label>
-                    <input type="password" autocorrect="off" autocapitalize="off" name="password" id="password" value="" />
-                </div>
+					<div data-role="fieldcontain" id="username_field">
+						<label for="username" id="username-label">Username:</label>
+						<input type="text" autocorrect="off" autocapitalize="off" name="username" id="username" value="" />
+					</div>
+					<div data-role="fieldcontain" id="password_field">
+						<label for="password" id="password-label">Password:</label>
+						<input type="password" autocorrect="off" autocapitalize="off" name="password" id="password" value="" />
+					</div>
                 <fieldset data-role="controlgroup">
                     <legend>Auto-login options:</legend>
                     <input type="radio" name="login-option" id="save-password" value="1" />

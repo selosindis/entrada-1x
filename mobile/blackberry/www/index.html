@@ -15,7 +15,7 @@
 		<div data-role="page" id="agenda" data-theme="b">
 		    <div data-role="header" class="header" data-id="persistent" data-position="fixed">
 		        <h1>Entrada</h1>
-                <a href="#settings" data-role="button" data-icon="gear" class="ui-btn-right settings" data-transition="flip">Settings</a>
+                <a href="#settings" data-role="button" data-icon="gear" class="ui-btn-right settings" data-transition="none">Settings</a>
                 <div data-role="navbar">
                     <ul>
                         <li><a id="agenda_button" href="#agenda" data-role="button" data-icon="home" data-iconpos="top" class="agenda" data-transition="none">My Agenda</a></li>
@@ -30,7 +30,7 @@
 		<div data-role="page" id="events" data-theme="b">
             <div data-role="header" class="header" data-id="persistent" data-position="fixed">
                 <h1>Entrada</h1>
-                <a href="#settings" data-role="button" data-icon="gear" class="ui-btn-right settings" data-transition="flip">Settings</a>
+                <a href="#settings" data-role="button" data-icon="gear" class="ui-btn-right settings" data-transition="none">Settings</a>
                 <div data-role="navbar">
                     <ul>
                         <li><a href="#agenda" data-role="button" data-icon="home" data-iconpos="top" class="agenda" data-transition="none">My Agenda</a></li>
@@ -51,23 +51,23 @@
         <div data-role="page" id="settings" data-theme="b">
             <div data-role="header">
                 <h1>Settings</h1>
-                <a href="#agenda" data-role="button" data-icon="delete" class="ui-btn-right ui-btn-active close" data-transition="flip">Close</a>
+                <a href="#agenda" data-role="button" data-icon="delete" class="ui-btn-right ui-btn-active close" data-transition="none">Close</a>
             </div>
             
-            <div data-role="content">	
+            <div data-role="content" id="test">	
                 <h1>Entrada Settings</h1>
                 <div data-role="fieldcontain">
                     <label for="url">Entrada URL:</label>
                     <input type="text" autocorrect="off" autocapitalize="off" name="url" id="url" value="" />
                 </div>
-                <div data-role="fieldcontain">
-                    <label for="username" id="username-label">Username:</label>
-                    <input type="text" autocorrect="off" autocapitalize="off" name="username" id="username" value="" />
-                </div>
-                <div data-role="fieldcontain">
-                    <label for="password" id="password-label">Password:</label>
-                    <input type="password" autocorrect="off" autocapitalize="off" name="password" id="password" value="" />
-                </div>
+					<div data-role="fieldcontain" id="username_field">
+						<label for="username" id="username-label">Username:</label>
+						<input type="text" autocorrect="off" autocapitalize="off" name="username" id="username" value="" />
+					</div>
+					<div data-role="fieldcontain" id="password_field">
+						<label for="password" id="password-label">Password:</label>
+						<input type="password" autocorrect="off" autocapitalize="off" name="password" id="password" value="" />
+					</div>
                 <fieldset data-role="controlgroup">
                     <legend>Auto-login options:</legend>
                     <input type="radio" name="login-option" id="save-password" value="1" />

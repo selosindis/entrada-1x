@@ -17,23 +17,28 @@ var app = {
 			dhx.env.mobile = true;
 			dhx.env.touch = true;
 			initScheduler();
-			var url = '';
+			
+			window.url = $('#url').val();
 			var username = '';
 			var password = '';
 					
 			if (window.localStorage.getItem('hash') != null) {
+				var hash = window.localStorage.getItem('hash');
 				$.ajax({
 					url: 'http://' + window.url + '/api/mobile.api.php',
 					type: 'post',
-					data: ({method:'credentials', hash:window.localStorage.getItem('hash')}),
+					data: ({method:'credentials', hash:hash}),
 					dataType: 'text',
 					success:function (data) {
 						if (data == true) {
 							$('#save-password').prop('checked', true);
+							disableUserInfo(false);
+							$('.agenda').addClass("ui-btn-active");
 							loadApp();			
 						} else {
 							navigator.notification.alert('Invalid credentials');
-							$.mobile.changePage('#settings', { transition: "flip"});
+							$.mobile.changePage('#settings', { transition: "none"});
+							dhx.Touch.disable();
 							$('.close').hide();
 						}
 					}, error: function (event, request, settings, exception, data) {
@@ -41,7 +46,8 @@ var app = {
 					} 
 				});
 			} else if (window.localStorage.getItem('hash') == null) {
-				$.mobile.changePage('#settings', { transition: "flip"});
+				$.mobile.changePage('#settings', { transition: "none"});
+				dhx.Touch.disable();
 				$('.close').hide();
 			}
 			
@@ -236,7 +242,7 @@ var app = {
 
 			function scheduler_size() {
 				var width = $("html").width();
-				var height = $("html").height() - 95;
+				var height = $("html").height();
 				$("#content").css("height", height);
 				$$("scheduler").define("width", width);
 				$$("scheduler").define("height", height);
@@ -264,7 +270,30 @@ var app = {
 					} 
 				});
 			}
-
+			
+			function disableUserInfo (credentialRequired) {
+				if (credentialRequired) {
+					if (!$('#username').val() || !$('#password').val()) {
+						navigator.notification.alert('Please enter your credentials before choosing this option');
+						$('input[name="login-option"]').filter('[value=0]').attr('checked', true);
+					} else {
+						$('#username').attr('disabled', 'disabled');
+						$('#password').attr('disabled', 'disabled');
+					}
+				} else {
+					$('#username').attr('disabled', 'disabled');
+					$('#password').attr('disabled', 'disabled');
+				}
+			}
+			
+			function enableUserInfo () {
+				$('#username').removeAttr('disabled');
+				$('#password').removeAttr('disabled');
+				
+				$('#username').removeClass("ui-disabled mobile-textinput-disabled ui-state-disabled");
+				$('#password').removeClass("ui-disabled mobile-textinput-disabled ui-state-disabled");
+			}
+			
 			$(window).bind("resize", function () {
 				scheduler_size();
 			});
@@ -282,7 +311,9 @@ var app = {
 						if (data == true) {
 							$('.close').show();
 							loadApp();
-							$.mobile.changePage('#agenda', {transition: 'flip'});
+							$.mobile.changePage('#agenda', {transition: 'none'});
+							$('.agenda').addClass("ui-btn-active");
+							dhx.Touch.enable();
 							if ($('input[name=login-option]:checked').val() == '1') {
 								fetchHash();
 							} else if ($('input[name=login-option]:checked').val() == '0') {
@@ -298,6 +329,23 @@ var app = {
 					} 
 				});
 			});
+	
+			$('input[name="login-option"]').change(function () {
+				if ($(this).attr('value') == 1) {
+					disableUserInfo(true);
+				} else if ($(this).attr('value') == 0) {
+					enableUserInfo();
+				}
+			});
+			
+			$('.settings').bind('touchstart click', function() {
+				dhx.Touch.disable();
+			});
+			
+			$('.close').bind('touchstart click', function () {
+				$('.agenda').addClass("ui-btn-active");
+			});
+			
 		}); 
     }
 }

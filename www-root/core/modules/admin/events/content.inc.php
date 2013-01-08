@@ -1,7 +1,7 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
- * 
+ *
  * Entrada is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -17,12 +17,12 @@
  *
  * This file is used to modify content (i.e. goals, objectives, file resources
  * etc.) within a learning event from the entrada.events table.
- * 
+ *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
- * 
+ *
 */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
@@ -82,7 +82,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							WHERE a.`event_id`  = ".$db->qstr($EVENT_ID)."
 							ORDER BY `history_timestamp` DESC, `history_message` ASC";
 				$history = $db->GetAll($query);
-				
+
 				if (!$history) {
 					$query = "	SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `fullname`,
 								$LASTUPDATED AS timestamp, 'created this learning event.' AS message
@@ -198,7 +198,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				 * Fetch the Curriculum Objective details.
 				 */
 				list($curriculum_objectives_list,$top_level_id) = courses_fetch_objectives($event_info["organisation_id"],array($event_info["course_id"]),-1, 1, false, false, $EVENT_ID, true);
-				
+
 				$curriculum_objectives = array();
 
 				if (isset($_POST["checked_objectives"]) && ($checked_objectives = $_POST["checked_objectives"]) && (is_array($checked_objectives))) {
@@ -209,7 +209,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							} else {
 								$objective_text = false;
 							}
-							
+
 							$curriculum_objectives[$objective_id] = $objective_text;
 						}
 					}
@@ -230,16 +230,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$event_eventtypes_list	= array();
 				$event_eventtypes		= array();
 
-				$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a 
-								LEFT JOIN `eventtype_organisation` AS c 
-								ON a.`eventtype_id` = c.`eventtype_id` 
+				$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a
+								LEFT JOIN `eventtype_organisation` AS c
+								ON a.`eventtype_id` = c.`eventtype_id`
 								LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
-								ON b.`organisation_id` = c.`organisation_id` 
+								ON b.`organisation_id` = c.`organisation_id`
 								WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-								AND a.`eventtype_active` = '1' 
+								AND a.`eventtype_active` = '1'
 								ORDER BY a.`eventtype_order`
 				";
-				
+
 				$results	= $db->GetAll($query);
 				if ($results) {
 					foreach ($results as $result) {
@@ -268,7 +268,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					$eventtype_durations = $_POST["duration_segment"];
 
 					$event_types = explode(",", trim($_POST["eventtype_duration_order"]));
-					
+
 					if ((is_array($event_types)) && (count($event_types))) {
 						foreach ($event_types as $order => $eventtype_id) {
 							if (($eventtype_id = clean_input($eventtype_id, array("trim", "int"))) && ($duration = clean_input($eventtype_durations[$order], array("trim", "int")))) {
@@ -284,17 +284,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 							}
 						}
-						
+
 						$event_duration	= 0;
 						$old_event_duration = 0;
 						foreach($event_eventtypes as $event_type) {
 							$event_duration += $event_type["duration"];
 						}
-						
+
 						foreach($old_event_eventtypes as $event_type) {
 							$old_event_duration += $event_type["duration"];
 						}
-						
+
 						if($old_event_duration != $event_duration) {
 							$ERROR++;
 							$ERRORSTR[] = "The modified <strong>Event Types</strong> duration specified is different than the exisitng one, please ensure the event's duration remains the same.";
@@ -359,7 +359,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									$event_finish += ($event_type["duration"] * 60);
 									$event_duration += $event_type["duration"];
 								}
-					
+
 								/**
 								 * Update base Learning Event.
 								 */
@@ -376,7 +376,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								/**
 								 * Update Event Types.
 								 */
-							
+
 								$query = "DELETE FROM `event_eventtypes` WHERE `event_id` = ".$db->qstr($EVENT_ID);
 								if ($db->Execute($query)) {
 									foreach ($event_eventtypes as $event_type) {
@@ -393,7 +393,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 									application_log("error", "Unable to delete any eventtype records while editing an event. Database said: ".$db->ErrorMsg());
 								}
-			
+
 								/**
 								 * Update Clinical Presentations.
 								 */
@@ -662,12 +662,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						},
 						afterClose: function() {
 							if (uploaded == true) {
-									window.location = '<?php echo ENTRADA_URL."/admin/events?".replace_query(); ?>';
+                                window.location = '<?php echo ENTRADA_URL."/admin/events?".replace_query(); ?>';
 							}
 						}
 					});
 				});
-				
+
 				function openDialog (url) {
 					if (url && url != ajax_url) {
 						ajax_url = url;
@@ -764,7 +764,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 				</script>
 				<?php
-				events_subnavigation($event_info,'content');											
+				events_subnavigation($event_info,'content');
 
 
 				echo "<div class=\"content-small\">".fetch_course_path($event_info["course_id"])."</div>\n";
@@ -1079,7 +1079,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								</tr>
 								<?php
 							}
-							
+
 							if ((is_array($curriculum_objectives_list["used_ids"])) && (count($curriculum_objectives_list["used_ids"]))) {
 								echo "<tr>\n";
 								echo "	<td style=\"vertical-align: top;\">\n";
@@ -1133,20 +1133,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 															ON a.`topic_id` = b.`topic_id`
 															AND b.`event_id` = ".$db->qstr($EVENT_ID)."
 															ORDER BY a.`topic_name` ASC";*/
-										
-										$query			= "	SELECT a.`topic_id`,a.`topic_name`, e.`topic_coverage`,e.`topic_time` 
-															FROM `events_lu_topics` AS a 
-															LEFT JOIN `topic_organisation` AS b 
-															ON a.`topic_id` = b.`topic_id` 
-															LEFT JOIN `courses` AS c 
-															ON b.`organisation_id` = c.`organisation_id` 
-															LEFT JOIN `events` AS d 
-															ON c.`course_id` = d.`course_id` 
-															LEFT JOIN `event_topics` AS e 
-															ON d.`event_id` = e.`event_id` 
-															AND a.`topic_id` = e.`topic_id` 
+
+										$query			= "	SELECT a.`topic_id`,a.`topic_name`, e.`topic_coverage`,e.`topic_time`
+															FROM `events_lu_topics` AS a
+															LEFT JOIN `topic_organisation` AS b
+															ON a.`topic_id` = b.`topic_id`
+															LEFT JOIN `courses` AS c
+															ON b.`organisation_id` = c.`organisation_id`
+															LEFT JOIN `events` AS d
+															ON c.`course_id` = d.`course_id`
+															LEFT JOIN `event_topics` AS e
+															ON d.`event_id` = e.`event_id`
+															AND a.`topic_id` = e.`topic_id`
 															WHERE d.`event_id` = ".$db->qstr($EVENT_ID);
-										
+
 										$topic_results	= $db->GetAll($query);
 										if ($topic_results) {
 											foreach ($topic_results as $topic_result) {
@@ -1183,13 +1183,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											$NOTICE++;
 											$NOTICESTR[] = "There are no Hot Topics associated with this organisation.";
 											echo "<tr><td colspan=\"4\">".display_notice()."</td></tr>";
-												
-											
+
+
 										}
 										?>
 										</table>
 			</div>
-				</form>				
+				</form>
 				<div id="event-resources-section">
 
 				<a name="event-resources-section"></a>
@@ -1201,7 +1201,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</div>
 						<div style="float: right; margin-bottom: 5px">
 							<ul class="page-action">
-								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A File</a></li>
+								<li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A File</a></li>
 							</ul>
 						</div>
 						<div class="clear"></div>
@@ -1255,7 +1255,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "	<td class=\"file-category\">".((isset($RESOURCE_CATEGORIES["event"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["event"][$result["file_category"]]) : "Unknown Category")."</td>\n";
 								echo "	<td class=\"title\">\n";
 								echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />";
-								echo "		<a href=\"#page-top\" id=\"edit-file\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-event.api.php?action=edit&id=".$EVENT_ID."&fid=".$result["efile_id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
+								echo "		<a href=\"#\" id=\"edit-file\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-event.api.php?action=edit&id=".$EVENT_ID."&fid=".$result["efile_id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
@@ -1283,7 +1283,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</div>
 						<div style="float: right; margin-bottom: 5px">
 							<ul class="page-action">
-								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A Link</a></li>
+								<li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A Link</a></li>
 							</ul>
 						</div>
 						<div class="clear"></div>
@@ -1329,7 +1329,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "		<a href=\"".ENTRADA_URL."/link-event.php?id=".$result["elink_id"]."\" target=\"_blank\"><img src=\"".ENTRADA_URL."/images/url-visit.gif\" width=\"16\" height=\"16\" alt=\"Visit ".html_encode($result["link"])."\" title=\"Visit ".html_encode($result["link"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-								echo "		<a href=\"#page-top\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-event.api.php?action=edit&id=".$EVENT_ID."&lid=".$result["elink_id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
+								echo "		<a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-event.api.php?action=edit&id=".$EVENT_ID."&lid=".$result["elink_id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
@@ -1358,7 +1358,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<div style="float: right; margin-bottom: 5px">
 							<ul class="page-action">
 								<li><a href="<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add">Create New Quiz</a></li>
-								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Attach Existing Quiz</a></li>
+								<li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Attach Existing Quiz</a></li>
 							</ul>
 						</div>
 						<div class="clear"></div>
@@ -1367,7 +1367,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										FROM `attached_quizzes` AS a
 										LEFT JOIN `quizzes_lu_quiztypes` AS b
 										ON b.`quiztype_id` = a.`quiztype_id`
-										WHERE a.`content_type` = 'event' 
+										WHERE a.`content_type` = 'event'
 										AND a.`content_id` = ".$db->qstr($EVENT_ID)."
 										ORDER BY b.`quiztype_title` ASC, a.`quiz_title` ASC";
 						$results	= $db->GetAll($query);
@@ -1415,7 +1415,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "	</td>\n";
 								echo "	<td class=\"file-category\">".html_encode($result["quiztype_title"])."</td>\n";
 								echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-								echo "		<a href=\"#page-top\" onclick=\"openDialog('".ENTRADA_URL."/api/quiz-wizard.api.php?action=edit&id=".$EVENT_ID."&qid=".$result["aquiz_id"]."')\" title=\"Click to edit ".html_encode($result["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($result["quiz_title"])."</a>\n";
+								echo "		<a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/quiz-wizard.api.php?action=edit&id=".$EVENT_ID."&qid=".$result["aquiz_id"]."')\" title=\"Click to edit ".html_encode($result["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($result["quiz_title"])."</a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
@@ -1437,7 +1437,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						?>
 					</div>
 				</div>
-				
+
 				<script type="text/javascript">
 				$$('select.ed_select_off').each(function(el) {
 					$(el).disabled = true;

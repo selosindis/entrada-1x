@@ -1,14 +1,14 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
- * 
+ *
  * Used to list all available polls within this page of a community.
- * 
+ *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Andrew Dos-Santos <andrew.dos-santos@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
- * 
+ *
 */
 
 if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_QUIZZES"))) {
@@ -51,7 +51,7 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 			}
 		});
 	});
-	
+
 	function openDialog (url) {
 		if (url && url != ajax_url) {
 			ajax_url = url;
@@ -75,7 +75,7 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 		<div style="float: right; margin-bottom: 5px">
 			<ul class="page-action">
 				<li><a href="<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add">Create New Quiz</a></li>
-				<li><a href="#site-header" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?type=community_page&action=add&id=<?php echo $PAGE_ID; ?>')">Attach Existing Quiz</a></li>
+				<li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?type=community_page&action=add&id=<?php echo $PAGE_ID; ?>')">Attach Existing Quiz</a></li>
 			</ul>
 		</div>
 		<div class="clear"></div>
@@ -140,7 +140,7 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 				echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($quiz_record["quiz_title"])."\" title=\"View results of ".html_encode($quiz_record["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 			}
 			if ($COMMUNITY_ADMIN && $_SESSION["details"]["group"] != "student") {
-				echo "		<a onclick=\"openDialog('".ENTRADA_URL."/api/quiz-wizard.api.php?action=edit&type=community_page&id=".$PAGE_ID."&qid=".$quiz_record["aquiz_id"]."')\" title=\"Click to edit ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold; cursor: pointer;\">".html_encode($quiz_record["quiz_title"])."</a>";
+				echo "		<a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/quiz-wizard.api.php?action=edit&type=community_page&id=".$PAGE_ID."&qid=".$quiz_record["aquiz_id"]."')\" title=\"Click to edit ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold; cursor: pointer;\">".html_encode($quiz_record["quiz_title"])."</a>";
 			} else {
 				if ($allow_attempt) {
 					echo "		<a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?section=attempt&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";

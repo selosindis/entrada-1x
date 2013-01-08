@@ -52,18 +52,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			else
 				$ORGANISATION_ID = 1;
 		}
-		
-		
+
+
 		list($course_objectives,$top_level_id) = courses_fetch_objectives($ORGANISATION_ID,array($COURSE_ID),-1, 1, false, false, 0, true);
-		
-		$query			= "	SELECT * FROM `courses` 
+
+		$query			= "	SELECT * FROM `courses`
 							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 							AND `course_active` = '1'";
 		$course_details	= $db->GetRow($query);
 		if($course_details) {
 			if(!$ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), 'update')) {
 				application_log("error", "A program coordinator attempted to modify content for a course [".$COURSE_ID."] that they were not the coordinator of.");
-				
+
 				header("Location: ".ENTRADA_URL."/admin/".$MODULE);
 				exit;
 			} else {
@@ -103,7 +103,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						case "text" :
 							$PROCESSED["updated_date"]	= time();
 							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-							
+
 							/**
 							 * Not-Required: course_url | External Website Url
 							 */
@@ -112,7 +112,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							} else {
 								$PROCESSED["course_url"] = "";
 							}
-							
+
 							/**
 							 * Not-Required: course_description | Course Description
 							 */
@@ -121,7 +121,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							} else {
 								$PROCESSED["course_description"] = "";
 							}
-							
+
 							/**
 							 * Not-Required: course_objectives | Course Objectives
 							 */
@@ -139,9 +139,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							} else {
 								$PROCESSED["course_message"] = "";
 							}
-							
+
 							if($db->AutoExecute("courses", $PROCESSED, "UPDATE", "`course_id` = ".$db->qstr($COURSE_ID))) {
-								
+
 								$SUCCESS++;
 								$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($course_details["course_name"])."</strong> " . $module_singular_name . " details section.";
 
@@ -288,11 +288,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$LASTUPDATED		= $course_details["updated_date"];
 
 				$OTHER_DIRECTORS	= array();
-					
+
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js\"></script>";
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/wizard.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 				$HEAD[] = "<link href=\"".ENTRADA_URL."/css/wizard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
-				?>								
+				?>
 
 				<iframe id="upload-frame" name="upload-frame" onload="frameLoad()" style="display: none;"></iframe>
 				<a id="false-link" href="#placeholder"></a>
@@ -318,7 +318,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						}
 					});
 				});
-				
+
 				function openDialog (url) {
 					if (url && url != ajax_url) {
 						ajax_url = url;
@@ -354,9 +354,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						return false;
 					}
 				}
-				
+
 				var text = new Array();
-				
+
 				function objectiveClick(element, id, default_text) {
 					if (element.checked) {
 						var textarea = document.createElement('textarea');
@@ -377,7 +377,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						}
 					}
 				}
-				</script>				
+				</script>
 				<?php
 
 				$sub_query		= "SELECT `proxy_id` FROM `course_contacts` WHERE `course_contacts`.`course_id`=".$db->qstr($COURSE_ID)." AND `course_contacts`.`contact_type` = 'director' ORDER BY `contact_order` ASC";
@@ -525,8 +525,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				<?php
 				$query = "	SELECT COUNT(*) FROM course_objectives WHERE course_id = ".$db->qstr($COURSE_ID);
 				$result = $db->GetOne($query);
-				
-				
+
+
 				if ($result) {
 					?>
 					<a name="course-objectives-section"></a>
@@ -572,14 +572,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										GROUP BY b.`objective_id`
 										ORDER BY b.`objective_order`";
 							$results = $db->GetAll($query);
-																			
+
 							if ($results) { ?>
 							<tr>
 								<td colspan="2">&nbsp;</td>
 							</tr>
 							<tr>
-								<td colspan="2">							
-										<?php 
+								<td colspan="2">
+										<?php
 										echo "<h3>Clinical Presentations</h3>";
 										echo "<ul class=\"objectives\">\n";
 										foreach ($results as $result) {
@@ -627,7 +627,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</div>
 						<div style="float: right; margin-bottom: 5px">
 							<ul class="page-action">
-								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')">Add A File</a></li>
+								<li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')">Add A File</a></li>
 							</ul>
 						</div>
 						<div class="clear"></div>
@@ -678,7 +678,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								echo "	<td class=\"file-category\">".((isset($RESOURCE_CATEGORIES["course"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["course"][$result["file_category"]]) : "Unknown Category")."</td>\n";
 								echo "	<td class=\"title\">\n";
 								echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />";
-								echo "		<a href=\"#page-top\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-course.api.php?action=edit&id=".$COURSE_ID."&fid=".$result["id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
+								echo "		<a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-course.api.php?action=edit&id=".$COURSE_ID."&fid=".$result["id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions")."</span></td>\n";
@@ -704,7 +704,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</div>
 						<div style="float: right; margin-bottom: 5px">
 							<ul class="page-action">
-								<li><a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')">Add A Link</a></li>
+								<li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')">Add A Link</a></li>
 							</ul>
 						</div>
 						<div class="clear"></div>
@@ -747,7 +747,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								echo "		<a href=\"".ENTRADA_URL."/link-course.php?id=".$result["id"]."\" target=\"_blank\"><img src=\"".ENTRADA_URL."/images/url-visit.gif\" width=\"16\" height=\"16\" alt=\"Visit ".html_encode($result["link"])."\" title=\"Visit ".html_encode($result["link"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-								echo "		<a href=\"#page-top\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-course.api.php?action=edit&id=".$COURSE_ID."&lid=".$result["id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
+								echo "		<a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-course.api.php?action=edit&id=".$COURSE_ID."&lid=".$result["id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions")."</span></td>\n";
@@ -776,16 +776,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" onclick=\"$('course-objectives-section').scrollTo(); return false;\" title=\"Course Objectives\">" . $module_singular_name . " Objectives</a></li>\n";
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-resources-section\" onclick=\"$('course-resources-section').scrollTo(); return false;\" title=\"Course Resources\">" . $module_singular_name . " Resources</a></li>\n";
 				$sidebar_html .= "</ul>\n";
-	
+
 				new_sidebar_item("Page Anchors", $sidebar_html, "page-anchors", "open", "1.9");
-				
+
 				/**
 				 * Sidebar item that will provide link to reports.
 				 */
 				$sidebar_html  = "<ul class=\"menu\">\n";
 				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/courses?id=".$COURSE_ID."&section=course-eventtype-report\" title=\"Event Types Report\">Event Types Report</a></li>\n";
 				$sidebar_html .= "</ul>\n";
-	
+
 				new_sidebar_item("Reports", $sidebar_html, "reports", "open", "1.9");
 			}
 		} else {

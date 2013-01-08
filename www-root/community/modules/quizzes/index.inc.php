@@ -46,14 +46,14 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 			},
 			afterClose: function() {
 				if (uploaded == true) {
-						window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL.replace_query(); ?>';
+                    location.reload();
 				}
 			}
 		});
 	});
 
 	function openDialog (url) {
-		if (url && url != ajax_url) {
+		if (url) {
 			ajax_url = url;
 			new Ajax.Request(ajax_url, {
 				method: 'get',

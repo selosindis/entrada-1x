@@ -117,7 +117,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								$query		= "	SELECT b.`proxy_id`
 												FROM `attached_quizzes` AS a
 												LEFT JOIN `event_contacts` AS b
-												ON a.`content_type` = 'event' 
+												ON a.`content_type` = 'event'
 												AND a.`content_id` = b.`event_id`
 												LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
 												ON b.`proxy_id` = c.`id`
@@ -398,7 +398,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											</div>
 											<script type="text/javascript" defer="defer">
 												var deleteQuestion_id = 0;
-												
+
 												document.observe('dom:loaded', function() {
 													try {
 														Sortable.create('quiz-questions-list', { handles : $$('#quiz-questions-list div.question'), onUpdate : updateQuizQuestionOrder });
@@ -420,7 +420,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 															});
 														});
 													} catch (e) {
-														clog(e); 
+														clog(e);
 													}
 												});
 
@@ -540,7 +540,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									fade:			true,
 									fadeDuration:	0.30
 								});
-		
+
 								// Modal control for copying quiz.
 								new Control.Modal('quiz-control-copy', {
 									overlayOpacity:	0.75,
@@ -549,8 +549,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									fade:			true,
 									fadeDuration:	0.30
 								});
-							} catch (e) { 
-								clog(e); 
+							} catch (e) {
+								clog(e);
 							}
 						});
 					</script>
@@ -592,10 +592,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 										</ul>
 									</div>
 									<?php
-									$query		= "	SELECT a.*, b.`event_id`, b.`course_id`, b.`eventtype_id`, b.`event_title`, b.`event_start`, b.`event_duration`, c.`course_name`, c.`course_code`
+									$query		= "	SELECT a.*, b.`event_id`, b.`course_id`, b.`event_title`, b.`event_start`, b.`event_duration`, c.`course_name`, c.`course_code`
 													FROM `attached_quizzes` AS a
 													JOIN `events` AS b
-													ON a.`content_type` = 'event' 
+													ON a.`content_type` = 'event'
 													AND	b.`event_id` = a.`content_id`
 													JOIN `courses` AS c
 													ON c.`course_id` = b.`course_id`
@@ -627,7 +627,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											foreach($results as $result) {
 												$url = ENTRADA_URL."/admin/events?section=content&id=".$result["event_id"];
 												$completed_attempts = $db->GetOne("SELECT COUNT(DISTINCT `proxy_id`) FROM `quiz_progress` WHERE `progress_value` = 'complete' AND `aquiz_id` = ".$db->qstr($result["aquiz_id"]));
-												
+
 												echo "<tr id=\"event-".$result["event_id"]."\" class=\"event\">\n";
 												echo "	<td class=\"modified\">\n";
 												if ($completed_attempts > 0) {
@@ -694,9 +694,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									$query		= "	SELECT a.*, b.`community_id`, b.`community_url`, b.`community_title`, CONCAT('[', b.`community_title`, '] ', bp.`menu_title`) AS `page_title`, bp.`page_url`
 													FROM `attached_quizzes` AS a
 													JOIN `communities` AS b
-													ON a.`content_type` = 'community_page' 
+													ON a.`content_type` = 'community_page'
 													JOIN `community_pages` AS bp
-													ON a.`content_type` = 'community_page' 
+													ON a.`content_type` = 'community_page'
 													AND	bp.`cpage_id` = a.`content_id`
 													AND bp.`community_id` = b.`community_id`
 													WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
@@ -756,7 +756,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							</td>
 						</tr>
 					</tbody>
-					
+
 					<tbody id="assessment-pages">
 						<tr>
 							<td colspan="3">
@@ -791,7 +791,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 										</ul>
 									</div>
 									<?php
-									
+
 									$query		= "	SELECT a.*, b.`name`, d.`course_id`, d.`course_name`, d.`course_code`, e.`group_name`
 													FROM `attached_quizzes` AS a
 													LEFT JOIN `assessments` AS b
@@ -849,7 +849,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							</td>
 						</tr>
 					</tbody>
-					
+
 					</table>
 					<?php
 					/**

@@ -74,6 +74,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 				/**
 				 * Fetch event content history
+                 * @todo This seems very strange to me.
 				 */
 				$query = "	SELECT a.`history_message` AS message, a.`history_timestamp` AS timestamp, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`
 							FROM `event_history` AS a
@@ -662,14 +663,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						},
 						afterClose: function() {
 							if (uploaded == true) {
-                                window.location = '<?php echo ENTRADA_URL."/admin/events?".replace_query(); ?>';
+                                location.reload();
 							}
 						}
 					});
 				});
 
 				function openDialog (url) {
-					if (url && url != ajax_url) {
+					if (url) {
 						ajax_url = url;
 						new Ajax.Request(ajax_url, {
 							method: 'get',
@@ -1102,95 +1103,83 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							</tr>
 						</tbody>
 					</table>
-									<table style="width: 100%" cellspacing="0" summary="List of ED10">
-										<colgroup>
-											<col style="width: 55%" />
-											<col style="width: 15%" />
-											<col style="width: 15%" />
-											<col style="width: 15%" />
-										</colgroup>
-										<tfoot>
-											<tr>
-												<td colspan="4" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
-											</tr>
-										</tfoot>
-										<tr>
-											<td colspan="4">
-												<h2>Event Topics</h2>
-												<div class="content-small" style="padding-bottom: 10px">Please select the topics that will be covered in your learning event and indicate if the amount of time that will be devoted.</div>
-											</td>
-										</tr>
-										<tr>
-											<td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
-											<td><span style="font-weight: bold; color: #003366;">Major</span></td>
-											<td><span style="font-weight: bold; color: #003366;">Minor</span></td>
-											<td><span style="font-weight: bold; color: #003366;">Time</span></td>
-										</tr>
-										<?php
-										/*$query			= "	SELECT a.`topic_id`, a.`topic_name`, b.`topic_coverage`, b.`topic_time`
-															FROM `events_lu_topics` AS a
-															LEFT JOIN `event_topics` AS b
-															ON a.`topic_id` = b.`topic_id`
-															AND b.`event_id` = ".$db->qstr($EVENT_ID)."
-															ORDER BY a.`topic_name` ASC";*/
+    			</div>
 
-										$query			= "	SELECT a.`topic_id`,a.`topic_name`, e.`topic_coverage`,e.`topic_time`
-															FROM `events_lu_topics` AS a
-															LEFT JOIN `topic_organisation` AS b
-															ON a.`topic_id` = b.`topic_id`
-															LEFT JOIN `courses` AS c
-															ON b.`organisation_id` = c.`organisation_id`
-															LEFT JOIN `events` AS d
-															ON c.`course_id` = d.`course_id`
-															LEFT JOIN `event_topics` AS e
-															ON d.`event_id` = e.`event_id`
-															AND a.`topic_id` = e.`topic_id`
-															WHERE d.`event_id` = ".$db->qstr($EVENT_ID);
-
-										$topic_results	= $db->GetAll($query);
-										if ($topic_results) {
-											foreach ($topic_results as $topic_result) {
-												echo "<tr>\n";
-												echo "	<td>".html_encode($topic_result["topic_name"])."</td>\n";
-												echo "	<td>";
-												echo "		<input type=\"checkbox\" id=\"topic_".$topic_result["topic_id"]."_major\" name=\"event_topic[".$topic_result["topic_id"]."][major_topic]\" value=\"major\" onclick=\"updateEdChecks(this)\"".(($topic_result["topic_coverage"] == "major") ? " checked=\"checked\"" : "")." />";
-												echo "	</td>\n";
-												echo "	<td>";
-												echo "		<input type=\"checkbox\" id=\"topic_".$topic_result["topic_id"]."_minor\" name=\"event_topic[".$topic_result["topic_id"]."][minor_topic]\" value=\"minor\" onclick=\"updateEdChecks(this)\"".(($topic_result["topic_coverage"] == "minor") ? " checked=\"checked\"" : "")." />";
-												echo "	</td>\n";
-												echo "	<td>\n";
-												echo "		<select id=\"topic_".$topic_result["topic_id"]."_minor_desc\" name=\"event_topic[".$topic_result["topic_id"]."][minor_desc]\" class=\"ed_select_".(($topic_result["topic_coverage"] == "minor") ? "on" : "off")."\">" ;
-												echo "			<option value=\"0\"".((!(int) $topic_result["topic_time"]) ? " selected=\"selected\"" : "").">0</option>";
-												echo "			<option value=\"5\"".(($topic_result["topic_time"] == "5") ? " selected=\"selected\"" : "").">5</option>";
-												echo "			<option value=\"10\"".(($topic_result["topic_time"] == "10") ? " selected=\"selected\"" : "").">10</option>";
-												echo "			<option value=\"15\"".(($topic_result["topic_time"] == "15") ? " selected=\"selected\"" : "").">15</option>";
-												echo "			<option value=\"20\"".(($topic_result["topic_time"] == "20") ? " selected=\"selected\"" : "").">20</option>";
-												echo "			<option value=\"25\"".(($topic_result["topic_time"] == "25") ? " selected=\"selected\"" : "").">25</option>";
-												echo "			<option value=\"30\"".(($topic_result["topic_time"] == "30") ? " selected=\"selected\"" : "").">30</option>";
-												echo "			<option value=\"35\"".(($topic_result["topic_time"] == "35") ? " selected=\"selected\"" : "").">35</option>";
-												echo "			<option value=\"40\"".(($topic_result["topic_time"] == "40") ? " selected=\"selected\"" : "").">40</option>";
-												echo "			<option value=\"45\"".(($topic_result["topic_time"] == "45") ? " selected=\"selected\"" : "").">45</option>";
-												echo "			<option value=\"50\"".(($topic_result["topic_time"] == "50") ? " selected=\"selected\"" : "").">50</option>";
-												echo "			<option value=\"55\"".(($topic_result["topic_time"] == "55") ? " selected=\"selected\"" : "").">55</option>";
-												echo "			<option value=\"60\"".(($topic_result["topic_time"] == "60") ? " selected=\"selected\"" : "").">60</option>";
-												echo "		</select>";
-												echo "	</td>\n";
-												echo "</tr>\n";
-											}
-											echo "<tr><td colspan=\"2\">&nbsp;</td></tr>";
-										}
-										else{
-											$NOTICE++;
-											$NOTICESTR[] = "There are no Hot Topics associated with this organisation.";
-											echo "<tr><td colspan=\"4\">".display_notice()."</td></tr>";
-
-
-										}
-										?>
-										</table>
-			</div>
+                <?php
+                $query = "	SELECT a.`topic_id`,a.`topic_name`, e.`topic_coverage`,e.`topic_time`
+                            FROM `events_lu_topics` AS a
+                            LEFT JOIN `topic_organisation` AS b
+                            ON a.`topic_id` = b.`topic_id`
+                            LEFT JOIN `courses` AS c
+                            ON b.`organisation_id` = c.`organisation_id`
+                            LEFT JOIN `events` AS d
+                            ON c.`course_id` = d.`course_id`
+                            LEFT JOIN `event_topics` AS e
+                            ON d.`event_id` = e.`event_id`
+                            AND a.`topic_id` = e.`topic_id`
+                            WHERE d.`event_id` = ".$db->qstr($EVENT_ID);
+                $topic_results = $db->GetAll($query);
+                if ($topic_results) {
+                    ?>
+                    <a name="event-topics-section"></a>
+                    <h2 title="Event Topics Section">Event Topics</h2>
+                    <div id="event-topics-section">
+                        <div class="content-small" style="padding-bottom: 10px">Please select the topics that will be covered in your learning event and indicate if the amount of time that will be devoted.</div>
+                        <table style="width: 100%" cellspacing="0" summary="List of ED10">
+                            <colgroup>
+                                <col style="width: 55%" />
+                                <col style="width: 15%" />
+                                <col style="width: 15%" />
+                                <col style="width: 15%" />
+                            </colgroup>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="4" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
+                                </tr>
+                            </tfoot>
+                            <tr>
+                                <td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
+                                <td><span style="font-weight: bold; color: #003366;">Major</span></td>
+                                <td><span style="font-weight: bold; color: #003366;">Minor</span></td>
+                                <td><span style="font-weight: bold; color: #003366;">Time</span></td>
+                            </tr>
+                            <?php
+                            foreach ($topic_results as $topic_result) {
+                                echo "<tr>\n";
+                                echo "	<td>".html_encode($topic_result["topic_name"])."</td>\n";
+                                echo "	<td>";
+                                echo "		<input type=\"checkbox\" id=\"topic_".$topic_result["topic_id"]."_major\" name=\"event_topic[".$topic_result["topic_id"]."][major_topic]\" value=\"major\" onclick=\"updateEdChecks(this)\"".(($topic_result["topic_coverage"] == "major") ? " checked=\"checked\"" : "")." />";
+                                echo "	</td>\n";
+                                echo "	<td>";
+                                echo "		<input type=\"checkbox\" id=\"topic_".$topic_result["topic_id"]."_minor\" name=\"event_topic[".$topic_result["topic_id"]."][minor_topic]\" value=\"minor\" onclick=\"updateEdChecks(this)\"".(($topic_result["topic_coverage"] == "minor") ? " checked=\"checked\"" : "")." />";
+                                echo "	</td>\n";
+                                echo "	<td>\n";
+                                echo "		<select id=\"topic_".$topic_result["topic_id"]."_minor_desc\" name=\"event_topic[".$topic_result["topic_id"]."][minor_desc]\" class=\"ed_select_".(($topic_result["topic_coverage"] == "minor") ? "on" : "off")."\">" ;
+                                echo "			<option value=\"0\"".((!(int) $topic_result["topic_time"]) ? " selected=\"selected\"" : "").">0</option>";
+                                echo "			<option value=\"5\"".(($topic_result["topic_time"] == "5") ? " selected=\"selected\"" : "").">5</option>";
+                                echo "			<option value=\"10\"".(($topic_result["topic_time"] == "10") ? " selected=\"selected\"" : "").">10</option>";
+                                echo "			<option value=\"15\"".(($topic_result["topic_time"] == "15") ? " selected=\"selected\"" : "").">15</option>";
+                                echo "			<option value=\"20\"".(($topic_result["topic_time"] == "20") ? " selected=\"selected\"" : "").">20</option>";
+                                echo "			<option value=\"25\"".(($topic_result["topic_time"] == "25") ? " selected=\"selected\"" : "").">25</option>";
+                                echo "			<option value=\"30\"".(($topic_result["topic_time"] == "30") ? " selected=\"selected\"" : "").">30</option>";
+                                echo "			<option value=\"35\"".(($topic_result["topic_time"] == "35") ? " selected=\"selected\"" : "").">35</option>";
+                                echo "			<option value=\"40\"".(($topic_result["topic_time"] == "40") ? " selected=\"selected\"" : "").">40</option>";
+                                echo "			<option value=\"45\"".(($topic_result["topic_time"] == "45") ? " selected=\"selected\"" : "").">45</option>";
+                                echo "			<option value=\"50\"".(($topic_result["topic_time"] == "50") ? " selected=\"selected\"" : "").">50</option>";
+                                echo "			<option value=\"55\"".(($topic_result["topic_time"] == "55") ? " selected=\"selected\"" : "").">55</option>";
+                                echo "			<option value=\"60\"".(($topic_result["topic_time"] == "60") ? " selected=\"selected\"" : "").">60</option>";
+                                echo "		</select>";
+                                echo "	</td>\n";
+                                echo "</tr>\n";
+                            }
+                            echo "<tr><td colspan=\"2\">&nbsp;</td></tr>";
+                            ?>
+                        </table>
+                    </div>
+                    <?php
+                }
+                ?>
 				</form>
-				<div id="event-resources-section">
 
 				<a name="event-resources-section"></a>
 				<h2 title="Event Resources Section">Event Resources</h2>
@@ -1201,7 +1190,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</div>
 						<div style="float: right; margin-bottom: 5px">
 							<ul class="page-action">
-								<li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A File</a></li>
+								<li><a href="#file-listing" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A File</a></li>
 							</ul>
 						</div>
 						<div class="clear"></div>
@@ -1247,7 +1236,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								$parts		= pathinfo($filename);
 								$ext		= $parts["extension"];
 
-								echo "<tr id=\"file-".$result["efile_id"]."\">\n";
+								echo "<tr>\n";
 								echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
 								echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["efile_id"]."\" style=\"vertical-align: middle\" />\n";
 								echo "		<a href=\"".ENTRADA_URL."/file-event.php?id=".$result["efile_id"]."\" target=\"_blank\"><img src=\"".ENTRADA_URL."/images/btn_save.gif\" width=\"16\" height=\"16\" alt=\"Download ".html_encode($result["file_name"])." to your computer.\" title=\"Download ".html_encode($result["file_name"])." to your computer.\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
@@ -1255,7 +1244,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "	<td class=\"file-category\">".((isset($RESOURCE_CATEGORIES["event"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["event"][$result["file_category"]]) : "Unknown Category")."</td>\n";
 								echo "	<td class=\"title\">\n";
 								echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />";
-								echo "		<a href=\"#\" id=\"edit-file\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-event.api.php?action=edit&id=".$EVENT_ID."&fid=".$result["efile_id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
+								echo "		<a href=\"#file-listing\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-event.api.php?action=edit&id=".$EVENT_ID."&fid=".$result["efile_id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
@@ -1283,7 +1272,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</div>
 						<div style="float: right; margin-bottom: 5px">
 							<ul class="page-action">
-								<li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A Link</a></li>
+								<li><a href="#link-listing" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A Link</a></li>
 							</ul>
 						</div>
 						<div class="clear"></div>
@@ -1329,7 +1318,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "		<a href=\"".ENTRADA_URL."/link-event.php?id=".$result["elink_id"]."\" target=\"_blank\"><img src=\"".ENTRADA_URL."/images/url-visit.gif\" width=\"16\" height=\"16\" alt=\"Visit ".html_encode($result["link"])."\" title=\"Visit ".html_encode($result["link"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-								echo "		<a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-event.api.php?action=edit&id=".$EVENT_ID."&lid=".$result["elink_id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
+								echo "		<a href=\"#link-listing\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-event.api.php?action=edit&id=".$EVENT_ID."&lid=".$result["elink_id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
@@ -1358,7 +1347,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<div style="float: right; margin-bottom: 5px">
 							<ul class="page-action">
 								<li><a href="<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add">Create New Quiz</a></li>
-								<li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Attach Existing Quiz</a></li>
+								<li><a href="#quiz-listing" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Attach Existing Quiz</a></li>
 							</ul>
 						</div>
 						<div class="clear"></div>
@@ -1415,7 +1404,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								echo "	</td>\n";
 								echo "	<td class=\"file-category\">".html_encode($result["quiztype_title"])."</td>\n";
 								echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-								echo "		<a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/quiz-wizard.api.php?action=edit&id=".$EVENT_ID."&qid=".$result["aquiz_id"]."')\" title=\"Click to edit ".html_encode($result["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($result["quiz_title"])."</a>\n";
+								echo "		<a href=\"#quiz-listing\" onclick=\"openDialog('".ENTRADA_URL."/api/quiz-wizard.api.php?action=edit&id=".$EVENT_ID."&qid=".$result["aquiz_id"]."')\" title=\"Click to edit ".html_encode($result["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($result["quiz_title"])."</a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
@@ -1449,30 +1438,37 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				 * View event content history if applicable
 				 */
 				if ($history) {
-					if (count($_POST)) {
-						$query = "	SELECT a.`history_message` AS message, a.`history_timestamp` AS timestamp, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`
-									FROM `event_history` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-									ON a.`proxy_id` = b.`id`
-									WHERE a.`event_id`  = ".$db->qstr($EVENT_ID)."
-									ORDER BY `history_timestamp` DESC, `history_message` ASC";
-						$history = $db->GetAll($query);
-					}
-					echo "<table class=\"tableList\"><tr><td /></tr></table>";
-					echo "<div style=\"float: left; margin-top: 5px\">";
-					echo "	<h3>Update history</h3>";
-					echo "</div><br>\n";
-					echo "<div class=\"display-generic\" style=\"white-space: normal\">\n";
-					$previous_day = 0;
-					foreach($history as $result) {
-						$current_day = mktime(0, 0, 0, date("m",$result["timestamp"])  , date("d",$result["timestamp"]), date("Y",$result["timestamp"]));
-						if ($current_day!=$previous_day) {
-							$previous_day = $current_day;
-							echo date("F j, Y",$current_day)."<br>\n";
-						}
-						echo date("* g:ia ",$result["timestamp"])."$result[fullname] $result[message]<br>\n";
-					}
-					echo "</div>\n";
+                    ?>
+                    <a name="event-history-section"></a>
+                    <h2 title="Event History Section">Event History</h2>
+                    <div id="event-history-section">
+                        <p>
+                        <?php
+                        if (count($_POST)) {
+                            $query = "	SELECT a.`history_message` AS message, a.`history_timestamp` AS timestamp, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`
+                                        FROM `event_history` AS a
+                                        LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                        ON a.`proxy_id` = b.`id`
+                                        WHERE a.`event_id`  = ".$db->qstr($EVENT_ID)."
+                                        ORDER BY `history_timestamp` DESC, `history_message` ASC";
+                            $history = $db->GetAll($query);
+                        }
+                        $previous_day = 0;
+                        foreach ($history as $key => $result) {
+                            $current_day = mktime(0, 0, 0, date("m",$result["timestamp"]), date("d", $result["timestamp"]), date("Y", $result["timestamp"]));
+                            if ($current_day != $previous_day) {
+                                $previous_day = $current_day;
+                                if ($key > 0) {
+                                    echo "</ul></p>";
+                                }
+                                echo "<strong>".date("F j, Y",$current_day)."</strong><ul class=\"history\">\n";
+                            }
+                            echo "<li>".date("g:ia ", $result["timestamp"]).$result["fullname"]." ".$result["message"]."</li>";
+                        }
+                        ?>
+                        </ul></p>
+                    </div>
+                    <?php
 				}
 
 				/**
@@ -1483,6 +1479,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#event-audience-section\" onclick=\"$('event-audience-section').scrollTo(); return false;\" title=\"Event Audience\">Event Audience</a></li>\n";
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#event-objectives-section\" onclick=\"$('event-objectives-section').scrollTo(); return false;\" title=\"Event Objectives\">Event Objectives</a></li>\n";
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#event-resources-section\" onclick=\"$('event-resources-section').scrollTo(); return false;\" title=\"Event Resources\">Event Resources</a></li>\n";
+                if ($history) {
+                    $sidebar_html .= "	<li class=\"link\"><a href=\"#event-history-section\" onclick=\"$('event-history-section').scrollTo(); return false;\" title=\"Event History\">Event History</a></li>\n";
+                }
 				$sidebar_html .= "</ul>\n";
 
 				new_sidebar_item("Page Anchors", $sidebar_html, "page-anchors", "open", "1.9");

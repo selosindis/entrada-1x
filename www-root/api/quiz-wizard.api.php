@@ -77,8 +77,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	if ((isset($_GET["qid"])) && ((int) trim($_GET["qid"]))) {
 		$AQUIZ_ID = (int) trim($_GET["qid"]);
 	}
+
 	/**
-	 * defaulting values for require_attendance and random_order here because the community doesn't ask for it but will still need to enter a value
+	 * Defaulting values for require_attendance and random_order here because the community doesn't ask for it but will still need to enter a value
 	 * Defaults in MySQL anyway but just for good measure giving them a value.
 	 */
 	$PROCESSED["require_attendance"] = 0;
@@ -475,6 +476,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											}
 										break;
 										case 3 :
+                                            $modal_onload[] = "updateTime('accessible_start')";
+                                            $modal_onload[] = "updateTime('accessible_finish')";
+
 											/**
 											 * Unset variables set by this page or they get posted twice.
 											 */
@@ -546,9 +550,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 																if (isset($PROCESSED["quiztype_id"]) && $PROCESSED["quiztype_id"]) {
 																	$query = "SELECT `quiztype_code` FROM `quizzes_lu_quiztypes` WHERE `quiztype_id` = ".$db->qstr($PROCESSED["quiztype_id"]);
 																	$quiztype = $db->GetOne($query);
-																	$delayed = ($quiztype == "delayed" ? true : false);
+																	$quiz_results_delayed = ($quiztype == "delayed" ? true : false);
 																}
-																echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true);
+																echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $quiz_results_delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true);
 															?>
 															</table>
 														</div>
@@ -818,7 +822,6 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["timeframe"] = "";
 										}
 
-
 										/**
 										 * Non-required field "require_attendance" / Should completion of this quiz be limited by the learner's event attendance?
 										 */
@@ -971,7 +974,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							}
 
 							// Display Add Step
-							switch($STEP) {
+							switch ($STEP) {
 								case 5 :
 									$PROCESSED["content_type"]	= "event";
 									$PROCESSED["content_id"]	= $RECORD_ID;
@@ -1003,7 +1006,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											</div>
 										</div>
 										<?php
-										history_log($RECORD_ID, "attached $PROCESSED[quiz_title] event quiz.");
+										history_log($RECORD_ID, "Attached ".$PROCESSED["quiz_title"]." event quiz.");
 									} else {
 										$ERROR++;
 										$ERRORSTR[] = "There was a problem attaching <strong>".html_encode($PROCESSED["quiz_title"])."</strong> to this event. The system administrator was informed of this error; please try again later.";
@@ -1046,7 +1049,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									}
 								break;
 								case 4 :
-									$modal_onload[] = "selectedTimeframe('".$PROCESSED["timeframe"]."')";
+                                    $modal_onload[] = "updateTime('accessible_start')";
+                                    $modal_onload[] = "updateTime('accessible_finish')";
 
 									/**
 									 * Unset variables set by this page or they get posted twice.
@@ -1117,12 +1121,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														<td colspan="3"><h2>Time Release Options</h2></td>
 													</tr>
 													<?php
+                                                        $quiz_results_delayed = false;
+
 														if (isset($PROCESSED["quiztype_id"]) && $PROCESSED["quiztype_id"]) {
 															$query = "SELECT `quiztype_code` FROM `quizzes_lu_quiztypes` WHERE `quiztype_id` = ".$db->qstr($PROCESSED["quiztype_id"]);
 															$quiztype = $db->GetOne($query);
-															$delayed = ($quiztype == "delayed" ? true : false);
+															$quiz_results_delayed = ($quiztype == "delayed" ? true : false);
 														}
-														echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true);
+
+														echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $quiz_results_delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true);
 													?>
 													</table>
 												</div>
@@ -1392,73 +1399,73 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                         echo $string.";\n";
                     }
 					?>
-					window.selectedTimeframe = function (timeframe) {
-						switch (timeframe) {
-							case 'pre' :
-								$('accessible_start').checked	= false;
-								$('accessible_finish').checked	= true;
+                    window.selectedTimeframe = function (timeframe) {
+                        switch (timeframe) {
+                            case 'pre' :
+                                $('accessible_start').checked	= false;
+                                $('accessible_finish').checked	= true;
 
-								dateLock('accessible_start');
-								dateLock('accessible_finish');
+                                dateLock('accessible_start');
+                                dateLock('accessible_finish');
 
-								$('accessible_start_date').value	= '';
-								$('accessible_start_hour').value	= '00';
-								$('accessible_start_min').value		= '00';
+                                $('accessible_start_date').value	= '';
+                                $('accessible_start_hour').value	= '00';
+                                $('accessible_start_min').value		= '00';
 
-								$('accessible_finish_date').value	= '<?php echo date("Y-m-d", $event_record["event_finish"]); ?>';
-								$('accessible_finish_hour').value	= '<?php echo date("G", $event_record["event_finish"]); ?>';
-								$('accessible_finish_min').value	= '<?php echo (int) date("i", $event_record["event_finish"]); ?>';
-							break;
-							case 'during' :
-								$('accessible_start').checked	= true;
-								$('accessible_finish').checked	= true;
+                                $('accessible_finish_date').value	= '<?php echo date("Y-m-d", $event_record["event_finish"]); ?>';
+                                $('accessible_finish_hour').value	= '<?php echo date("G", $event_record["event_finish"]); ?>';
+                                $('accessible_finish_min').value	= '<?php echo date("i", $event_record["event_finish"]); ?>';
+                            break;
+                            case 'during' :
+                                $('accessible_start').checked	= true;
+                                $('accessible_finish').checked	= true;
 
-								dateLock('accessible_start');
-								dateLock('accessible_finish');
+                                dateLock('accessible_start');
+                                dateLock('accessible_finish');
 
-								$('accessible_start_date').value	= '<?php echo date("Y-m-d", $event_record["event_start"]); ?>';
-								$('accessible_start_hour').value	= '<?php echo date("G", $event_record["event_start"]); ?>';
-								$('accessible_start_min').value		= '<?php echo (int) date("i", $event_record["event_start"]); ?>';
+                                $('accessible_start_date').value	= '<?php echo date("Y-m-d", $event_record["event_start"]); ?>';
+                                $('accessible_start_hour').value	= '<?php echo date("G", $event_record["event_start"]); ?>';
+                                $('accessible_start_min').value		= '<?php echo date("i", $event_record["event_start"]); ?>';
 
-								$('accessible_finish_date').value	= '<?php echo date("Y-m-d", $event_record["event_finish"]); ?>';
-								$('accessible_finish_hour').value	= '<?php echo date("G", $event_record["event_finish"]); ?>';
-								$('accessible_finish_min').value	= '<?php echo (int) date("i", $event_record["event_finish"]); ?>';
-							break;
-							case 'post' :
-								$('accessible_start').checked	= true;
-								$('accessible_finish').checked	= false;
+                                $('accessible_finish_date').value	= '<?php echo date("Y-m-d", $event_record["event_finish"]); ?>';
+                                $('accessible_finish_hour').value	= '<?php echo date("G", $event_record["event_finish"]); ?>';
+                                $('accessible_finish_min').value	= '<?php echo date("i", $event_record["event_finish"]); ?>';
+                            break;
+                            case 'post' :
+                                $('accessible_start').checked	= true;
+                                $('accessible_finish').checked	= <?php echo (isset($quiz_results_delayed) && $quiz_results_delayed ? "true" : "false"); ?>;
 
-								dateLock('accessible_start');
-								dateLock('accessible_finish');
+                                dateLock('accessible_start');
+                                dateLock('accessible_finish');
 
-								$('accessible_start_date').value	= '<?php echo date("Y-m-d", $event_record["event_start"]); ?>';
-								$('accessible_start_hour').value	= '<?php echo date("G", $event_record["event_start"]); ?>';
-								$('accessible_start_min').value		= '<?php echo (int) date("i", $event_record["event_start"]); ?>';
+                                $('accessible_start_date').value	= '<?php echo date("Y-m-d", $event_record["event_start"]); ?>';
+                                $('accessible_start_hour').value	= '<?php echo date("G", $event_record["event_start"]); ?>';
+                                $('accessible_start_min').value		= '<?php echo date("i", $event_record["event_start"]); ?>';
 
-								$('accessible_finish_date').value	= '';
-								$('accessible_finish_hour').value	= '00';
-								$('accessible_finish_min').value	= '00';
-							break;
-							default :
-								$('accessible_start').checked	= false;
-								$('accessible_finish').checked	= false;
+                                $('accessible_finish_date').value	= '';
+                                $('accessible_finish_hour').value	= '00';
+                                $('accessible_finish_min').value	= '00';
+                            break;
+                            default :
+                                $('accessible_start').checked	= false;
+                                $('accessible_finish').checked	= <?php echo (isset($quiz_results_delayed) && $quiz_results_delayed ? "true" : "false"); ?>;
 
-								dateLock('accessible_start');
-								dateLock('accessible_finish');
+                                dateLock('accessible_start');
+                                dateLock('accessible_finish');
 
-								$('accessible_start_date').value	= '';
-								$('accessible_start_hour').value	= '00';
-								$('accessible_start_min').value		= '00';
+                                $('accessible_start_date').value	= '';
+                                $('accessible_start_hour').value	= '00';
+                                $('accessible_start_min').value		= '00';
 
-								$('accessible_finish_date').value	= '';
-								$('accessible_finish_hour').value	= '00';
-								$('accessible_finish_min').value	= '00';
-							break;
-						}
+                                $('accessible_finish_date').value	= '';
+                                $('accessible_finish_hour').value	= '00';
+                                $('accessible_finish_min').value	= '00';
+                            break;
+                        }
 
-						updateTime('accessible_start');
-						updateTime('accessible_finish');
-					}
+                        updateTime('accessible_start');
+                        updateTime('accessible_finish');
+                    }
 					</div>
 					<?php
 				}
@@ -1560,6 +1567,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 
 										/**
+										 * Non-required field "random_order" / Should quiz question order be shuffled?
+										 */
+										if ((isset($_POST["random_order"])) && ($_POST["random_order"] == 1)) {
+											$PROCESSED["random_order"] = 1;
+										} else {
+											$PROCESSED["random_order"] = 0;
+										}
+
+										/**
 										 * Required field "quiztype_id" / When should learners be allowed to view the results of the quiz?
 										 */
 										if ((isset($_POST["quiztype_id"])) && (array_key_exists($_POST["quiztype_id"], $quiz_types_record)) && ($tmp_input = clean_input($_POST["quiztype_id"], "int"))) {
@@ -1606,6 +1622,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											$PROCESSED["timeframe"] = $tmp_input;
 										} else {
 											$PROCESSED["timeframe"] = "";
+										}
+
+										/**
+										 * Non-required field "require_attendance" / Should completion of this quiz be limited by the learner's event attendance?
+										 */
+										if ((isset($_POST["require_attendance"])) && ($_POST["require_attendance"] == 1)) {
+											$PROCESSED["require_attendance"] = 1;
+										} else {
+											$PROCESSED["require_attendance"] = 0;
 										}
 
 										/**
@@ -1816,6 +1841,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											}
 										break;
 										case 3 :
+                                            $modal_onload[] = "updateTime('accessible_start')";
+                                            $modal_onload[] = "updateTime('accessible_finish')";
+
 											/**
 											 * Unset variables set by this page or they get posted twice.
 											 */
@@ -1866,9 +1894,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 																if (isset($PROCESSED["quiztype_id"]) && $PROCESSED["quiztype_id"]) {
 																	$query = "SELECT `quiztype_code` FROM `quizzes_lu_quiztypes` WHERE `quiztype_id` = ".$db->qstr($PROCESSED["quiztype_id"]);
 																	$quiztype = $db->GetOne($query);
-																	$delayed = ($quiztype == "delayed" ? true : false);
+																	$quiz_results_delayed = ($quiztype == "delayed" ? true : false);
 																}
-																echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true);
+																echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $quiz_results_delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true);
 															?>
 															</table>
 														</div>
@@ -2080,6 +2108,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 
 										/**
+										 * Non-required field "random_order" / Should quiz question order be shuffled?
+										 */
+										if ((isset($_POST["random_order"])) && ($_POST["random_order"] == 1)) {
+											$PROCESSED["random_order"] = 1;
+										} else {
+											$PROCESSED["random_order"] = 0;
+										}
+
+										/**
 										 * Required field "quiztype_id" / When should learners be allowed to view the results of the quiz?
 										 */
 										if ((isset($_POST["quiztype_id"])) && (array_key_exists($_POST["quiztype_id"], $quiz_types_record)) && ($tmp_input = clean_input($_POST["quiztype_id"], "int"))) {
@@ -2117,6 +2154,24 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											}
 										} else {
 											$PROCESSED["quiz_attempts"] = 0;
+										}
+
+										/**
+										 * Required field "timeframe" / When should this quiz be taken in relation to the event?
+										 */
+										if ((isset($_POST["timeframe"])) && ($tmp_input = clean_input($_POST["timeframe"], "trim")) && (array_key_exists($tmp_input, $RESOURCE_TIMEFRAMES["event"]))) {
+											$PROCESSED["timeframe"] = $tmp_input;
+										} else {
+											$PROCESSED["timeframe"] = "";
+										}
+
+										/**
+										 * Non-required field "require_attendance" / Should completion of this quiz be limited by the learner's event attendance?
+										 */
+										if ((isset($_POST["require_attendance"])) && ($_POST["require_attendance"] == 1)) {
+											$PROCESSED["require_attendance"] = 1;
+										} else {
+											$PROCESSED["require_attendance"] = 0;
 										}
 
 										/**
@@ -2328,6 +2383,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									}
 								break;
 								case 4 :
+                                    $modal_onload[] = "updateTime('accessible_start')";
+                                    $modal_onload[] = "updateTime('accessible_finish')";
+
 									/**
 									 * Unset variables set by this page or they get posted twice.
 									 */
@@ -2378,9 +2436,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														if (isset($PROCESSED["quiztype_id"]) && $PROCESSED["quiztype_id"]) {
 															$query = "SELECT `quiztype_code` FROM `quizzes_lu_quiztypes` WHERE `quiztype_id` = ".$db->qstr($PROCESSED["quiztype_id"]);
 															$quiztype = $db->GetOne($query);
-															$delayed = ($quiztype == "delayed" ? true : false);
+															$quiz_results_delayed = ($quiztype == "delayed" ? true : false);
 														}
-														echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true);
+														echo generate_calendars("accessible", "Accessible", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, $quiz_results_delayed, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, true);
 													?>
 													</table>
 												</div>

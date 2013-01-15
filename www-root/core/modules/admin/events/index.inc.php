@@ -58,8 +58,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	 */
 	$learning_events = events_fetch_filtered_events(
 			$ENTRADA_USER->getActiveId(),
-			$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"],
-			$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"],
+			$ENTRADA_USER->getActiveGroup(),
+			$ENTRADA_USER->getActiveRole(),
 			$ENTRADA_USER->getActiveOrganisation(),
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"],
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["so"],
@@ -69,7 +69,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"],
 			true,
 			(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
-			$_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
+			$_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"],
+            false,
+            false);
 
 	echo "<h1>".$MODULES[strtolower($MODULE)]["title"]."</h1>";
 

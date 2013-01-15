@@ -693,26 +693,23 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 					break;
 			}
 
-			$query		= "	SELECT a.*, e.`course_code`, CONCAT_WS(', ', c.`lastname`, c.`firstname`) AS `fullname`, MAX(d.`timestamp`) AS `last_visited`
-							FROM `events` AS a
-							JOIN `event_contacts` AS b
-							ON b.`event_id` = a.`event_id`
-							JOIN `".AUTH_DATABASE."`.`user_data` AS c
-							ON c.`id` = b.`proxy_id`
-							LEFT JOIN `statistics` AS d
-							ON d.`module` = 'events'
-							AND d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-							AND d.`action` = 'view'
-							AND d.`action_field` = 'event_id'
-							AND d.`action_value` = a.`event_id`
-							JOIN `courses` AS e
-							ON e.`course_id` = a.`course_id`
-							WHERE (a.`event_start` BETWEEN ".$db->qstr($DISPLAY_DURATION["start"])." AND ".$db->qstr($DISPLAY_DURATION["end"]).")
-							AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-							GROUP BY a.`event_id`
-							ORDER BY a.`event_start` ASC";
-			$results	= $db->GetAll($query);
-			$TOTAL_ROWS	= @count($results);
+            $results = events_fetch_filtered_events(
+                        $ENTRADA_USER->getActiveId(),
+                        $ENTRADA_USER->getActiveGroup(),
+                        $ENTRADA_USER->getActiveRole(),
+                        $ENTRADA_USER->getActiveOrganisation(),
+                        "date",
+                        "asc",
+                        "custom",
+                        $DISPLAY_DURATION["start"],
+                        $DISPLAY_DURATION["end"],
+                        events_filters_defaults($ENTRADA_USER->getActiveId(), $ENTRADA_USER->getActiveGroup(), $ENTRADA_USER->getActiveRole(), $ENTRADA_USER->getActiveOrganisation()),
+                        false,
+                        0,
+                        0,
+                        0,
+                        false);
+            $TOTAL_ROWS = count($results["result_ids_map"]);
 			?>
 			<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Weekly Student Calendar">
 				<tr>
@@ -759,26 +756,29 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 						</thead>
 						<tbody>
 							<?php
-							foreach ($results as $result) {
-								if (((!$result["release_date"]) || ($result["release_date"] <= time())) && ((!$result["release_until"]) || ($result["release_until"] >= time()))) {
-									$attachments	= attachment_check($result["event_id"]);
-									$url			= ENTRADA_URL."/admin/events?section=content&id=".$result["event_id"];
+							foreach ($results["events"] as $result) {
+                                $attachments = attachment_check($result["event_id"]);
+                                $url = ENTRADA_URL."/admin/events?section=content&id=".$result["event_id"];
+                				$accessible = true;
 
-									if (((int) $result["last_visited"]) && ((int) $result["last_visited"] < (int) $result["updated_date"])) {
-										$is_modified = true;
-										$modified++;
-									} else {
-										$is_modified = false;
-									}
+                                if ((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {
+                                    $accessible = false;
+                                }
 
-									echo "<tr id=\"event-".$result["event_id"]."\" class=\"event\">\n";
-									echo "	<td class=\"modified\">".(($is_modified) ? "<img src=\"".ENTRADA_URL."/images/lecture-modified.gif\" width=\"15\" height=\"15\" alt=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" title=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"15\" height=\"15\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
-									echo "	<td class=\"date\"><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
-									echo "	<td class=\"course-code\"><a href=\"".$url."\">".html_encode($result["course_code"])."</a></td>\n";
-									echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\">".html_encode($result["event_title"])."</a></td>\n";
-									echo "	<td class=\"attachment\">".(($attachments) ? "<img src=\"".ENTRADA_URL."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" title=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
-									echo "</tr>\n";
-								}
+                                if (((int) $result["last_visited"]) && ((int) $result["last_visited"] < (int) $result["updated_date"])) {
+                                    $is_modified = true;
+                                    $modified++;
+                                } else {
+                                    $is_modified = false;
+                                }
+
+                                echo "<tr id=\"event-".$result["event_id"]."\" class=\"event".(!$accessible ? " na" : "")."\">\n";
+                                echo "	<td class=\"modified\">".(($is_modified) ? "<img src=\"".ENTRADA_URL."/images/lecture-modified.gif\" width=\"15\" height=\"15\" alt=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" title=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"15\" height=\"15\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
+                                echo "	<td class=\"date\"><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
+                                echo "	<td class=\"course-code\"><a href=\"".$url."\">".html_encode($result["course_code"])."</a></td>\n";
+                                echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\">".html_encode($result["event_title"])."</a></td>\n";
+                                echo "	<td class=\"attachment\">".(($attachments) ? "<img src=\"".ENTRADA_URL."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" title=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
+                                echo "</tr>\n";
 							}
 							?>
 						</tbody>

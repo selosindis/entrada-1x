@@ -10175,7 +10175,7 @@ function events_output_calendar_controls($module_type = "") {
  * @param string $role
  * @return array Containing the default filters.
  */
-function events_filters_defaults($proxy_id = 0, $group = "", $role = "") {
+function events_filters_defaults($proxy_id = 0, $group = "", $role = "", $organisation = 0) {
 	$filters = array();
 
 	switch ($group) {
@@ -10695,7 +10695,7 @@ function events_fetch_sorting_query($sort_by = "", $sort_order = "ASC") {
  * Function used by public events and admin events index to generate the SQL queries based on the users
  * filter settings and results that can be iterated through by these views.
  */
-function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_role = "", $organisation_id = 0, $sort_by = "", $sort_order = "", $date_type = "", $timestamp_start = 0, $timestamp_finish = 0, $filters = array(), $pagination = true, $current_page = 1, $results_per_page = 15, $community_id = false) {
+function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_role = "", $organisation_id = 0, $sort_by = "", $sort_order = "", $date_type = "", $timestamp_start = 0, $timestamp_finish = 0, $filters = array(), $pagination = true, $current_page = 1, $results_per_page = 15, $community_id = false, $respect_time_release = true) {
 	global $db, $ENTRADA_ACL, $ENTRADA_USER, $ENTRADA_CACHE;
 
 	$output = array(
@@ -10706,6 +10706,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 				"page_current" => 0,
 				"page_previous" => 0,
 				"page_next" => 0,
+                "result_ids_map" => array(),
 				"events" => array()
 			);
 
@@ -10804,29 +10805,34 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 	$output["duration_start"] = $display_duration["start"];
 	$output["duration_end"] = $display_duration["end"];
 
-	$query_events = "	SELECT `events`.`event_id`,
-						`events`.`course_id`,
-						`events`.`parent_id`,
-						`events`.`event_title`,
-						`events`.`event_description`,
-						`events`.`event_duration`,
-						`events`.`event_message`,
-						`events`.`event_location`,
-						`events`.`event_start`,
-						`events`.`event_finish`,
-						`events`.`release_date`,
-						`events`.`release_until`,
-						`events`.`updated_date`,
-						`event_audience`.`audience_type`,
-						`courses`.`organisation_id`,
-						`courses`.`course_code`,
-						`courses`.`course_name`,
-						`courses`.`permission`,
-						`curriculum_lu_types`.`curriculum_type_id`,
-						`curriculum_lu_types`.`curriculum_type_name` AS `event_phase`,
-						`curriculum_lu_types`.`curriculum_type_name` AS `event_term`,
-						CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
-						FROM `events`";
+    $query_events = "";
+
+	$query_events_select = "SELECT '".(int) $respect_time_release."' AS `respect_time_release`,
+                            `events`.`event_id`,
+                            `events`.`course_id`,
+                            `events`.`parent_id`,
+                            `events`.`event_title`,
+                            `events`.`event_description`,
+                            `events`.`event_duration`,
+                            `events`.`event_message`,
+                            `events`.`event_location`,
+                            `events`.`event_start`,
+                            `events`.`event_finish`,
+                            `events`.`release_date`,
+                            `events`.`release_until`,
+                            `events`.`updated_date`,
+                            `event_audience`.`audience_type`,
+                            `courses`.`organisation_id`,
+                            `courses`.`course_code`,
+                            `courses`.`course_name`,
+                            `courses`.`permission`,
+                            `curriculum_lu_types`.`curriculum_type_id`,
+                            `curriculum_lu_types`.`curriculum_type_name` AS `event_phase`,
+                            `curriculum_lu_types`.`curriculum_type_name` AS `event_term`,
+                            CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`
+                            FROM `events`";
+
+	$query_events_count = "SELECT COUNT(DISTINCT `events`.`event_id`) AS `event_count` FROM `events`";
 
 	/**
 	 * If there are filters set by the user, build the SQL to reflect the filters.
@@ -10871,8 +10877,6 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							%TOPIC_JOIN%
 							WHERE `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
-							AND (`events`.`release_date` <= ".$db->qstr(time())." OR `events`.`release_date` = 0)
-							AND (`events`.`release_until` >= ".$db->qstr(time())." OR `events`.`release_until` = 0)
 							".(($display_duration) ? " AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "");
 
 		if (!is_array($filters) || empty($filters)) {
@@ -11067,8 +11071,6 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		$query_events = str_replace("%OBJECTIVE_JOIN%", $objective_sql, $query_events);
 
 		$query_events = str_replace("%TOPIC_JOIN%", $topic_sql, $query_events);
-
-		$query_events .= " GROUP BY `events`.`event_id`";
 	} else {
 		$query_events .= "	LEFT JOIN `event_contacts`
 							ON `event_contacts`.`event_id` = `events`.`event_id`
@@ -11083,47 +11085,56 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							ON `curriculum_lu_types`.`curriculum_type_id` = `courses`.`curriculum_type_id`
 							WHERE `courses`.`organisation_id` = ".$db->qstr($organisation_id)."
 							".($filter_clerkship_events && $course_ids_string ? "AND (`courses`.`course_id` NOT IN (".$course_ids_string.")\n OR (".implode("\n", $time_periods)."))" : "")."
-							".(($display_duration) ? "AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "")."
-							GROUP BY `events`.`event_id`";
+							".(($display_duration) ? "AND `events`.`event_start` BETWEEN ".$db->qstr($display_duration["start"])." AND ".$db->qstr($display_duration["end"]) : "");
 	}
 
-	$query_events .= " ORDER BY %s";
-	$limitless_query_events = $query_events;
+    /**
+     * This builds the counting query that is run to see whether or not
+     * the cache gets hit.
+     */
 
-	$limitless_query_events = sprintf($limitless_query_events, $sort_by);
+    $query_events_count .= " " . $query_events;
 
+    $query_events_select .= " " . $query_events . "GROUP BY `events`.`event_id` ORDER BY %s";
+
+	$limitless_query_events = sprintf($query_events_select, $sort_by);
 
 	/**
 	 * Provide the previous query so we can have previous / next event links on the details page.
 	 */
 	if (session_id()) {
-
 		$stored_query = false;
+        $stored_events_count = false;
 		if (($community_id && isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"]) || (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"])) {
 			if ($community_id == false) {
 				$stored_query = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"];
+				$stored_events_count = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_returned_rows"];
 			} else {
 				$stored_query = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"];
+				$stored_events_count = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_returned_rows"];
 			}
 		}
 
+        $live_events_count = (int) $db->GetOne($query_events_count);
+
 		$current_result_ids_map = $ENTRADA_CACHE->load(($community_id ? "community_".$community_id."_" : "")."events_map_".AUTH_APP_ID."_".$ENTRADA_USER->getID());
 
-		if (!$stored_query || $stored_query != $limitless_query_events || !isset($current_result_ids_map) || !$current_result_ids_map) {
+		if (!$stored_query || $stored_query != $limitless_query_events || !isset($current_result_ids_map) || !$current_result_ids_map || !$stored_events_count || ($live_events_count != $stored_events_count)) {
 			$all_events = $db->GetAll($limitless_query_events);
 			$result_ids_map = array();
 			if ($all_events) {
 				foreach ($all_events as $map_event) {
-					if (strtolower($ENTRADA_USER->getActiveRole()) != "admin") {
+					if ($respect_time_release) {
 						$event_resource = new EventResource($map_event["event_id"], $map_event["course_id"], $map_event["organisation_id"]);
-						if ($ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {
-							$result_ids_map[] = $map_event["event_id"];
+						if (((!$map_event["release_date"]) || ($map_event["release_date"] <= time())) && ((!$map_event["release_until"]) || ($map_event["release_until"] >= time())) && $ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {
+                            $result_ids_map[] = $map_event["event_id"];
 						}
 					} else {
 						$result_ids_map[] = $map_event["event_id"];
 					}
 				}
 			}
+
 			$ENTRADA_CACHE->save($result_ids_map, ($community_id ? "community_".$community_id."_" : "")."events_map_".AUTH_APP_ID."_".$ENTRADA_USER->getID(), array("events", "community"), 10800);
 		} else {
 			$result_ids_map = $current_result_ids_map;
@@ -11206,13 +11217,13 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		}
 
 		if ($learning_events) {
-			if (strtolower($ENTRADA_USER->getActiveRole()) != "admin") {
+			if ($respect_time_release) {
 				$i = 0;
 				foreach ($learning_events as $event) {
 					if ($event["course_id"]) {
 						$event_resource = new EventResource($event["event_id"], $event["course_id"], $event["organisation_id"]);
 					}
-					if (!$ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {
+					if ((($event["release_date"] != 0 && $event["release_date"] > time()) || ($event["release_until"] != 0 && $event["release_until"] < time())) || !$ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {
 						unset($learning_events[$i]);
 					}
 					$i++;
@@ -11271,14 +11282,17 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		if ($community_id == false) {
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["query"] = $query_events;
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["limitless_query"] = $limitless_query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["total_returned_rows"] = $live_events_count;
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dashboard"]["previous_query"]["total_rows"] = $output["total_rows"];
 
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["query"] = $query_events;
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"] = $limitless_query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_returned_rows"] = $live_events_count;
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_rows"] = $output["total_rows"];
 		} else {
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["query"] = $query_events;
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"] = $limitless_query_events;
+			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_returned_rows"] = $live_events_count;
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_rows"] = $output["total_rows"];
 		}
 	}

@@ -50,7 +50,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 			}
 
 			if($GROUP_ID && $COURSE_ID){
-				echo 'here';
 				$proxy_ids = explode(',', $_POST["group_members_".$GROUP_ID]);
 				foreach ($proxy_ids as $proxy_id) {
 					$added_proxy_ids[] = (int) $proxy_id;
@@ -126,33 +125,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 									application_log("error", "Error while inserting member into database. Database server said: ".$db->ErrorMsg());
 								}
 							}
-						}	
+						}
 					}
 					$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/courses/enrolment?id=".$COURSE_ID."\\'', 5000)";
 				} else{
 					add_error("You must select users to add.");
 					$STEP = 1;
 				}
-			} else {			
+			} else {
 				add_error("Invalid course identifier provided.");
 				$STEP = 1;
 			}
 
 		break;
 		default :
-	
-		break;	
+
+		break;
 	}
-	
+
 	// PAGE DISPLAY
 	switch ($STEP) {
 		case "2" :			// Step 2
-            add_success("You have successfully updated the course enrolment. You will be returned to the Course Enrolment index in 5 seconds. Or <a href=\"".ENTRADA_URL."/admin/courses/enrolment?id=".$COURSE_ID."\">click here</a> to go there now."); 
+            add_success("You have successfully updated the course enrolment. You will be returned to the Course Enrolment index in 5 seconds. Or <a href=\"".ENTRADA_URL."/admin/courses/enrolment?id=".$COURSE_ID."\">click here</a> to go there now.");
 			echo display_success($SUCCESSSTR);
 		break;
-	
+
 		default :			// Step 1
-			
+
 			if ($ERROR) {
 				echo display_error();
 			}
@@ -164,33 +163,37 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 			if ($SUCCESS) {
 				echo display_success();
 			}
-			
-			$group_ids = array();								
 
-			$ONLOAD[]	= "showgroup('".$group_name."',".$GROUP_ID.")";			
-			
-				$query = "	SELECT * FROM `courses` 
+			$group_ids = array();
+
+			$ONLOAD[]	= "showgroup('".$group_name."',".$GROUP_ID.")";
+
+				$query = "	SELECT * FROM `courses`
 					WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 					AND `course_active` = '1'";
-				$course_details	= $db->GetRow($query);				
-				
-			
-			$query = "	SELECT `cperiod_id` FROM `curriculum_periods` 
+				$course_details	= $db->GetRow($query);
+
+
+			$query = "	SELECT `cperiod_id`
+                        FROM `curriculum_periods`
 						WHERE `curriculum_type_id` = ".$db->qstr($course_details["curriculum_type_id"])."
 						AND `start_date` < ".$db->qstr(time())."
-						AND `finish_date` > ".$db->qstr(time());
+						AND `finish_date` > ".$db->qstr(time())."
+                        AND `active` = 1
+                        LIMIT 1";
 			$cperiod = $db->GetOne($query);
 			if (!$cperiod) {
 				$cperiod = 0;
 			}
-			$query = "	SELECT * FROM `course_audience` 
+
+			$query = "	SELECT * FROM `course_audience`
 						WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 						AND `cperiod_id` = ".$db->qstr($cperiod);
 			$audience = $db->GetAll($query);
 			$singles = array();
 			$groups = array();
 			if ($audience) {
-				foreach ($audience as $member) {					
+				foreach ($audience as $member) {
 					if ($member["audience_type"] == "proxy_id") {
 						$singles[] = (int)$member["audience_value"];
 					} elseif($member["audience_type"] == "group_id") {
@@ -204,14 +207,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 										a.`username`, a.`organisation_id`,  CONCAT_WS(':', b.`group`, b.`role`) AS `grouprole`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-										ON a.`id` = b.`user_id`										
+										ON a.`id` = b.`user_id`
 										WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										AND b.`account_active` = 'true'
 										AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 										AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 										AND a.`id` IN (".implode(",",$singles).")
 										GROUP BY a.`id`
-										ORDER BY a.`lastname` ASC, a.`firstname` ASC";									
+										ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 				$single_members = $db->GetAll($members_query);
 			}
 			if ($groups && !empty ($groups)) {
@@ -231,11 +234,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 										AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 										AND c.`group_id` = ".$db->qstr($group)."
 										GROUP BY a.`id`
-										ORDER BY a.`lastname` ASC, a.`firstname` ASC";									
+										ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 					$group_members[$group] = $db->GetAll($emembers_query);
 				}
-			}			
-			
+			}
+
 			if (isset($_GET["download"]) && $type = clean_input($_GET["download"])) {
 				switch($type){
 					case "csv":
@@ -248,7 +251,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 									$num_members++;
 									$output .= $group["group_name"].",".$member["fullname"].",".$member["number"]."\n";
 								}
-								
+
 							}
 						}
 						if($single_members){
@@ -266,7 +269,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 						header("Content-Disposition: inline; filename=\"ClassList.csv\"");
 						header("Content-Length: ".@strlen($output));
 						header("Content-Transfer-Encoding: binary\n");
-						
+
 						echo $output;
 						exit;
 						break;
@@ -274,7 +277,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 						break;
 				}
 			}
-			
+
 			courses_subnavigation($course_details,"enrolment");
 			?>
 			<h1>Manage Course Enrolment</h1>
@@ -283,8 +286,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 				add_notice('There is currently no  enrolment for this course.');
 				echo display_notice();
 			}
-			
-			if ($group_names) {				
+
+			if ($group_names) {
 				foreach ($group_names as $key=>$group) {
 					if ($group["group_type"] == "course_list") { ?>
 					<div style="float: right; margin-bottom: 5px">
@@ -336,15 +339,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 
 						<input type="hidden" name="members" value="1" />
 					</form>
-				<?php 
+				<?php
 					if ($group["group_type"] == "cohort") {
 						clear_notice();
-						add_notice('This group is a cohort and may be used by multiple courses. Editing it is reserved for system administrators. Is this group incorrect? <a href="javascript: sendFeedback(\'http://localhost/entrada/www-root/agent-feedback.php?enc=YToxOntzOjM6InVybCI7czo2NDoiL2VudHJhZGEvd3d3LXJvb3QvYWRtaW4vY291cnNlcz9zZWN0aW9uPWVucm9sbWVudCZpZD0xNSZvcmdfaWQ9MSI7fQ==\')"><b>Click here</b></a> and list any changes that should be made.'); 
+						add_notice('This group is a cohort and may be used by multiple courses. Editing it is reserved for system administrators. Is this group incorrect? <a href="javascript: sendFeedback(\'http://localhost/entrada/www-root/agent-feedback.php?enc=YToxOntzOjM6InVybCI7czo2NDoiL2VudHJhZGEvd3d3LXJvb3QvYWRtaW4vY291cnNlcz9zZWN0aW9uPWVucm9sbWVudCZpZD0xNSZvcmdfaWQ9MSI7fQ==\')"><b>Click here</b></a> and list any changes that should be made.');
 						echo display_notice();
 					} else {
 						?>
 					<div id="additions_<?php echo $group["group_id"];?>" style="display:none;">
-						<h2 style="margin-top: 10px">Add Members to the group '<?php echo $group["group_name"]; ?>'</h2>						
+						<h2 style="margin-top: 10px">Add Members to the group '<?php echo $group["group_name"]; ?>'</h2>
 						<form action="<?php echo ENTRADA_URL;?>/admin/courses/enrolment?step=2&amp;id=<?php echo $COURSE_ID;?>&amp;org_id=<?php echo $ORGANIATION_ID;?>&amp;group_id=<?php echo $group["group_id"]; ?>" method="post">
 							<table style="margin-top: 1px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Member">
 								<colgroup>
@@ -371,7 +374,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 										<td>
 											<div id="group_name_title"></div>
 										</td>
-									</tr>			
+									</tr>
 									<tr>
 										<td colspan="2" style="vertical-align: top">
 											<div class="member-add-type" id="existing-member-add-type">
@@ -510,8 +513,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 							</table>
 							<input type="hidden" id="add_group_id" name="add_group_id" value="" />
 						</form>
-					</div>			
-			
+					</div>
+
 						<?php
 					}
 				}
@@ -523,7 +526,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 					<ul class="page-action">
 						<li class="last"><a id="toggle_add_button_0" href="javascript: toggleAddUsers(0)" data-group-name="<?php echo $course_details["course_name"];?>">Add Individual Users to <?php echo $course["course_name"]; ?></a></li>
 					</ul>
-				</div>			
+				</div>
 				<h2>Individual Members</h2>
 				<form id="delete_form_0"action="<?php echo ENTRADA_URL; ?>/admin/courses/enrolment?section=manage&amp;step=2&amp;id=<?php echo $COURSE_ID;?>&amp;org_id=<?php echo $ORGANISATION_ID;?>&amp;group_id=0" method="post">
 					<table class="tableList" cellspacing="1" cellpadding="1">
@@ -587,7 +590,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 											<td>
 												<div id="group_name_title"></div>
 											</td>
-										</tr>			
+										</tr>
 										<tr>
 											<td colspan="2" style="vertical-align: top">
 												<div class="member-add-type" id="existing-member-add-type">
@@ -725,10 +728,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 								</table>
 								<input type="hidden" id="add_group_id" name="add_group_id" value="" />
 							</form>
-						</div>			
+						</div>
 				<br/>
 				<a href="<?php echo ENTRADA_URL;?>/admin/courses/enrolment?id=<?php echo $COURSE_ID;?>&amp;download=csv"><img src="<?php echo ENTRADA_URL;?>/templates/default/images/btn_save.gif" title="Download File" alt="Download File" width="15" style="vertical-align:text-bottom;">Download CSV</a>
-				
+
 			<?php } ?>
 			<div id="dialog-confirm" title="Delete?" style="display: none">
 				<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>Any users removed will be permanently removed. Are you sure you want to continue?</p>
@@ -751,7 +754,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 								}
 							}
 							});
-					});	
+					});
 				});
 				function toggleAddUsers(id){
 					if(jQuery('#additions_'+id).is(":visible")){
@@ -759,7 +762,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 						var group = jQuery('#toggle_add_button_'+id).attr('data-group-name');
 						if (id==0) {
 							jQuery('#toggle_add_button_'+id).text('Add Individual Users to '+group);
-						} else { 
+						} else {
 							jQuery('#toggle_add_button_'+id).text('Add Users to '+group);
 						}
 					}else{
@@ -772,7 +775,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 						}
 					}
 				}
-				
+
 				var people = [[]];
 				var ids = [[]];
 				var disablestatus = 0;
@@ -790,7 +793,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 							}
 							row.appendChild(new Element('td').update(option));
 							return table;
-						});			
+						});
 						$('group_members_'+currentgroup+'_category_select').selectedIndex = 0;
 						$('group_members_'+currentgroup+'_scroll').update('');
 						$('group_members_'+currentgroup+'_list').update(table);
@@ -814,7 +817,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 //						Event.stop(event);
 //					}
 //				});
-				
+
 				//Reload the multiselect every time the category select box changes
 				var multiselect;
 
@@ -873,7 +876,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 					$('cgroup_id').value = group;
 					$('addMembersForm').submit();
 				}
-				function showgroup(name,group) {					
+				function showgroup(name,group) {
 					$('group_name_title').update(new Element('div',{'style':'font-size:14px; font-weight:600; color:#153E7E'}).update('Group: '+name));
 					$('add_group_id').value = group;
 				}
@@ -889,20 +892,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 						}
 					}
 				}
-				function memberChecks(id) {					
+				function memberChecks(id) {
 					if ($$('.delchk_'+id+':checked').length&&!disablestatus[id]) {
 						disablestatus[id] = 1;
 						toggleDisabled($('additions_'+id),true);
 						$('delbutton_'+id).style.display = 'block';
-						$('additions_'+id).fade({ duration: 0.3, to: 0.25 }); 
+						$('additions_'+id).fade({ duration: 0.3, to: 0.25 });
 					} else if (!$$('.delchk_'+id+':checked').length&&disablestatus[id]) {
 						disablestatus[id] = 0;
 						toggleDisabled($('additions_'+id),false);
 						$('delbutton_'+id).style.display = 'none';
 						$('additions_'+id).fade({ duration: 0.3, to: 1.0 });
 					}
-				}				
-				
+				}
+
 
 		<?php
 		if (false && isset($added_ids) && $added_ids) {
@@ -929,6 +932,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 		</script>
 		<br /><br />
 		<?php
-		break;	
+		break;
 	}
 }

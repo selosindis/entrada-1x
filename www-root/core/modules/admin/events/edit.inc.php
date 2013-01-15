@@ -22,7 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
-*/
+ */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	exit;
@@ -754,9 +754,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 													<option value="0">-- Select the course this event belongs to --</option>
 													<?php
 													foreach($results as $result) {
-														if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $event_info["organisation_id"]), "create")) {
+														if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $event_info["organisation_id"]), "create") || $ENTRADA_ACL->amIAllowed(new EventClosedResource($EVENT_ID, $result["course_id"], $event_info["organisation_id"]), "update")) {
 															echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode(($result["course_code"] ? $result["course_code"].": " : "").$result["course_name"])."</option>\n";
-														}
+                                                        }
 													}
 													?>
 												</select>
@@ -878,7 +878,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 														jQuery("#associated_faculty").val(associated_faculty.join());
 
-														$('faculty_'+proxy_id).remove();	
+														$('faculty_'+proxy_id).remove();
 													}
 												});
 											});
@@ -966,6 +966,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							var audience_type;
 
 							function showMultiSelect() {
+                                if ($('display-notice-box')) {
+                                    $('display-notice-box').hide();
+                                }
+
 								$$('select_multiple_container').invoke('hide');
 								audience_type = $F('audience_type');
 								course_id = $F('course_id');

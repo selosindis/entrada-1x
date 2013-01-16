@@ -9481,6 +9481,7 @@ function course_fetch_course_audience($course_id = 0, $organisation_id = false,$
 									JOIN `".AUTH_DATABASE."`.`user_data` u
 									ON a.`proxy_id` = u.`id`
 									AND a.`group_id` = ".$db->qstr($result["audience_value"])."
+									AND a.`member_active` = 1
 									JOIN `".AUTH_DATABASE."`.`user_access` ua
 									ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
 									AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.") "
@@ -11578,6 +11579,7 @@ function events_fetch_event_audience_attendance($event_id = 0) {
 											JOIN `".AUTH_DATABASE."`.`user_data` u
 											ON a.`proxy_id` = u.`id`
 											AND a.`group_id` = ".$db->qstr($ca["audience_value"])."
+											AND a.`member_active` = 1
 											JOIN `".AUTH_DATABASE."`.`user_access` ua
 											ON u.`id` = ua.`user_id`".($group?" AND ua.`group` = ".$db->qstr($group):"").($role?" AND ua.`role` = ".$db->qstr($role):"")."
 											AND ua.`app_id` IN (".AUTH_APP_IDS_STRING.")

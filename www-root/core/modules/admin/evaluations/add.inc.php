@@ -129,6 +129,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			}
 			
 			/**
+			 * Non-required field "allow_target_request" / Allow Target Request
+			 */
+			if (isset($_POST["allow_target_request"]) && ($_POST["allow_target_request"])) {
+				$PROCESSED["allow_target_request"] = true;
+			} else {
+				$PROCESSED["allow_target_request"] = false;
+			}
+			
+			/**
 			 * Non-required field "show_comments" / Show Comments
 			 */
 			if (isset($_POST["show_comments"]) && ($_POST["show_comments"])) {
@@ -984,6 +993,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							<td>
 								<input type="checkbox" id="allow_target_review" name="allow_target_review"<?php echo (!isset($PROCESSED["allow_target_review"]) || $PROCESSED["allow_target_review"] ? " checked=\"checked\"" : ""); ?> />
 								<div style="float: right; width: 91%" class="content-small">Allow targets (or users with "ownership" permissions of the target) to review the results for this evaluation.</div>
+							</td>
+						</tr>
+						<tr>
+							<td></td>
+							<td style="vertical-align: top">
+								<label for="allow_target_request" class="form-required">Allow Target Request</label>
+							</td>
+							<td>
+								<input type="checkbox" id="allow_target_request" name="allow_target_request"<?php echo (!isset($PROCESSED["allow_target_request"]) || $PROCESSED["allow_target_request"] ? " checked=\"checked\"" : ""); ?> />
+								<div style="float: right; width: 91%" class="content-small">Allow targets to trigger a request to be sent to a valid evaluator to fill out an evaluation for them.</div>
 							</td>
 						</tr>
 						<tr>

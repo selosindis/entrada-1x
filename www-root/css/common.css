@@ -1248,6 +1248,11 @@ text-align:center;
 border-left:none;
 }
 
+table.tableList tr td.type-title {
+width:180px;
+border-left:none;
+}
+
 table.tableList tr td.date {
 width:160px;
 border-left:none;
@@ -1263,8 +1268,13 @@ width:100px;
 border-left:none;
 }
 
-table.tableList tr td.notices,table.tableList tr td.accesses,table.tableList tr td.term {
+table.tableList tr td.notices,table.tableList tr td.accesses,table.tableList tr td.term{
 width:50px;
+border-left:none;
+}
+
+table.tableList tr td.actions {
+width:60px;
 border-left:none;
 }
 
@@ -2205,7 +2215,7 @@ margin-left:5px;
 vertical-align:middle;
 }
 
-#form-content-questions-holder {
+#form-content-questions-holder, #evaluations-questions-holder {
 border:2px #EEE solid;
 padding:2px;
 }
@@ -2214,7 +2224,7 @@ padding:2px;
 padding-left:25px;
 }
 
-#form-questions-list > li{
+#form-questions-list > li {
 display:list-item;
 vertical-align:top;
 background-color:#FFF;
@@ -2229,6 +2239,35 @@ padding:8px 8px 15px 8px;
 margin-right: 25px;
 }
 
+.evaluation-questions-list input {
+	transform-origin: left top;
+	-ms-transform-origin: left top; /* IE 9 */
+	-webkit-transform-origin: left top; /* Safari and Chrome */
+	-o-transform-origin: left top; /* Opera */
+	-moz-transform-origin: left top; /* Firefox */
+	transform: scale(0.5, 0.5);
+	-ms-transform: scale(0.5, 0.5); /* IE 9 */
+	-webkit-transform: scale(0.5, 0.5); /* Safari and Chrome */
+	-o-transform: scale(0.5, 0.5); /* Opera */
+	-moz-transform: scale(0.5, 0.5); /* Firefox */
+}
+
+.evaluation-questions-list,
+.evaluation-questions-list td,
+.evaluation-questions-list div {
+	font-size: 5px !important;
+	white-space: normal !important;
+}
+
+.evaluation-questions-list textarea {
+	height: 30px !important;
+	min-height: 30px !important;
+}
+
+.evaluation-questions-list > div {
+	width: 377.5px
+}
+
 #form-questions-list > li.odd,
 #form-questions-list > div.odd {
 background-color:#EEE;
@@ -2240,7 +2279,8 @@ float:right;
 }
 
 #form-questions-list > li > div.controls img,
-#form-questions-list > div > div.controls img {
+#form-questions-list > div > div.controls img,
+.evaluation-questions-list > div > div.controls img, {
 border:0;
 }
 
@@ -2273,9 +2313,34 @@ padding:0;
 text-align:center;
 }
 
-#form-questions-list > li > div.comments,
-#form-questions-list > div > div.comments {
-margin-top:5px;
+.evaluation-questions-list > div > h2 {
+font-size: 10px;
+border-bottom: 1px #CCC solid;
+margin: 3px 0px 0px 0px;
+}
+
+.evaluation-questions-list > div > h2 > span {
+font-size: 5px;
+}
+
+.evaluation-questions-list > div > div.question {
+position:relative;
+font-weight:700;
+}
+
+.evaluation-questions-list > div > div.responses {
+position:relative;
+height: 20px;
+}
+
+.evaluation-questions-list > div > div.responses > div {
+display:inline;
+float:left;
+width:20%;
+margin:0;
+padding:0;
+text-align:center;
+height: 20px;
 }
 
 #control_overlay {

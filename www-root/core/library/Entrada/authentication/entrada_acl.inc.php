@@ -32,6 +32,7 @@ class Entrada_ACL extends ACL_Factory {
 				"evaluationform" => array (
 					"evaluationformquestion"
 				),
+				"evaluationquestion"
 			),			
 			"gradebook" => array(
 				"assessment"
@@ -2637,6 +2638,17 @@ class EvaluationFormResource extends EvaluationResource {
 	}
 	public function getResourceId() {
 		return "evaluationform".($this->specific ? $this->evaluation_id : "");
+	}
+}
+
+class EvaluationQuestionResource extends EvaluationResource {
+	var $equestion_id;
+
+	function __construct($equestion_id, $assert = null) {
+		$this->equestion_id = $equestion_id;
+	}
+	public function getResourceId() {
+		return "evaluationquestion".($this->specific ? $this->equestion_id : "");
 	}
 }
 

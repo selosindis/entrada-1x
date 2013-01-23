@@ -405,6 +405,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 																		AND c.`audience_active` = 1
 																		AND d.`start_date` <= ".$db->qstr(time())."
 																		AND d.`finish_date` >= ".$db->qstr(time())."
+																		GROUP BY a.`id`
+																		ORDER BY a.`lastname` ASC, a.`firstname` ASC
 
 																		UNION
 
@@ -431,7 +433,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 																		AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`expire_date` = 0)
 
 																		GROUP BY a.`id`
-																		ORDER BY `lastname` ASC, `firstname` ASC";
+																		ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 												} else {
 													$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
 																		FROM `".AUTH_DATABASE."`.`user_data` AS a

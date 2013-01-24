@@ -186,9 +186,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				}
 
 				if ((!$permissions_only) && (!$ERROR)) {
-				/**
-				 * Required field "password" / Password.
-				 */
+                    /**
+                     * Required field "password" / Password.
+                     */
 					if ((isset($_POST["password"])) && ($password = clean_input($_POST["password"], "trim"))) {
 						if ((strlen($password) >= 6) && (strlen($password) <= 24)) {
 							$PROCESSED["password"] = $password;
@@ -206,18 +206,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							$entry_year = clean_input($_POST["entry_year"],"int");
 							$grad_year = clean_input($_POST["grad_year"],"int");
 							$sanity_start = 1995;
-							$sanity_end = fetch_first_year();
+							$sanity_end = (fetch_first_year() + 1);
 							if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
 								$PROCESSED["grad_year"] = $grad_year;
 							} else {
 								$ERROR++;
-								$ERRORSTR[] = "You must provide a valid graduation year";
+								$ERRORSTR[] = "You must provide a valid graduation year.";
 							}
 							if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
 								$PROCESSED["entry_year"] = $entry_year;
 							} else {
 								$ERROR++;
-								$ERRORSTR[] = "You must provide a valid program entry year";
+								$ERRORSTR[] = "You must provide a valid program entry year.";
 							}
 						}
 					}
@@ -445,18 +445,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									$entry_year = clean_input($perm["entry_year"],"int");
 									$grad_year = clean_input($perm["grad_year"],"int");
 									$sanity_start = 1995;
-									$sanity_end = fetch_first_year();
+									$sanity_end = (fetch_first_year() + 1);
 									if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
 										$PROCESSED["grad_year"] = $grad_year;
 									} else {
 										$ERROR++;
-										$ERRORSTR[] = "You must provide a valid graduation year";
+										$ERRORSTR[] = "You must provide a valid graduation year.";
 									}
 									if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
 										$PROCESSED["entry_year"] = $entry_year;
 									} else {
 										$ERROR++;
-										$ERRORSTR[] = "You must provide a valid program entry year";
+										$ERRORSTR[] = "You must provide a valid program entry year.";
 									}
 									if (!$ERROR) {
 										$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
@@ -508,24 +508,51 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 
 								/**
-								* Add user to cohort if they're a student
-								*/
+								 * Add user to cohort if they're a student
+                                 *
+                                 * @todo Wow, this is just plain lazy. Someone needs to fix this dirty bit.
+								 */
 								if ($PROCESSED_ACCESS["group"] == "student") {
-									$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."' AND `group_type` = 'cohort' AND `group_active` = 1";
+                                    $query = "  SELECT a.`group_id`
+                                                FROM `groups` AS a
+                                                JOIN `group_organisations` AS b
+                                                ON a.`group_id` = b.`group_id`
+                                                AND b.`organisation_id` = ".$db->qstr($PROCESSED_ACCESS["organisation_id"])."
+                                                WHERE a.`group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."'
+                                                AND a.`group_type` = 'cohort'
+                                                AND a.`group_active` = 1";
 									$group_id = $db->GetOne($query);
-									if($group_id){
-										$gmember = array(
-											'group_id' => $group_id,
-											'proxy_id' => $PROCESSED_ACCESS["user_id"],
-											'start_date' => time(),
-											'finish_date' => 0,
-											'member_active' => 1,
-											'entrada_only' => 1,
-											'updated_date' => time(),
-											'updated_by' => $ENTRADA_USER->getID()
-										);
+									if ($group_id) {
+                                        $query = "SELECT * FROM `group_members` WHERE `group_id`=".$db->qstr($group_id)." AND `proxy_id`=".$db->qstr($PROCESSED_ACCESS["user_id"]);
+                                        $result = $db->GetRow($query);
+                                        if ($result) {
+                                            /**
+                                             * Update existing group_member record.
+                                             */
+                                            $gmember = array(
+                                                'member_active' => 1,
+                                                'updated_date' => time(),
+                                                'updated_by' => $ENTRADA_USER->getID()
+                                            );
 
-										$db->AutoExecute("group_members", $gmember, "INSERT");
+                                            $db->AutoExecute("group_members", $gmember, "UPDATE", "gmember_id = ".$result["gmember_id"]);
+                                        } else {
+                                            /**
+                                             * Create new group_member record.
+                                             */
+                                            $gmember = array(
+                                                'group_id' => $group_id,
+                                                'proxy_id' => $PROCESSED_ACCESS["user_id"],
+                                                'start_date' => 0,
+                                                'finish_date' => 0,
+                                                'member_active' => 1,
+                                                'entrada_only' => 1,
+                                                'updated_date' => time(),
+                                                'updated_by' => $ENTRADA_USER->getID()
+                                            );
+
+                                            $db->AutoExecute("group_members", $gmember, "INSERT");
+                                        }
 									}
 								}
 
@@ -579,18 +606,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											$entry_year = clean_input($perm["entry_year"],"int");
 											$grad_year = clean_input($perm["grad_year"],"int");
 											$sanity_start = 1995;
-											$sanity_end = fetch_first_year();
+                							$sanity_end = (fetch_first_year() + 1);
 											if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
 												$PROCESSED["grad_year"] = $grad_year;
 											} else {
 												$ERROR++;
-												$ERRORSTR[] = "You must provide a valid graduation year";
+												$ERRORSTR[] = "You must provide a valid graduation year.";
 											}
 											if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
 												$PROCESSED["entry_year"] = $entry_year;
 											} else {
 												$ERROR++;
-												$ERRORSTR[] = "You must provide a valid program entry year";
+												$ERRORSTR[] = "You must provide a valid program entry year.";
 											}
 											if (!$ERROR) {
 												$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
@@ -628,31 +655,59 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												application_log("error", "USER NOTICE: A new user (".$PROCESSED["firstname"]." ".$PROCESSED["lastname"].") was added to ".APPLICATION_NAME." as ".$PROCESSED_ACCESS["group"]." > ".$PROCESSED_ACCESS["role"].".");
 											}
 
-											/**
-											* Add user to cohort if they're a student
-											*/
-											if ($PROCESSED_ACCESS["group"] == "student") {
-												$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."' AND `group_type` = 'cohort' AND `group_active` = 1";
-												$group_id = $db->GetOne($query);
-												if($group_id){
-													$gmember = array(
-														'group_id' => $group_id,
-														'proxy_id' => $PROCESSED_ACCESS["user_id"],
-														'start_date' => time(),
-														'finish_date' => 0,
-														'member_active' => 1,
-														'entrada_only' => 1,
-														'updated_date' => time(),
-														'updated_by' => $ENTRADA_USER->getID()
-													);
+                                            /**
+                                             * Add user to cohort if they're a student
+                                             *
+                                             * @todo Wow, this is just plain lazy. Someone needs to fix this dirty bit.
+                                             */
+                                            if ($PROCESSED_ACCESS["group"] == "student") {
+                                                $query = "  SELECT a.`group_id`
+                                                            FROM `groups` AS a
+                                                            JOIN `group_organisations` AS b
+                                                            ON a.`group_id` = b.`group_id`
+                                                            AND b.`organisation_id` = ".$db->qstr($PROCESSED_ACCESS["organisation_id"])."
+                                                            WHERE a.`group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."'
+                                                            AND a.`group_type` = 'cohort'
+                                                            AND a.`group_active` = 1";
+                                                $group_id = $db->GetOne($query);
+                                                if ($group_id) {
+                                                    $query = "SELECT * FROM `group_members` WHERE `group_id`=".$db->qstr($group_id)." AND `proxy_id`=".$db->qstr($PROCESSED_ACCESS["user_id"]);
+                                                    $result = $db->GetRow($query);
+                                                    if ($result) {
+                                                        /**
+                                                         * Update existing group_member record.
+                                                         */
+                                                        $gmember = array(
+                                                            'member_active' => 1,
+                                                            'updated_date' => time(),
+                                                            'updated_by' => $ENTRADA_USER->getID()
+                                                        );
 
-													$db->AutoExecute("group_members", $gmember, "INSERT");
-												}
-											}
+                                                        $db->AutoExecute("group_members", $gmember, "UPDATE", "gmember_id = ".$result["gmember_id"]);
+                                                    } else {
+                                                        /**
+                                                         * Create new group_member record.
+                                                         */
+                                                        $gmember = array(
+                                                            'group_id' => $group_id,
+                                                            'proxy_id' => $PROCESSED_ACCESS["user_id"],
+                                                            'start_date' => 0,
+                                                            'finish_date' => 0,
+                                                            'member_active' => 1,
+                                                            'entrada_only' => 1,
+                                                            'updated_date' => time(),
+                                                            'updated_by' => $ENTRADA_USER->getID()
+                                                        );
+
+                                                        $db->AutoExecute("group_members", $gmember, "INSERT");
+                                                    }
+                                                }
+                                            }
+
 											/**
-											* Handle the inserting of user data into the user_departments table
-											* if departmental information exists in the form.
-											*/
+											 * Handle the inserting of user data into the user_departments table
+											 * if departmental information exists in the form.
+											 */
 											if (isset($_POST["my_departments"]) && $in_departments = json_decode($_POST["my_departments"], true)) {
 												$in_departments = json_decode($in_departments["list"], true);
 													if (is_array($in_departments)) {
@@ -1221,20 +1276,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												<th></th>
 												<th></th>
 												<th></th>
+												<th></th>
 											</tr>
 										</thead>
 										<tbody>
 											<tr>
-												<td colspan="3"><h3>Profiles</h3></td>
+												<td colspan="4"><h3>Profiles</h3></td>
 											</tr>
 										</tbody>
 										<tfoot>
 											<tr>
-												<td colspan="3"><h3>Options</h3></td>
+												<td colspan="4"><h3>Options</h3></td>
 											</tr>
 											<tr>
-												<td></td>
-												<td colspan="2">
+												<td>&nbsp;</td>
+												<td colspan="3">
 													<label for="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="display: block;">Departments</label><br />
 													<select id="<?php echo "in_departments_" . $result["organisation_id"]; ?>" name="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="">
 														<option value="0">-- Select Departments --</option>
@@ -1256,8 +1312,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												</td>
 											</tr>
 										</tfoot>
-										<tbody>
-										</tbody>
 									</table>
 									<br />
 								<?php
@@ -1293,25 +1347,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				<input id="permissions" name="permissions" type="hidden" value="" />
 			</form>
 			<div style="display: none;" id="entry_grad_year_container">
-				<div id="grad_year_container" style="float: left; margin-right: 20px;">
-					<label for="grad_year" class="form-required" style="display: block;">Expected Graduation Year</label>&nbsp;
-					<select id="grad_year" name="grad_year" style="width: 140px;">
-					<?php
-					for($i = fetch_first_year(); $i >= 1995; $i--) {
-						$selected = (isset($PROCESSED["grad_year"]) && $PROCESSED["grad_year"] == $i);
-						echo build_option($i, $i, $selected);
-					}
-					?>
-					</select>
-				</div>
-				&nbsp;&nbsp;
-				<div id="entry_year_container" style="float: left;">
+				<div id="entry_year_container" style="float: left; margin-right: 20px;">
 					<label for="entry_year" class="form-required" style="display: block;">Year of Program Entry</label>&nbsp;
 					<select id="entry_year" name="entry_year" style="width: 140px">
 					<?php
 					$selected_year = (isset($PROCESSED["entry_year"])) ? $PROCESSED["entry_year"] : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
 					for($i = fetch_first_year(); $i >= 1995; $i--) {
 						$selected = $selected_year == $i;
+						echo build_option($i, $i, $selected);
+					}
+					?>
+					</select>
+				</div>
+   				&nbsp;&nbsp;
+				<div id="grad_year_container" style="float: left;">
+					<label for="grad_year" class="form-required" style="display: block;">Expected Graduation Year</label>&nbsp;
+					<select id="grad_year" name="grad_year" style="width: 140px;">
+					<?php
+					for($i = (fetch_first_year() + 1); $i >= 1995; $i--) {
+						$selected = (isset($PROCESSED["grad_year"]) && $PROCESSED["grad_year"] == $i);
 						echo build_option($i, $i, $selected);
 					}
 					?>
@@ -1454,6 +1508,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 							var temp_permissions = {"org_id" : org_id, "group_id" : group_id, "role_id" : role_id, "clinical" : clinical, "entry_year" : entry_year, "grad_year" : grad_year};
 							permissions.acl.push(temp_permissions);
+
 							$('input[name=permissions]').val(JSON.stringify(permissions));
 						}
 					});
@@ -1476,9 +1531,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 					$('select[id=entry_year]').live("change", function() {
 						var org_id = $(this).closest('table').attr("id").split("_")[2]
-						for (i = 0; i < permissions.length; i++) {
-							if (permissions[i].org_id == org_id) {
-								permissions[i].entry_year = $(this).val();
+						for (i = 0; i < permissions.acl.length; i++) {
+							if (permissions.acl[i].org_id == org_id) {
+								permissions.acl[i].entry_year = $(this).val();
 							}
 						}
 						$('input[name=permissions]').val(JSON.stringify(permissions));
@@ -1486,9 +1541,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 					$('select[id=grad_year]').live("change", function() {
 						var org_id = $(this).closest('table').attr("id").split("_")[2];
-						for (i = 0; i < permissions.length; i++) {
-							if (permissions[i].org_id == org_id) {
-								permissions[i].grad_year = $(this).val();
+						for (i = 0; i < permissions.acl.length; i++) {
+							if (permissions.acl[i].org_id == org_id) {
+								permissions.acl[i].grad_year = $(this).val();
 							}
 						}
 						$('input[name=permissions]').val(JSON.stringify(permissions));
@@ -1537,6 +1592,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							$('#departments_container_' + org_id).children().remove();
 						}
 					});
+
 					function filterGroups() {
 						if ($('#groups option').length > 0) {
 							var current_org = $('#organisations').val();

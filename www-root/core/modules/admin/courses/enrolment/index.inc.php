@@ -233,6 +233,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 										AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 										AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 										AND c.`group_id` = ".$db->qstr($group)."
+										AND c.`member_active` = 1
 										GROUP BY a.`id`
 										ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 					$group_members[$group] = $db->GetAll($emembers_query);

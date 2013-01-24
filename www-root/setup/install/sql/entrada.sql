@@ -4393,7 +4393,9 @@ CREATE TABLE IF NOT EXISTS `groups` (
 INSERT INTO `groups` (`group_id`, `group_name`, `group_type`, `group_active`, `updated_date`, `updated_by`)	VALUES
 (1, CONCAT('Class of ', YEAR(CURRENT_DATE())), 'cohort', 1, UNIX_TIMESTAMP(), 1),
 (2, CONCAT('Class of ', YEAR(CURRENT_DATE())+1), 'cohort', 1, UNIX_TIMESTAMP(), 1),
-(3, CONCAT('Class of ', YEAR(CURRENT_DATE())+2), 'cohort', 1, UNIX_TIMESTAMP(), 1);
+(3, CONCAT('Class of ', YEAR(CURRENT_DATE())+2), 'cohort', 1, UNIX_TIMESTAMP(), 1),
+(4, CONCAT('Class of ', YEAR(CURRENT_DATE())+3), 'cohort', 1, UNIX_TIMESTAMP(), 1),
+(5, CONCAT('Class of ', YEAR(CURRENT_DATE())+4), 'cohort', 1, UNIX_TIMESTAMP(), 1);
 
 CREATE TABLE IF NOT EXISTS `group_members` (
   `gmember_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -4423,7 +4425,9 @@ CREATE TABLE IF NOT EXISTS `group_organisations` (
 INSERT INTO `group_organisations` (`gorganisation_id`, `group_id`, `organisation_id`, `updated_by`, `updated_date`) VALUES
 (1, 1, 1, 1, UNIX_TIMESTAMP()),
 (2, 2, 1, 1, UNIX_TIMESTAMP()),
-(3, 3, 1, 1, UNIX_TIMESTAMP());
+(3, 3, 1, 1, UNIX_TIMESTAMP()),
+(4, 4, 1, 1, UNIX_TIMESTAMP()),
+(5, 5, 1, 1, UNIX_TIMESTAMP());
 
 CREATE TABLE IF NOT EXISTS `pg_eval_response_rates` (
   `id` int(12) NOT NULL AUTO_INCREMENT,

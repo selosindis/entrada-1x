@@ -11123,15 +11123,23 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 			$all_events = $db->GetAll($limitless_query_events);
 			$result_ids_map = array();
 			if ($all_events) {
+                if ($user_group == "student") {
+                    $enroled_courses = groups_get_enrolled_course_ids($proxy_id, true, $output["duration_start"], $output["duration_end"]);
+                } else {
+                    $enroled_courses = array();
+                }
+
 				foreach ($all_events as $map_event) {
-					if ($respect_time_release) {
-						$event_resource = new EventResource($map_event["event_id"], $map_event["course_id"], $map_event["organisation_id"]);
-						if (((!$map_event["release_date"]) || ($map_event["release_date"] <= time())) && ((!$map_event["release_until"]) || ($map_event["release_until"] >= time())) && $ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {
+                    if ($user_group != "student" || in_array($map_event["course_id"], $enroled_courses)) {
+                        if ($respect_time_release) {
+                            $event_resource = new EventResource($map_event["event_id"], $map_event["course_id"], $map_event["organisation_id"]);
+                            if (((!$map_event["release_date"]) || ($map_event["release_date"] <= time())) && ((!$map_event["release_until"]) || ($map_event["release_until"] >= time())) && $ENTRADA_ACL->amIAllowed($event_resource, "read", true)) {
+                                $result_ids_map[] = $map_event["event_id"];
+                            }
+                        } else {
                             $result_ids_map[] = $map_event["event_id"];
-						}
-					} else {
-						$result_ids_map[] = $map_event["event_id"];
-					}
+                        }
+                    }
 				}
 			}
 
@@ -11149,6 +11157,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 		} else {
 			$output["total_pages"] = (int) ($output["total_rows"] / $results_per_page) + 1;
 		}
+
 		/**
 		 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
 		 */
@@ -15241,59 +15250,71 @@ function groups_get_cohort($proxy_id = 0) {
  * @param int $proxy_id
  * @return array $group
  */
-function groups_get_enrolled_course_ids($proxy_id = 0, $only_active_groups = false) {
+function groups_get_enrolled_course_ids($proxy_id = 0, $only_active_enrolment = false, $start_date = 0, $finish_date = 0) {
 	global $db, $ENTRADA_USER;
 
 	$proxy_id = (int) $proxy_id;
-	$only_active_groups = (bool) $only_active_groups;
+	$only_active_enrolment = (bool) $only_active_enrolment;
+	$start_date = (int) $start_date;
+    if (!$start_date) {
+        $start_date = time();
+    }
+
+	$finish_date = (int) $finish_date;
+    if (!$finish_date) {
+        $finish_date = time();
+    }
 
 	$course_ids = array();
 
 	if ($proxy_id) {
-//		$query = "	SELECT a.`group_value`
-//					FROM `groups` AS a
-//					JOIN `group_members` AS b
-//					ON b.`group_id` = a.`group_id`
-//					JOIN `group_organisations` AS c
-//					ON c.`group_id` = a.`group_id`
-//					WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
-//					AND (b.`start_date` = 0 OR b.`start_date` <= UNIX_TIMESTAMP())
-//					AND (b.`finish_date` = 0 OR b.`finish_date` >= UNIX_TIMESTAMP())
-//					AND b.`member_active` = '1'
-//					AND a.`group_type` = 'course_list'
-//					".($only_active_groups ? " AND a.`group_active` = '1'" : "")."
-//					AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
-
-		$query = "	SELECT a.course_id FROM courses AS a
-					LEFT JOIN course_audience AS b
-					ON a.course_id = b.course_id
-					WHERE a.permission = 'open'
+		$query  = "SELECT DISTINCT a.`course_id`
+                    FROM `courses` AS a
+					LEFT JOIN `course_audience` AS b
+					ON a.`course_id` = b.`course_id`
+                    LEFT JOIN `curriculum_periods` AS c
+                    ON b.`cperiod_id` = c.`cperiod_id`
+					WHERE a.`permission` = 'open'
 					OR (
 						(
 							(
-								audience_type = 'group_id'
-								AND audience_value IN(
-									SELECT a.group_id FROM `groups` AS a
+                                b.`audience_type` = 'group_id' AND b.`audience_value` IN (
+									SELECT a.`group_id`
+                                    FROM `groups` AS a
 									JOIN `group_members` AS b
 									ON b.`group_id` = a.`group_id`
 									JOIN `group_organisations` AS c
 									ON c.`group_id` = a.`group_id`
-									WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
-									AND (b.`start_date` = 0
-									OR b.`start_date` <= UNIX_TIMESTAMP())
-									AND (b.`finish_date` = 0 OR b.`finish_date` >= UNIX_TIMESTAMP())
-									AND b.`member_active` = '1'
+									WHERE b.`proxy_id` = ".$db->qstr($proxy_id);
+		if ($only_active_enrolment) {
+            $query .= "             AND (
+                                        (b.`start_date` = '0' AND b.`finish_date` = '0') OR
+                                        (".$db->qstr($start_date)." BETWEEN b.`start_date` AND b.`finish_date`) OR
+                                        (".$db->qstr($finish_date)." BETWEEN b.`start_date` AND b.`finish_date`) OR
+                                        (b.`start_date` BETWEEN ".$db->qstr($start_date)." AND ".$db->qstr($finish_date).") OR
+                                        (b.`finish_date` BETWEEN ".$db->qstr($start_date)." AND ".$db->qstr($finish_date).")
+                                    )";
+        }
+
+        $query .= "                 AND b.`member_active` = '1'
 									AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 								)
 							)
-							OR (
-								audience_type='proxy_id'
-								AND audience_value = ".$db->qstr($proxy_id)."
+                            OR (
+								b.`audience_type` = 'proxy_id' AND b.`audience_value` = ".$db->qstr($proxy_id)."
 							)
 						)
-						AND audience_active = '1'
-					)";
+						AND b.`audience_active` = '1'";
+        if ($only_active_enrolment) {
+            $query .= " AND (
+                            (".$db->qstr($start_date)." BETWEEN c.`start_date` AND c.`finish_date`) OR
+                            (".$db->qstr($finish_date)." BETWEEN c.`start_date` AND c.`finish_date`) OR
+                            (c.`start_date` BETWEEN ".$db->qstr($start_date)." AND ".$db->qstr($finish_date).") OR
+                            (c.`finish_date` BETWEEN ".$db->qstr($start_date)." AND ".$db->qstr($finish_date).")
+                        )";
+        }
 
+		$query .= " )";
 
 		$course_list = $db->CacheGetAll(CACHE_TIMEOUT, $query);
 		if ($course_list) {

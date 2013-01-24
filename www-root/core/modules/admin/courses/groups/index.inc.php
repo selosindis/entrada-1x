@@ -53,7 +53,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 	$show_results		= false;
 
 	$admin_wording = "Administrator View";
-	
+
 
 	/**
 	 * Determine the type of search that is requested.
@@ -110,7 +110,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 	 * Check if preferences need to be updated on the server at this point.
 	 */
 	preferences_update($MODULE, $PREFERENCES);
-	$query = "	SELECT * FROM `courses` 
+	$query = "	SELECT * FROM `courses`
 				WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 				AND `course_active` = '1'";
 	$course_details	= $db->GetRow($query);
@@ -122,9 +122,9 @@ if (!defined("IN_COURSE_GROUPS")) {
 				<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : ""); ?>?section=add&id=<?php echo $COURSE_ID; ?>" class="strong-green">Add Group</a></li>
 			</ul>
 		</div>
-		<div style="clear: both"></div> 
+		<div style="clear: both"></div>
 
-	<?php 
+	<?php
 	/**
 	 * Update requested order to sort by.
 	 * Valid: asc, desc
@@ -163,10 +163,10 @@ if (!defined("IN_COURSE_GROUPS")) {
 			$sort_by = "a.`updated_date` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE."-".$SUBMODULE]["so"]).", a.`updated_date` ASC";
 		break;
 	}
-	
+
 	/**** Query ***/
 	$query_count = "SELECT COUNT(`cgroup_id`) AS `total_rows`
-					FROM `course_groups` 
+					FROM `course_groups`
 					WHERE `course_id` = ".$db->qstr($COURSE_ID);
 
 	$query_groups = "SELECT a.*, COUNT(b.`cgaudience_id`) AS `members`
@@ -196,7 +196,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 	 * of pages that are available based on the results per page preferences.
 	 */
 	$result_count = $db->GetRow($query_count);
-	
+
 	if ($result_count) {
 		$scheduler_groups["total_rows"] = (int) $result_count["total_rows"];
 
@@ -252,7 +252,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 		<div class="tab-page">
 			<h2 class="tab">Group Search</h2>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/courses/groups" method="get">
-			<input type="hidden" name="id" value="<?php echo $COURSE_ID;?>"/>	
+			<input type="hidden" name="id" value="<?php echo $COURSE_ID;?>"/>
 			<input type="hidden" name="type" value="search" />
 			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Search for Groups">
 			<colgroup>
@@ -287,8 +287,8 @@ if (!defined("IN_COURSE_GROUPS")) {
 			</form>
 		</div>
 	</div>
-	
-	<script type="text/javascript">setupAllTabs(true);</script>
+
+	<script type="text/javascript">setupAllTabs(false);</script>
 	<?php
 	echo "<p />";
 	if ($scheduler_groups["total_pages"] > 1) {
@@ -390,7 +390,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 			.actions{
 				width:40px;
 			}
-		</style>		
+		</style>
 		<?php
 		endif;
 	} else {

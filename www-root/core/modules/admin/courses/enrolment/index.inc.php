@@ -283,8 +283,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 			?>
 			<h1>Manage Course Enrolment</h1>
 			<?php
-			if(!$group_names && !$single_members){
-				add_notice('There is currently no  enrolment for this course.');
+			if (!$group_names && !$single_members) {
+				add_notice('There is currently no student enrolment for this course at this time.');
 				echo display_notice();
 			}
 
@@ -301,35 +301,36 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 					<form id="delete_form_<?php echo $group["group_id"];?>" action="<?php echo ENTRADA_URL; ?>/admin/courses/enrolment?section=manage&amp;step=2&amp;id=<?php echo $COURSE_ID;?>&amp;group_id=<?php echo $group["group_id"];?>" method="post">
 						<table class="tableList" cellspacing="1" cellpadding="1">
 							<colgroup>
-								<col style="width: 6%" />
-								<col style="width: 54%" />
-								<col style="width: 40%" />
+								<col class="modified" />
+								<col class="title" />
+								<col class="general" />
 							</colgroup>
 							<thead>
 								<tr>
-									<td></td>
-									<td>Full Name</td>
-									<td>Group &amp; Role</td>
+									<td class="modified"></td>
+									<td class="title">Full Name</td>
+									<td class="general">Group &amp; Role</td>
 								</tr>
 							</thead>
 							<tbody>
 							<?php
-
-								if ($group_members[$key]) {
-									foreach($group_members[$key] as $result) {
-										echo "<tr class=\"event".(!$result["member_active"] ? " na" : "")."\">";
-										echo "	<td>".($group["group_type"]=="course_list"?"<input type=\"checkbox\" class=\"delchk delchk_".$group["group_id"]."\" name=\"checked[]\" onclick=\"memberChecks(".$group["group_id"].")\" value=\"".$result["proxy_id"]."\" />":"&nbsp;")."</td>\n";
-										echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".html_encode($result["fullname"])."</a></td>";
-										echo "	<td><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".$result["grouprole"]."</a></td>";
-										echo "</tr>";
-									}
-								} else {
-									echo "<tr><td colspan=\"3\">";
-									clear_notice();
-									add_notice("There are no students in the group '".$group["group_name"]."'.");
-									echo display_notice();
-									echo "</td></tr>";
-								}
+                            if ($group_members[$key]) {
+                                foreach ($group_members[$key] as $result) {
+                                    echo "<tr class=\"event".(!$result["member_active"] ? " na" : "")."\">";
+                                    echo "	<td class=\"modified\">".($group["group_type"]=="course_list"?"<input type=\"checkbox\" class=\"delchk delchk_".$group["group_id"]."\" name=\"checked[]\" onclick=\"memberChecks(".$group["group_id"].")\" value=\"".$result["proxy_id"]."\" />":"&nbsp;")."</td>\n";
+                                    echo "	<td class=\"title\"><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".html_encode($result["fullname"])."</a></td>";
+                                    echo "	<td class=\"general\"><a href=\"".ENTRADA_URL."/people?profile=".$result["username"]."\" >".$result["grouprole"]."</a></td>";
+                                    echo "</tr>";
+                                }
+                            } else {
+                                echo "<tr>";
+                                echo "  <td colspan=\"3\">";
+                                    clear_notice();
+                                    add_notice("There are no students in the group '".$group["group_name"]."' at this time.");
+                                    echo display_notice();
+                                echo "  </td>";
+                                echo "</tr>";
+                            }
 							?>
 							</tbody>
 						</table>
@@ -342,189 +343,190 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 					</form>
 				<?php
 					if ($group["group_type"] == "cohort") {
-						clear_notice();
-						add_notice('This group is a cohort and may be used by multiple courses. Editing it is reserved for system administrators. Is this group incorrect? <a href="javascript: sendFeedback(\'http://localhost/entrada/www-root/agent-feedback.php?enc=YToxOntzOjM6InVybCI7czo2NDoiL2VudHJhZGEvd3d3LXJvb3QvYWRtaW4vY291cnNlcz9zZWN0aW9uPWVucm9sbWVudCZpZD0xNSZvcmdfaWQ9MSI7fQ==\')"><b>Click here</b></a> and list any changes that should be made.');
-						echo display_notice();
+                        ?>
+                        <div class="display-generic">
+                            <strong>Please Note:</strong> This student list is used by multiple courses, so editing is reserved for system administrators.
+                        </div>
+						<?php
 					} else {
 						?>
-					<div id="additions_<?php echo $group["group_id"];?>" style="display:none;">
-						<h2 style="margin-top: 10px">Add Members to the group '<?php echo $group["group_name"]; ?>'</h2>
-						<form action="<?php echo ENTRADA_URL;?>/admin/courses/enrolment?step=2&amp;id=<?php echo $COURSE_ID;?>&amp;org_id=<?php echo $ORGANIATION_ID;?>&amp;group_id=<?php echo $group["group_id"]; ?>" method="post">
-							<table style="margin-top: 1px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Member">
-								<colgroup>
-									<col style="width: 45%" />
-									<col style="width: 10%" />
-									<col style="width: 45%" />
-								</colgroup>
-								<tfoot>
-									<tr>
-										<td colspan="3" style="padding-top: 15px; text-align: right">
-											<input type="submit" class="button" value="Proceed" style="vertical-align: middle" />
-										</td>
-									</tr>
-								</tfoot>
-								<tbody>
-									<tr>
-										<td colspan="3" style="vertical-align: top">
-											If you would like to add users that already exist in the system to this group yourself, you can do so by clicking the checkbox beside their name from the list below.
-											Once you have reviewed the list at the bottom and are ready, click the <strong>Proceed</strong> button at the bottom to complete the process.
-										</td>
-									</tr>
-									<tr>
-										<td colspan="2" />
-										<td>
-											<div id="group_name_title"></div>
-										</td>
-									</tr>
-									<tr>
-										<td colspan="2" style="vertical-align: top">
-											<div class="member-add-type" id="existing-member-add-type">
-											<?php
-												$nmembers_results	= false;
+                        <div id="additions_<?php echo $group["group_id"];?>" style="display:none;">
+                            <h2 style="margin-top: 10px">Add Members to the group '<?php echo $group["group_name"]; ?>'</h2>
+                            <form action="<?php echo ENTRADA_URL;?>/admin/courses/enrolment?step=2&amp;id=<?php echo $COURSE_ID;?>&amp;org_id=<?php echo $ORGANIATION_ID;?>&amp;group_id=<?php echo $group["group_id"]; ?>" method="post">
+                                <table style="margin-top: 1px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Member">
+                                    <colgroup>
+                                        <col style="width: 45%" />
+                                        <col style="width: 10%" />
+                                        <col style="width: 45%" />
+                                    </colgroup>
+                                    <tfoot>
+                                        <tr>
+                                            <td colspan="3" style="padding-top: 15px; text-align: right">
+                                                <input type="submit" class="button" value="Proceed" style="vertical-align: middle" />
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                    <tbody>
+                                        <tr>
+                                            <td colspan="3" style="vertical-align: top">
+                                                If you would like to add users that already exist in the system to this group yourself, you can do so by clicking the checkbox beside their name from the list below.
+                                                Once you have reviewed the list at the bottom and are ready, click the <strong>Proceed</strong> button at the bottom to complete the process.
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" />
+                                            <td>
+                                                <div id="group_name_title"></div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" style="vertical-align: top">
+                                                <div class="member-add-type" id="existing-member-add-type">
+                                                <?php
+                                                    $nmembers_results	= false;
 
 
-												if ($course_details["permission"] == "closed") {
-													$course_audience = true;
-												} else {
-													$course_audience = false;
-												}
+                                                    if ($course_details["permission"] == "closed") {
+                                                        $course_audience = true;
+                                                    } else {
+                                                        $course_audience = false;
+                                                    }
 
-												if ($course_audience) {
-													$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`lastname`, a.`firstname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
-																		FROM `".AUTH_DATABASE."`.`user_data` AS a
-																		LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-																		ON a.`id` = b.`user_id`
-																		JOIN `course_audience` AS c
-																		ON c.`course_id` = ".$db->qstr($COURSE_ID)."
-																		AND c.`audience_type` = 'proxy_id'
-																		AND a.`id` = c.`audience_value`
-																		JOIN `curriculum_periods` AS d
-																		ON c.`cperiod_id` = d.`cperiod_id`
-																		WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-																		AND b.`account_active` = 'true'
-																		AND b.`group` = 'student'
-																		AND c.`audience_active` = 1
-																		AND d.`start_date` <= ".$db->qstr(time())."
-																		AND d.`finish_date` >= ".$db->qstr(time())."
-																		GROUP BY a.`id`
-																		ORDER BY a.`lastname` ASC, a.`firstname` ASC
+                                                    if ($course_audience) {
+                                                        $nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`lastname`, a.`firstname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
+                                                                            FROM `".AUTH_DATABASE."`.`user_data` AS a
+                                                                            LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                                                                            ON a.`id` = b.`user_id`
+                                                                            JOIN `course_audience` AS c
+                                                                            ON c.`course_id` = ".$db->qstr($COURSE_ID)."
+                                                                            AND c.`audience_type` = 'proxy_id'
+                                                                            AND a.`id` = c.`audience_value`
+                                                                            JOIN `curriculum_periods` AS d
+                                                                            ON c.`cperiod_id` = d.`cperiod_id`
+                                                                            WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+                                                                            AND b.`account_active` = 'true'
+                                                                            AND b.`group` = 'student'
+                                                                            AND c.`audience_active` = 1
+                                                                            AND d.`start_date` <= ".$db->qstr(time())."
+                                                                            AND d.`finish_date` >= ".$db->qstr(time())."
+                                                                            GROUP BY a.`id`
+                                                                            ORDER BY a.`lastname` ASC, a.`firstname` ASC
 
-																		UNION
+                                                                            UNION
 
-																		SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`lastname`, a.`firstname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
-																		FROM `".AUTH_DATABASE."`.`user_data` AS a
-																		JOIN `".AUTH_DATABASE."`.`user_access` AS b
-																		ON a.`id` = b.`user_id`
-																		JOIN `course_audience` AS c
-																		ON c.`course_id` = ".$db->qstr($COURSE_ID)."
-																		AND c.`audience_type` = 'group_id'
-																		JOIN `groups` AS d
-																		ON c.`audience_value` = d.`group_id`
-																		JOIN `group_members` AS e
-																		ON d.`group_id` = e.`group_id`
-																		AND e.`proxy_id` = a.`id`
-																		JOIN `curriculum_periods` AS f
-																		ON c.`cperiod_id` = f.`cperiod_id`
-																		WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-																		AND b.`account_active` = 'true'
-																		AND b.`group` = 'student'
-																		AND c.`audience_active` = 1
-																		AND d.`group_active` = 1
-																		AND (d.`start_date` <= ".$db->qstr(time())." OR d.`start_date` = 0)
-																		AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`expire_date` = 0)
+                                                                            SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`lastname`, a.`firstname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
+                                                                            FROM `".AUTH_DATABASE."`.`user_data` AS a
+                                                                            JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                                                                            ON a.`id` = b.`user_id`
+                                                                            JOIN `course_audience` AS c
+                                                                            ON c.`course_id` = ".$db->qstr($COURSE_ID)."
+                                                                            AND c.`audience_type` = 'group_id'
+                                                                            JOIN `groups` AS d
+                                                                            ON c.`audience_value` = d.`group_id`
+                                                                            JOIN `group_members` AS e
+                                                                            ON d.`group_id` = e.`group_id`
+                                                                            AND e.`proxy_id` = a.`id`
+                                                                            JOIN `curriculum_periods` AS f
+                                                                            ON c.`cperiod_id` = f.`cperiod_id`
+                                                                            WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+                                                                            AND b.`account_active` = 'true'
+                                                                            AND b.`group` = 'student'
+                                                                            AND c.`audience_active` = 1
+                                                                            AND d.`group_active` = 1
+                                                                            AND (d.`start_date` <= ".$db->qstr(time())." OR d.`start_date` = 0)
+                                                                            AND (d.`expire_date` >= ".$db->qstr(time())." OR d.`expire_date` = 0)
 
-																		GROUP BY a.`id`
-																		ORDER BY a.`lastname` ASC, a.`firstname` ASC";
-												} else {
-													$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
-																		FROM `".AUTH_DATABASE."`.`user_data` AS a
-																		LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-																		ON a.`id` = b.`user_id`
-																		WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
-																		AND b.`account_active` = 'true'
-																		AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-																		AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-																		GROUP BY a.`id`
-																		ORDER BY a.`lastname` ASC, a.`firstname` ASC";
-												}
+                                                                            GROUP BY a.`id`
+                                                                            ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+                                                    } else {
+                                                        $nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
+                                                                            FROM `".AUTH_DATABASE."`.`user_data` AS a
+                                                                            LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                                                                            ON a.`id` = b.`user_id`
+                                                                            WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+                                                                            AND b.`account_active` = 'true'
+                                                                            AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+                                                                            AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+                                                                            GROUP BY a.`id`
+                                                                            ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+                                                    }
 
-												//Fetch list of categories
-												$query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
-												$organisation_results	= $db->GetAll($query);
-												if($organisation_results) {
-													$organisations = array();
-													foreach($organisation_results as $result) {
-														if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'create')) {
-															$member_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
-														}
-													}
-												}
+                                                    //Fetch list of categories
+                                                    $query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
+                                                    $organisation_results	= $db->GetAll($query);
+                                                    if($organisation_results) {
+                                                        $organisations = array();
+                                                        foreach($organisation_results as $result) {
+                                                            if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'create')) {
+                                                                $member_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
+                                                            }
+                                                        }
+                                                    }
 
-												$current_member_list	= array();
-												$query		= "SELECT `proxy_id` FROM `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `active` = '1'";
-												$results	= $db->GetAll($query);
-												if($results) {
-													foreach($results as $result) {
-														if($proxy_id = (int) $result["proxy_id"]) {
-															$current_member_list[] = $proxy_id;
-														}
-													}
-												}
+                                                    $current_member_list	= array();
+                                                    $query		= "SELECT `proxy_id` FROM `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID)." AND `active` = '1'";
+                                                    $results	= $db->GetAll($query);
+                                                    if($results) {
+                                                        foreach($results as $result) {
+                                                            if($proxy_id = (int) $result["proxy_id"]) {
+                                                                $current_member_list[] = $proxy_id;
+                                                            }
+                                                        }
+                                                    }
 
-												$nmembers_results = $db->GetAll($nmembers_query);
-												if($nmembers_results) {
-													$members = $member_categories;
+                                                    $nmembers_results = $db->GetAll($nmembers_query);
+                                                    if($nmembers_results) {
+                                                        $members = $member_categories;
 
-													foreach($nmembers_results as $member) {
+                                                        foreach($nmembers_results as $member) {
 
-														$organisation_id = $member['organisation_id'];
-														$user_group = $member['group'];
-														$user_role = $member['role'];
+                                                            $organisation_id = $member['organisation_id'];
+                                                            $user_group = $member['group'];
+                                                            $user_role = $member['role'];
 
-														if($user_group == "student" && !isset($members[$organisation_id]['options'][$user_group.$user_role])) {
-															$members[$organisation_id]['options'][$user_group.$user_role] = array('text' => $user_group. ' > '.$user_role, 'value' => $organisation_id.'|'.$user_group.'|'.$user_role);
-														} elseif ($user_group != "guest" && $group != "student" && !isset($members[$organisation_id]['options'][$user_group."all"])) {
-															$members[$organisation_id]['options'][$user_group."all"] = array('text' => $user_group. ' > all', 'value' => $organisation_id.'|'.$user_group.'|all');
-														}
-													}
+                                                            if($user_group == "student" && !isset($members[$organisation_id]['options'][$user_group.$user_role])) {
+                                                                $members[$organisation_id]['options'][$user_group.$user_role] = array('text' => $user_group. ' > '.$user_role, 'value' => $organisation_id.'|'.$user_group.'|'.$user_role);
+                                                            } elseif ($user_group != "guest" && $group != "student" && !isset($members[$organisation_id]['options'][$user_group."all"])) {
+                                                                $members[$organisation_id]['options'][$user_group."all"] = array('text' => $user_group. ' > all', 'value' => $organisation_id.'|'.$user_group.'|all');
+                                                            }
+                                                        }
 
-													foreach($members as $key => $member) {
-														if(isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
-															sort($members[$key]['options']);
-														}
-													}
-													echo lp_multiple_select_inline('group_members_'.$group["group_id"], $members, array(
-															'width'	=>'100%',
-															'ajax'=>true,
-															'selectboxname'=>'group and role',
-															'default-option'=>'-- Select Group & Role --',
-															'category_check_all'=>true));
+                                                        foreach($members as $key => $member) {
+                                                            if(isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
+                                                                sort($members[$key]['options']);
+                                                            }
+                                                        }
+                                                        echo lp_multiple_select_inline('group_members_'.$group["group_id"], $members, array(
+                                                                'width'	=>'100%',
+                                                                'ajax'=>true,
+                                                                'selectboxname'=>'group and role',
+                                                                'default-option'=>'-- Select Group & Role --',
+                                                                'category_check_all'=>true));
 
-												} else {
-													echo "No One Available [1]";
-												}
-											?>
-												<input class="multi-picklist" id="group_members_<?php echo $group["group_id"];?>" name="group_members_<?php echo $group["group_id"];?>" style="display: none;">
-											</div>
-										</td>
-										<td style="vertical-align: top; padding-left: 20px;">
-											<h3>Members to be Added on Submission</h3>
-											<div id="group_members_<?php echo $group["group_id"];?>_list"></div>
-										</td>
-									</tr>
-								</tbody>
-							</table>
-							<input type="hidden" id="add_group_id" name="add_group_id" value="" />
-						</form>
-					</div>
-
+                                                    } else {
+                                                        echo "No One Available [1]";
+                                                    }
+                                                ?>
+                                                    <input class="multi-picklist" id="group_members_<?php echo $group["group_id"];?>" name="group_members_<?php echo $group["group_id"];?>" style="display: none;">
+                                                </div>
+                                            </td>
+                                            <td style="vertical-align: top; padding-left: 20px;">
+                                                <h3>Members to be Added on Submission</h3>
+                                                <div id="group_members_<?php echo $group["group_id"];?>_list"></div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <input type="hidden" id="add_group_id" name="add_group_id" value="" />
+                            </form>
+                        </div>
 						<?php
 					}
 				}
 			}
 
-			if($single_members){ ?>
-				<h1></h1>
+			if ($single_members) {
+                ?>
 				<div style="float: right; margin-bottom: 5px">
 					<ul class="page-action">
 						<li class="last"><a id="toggle_add_button_0" href="javascript: toggleAddUsers(0)" data-group-name="<?php echo $course_details["course_name"];?>">Add Individual Users to <?php echo $course["course_name"]; ?></a></li>

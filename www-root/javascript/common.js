@@ -443,7 +443,7 @@ document.observe("dom:loaded", function() {
 		new CollapseHeadings(el);
 	});
 
-	$$('ul.page-action li:last').each(function (el) {
+	$$('ul.page-action > li:last-child').each(function (el) {
 		el.addClassName('last');
 	});
 });

@@ -31,7 +31,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
-} else { 
+} else {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events/drafts", "title" => "My Draft Learning Event Schedules");
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	?>
@@ -60,39 +60,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	<div style="clear: both"></div>
 	<?php
 	// fetch the list of draft ids for the user
-	$query = "	SELECT `draft_id`
-				FROM `draft_creators`
-				WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
-	$my_drafts = $db->GetArray($query);
-	if (!empty($my_drafts)) {
-		
-		add_notice("You are currently working on <strong>".count($my_drafts)."</strong> draft".((count($my_drafts) > 1) ? "s" : "").".");
+	$query = "	SELECT a.*
+                FROM `drafts` AS a
+                JOIN `draft_creators` AS b
+                ON b.`draft_id` = a.`draft_id`
+				WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
+                AND a.`status` <> 'closed'";
+	$drafts = $db->GetArray($query);
+	if ($drafts) {
+		add_notice("<p>You currently have <strong>".count($drafts)."</strong> draft".((count($drafts) > 1) ? "s" : "")." on the go.</p><p>When you are finished working on your draft event schedule you can click <strong>Publish Drafts</strong> to schedule them to be imported.</p>");
 		echo display_notice();
-		
-		foreach ($my_drafts as $draft) {
-			$drafts[] = $draft["draft_id"];
-		}
-		$query = "	SELECT *
-					FROM `drafts`
-					WHERE `draft_id` IN ('".implode("', '", $drafts)."')
-					AND `status` != 'closed'
-					ORDER BY `created` ASC";
-		$drafts = $db->GetAll($query); 
 		?>
-	
-			<form name="frmSelect" action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=delete" method="post">
-
+			<form name="frmSelect" id="frmSelect" action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=delete" method="post">
 			<table class="tableList" id="draft-list" cellspacing="0" cellpadding="1" summary="List of Events">
 				<colgroup>
-					<col class="modified" width="3%"/>
-					<col class="name" />
-					<col class="date" width="15%"/>
-					<col class="status" width="10%"/>
+					<col class="modified" />
+					<col class="title" />
+					<col class="date" />
+					<col class="status" />
 				</colgroup>
 				<thead>
 					<tr>
 						<td class="modified">&nbsp;</td>
-						<td class="name"><a href="#" class="noLink">Draft Name</a></td>
+						<td class="title"><a href="#" class="noLink">Draft Name</a></td>
 						<td class="date"><a href="#" class="noLink">Created</a></td>
 						<td class="status"><a href="#" class="noLink">Status</a></td>
 					</tr>
@@ -105,7 +95,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				foreach ($drafts as $draft) {
 					echo "<tr id=\"draft-".$draft["draft_id"]."\" rel=\"".$draft["draft_id"]."\" class=\"draft".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
 					echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$draft["draft_id"]."\" /></td>\n";
-					echo "	<td class=\"name\">".(($draft["status"] == "open") ? "<a href=\"".$url."?section=edit&draft_id=".$draft["draft_id"]."\" title=\"Draft Name\">" : "") .$draft["name"].(($draft["status"] == "open") ? "</a>" : "" )."</td>\n";
+					echo "	<td class=\"title\">".(($draft["status"] == "open") ? "<a href=\"".$url."?section=edit&draft_id=".$draft["draft_id"]."\" title=\"Draft Name\">" : "") .$draft["name"].(($draft["status"] == "open") ? "</a>" : "" )."</td>\n";
 					echo "	<td class=\"date\">".(($draft["status"] == "open") ? "<a href=\"".$url."?section=edit&draft_id=".$draft["draft_id"]."\" title=\"Duration\">" : "").date("Y-m-d", $draft["created"]).(($draft["status"] == "open") ? "</a>" : "")."</td>\n";
 					echo "	<td class=\"status\">".(($draft["status"] == "open") ? "<a href=\"".$url."?section=edit&draft_id=".$draft["draft_id"]."\" title=\"Draft Status\">" : "").$draft["status"].(($draft["status"] == "open") ? "</a>" : "")."</td>\n";
 					echo "</tr>\n";
@@ -130,8 +120,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<?php
 							if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 								?>
-								<input type="submit" class="button" value="Reopen Drafts"  onClick="document.frmSelect.action ='<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&action=reopen'" />
-								<input type="submit" class="button" value="Approve Drafts"  onClick="document.frmSelect.action ='<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&action=approve'" />
+								<input type="submit" class="button" value="Reopen Drafts" onclick="jQuery('#frmSelect').attr('action', '<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&action=reopen')" />
+								<input type="submit" class="button" value="Publish Drafts" onclick="jQuery('#frmSelect').attr('action', '<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&action=approve')" />
 								<?php
 							}
 							?>
@@ -141,10 +131,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			</table>
 			<?php endif; ?>
 			</form>
-	
+
 		<?php
 	} else {
-		add_notice("<h3>No draft schedules</h3>You are not currently working on any draft schedules. You can create a new draft schedule or have an administrator add you to an existing one.");
-		echo display_notice();
+		?>
+        <div class="display-generic">
+            <h3>No draft schedules</h3>
+            <p>You are not currently working on any draft schedules. You can create a new draft schedule or have an administrator add you to an existing one.</p>
+        </div>
+        <?php
 	}
 }

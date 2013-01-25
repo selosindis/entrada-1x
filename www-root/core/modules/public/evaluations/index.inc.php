@@ -87,7 +87,7 @@ if ($evaluations && $view != "review") {
 								$evaluation_progress = $db->GetRow($query);
 								if (!$evaluation_progress || $evaluation_progress["allow_repeat_targets"] == 1) {
 									require_once("Models/notifications/Notification.class.php");
-									require_once("Models/notifications/Notificationuser.class.php");
+									require_once("Models/notifications/NotificationUser.class.php");
 									$notification_user = NotificationUser::get($proxy_id, "evaluation_request", $RECORD_ID, $ENTRADA_USER->getId());
 									if (!$notification_user) {
 										$notification_user = NotificationUser::add($proxy_id, "evaluation_request", $RECORD_ID, $ENTRADA_USER->getId());

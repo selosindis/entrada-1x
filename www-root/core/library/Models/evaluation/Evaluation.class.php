@@ -2292,6 +2292,9 @@ class Evaluation {
 					WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
 		$evaluation = $db->GetRow($query);
 		if ($evaluation) {
+			if (isset($evaluation["allow_repeat_targets"]) && $evaluation["allow_repeat_targets"] == 1) {
+				$available_only = false;
+			}
 			if ($evaluator_id) {
 				$query = "SELECT * FROM `evaluation_evaluators`
 							WHERE `eevaluator_id` = ".$db->qstr($evaluator_id)."

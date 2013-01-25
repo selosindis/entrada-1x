@@ -339,8 +339,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						$query = "SELECT COUNT(`eqresponse_id`) FROM `evaluations_lu_question_responses` WHERE `equestion_id` = ".$db->qstr($QUESTION_ID);
 						$response_count = $db->GetOne($query);
 						if ((int)count($PROCESSED["evaluation_question_responses"]) != (int)$response_count) {
-							if ($PROCESSED["question_parent_id"]) {
-								$PROCESSED_RELATED_QUESTION["related_equestion_id"] = $PROCESSED["question_parent_id"];
+							if ($question_record["question_parent_id"]) {
+								$PROCESSED_RELATED_QUESTION["related_equestion_id"] = $question_record["question_parent_id"];
 							}
 							$PROCESSED["question_parent_id"] = 0;
 						}

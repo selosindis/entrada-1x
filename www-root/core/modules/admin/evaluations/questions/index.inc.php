@@ -49,18 +49,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	$results = Evaluation::getAuthorEvaluationQuestions();
 	if ($results) {
 		if (isset($FORM_ID) && $FORM_ID) {
-			$query = "SELECT `equestion_id` FROM `evaluation_form_questions` WHERE `eform_id` = ".$db->qstr($FORM_ID);
-			$used_questions = $db->GetAll($query);
-			$used_ids = array();
-			foreach ($used_questions as $used_question) {
-				$used_ids[] = $used_question["equestion_id"];
-			}
-			$temp_results = $results;
-			$results = array();
-			foreach ($temp_results as $temp_result) {
-				if (array_search($temp_result["equestion_id"], $used_ids) === false) {
-					$results[] = $temp_result;
+			$query	= "SELECT COUNT(*) AS `total` FROM `evaluations` WHERE `eform_id` = ".$db->qstr($FORM_ID);
+			$result = $db->GetRow($query);
+			if ((!$result) || ((int) $result["total"] === 0)) {
+				$query = "SELECT `form_title` FROM `evaluation_forms` WHERE `eform_id` = ".$db->qstr($FORM_ID);
+				$form_title = $db->GetOne($query);
+				$query = "SELECT `equestion_id` FROM `evaluation_form_questions` WHERE `eform_id` = ".$db->qstr($FORM_ID);
+				$used_questions = $db->GetAll($query);
+				$used_ids = array();
+				foreach ($used_questions as $used_question) {
+					$used_ids[] = $used_question["equestion_id"];
 				}
+				$temp_results = $results;
+				$results = array();
+				foreach ($temp_results as $temp_result) {
+					if (array_search($temp_result["equestion_id"], $used_ids) === false) {
+						$results[] = $temp_result;
+					}
+				}
+				add_notice("To attach evaluation questions to the selected form [".$form_title."], you may either click the 'paperclip' image to add one question, or select the checkboxes on the line of each question that you wish to add, then press the 'Attach Selected' button at the bottom of the page.");
+				echo display_notice();
+			} else {
+				$FORM_ID = false;
 			}
 		}
 		$question_controls = Evaluation::getQuestionControlsArray($results);
@@ -129,7 +139,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					echo "	<td><input type=\"checkbox\" name=\"checked[]\" class=\"attach\" value=\"".$result["equestion_id"]."\" /></td>\n";
 					echo "	<td><div class=\"evaluation-questions-list\">".$question_controls[$result["equestion_id"]]."</div></td>\n";
 					echo "	<td><a href=\"".ENTRADA_URL."/admin/evaluations/questions?section=edit&amp;id=".$result["equestion_id"]."\">".html_encode($result["questiontype_title"])."</a></td>\n";
-					echo "	<td><img style=\"cursor: pointer;\" height=\"16\" width=\"16\" src=\"".ENTRADA_URL."/images/magnify.gif\" onclick=\"openDialog(".$result["equestion_id"].")\" alt=\"View Evaluation Question Full Size\" title=\"View Evaluation Question Full Size\" /> <a href=\"".ENTRADA_URL."/admin/evaluations/questions?section=edit&amp;id=".$result["equestion_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Edit Evaluation Question\" title=\"Edit Evaluation Question\" border=\"0\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations/questions?section=attach&amp;id=".$result["equestion_id"]."\"><img src=\"".ENTRADA_URL."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Attach Evaluation Question to Form\" title=\"Attach Evaluation Question to Form\" border=\"0\" /></a></td>\n";
+					echo "	<td><img style=\"cursor: pointer;\" height=\"16\" width=\"16\" src=\"".ENTRADA_URL."/images/magnify.gif\" onclick=\"openDialog(".$result["equestion_id"].")\" alt=\"View Evaluation Question Full Size\" title=\"View Evaluation Question Full Size\" /> <a href=\"".ENTRADA_URL."/admin/evaluations/questions?section=edit&amp;id=".$result["equestion_id"]."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Edit Evaluation Question\" title=\"Edit Evaluation Question\" border=\"0\" /></a> <a href=\"".ENTRADA_URL."/admin/evaluations/questions?section=attach&amp;id=".$result["equestion_id"].(isset($FORM_ID) && (int)$FORM_ID ? "&amp;form_id=".((int)$FORM_ID) : "")."\"><img src=\"".ENTRADA_URL."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Attach Evaluation Question to Form\" title=\"Attach Evaluation Question to Form\" border=\"0\" /></a></td>\n";
 					echo "</tr>\n";
 				}
 			}

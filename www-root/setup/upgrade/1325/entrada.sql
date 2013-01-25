@@ -92,6 +92,7 @@ ALTER TABLE `evaluation_responses` ADD COLUMN `eqresponse_id` int(12) NOT NULL A
 UPDATE `evaluation_responses` AS a SET a.`eqresponse_id` = (SELECT b.`eqresponse_id` FROM `evaluations_lu_question_responses` AS b WHERE b.`efresponse_id` = a.`efresponse_id`);
 
 ALTER TABLE `evaluations` ADD COLUMN `allow_target_request` tinyint(1) NOT NULL DEFAULT '0' AFTER `allow_target_review`;
+ALTER TABLE `evaluations` ADD COLUMN `allow_repeat_targets` tinyint(1) NOT NULL DEFAULT '0' AFTER `allow_target_request`;
 ALTER TABLE `evaluations_lu_question_responses` DROP COLUMN `efresponse_id`;
 ALTER TABLE `evaluation_responses` DROP COLUMN `efresponse_id`;
 

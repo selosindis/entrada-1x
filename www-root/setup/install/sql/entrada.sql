@@ -2021,6 +2021,8 @@ CREATE TABLE IF NOT EXISTS `evaluations` (
   `max_submittable` tinyint(1) NOT NULL DEFAULT '1',
   `evaluation_mandatory` tinyint(1) NOT NULL DEFAULT '1',
   `allow_target_review` tinyint(1) NOT NULL DEFAULT '0',
+  `allow_target_request` tinyint(1) NOT NULL DEFAULT '0',
+  `allow_repeat_targets` tinyint(1) NOT NULL DEFAULT '0',
   `show_comments` tinyint(1) NOT NULL DEFAULT '0',
   `threshold_notifications_type` enum('reviewers','tutors','directors','pcoordinators','authors','disabled') NOT NULL DEFAULT 'disabled',
   `release_date` bigint(64) NOT NULL,
@@ -2028,6 +2030,35 @@ CREATE TABLE IF NOT EXISTS `evaluations` (
   `updated_date` bigint(64) NOT NULL,
   `updated_by` bigint(64) NOT NULL,
   PRIMARY KEY (`evaluation_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `evaluations_lu_questions` (
+  `equestion_id` int(12) NOT NULL AUTO_INCREMENT,
+  `efquestion_id` int(12) NOT NULL DEFAULT '0',
+  `question_parent_id` int(12) NOT NULL DEFAULT '0',
+  `questiontype_id` int(12) NOT NULL,
+  `question_text` longtext NOT NULL,
+  `allow_comments` tinyint(1) NOT NULL DEFAULT '1',
+  `question_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`equestion_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `evaluations_lu_question_responses` (
+  `eqresponse_id` int(12) NOT NULL AUTO_INCREMENT,
+  `efresponse_id` int(12) NOT NULL,
+  `equestion_id` int(12) NOT NULL,
+  `response_text` longtext NOT NULL,
+  `response_order` tinyint(3) NOT NULL DEFAULT '0',
+  `response_is_html` tinyint(1) NOT NULL DEFAULT '0',
+  `minimum_passing_level` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`eqresponse_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `evaluations_lu_question_response_criteria` (
+  `eqrcriteria_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `eqresponse_id` int(11) DEFAULT NULL,
+  `criteria_text` text,
+  PRIMARY KEY (`eqrcriteria_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `evaluations_lu_questiontypes` (
@@ -2045,6 +2076,13 @@ INSERT INTO `evaluations_lu_questiontypes` (`questiontype_id`, `questiontype_sho
 (3, 'rubric', 'Rubric', 'The rating scale allows evaluators to rate each question based on the scale you provide, while also providing a short description of the requirements to meet each level on the scale (i.e. Level 1 to 4 of \\\"Professionalism\\\" for an assignment are qualified with what traits the learner is expected to show to meet each level, and while the same scale is used for \\\"Collaborator\\\", the requirements at each level are defined differently).', 1),
 (4, 'free_text', 'Free Text Comments', 'Allows the user to be asked for a simple free-text response. This can be used to get additional details about prior questions, or to simply ask for any comments from the evaluator regarding a specific topic.', 1);
 
+CREATE TABLE `evaluations_lu_rubrics` (
+  `erubric_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `rubric_title` varchar(32) DEFAULT NULL,
+  `rubric_description` text,
+  `efrubric_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`erubric_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `evaluations_lu_targets` (
   `target_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -2065,6 +2103,12 @@ INSERT INTO `evaluations_lu_targets` (`target_id`, `target_shortname`, `target_t
 (7, 'peer', 'Peer Assessment', '', 1),
 (8, 'self', 'Self Assessment', '', 1);
 
+CREATE TABLE `evaluations_related_questions` (
+  `erubric_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `related_equestion_id` int(11) unsigned NOT NULL,
+  `equestion_id` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`erubric_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `evaluation_contacts` (
   `econtact_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -2133,8 +2177,7 @@ CREATE TABLE IF NOT EXISTS `evaluation_forms` (
 CREATE TABLE IF NOT EXISTS `evaluation_form_questions` (
   `efquestion_id` int(12) NOT NULL AUTO_INCREMENT,
   `eform_id` int(121) NOT NULL,
-  `questiontype_id` int(12) NOT NULL,
-  `question_text` longtext NOT NULL,
+  `equestion_id` int(12) NOT NULL,
   `question_order` tinyint(3) NOT NULL DEFAULT '0',
   `allow_comments` tinyint(1) NOT NULL DEFAULT '1',
   `send_threshold_notifications` tinyint(1) NOT NULL DEFAULT '0',
@@ -2148,38 +2191,6 @@ CREATE TABLE IF NOT EXISTS `evaluation_form_question_objectives` (
   `updated_date` bigint(64) DEFAULT NULL,
   `updated_by` int(12) DEFAULT NULL,
   PRIMARY KEY (`efqobjective_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `evaluation_form_response_criteria` (
-  `efrcriteria_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `efresponse_id` int(11) DEFAULT NULL,
-  `criteria_text` text,
-  PRIMARY KEY (`efrcriteria_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `evaluation_form_responses` (
-  `efresponse_id` int(12) NOT NULL AUTO_INCREMENT,
-  `efquestion_id` int(12) NOT NULL,
-  `response_text` longtext NOT NULL,
-  `response_order` tinyint(3) NOT NULL DEFAULT '0',
-  `response_is_html` tinyint(1) NOT NULL DEFAULT '0',
-  `minimum_passing_level` tinyint(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`efresponse_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `evaluation_form_rubric_questions` (
-  `efrquestion_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `efrubric_id` int(11) DEFAULT NULL,
-  `efquestion_id` int(11) DEFAULT NULL,
-  PRIMARY KEY (`efrquestion_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `evaluation_form_rubrics` (
-  `efrubric_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `eform_id` int(11) NOT NULL,
-  `rubric_title` varchar(32) DEFAULT NULL,
-  `rubric_description` text,
-  PRIMARY KEY (`efrubric_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `evaluation_progress` (
@@ -2208,11 +2219,19 @@ CREATE TABLE IF NOT EXISTS `evaluation_responses` (
   `eform_id` int(12) NOT NULL,
   `proxy_id` int(12) NOT NULL,
   `efquestion_id` int(12) NOT NULL,
-  `efresponse_id` int(12) NOT NULL,
-  `comments` text NULL,
+  `eqresponse_id` int(12) NOT NULL,
+  `comments` text,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
   PRIMARY KEY (`eresponse_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `evaluation_rubric_questions` (
+  `efrquestion_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `erubric_id` int(11) DEFAULT NULL,
+  `equestion_id` int(11) DEFAULT NULL,
+  `question_order` int(3) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`efrquestion_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `evaluation_targets` (

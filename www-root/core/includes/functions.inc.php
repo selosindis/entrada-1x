@@ -2743,6 +2743,10 @@ function clean_input($string, $rules = array()) {
 				case "allowedtags" :	// Cleans and validates HTML, requires HTMLPurifier: http://htmlpurifier.org
 				case "nicehtml" :
 				case "html" :
+					if (!gc_enabled()) {
+						gc_enable();
+					}
+					gc_collect_cycles();
 					require_once("Entrada/htmlpurifier/HTMLPurifier.auto.php");
 
 					$html = new HTMLPurifier();
@@ -2756,7 +2760,6 @@ function clean_input($string, $rules = array()) {
 					$config->set("HTML.TidyLevel", "medium");
 					$config->set("Test.ForceNoIconv", true);
 					$config->set("Attr.AllowedFrameTargets", array("_blank", "_self", "_parent", "_top"));
-
 					$string = $html->purify($string, $config);
 				break;
 				default :				// Unknown rule, log notice.
@@ -14645,23 +14648,25 @@ function evaluations_fetch_attempts($evaluation_id = 0) {
 	return 0;
 }
 
-function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efresponse_id, $comments) {
+function evaluation_save_response($eprogress_id, $eform_id, $equestion_id, $eqresponse_id, $comments) {
 	global $db, $ENTRADA_USER;
 	/**
 	 * Check to ensure that this response is associated with this question.
 	 */
-	if ($efresponse_id !== 0) {
-		$query	= "SELECT * FROM `evaluation_form_responses` WHERE `efresponse_id` = ".$db->qstr($efresponse_id)." AND `efquestion_id` = ".$db->qstr($efquestion_id);
+	if ($eqresponse_id !== 0) {
+		$query	= "SELECT * FROM `evaluations_lu_question_responses` WHERE `eqresponse_id` = ".$db->qstr($eqresponse_id)." AND `equestion_id` = ".$db->qstr($equestion_id);
 	} else {
-		$query	= "SELECT * FROM `evaluation_form_questions` WHERE `efquestion_id` = ".$db->qstr($efquestion_id)." AND `questiontype_id` = 4";
+		$query	= "SELECT * FROM `evaluation_form_questions` AS a JOIN `evaluations_lu_questions` AS b ON a.`equestion_id` = b.`equestion_id` WHERE a.`equestion_id` = ".$db->qstr($equestion_id)." AND a.`eform_id` = ".$db->qstr($eform_id)." AND b.`questiontype_id` = 4";
 	}
 	$result	= $db->GetRow($query);
 	if ($result) {
-	/**
-	 * See if they have already responded to this question or not as this
-	 * determines whether an INSERT or an UPDATE is required.
-	 */
-		$query = "	SELECT `eresponse_id`, `efresponse_id`, `comments`, `eprogress_id`
+		$query	= "SELECT a.`efquestion_id` FROM `evaluation_form_questions` AS a JOIN `evaluations_lu_questions` AS b ON a.`equestion_id` = b.`equestion_id` WHERE a.`equestion_id` = ".$db->qstr($equestion_id)." AND a.`eform_id` = ".$db->qstr($eform_id);
+		$efquestion_id = $db->GetOne($query);
+		/**
+		 * See if they have already responded to this question or not as this
+		 * determines whether an INSERT or an UPDATE is required.
+		 */
+		$query = "	SELECT `eresponse_id`, `eqresponse_id`, `comments`, `eprogress_id`
 					FROM `evaluation_responses`
 					WHERE `eprogress_id` = ".$db->qstr($eprogress_id)."
 					AND `eform_id` = ".$db->qstr($eform_id)."
@@ -14669,26 +14674,29 @@ function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efr
 					AND `efquestion_id` = ".$db->qstr($efquestion_id);
 		$result	= $db->GetRow($query);
 		if ($result) {
-			$query = "SELECT c.`eresponse_id` FROM `evaluation_form_rubric_questions` AS a
-						JOIN `evaluation_form_questions` AS b
-						ON a.`efquestion_id` = b.`efquestion_id`
-						JOIN `evaluation_responses` AS c
-						ON a.`efquestion_id` = c.`efquestion_id`
-						AND c.`eprogress_id` = ".$db->qstr($result["eprogress_id"])."
-						WHERE a.`efrubric_id` = (
-							SELECT `efrubric_id` FROM `evaluation_form_rubric_questions`
-							WHERE `efquestion_id` = ".$db->qstr($efquestion_id)."
+			$query = "SELECT d.`eresponse_id` FROM `evaluation_rubric_questions` AS a
+						JOIN `evaluations_lu_questions` AS b
+						ON a.`equestion_id` = b.`equestion_id`
+						JOIN `evaluation_form_questions` AS c
+						ON b.`efquestion_id` = c.`efquestion_id`
+						JOIN `evaluation_responses` AS d
+						ON a.`equestion_id` = d.`equestion_id`
+						AND d.`eprogress_id` = ".$db->qstr($result["eprogress_id"])."
+						WHERE a.`erubric_id` = (
+							SELECT `erubric_id` FROM `evaluation_rubric_questions`
+							WHERE `equestion_id` = ".$db->qstr($equestion_id)."
 						)
-						ORDER BY b.`question_order` ASC
+						ORDER BY c.`question_order` ASC
 						LIMIT 0, 1";
 			$comment_response_id = $db->GetOne($query);
 		/**
 		 * Checks to see if the response is different from what was previously
 		 * stored in the event_evaluation_responses table.
 		 */
-			if ($efresponse_id != $result["efresponse_id"] || $comments != $result["comments"]) {
+			if ($eqresponse_id != $result["eqresponse_id"] || $comments != $result["comments"]) {
 				$evaluation_response_array	= array (
-					"efresponse_id" => $efresponse_id,
+					"eqresponse_id" => $eqresponse_id,
+					"efquestion_id" => $efquestion_id,
 					"comments" => (!$comment_response_id ? $comments : NULL),
 					"updated_date" => time(),
 					"updated_by" => $ENTRADA_USER->getID()
@@ -14696,6 +14704,7 @@ function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efr
 				if ($db->AutoExecute("evaluation_responses", $evaluation_response_array, "UPDATE", "`eresponse_id` = ".$db->qstr($result["eresponse_id"]))) {
 					if ($comment_response_id) {
 						$evaluation_response_array	= array (
+							"efquestion_id" => $efquestion_id,
 							"comments" => $comments,
 							"updated_date" => time(),
 							"updated_by" => $ENTRADA_USER->getID()
@@ -14720,7 +14729,7 @@ function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efr
 				"eform_id" => $eform_id,
 				"proxy_id" => $ENTRADA_USER->getID(),
 				"efquestion_id" => $efquestion_id,
-				"efresponse_id" => $efresponse_id,
+				"eqresponse_id" => $eqresponse_id,
 				"comments" => $comments,
 				"updated_date" => time(),
 				"updated_by" => $ENTRADA_USER->getID()
@@ -14733,7 +14742,7 @@ function evaluation_save_response($eprogress_id, $eform_id, $efquestion_id, $efr
 			}
 		}
 	} else {
-		application_log("error", "A submitted efresponse_id was not a valid response for the efquestion_id that was provided when attempting to submit a response to a question.");
+		application_log("error", "A submitted eqresponse_id was not a valid response for the equestion_id that was provided when attempting to submit a response to a question.");
 	}
 
 	return false;

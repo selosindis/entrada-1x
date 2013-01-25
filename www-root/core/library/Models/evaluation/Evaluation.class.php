@@ -271,7 +271,7 @@ class Evaluation {
 							<label for="category_<?php echo $rownum; ?>" class="form-required">Category Title</label>
 						</td>
 						<td colspan="2" style="padding: 10px 4px 0px 4px;">
-							<input class="category" type="text" id="category_<?php echo $rownum; ?>" name="category[<?php echo $rownum; ?>]" style="width: 79%" value="<?php echo ((isset($question_data["evaluation_form_categories"][$rownum]["category"])) ? clean_input($question_data["evaluation_form_categories"][$rownum]["category"], "encode") : ""); ?>" />
+							<input class="category" type="text" id="category_<?php echo $rownum; ?>" name="category[<?php echo $rownum; ?>]" style="width: 79%" value="<?php echo ((isset($question_data["evaluation_rubric_categories"][$rownum]["category"])) ? clean_input($question_data["evaluation_rubric_categories"][$rownum]["category"], "encode") : ""); ?>" />
 							<?php
 							echo "<div class=\"controls\" style=\"float: right;\">\n";
 							echo "	<a id=\"question_delete_".$rownum."\" class=\"question-controls-delete\" onclick=\"loadCategories($('columns_count').options[$('columns_count').selectedIndex].value, (parseInt($('categories_count').value) - 1), ".$rownum.")\" title=\"".$rownum."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
@@ -292,7 +292,7 @@ class Evaluation {
 									<div style="position: absolute;">
 										<label style="text-align: left; vertical-align: top;" class="form-required" for="category_<?php echo $rownum."_criteria_".$colnum; ?>">Column <?php echo $colnum; ?> Criteria</label>
 									</div>
-									<textarea class="criteria_<?php echo $rownum; ?>" style="width: 65%;" id="criteria_<?php echo $colnum; ?>" name="criteria[<?php echo $rownum."][".$colnum; ?>]"><?php echo (isset($question_data["evaluation_form_category_criteria"][$rownum][$colnum]["criteria"]) && $question_data["evaluation_form_category_criteria"][$rownum][$colnum]["criteria"] ? html_encode($question_data["evaluation_form_category_criteria"][$rownum][$colnum]["criteria"]) : ""); ?></textarea>
+									<textarea class="criteria_<?php echo $rownum; ?>" style="width: 65%;" id="criteria_<?php echo $colnum; ?>" name="criteria[<?php echo $rownum."][".$colnum; ?>]"><?php echo (isset($question_data["evaluation_rubric_category_criteria"][$rownum][$colnum]["criteria"]) && $question_data["evaluation_rubric_category_criteria"][$rownum][$colnum]["criteria"] ? html_encode($question_data["evaluation_rubric_category_criteria"][$rownum][$colnum]["criteria"]) : ""); ?></textarea>
 								</div>
 								<?php
 							}
@@ -308,14 +308,14 @@ class Evaluation {
 	public static function getRubricColumnList($question_data) {
 		if ($question_data) {
 			foreach (range(1, (isset($question_data["columns_count"]) && (int) $question_data["columns_count"] ? (int) $question_data["columns_count"] : 3)) as $number) {
-				$minimum_passing_level = (((!isset($question_data["evaluation_form_responses"][$number]["minimum_passing_level"]) && ($number == 1)) || (isset($question_data["evaluation_form_responses"][$number]["minimum_passing_level"]) && (int) $question_data["evaluation_form_responses"][$number]["minimum_passing_level"])) ? true : false);
+				$minimum_passing_level = (((!isset($question_data["evaluation_question_responses"][$number]["minimum_passing_level"]) && ($number == 1)) || (isset($question_data["evaluation_question_responses"][$number]["minimum_passing_level"]) && (int) $question_data["evaluation_question_responses"][$number]["minimum_passing_level"])) ? true : false);
 				?>
 				<tr>
 					<td style="padding-top: 13px">
 						<label for="response_text_<?php echo $number; ?>" class="form-required"><?php echo $number; ?></label>
 					</td>
 					<td style="padding-top: 10px">
-						<input type="text" class="response_text" id="response_text_<?php echo $number; ?>" name="response_text[<?php echo $number; ?>]" style="width: 99%" value="<?php echo ((isset($question_data["evaluation_form_responses"][$number]["response_text"])) ? clean_input($question_data["evaluation_form_responses"][$number]["response_text"], "encode") : ""); ?>" />
+						<input type="text" class="response_text" id="response_text_<?php echo $number; ?>" name="response_text[<?php echo $number; ?>]" style="width: 99%" value="<?php echo ((isset($question_data["evaluation_question_responses"][$number]["response_text"])) ? clean_input($question_data["evaluation_question_responses"][$number]["response_text"], "encode") : ""); ?>" />
 					</td>
 					<td class="minimumPass center" style="padding-top: 10px">
 						<input type="radio" name="minimum_passing_level" id="fail_indicator_<?php echo $number; ?>" value="<?php echo $number; ?>"<?php echo (($minimum_passing_level) ? " checked=\"true\"" : ""); ?> />
@@ -397,14 +397,14 @@ class Evaluation {
 			<tbody>
 				<?php
 				foreach (range(1, (isset($question_data["responses_count"]) && (int) $question_data["responses_count"] ? (int) $question_data["responses_count"] : 4)) as $number) {
-					$minimum_passing_level = (((!isset($question_data["evaluation_form_responses"][$number]["minimum_passing_level"]) && ($number == 1)) || (isset($question_data["evaluation_form_responses"][$number]["minimum_passing_level"]) && (int) $question_data["evaluation_form_responses"][$number]["minimum_passing_level"])) ? true : false);
+					$minimum_passing_level = (((!isset($question_data["evaluation_question_responses"][$number]["minimum_passing_level"]) && ($number == 1)) || (isset($question_data["evaluation_question_responses"][$number]["minimum_passing_level"]) && (int) $question_data["evaluation_question_responses"][$number]["minimum_passing_level"])) ? true : false);
 					?>
 					<tr>
 						<td style="padding-top: 13px">
 							<label for="response_text_<?php echo $number; ?>" class="form-required"><?php echo $number; ?></label>
 						</td>
 						<td style="padding-top: 10px">
-							<input type="text" class="response_text" id="response_text_<?php echo $number; ?>" name="response_text[<?php echo $number; ?>]" style="width: 99%" value="<?php echo ((isset($question_data["evaluation_form_responses"][$number]["response_text"])) ? clean_input($question_data["evaluation_form_responses"][$number]["response_text"], "encode") : ""); ?>" />
+							<input type="text" class="response_text" id="response_text_<?php echo $number; ?>" name="response_text[<?php echo $number; ?>]" style="width: 99%" value="<?php echo ((isset($question_data["evaluation_question_responses"][$number]["response_text"])) ? clean_input($question_data["evaluation_question_responses"][$number]["response_text"], "encode") : ""); ?>" />
 						</td>
 						<td class="minimumPass center" style="padding-top: 10px">
 							<input type="radio" name="minimum_passing_level" id="fail_indicator_<?php echo $number; ?>" value="<?php echo $number; ?>"<?php echo (($minimum_passing_level) ? " checked=\"true\"" : ""); ?> />
@@ -417,6 +417,7 @@ class Evaluation {
 			<?php
 		}
 	}
+	
 	public static function getQuestionAnswerControls($questions, $form_id, $allow_question_modifications = true, $attempt = false, $eprogress_id = 0) {
 		global $db;
 		
@@ -447,19 +448,19 @@ class Evaluation {
 				}
 				switch ($questiontype["questiontype_shortname"]) {
 					case "rubric" :
-						$query = "SELECT * FROM `evaluation_form_rubric_questions` AS a 
-									JOIN `evaluation_form_rubrics` AS b
-									ON a.`efrubric_id` = b.`efrubric_id`
-									WHERE a.`efquestion_id` = ".$db->qstr($question["efquestion_id"]);
+						$query = "SELECT * FROM `evaluation_rubric_questions` AS a 
+									JOIN `evaluations_lu_rubrics` AS b
+									ON a.`erubric_id` = b.`erubric_id`
+									WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"]);
 						$rubric = $db->GetRow($query);
 						if ($rubric) {
-							if ($rubric["efrubric_id"] != $rubric_id) {
+							if ($rubric["erubric_id"] != $rubric_id) {
 								if ($rubric_id) {
 									$show_rubric_footers = true;
 								}
-								$rubric_id = $rubric["efrubric_id"];
+								$rubric_id = $rubric["erubric_id"];
 								$show_rubric_headers = true;
-								$original_question_id = $question["efquestion_id"];
+								$original_question_id = $question["equestion_id"];
 								$comments_enabled = $question["allow_comments"];
 							}
 							if ($show_rubric_footers) {
@@ -475,19 +476,19 @@ class Evaluation {
 								} else {
 									echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
 								}
-								$original_question_id = $question["efquestion_id"];
+								$original_question_id = $question["equestion_id"];
 								$comments_enabled = $question["allow_comments"];
 								echo "</li>";
 							}
 							if ($show_rubric_headers) {
 								$rubric_table_open = true;
-								echo "<li id=\"question_".$question["efquestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">\n";
-								echo "<span id=\"question_text_".$question["efquestion_id"]."\" style=\"display: none;\">".$rubric["rubric_title"].(stripos($rubric["rubric_title"], "rubric") === false ? " Rubric" : "")."</span>";
+								echo "<li id=\"question_".$question["equestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">\n";
+								echo "<span id=\"question_text_".$question["equestion_id"]."\" style=\"display: none;\">".$rubric["rubric_title"].(stripos($rubric["rubric_title"], "rubric") === false ? " Rubric" : "")."</span>";
 								echo (isset($rubric["rubric_title"]) && $rubric["rubric_title"] ? "<h2>".$rubric["rubric_title"] : "")."<span style=\"font-weight: normal; margin-left: 10px; padding-right: 30px;\" class=\"content-small\">".$rubric["rubric_description"]."</span>".(isset($rubric["rubric_title"]) && $rubric["rubric_title"] ? "</h2>\n" : "\n");
 								if ($allow_question_modifications) {
 									echo "<div class=\"rubric-controls\">\n";
-									echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$form_id."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
-									echo "	<a id=\"question_delete_".$question["efquestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
+									echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/questions?form_id=".$form_id."&amp;section=edit&amp;id=".$question["equestion_id"]."&amp;efquestion_id=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
+									echo "	<a id=\"question_delete_".$question["equestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["equestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
 									echo "</div>\n";
 								}
 								$modified_count++;
@@ -495,8 +496,8 @@ class Evaluation {
 								echo "	<tr>\n";
 								$columns = 0;
 								$query = "	SELECT a.*
-											FROM `evaluation_form_responses` AS a
-											WHERE a.`efquestion_id` = ".$db->qstr($question["efquestion_id"])."
+											FROM `evaluations_lu_question_responses` AS a
+											WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"])."
 											ORDER BY a.`response_order` ASC";
 								$responses = $db->GetAll($query);
 								if ($responses) {
@@ -517,13 +518,13 @@ class Evaluation {
 							
 							$question_number = ($key + 1);
 
-							echo "<tr id=\"question_".$question["efquestion_id"]."\">";
+							echo "<tr id=\"question_".$question["equestion_id"]."\">";
 							
-							$query = "	SELECT b.*, a.`efquestion_id`, a.`minimum_passing_level`
-										FROM `evaluation_form_responses` AS a
-										JOIN `evaluation_form_response_criteria` AS b
-										ON a.`efresponse_id` = b.`efresponse_id`
-										WHERE a.`efquestion_id` = ".$db->qstr($question["efquestion_id"])."
+							$query = "	SELECT b.*, a.`equestion_id`, a.`minimum_passing_level`
+										FROM `evaluations_lu_question_responses` AS a
+										LEFT JOIN `evaluations_lu_question_response_criteria` AS b
+										ON a.`eqresponse_id` = b.`eqresponse_id`
+										WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"])."
 										ORDER BY a.`response_order` ASC";
 							$criteriae = $db->GetAll($query);
 							if ($criteriae) {
@@ -539,7 +540,7 @@ class Evaluation {
 								foreach ($criteriae as $criteria) {
 									echo "<td style=\"width: ".$criteria_width."%; vertical-align: top;\" >\n";
 									echo "	<div style=\"width: 100%; text-align: center; padding-bottom: 10px;\">";
-									echo "		<input type=\"radio\" id=\"".$form_id."_".$criteria["efquestion_id"]."_".$criteria["efresponse_id"]."\" name=\"responses[".$question["efquestion_id"]."]\"".($attempt ? " onclick=\"((this.checked == true) ? storeResponse('".$question["efquestion_id"]."', '".$criteria["efresponse_id"]."', ".($question["allow_comments"] ? "$('".$original_question_id."_comment').value" : "''").") : false)\"" : "").($current_progress_record && isset($current_progress_record[$question["efquestion_id"]]["efresponse_id"]) && $current_progress_record[$question["efquestion_id"]]["efresponse_id"] == $criteria["efresponse_id"] ? " checked=\"checked\"" : "")." value=\"".$criteria["efresponse_id"]."\" />";
+									echo "		<input type=\"radio\" id=\"".$form_id."_".$criteria["equestion_id"]."_".$criteria["eqresponse_id"]."\" name=\"responses[".$question["equestion_id"]."]\"".($attempt ? " onclick=\"((this.checked == true) ? storeResponse('".$question["equestion_id"]."', '".$criteria["eqresponse_id"]."', ".($question["allow_comments"] ? "$('".$original_question_id."_comment').value" : "''").") : false)\"" : "").($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["eqresponse_id"]) && $current_progress_record[$question["equestion_id"]]["eqresponse_id"] == $criteria["eqresponse_id"] ? " checked=\"checked\"" : "")." value=\"".$criteria["eqresponse_id"]."\" />";
 									echo "	</div>\n";
 									echo clean_input(nl2br($criteria["criteria_text"]), "allowedtags");
 									echo "</td>\n";
@@ -569,21 +570,21 @@ class Evaluation {
 						} 
 						$question_number = ($key + 1);
 
-						echo "<li id=\"question_".$question["efquestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">";
+						echo "<li id=\"question_".$question["equestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">";
 						if ($allow_question_modifications) {
 							echo "<div class=\"controls\">\n";
-							echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$form_id."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
-							echo "	<a id=\"question_delete_".$question["efquestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
+							echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/questions?form_id=".$form_id."&amp;section=edit&amp;id=".$question["equestion_id"]."&amp;efquestion_id=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
+							echo "	<a id=\"question_delete_".$question["equestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["equestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
 							echo "	<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" /></a>";
 							echo "</div>\n";
 						}
-						echo "	<div id=\"question_text_".$question["efquestion_id"]."\" for=\"".$question["efquestion_id"]."_comment\" class=\"question".($allow_question_modifications ? " question-handle" : "")."\">\n";
+						echo "	<div id=\"question_text_".$question["equestion_id"]."\" for=\"".$question["equestion_id"]."_comment\" class=\"question".($allow_question_modifications ? " question-handle" : "")."\">\n";
 						echo "		".clean_input($question["question_text"], "specialchars");
 						echo "	</div>\n";
 						echo "	<div class=\"clear\"></div>";
 						if ($questiontype["questiontype_shortname"] == "free_text") {
 							echo "	<div class=\"comments\">";
-							echo "	<textarea name=\"comments[".$question["efquestion_id"]."]\" id=\"".$question["efquestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$question["efquestion_id"]]["comments"]) ? $current_progress_record[$question["efquestion_id"]]["comments"] : "")."</textarea>";
+							echo "	<textarea name=\"comments[".$question["equestion_id"]."]\" id=\"".$question["equestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["comments"]) ? $current_progress_record[$question["equestion_id"]]["comments"] : "")."</textarea>";
 							echo "	</div>";
 						}
 						echo "</li>\n";
@@ -610,21 +611,21 @@ class Evaluation {
 						} 
 						$question_number = ($key + 1);
 
-						echo "<li id=\"question_".$question["efquestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">";
+						echo "<li id=\"question_".$question["equestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">";
 						if ($allow_question_modifications) {
 							echo "<div class=\"controls\">\n";
-							echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$form_id."&amp;section=edit&amp;record=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
-							echo "	<a id=\"question_delete_".$question["efquestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
+							echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/questions?form_id=".$form_id."&amp;section=edit&amp;id=".$question["equestion_id"]."&amp;efquestion_id=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
+							echo "	<a id=\"question_delete_".$question["equestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["equestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
 							echo "	<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" /></a>";
 							echo "</div>\n";
 						}
-						echo "	<div id=\"question_text_".$question["efquestion_id"]."\" class=\"question".($allow_question_modifications ? " question-handle" : "")."\">\n";
+						echo "	<div id=\"question_text_".$question["equestion_id"]."\" class=\"question".($allow_question_modifications ? " question-handle" : "")."\">\n";
 						echo "		".clean_input($question["question_text"], "specialchars");
 						echo "	</div>\n";
 						echo "	<div class=\"responses\">\n";
 						$query = "	SELECT a.*
-									FROM `evaluation_form_responses` AS a
-									WHERE a.`efquestion_id` = ".$db->qstr($question["efquestion_id"])."
+									FROM `evaluations_lu_question_responses` AS a
+									WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"])."
 									ORDER BY a.`response_order` ASC";
 						$responses = $db->GetAll($query);
 						if ($responses) {
@@ -632,8 +633,8 @@ class Evaluation {
 
 							foreach ($responses as $response) {
 								echo "<div style=\"width: ".$response_width."%\">\n";
-								echo "	<label for=\"".$form_id."_".$response["efquestion_id"]."_".$response["efresponse_id"]."\">".clean_input($response["response_text"], "specialchars")."</label><br />";
-								echo "	<input type=\"radio\" style=\"margin-top: 5px\" id=\"response_".$question["efquestion_id"]."_".$response["efresponse_id"]."\" name=\"responses[".$response["efquestion_id"]."]\"".($attempt ? " onclick=\"((this.checked == true) ? storeResponse('".$question["efquestion_id"]."', '".$response["efresponse_id"]."', ".($question["allow_comments"] ? "$('".$response["efquestion_id"]."_comment').value" : "''").") : false)\"" : "").($current_progress_record && isset($current_progress_record[$question["efquestion_id"]]["efresponse_id"]) && $current_progress_record[$question["efquestion_id"]]["efresponse_id"] == $response["efresponse_id"] ? " checked=\"checked\"" : "")." value=\"".$response["efresponse_id"]."\" />";
+								echo "	<label for=\"".$form_id."_".$response["equestion_id"]."_".$response["eqresponse_id"]."\">".clean_input($response["response_text"], "specialchars")."</label><br />";
+								echo "	<input type=\"radio\" style=\"margin-top: 5px\" id=\"response_".$question["equestion_id"]."_".$response["eqresponse_id"]."\" name=\"responses[".$response["equestion_id"]."]\"".($attempt ? " onclick=\"((this.checked == true) ? storeResponse('".$question["equestion_id"]."', '".$response["eqresponse_id"]."', ".($question["allow_comments"] ? "$('".$response["equestion_id"]."_comment').value" : "''").") : false)\"" : "").($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["eqresponse_id"]) && $current_progress_record[$question["equestion_id"]]["eqresponse_id"] == $response["eqresponse_id"] ? " checked=\"checked\"" : "")." value=\"".$response["eqresponse_id"]."\" />";
 								echo "</div>\n";
 							}
 						}
@@ -641,8 +642,8 @@ class Evaluation {
 						if ($question["allow_comments"]) {
 							echo "	<div class=\"clear\"></div>";
 							echo "	<div class=\"comments\">";
-							echo "	<label for=\"".$question["efquestion_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
-							echo "	<textarea name=\"comments[".$question["efquestion_id"]."]\" id=\"".$question["efquestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$question["efquestion_id"]]["comments"]) ? $current_progress_record[$question["efquestion_id"]]["comments"] : "")."</textarea>";
+							echo "	<label for=\"".$question["equestion_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
+							echo "	<textarea name=\"comments[".$question["equestion_id"]."]\" id=\"".$question["equestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["comments"]) ? $current_progress_record[$question["equestion_id"]]["comments"] : "")."</textarea>";
 							echo "	</div>";
 						} else {
 							echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
@@ -714,9 +715,9 @@ class Evaluation {
 				});
 
 				function updateFormQuestionOrder() {
-					new Ajax.Request('<?php echo ENTRADA_URL; ?>/admin/evaluations/forms/questions', {
+					new Ajax.Request('<?php echo ENTRADA_URL; ?>/admin/evaluations/forms/questions?section=api-order&id=<?php echo $form_id; ?>', {
 						method: 'post',
-						parameters: { id : <?php echo $form_id; ?>, section : 'api-order', result : Sortable.serialize('form-questions-list', { name : 'order' }) },
+						parameters: {result : Sortable.serialize('form-questions-list', { name : 'order' }) },
 						onSuccess: function(transport) {
 							var count = 0;
 							$$('#form-questions-list li').each(function(obj) {
@@ -777,6 +778,241 @@ class Evaluation {
 			</script>
 			<?php
 		}
+	}
+	
+	public static function getQuestionControlsArray($questions) {
+		global $db;
+		$question_controls = array();
+		?>
+		<div id="evaluation-questions-holder">
+			<?php
+			$temp_question_controls = array();
+			$rubric_id = 0;
+			$show_rubric_headers = false;
+			$show_rubric_footers = false;
+			$rubric_table_open = false;
+			$original_question_id = 0;
+			$comments_enabled = false;
+			$modified_count = 0;
+			$desctext_count = 0;
+			foreach ($questions as $key => &$question) {
+				if (isset($question["questiontype_id"]) && $question["questiontype_id"]) {
+					$query = "SELECT * FROM `evaluations_lu_questiontypes`
+								WHERE `questiontype_id` = ".$db->qstr($question["questiontype_id"]);
+					$questiontype = $db->GetRow($query);
+				} else {
+					$questiontype = array("questiontype_shortname" => "matrix_single");
+				}
+				switch ($questiontype["questiontype_shortname"]) {
+					case "rubric" :
+						$query = "SELECT * FROM `evaluation_rubric_questions` AS a 
+									JOIN `evaluations_lu_rubrics` AS b
+									ON a.`erubric_id` = b.`erubric_id`
+									WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"]);
+						$rubric = $db->GetRow($query);
+						if ($rubric) {
+							if ($rubric["erubric_id"] != $rubric_id) {
+								if ($rubric_id) {
+									$show_rubric_footers = true;
+								}
+								$rubric_id = $rubric["erubric_id"];
+								$show_rubric_headers = true;
+								$save_question_id = $original_question_id;
+								$original_question_id = $question["equestion_id"];
+								$comments_enabled = $question["allow_comments"];
+							}
+							if ($show_rubric_footers) {
+								$show_rubric_footers = false;
+								$rubric_table_open = false;
+								$temp_question_controls[] = "</table></div>";
+								if ($comments_enabled) {
+									$temp_question_controls[] = "	<div class=\"clear\"></div>\n";
+									$temp_question_controls[] = "	<div class=\"comments\">\n";
+									$temp_question_controls[] = "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
+									$temp_question_controls[] = "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"></textarea>\n";
+									$temp_question_controls[] = "	</div>\n";
+								} else {
+									$temp_question_controls[] = "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+								}
+								$temp_question_controls[] = "</div>";
+								$question_controls[$save_question_id] = implode("", $temp_question_controls);
+								$original_question_id = $question["equestion_id"];
+								$comments_enabled = $question["allow_comments"];
+							}
+							if ($show_rubric_headers) {
+								$rubric_table_open = true;
+								unset($temp_question_controls);
+								$temp_question_controls = array("<div id=\"question_".$question["equestion_id"]."\">\n");
+								$temp_question_controls[] = "<span id=\"question_text_".$question["equestion_id"]."\" style=\"display: none;\">".$rubric["rubric_title"].(stripos($rubric["rubric_title"], "rubric") === false ? " Rubric" : "")."</span>";
+								$temp_question_controls[] = (isset($rubric["rubric_title"]) && $rubric["rubric_title"] ? "<h2>".$rubric["rubric_title"] : "")."<span style=\"font-weight: normal; margin-left: 10px; padding-right: 30px;\" class=\"content-small\">".$rubric["rubric_description"]."</span>".(isset($rubric["rubric_title"]) && $rubric["rubric_title"] ? "</h2>\n" : "\n");
+								$modified_count++;
+								$temp_question_controls[] = "<div class=\"question\"><table class=\"rubric\">\n";
+								$temp_question_controls[] = "	<tr>\n";
+								$columns = 0;
+								$query = "	SELECT a.*
+											FROM `evaluations_lu_question_responses` AS a
+											WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"])."
+											ORDER BY a.`response_order` ASC";
+								$responses = $db->GetAll($query);
+								if ($responses) {
+									$response_width = floor(100 / (count($responses) + 1));
+									$temp_question_controls[] = "		<th style=\"width: ".$response_width."%; text-align: left; border-bottom: \">\n";
+									$temp_question_controls[] = "			Categories";
+									$temp_question_controls[] = "		</th>\n";
+									foreach ($responses as $response) {
+										$columns++;
+										$temp_question_controls[] = "<th style=\"width: ".$response_width."%; text-align: left;\">\n";
+										$temp_question_controls[] = clean_input($response["response_text"], "specialchars");
+										$temp_question_controls[] = "</th>\n";
+									}
+								}
+								$temp_question_controls[] = "	</tr>\n";
+								$show_rubric_headers = false;
+							}
+							
+							$question_number = ($key + 1);
+
+							$temp_question_controls[] = "<tr id=\"question_".$question["equestion_id"]."\">";
+							
+							$query = "SELECT b.*, a.`equestion_id`, a.`minimum_passing_level`
+										FROM `evaluations_lu_question_responses` AS a
+										LEFT JOIN `evaluations_lu_question_response_criteria` AS b
+										ON a.`eqresponse_id` = b.`eqresponse_id`
+										WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"])."
+										ORDER BY a.`response_order` ASC";
+							$criteriae = $db->GetAll($query);
+							if ($criteriae) {
+								$criteria_width = floor(100 / (count($criteriae) + 1));
+								$temp_question_controls[] = "		<td style=\"width: ".$criteria_width."%\">\n";
+								$temp_question_controls[] = "			<div class=\"td-stretch\" style=\"position: relative; width: 100%; vertical-align: middle;\">\n";
+								$temp_question_controls[] = "				<div style=\"position: relative; top: 50%;\">".$question["question_text"]."</div>\n";
+								$temp_question_controls[] = "			</div>\n";
+								$temp_question_controls[] = "		</td>\n";
+								foreach ($criteriae as $criteria) {
+									$temp_question_controls[] = "<td style=\"width: ".$criteria_width."%; vertical-align: top;\" >\n";
+									$temp_question_controls[] = "	<div style=\"width: 100%; text-align: center; padding-bottom: 10px;\">";
+									$temp_question_controls[] = "		<input type=\"radio\" id=\"".$criteria["equestion_id"]."_".$criteria["eqresponse_id"]."\" name=\"responses[".$question["equestion_id"]."]\" value=\"".$criteria["eqresponse_id"]."\" />";
+									$temp_question_controls[] = "	</div>\n";
+									$temp_question_controls[] = clean_input(nl2br($criteria["criteria_text"]), "allowedtags");
+									$temp_question_controls[] = "</td>\n";
+								}
+							}
+							$temp_question_controls[] = "</tr>";
+						}
+					break;
+					case "descriptive_text" :
+					case "free_text" :
+						if ($rubric_table_open) {
+							$rubric_table_open = false;
+							$rubric_id = 0;
+							$temp_question_controls[] = "</table></div>";
+							if ($comments_enabled) {
+								$temp_question_controls[] = "	<div class=\"clear\"></div>\n";
+								$temp_question_controls[] = "	<div class=\"comments\">\n";
+								$temp_question_controls[] = "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
+								$temp_question_controls[] = "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"></textarea>\n";
+								$temp_question_controls[] = "	</div>\n";
+							} else {
+								$temp_question_controls[] = "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+							}
+							$temp_question_controls[] = "</div>";
+							$question_controls[$original_question_id] = implode("", $temp_question_controls);
+							$original_question_id = 0;
+							$comments_enabled = false;
+						} 
+						$question_number = ($key + 1);
+						unset($temp_question_controls);
+						$temp_question_controls = array("<div id=\"question_".$question["equestion_id"]."\">");
+						$temp_question_controls[] = "	<div id=\"question_text_".$question["equestion_id"]."\" for=\"".$question["equestion_id"]."_comment\" class=\"question\">\n";
+						$temp_question_controls[] = "		".clean_input($question["question_text"], "specialchars");
+						$temp_question_controls[] = "	</div>\n";
+						$temp_question_controls[] = "	<div class=\"clear\"></div>";
+						if ($questiontype["questiontype_shortname"] == "free_text") {
+							$temp_question_controls[] = "	<div class=\"comments\">";
+							$temp_question_controls[] = "	<textarea name=\"comments[".$question["equestion_id"]."]\" id=\"".$question["equestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"></textarea>";
+							$temp_question_controls[] = "	</div>";
+						}
+						$temp_question_controls[] = "</div>\n";
+						$question_controls[$question["equestion_id"]] = implode("", $temp_question_controls);
+						$modified_count++;
+					break;
+					case "matrix_single" :
+					default :
+						if ($rubric_table_open) {
+							$rubric_table_open = false;
+							$rubric_id = 0;
+							$temp_question_controls[] = "</table></div>";
+							if ($comments_enabled) {
+								$temp_question_controls[] = "	<div class=\"clear\"></div>\n";
+								$temp_question_controls[] = "	<div class=\"comments\">\n";
+								$temp_question_controls[] = "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
+								$temp_question_controls[] = "	<textarea id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"></textarea>\n";
+								$temp_question_controls[] = "	</div>\n";
+							} else {
+								$temp_question_controls[] = "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+							}
+							$temp_question_controls[] = "</div>";
+							$question_controls[$original_question_id] = implode("", $temp_question_controls);
+							$original_question_id = 0;
+							$comments_enabled = false;
+						} 
+						$question_number = ($key + 1);
+						unset($temp_question_controls);
+						$temp_question_controls = array("<div id=\"question_".$question["equestion_id"]."\">");
+						$temp_question_controls[] = "	<div id=\"question_text_".$question["equestion_id"]."\" class=\"question\">\n";
+						$temp_question_controls[] = "		".clean_input($question["question_text"], "specialchars");
+						$temp_question_controls[] = "	</div>\n";
+						$temp_question_controls[] = "	<div class=\"responses\">\n";
+						$query = "	SELECT a.*
+									FROM `evaluations_lu_question_responses` AS a
+									WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"])."
+									ORDER BY a.`response_order` ASC";
+						$responses = $db->GetAll($query);
+						if ($responses) {
+							$response_width = floor(100 / count($responses)) - 1;
+
+							foreach ($responses as $response) {
+								$temp_question_controls[] = "<div style=\"width: ".$response_width."%\">\n";
+								$temp_question_controls[] = "	<label for=\"".$response["equestion_id"]."_".$response["eqresponse_id"]."\">".clean_input($response["response_text"], "specialchars")."</label><br />";
+								$temp_question_controls[] = "	<input type=\"radio\" style=\"margin-top: 5px\" id=\"response_".$question["equestion_id"]."_".$response["eqresponse_id"]."\" name=\"responses[".$response["equestion_id"]."]\" value=\"".$response["eqresponse_id"]."\" />";
+								$temp_question_controls[] = "</div>\n";
+							}
+						}
+						$temp_question_controls[] = "	</div>\n";
+						if ($question["allow_comments"]) {
+							$temp_question_controls[] = "	<div class=\"clear\"></div>";
+							$temp_question_controls[] = "	<div class=\"comments\">";
+							$temp_question_controls[] = "	<label for=\"".$question["equestion_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
+							$temp_question_controls[] = "	<textarea name=\"comments[".$question["equestion_id"]."]\" id=\"".$question["equestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"></textarea>";
+							$temp_question_controls[] = "	</div>";
+						} else {
+							$temp_question_controls[] = "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+						}
+						$temp_question_controls[] = "</div>\n";
+						$question_controls[$question["equestion_id"]] = implode("", $temp_question_controls);
+						$modified_count++;
+					break;
+				}
+			}
+			if ($rubric_table_open) {
+				$temp_question_controls[] = "</table></div>";
+				if ($comments_enabled) {
+					$temp_question_controls[] = "	<div class=\"clear\"></div>\n";
+					$temp_question_controls[] = "	<div class=\"comments\">\n";
+					$temp_question_controls[] = "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
+					$temp_question_controls[] = "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"></textarea>\n";
+					$temp_question_controls[] = "	</div>\n";
+				} else {
+					$temp_question_controls[] = "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+				}
+				$temp_question_controls[] = "</div>";
+				$question_controls[$original_question_id] = implode("", $temp_question_controls);
+			} 
+				
+			?>
+		</div>
+		<?php
+		return $question_controls;
 	}
 	
 	public static function getTargetControls ($target_data, $options_for = "", $form_id = 0) {
@@ -2056,6 +2292,9 @@ class Evaluation {
 					WHERE `evaluation_id` = ".$db->qstr($evaluation_id);
 		$evaluation = $db->GetRow($query);
 		if ($evaluation) {
+			if (isset($evaluation["allow_repeat_targets"]) && $evaluation["allow_repeat_targets"] == 1) {
+				$available_only = false;
+			}
 			if ($evaluator_id) {
 				$query = "SELECT * FROM `evaluation_evaluators`
 							WHERE `eevaluator_id` = ".$db->qstr($evaluator_id)."
@@ -2579,11 +2818,11 @@ class Evaluation {
 			/**
 			 * Add all of the qquestion_ids to the $output array so they're set.
 			 */
-				$query		= "SELECT * FROM `evaluation_form_questions` WHERE `eform_id` = ".$db->qstr($progress["eform_id"])." ORDER BY `question_order` ASC";
+				$query		= "SELECT * FROM `evaluation_form_questions` AS a JOIN `evaluations_lu_questions` AS b ON a.`equestion_id` = b.`equestion_id` WHERE a.`eform_id` = ".$db->qstr($progress["eform_id"])." ORDER BY a.`question_order` ASC";
 				$questions	= $db->GetAll($query);
 				if ($questions) {
 					foreach ($questions as $question) {
-						$output[$question["efquestion_id"]] = 0;
+						$output[$question["equestion_id"]] = 0;
 					}
 				} else {
 					return false;
@@ -2598,9 +2837,9 @@ class Evaluation {
 				$responses	= $db->GetAll($query);
 				if ($responses) {
 					foreach ($responses as $response) {
-						$output[$response["efquestion_id"]] = array();
-						$output[$response["efquestion_id"]]["efresponse_id"] = $response["efresponse_id"];
-						$output[$response["efquestion_id"]]["comments"] = $response["comments"];
+						$output[$response["equestion_id"]] = array();
+						$output[$response["equestion_id"]]["eqresponse_id"] = $response["eqresponse_id"];
+						$output[$response["equestion_id"]]["comments"] = $response["comments"];
 					}
 				}
 			} else {
@@ -2611,11 +2850,11 @@ class Evaluation {
 		return $output;
 	}
 	
-	public static function getMinimumPassingLevel ($efquestion_id) {
+	public static function getMinimumPassingLevel ($equestion_id) {
 		global $db;
 		
-		$query = "SELECT `response_order` FROM `evaluation_form_response`
-					WHERE `efquestion_id` = ".$db->qstr($efquestion_id)."
+		$query = "SELECT `response_order` FROM `evaluations_lu_question_response`
+					WHERE `equestion_id` = ".$db->qstr($equestion_id)."
 					AND `minimum_passing_level` = 1";
 		$minimum_passing_level = $db->GetOne($query);
 		if ($minimum_passing_level) {
@@ -2953,6 +3192,63 @@ class Evaluation {
 		
 	}
 	
+	public static function getTargetEvaluations() {
+		global $db, $ENTRADA_USER, $ENTRADA_ACL;
+		
+		
+		
+		$cohort = groups_get_cohort($ENTRADA_USER->getID());
+
+		$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
+					JOIN `course_groups` AS b
+					ON a.`cgroup_id` = b.`cgroup_id`
+					WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+					AND a.`active` = 1
+					AND b.`active` = 1";
+		$course_groups = $db->GetAll($query);
+
+		$cgroup_ids_string = "";
+		if (isset($course_groups) && is_array($course_groups)) {
+			foreach ($course_groups as $course_group) {
+				if ($cgroup_ids_string) {
+					$cgroup_ids_string .= ", ".$db->qstr($course_group["cgroup_id"]);
+				} else {
+					$cgroup_ids_string = $db->qstr($course_group["cgroup_id"]);
+				}
+			}
+		}
+
+		$query = "	SELECT * FROM `evaluations` AS a
+					JOIN `evaluation_targets` AS b
+					ON a.`evaluation_id` = b.`evaluation_id`
+					JOIN `evaluation_forms` AS c
+					ON a.`eform_id` = c.`eform_id`
+					JOIN `evaluations_lu_targets` AS d
+					ON c.`target_id` = d.`target_id`
+					WHERE
+					(
+						(
+							b.`target_type` = 'proxy_id'
+							AND b.`target_value` = ".$db->qstr($ENTRADA_USER->getID())."
+						)
+						".($_SESSION["details"]["group"] == "student" ? " OR (
+							b.`target_type` = 'cohort'
+							AND b.`target_value` = ".$db->qstr($cohort["group_id"])."
+						)" : "").($cgroup_ids_string ? " OR (
+							b.`target_type` = 'cgroup_id'
+							AND b.`target_value` IN (".$cgroup_ids_string.")
+						)" : "")."
+					)
+					AND a.`evaluation_start` < ".$db->qstr(time())."
+					AND a.`evaluation_active` = 1
+					GROUP BY a.`evaluation_id`
+					ORDER BY a.`evaluation_finish` DESC";
+		$evaluations = $db->GetAll($query);
+		
+		return $evaluations;
+		
+	}
+	
 	public static function getFormAuthorPermissions($eform_id) {
 		global $db, $ENTRADA_USER;
 		
@@ -3062,26 +3358,28 @@ class Evaluation {
 	public static function responsesBelowThreshold($evaluation_id, $eprogress_id) {
 		global $db;
 		
-		$query = "SELECT c.* FROM `evaluations` AS a
+		$query = "SELECT c.*, d.* FROM `evaluations` AS a
 					JOIN `evaluation_forms` AS b
 					ON a.`eform_id` = b.`eform_id`
 					JOIN `evaluation_form_questions` AS c
 					ON b.`eform_id` = c.`eform_id`
+					JOIN `evaluations_lu_questions` AS d
+					ON c.`equestion_id` = d.`equestion_id`
 					WHERE a.`evaluation_id` = ".$db->qstr($evaluation_id);
 		$evaluation_questions = $db->GetAll($query);
 		if ($evaluation_questions) {
 			foreach ($evaluation_questions as $evaluation_question) {
-				$query = "SELECT `response_order` FROM `evaluation_form_responses`
-							WHERE `efquestion_id` = ".$db->qstr($evaluation_question["efquestion_id"])."
+				$query = "SELECT `response_order` FROM `evaluations_lu_question_responses`
+							WHERE `equestion_id` = ".$db->qstr($evaluation_question["equestion_id"])."
 							AND `minimum_passing_level` = 1";
 				$minimum_passing_level = $db->GetOne($query);
 				if ($minimum_passing_level) {
 					$query = "SELECT c.`response_order` FROM `evaluation_progress` AS a
 								JOIN `evaluation_responses` AS b
 								ON a.`eprogress_id` = b.`eprogress_id`
-								JOIN `evaluation_form_responses` AS c
-								ON b.`efresponse_id` = c.`efresponse_id`
-								WHERE b.`efquestion_id` = ".$db->qstr($evaluation_question["efquestion_id"]);
+								JOIN `evaluations_lu_question_responses` AS c
+								ON b.`eqresponse_id` = c.`eqresponse_id`
+								WHERE b.`equestion_id` = ".$db->qstr($evaluation_question["equestion_id"]);
 					$response_level = $db->GetOne($query);
 					if ($response_level && $response_level < $minimum_passing_level) {
 						return true;
@@ -3258,6 +3556,31 @@ class Evaluation {
 		
 	}
 	
+	public static function getAuthorEvaluationQuestions() {
+		global $db, $ENTRADA_USER, $ENTRADA_ACL;
+		
+		$evaluation_questions = array();
+		
+		$query = "SELECT a.*, b.`questiontype_shortname`, b.`questiontype_title`
+					FROM `evaluations_lu_questions` AS a
+					JOIN `evaluations_lu_questiontypes` AS b
+					ON a.`questiontype_id` = b.`questiontype_id`
+					LEFT JOIN `evaluation_rubric_questions` AS c
+					ON a.`equestion_id` = c.`equestion_id`
+					WHERE a.`question_active` = 1
+					GROUP BY a.`equestion_id`
+					ORDER BY c.`erubric_id`, c.`question_order`, b.`questiontype_id`";
+		$temp_evaluation_questions = $db->GetAll($query);
+		foreach ($temp_evaluation_questions as $evaluation_question) {
+			if ($ENTRADA_ACL->amIAllowed(new EvaluationQuestionResource($evaluation_question["equestion_id"], true), 'update')) {
+				$evaluation_questions[] = $evaluation_question;
+			}
+		}
+		
+		return $evaluation_questions;
+		
+	}
+	
 	public static function getEvaluators($evaluation_id, $available_only = false) {
 		global $db;
 		
@@ -3278,17 +3601,17 @@ class Evaluation {
 	}
 	
 	
-	public static function getClinicalPresentations($parent_id = 0, $presentations = array(), $efquestion_id = 0, $presentation_ids = false, $org_id = 0) {
+	public static function getClinicalPresentations($parent_id = 0, $presentations = array(), $equestion_id = 0, $presentation_ids = false, $org_id = 0) {
 		global $db, $ENTRADA_USER, $translate;
 
 		$org_id = ($org_id == 0 ? $ENTRADA_USER->getActiveOrganisation() : (int) $org_id );
 
-		if ($efquestion_id) {
+		if ($equestion_id) {
 			$presentation_ids = array();
 
 			$query = "	SELECT `objective_id`
 						FROM `evaluation_form_question_objectives`
-						WHERE `efquestion_id` = ".$db->qstr($efquestion_id);
+						WHERE `equestion_id` = ".$db->qstr($equestion_id);
 			$allowed_objectives = $db->GetAll($query);
 			if ($allowed_objectives) {
 				foreach ($allowed_objectives as $presentation) {

@@ -59,41 +59,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 				if ($db->AutoExecute("evaluation_forms", $PROCESSED, "INSERT") && ($new_eform_id = $db->Insert_Id())) {
 					$query = "	SELECT *
-								FROM `evaluation_form_questions`
-								WHERE `eform_id` = ".$db->qstr($FORM_ID);
+								FROM `evaluation_form_questions` AS a
+								JOIN `evaluations_lu_questions` AS b
+								ON a.`equestion_id` = b.`equestion_id`
+								WHERE a.`eform_id` = ".$db->qstr($FORM_ID);
 					$questions = $db->GetAll($query);
 					if ($questions) {
 						$new_efquestion_ids = array();
-						$new_efresponse_ids_string = array();
 
 						foreach ($questions as $question) {
 							$query = "	INSERT INTO `evaluation_form_questions` VALUES (
 											NULL,
 											'".$new_eform_id."',
-											".$db->qstr($question["questiontype_id"]).",
-											".$db->qstr($question["question_text"]).",
+											".$db->qstr($question["equestion_id"]).",
 											".$db->qstr($question["question_order"]).",
 											".$db->qstr($question["allow_comments"]).",
 											".$db->qstr($question["send_threshold_notifications"])."
 										)";
-							if (($db->Execute($query)) && ($new_efquestion_id = $db->Insert_Id())) {
-								if (!in_array($question["questiontype_id"], array(4, 2))) {
-									$query = "	INSERT INTO `evaluation_form_responses`
-												SELECT NULL, '".$new_efquestion_id."', `response_text`, `response_order`, `response_is_html`, `minimum_passing_level`
-												FROM `evaluation_form_responses`
-												WHERE `efquestion_id` = ".$db->qstr($question["efquestion_id"]);
-									if (($db->Execute($query)) && ($db->Affected_Rows() > 0)) {
-										/**
-										 * Add this new efquestion_id to the $new_efquestion_ids array.
-										 */
-										$new_efquestion_ids[$question["efquestion_id"]] = $new_efquestion_id;
-									} else {
-										$ERROR++;
-
-										application_log("error", "Unable to insert new evaluation_form_responses record when attempting to copy responses for efquestion_id [".$question["efquestion_id"]."] from eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
-									}
-								}
-							} else {
+							if (!($db->Execute($query))) {
 								$ERROR++;
 
 								application_log("error", "Unable to insert new evaluation_form_questions record when attempting to copy eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
@@ -106,44 +89,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							foreach ($rubrics as $rubric) {
 								$new_rubric = $rubric;
 								$new_rubric["eform_id"] = $new_eform_id;
-								$new_rubric["efrubric_id"] = NULL;
-								if ($db->AutoExecute("evaluation_form_rubrics", $new_rubric, "INSERT") && ($new_efrubric_id = $db->Insert_Id())) {
-									$query = "SELECT * FROM `evaluation_form_rubric_questions` WHERE `efrubric_id` = ".$db->qstr($rubric["efrubric_id"]);
-									$rubric_questions = $db->GetAll($query);
-									if ($rubric_questions) {
-										foreach ($rubric_questions as $rubric_question) {
-											$new_rubric_question = array();
-											$new_rubric_question["efrubric_id"] = $new_efrubric_id;
-											$new_rubric_question["efquestion_id"] = $new_efquestion_ids[$rubric_question["efquestion_id"]];
-											if ($db->AutoExecute("evaluation_form_rubric_questions", $new_rubric_question, "INSERT")) {
-												$query = "SELECT c.`efresponse_id`, b.`criteria_text` FROM `evaluation_form_responses` AS a
-															JOIN `evaluation_form_response_criteria` AS b
-															ON a.`efresponse_id` = b.`efresponse_id`
-															JOIN `evaluation_form_responses` AS c
-															ON a.`response_order` = c.`response_order`
-															AND c.`efquestion_id` = ".$db->qstr($new_efquestion_ids[$rubric_question["efquestion_id"]])."
-															WHERE a.`efquestion_id` = ".$db->qstr($rubric_question["efquestion_id"]);
-												$response_criteriae = $db->GetAll($query);
-												if ($response_criteriae) {
-													foreach ($response_criteriae as $response_criteria) {
-														if (!$db->AutoExecute("evaluation_form_response_criteria", $response_criteria, "INSERT")) {
-															$ERROR++;
-															application_log("error", "Unable to insert new evaluation_form_rubric_questions record when attempting to copy eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
-														} else {
-															$new_efresponse_ids_string .= ($new_efresponse_ids_string ? ", " : "").($db->qstr($response_criteria["efresponse_id"]));
-														}
-													}
-												}
-											} else {
-												$ERROR++;
-												application_log("error", "Unable to insert new evaluation_form_rubric_questions record when attempting to copy eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
-											}
-										}
-									} else {
-										$ERROR++;
-										application_log("error", "Unable to find efrubric_id [".$rubric["efrubric_id"]."] evaluation_form_rubric_questions record when attempting to copy eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
-									}
-								} else {
+								$new_rubric["erubric_id"] = NULL;
+								if (!$db->AutoExecute("evaluation_form_rubrics", $new_rubric, "INSERT") || !($new_erubric_id = $db->Insert_Id())) {
 									$ERROR++;
 									application_log("error", "Unable to insert new evaluation_form_rubrics record when attempting to copy eform_id [".$FORM_ID."]. Database said: ".$db->ErrorMsg());
 								}
@@ -166,17 +113,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						}
 
 						if ($ERROR) {
-							if (count($new_efquestion_ids) > 0) {
-								$query = "DELETE FROM `evaluation_form_responses` WHERE `efquestion_id` IN (".implode(", ", $new_efquestion_ids).")";
-								$db->Execute($query);
-								$query = "DELETE FROM `evaluation_form_rubric_questions` WHERE `efquestion_id` IN (".implode(", ", $new_efquestion_ids).")";
-								$db->Execute($query);
-							}
-							
-							if ($new_efresponse_ids_string) {
-								$query = "DELETE FROM `evaluation_form_response_criteria` WHERE `efresponse_id` IN (".$new_efresponse_ids_string.")";
-							}
-
 							$query = "DELETE FROM `evaluation_form_rubrics` WHERE `eform_id` = ".$db->qstr($new_eform_id);
 							$db->Execute($query);
 							

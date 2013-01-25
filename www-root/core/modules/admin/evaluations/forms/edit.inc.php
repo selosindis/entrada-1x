@@ -170,7 +170,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					}
 					
 					if (!$ALLOW_QUESTION_MODIFICATIONS) {
-						echo display_notice(array("Please note this evaluation form has alreay been used in an evaluation, therefore the questions cannot be modified.<br /><br />If you would like to make modifications to the form you must copy it first <em>(using the Copy Form button below)</em> and then make your modifications."));
+						echo display_notice(array("Please note this evaluation form has already been used in an evaluation, therefore the questions cannot be modified.<br /><br />If you would like to make modifications to the form you must copy it first <em>(using the Copy Form button below)</em> and then make your modifications."));
 					}
 
 					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
@@ -335,14 +335,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									?>
 									<div style="padding-bottom: 2px">
 										<ul class="page-action">
-											<li><a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/forms/questions?id=<?php echo $FORM_ID; ?>&amp;section=add">Add New Question</a></li>
+											<li><a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/questions?form_id=<?php echo $FORM_ID; ?>">Attach Evaluation Questions</a></li>
 										</ul>
 									</div>
 									<?php
 								}
 
-								$query = "SELECT a.*
+								$query = "SELECT a.*, b.*
 											FROM `evaluation_form_questions` AS a
+											JOIN `evaluations_lu_questions` AS b
+											ON a.`equestion_id` = b.`equestion_id`
 											WHERE a.`eform_id` = ".$db->qstr($FORM_ID)."
 											ORDER BY a.`question_order` ASC";
 								$questions = $db->GetAll($query);
@@ -354,7 +356,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								}
 								?>
 								<div id="display-no-question-message" class="display-generic" style="display: none">
-									There are currently <strong>no questions</strong> associated with this evaluation form.<br /><br />To create questions in this form click the <strong>Add Question</strong> link above.
+									There are currently <strong>no questions</strong> associated with this evaluation form.<br /><br />To create questions in this form click the <strong>Attach Evaluation Questions</strong> link above.
 								</div>
 							</td>
 						</tr>

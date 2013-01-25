@@ -117,7 +117,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					}
 					application_log("success", "New evaluation form [".$eform_id."] was added to the system.");
 
-					header("Location: ".ENTRADA_URL."/admin/evaluations/forms/questions?id=".$eform_id."&section=add");
+					header("Location: ".ENTRADA_URL."/admin/evaluations/forms?section=edit&id=".$eform_id);
 					exit;
 				} else {
 					$ERROR++;

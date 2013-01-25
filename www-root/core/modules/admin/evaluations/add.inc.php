@@ -1010,7 +1010,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								<label for="allow_target_request" class="form-required">Allow Target Request</label>
 							</td>
 							<td>
-								<input type="checkbox" id="allow_target_request" name="allow_target_request"<?php echo (!isset($PROCESSED["allow_target_request"]) || $PROCESSED["allow_target_request"] ? " checked=\"checked\"" : ""); ?> />
+								<input type="checkbox" id="allow_target_request" name="allow_target_request"<?php echo (isset($PROCESSED["allow_target_request"]) && $PROCESSED["allow_target_request"] ? " checked=\"checked\"" : ""); ?> />
 								<div style="float: right; width: 91%" class="content-small">Allow targets to trigger a request to be sent to a valid evaluator to fill out an evaluation for them.</div>
 							</td>
 						</tr>
@@ -1020,7 +1020,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								<label for="allow_repeat_targets" class="form-required">Allow Multiple Attempts on Each Target</label>
 							</td>
 							<td>
-								<input type="checkbox" id="allow_repeat_targets" name="allow_repeat_targets"<?php echo (!isset($PROCESSED["allow_repeat_targets"]) || $PROCESSED["allow_repeat_targets"] ? " checked=\"checked\"" : ""); ?> />
+								<input type="checkbox" id="allow_repeat_targets" name="allow_repeat_targets"<?php echo (isset($PROCESSED["allow_repeat_targets"]) && $PROCESSED["allow_repeat_targets"] ? " checked=\"checked\"" : ""); ?> />
 								<div style="float: right; width: 91%" class="content-small">Allows evaluators to submit evaluations for the same target multiple times.</div>
 							</td>
 						</tr>

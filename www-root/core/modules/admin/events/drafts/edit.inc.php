@@ -30,36 +30,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
-} else { 
-	
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."].");
+} else {
+
 	if (isset($_GET["mode"]) && $temp = (clean_input($_GET["mode"], array("trim", "striptags")))) {
 		ob_clear_open_buffers();
 		switch ($temp) {
 			case "csv-example" :
-				
 				$csv_content  = "Original Event,Parent Event,Term,Course Code,Course Name,Date,Start Time,Total Duration,Event Type Durations,Event Types,Event Title,Location,Audience (Cohorts),Audience (Groups),Audience (Students),Teacher Numbers,Teacher Names"."\n";
-				$csv_content .= "22589,0,Clerkship,MEDS443,Clerkship: Obstetrics and Gynecology,12-04-02,7:30,60,60,Clerkship Seminars,The Abnormal Pap/Cervical Cancer,Kidd 7,Class of 2012,,,7390885,Julie Francis"."\n";
-				$csv_content .= "22518,0,Clerkship,MEDS453,Clerkship: Perioperative/Acute Care,12-04-02,8:00,240,240,Other,\"Anesthesia Simulator Session (Datoo, Bharath, Harvey, Wong, Glicksman)\",New Med Bldg Sim Lab 3 Rm 234E,,,5588583; 5948964; 5948982; 3598651; 5000040,3489488,Robert Tanzola"."\n";
-				$csv_content .= "21928,0,Term 4,MEDS245,Clinical Foundations: Neurology and Ophthalmology,12-04-02,8:30,60,60,Directed Independent Learning,Neurology Theme of the Week: Multiple Sclerosis,132A,Class of 2014,,,7110265; 7315777,Donald Brunet; Heather E. Murray"."\n";
+				$csv_content .= "0,1,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d").",9:00,120,60;30;30,Lecture;Lab;Review / Feedback Session,\"Demo Event #1: Learning Demos\",Room 102,Class of ".fetch_first_year().",,,8217321,Dr. Jenn Warden"."\n";
+				$csv_content .= "0,1,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d", strtotime("+1 week")).",9:00,60,60,Lecture,\"Demo Event #2: More About Demos\",Room 102,Class of ".fetch_first_year().",,,7291430,Ted Simon"."\n";
+				$csv_content .= "0,0,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d", strtotime("+1 week")).",10:00,60,60,Small Group,\"Demo Small Group Session (Group 1)\",Room 201,,".fetch_first_year()." Group 1,,7291430,Ted Simon"."\n";
+				$csv_content .= "0,0,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d", strtotime("+1 week")).",10:00,60,60,Small Group,\"Demo Small Group Session (Group 2)\",Room 202,,".fetch_first_year()." Group 2,,8392943,Sam Edwards"."\n";
+				$csv_content .= "0,0,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d", strtotime("+1 week")).",10:00,60,60,Small Group,\"Demo Small Group Session (Group 3)\",Room 203,,".fetch_first_year()." Group 3,,2536437,Jim Sampson"."\n";
+				$csv_content .= "0,1,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d", strtotime("+8 days")).",8:00,60,60,Examination,\"Mid-Term Make Up Session\",Room 203a,,,8290103;2823945,7291430,Ted Simon"."\n";
+				$csv_content .= "0,1,Term 4,EXAMPLE403,Applying Examples,".date("Y-m-d", strtotime("+9 days")).",14:30,60,60,Directed Independent Learning,Neurology Theme of the Week: Multiple Sclerosis,,,,,,"."\n";
 
-				
 				header('Pragma: public');
 				header('Content-type: text/csv');
 				header('Content-Disposition: attachment; filename="draft-schedule-example.csv"');
-				
-				echo $csv_content;				
-				
+
+				echo $csv_content;
+
 			break;
 			default :
-			continue;
+                continue;
+            break;
 		}
 		exit;
 	}
-	
+
 	$BREADCRUMB[]	= array("url" => "", "title" => "Edit Draft Schedule");
 	$draft_id = (int) $_GET["draft_id"];
-	
+
 	/**
 	* Load the rich text editor.
 	*/
@@ -120,7 +123,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					/**
 					* Add the updated draft authors to the draft_contacts table.
 					*/
-					
+
 					if ((is_array($PROCESSED["associated_proxy_ids"])) && !empty($PROCESSED["associated_proxy_ids"])) {
 						foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
 							if (!$db->AutoExecute("draft_creators", array("draft_id" => $draft_id, "proxy_id" => $proxy_id), "INSERT")) {
@@ -163,17 +166,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		case 2 :
 		case 1 :
 		default :
-			
+
 		break;
 	}
-	
-	$query = "	SELECT * 
+
+	$query = "	SELECT *
 				FROM `drafts`
 				WHERE `draft_id` = ".$db->qstr($draft_id);
 	$draft_information = $db->GetRow($query);
-	
+
 	if ($draft_information && $draft_information["status"] == "open") {
-	
+
 	$query = "	SELECT a.`proxy_id`, CONCAT(b.`lastname`, ', ', b.`firstname`) AS `fullname`
 				FROM `draft_creators` AS a
 				JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -188,7 +191,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 		?>
-	
+
 		<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>/drafts/?section=edit&draft_id=<?php echo $draft_id; ?>" method="post" id="editDraftForm" onsubmit="picklist_select('proxy_id')">
 			<input type="hidden" name="step" value="2" />
 			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Draft">
@@ -299,7 +302,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			</table>
 		</form>
 		</div>
-		<?php 
+		<?php
 		$query = "	SELECT a.*, CONCAT(c.`prefix`, ' ', c.`lastname`, ', ', c.`firstname` ) AS `fullname`, f.`curriculum_type_name` AS `event_term`
 					FROM `draft_events` AS a
 					LEFT JOIN `draft_contacts` AS b
@@ -319,80 +322,80 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		?>
 		<script type="text/javascript">
 			jQuery(function(){
-				jQuery(".noLink").live("click", function(){
-					return false;
-				});
+//				jQuery(".noLink").live("click", function(){
+//					return false;
+//				});
+//
+//				jQuery('#draftEvents').dataTable({
+//					"aaSorting": [[ 1, "asc" ]]
+//				});
+//
+//				jQuery("tbody a.date, tbody a.title, tbody a.time").live("click", function(){
+//					var element = jQuery(this);
+//					var temp_id = element.parent().parent().attr('rel');
+//					var temp_input = jQuery('<input/>', {
+//						id: element.parent().parent().attr('id')+'-input',
+//						type: 'text'
+//					});
+//
+//					temp_input.addClass(element.attr("class"));
+//
+//					var temp_data = element.html();
+//
+//					switch (element.attr('class').trim()) {
+//						case "date" :
+//							temp_input.datepicker({
+//								dateFormat: "yy-mm-dd",
+//								defaultDate: temp_data,
+//								onClose: function(dateText, inst) {
+//									temp_input.attr("value", dateText);
+//									if (dateText != temp_data && dateText != "") {
+//										temp_input.parent().append(update_draft_event("date", temp_id, dateText));
+//										temp_input.remove();
+//									} else {
+//										temp_input.parent().append(element);
+//										temp_input.remove();
+//									}
+//								}
+//							});
+//						break;
+//					}
+//
+//					element.parent().append(temp_input);
+//					element.siblings("input").focus();
+//					element.remove();
+//
+//					return false;
+//				});
+//
+//				jQuery("tbody input[type=text].time, tbody input[type=text].title").live("blur", function(){
+//					var element = jQuery(this);
+//					var temp_id = element.parent().parent().attr('rel');
+//					element.parent().append(update_draft_event(element.attr("class").trim(), temp_id, element.val()));
+//					element.remove();
+//				});
+//
+//				function update_draft_event(action, event_id, new_data) {
+//					var ajax_data = "";
+//					jQuery.ajax({
+//						type: 'POST',
+//						url: '<?php echo ENTRADA_URL ;?>/api/learning-events-schedule.api.php',
+//						data: 'action='+action+'&id='+event_id+'&data='+new_data,
+//						async: false,
+//						success: function(data) {
+//							ajax_data = data;
+//						}
+//					});
+//					return ajax_data;
+//				}
+//
+//				jQuery("form").keypress(function(e) {
+//					if (e.keyCode == 13) {
+//						jQuery("input").blur();
+//						return false;
+//					}
+//				});
 
-				jQuery('#draftEvents').dataTable({
-					"aaSorting": [[ 1, "asc" ]]
-				});
-
-				jQuery("tbody a.date, tbody a.title, tbody a.time").live("click", function(){
-					var element = jQuery(this);
-					var temp_id = element.parent().parent().attr('rel');
-					var temp_input = jQuery('<input/>', {
-						id: element.parent().parent().attr('id')+'-input',
-						type: 'text'
-					});
-
-					temp_input.addClass(element.attr("class"));
-
-					var temp_data = element.html();
-
-					switch (element.attr('class').trim()) {
-						case "date" :
-							temp_input.datepicker({
-								dateFormat: "yy-mm-dd",
-								defaultDate: temp_data,
-								onClose: function(dateText, inst) {
-									temp_input.attr("value", dateText);
-									if (dateText != temp_data && dateText != "") { 
-										temp_input.parent().append(update_draft_event("date", temp_id, dateText)); 
-										temp_input.remove();
-									} else {
-										temp_input.parent().append(element);
-										temp_input.remove();
-									}
-								}
-							});
-						break;
-					}
-
-					element.parent().append(temp_input);
-					element.siblings("input").focus();
-					element.remove();
-
-					return false;
-				});
-
-				jQuery("tbody input[type=text].time, tbody input[type=text].title").live("blur", function(){
-					var element = jQuery(this);
-					var temp_id = element.parent().parent().attr('rel');
-					element.parent().append(update_draft_event(element.attr("class").trim(), temp_id, element.val()));
-					element.remove();
-				});
-
-				function update_draft_event(action, event_id, new_data) {
-					var ajax_data = "";
-					jQuery.ajax({
-						type: 'POST',
-						url: '<?php echo ENTRADA_URL ;?>/api/learning-events-schedule.api.php',
-						data: 'action='+action+'&id='+event_id+'&data='+new_data,
-						async: false,
-						success: function(data) {
-							ajax_data = data;
-						}
-					});
-					return ajax_data;
-				}
-
-				jQuery("form").keypress(function(e) {
-					if (e.keyCode == 13) {
-						jQuery("input").blur();
-						return false;
-					}
-				});
-				
 				jQuery(".import-csv").live("click", function(){
 					jQuery("#import-csv").dialog({
 						title: "Import CSV",
@@ -423,7 +426,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		</style>
 		<div style="clear:both;"></div>
 		<h2>Learning Events in Draft</h2>
-		<?php 
+		<?php
 		$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 		if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
 			?>
@@ -441,28 +444,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			<form id="csv-form" action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=csv-import&draft_id=<?php echo $draft_id; ?>" enctype="multipart/form-data" method="POST">
 				<p><a href="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=edit&mode=csv-example">Click here to download example CSV</a>.</p>
 				<input type="hidden" name="draft_id" value="<?php echo $draft_id; ?>" />
-				<input type="file" name="csv_file" /> 
+				<input type="file" name="csv_file" />
 			</form>
 		</div>
 		<form name="frmSelect" action="<?php echo ENTRADA_URL; ?>/admin/events?section=delete&mode=draft&draft_id=<?php echo $draft_id; ?>" method="post">
 			<table class="tableList" id="draftEvents" cellspacing="0" cellpadding="1" summary="List of Events" style="margin-bottom:5px;">
 				<colgroup>
 					<col class="modified" />
-					<col class="date" width="12%" />
-					<col class="time" width="10%" />
-					<col class="duration" width="14%" />
-					<col class="term" />
-					<col class="teacher" />
+					<col class="date-smallest" />
+					<col class="accesses" />
+					<col class="general" />
 					<col class="title" />
 				</colgroup>
 				<thead>
 					<tr>
 						<td class="modified">&nbsp;</td>
-						<td class="date"><a href="#" class="noLink">Date</a></td>
-						<td class="time"><a href="#" class="noLink">Time</a></td>
-						<td class="duration"><a href="#" class="noLink">Duration</a></td>
-						<td class="term"><a href="#" class="noLink">Term</a></td>
-						<td class="teacher"><a href="#" class="noLink">Teacher</a></td>
+						<td class="date-smallest"><a href="#" class="noLink">Date</a></td>
+						<td class="accesses"><a href="#" class="noLink">Time</a></td>
+						<td class="general"><a href="#" class="noLink">Duration</a></td>
 						<td class="title"><a href="#" class="noLink">Event Title</a></td>
 					</tr>
 				</thead>
@@ -476,21 +475,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				foreach ($learning_events as $result) {
 					$url = "";
 					$accessible = true;
-					$administrator = false;
-					
+
 					$url = ENTRADA_URL."/admin/events?section=edit&mode=draft&id=".$result["devent_id"];
-					
+
 					if ((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {
 						$accessible = false;
 					}
 
 					echo "<tr id=\"event-".$result["event_id"]."\" rel=\"".$result["devent_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
-					echo "	<td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"checked[]\" value=\"".$result["devent_id"]."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
-					echo "	<td class=\"date\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\" class=\"date\">" : "").date("Y-m-d", $result["event_start"]).(($url) ? "</a>" : "")."</td>\n";
-					echo "	<td class=\"time\">".(($url) ? "<a href=\"".$url."\" title=\"Event Time\" class=\"time\">" : "").date("H:i", $result["event_start"]).(($url) ? "</a>" : "")."</td>\n";
-					echo "	<td class=\"duration\">".(($url) ? "<a href=\"".$url."\" title=\"Duration\">" : "").$result["event_duration"].(($url) ? " minutes</a>" : "")."</td>\n";
-					echo "	<td class=\"term\">".(($url) ? "<a href=\"".$url."\" title=\"Intended For ".html_encode($result["event_term"])."\">" : "").html_encode($result["event_term"]).(($url) ? "</a>" : "")."</td>\n";
-					echo "	<td class=\"teacher\">".(($url) ? "<a href=\"".$url."\" title=\"Primary Teacher: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";
+					echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["devent_id"]."\" /></td>\n";
+					echo "	<td class=\"date-smallest\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\" class=\"date\">" : "").date("Y-m-d", $result["event_start"]).(($url) ? "</a>" : "")."</td>\n";
+					echo "	<td class=\"accesses\">".(($url) ? "<a href=\"".$url."\" title=\"Event Time\" class=\"time\">" : "").date("H:i", $result["event_start"]).(($url) ? "</a>" : "")."</td>\n";
+					echo "	<td class=\"general\">".(($url) ? "<a href=\"".$url."\" title=\"Duration\">" : "").$result["event_duration"].(($url) ? " minutes</a>" : "")."</td>\n";
 					echo "	<td class=\"title\">".(($url) ? "<a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\" class=\"title\">" : "").html_encode($result["event_title"]).(($url) ? "</a>" : "")."</td>\n";
 					echo "</tr>\n";
 				}
@@ -514,7 +510,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
-							<input type="button" value="Approve Draft" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/drafts?section=status&action=approve&draft_id=".$draft_id; ?>';" />
+							<input type="button" value="Publish Draft" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/drafts?section=status&action=approve&draft_id=".$draft_id; ?>';" />
 							<?php
 						}
 						?>

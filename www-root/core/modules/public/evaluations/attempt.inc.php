@@ -504,6 +504,9 @@ if ($RECORD_ID) {
 								}
 
 								if ($eprogress_id) {
+									if ((isset($_GET["proxy_id"])) && ($proxy_id = clean_input($_GET["proxy_id"], array("trim", "int"))) && array_search($PROCESSED["target_shortname"], array("peer", "student", "teacher")) !== false) {
+										$PROCESSED["target_record_id"] = $proxy_id;
+									}
 									?>
 									<form name="evaluation-form" id="evaluation-form" action="<?php echo ENTRADA_URL."/".$MODULE; ?>?section=attempt&id=<?php echo $RECORD_ID; ?>" method="post">
 									<?php

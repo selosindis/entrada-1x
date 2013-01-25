@@ -3189,6 +3189,63 @@ class Evaluation {
 		
 	}
 	
+	public static function getTargetEvaluations() {
+		global $db, $ENTRADA_USER, $ENTRADA_ACL;
+		
+		
+		
+		$cohort = groups_get_cohort($ENTRADA_USER->getID());
+
+		$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
+					JOIN `course_groups` AS b
+					ON a.`cgroup_id` = b.`cgroup_id`
+					WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+					AND a.`active` = 1
+					AND b.`active` = 1";
+		$course_groups = $db->GetAll($query);
+
+		$cgroup_ids_string = "";
+		if (isset($course_groups) && is_array($course_groups)) {
+			foreach ($course_groups as $course_group) {
+				if ($cgroup_ids_string) {
+					$cgroup_ids_string .= ", ".$db->qstr($course_group["cgroup_id"]);
+				} else {
+					$cgroup_ids_string = $db->qstr($course_group["cgroup_id"]);
+				}
+			}
+		}
+
+		$query = "	SELECT * FROM `evaluations` AS a
+					JOIN `evaluation_targets` AS b
+					ON a.`evaluation_id` = b.`evaluation_id`
+					JOIN `evaluation_forms` AS c
+					ON a.`eform_id` = c.`eform_id`
+					JOIN `evaluations_lu_targets` AS d
+					ON c.`target_id` = d.`target_id`
+					WHERE
+					(
+						(
+							b.`target_type` = 'proxy_id'
+							AND b.`target_value` = ".$db->qstr($ENTRADA_USER->getID())."
+						)
+						".($_SESSION["details"]["group"] == "student" ? " OR (
+							b.`target_type` = 'cohort'
+							AND b.`target_value` = ".$db->qstr($cohort["group_id"])."
+						)" : "").($cgroup_ids_string ? " OR (
+							b.`target_type` = 'cgroup_id'
+							AND b.`target_value` IN (".$cgroup_ids_string.")
+						)" : "")."
+					)
+					AND a.`evaluation_start` < ".$db->qstr(time())."
+					AND a.`evaluation_active` = 1
+					GROUP BY a.`evaluation_id`
+					ORDER BY a.`evaluation_finish` DESC";
+		$evaluations = $db->GetAll($query);
+		
+		return $evaluations;
+		
+	}
+	
 	public static function getFormAuthorPermissions($eform_id) {
 		global $db, $ENTRADA_USER;
 		
@@ -3196,20 +3253,6 @@ class Evaluation {
 					WHERE `eform_id` = ".$db->qstr($eform_id)."
 					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 					AND `contact_role` = 'author'";
-		$permissions = $db->GetRow($query);
-		if ($permissions) {
-			return $permissions;
-		} else {
-			return false;
-		}
-	}
-	
-	public static function getQuestionAuthorPermissions($equestion_id) {
-		global $db, $ENTRADA_USER;
-		
-		$query = "SELECT * FROM `evaluation_question_authors`
-					WHERE `equestion_id` = ".$db->qstr($eform_id)."
-					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 		$permissions = $db->GetRow($query);
 		if ($permissions) {
 			return $permissions;

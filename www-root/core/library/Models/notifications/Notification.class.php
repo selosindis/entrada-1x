@@ -284,6 +284,36 @@ class Notification {
 						$notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-evaluation-threshold.xml");
 						$notification_body = str_replace($search, $replace, $notification_body);
 					break;
+					case "evaluation_request" :
+						$search = array("%UC_CONTENT_TYPE_NAME%",
+										"%CONTENT_TYPE_NAME%",
+										"%CONTENT_TYPE_SHORTNAME%",
+										"%TARGET_FULLNAME%",
+										"%CONTENT_TITLE%",
+										"%CONTENT_BODY%",
+										"%URL%",
+										"%APPLICATION_NAME%",
+										"%ENTRADA_URL%");
+						if (strpos($notification_user->getContentTypeName(), "assessment") !== false) {
+							$content_type_shortname = "assessment";
+						} else {
+							$content_type_shortname = "evaluation";
+						}
+						$evaluation = $db->GetRow("SELECT * FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($notification_user->getRecordID()));
+						$evaluation_start = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_start"]);
+						$evaluation_finish = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_finish"]);
+						$replace = array(	html_encode(ucwords($notification_user->getContentTypeName())),
+											html_encode($notification_user->getContentTypeName()),
+											html_encode($content_type_shortname),
+											html_encode(get_account_data("wholename", $proxy_id)),
+											html_encode($notification_user->getContentTitle()),
+											html_encode($notification_user->getContentBody($record_id)),
+											html_encode($notification_user->getContentURL()."&proxy_id=".$proxy_id),
+											html_encode(APPLICATION_NAME),
+											html_encode(ENTRADA_URL));
+						$notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-evaluation-request.xml");
+						$notification_body = str_replace($search, $replace, $notification_body);
+					break;
 					default :
 						$search = array("%UC_CONTENT_TYPE_NAME%",
 										"%CONTENT_TYPE_NAME%",

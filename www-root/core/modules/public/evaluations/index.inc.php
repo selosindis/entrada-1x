@@ -47,6 +47,82 @@ $review_evaluations = Evaluation::getReviewerEvaluations();
 $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";
 
 if ($evaluations && $view != "review") {
+	if (isset($_GET["request"]) && $_GET["request"]) {
+		if (isset($RECORD_ID) && $RECORD_ID) {
+			$query = "SELECT `evaluation_title` FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($RECORD_ID);
+			$evaluation_title = $db->GetOne($query);
+			$target_evaluations = Evaluation::getTargetEvaluations();
+			$found = false;
+			if ($target_evaluations) {
+				foreach ($target_evaluations as $target_evaluation) {
+					if ($target_evaluation["evaluation_id"] == $RECORD_ID) {
+						$found = true;
+					}
+				}
+			}
+			if ($evaluation_title && $found) {
+				if (isset($_POST["associated_evaluator"]) && $_POST["associated_evaluator"]) {
+					$associated_evaluators = explode(",", $_POST["associated_evaluator"]);
+					$notifications_sent = 0;
+					$proxy_id = 0;
+					foreach($associated_evaluators as $proxy_id) {
+						if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+							$query = "SELECT *, COUNT(a.`evaluation_id`) AS `completed_evaluations` FROM `evaluation_progress` AS a
+										JOIN `evaluations` AS b
+										ON a.`evaluation_id` = b.`evaluation_id`
+										WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
+										AND a.`proxy_id` = ".$db->qstr($proxy_id)."
+										AND a.`progress_value` = 'complete'
+										GROUP BY a.`evaluation_id`";
+							$all_targets_progress = $db->GetRow($query);
+							if (!$all_targets_progress || $all_targets_progress["max_submittable"] == 0 || $all_targets_progress["completed_evaluations"] < $all_targets_progress["max_submittable"]) {
+								$query = "SELECT * FROM `evaluation_progress` AS a
+											JOIN `evaluations` AS b
+											ON a.`evaluation_id` = b.`evaluation_id`
+											WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
+											AND a.`proxy_id` = ".$db->qstr($proxy_id)."
+											AND a.`target_record_id` = ".$db->qstr($ENTRADA_USER->getId())."
+											AND a.`progress_value` = 'complete'
+											GROUP BY a.`evaluation_id`";
+								$evaluation_progress = $db->GetRow($query);
+								if (!$evaluation_progress || $evaluation_progress["allow_repeat_targets"] == 1) {
+									require_once("Models/notifications/Notification.class.php");
+									require_once("Models/notifications/Notificationuser.class.php");
+									$notification_user = NotificationUser::get($proxy_id, "evaluation_request", $RECORD_ID, $ENTRADA_USER->getId());
+									if (!$notification_user) {
+										$notification_user = NotificationUser::add($proxy_id, "evaluation_request", $RECORD_ID, $ENTRADA_USER->getId());
+									}
+									if (Notification::add($notification_user->getID(), $ENTRADA_USER->getId(), $RECORD_ID)) {
+										$notifications_sent++;
+									} else {
+										add_error("An issue was encountered while attempting to send a notification to a user [".get_account_data("wholename", $proxy_id)."] requesting that they complete an evaluation [".$evaluation_title."] for you. The system administrator has been notified of this error, please try again later.");
+										application_log("Unable to send notification requesting an evaluation be completed to evaluator [".$proxy_id."] for evaluation_id [".$RECORD_ID."].");
+									}
+								} else {
+									add_error("The selected evaluator [".get_account_data("wholename", $proxy_id)."] has already completed this evaluation [".$evaluation_title."] for you, and is unable to attempt it again.");
+								}
+							} else {
+								add_error("The selected evaluator [".get_account_data("wholename", $proxy_id)."] has already completed this evaluation [".$evaluation_title."] the maximum number of times, and is therefore unable to attempt it again.");
+							}
+						}
+					}
+				} else {
+					add_error("An evaluator must be selected to request an evaluation be completed for you.");
+				}
+			} else {
+				add_error("A valid evaluation must be selected from the drop-down list to request an evaluation be completed for you.");
+			}
+		} else {
+			add_error("An evaluation must be selected from the drop-down list to request an evaluation be completed for you.");
+		}
+		if (has_error()) {
+			echo display_error();
+		}
+		if (isset($notifications_sent) && $notifications_sent) {
+			add_success("Successfully requested that ".($notifications_sent > 1 ? $notifications_sent." evaluators" : get_account_data("wholename", $proxy_id))." fill out this evaluation [".$evaluation_title."] for you.");
+			echo display_success();
+		}
+	}
 	?>
 	<h1>My Evaluations and Assessments</h1>
 	<?php
@@ -130,6 +206,7 @@ if ($evaluations && $view != "review") {
 	</thead>
 	<tbody>
 	<?php
+	$request_evaluations = array();
 	foreach ($evaluations as $evaluation) {
 		if ($evaluation["click_url"]) {
 			echo "<tr>\n";
@@ -157,6 +234,46 @@ if ($evaluations && $view != "review") {
 	</tbody>
 	</table>
 	<?php
+	$request_evaluations = array();
+	$target_evaluations = Evaluation::getTargetEvaluations();
+	if ($target_evaluations) {
+		foreach ($target_evaluations as $target_evaluation) {
+			if (isset($target_evaluation["allow_target_request"]) && $target_evaluation["allow_target_request"]) {
+				$request_evaluations[] = $target_evaluation;
+			}
+		}
+	}
+	if (isset($request_evaluations) && count($request_evaluations)) {
+		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+		$ONLOAD[] = "evaluator_list = new AutoCompleteList({ type: 'evaluator', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=evaluators&id=".(isset($RECORD_ID) && $RECORD_ID ? $RECORD_ID : 0)."', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
+		$HEAD[] = "
+		<script type=\"text/javascript\">jQuery(window).keydown(function(e) { if (e.keyCode == 123) debugger; });
+			function loadAutocompleteList(evaluation_id) {
+				evaluator_list.setUrl('". ENTRADA_RELATIVE ."/api/personnel.api.php?type=evaluators&id='+evaluation_id);
+			}
+		</script>";
+		$sidebar_html  = "<form method=\"post\" action=\"".ENTRADA_RELATIVE."/evaluations?request=1\">\n";
+		$sidebar_html .= "	<label class=\"form-nrequired\" for=\"evaluation_request_id\">Evaluation: </label>";
+		$sidebar_html .= "	<select style=\"width: 150px; overflow: none;\" name=\"id\" onchange=\"loadAutocompleteList(this.options[this.selectedIndex].value)\">";
+		$sidebar_html .= "		<option value=\"0\">-- Select an Evaluation --</option>";
+		foreach ($request_evaluations as $request_evaluation) {
+			$sidebar_html .= "		<option value=\"".$request_evaluation["evaluation_id"]."\"".(isset($RECORD_ID) && $RECORD_ID == $request_evaluation["evaluation_id"] ? " selecte=\"selected\"" : "").">".$request_evaluation["evaluation_title"]."</option>";
+		}
+		$sidebar_html .= "	</select>";
+		$sidebar_html .= "	<br /><br /><label class=\"form-nrequired\" for=\"evaluator\">Evaluator: </label>";
+		$sidebar_html .= "<input type=\"text\" id=\"evaluator_name\" name=\"fullname\" size=\"30\" autocomplete=\"off\" style=\"width: 140px; vertical-align: middle\" />";
+		$sidebar_html .= "<div class=\"autocomplete\" id=\"evaluator_name_auto_complete\"></div>";
+		$sidebar_html .= "<input type=\"hidden\" id=\"associated_evaluator\" name=\"associated_evaluator\" />";
+		$sidebar_html .= "<input type=\"button\" class=\"button-sm\" id=\"add_associated_evaluator\" value=\"Add\" style=\"vertical-align: middle\" />";
+		$sidebar_html .= "<ul id=\"evaluator_list\" class=\"menu\" style=\"margin-top: 15px\"></ul>\n";
+		$sidebar_html .= "<input type=\"hidden\" id=\"evaluator_ref\" name=\"evaluator_ref\" value=\"\" />";
+		$sidebar_html .= "<input type=\"hidden\" id=\"evaluator_id\" name=\"evaluator_id\" value=\"\" />";
+		$sidebar_html .= "	<br /><br /><input type=\"submit\" value=\"Request Evaluation\" />";
+		$sidebar_html .= "</form>";
+
+		new_sidebar_item("Request an Evaluation", $sidebar_html, "request-evaluation", "open", "1.9");
+	}
+
 } elseif ($review_evaluations && $view != "attempt") {
 	$HEAD[] = "<script type=\"text/javascript\">
 	var eTable;

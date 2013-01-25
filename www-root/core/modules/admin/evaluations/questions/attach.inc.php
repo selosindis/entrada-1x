@@ -128,7 +128,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							/**
 							 * Check to see if the evaluation question is already attached to the chosen form.
 							 */
-							$query = "SELECT `equestion_id` FROM `evaluation_form_questions` WHERE `equestion_id` = ".$db->qstr($question_id);
+							$query = "SELECT `equestion_id` FROM `evaluation_form_questions` WHERE `equestion_id` = ".$db->qstr($question_id)." AND `eform_id` = ".$db->qstr($PROCESSED["eform_id"]);
 							$question_found = $db->GetOne($query);
 							if (!$question_found) {
 								$query = "SELECT `question_order` FROM `evaluation_form_questions`

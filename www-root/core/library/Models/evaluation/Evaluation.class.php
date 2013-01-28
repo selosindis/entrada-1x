@@ -1145,7 +1145,7 @@ class Evaluation {
 									<select class="multi-picklist" id="SelectList" name="other_teachers_list" multiple="multiple" size="15" style="width: 100%">
 									<?php
 									foreach ($teachers_list as $proxy_id => $teacher_name) {
-										if (!in_array($proxy_id, $target_data["evaluation_targets"])) {
+										if (!isset($target_data["evaluation_targets"]) || !is_array($target_data["evaluation_targets"]) || !in_array($proxy_id, $target_data["evaluation_targets"])) {
 											echo "<option value=\"".(int) $proxy_id."\">".html_encode($teacher_name)."</option>\n";
 										}
 									}
@@ -1179,9 +1179,11 @@ class Evaluation {
 							}
 						}
 						$target_ids = array();
-						foreach ($target_data["evaluation_targets"] as $temp_target) {
-							if ($temp_target["target_type"] == "proxy_id") {
-								$target_ids[] = $temp_target["target_value"];
+						if (isset($target_data["evaluation_targets"]) && @count($target_data["evaluation_targets"])) {
+							foreach ($target_data["evaluation_targets"] as $temp_target) {
+								if ($temp_target["target_type"] == "proxy_id") {
+									$target_ids[] = $temp_target["target_value"];
+								}
 							}
 						}
 						?>
@@ -1215,7 +1217,7 @@ class Evaluation {
 									<select class="multi-picklist" id="SelectList" name="other_residents_list" multiple="multiple" size="15" style="width: 100%">
 									<?php
 									foreach ($residents_list as $proxy_id => $resident_name) {
-										if (!in_array($proxy_id, $target_data["evaluation_targets"])) {
+										if (!isset($target_data["evaluation_targets"]) || !is_array($target_data["evaluation_targets"]) || !in_array($proxy_id, $target_data["evaluation_targets"])) {
 											echo "<option value=\"".(int) $proxy_id."\">".html_encode($resident_name)."</option>\n";
 										}
 									}

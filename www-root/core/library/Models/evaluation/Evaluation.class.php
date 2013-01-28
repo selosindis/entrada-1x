@@ -1156,6 +1156,76 @@ class Evaluation {
 						</tr>
 						<?php
 					break;
+					case "resident" :
+						$residents_list = array();
+
+						$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
+									FROM `".AUTH_DATABASE."`.`user_data` AS a
+									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+									ON b.`user_id` = a.`id`
+									LEFT JOIN `event_contacts` AS c
+									ON c.`proxy_id` = a.`id`
+									LEFT JOIN `events` AS d
+									ON d.`event_id` = c.`event_id`
+									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+									AND b.`group` = 'resident'
+									AND d.`event_finish` >= ".$db->qstr(strtotime("-12 months"))."
+									GROUP BY a.`id`
+									ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+						$results = $db->GetAll($query);
+						if ($results) {
+							foreach ($results as $result) {
+								$residents_list[$result["proxy_id"]] = $result["fullname"];
+							}
+						}
+						$target_ids = array();
+						foreach ($target_data["evaluation_targets"] as $temp_target) {
+							if ($temp_target["target_type"] == "proxy_id") {
+								$target_ids[] = $temp_target["target_value"];
+							}
+						}
+						?>
+						<tr>
+							<td></td>
+							<td style="vertical-align: top">
+								<label for="PickList" class="form-required">Select Residents</label>
+								<div class="content-small"><strong>Hint:</strong> Select the resident or residents you would like to have evaluated.</div>
+							</td>
+							<td style="vertical-align: top">
+								<select class="multi-picklist" id="PickList" name="resident_ids[]" multiple="multiple" size="4" style="width: 100%; margin-bottom: 5px">
+								<?php
+								if ((is_array($target_data["evaluation_targets"])) && (!empty($target_data["evaluation_targets"]))) {
+									foreach ($residents_list as $proxy_id => $resident_name) {
+										if (in_array($proxy_id, $target_ids)) {
+											echo "<option value=\"".(int) $proxy_id."\">".html_encode($resident_name)."</option>\n";
+										}
+									}
+								}
+								?>
+								</select>
+								<div style="float: left; display: inline">
+									<input type="button" id="residents_list_state_btn" class="button" value="Show List" onclick="toggle_list('residents_list')" />
+								</div>
+								<div style="float: right; display: inline">
+									<input type="button" id="residents_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
+									<input type="button" id="residents_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+								</div>
+								<div id="residents_list" style="clear: both; padding-top: 3px; display: none">
+									<h2>Course List</h2>
+									<select class="multi-picklist" id="SelectList" name="other_residents_list" multiple="multiple" size="15" style="width: 100%">
+									<?php
+									foreach ($residents_list as $proxy_id => $resident_name) {
+										if (!in_array($proxy_id, $target_data["evaluation_targets"])) {
+											echo "<option value=\"".(int) $proxy_id."\">".html_encode($resident_name)."</option>\n";
+										}
+									}
+									?>
+									</select>
+								</div>
+							</td>
+						</tr>
+						<?php
+					break;
 					case "student" :
 					case "peer" :
 						$query = "SELECT * FROM `course_groups` AS a 
@@ -1577,7 +1647,7 @@ class Evaluation {
 					break;
 				}
 
-				if ($target_details["target_shortname"] != "peer" && $target_details["target_shortname"] != "student") {
+				if ($target_details["target_shortname"] != "peer" && $target_details["target_shortname"] != "student" && $target_details["target_shortname"] != "resident") {
 					?>
 					<tr>
 						<td colspan="3">&nbsp;</td>
@@ -1774,7 +1844,7 @@ class Evaluation {
 						</td>
 					</tr
 					<?php
-				} elseif ($target_details["target_shortname"] == "student") {
+				} elseif ($target_details["target_shortname"] == "student" || $target_details["target_shortname"] == "resident") {
 					?>
 					<tr>
 						<td colspan="3">&nbsp;</td>
@@ -1992,6 +2062,64 @@ class Evaluation {
 						echo display_notice("There are no students available.");
 					}
 				break;
+				case "residents" : // Residents
+					if ((isset($target_data["evaluation_target_residents"]))) {
+						$associated_targets = explode(',', $target_data["evaluation_target_residents"]);
+						if ((isset($associated_targets)) && (is_array($associated_targets)) && (count($associated_targets))) {
+							foreach($associated_targets as $target_id) {
+								if (strpos($target_id, "resident") !== false) {
+									if ($proxy_id = clean_input(preg_replace("/[a-z_]/", "", $target_id), array("trim", "int"))) {
+										$query = "	SELECT a.*
+													FROM `".AUTH_DATABASE."`.`user_data` AS a
+													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+													ON a.`id` = b.`user_id`
+													WHERE a.`id` = ".$db->qstr($proxy_id)."
+													AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+													AND b.`account_active` = 'true'
+													AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+													AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
+										$result	= $db->GetRow($query);
+										if ($result) {
+											$target_data["associated_proxy_ids"][] = $proxy_id;
+										}
+									}
+								}
+							}
+						}
+					}
+
+					$residents = $organisation;
+
+					$query = "	SELECT a.`id` AS `proxy_id`, a.`organisation_id`, b.`role`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
+								FROM `".AUTH_DATABASE."`.`user_data` AS a
+								JOIN `".AUTH_DATABASE."`.`user_access` AS b
+								ON a.`id` = b.`user_id`
+								WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+								AND a.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
+								AND b.`account_active` = 'true'
+								AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+								AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+								AND b.`group` = 'resident'".
+								(($ENTRADA_USER->getGroup() == "resident") ? " AND a.`id` = ".$db->qstr($ENTRADA_USER->getID()) : "")."
+								GROUP BY a.`id`
+								ORDER BY a.`grad_year` DESC, a.`lastname` ASC, a.`firstname` ASC";
+					$resident_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+					if ($resident_results) {
+						foreach ($resident_results as $resident) {
+							if (isset($target_data["associated_proxy_ids"]) && is_array($target_data["associated_proxy_ids"]) && in_array($resident["proxy_id"], $target_data["associated_proxy_ids"])) {
+								$checked = "checked=\"checked\"";
+							} else {
+								$checked = "";
+							}
+
+							$residents[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $resident["fullname"], "value" => "resident_".$resident["proxy_id"], "checked" => $checked);
+						}
+
+						echo lp_multiple_select_popup("residents", $residents, array("title" => "Select Individual Learners:", "submit_text" => "Close", "submit" => true));
+					} else {
+						echo display_notice("There are no residents available.");
+					}
+				break;
 				default :
 					application_log("notice", "Unknown evaluation target filter type [" . $options_for . "] provided to evaluation targets API.");
 				break;
@@ -2070,6 +2198,34 @@ class Evaluation {
 					}
 				} else {
 					add_error("You must select <strong>which teachers</strong> you would like to have evaluated.");
+				}
+			break;
+			case "resident" :
+				if (isset($target_data["resident_ids"]) && is_array($target_data["resident_ids"]) && !empty($target_data["resident_ids"])) {
+					foreach ($target_data["resident_ids"] as $proxy_id) {
+						$proxy_id = clean_input($proxy_id, "int");
+						if ($proxy_id) {
+							$query = "	SELECT a.`id` AS `proxy_id`
+										FROM `".AUTH_DATABASE."`.`user_data` AS a
+										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+										ON b.`user_id` = a.`id`
+										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+										AND (b.`group` = 'faculty' OR 
+											(b.`group` = 'resident' AND b.`role` = 'lecturer')
+										)
+										AND a.`id` = ".$db->qstr($proxy_id);
+							$result = $db->GetOne($query);
+							if ($result) {
+									$PROCESSED["evaluation_targets"][] = array("target_value" => $proxy_id, "target_type" => "proxy_id");
+							}
+						}
+					}
+
+					if (empty($PROCESSED["evaluation_targets"])) {
+						add_error("You must select at least one <strong>resident</strong> that you would like to have evaluated.");
+					}
+				} else {
+					add_error("You must select <strong>which residents</strong> you would like to have evaluated.");
 				}
 			break;
 			case "peer" :
@@ -2562,6 +2718,7 @@ class Evaluation {
 					array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
 				break;
 				case "teacher" :
+				case "resident" :
 					$query = "SELECT ".($simple ? "a.`target_value` as `proxy_id`" : "*, a.`target_value` as `proxy_id`")." FROM `evaluation_targets` AS a
 								JOIN `".AUTH_DATABASE."`.`user_data` AS b
 								ON a.`target_value` = b.`id`
@@ -2727,6 +2884,7 @@ class Evaluation {
 			case "self" :
 			case "peer" :
 			case "student" :
+			case "resident" :
 			case "teacher" :
 			case "course" :
 			default :
@@ -2768,6 +2926,7 @@ class Evaluation {
 					}
 				case "self" :
 				case "student" :
+				case "resident" :
 				case "teacher" :
 				case "course" :
 				default :
@@ -3096,6 +3255,7 @@ class Evaluation {
 							}
 						break;
 						case "student" :
+						case "resident" :
 							$query = "SELECT * FROM `evaluation_progress`
 										WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
 										AND `target_record_id` = ".$db->qstr($ENTRADA_USER->getID())."

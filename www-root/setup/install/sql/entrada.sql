@@ -2101,7 +2101,8 @@ INSERT INTO `evaluations_lu_targets` (`target_id`, `target_shortname`, `target_t
 (5, 'rotation_elective', 'Clerkship Elective Rotation Evaluation', '', 1),
 (6, 'preceptor', 'Clerkship Preceptor Evaluation', '', 1),
 (7, 'peer', 'Peer Assessment', '', 1),
-(8, 'self', 'Self Assessment', '', 1);
+(8, 'self', 'Self Assessment', '', 1),
+(9, 'resident', 'Resident Evaluation', '', 1);
 
 CREATE TABLE `evaluations_related_questions` (
   `erubric_id` int(11) unsigned NOT NULL AUTO_INCREMENT,

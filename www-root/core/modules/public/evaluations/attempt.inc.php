@@ -183,17 +183,17 @@ if ($RECORD_ID) {
 								$target_record = $db->GetRow($query);
 								//If course_id or proxy_id, set based on target_value
 								switch ($target_record["target_type"]) {
-									case "proxy_id" :
-									case "course_id" :
-									case "rotation_id" :
-									default :
-										$target_record_id = $target_record["target_value"];
-									break;
 									case "cgroup_id" :
 									case "cohort" :
 										if (isset($_POST["target_record_id"]) && ($tmp_value = clean_input($_POST["target_record_id"], array("trim", "int")))) {
 											$target_record_id = $tmp_value;
 										}
+									break;
+									case "proxy_id" :
+									case "course_id" :
+									case "rotation_id" :
+									default :
+										$target_record_id = $target_record["target_value"];
 									break;
 								}
 								if ((isset($target_record_id) && $target_record_id) || ((isset($_POST["target_record_id"])) && ($target_record_id = clean_input($_POST["target_record_id"], array("trim", "int"))))) {
@@ -504,7 +504,7 @@ if ($RECORD_ID) {
 								}
 
 								if ($eprogress_id) {
-									if ((isset($_GET["proxy_id"])) && ($proxy_id = clean_input($_GET["proxy_id"], array("trim", "int"))) && array_search($PROCESSED["target_shortname"], array("peer", "student", "teacher")) !== false) {
+									if ((isset($_GET["proxy_id"])) && ($proxy_id = clean_input($_GET["proxy_id"], array("trim", "int"))) && array_search($PROCESSED["target_shortname"], array("peer", "student", "teacher", "resident")) !== false) {
 										$PROCESSED["target_record_id"] = $proxy_id;
 									}
 									?>
@@ -518,6 +518,9 @@ if ($RECORD_ID) {
 										if (count($evaluation_targets) == 1) {
 											echo "<input type=\"hidden\" id=\"evaluation_target\" name=\"evaluation_target\" value=\"".$evaluation_targets[0]["etarget_id"]."\" />";
 											if ($PROCESSED["target_shortname"] == "teacher") {
+												echo "<input type=\"hidden\" id=\"target_record_id\" name=\"target_record_id\" value=\"".$evaluation_targets[0]["proxy_id"]."\" />";
+												$target_name = $evaluation_targets[0]["firstname"]." ".$evaluation_targets[0]["lastname"];
+											} elseif ($PROCESSED["target_shortname"] == "resident") {
 												echo "<input type=\"hidden\" id=\"target_record_id\" name=\"target_record_id\" value=\"".$evaluation_targets[0]["proxy_id"]."\" />";
 												$target_name = $evaluation_targets[0]["firstname"]." ".$evaluation_targets[0]["lastname"];
 											} elseif ($PROCESSED["target_shortname"] == "course") {
@@ -594,6 +597,17 @@ if ($RECORD_ID) {
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
 													echo "<option value=\"".$evaluation_target["proxy_id"]."\"".($PROCESSED["target_record_id"] == $evaluation_target["proxy_id"] ? " selected=\"selected\"" : "").">".$evaluation_target["firstname"]." ".$evaluation_target["lastname"]."</option>\n";
+												}
+											}
+											echo "</select>";
+											echo "</div>";
+										} elseif ($PROCESSED["target_shortname"] == "resident") {
+											echo "<div class=\"content-small\">Please choose a resident to evaluate: \n";
+											echo "<select id=\"evaluation_target\" name=\"evaluation_target\">";
+											echo "<option value=\"0\">-- Select a resident --</option>\n";
+											foreach ($evaluation_targets as $evaluation_target) {
+												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
+													echo "<option value=\"".$evaluation_target["etarget_id"]."\"".($PROCESSED["etarget_id"] == $evaluation_target["etarget_id"] || $PROCESSED["target_record_id"] == $evaluation_target["proxy_id"] ? " selected=\"selected\"" : "").">".$evaluation_target["firstname"]." ".$evaluation_target["lastname"]."</option>\n";
 												}
 											}
 											echo "</select>";

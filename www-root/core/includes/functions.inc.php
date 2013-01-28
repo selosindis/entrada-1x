@@ -14582,6 +14582,7 @@ function fetch_evaluation_target_title($evaluation_target = array(), $number_of_
 				case "self" :
 						return "Yourself";
 					break;
+				case "resident" :
 				case "teacher" :
 				case "student" :
 				case "peer" :
@@ -14598,6 +14599,9 @@ function fetch_evaluation_target_title($evaluation_target = array(), $number_of_
 			switch ($target_shortname) {
 				case "course" :
 					return $number_of_targets." Courses";
+				break;
+				case "resident" :
+					return $number_of_targets." Residents";
 				break;
 				case "student" :
 					return $number_of_targets." Students";

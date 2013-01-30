@@ -257,7 +257,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 															"allow_comments" => $PROCESSED["allow_comments"]);
 								$equestion_id = 0;
 								if ($db->AutoExecute("evaluations_lu_questions", $PROCESSED_QUESTION, "INSERT") && ($equestion_id = $db->Insert_Id()) &&
-										$db->AutoExecute("evaluation_rubric_questions", array("erubric_id" => $erubric_id, "equestion_id" => $equestion_id), "INSERT")) {
+										$db->AutoExecute("evaluation_rubric_questions", array("erubric_id" => $erubric_id, "equestion_id" => $equestion_id, "question_order" => $PROCESSED["question_order"]), "INSERT")) {
 									/**
 									 * Add the question responses to the evaluation_question_responses table.
 									 */
@@ -275,10 +275,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 												/**
 												 * Add the responses criteria to the evaluation_rubric_criteria table.
 												 */
-												if ((isset($PROCESSED["evaluation_question_response_criteria"][$index][$subindex]["criteria"])) && ($PROCESSED["evaluation_question_response_criteria"][$index][$subindex]["criteria"] || $PROCESSED["evaluation_question_response_criteria"][$index][$subindex]["criteria"] === "")) {
+												if ((isset($PROCESSED["evaluation_rubric_category_criteria"][$index][$subindex]["criteria"])) && ($PROCESSED["evaluation_rubric_category_criteria"][$index][$subindex]["criteria"] || $PROCESSED["evaluation_rubric_category_criteria"][$index][$subindex]["criteria"] === "")) {
 													$PROCESSED_CRITERIA = array (
 																	"eqresponse_id" => $eqresponse_id,
-																	"criteria_text" => $PROCESSED["evaluation_question_response_criteria"][$index][$subindex]["criteria"],
+																	"criteria_text" => $PROCESSED["evaluation_rubric_category_criteria"][$index][$subindex]["criteria"],
 																	);
 
 													if (!$db->AutoExecute("evaluations_lu_question_response_criteria", $PROCESSED_CRITERIA, "INSERT")) {

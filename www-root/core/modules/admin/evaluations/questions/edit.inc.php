@@ -569,7 +569,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 										$db->Execute("DELETE FROM `evaluations_lu_question_responses` WHERE `equestion_id` = ".$db->qstr($category["equestion_id"]));
 										$db->Execute("DELETE FROM `evaluation_rubric_questions` WHERE `equestion_id` = ".$db->qstr($category["equestion_id"]));
 										if (isset($FORM_ID) && $FORM_ID) {
-											echo $query = "SELECT * FROM `evaluation_form_questions` WHERE `eform_id` = ".$db->qstr($FORM_ID)." AND `equestion_id` = ".$db->qstr($category["equestion_id"]);
+											$query = "SELECT * FROM `evaluation_form_questions` WHERE `eform_id` = ".$db->qstr($FORM_ID)." AND `equestion_id` = ".$db->qstr($category["equestion_id"]);
 											$question = $db->GetRow($query);
 											if ($question) {
 												$old_questions[] = $question;

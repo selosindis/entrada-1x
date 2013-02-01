@@ -2492,24 +2492,24 @@ function permissions_by_module($module_name = "") {
  * @param array $preferences
  * @return bool
  */
-function preferences_update($module, $preferences = array()) {
+function preferences_update($module, $original_preferences = array()) {
 	global $db, $ENTRADA_USER;
+	if(isset($_SESSION[APPLICATION_IDENTIFIER][$module])) {
+		if (serialize($_SESSION[APPLICATION_IDENTIFIER][$module]) != serialize($original_preferences)) {
+			$query	= "SELECT `preference_id` FROM `".AUTH_DATABASE."`.`user_preferences` WHERE `app_id`=".$db->qstr(AUTH_APP_ID)." AND `proxy_id`=".$db->qstr($ENTRADA_USER->getID())." AND `module`=".$db->qstr($module);
+			$result	= $db->GetRow($query);
+			if($result) {				
+				if(!$db->AutoExecute("`".AUTH_DATABASE."`.`user_preferences`", array("preferences" => @serialize($_SESSION[APPLICATION_IDENTIFIER][$module]), "updated" => time()), "UPDATE", "preference_id = ".$db->qstr($result["preference_id"]))) {
+					application_log("error", "Unable to update the users database preferences for this module. Database said: ".$db->ErrorMsg());
 
-	if(!isset($_SESSION[APPLICATION_IDENTIFIER][$module]) || $_SESSION[APPLICATION_IDENTIFIER][$module] != $preferences) {
-		$query	= "SELECT `preference_id` FROM `".AUTH_DATABASE."`.`user_preferences` WHERE `app_id`=".$db->qstr(AUTH_APP_ID)." AND `proxy_id`=".$db->qstr($ENTRADA_USER->getID())." AND `module`=".$db->qstr($module);
+					return false;
+				} 
+			} else {
+				if(!$db->AutoExecute(AUTH_DATABASE.".user_preferences", array("app_id" => AUTH_APP_ID, "proxy_id" => $ENTRADA_USER->getID(), "module" => $module, "preferences" => @serialize($_SESSION[APPLICATION_IDENTIFIER][$module]), "updated" => time()), "INSERT")) {
+					application_log("error", "Unable to insert the users database preferences for this module. Database said: ".$db->ErrorMsg());
 
-		$result	= $db->GetRow($query);
-		if($result) {
-			if(!$db->AutoExecute(AUTH_DATABASE.".user_preferences", array("preferences" => @serialize($_SESSION[APPLICATION_IDENTIFIER][$module]), "updated" => time()), "UPDATE", "preference_id = ".$db->qstr($result["preference_id"]))) {
-				application_log("error", "Unable to update the users database preferences for this module. Database said: ".$db->ErrorMsg());
-
-				return false;
-			}
-		} else {
-			if(!$db->AutoExecute(AUTH_DATABASE.".user_preferences", array("app_id" => AUTH_APP_ID, "proxy_id" => $ENTRADA_USER->getID(), "module" => $module, "preferences" => @serialize($_SESSION[APPLICATION_IDENTIFIER][$module]), "updated" => time()), "INSERT")) {
-				application_log("error", "Unable to insert the users database preferences for this module. Database said: ".$db->ErrorMsg());
-
-				return false;
+					return false;
+				}
 			}
 		}
 	}

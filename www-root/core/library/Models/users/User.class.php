@@ -525,24 +525,6 @@ class User {
 				$user->setCohort($result);
 			}
 
-			//get all of the users orgs
-			$query = "SELECT b.`organisation_id`, b.`organisation_title`
-						  FROM `" . AUTH_DATABASE . "`.`user_access` a
-						  JOIN `" . AUTH_DATABASE . "`.`organisations` b
-						  ON a.`organisation_id` = b.`organisation_id`
-						  WHERE a.`user_id` = ?
-						  AND a.`app_id` = ?";
-			$results = $db->getAll($query, array($proxy_id, AUTH_APP_ID));
-
-			//every user should have at least one org.
-			if ($results) {
-				$organisation_list = array();
-				foreach ($results as $result) {
-					$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
-				}
-				$user->setAllOrganisations($organisation_list);
-			}
-
 			//get all of the users groups and roles for each organisation
 			$query = "SELECT b.`organisation_id`, b.`organisation_title`, a.`group`, a.`role`, a.`id`
 						FROM `" . AUTH_DATABASE . "`.`user_access` a
@@ -557,8 +539,17 @@ class User {
 
 			$results = $db->getAll($query, array($proxy_id, time(), time(), AUTH_APP_ID));
 
+			//every user should have at least one org.
 			if ($results) {
+				$organisation_list = array();
 				$org_group_role = array();
+				
+				foreach ($results as $result) {
+					$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
+				}
+				
+				$user->setAllOrganisations($organisation_list);
+				
 				foreach ($results as $result) {
 					if ((!isset($user->default_access_id) || !$user->default_access_id)) {
 						if (!isset($_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) || !$_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) {
@@ -578,8 +569,27 @@ class User {
 			}
 
 			$ENTRADA_CACHE->save($user, "user_".AUTH_APP_ID."_".$proxy_id, array("auth"), 300);
+			$ENTRADA_CACHE->save(md5(serialize($results)), "access_hash_" . $proxy_id, array("access_hash"), 300);
 		}
 		return $user;
+	}
+	
+	public static function getAccessHash() {
+		global $db, $ENTRADA_USER;
+		//get all of the users groups and roles for each organisation
+		$query = "		SELECT b.`organisation_id`, b.`organisation_title`, a.`group`, a.`role`, a.`id`
+						FROM `" . AUTH_DATABASE . "`.`user_access` a
+						JOIN `" . AUTH_DATABASE . "`.`organisations` b
+						ON a.`organisation_id` = b.`organisation_id`
+						WHERE a.`user_id` = ?
+						AND a.`account_active` = 'true'
+						AND (a.`access_starts` = '0' OR a.`access_starts` < ?)
+						AND (a.`access_expires` = '0' OR a.`access_expires` >= ?)
+						AND a.`app_id` = ?
+						ORDER BY a.`id` ASC";
+
+		$results = $db->getAll($query, array($ENTRADA_USER->getID(), time(), time(), AUTH_APP_ID));
+		return md5(serialize($results));
 	}
 
 	/**

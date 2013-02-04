@@ -567,12 +567,13 @@ class User {
 						}
 						$user->setDefaultAccessId($result["id"]);
 					}
-					$org_group_role[$result["organisation_id"]][html_encode($result["group"])] = array(html_encode($result["role"]), $result["id"]);
+    				$org_group_role[$result["organisation_id"]][] = array("group" => html_encode($result["group"]), "role" => html_encode($result["role"]), "access_id" => $result["id"]);
 				}
 				if ((!isset($_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) || !$_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) && isset($results[0]["organisation_id"]) && $results[0]["organisation_id"]) {
 					$_SESSION["permissions"][$user->getAccessId()]["organisation_id"] = $results[0]["organisation_id"];
 					$user->setActiveOrganisation($results[0]["organisation_id"]);
 				}
+
 				$user->setOrganisationGroupRole($org_group_role);
 			}
 

@@ -2436,8 +2436,10 @@ class Evaluation {
 			$query = "SELECT * FROM `evaluation_evaluators` WHERE `eevaluator_id` = ".$db->qstr($evaluator_id);
 			$evaluator = $db->GetRow($query);
 			if ($evaluator["evaluator_type"] == "proxy_id") {
-				$evaluator_proxy_id = $evaluator["evaluator_value"];
-			}
+                            $evaluator_proxy_id = $evaluator["evaluator_value"];
+			} elseif ($evaluator["evaluator_type"] == "cgroup_id") {
+                            $cgroup_id = $evaluator["evaluator_value"];
+                        }
 		}
 		
 		$evaluation_targets = array();
@@ -2638,32 +2640,42 @@ class Evaluation {
 								AND `target_active` = 1";
 					$evaluation_target_records = $db->GetAll($query);
 					if ($evaluation_target_records) {
+                                                $query = "SELECT `cgroup_id` FROM `course_group_contacts` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+                                                $course_groups = $db->GetAll($query);
+                                                if ($course_groups) {
+                                                    $course_group_ids = array();
+                                                    foreach ($course_groups as $course_group) {
+                                                        $course_group_ids[] = $course_group["cgroup_id"];
+                                                    }
+                                                }
 						foreach ($evaluation_target_records as $evaluation_target_record) {
 							switch ($evaluation_target_record["target_type"]) {
 								case "cgroup_id" :
-									$query = "SELECT ".($simple ? "a.`proxy_id`" : "*")." FROM `course_group_audience` AS a
-												JOIN `".AUTH_DATABASE."`.`user_data` AS b
-												ON a.`proxy_id` = b.`id`
-												WHERE a.`cgroup_id` = ".$db->qstr($evaluation_target_record["target_value"])."
-												".($evaluator_proxy_id && $available_only ? "AND a.`proxy_id` NOT IN (
-													SELECT `target_record_id` FROM `evaluation_progress` 
-													WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
-													AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
-													AND `progress_value` = 'complete'
-												)" : "")."
-												AND a.`active` = 1
-												GROUP BY b.`id`";
-									$evaluation_target_users = $db->GetAll($query);
-									if ($evaluation_target_users) {
-										foreach ($evaluation_target_users as $evaluation_target_user) {
-											if ($simple) {
-												$evaluation_targets[] = $evaluation_target_user["proxy_id"];
-											} else {
-												$evaluation_target_user = array_merge($evaluation_target_user, $evaluation_target_record);
-												$evaluation_targets[] = $evaluation_target_user;
-											}
-										}
-									}
+                                                                    if (!isset($course_group_ids) || !count($course_group_ids) || array_search($evaluation_target_record["target_value"], $course_group_ids) !== false) {
+                                                                            $query = "SELECT ".($simple ? "a.`proxy_id`" : "*")." FROM `course_group_audience` AS a
+                                                                                                    JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                                                                                    ON a.`proxy_id` = b.`id`
+                                                                                                    WHERE a.`cgroup_id` = ".$db->qstr($evaluation_target_record["target_value"])."
+                                                                                                    ".($evaluator_proxy_id && $available_only ? "AND a.`proxy_id` NOT IN (
+                                                                                                            SELECT `target_record_id` FROM `evaluation_progress` 
+                                                                                                            WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+                                                                                                            AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                                                                                            AND `progress_value` = 'complete'
+                                                                                                    )" : "")."
+                                                                                                    AND a.`active` = 1
+                                                                                                    GROUP BY b.`id`";
+                                                                            $evaluation_target_users = $db->GetAll($query);
+                                                                            if ($evaluation_target_users) {
+                                                                                    foreach ($evaluation_target_users as $evaluation_target_user) {
+                                                                                            if ($simple) {
+                                                                                                    $evaluation_targets[] = $evaluation_target_user["proxy_id"];
+                                                                                            } else {
+                                                                                                    $evaluation_target_user = array_merge($evaluation_target_user, $evaluation_target_record);
+                                                                                                    $evaluation_targets[] = $evaluation_target_user;
+                                                                                            }
+                                                                                    }
+                                                                            }
+                                                                    }
 								break;
 								case "cohort" :
 									$query = "SELECT ".($simple ? "a.`proxy_id`" : "*")." FROM `group_members` AS a
@@ -2721,6 +2733,44 @@ class Evaluation {
 				break;
 				case "teacher" :
 				case "resident" :
+                                    if (isset($cgroup_id) && $cgroup_id) {
+					$query = "SELECT ".($simple ? "a.`target_value` as `proxy_id`" : "*, a.`target_value` as `proxy_id`")." FROM `evaluation_targets` AS a
+								JOIN `".AUTH_DATABASE."`.`user_data` AS b
+								ON a.`target_value` = b.`id`
+								AND a.`target_type` = 'proxy_id'
+                                                                JOIN `course_group_contacts` AS c
+                                                                ON c.`proxy_id` = b.`id`
+								WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+								".($evaluator_proxy_id && $available_only ? "AND a.`etarget_id` NOT IN (
+									SELECT `etarget_id` FROM `evaluation_progress` 
+									WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+									AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+									AND `progress_value` = 'complete'
+								)" : "")."
+                                                                AND c.`cgroup_id` = ".$db->qstr($cgroup_id)."
+								AND a.`target_active` = 1";
+					$evaluation_target_users = $db->GetAll($query);
+					if ($evaluation_target_users) {
+                                            $target_found = true;
+                                            foreach ($evaluation_target_users as $evaluation_target_user) {
+                                                    if ($simple) {
+                                                            $evaluation_targets[] = $evaluation_target_user["proxy_id"];
+                                                    } else {
+                                                            $evaluation_targets[] = $evaluation_target_user;
+                                                    }
+                                            }
+                                            $sort_lastname = array();
+                                            $sort_firstname = array();
+                                            foreach ($evaluation_targets as $temp_target) {
+                                                    $sort_lastname[] = $temp_target["lastname"];
+                                                    $sort_firstname[] = $temp_target["firstname"];
+                                            }
+                                            array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
+					} else {
+                                            $target_found = false;
+                                        }
+                                    }
+                                    if (!isset($target_found) || !$target_found) {
 					$query = "SELECT ".($simple ? "a.`target_value` as `proxy_id`" : "*, a.`target_value` as `proxy_id`")." FROM `evaluation_targets` AS a
 								JOIN `".AUTH_DATABASE."`.`user_data` AS b
 								ON a.`target_value` = b.`id`
@@ -2750,6 +2800,7 @@ class Evaluation {
 						$sort_firstname[] = $temp_target["firstname"];
 					}
 					array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
+                                    }
 				break;
 				case "course" :
 				default :

@@ -3444,7 +3444,7 @@ class Evaluation {
 							b.`target_type` = 'proxy_id'
 							AND b.`target_value` = ".$db->qstr($ENTRADA_USER->getID())."
 						)
-						".($_SESSION["details"]["group"] == "student" ? " OR (
+						".($ENTRADA_USER->getActiveGroup() == "student" ? " OR (
 							b.`target_type` = 'cohort'
 							AND b.`target_value` = ".$db->qstr($cohort["group_id"])."
 						)" : "").($cgroup_ids_string ? " OR (
@@ -3646,7 +3646,7 @@ class Evaluation {
 						(
 							b.`evaluator_type` = 'organisation_id'
 							AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
-						)".($_SESSION["details"]["group"] == "student" ? " OR (
+						)".($ENTRADA_USER->getActiveGroup() == "student" ? " OR (
 							b.`evaluator_type` = 'cohort'
 							AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
 						)" : "").($cgroup_ids_string ? " OR (

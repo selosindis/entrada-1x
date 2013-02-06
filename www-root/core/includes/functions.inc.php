@@ -13185,7 +13185,7 @@ function getUndergraduateSupervisionCourses() {
  * @return array $defaultEnrollmentArray
  */
 function getDefaultEnrollment() {
-    global $db;
+    global $db, $ENTRADA_USER;
 
     $query = "	SELECT `t`.`eventtype_id`,`t`. `eventtype_title`,`t`. `eventtype_default_enrollment`
 				FROM `events_lu_eventtypes` AS `t`
@@ -13194,16 +13194,18 @@ function getDefaultEnrollment() {
 				LEFT JOIN  `entrada_auth`.`organisations` AS `o`
 				ON `o`.`organisation_id` = `e_o`.`organisation_id`
 				WHERE `t`.`eventtype_default_enrollment` IS NOT NULL
-				AND `o`.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+				AND `o`.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 				ORDER BY `t`.`eventtype_default_enrollment` DESC";
 
     $results = $db->GetAll($query);
 
     $defaultEnrollmentArray = array();
 
-    foreach($results as $result) {
-    	$defaultEnrollmentArray[$result["eventtype_id"]] = array("title" => $result["eventtype_title"], "default_enrollment" => $result["eventtype_default_enrollment"]);
-    }
+	if ($results) {
+		foreach($results as $result) {
+			$defaultEnrollmentArray[$result["eventtype_id"]] = array("title" => $result["eventtype_title"], "default_enrollment" => $result["eventtype_default_enrollment"]);
+		}
+	}
 	return $defaultEnrollmentArray;
 }
 

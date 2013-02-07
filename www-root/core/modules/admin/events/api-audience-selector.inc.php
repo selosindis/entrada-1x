@@ -196,7 +196,7 @@ if (!defined("IN_EVENTS")) {
 
 				$students = $organisation;
 
-				$query = "	SELECT a.`id` AS `proxy_id`, a.`organisation_id`, b.`role`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
+				$query = "	SELECT a.`id` AS `proxy_id`, b.`organisation_id`, b.`role`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
 							JOIN `".AUTH_DATABASE."`.`user_access` AS b
 							ON a.`id` = b.`user_id`

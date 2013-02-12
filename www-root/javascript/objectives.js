@@ -71,14 +71,15 @@ jQuery(document).ready(function(){
 			}	
 			description = 	jQuery(document.createElement('div'))
 							.attr('class','objective-description')
-							.attr('id','description_'+children[i].objective_id);
-							.html(children[i].objective_description)
+							.attr('id','description_'+children[i].objective_id)
+							.html(children[i].objective_description);
 			child_container = 	jQuery(document.createElement('div'))
 								.attr('class','objective-children')
 								.attr('id','children_'+children[i].objective_id);
 			child_list = 	jQuery(document.createElement('ul'))
 								.attr('class','objective-list')
-								.attr('id','objective_list_'+children[i].objective_id);												jQuery(child_container).append(child_list);			
+								.attr('id','objective_list_'+children[i].objective_id);													
+			jQuery(child_container).append(child_list);			
 			if(EDITABLE){
 			jQuery(controls).append(d_control)
 								.append(e_control)

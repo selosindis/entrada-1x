@@ -25,7 +25,7 @@
  *
 */
 
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/objectives?org=".$ORGANISATION['organisation_id'], "title" => "Manage Objectives");
+$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/objectives?org=".$ORGANISATION['organisation_id'], "title" => "Manage Objective Sets");
 
 if (!defined("PARENT_INCLUDED")) {
 	exit;

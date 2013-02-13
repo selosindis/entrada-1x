@@ -29,9 +29,8 @@ jQuery(document).ready(function(){
 		var id = jQuery(this).attr('data-id');		
 		var children = [];
 		if (loaded[id] === undefined || !loaded[id]) {
-			console.log('undefined list');
 			jQuery.ajax({
-							url:'/e/entrada/www-root/api/fetchobjectives.api.php',
+							url:SITE_URL+'/api/fetchobjectives.api.php',
 							data:{'objective_id':id},
 							success:function(data,status,xhr){								
 								loaded[id] = jQuery.parseJSON(data);
@@ -60,9 +59,6 @@ jQuery(document).ready(function(){
 });
 
 function buildDOM(children,id){
-	console.log(children);
-	console.log(id);
-
 	var container,title,title_text,controls,check,d_control,e_control,a_control,description,child_container;
 	jQuery('#children_'+id).hide();
 	for(i = 0;i<children.length;i++){
@@ -91,6 +87,7 @@ function buildDOM(children,id){
 		check = 	jQuery(document.createElement('input'))
 					.attr('type','checkbox')
 					.attr('class','checked-objective')
+					.attr('id','check_objective_'+children[i].objective_id)
 					.val(children[i].objective_id);					
 		//this will need to change at some point
 		// c_control = jQuery(document.createElement('i'))

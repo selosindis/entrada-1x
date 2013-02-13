@@ -40,6 +40,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					AND `course_active` = '1'";
 		$course_details	= $db->GetRow($query);
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
+			?>
+			<script type="text/javascript">
+				var SITE_URL = "<?php echo ENTRADA_URL;?>";
+			</script>
+			<?php
 			$HEAD[] = "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
@@ -1062,15 +1067,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								margin-left:0px;
 								padding-left: 0px;
 							}
-							.half{
+							.objectives{
 								width:48%;
-							}
-							.half.left{
 								float:left;
 							}
-							.half.right{
+							.mapped_objectives{
 								float:right;
 								height:100%;
+								width:100%;
 							}
 							.remove{
 								display:block;
@@ -1104,36 +1108,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								padding-top:10px!important;
 								text-align:center;
 							}
+							.hide{
+								display:none;
+							}
 						</style>
 
 						<script type="text/javascript">
-							jQuery(document).ready(function(){
+							var mapped = [];
+							jQuery(document).ready(function($){
+								jQuery('.objectives').hide();
 								jQuery('.draggable').draggable({
 									revert:true
 								});
 								jQuery('.droppable').droppable({
-									drop: function(event,ui){
+									drop: function(event,ui){										
 										var id = jQuery(ui.draggable[0]).attr('data-id');
-										console.log(id);
-										var title = jQuery('#objective_title_'+id).attr('data-title');										
-										console.log(jQuery(jQuery('#objective_title_'+id)));
-										console.log(title);
-										var li = jQuery(document.createElement('li'))
-														.attr('class','mapped-objective')
-														.attr('id','mapped_objective_'+id)
-														.html(title);
-										var rm = jQuery(document.createElement('a'))
-														.attr('data-id',id)
-														.attr('class','remove')
-														.html('x');			
-										jQuery(li).append(rm);											
-										var option = jQuery(document.createElement('option'))
-														.val(id)
-														.attr('selected','selected')
-														.html(title);														
-										jQuery('#mapped_objectives').append(li);
-										jQuery('#mapped_objectives .display-notice').remove();
-										jQuery('#mapped_objectives_select').append(option);
+										var ismapped = jQuery.inArray(id,mapped);
+										if(ismapped == -1){
+											var title = jQuery('#objective_title_'+id).attr('data-title');										
+											mapObjective(id,title);
+										}
 										jQuery(this).removeClass('hover');											
 									},
 									over:function(event,ui){
@@ -1146,6 +1140,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 								jQuery('.remove').live('click',function(){
 									var id = jQuery(this).attr('data-id');
+									var key = jQuery.inArray(id,mapped);
+									if(key != -1){
+										mapped.splice(key,1);
+									}
+									jQuery('#check_objective_'+id).attr('checked','');
+									
 									jQuery('#mapped_objective_'+id).remove();																		
 									jQuery("#mapped_objectives_select option[value='"+id+"']").remove();
 									if(jQuery('#mapped_objectives').children('li').length == 0){
@@ -1156,29 +1156,60 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									}									
 								});
 
-								jQuery('.map_selected').live('click',function(){
-									jQuery('.checked-objective:checked').each(function(){
-										var id = jQuery(this).val();
-										var title = jQuery('#objective_title_'+id).attr('data-title');										
-										var li = jQuery(document.createElement('li'))
-														.attr('class','mapped-objective')
-														.attr('id','mapped_objective_'+id)
-														.html(title);
-										var rm = jQuery(document.createElement('a'))
-														.attr('data-id',id)
-														.attr('class','remove')
-														.html('x');			
-										jQuery(li).append(rm);											
-										var option = jQuery(document.createElement('option'))
-														.val(id)
-														.attr('selected','selected')
-														.html(title);														
-										jQuery('#mapped_objectives').append(li);
-										jQuery('#mapped_objectives .display-notice').remove();
-										jQuery('#mapped_objectives_select').append(option);
-									})										
+								jQuery('.checked-objective').live('change',function(){
+									var id = jQuery(this).val();
+									var title = jQuery('#objective_title_'+id).attr('data-title');
+									if (jQuery(this).is(':checked')) {
+										mapObjective(id,title);
+									} else {
+										jQuery('#objective_remove_'+id).trigger('click');
+									}
 								});
+
+								jQuery('.mapping-toggle').click(function(){
+									var state = $(this).attr('data-toggle');
+									if(state == "show"){
+										$(this).attr('data-toggle','hide');
+										$(this).html('Hide All Objectives');
+										jQuery('.mapped_objectives').animate({width:'45%'},400,'swing',function(){
+											//jQuery('.objectives').animate({display:'block'},400,'swing');											
+											jQuery('.objectives').css({width:'48%'});
+											jQuery('.objectives').show(400);
+										});										
+									}else{
+										$(this).attr('data-toggle','show');
+										$(this).html('Show All Objectives');
+										jQuery('.objectives').animate({width:'0%'},400,'swing',function(){
+											jQuery('.objectives').hide();
+											jQuery('.mapped_objectives').animate({width:'100%'},400,'swing');
+										});																				
+									}
+								});
+
 							});
+
+							function mapObjective(id,title){
+								
+								var li = jQuery(document.createElement('li'))
+												.attr('class','mapped-objective')
+												.attr('id','mapped_objective_'+id)
+												.html(title);
+								var rm = jQuery(document.createElement('a'))
+												.attr('data-id',id)
+												.attr('class','remove')
+												.attr('id','objective_remove_'+id)
+												.html('x');			
+								jQuery(li).append(rm);											
+								var option = jQuery(document.createElement('option'))
+												.val(id)
+												.attr('selected','selected')
+												.html(title);														
+								jQuery('#mapped_objectives').append(li);
+								jQuery('#mapped_objectives .display-notice').remove();
+								jQuery('#mapped_objectives_select').append(option);
+								jQuery('#check_objective_'+id).attr('checked','checked');
+								mapped.push(id);								
+							}
 						</script>
 
 						<h2>New Objectives</h2>
@@ -1191,7 +1222,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										AND a.`objective_active` = '1'";
 							$objectives = $db->GetAll($query);
 							if($objectives){ ?>
-							<div class="half left">
+							<div class="objectives half left">
 								<h3>Available Objective Sets and Objectives</h3>
 								<ul class="objective-list" id="objective_list_0">
 						<?php		foreach($objectives as $objective){ ?>
@@ -1224,9 +1255,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 						?>
 
-						<div class="half right droppable">
+						<div class="mapped_objectives right droppable">
 							<h3>Mapped Objectives</h3>
-							<a href="javascript:void(0)" class="map_selected">Map Selected Objectives</a>
+							<a href="javascript:void(0)" class="mapping-toggle" data-toggle="show">Show All Objectives</a>
 							<p class="content-small"><strong>Helpful Tip:</strong> Select an objective from the list on the left and drag it to this area to map it to the course.</p>
 							<ul class="objective-list" id="mapped_objectives">
 								<?php   $query = "	SELECT a.* FROM `global_lu_objectives` a
@@ -1254,10 +1285,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<?php 
 								if ($mapped_objectives) {		
 									foreach($mapped_objectives as $objective){ ?>
-										<option value = "<?php echo $objective["objective_id"]; ?>">
-											<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-											<?php echo $title; ?>
-										</option>
+										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+										<option value = "<?php echo $objective["objective_id"]; ?>"><?php echo $title; ?></option>
 						<?php 		} 
 								}							
 							?>

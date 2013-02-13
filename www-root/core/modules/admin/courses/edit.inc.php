@@ -43,6 +43,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			$HEAD[] = "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing " . $module_singular_name);
 
@@ -1050,6 +1051,219 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</tr>
 						</tbody>
 						</table>
+						<style>
+							.objective-title{
+								cursor:pointer;
+							}
+							.objective-list{
+								padding-left:5px;
+							}
+							#mapped_objectives,#objective_list_0{
+								margin-left:0px;
+								padding-left: 0px;
+							}
+							.half{
+								width:48%;
+							}
+							.half.left{
+								float:left;
+							}
+							.half.right{
+								float:right;
+								height:100%;
+							}
+							.remove{
+								display:block;
+								cursor:pointer;
+								float:right;
+							}
+							.draggable{
+								cursor:pointer;
+							}
+							.droppable.hover{
+								background-color:#ddd;
+							}
+							.objective-title{
+								font-weight:bold;
+							}
+							.objective-children{
+								margin-top:5px;
+							}
+							.objective-container{
+								position:relative;
+								padding-right:0px!important;
+								margin-right:0px!important;
+							}
+							.objective-controls{
+								position:absolute;
+								top:5px;
+								right:0px;
+							}
+							li.display-notice{
+								border:1px #FC0 solid!important;
+								padding-top:10px!important;
+								text-align:center;
+							}
+						</style>
+
+						<script type="text/javascript">
+							jQuery(document).ready(function(){
+								jQuery('.draggable').draggable({
+									revert:true
+								});
+								jQuery('.droppable').droppable({
+									drop: function(event,ui){
+										var id = jQuery(ui.draggable[0]).attr('data-id');
+										console.log(id);
+										var title = jQuery('#objective_title_'+id).attr('data-title');										
+										console.log(jQuery(jQuery('#objective_title_'+id)));
+										console.log(title);
+										var li = jQuery(document.createElement('li'))
+														.attr('class','mapped-objective')
+														.attr('id','mapped_objective_'+id)
+														.html(title);
+										var rm = jQuery(document.createElement('a'))
+														.attr('data-id',id)
+														.attr('class','remove')
+														.html('x');			
+										jQuery(li).append(rm);											
+										var option = jQuery(document.createElement('option'))
+														.val(id)
+														.attr('selected','selected')
+														.html(title);														
+										jQuery('#mapped_objectives').append(li);
+										jQuery('#mapped_objectives .display-notice').remove();
+										jQuery('#mapped_objectives_select').append(option);
+										jQuery(this).removeClass('hover');											
+									},
+									over:function(event,ui){
+										jQuery(this).addClass('hover');
+									},
+									out: function(event,ui){
+										jQuery(this).removeClass('hover');	
+									}
+								});
+
+								jQuery('.remove').live('click',function(){
+									var id = jQuery(this).attr('data-id');
+									jQuery('#mapped_objective_'+id).remove();																		
+									jQuery("#mapped_objectives_select option[value='"+id+"']").remove();
+									if(jQuery('#mapped_objectives').children('li').length == 0){
+										var warning = jQuery(document.createElement('li'))
+														.attr('class','display-notice')
+														.html('No <strong>objectives</strong> have been mapped to this course.');
+										jQuery('#mapped_objectives').append(warning);				
+									}									
+								});
+
+								jQuery('.map_selected').live('click',function(){
+									jQuery('.checked-objective:checked').each(function(){
+										var id = jQuery(this).val();
+										var title = jQuery('#objective_title_'+id).attr('data-title');										
+										var li = jQuery(document.createElement('li'))
+														.attr('class','mapped-objective')
+														.attr('id','mapped_objective_'+id)
+														.html(title);
+										var rm = jQuery(document.createElement('a'))
+														.attr('data-id',id)
+														.attr('class','remove')
+														.html('x');			
+										jQuery(li).append(rm);											
+										var option = jQuery(document.createElement('option'))
+														.val(id)
+														.attr('selected','selected')
+														.html(title);														
+										jQuery('#mapped_objectives').append(li);
+										jQuery('#mapped_objectives .display-notice').remove();
+										jQuery('#mapped_objectives_select').append(option);
+									})										
+								});
+							});
+						</script>
+
+						<h2>New Objectives</h2>
+						<?php
+							$query = "SELECT a.* FROM `global_lu_objectives` a
+										JOIN `objective_organisation` b
+										ON a.`objective_id` = b.`objective_id`
+										AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+										WHERE a.`objective_parent` = '0'
+										AND a.`objective_active` = '1'";
+							$objectives = $db->GetAll($query);
+							if($objectives){ ?>
+							<div class="half left">
+								<h3>Available Objective Sets and Objectives</h3>
+								<ul class="objective-list" id="objective_list_0">
+						<?php		foreach($objectives as $objective){ ?>
+										<li class = "objective-container"
+											id = "objective_<?php echo $objective["objective_id"]; ?>">
+											<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+											<div 	class="objective-title draggable" 
+													id="objective_title_<?php echo $objective["objective_id"]; ?>" 
+													data-title="<?php echo $title;?>"
+													data-id = "<?php echo $objective["objective_id"]; ?>"
+													data-code = "<?php echo $objective["objective_code"]; ?>"
+													data-name = "<?php echo $objective["objective_name"]; ?>"
+													data-description = "<?php echo $objective["objective_description"]; ?>">
+												<?php echo $title; ?>
+											</div>
+											<div class="objective-controls">
+												<input type="checkbox" value="<?php echo $objective["objective_id"]; ?>" class="checked-objective"/>
+											</div>
+											<div 	class="objective-children"
+													id="children_<?php echo $objective["objective_id"]; ?>">
+													<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>">
+													</ul>
+											</div>
+										</li>
+						<?php 		} ?>
+								</ul>
+							</div>
+					<?php
+							}
+
+						?>
+
+						<div class="half right droppable">
+							<h3>Mapped Objectives</h3>
+							<a href="javascript:void(0)" class="map_selected">Map Selected Objectives</a>
+							<p class="content-small"><strong>Helpful Tip:</strong> Select an objective from the list on the left and drag it to this area to map it to the course.</p>
+							<ul class="objective-list" id="mapped_objectives">
+								<?php   $query = "	SELECT a.* FROM `global_lu_objectives` a
+													JOIN `course_objectives` b
+													ON a.`objective_id` = b.`objective_id`
+													AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+													WHERE a.`objective_active` = '1'";
+										$mapped_objectives = $db->GetAll($query);	
+										if ($mapped_objectives) {		
+											foreach($mapped_objectives as $objective){ ?>
+												<li class = "mapped-objective"
+													id = "mapped_objective_<?php echo $objective["objective_id"]; ?>">
+													<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+													<?php echo $title; ?>
+													<a class="remove" data-id="<?php echo $objective["objective_id"];?>">x</a>
+												</li>
+								<?php 		} 
+										}else { ?>
+									<li class="display-notice">No <strong>objectives</strong> have been mapped to this course.</li>
+							<?php
+										} ?>
+				
+							</ul>
+							<select id="mapped_objectives_select" multiple="multiple" style="display:none;">
+							<?php 
+								if ($mapped_objectives) {		
+									foreach($mapped_objectives as $objective){ ?>
+										<option value = "<?php echo $objective["objective_id"]; ?>">
+											<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+											<?php echo $title; ?>
+										</option>
+						<?php 		} 
+								}							
+							?>
+							</select>
+						</div>
+						<div style="clear:both;"></div>
 					</div>
 
 					<h2 title="Course Contacts Section"><?php echo $module_singular_name; ?> Contacts</h2>
@@ -1354,7 +1568,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                             <h3><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif" style="vertical-align:top;margin-right:20px;cursor:pointer;" class="remove_period" id="remove_period_<?php echo $key;?>"/><?php echo date("F jS,Y",$period_data["start_date"])." to ".date("F jS,Y",$period_data["finish_date"]);?></h3>
                                             <div class="audience_list" id="audience_list_<?php echo $key;?>" style="margin-bottom:10px;">
                                                 <h4>Associated Groups</h4>
-                                            <ol id="audience_container_<?php echo $key;?>" class="sortableList"">
+                                            <ol id="audience_container_<?php echo $key;?>" class="sortableList">
                                                 <?php
                                                 foreach ($period as $audience) {
                                                     switch($audience["audience_type"]){

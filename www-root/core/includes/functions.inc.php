@@ -11983,45 +11983,47 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 				$output .= "<h2".($iterated ? " class=\"collapsed\"" : "")." title=\"".ucwords($display_importance)." Objectives\">".ucwords($display_importance)." Objectives</h2>\n";
 				$output .= "<div id=\"".($display_importance)."-objectives\">\n";
 			}
-			foreach ($flat_objective_list as $objective_id => $objective_activity) {
-				$objective = $objectives[$objective_id];
-				$count++;
+			if ($flat_objective_list) {
+				foreach ($flat_objective_list as $objective_id => $objective_activity) {
+					$objective = $objectives[$objective_id];
+					$count++;
 
-					if (($objective["parent"] == $parent_id) && (($objective["objective_".$display_importance."_children"]) || ($objective[$display_importance]) || ($parent_active))) {
-						$importance = (($objective["primary"]) ? 1 : ($objective["secondary"] ? 2 : ($objective["tertiary"] ? 3 : $importance)));
+						if (($objective["parent"] == $parent_id) && (($objective["objective_".$display_importance."_children"]) || ($objective[$display_importance]) || ($parent_active))) {
+							$importance = (($objective["primary"]) ? 1 : ($objective["secondary"] ? 2 : ($objective["tertiary"] ? 3 : $importance)));
 
-						if (((($objective[$display_importance]) || ($parent_active)) && (count($objective["parent_ids"]) > 2))) {
-						$output .= "<li>\n";
-						if ($edit_text && !$course) {
-							$output .= "<div id=\"objective_table_".$objective_id."\" class=\"content-small\" style=\"color: #000\">\n";
-							$output .= "	<input type=\"checkbox\" name=\"checked_objectives[".$objective_id."]\" id=\"objective_checkbox_".$objective_id."\"".($course ? " disabled=\"true\" checked=\"checked\"" : " onclick=\"if (this.checked) { $('objective_table_".$objective_id."_details').show(); $('objective_text_".$objective_id."').focus(); } else { $('objective_table_".$objective_id."_details').hide(); }\"".($objective["event_objective"] ? " checked=\"checked\"" : ""))." style=\"float: left;\" value=\"1\" />\n";
-							$output .= "	<div style=\"padding-left: 25px;\"><label for=\"objective_checkbox_".$objective_id."\">".$objective["description"]." <a class=\"external content-small\" href=\"".ENTRADA_RELATIVE."/courses/objectives?section=objective-details&amp;oid=".$objective_id."\">".$objective["name"]."</a></label></div>\n";
-							$output .= "</div>\n";
-							$output .= "<div id=\"objective_table_".$objective_id."_details\" style=\"padding-left: 25px; margin-top: 5px".($objective["event_objective"] ? "" : "; display: none")."\">\n";
-							$output .= "	<label for=\"c_objective_".$objective_id."\" class=\"content-small\" id=\"objective_".$objective_id."_append\" style=\"vertical-align: middle;\">Provide your sessional free-text objective below as it relates to this curricular objective.</label>\n";
-							$output .= "	<textarea name=\"objective_text[".$objective_id."]\" id=\"objective_text_".$objective_id."\" class=\"expandable\">".(isset($objective["event_objective_details"]) ? html_encode($objective["event_objective_details"]) : "")."</textarea>";
-							$output .= "</div>\n";
-						} elseif ($edit_text) {
-							$edit_ajax[] = $objective_id;
-							$output .= "<div id=\"objective_table_".$objective_id."\">\n";
-							$output .= "	<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label> ( <span id=\"edit_mode_".$objective_id."\" class=\"content-small\" style=\"cursor: pointer\">edit</span> )".(isset($objective["objective_details"]) && $objective["objective_details"] ? "<span style=\"margin-left: 10px;\">( <span id=\"revert_mode_".$objective_id."\" class=\"content-small\" onclick=\"new Ajax.Updater('objective_description_".$objective_id."', '".ENTRADA_RELATIVE."/api/objective-details.api.php', {parameters: { id: '".$objective_id."', cids: '".$course_id."', objective_details: '' }})\" style=\"cursor: pointer\">clear custom text</span> )</span>" : "")."\n";
-							$output .= "	<div class=\"content-small\" style=\"padding-left: 25px;\" id=\"objective_description_".$objective_id."\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])."</div>\n";
-							$output .= "</div>\n";
-						} else {
-							$output .= "<input type=\"checkbox\" id=\"objective_checkbox_".$objective_id."\ name=\"course_objectives[".$objective_id."]\"".(isset($objective["event_objective"]) && $objective["event_objective"] ? " checked=\"checked\"" : "")." onclick=\"if (this.checked) { this.parentNode.addClassName('".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."'); } else { this.parentNode.removeClassName('".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."'); }\" style=\"float: left;\" value=\"1\" />\n";
-							$output .= "<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label>\n";
-							$output .= "<div style=\"padding-left: 25px;\">\n";
-							$output .=		$objective["description"]."\n";
-							if (isset($objective["objective_details"]) && $objective["objective_details"]) {
-								$output .= "<br /><br />\n";
-								$output .= "<em>".$objective["objective_details"]."</em>";
+							if (((($objective[$display_importance]) || ($parent_active)) && (count($objective["parent_ids"]) > 2))) {
+							$output .= "<li>\n";
+							if ($edit_text && !$course) {
+								$output .= "<div id=\"objective_table_".$objective_id."\" class=\"content-small\" style=\"color: #000\">\n";
+								$output .= "	<input type=\"checkbox\" name=\"checked_objectives[".$objective_id."]\" id=\"objective_checkbox_".$objective_id."\"".($course ? " disabled=\"true\" checked=\"checked\"" : " onclick=\"if (this.checked) { $('objective_table_".$objective_id."_details').show(); $('objective_text_".$objective_id."').focus(); } else { $('objective_table_".$objective_id."_details').hide(); }\"".($objective["event_objective"] ? " checked=\"checked\"" : ""))." style=\"float: left;\" value=\"1\" />\n";
+								$output .= "	<div style=\"padding-left: 25px;\"><label for=\"objective_checkbox_".$objective_id."\">".$objective["description"]." <a class=\"external content-small\" href=\"".ENTRADA_RELATIVE."/courses/objectives?section=objective-details&amp;oid=".$objective_id."\">".$objective["name"]."</a></label></div>\n";
+								$output .= "</div>\n";
+								$output .= "<div id=\"objective_table_".$objective_id."_details\" style=\"padding-left: 25px; margin-top: 5px".($objective["event_objective"] ? "" : "; display: none")."\">\n";
+								$output .= "	<label for=\"c_objective_".$objective_id."\" class=\"content-small\" id=\"objective_".$objective_id."_append\" style=\"vertical-align: middle;\">Provide your sessional free-text objective below as it relates to this curricular objective.</label>\n";
+								$output .= "	<textarea name=\"objective_text[".$objective_id."]\" id=\"objective_text_".$objective_id."\" class=\"expandable\">".(isset($objective["event_objective_details"]) ? html_encode($objective["event_objective_details"]) : "")."</textarea>";
+								$output .= "</div>\n";
+							} elseif ($edit_text) {
+								$edit_ajax[] = $objective_id;
+								$output .= "<div id=\"objective_table_".$objective_id."\">\n";
+								$output .= "	<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label> ( <span id=\"edit_mode_".$objective_id."\" class=\"content-small\" style=\"cursor: pointer\">edit</span> )".(isset($objective["objective_details"]) && $objective["objective_details"] ? "<span style=\"margin-left: 10px;\">( <span id=\"revert_mode_".$objective_id."\" class=\"content-small\" onclick=\"new Ajax.Updater('objective_description_".$objective_id."', '".ENTRADA_RELATIVE."/api/objective-details.api.php', {parameters: { id: '".$objective_id."', cids: '".$course_id."', objective_details: '' }})\" style=\"cursor: pointer\">clear custom text</span> )</span>" : "")."\n";
+								$output .= "	<div class=\"content-small\" style=\"padding-left: 25px;\" id=\"objective_description_".$objective_id."\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])."</div>\n";
+								$output .= "</div>\n";
+							} else {
+								$output .= "<input type=\"checkbox\" id=\"objective_checkbox_".$objective_id."\ name=\"course_objectives[".$objective_id."]\"".(isset($objective["event_objective"]) && $objective["event_objective"] ? " checked=\"checked\"" : "")." onclick=\"if (this.checked) { this.parentNode.addClassName('".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."'); } else { this.parentNode.removeClassName('".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."'); }\" style=\"float: left;\" value=\"1\" />\n";
+								$output .= "<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label>\n";
+								$output .= "<div style=\"padding-left: 25px;\">\n";
+								$output .=		$objective["description"]."\n";
+								if (isset($objective["objective_details"]) && $objective["objective_details"]) {
+									$output .= "<br /><br />\n";
+									$output .= "<em>".$objective["objective_details"]."</em>";
+								}
+								$output .= "</div>\n";
 							}
-							$output .= "</div>\n";
-						}
-						$output .= "</li>\n";
+							$output .= "</li>\n";
 
-					} else {
-							$output .= event_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_text, (($objective[$display_importance]) ? true : false), $importance, $course, false, $display_importance, $full_objective_list, $course_id);
+						} else {
+								$output .= event_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_text, (($objective[$display_importance]) ? true : false), $importance, $course, false, $display_importance, $full_objective_list, $course_id);
+						}
 					}
 				}
 			}

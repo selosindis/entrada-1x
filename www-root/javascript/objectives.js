@@ -87,6 +87,39 @@ jQuery(document).ready(function(){
 		});
 		return false;
 	});
+	
+	jQuery(".objective-add-control").live("click", function(){
+		var parent_id = jQuery(this).attr("data-id");
+		var modal_container = jQuery(document.createElement("div"));
+		var url = SITE_URL + "/admin/settings/manage/objectives?org=1&section=add&mode=ajax&parent_id="+parent_id;
+		modal_container.load(url);
+		
+		modal_container.dialog({
+			title: "Add New Objective",
+			modal: true,
+			draggable: false,
+			resizable: false,
+			width: 700,
+			minHeight: 550,
+			maxHeight: 700,
+			buttons: {
+				Cancel : function() {
+					jQuery(this).dialog( "close" );
+				},
+				Save : function() {
+					console.log(modal_container.children("form").serialize());
+//					jQuery.ajax(function(){
+//						url: url
+//					});
+					jQuery(this).dialog( "close" );
+				}
+			},
+			close: function(event, ui){
+				modal_container.dialog("destroy");
+			}
+		});
+		return false;
+	});
 });
 
 function buildDOM(children,id){

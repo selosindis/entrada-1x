@@ -95,7 +95,11 @@ function buildDOM(children,id){
 	for(i = 0;i<children.length;i++){
 		//Javascript to create DOM elements from JSON response
 		container = jQuery(document.createElement('li'))
-					.attr('class','objective-container')
+					.attr('class','objective-container draggable')
+					.attr('data-id',children[i].objective_id)
+					.attr('data-code',children[i].objective_code)
+					.attr('data-name',children[i].objective_name)
+					.attr('data-description',children[i].objective_description)					
 					.attr('id','objective_'+children[i].objective_id);
 		if(children[i].objective_code){
 			title_text = children[i].objective_code+': '+children[i].objective_name
@@ -103,13 +107,10 @@ function buildDOM(children,id){
 			title_text = children[i].objective_name;
 		}
 		title = 	jQuery(document.createElement('div'))
-					.attr('class','objective-title draggable')
+					.attr('class','objective-title')
 					.attr('id','objective_title_'+children[i].objective_id)
 					.attr('data-id',children[i].objective_id)
-					.attr('data-code',children[i].objective_code)
 					.attr('data-title',title_text)
-					.attr('data-name',children[i].objective_name)
-					.attr('data-description',children[i].objective_description)
 					.html(title_text);
 
 		controls = 	jQuery(document.createElement('div'))
@@ -154,7 +155,7 @@ function buildDOM(children,id){
 							.append(controls)
 							.append(description)
 							.append(child_container);
-		jQuery(title).draggable({
+		jQuery(container).draggable({
 								revert:true
 							});
 		jQuery('#objective_list_'+id).append(container);

@@ -1077,9 +1077,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								width:100%;
 							}
 							.remove{
-								display:block;
 								cursor:pointer;
-								float:right;
 							}
 							.draggable{
 								cursor:pointer;
@@ -1098,16 +1096,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								padding-right:0px!important;
 								margin-right:0px!important;
 							}
+							.objective-description{
+								font-size: 11px;
+								font-style: normal;
+								color: #666;
+								margin-top:5px;
+							}
+							.importance{
+								font-size:.8em;	
+								margin-right:5px;						
+							}
+							.mapped-objective{
+								position:relative;
+							}
 							.objective-controls{
 								position:absolute;
 								top:5px;
-								right:0px;
+								right:5px;
 							}
 							li.display-notice{
 								border:1px #FC0 solid!important;
 								padding-top:10px!important;
 								text-align:center;
 							}
+
 							.hide{
 								display:none;
 							}
@@ -1125,8 +1137,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										var id = jQuery(ui.draggable[0]).attr('data-id');
 										var ismapped = jQuery.inArray(id,mapped);
 										if(ismapped == -1){
-											var title = jQuery('#objective_title_'+id).attr('data-title');										
-											mapObjective(id,title);
+											var title = jQuery('#objective_title_'+id).attr('data-title');
+											var description = jQuery('#objective_title_'+id).attr('data-description');										
+											mapObjective(id,title,description);
 										}
 										jQuery(this).removeClass('hover');											
 									},
@@ -1141,6 +1154,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								jQuery('.remove').live('click',function(){
 									var id = jQuery(this).attr('data-id');
 									var key = jQuery.inArray(id,mapped);
+									var importance = jQuery(this).parent().parent().parent().attr('data-importance');
 									if(key != -1){
 										mapped.splice(key,1);
 									}
@@ -1148,11 +1162,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									
 									jQuery('#mapped_objective_'+id).remove();																		
 									jQuery("#mapped_objectives_select option[value='"+id+"']").remove();
-									if(jQuery('#mapped_objectives').children('li').length == 0){
+									if(jQuery('#mapped_'+importance+'_objectives').children('li').length == 0){
 										var warning = jQuery(document.createElement('li'))
 														.attr('class','display-notice')
-														.html('No <strong>objectives</strong> have been mapped to this course.');
-										jQuery('#mapped_objectives').append(warning);				
+														.html('No <strong>'+importance+' objectives</strong> have been mapped to this course.');
+										jQuery('#mapped_'+importance+'_objectives').append(warning);				
 									}									
 								});
 
@@ -1160,7 +1174,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									var id = jQuery(this).val();
 									var title = jQuery('#objective_title_'+id).attr('data-title');
 									if (jQuery(this).is(':checked')) {
-										mapObjective(id,title);
+										var description = jQuery('#objective_title_'+id).attr('data-description');
+										mapObjective(id,title,description);
 									} else {
 										jQuery('#objective_remove_'+id).trigger('click');
 									}
@@ -1173,8 +1188,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										$(this).html('Hide All Objectives');
 										jQuery('.mapped_objectives').animate({width:'45%'},400,'swing',function(){
 											//jQuery('.objectives').animate({display:'block'},400,'swing');											
-											jQuery('.objectives').css({width:'48%'});
-											jQuery('.objectives').show(400);
+											jQuery('.objectives').css({width:'0%'});
+											jQuery('.objectives').show();
+											jQuery('.objectives').animate({width:'48%'});
 										});										
 									}else{
 										$(this).attr('data-toggle','show');
@@ -1186,27 +1202,81 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									}
 								});
 
+								jQuery('.importance').live('change',function(){
+									var id = $(this).attr('data-id');
+									var imp = $(this).val();
+									var desc = $(this).parent().parent().attr('data-description');
+									var title = $(this).parent().parent().attr('data-title');
+									$(this).parent().find('.remove').trigger('click');
+									mapObjective(id,title,desc,imp);
+								});
+
 							});
 
-							function mapObjective(id,title){
+							function mapObjective(id,title,description,importance){
+								if(importance === undefined || !importance){
+									importance = '1';
+								}
+								if(description === undefined || !description){
+									description = '';
+								}
 								
 								var li = jQuery(document.createElement('li'))
 												.attr('class','mapped-objective')
 												.attr('id','mapped_objective_'+id)
-												.html(title);
+												.attr('data-title',title)
+												.attr('data-description',description)
+												.html('<strong>'+title+'</strong>');
+								var desc = jQuery(document.createElement('div'))
+												.attr('class','objective-description')
+												.attr('data-description',description)
+												.html(description);
+								jQuery(li).append(desc);
+								var controls = 	jQuery(document.createElement('div'))
+													.attr('class','objective-controls');			
+
+								//need some way to determine if this selector should be added
+								var imp = 	jQuery(document.createElement('select'))
+													.attr('class','importance')
+													.attr('data-id',id);
+								var pri = jQuery(document.createElement('option')).val(1).html('Primary');
+								var sec = jQuery(document.createElement('option')).val(2).html('Secondary');
+								var ter = jQuery(document.createElement('option')).val(3).html('Tertiary');
+
+								var list_val = 'primary';
+
+								switch(importance){
+									case '2':
+										list_val = 'secondary';
+										jQuery(sec).attr('selected','selected');
+										break;
+									case '3':
+										list_val = 'tertiary';
+										jQuery(ter).attr('selected','selected');
+										break;
+									default:
+										jQuery(pri).attr('selected','selected');
+										break;
+								}
+
+								jQuery(imp).append(pri).append(sec).append(ter);
+								
 								var rm = jQuery(document.createElement('a'))
 												.attr('data-id',id)
 												.attr('class','remove')
 												.attr('id','objective_remove_'+id)
-												.html('x');			
-								jQuery(li).append(rm);											
+												.html('x');
+								
+								jQuery(controls).append(imp);			
+								jQuery(controls).append(rm);			
+								jQuery(li).append(controls);											
 								var option = jQuery(document.createElement('option'))
 												.val(id)
 												.attr('selected','selected')
 												.html(title);														
-								jQuery('#mapped_objectives').append(li);
-								jQuery('#mapped_objectives .display-notice').remove();
-								jQuery('#mapped_objectives_select').append(option);
+								jQuery('#mapped_'+list_val+'_objectives').append(li);
+								jQuery('#mapped_'+list_val+'_objectives .display-notice').remove();
+								jQuery('#'+list_val+'_objectives_select').append(option);
 								jQuery('#check_objective_'+id).attr('checked','checked');
 								mapped.push(id);								
 							}
@@ -1256,41 +1326,173 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						?>
 
 						<div class="mapped_objectives right droppable">
-							<h3>Mapped Objectives</h3>
 							<a href="javascript:void(0)" class="mapping-toggle" data-toggle="show">Show All Objectives</a>
-							<p class="content-small"><strong>Helpful Tip:</strong> Select an objective from the list on the left and drag it to this area to map it to the course.</p>
-							<ul class="objective-list" id="mapped_objectives">
-								<?php   $query = "	SELECT a.* FROM `global_lu_objectives` a
+							<p class="content-small"><strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left and drag it to this area to map it to the course, or check the checkbox.</p>
+							<h3>Primary Objectives</h3>
+							<ul class="objective-list" id="mapped_primary_objectives" data-importance="primary">
+								<?php   $query = "	SELECT a.*, b.`importance` FROM `global_lu_objectives` a
 													JOIN `course_objectives` b
 													ON a.`objective_id` = b.`objective_id`
 													AND b.`course_id` = ".$db->qstr($COURSE_ID)."
 													WHERE a.`objective_active` = '1'";
+										$primary = false;
+										$secondary = false;
+										$tertiary = false;
 										$mapped_objectives = $db->GetAll($query);	
 										if ($mapped_objectives) {		
-											foreach($mapped_objectives as $objective){ ?>
+											foreach($mapped_objectives as $objective){ 
+												if($objective["importance"] == 1){
+													$primary = true;
+													$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);													
+												?>
 												<li class = "mapped-objective"
-													id = "mapped_objective_<?php echo $objective["objective_id"]; ?>">
-													<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-													<?php echo $title; ?>
-													<a class="remove" data-id="<?php echo $objective["objective_id"];?>">x</a>
+													id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+													data-title="<?php echo $title;?>"
+													data-description="<?php echo $objective["objective_description"];?>">
+													<strong><?php echo $title; ?></strong>
+													<div class="objective-description"><?php echo $objective["objective_description"];?></div>
+													<div class="objective-controls">
+														<select class="importance" data-id="<?php echo $objective["objective_id"];?>">
+															<option value="1"<?php echo $objective["importance"] == 1?' selected="selected"':'';?>>Primary</option>
+															<option value="2"<?php echo $objective["importance"] == 2?' selected="selected"':'';?>>Secondary</option>
+															<option value="3"<?php echo $objective["importance"] == 3?' selected="selected"':'';?>>Tertiary</option>
+														</select><a class="remove" data-id="<?php echo $objective["objective_id"];?>">x</a>
+													</div>
 												</li>
-								<?php 		} 
-										}else { ?>
-									<li class="display-notice">No <strong>objectives</strong> have been mapped to this course.</li>
+
+								<?php 			}
+											} 
+										}
+
+										if (!$primary){ ?>
+									<li class="display-notice">No <strong>primary objectives</strong> have been mapped to this course.</li>
 							<?php
 										} ?>
 				
 							</ul>
-							<select id="mapped_objectives_select" multiple="multiple" style="display:none;">
+							<h3>Secondary Objectives</h3>
+							<ul class="objective-list" id="mapped_secondary_objectives" data-importance="secondary">
+								<?php   if ($mapped_objectives) {		
+											foreach($mapped_objectives as $objective){ 
+												if($objective["importance"] == 2){
+													$secondary = true;
+													$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);													
+												?>
+												<li class = "mapped-objective"
+													id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+													data-title="<?php echo $title;?>"
+													data-description="<?php echo $objective["objective_description"];?>">
+													<strong><?php echo $title; ?></strong>
+													<div class="objective-description" data-description="<?php echo $objective["objective_description"];?>"><?php echo $objective["objective_description"];?></div>
+													<div class="objective-controls">
+														<select class="importance" data-id="<?php echo $objective["objective_id"];?>">
+															<option value="1"<?php echo $objective["importance"] == 1?' selected="selected"':'';?>>Primary</option>
+															<option value="2"<?php echo $objective["importance"] == 2?' selected="selected"':'';?>>Secondary</option>
+															<option value="3"<?php echo $objective["importance"] == 3?' selected="selected"':'';?>>Tertiary</option>
+														</select><a class="remove" data-id="<?php echo $objective["objective_id"];?>">x</a>
+													</div>
+												</li>
+								<?php 			}
+											} 
+										}
+										if (!$secondary) { ?>
+									<li class="display-notice">No <strong>secondary objectives</strong> have been mapped to this course.</li>
+							<?php
+										} ?>
+				
+							</ul>	
+							<h3>Tertiary Objectives</h3>
+							<ul class="objective-list" id="mapped_tertiary_objectives" data-importance="tertiary">
+								<?php   if ($mapped_objectives) {		
+											foreach($mapped_objectives as $objective){ 
+												if($objective["importance"] == 3){
+													$tertiary = true;
+													$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);													
+												?>
+												<li class = "mapped-objective"
+													id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+													data-title="<?php echo $title;?>"
+													data-description="<?php echo $objective["objective_description"];?>">													
+													<strong><?php echo $title; ?></strong>
+													<div class="objective-description" data-description="<?php echo $objective["objective_description"];?>"><?php echo $objective["objective_description"];?></div>
+													<div class="objective-controls">
+														<select class="importance" data-id="<?php echo $objective["objective_id"];?>">
+															<option value="1"<?php echo $objective["importance"] == 1?' selected="selected"':'';?>>Primary</option>
+															<option value="2"<?php echo $objective["importance"] == 2?' selected="selected"':'';?>>Secondary</option>
+															<option value="3"<?php echo $objective["importance"] == 3?' selected="selected"':'';?>>Tertiary</option>
+														</select><a class="remove" data-id="<?php echo $objective["objective_id"];?>">x</a>
+													</div>
+												</li>
+								<?php 			}
+											} 
+										}
+
+										if (!$tertiary) { ?>
+									<li class="display-notice">No <strong>tertiary objectives</strong> have been mapped to this course.</li>
+							<?php
+										} ?>
+				
+							</ul>													
+							<select id="primary_objectives_select" name="primary_objectives" multiple="multiple" style="display:none;">
 							<?php 
 								if ($mapped_objectives) {		
-									foreach($mapped_objectives as $objective){ ?>
+									foreach($mapped_objectives as $objective){ 
+										if($objective["importance"] == 1) {
+										?>
 										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
 										<option value = "<?php echo $objective["objective_id"]; ?>"><?php echo $title; ?></option>
-						<?php 		} 
+									<?php 
+										}
+									} 
 								}							
 							?>
 							</select>
+							<select id="secondary_objectives_select" name="secondary_objectives" multiple="multiple" style="display:none;">
+							<?php 
+								if ($mapped_objectives) {		
+									foreach($mapped_objectives as $objective){ 
+										if($objective["importance"] == 2) {
+										?>
+										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+										<option value = "<?php echo $objective["objective_id"]; ?>"><?php echo $title; ?></option>
+									<?php 
+										}
+									} 
+								}							
+							?>
+							</select>
+							<select id="tertiary_objectives_select" name="tertiary_objectives" multiple="multiple" style="display:none;">
+							<?php 
+								if ($mapped_objectives) {		
+									foreach($mapped_objectives as $objective){ 
+										if($objective["importance"] == 3) {
+										?>
+										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+										<option value = "<?php echo $objective["objective_id"]; ?>"><?php echo $title; ?></option>
+									<?php 
+										}
+									} 
+								}							
+							?>
+							</select>
+							<select id="clinical_objectives_select" name="clinical_presentations" multiple="multiple" style="display:none;">
+							<?php 
+								if ($mapped_objectives) {		
+									foreach($mapped_objectives as $objective){ 
+										/** 
+										* @todo: figure out how to determine if an objective is clinical 
+										*/
+										if(false) { //$objective["importance"] == 3) {
+										?>
+										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+										<option value = "<?php echo $objective["objective_id"]; ?>"><?php echo $title; ?></option>
+									<?php 
+										}
+									} 
+								}							
+							?>
+							</select>							
+
 						</div>
 						<div style="clear:both;"></div>
 					</div>

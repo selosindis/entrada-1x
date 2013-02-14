@@ -67,32 +67,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				header("Location: ".ENTRADA_URL."/admin/".$MODULE);
 				exit;
 			} else {
-				$query	= "	SELECT a.*, b.`community_url`, c.`cpage_id`
+				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID)), "title" => $module_singular_name . " Content");
+
+				$query	= "	SELECT a.*, b.`community_url`
 							FROM `community_courses` AS a
 							JOIN `communities` AS b
 							ON a.`community_id` = b.`community_id`
-							JOIN `community_pages` AS c
-							ON a.`community_id` = c.`community_id`
 							WHERE a.`course_id` = ".$db->qstr($COURSE_ID);
-				$result = $db->getRow($query);
-				if ($result) {
-					$query = "SELECT b.`course_id`, b.`organisation_id` FROM `course_contacts` AS a
-								JOIN `courses` AS b
-								ON a.`course_id` = b.`course_id`
-								WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-								AND b.`course_active` = 1
-								GROUP BY b.`course_id`
-								UNION
-								SELECT `course_id`, `organisation_id` FROM `courses`
-								WHERE `pcoord_id` = ".$db->qstr($ENTRADA_USER->getID())."
-								AND `course_active` = 1";
-					$admin_course_ids = $db->GetAll($query);
-					if (!isset($admin_course_ids) || !$admin_course_ids || count($admin_course_ids) > 1 || $admin_course_ids[0]["course_id"] != $COURSE_ID || ($ENTRADA_ACL->amIAllowed(new CourseResource($admin_course_ids[0]["course_id"], $admin_course_ids[0]["organisation_id"]), 'update'))) {
-						header("Location: ".ENTRADA_URL."/community".$result["community_url"].":pages");
-						exit;
-					}
-				}
-				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID)), "title" => $module_singular_name . " Content");
+				$course_community = $db->getRow($query);
 
 				$PROCESSED		= $course_details;
 				/**
@@ -425,13 +407,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<?php
 						echo "<tr>\n";
 						echo "	<td><label for=\"course_url\" class=\"form-nrequired\">External Website URL</label></td>\n";
-						echo "	<td><input type=\"text\" id=\"course_url\" name=\"course_url\" value=\"".((isset($PROCESSED["course_url"]) && ($PROCESSED["course_url"] != "")) ? html_encode($PROCESSED["course_url"]) : "http://")."\" style=\"width: 450px\" />
-								<br /><span class=\"content-small\"><strong>Example:</strong> http://meds.queensu.ca</span></td>\n";
-						echo "</tr>\n";
-						echo "<tr>\n";
-						echo "	<td>&nbsp;</td>\n";
-						echo "	<td><span class=\"content-small\"><strong>Please Note:</strong> If you have an external " . strtolower($module_singular_name) . " website or have created a Community for your course, please enter the URL here and a link will be automatically created on the public side.</span></td>\n";
-						echo "</tr>\n";
+						if (!$course_community) {
+							echo "	<td><input type=\"text\" id=\"course_url\" name=\"course_url\" value=\"".((isset($PROCESSED["course_url"]) && ($PROCESSED["course_url"] != "")) ? html_encode($PROCESSED["course_url"]) : "http://")."\" style=\"width: 450px\" />
+									<br /><span class=\"content-small\"><strong>Example:</strong> http://meds.queensu.ca</span></td>\n";
+							echo "</tr>\n";
+							echo "<tr>\n";
+							echo "	<td>&nbsp;</td>\n";
+							echo "	<td><span class=\"content-small\"><strong>Please Note:</strong> If you have an external " . strtolower($module_singular_name) . " website or have created a Community for your course, please enter the URL here and a link will be automatically created on the public side.</span></td>\n";
+							echo "</tr>\n";
+						} else {
+							echo "	<td><a href=\"" . ENTRADA_URL."/community" . $course_community["community_url"] . "\">" . ENTRADA_URL."/community" . $course_community["community_url"] . "</a></td>\n";
+							echo "</tr>\n";
+						}
 						echo "<tr>\n";
 						echo "	<td colspan=\"2\">&nbsp;</td>\n";
 						echo "</tr>\n";

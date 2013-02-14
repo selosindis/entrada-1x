@@ -56,6 +56,37 @@ jQuery(document).ready(function(){
 			jQuery(this).trigger('click');
 		});
 	});
+	
+	
+	jQuery(".objective-edit-control").live("click", function(){
+		var objective_id = jQuery(this).attr("data-id");
+		var modal_container = jQuery(document.createElement("div"));
+		
+		modal_container.load(SITE_URL + "/admin/settings/manage/objectives?org=1&section=edit&id=" + objective_id + "&mode=ajax");
+		
+		modal_container.dialog({
+			title: "Edit Objective",
+			modal: true,
+			draggable: false,
+			resizable: false,
+			width: 700,
+			minHeight: 550,
+			maxHeight: 700,
+			buttons: {
+				Cancel : function() {
+					jQuery(this).dialog( "close" );
+				},
+				Save : function() {
+					console.log(modal_container.children("form").serialize());
+					jQuery(this).dialog( "close" );
+				}
+			},
+			close: function(event, ui){
+				modal_container.dialog("destroy");
+			}
+		});
+		return false;
+	});
 });
 
 function buildDOM(children,id){
@@ -83,25 +114,26 @@ function buildDOM(children,id){
 
 		controls = 	jQuery(document.createElement('div'))
 					.attr('class','objective-controls');
-		
-		check = 	jQuery(document.createElement('input'))
-					.attr('type','checkbox')
-					.attr('class','checked-objective')
-					.attr('id','check_objective_'+children[i].objective_id)
-					.val(children[i].objective_id);					
+						
 		//this will need to change at some point
 		// c_control = jQuery(document.createElement('i'))
 		// 			.attr('class','objective-collapse-control')
 		// 			.attr('data-id',children[i].objective_id)
 		// 			.html('Collapse');
-		if(EDITABLE){						
+		if(EDITABLE == true){						
 			e_control = jQuery(document.createElement('i'))
 						.attr('class','objective-edit-control')
 						.attr('data-id',children[i].objective_id);
 			a_control = jQuery(document.createElement('i'))
 						.attr('class','objective-add-control')
 						.attr('data-id',children[i].objective_id);		
-		}	
+		} else {
+			check = 	jQuery(document.createElement('input'))
+						.attr('type','checkbox')
+						.attr('class','checked-objective')
+						.attr('id','check_objective_'+children[i].objective_id)
+						.val(children[i].objective_id);	
+		}
 		description = 	jQuery(document.createElement('div'))
 						.attr('class','objective-description')
 						.attr('id','description_'+children[i].objective_id)
@@ -114,9 +146,9 @@ function buildDOM(children,id){
 							.attr('id','objective_list_'+children[i].objective_id);													
 		jQuery(child_container).append(child_list);			
 		jQuery(controls).append(check);
-		if(EDITABLE){
+		if(EDITABLE == true){
 		jQuery(controls).append(e_control)
-							.append(a_control);
+						.append(a_control);
 		}
 		jQuery(container).append(title)
 							.append(controls)

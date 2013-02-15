@@ -794,10 +794,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					break;
 				}
 			} else {
-				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/settings/manage/".$MODULE."\\'', 15000)";
+				$url = ENTRADA_URL."/admin/settings/manage/objectives?org=" . $ORGANISATION_ID;
+				$ONLOAD[]	= "setTimeout('window.location=\\'". $url . "\\'', 5000)";
 
 				$ERROR++;
-				$ERRORSTR[] = "In order to update an objective a valid objective identifier must be supplied. The provided ID does not exist in the system.";
+				$ERRORSTR[] = "	In order to update an objective a valid objective identifier must be supplied. The provided ID does not exist in the system.  You will be redirected to the System Settings page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 				echo display_error();
 

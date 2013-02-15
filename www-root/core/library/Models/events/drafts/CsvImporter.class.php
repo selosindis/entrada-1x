@@ -154,7 +154,7 @@ class CsvImporter {
                 $skip_row = true;
             }
 		} else {
-            $err["errors"][] = "Unable to locate a course with a code of ".html_encode($course_code).".";
+            $err["errors"][] = "We were unable to locate a course with a code of [".html_encode($course_code)."].";
             $skip_row = true;
 		}
 
@@ -163,7 +163,7 @@ class CsvImporter {
 		if ($event_start) {
 			$output[$event_id]["event_start"] = $event_start;
 		} else {
-			$err["errors"][] = "The start date and time of this event could not be validated.";
+			$err["errors"][] = "The start date [".html_encode($date)."] and time [".html_encode($start_time)."] of this event could not be validated.";
 			$skip_row = true;
 		}
 
@@ -183,13 +183,13 @@ class CsvImporter {
 					$output[$event_id]["eventtypes"][$i]["duration"] = $duration;
 					$output[$event_id]["total_duration"] += $duration;
 				} else {
-					$err["errors"][] = "Unable to fine a learning event type of ".$eventtype[$i].".";
+					$err["errors"][] = "We were unable to find a learning event type of [".$eventtypes[$i]."].";
 					$skip_row = true;
 				}
 				$i++;
 			}
 		} else {
-			$err["errors"][] = "The number of event types provided does not match the number of durations provided.";
+			$err["errors"][] = "The number of event types [".html_encode($row[8])."] provided does not match the number of durations [".html_encode($row[9])."] provided.";
 			$skip_row = true;
 		}
 
@@ -246,7 +246,7 @@ class CsvImporter {
 					$output[$event_id]["audiences"]["groups"][] = $result["cgroup_id"];
 				}
 			} else {
-				$err["errors"][] = "Event audience group not found.";
+				$err["errors"][] = "We were unable to find the provided event audience groups [".implode(",", $event_audiences_groups)."].";
 				$skip_row = true;
 			}
 		}
@@ -376,7 +376,7 @@ class CsvImporter {
 				if ($row_count >= 1) {
 					$results = $this->validateRow($row);
 					if (isset($results["errors"])) {
-						$this->errors[$row_count] = $results["errors"];
+						$this->errors[$row_count + 1] = $results["errors"];
 					} else {
 						$this->valid_rows[] = $results;
 					}
@@ -386,7 +386,7 @@ class CsvImporter {
 			if (count($this->errors) <= 0) {
 				foreach ($this->valid_rows as $valid_row) {
 					$this->importRow($valid_row);
-					$this->success[] = $row_count;
+					$this->success[] = $row_count + 1;
 				}
 			}
 		}

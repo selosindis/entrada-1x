@@ -62,75 +62,147 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		$objective_details	= $db->GetRow($query);
 		
 		if ($MODE == "ajax") {
+			ob_clear_open_buffers();
+			$time = time();
+
 			if ($objective_details["objective_parent"] != 0) {
-				ob_clear_open_buffers();
-				$time = time();
-				?>
-				<script type="text/javascript">
-				function selectObjective(parent_id, objective_id) {
-					new Ajax.Updater('m_selectObjectiveField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/objectives-list.api.php', {parameters: {'pid': parent_id, 'id': objective_id, 'organisation_id': <?php echo $ORGANISATION_ID; ?>}});
-					return;
-				}
-				function selectOrder(objective_id, parent_id) {
-					new Ajax.Updater('m_selectOrderField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/objectives-list.api.php', {parameters: {'id': objective_id, 'type': 'order', 'pid': parent_id, 'organisation_id': <?php echo $ORGANISATION_ID; ?>}});
-					return;
-				}
-				jQuery(function(){
-					selectObjective(<?php echo (isset($objective_details["objective_parent"]) && $objective_details["objective_parent"] ? $objective_details["objective_parent"] : "0"); ?>, <?php echo $OBJECTIVE_ID; ?>);
-					selectOrder(<?php echo $OBJECTIVE_ID; ?>, <?php echo (isset($objective_details["objective_parent"]) && $objective_details["objective_parent"] ? $objective_details["objective_parent"] : "0"); ?>);
-				});
-				</script>
 				
-				<form id="objective-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives"."?".replace_query(array("action" => "add", "step" => 2)); ?>" method="post">
-					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
-					<colgroup>
-						<col style="width: 30%" />
-						<col style="width: 70%" />
-					</colgroup>
-					<thead>
-						<tr>
-							<td colspan="2"><h2>Objective <?php echo ($objective_details["objective_parent"] == 0) ? "Set " : ""; ?>Details</h2></td>
-						</tr>
-					</thead>
-					<tbody>
-						<tr>
-							<td><label for="objective_name" class="form-required">Objective Name:</label></td>
-							<td><input type="text" id="objective_name" name="objective_name" value="<?php echo ((isset($objective_details["objective_name"])) ? html_encode($objective_details["objective_name"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
-						</tr>
-						<tr>
-							<td><label for="objective_code" class="form-nrequired">Objective Code:</label></td>
-							<td><input type="text" id="objective_code" name="objective_code" value="<?php echo ((isset($objective_details["objective_code"])) ? html_encode($objective_details["objective_code"]) : ""); ?>" maxlength="100" style="width: 300px" /></td>
-						</tr>
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top; padding-top: 15px"><label for="objective_id" class="form-required">Objective Parent:</label></td>
-							<td style="vertical-align: top"><div id="m_selectObjectiveField_<?php echo $time; ?>"></div></td>
-						</tr>
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top"><label for="objective_id" class="form-required">Objective Order:</label></td>
-							<td style="vertical-align: top"><div id="m_selectOrderField_<?php echo $time; ?>"></div></td>
-						</tr>
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top"><label for="objective_description" class="form-nrequired">Objective Description: </label></td>
-							<td>
-								<textarea id="objective_description" name="objective_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ((isset($objective_details["objective_description"])) ? html_encode($objective_details["objective_description"]) : ""); ?></textarea>
-							</td>
-						</tr>
-					</tbody>
-					</table>
-				</form>
-				<?php
-				
-				exit;
+				switch ($STEP) {
+					case "2" :
+						/**
+						* Required field "objective_name" / Objective Name
+						*/
+						if (isset($_POST["objective_name"]) && ($objective_name = clean_input($_POST["objective_name"], array("notags", "trim")))) {
+							$PROCESSED["objective_name"] = $objective_name;
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "The <strong>Objective Name</strong> is a required field.";
+						}
+
+						/**
+						* Non-required field "objective_code" / Objective Code
+						*/
+						if (isset($_POST["objective_code"]) && ($objective_code = clean_input($_POST["objective_code"], array("notags", "trim")))) {
+							$PROCESSED["objective_code"] = $objective_code;
+						} else {
+							$PROCESSED["objective_code"] = "";
+						}
+
+						/**
+						* Non-required field "objective_parent" / Objective Parent
+						*/
+						if (isset($_POST["objective_id"]) && ($objective_parent = clean_input($_POST["objective_id"], array("int")))) {
+							$PROCESSED["objective_parent"] = $objective_parent;
+						} else {
+							$PROCESSED["objective_parent"] = 0;
+						}
+
+						/**
+						* Required field "objective_order" / Objective Order
+						*/
+						if (isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int")))) {
+							$PROCESSED["objective_order"] = $objective_order;
+						} else {
+							$PROCESSED["objective_order"] = 0;
+						}
+
+						/**
+						* Non-required field "objective_description" / Objective Description
+						*/
+						if (isset($_POST["objective_description"]) && ($objective_description = clean_input($_POST["objective_description"], array("notags", "trim")))) {
+							$PROCESSED["objective_description"] = $objective_description;
+						} else {
+							$PROCESSED["objective_description"] = "";
+						}
+						
+						if (!$ERROR) {
+						
+							$PROCESSED["updated_date"] = time();
+							$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
+
+							if (!$db->AutoExecute("global_lu_objectives", $PROCESSED, "UPDATE", "`objective_id` = ".$db->qstr($OBJECTIVE_ID))) {
+								
+								echo json_encode(array("status" => "error", "msg" => "There was a problem updating this objective in the system. The system administrator was informed of this error; please try again later."));
+
+								application_log("error", "There was an error updating an objective. Database said: ".$db->ErrorMsg());
+							} else {
+								$PROCESSED["objective_id"] = $OBJECTIVE_ID;
+								echo json_encode(array("status" => "success", "updates" => $PROCESSED));
+							}
+							
+						} else {
+							echo json_encode(array("status" => "error", "msg" => "Name is required"));
+						}
+					break;
+					case "1" :
+					default :
+						?>
+						<script type="text/javascript">
+						function selectObjective(parent_id, objective_id) {
+							new Ajax.Updater('m_selectObjectiveField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/objectives-list.api.php', {parameters: {'pid': parent_id, 'id': objective_id, 'organisation_id': <?php echo $ORGANISATION_ID; ?>}});
+							return;
+						}
+						function selectOrder(objective_id, parent_id) {
+							new Ajax.Updater('m_selectOrderField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/objectives-list.api.php', {parameters: {'id': objective_id, 'type': 'order', 'pid': parent_id, 'organisation_id': <?php echo $ORGANISATION_ID; ?>}});
+							return;
+						}
+						jQuery(function(){
+							selectObjective(<?php echo (isset($objective_details["objective_parent"]) && $objective_details["objective_parent"] ? $objective_details["objective_parent"] : "0"); ?>, <?php echo $OBJECTIVE_ID; ?>);
+							selectOrder(<?php echo $OBJECTIVE_ID; ?>, <?php echo (isset($objective_details["objective_parent"]) && $objective_details["objective_parent"] ? $objective_details["objective_parent"] : "0"); ?>);
+						});
+						</script>
+
+						<form id="objective-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives"."?".replace_query(array("action" => "add", "step" => 2, "mode" => "ajax")); ?>" method="post">
+							<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
+							<colgroup>
+								<col style="width: 30%" />
+								<col style="width: 70%" />
+							</colgroup>
+							<thead>
+								<tr>
+									<td colspan="2"><h2>Objective <?php echo ($objective_details["objective_parent"] == 0) ? "Set " : ""; ?>Details</h2></td>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td><label for="objective_name" class="form-required">Objective Name:</label></td>
+									<td><input type="text" id="objective_name" name="objective_name" value="<?php echo ((isset($objective_details["objective_name"])) ? html_encode($objective_details["objective_name"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
+								</tr>
+								<tr>
+									<td><label for="objective_code" class="form-nrequired">Objective Code:</label></td>
+									<td><input type="text" id="objective_code" name="objective_code" value="<?php echo ((isset($objective_details["objective_code"])) ? html_encode($objective_details["objective_code"]) : ""); ?>" maxlength="100" style="width: 300px" /></td>
+								</tr>
+								<tr>
+									<td colspan="2">&nbsp;</td>
+								</tr>
+								<tr>
+									<td style="vertical-align: top; padding-top: 15px"><label for="objective_id" class="form-required">Objective Parent:</label></td>
+									<td style="vertical-align: top"><div id="m_selectObjectiveField_<?php echo $time; ?>"></div></td>
+								</tr>
+								<tr>
+									<td colspan="2">&nbsp;</td>
+								</tr>
+								<tr>
+									<td style="vertical-align: top"><label for="objective_id" class="form-required">Objective Order:</label></td>
+									<td style="vertical-align: top"><div id="m_selectOrderField_<?php echo $time; ?>"></div></td>
+								</tr>
+								<tr>
+									<td colspan="2">&nbsp;</td>
+								</tr>
+								<tr>
+									<td style="vertical-align: top"><label for="objective_description" class="form-nrequired">Objective Description: </label></td>
+									<td>
+										<textarea id="objective_description" name="objective_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ((isset($objective_details["objective_description"])) ? html_encode($objective_details["objective_description"]) : ""); ?></textarea>
+									</td>
+								</tr>
+							</tbody>
+							</table>
+						</form>
+						<?php
+					break;
+				}
 			}
+			exit;
 		} else {
 			/**
 			* Fetch all courses into an array that will be used.
@@ -548,21 +620,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 								.hide{
 									display:none;
 								}
-								.objective-add-control {
+								.objective-controls i {
 									display:block;
-									background-image:url("<?php echo ENTRADA_URL; ?>/images/add.png");
 									width:16px;
 									height:16px;
 									cursor:pointer;
 									float:left;
 								}
+								.objective-add-control {
+									background-image:url("<?php echo ENTRADA_URL; ?>/images/add.png");
+								}
 								.objective-edit-control {
-									display:block;
-									background-image:url("<?php echo ENTRADA_URL; ?>/images/edit_list.png");
-									width:16px;
-									height:16px;
-									cursor:pointer;
-									float:left;
+									background-image:url("<?php echo ENTRADA_URL; ?>/images/edit_list.png");								
+								}
+								.objective-delete-control {
+									background-image:url("<?php echo ENTRADA_URL; ?>/images/action-delete.gif");								
 								}
 							</style>
 
@@ -700,6 +772,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 												<div class="objective-controls">
 													<i class="objective-edit-control" data-id="<?php echo $objective["objective_id"]; ?>"></i>
 													<i class="objective-add-control" data-id="<?php echo $objective["objective_id"]; ?>"></i>
+													<i class="objective-delete-control" data-id="<?php echo $objective["objective_id"]; ?>"></i>
 												</div>
 												<div 	class="objective-children"
 														id="children_<?php echo $objective["objective_id"]; ?>">

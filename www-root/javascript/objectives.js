@@ -11,20 +11,7 @@ jQuery(document).ready(function(){
 			jQuery('#children_'+id).slideDown();
 		}
 	});
-	jQuery('.objective-edit-control').live('click',function(){
-		var id = jQuery(this).attr('data-id');
-		var code = jQuery('#objective_'+id).attr('data-code');
-		var description = jQuery('#objective_'+id).attr('data-description');
-		var name = jQuery('#objective_'+id).attr('data-name');
-		//popup form modal for editing
-		jQuery('#form_code').val(code);
-		jQuery('#form_description').val(description);
-		jQuery('#form_name').val(name);
-	});		
-	jQuery('.objective-add-control').live('click',function(){
-		var id = jQuery(this).attr('data-id');
-		//popup empty form modal
-	});		
+	
 	jQuery('.objective-title').live('click',function(){
 		var id = jQuery(this).attr('data-id');		
 		var children = [];
@@ -46,9 +33,6 @@ jQuery(document).ready(function(){
 			// buildDOM(children,id);
 			jQuery('#children_'+id).slideDown();	
 		}
-		
-		
-		
 	});
 
 	jQuery('#expand-all').click(function(){
@@ -56,7 +40,6 @@ jQuery(document).ready(function(){
 			jQuery(this).trigger('click');
 		});
 	});
-	
 	
 	jQuery(".objective-edit-control").live("click", function(){
 		var objective_id = jQuery(this).attr("data-id");
@@ -77,7 +60,73 @@ jQuery(document).ready(function(){
 					jQuery(this).dialog( "close" );
 				},
 				Save : function() {
-					console.log(modal_container.children("form").serialize());
+					var url = modal_container.children("form").attr("action");
+					jQuery.ajax({
+						url: url,
+						type: "POST",
+						async: false,
+						data: modal_container.children("form").serialize(),
+						success: function(data) {
+							var jsonData = JSON.parse(data);
+							
+							if (jsonData.status == "success") {
+								var parent_found = false;
+//								var parents = jQuery("#objective_"+objective_id).parents("li");
+//								for (var i = 0; i < parents.length; i++) {
+//									if (parents[i].id == "objective_" + jsonData.updates.objective_parent) {
+//										parent_found = true;
+//										if (i == 0) {
+//											break;
+//										} else {
+//											var list_item = jQuery("#objective_"+objective_id);
+//											jQuery("#objective_" + objective_id).remove();
+//											if (jQuery("#objective_" + jsonData.updates.objective_parent + " .objective_children").length < 0) {
+//												var objective_children = jQuery(document.createElement("div"));
+//												objective_children.addClass("objective_children");
+//												jQuery("#objective_" + jsonData.updates.objective_parent).append(objective_children);
+//											}
+//											jQuery("#objective_" + jsonData.updates.objective_parent + " .objective_children").append(list_item)
+//											break;
+//										}
+//									}
+//								}
+//								if (parent_found == false) {
+//									jQuery("#objective_" + objective_id).remove();
+//								}
+//								console.log(jQuery(".objective-title[data-id=" + jsonData.updates.objective_parent + "]"));
+								
+								if (jQuery("#objective_list_0").find("#objective_" + jsonData.updates.objective_parent) && jQuery("#objective_" + jsonData.updates.objective_parent).length > 0) {
+									console.log("#objective_" + jsonData.updates.objective_parent);
+									console.log("found the parent in the tree!");
+									var list_item = jQuery("#objective_"+objective_id);
+									jQuery("#objective_" + objective_id).remove();
+									if (jQuery("#objective_" + jsonData.updates.objective_parent + " .objective_children").length < 0) {
+										var objective_children = jQuery(document.createElement("div"));
+										objective_children.addClass("objective_children");
+										jQuery("#objective_" + jsonData.updates.objective_parent).append(objective_children);
+									}
+									jQuery("#objective_" + jsonData.updates.objective_parent + " .objective_children").append(list_item)
+									jQuery("#objective_" + jsonData.updates.objective_parent).click();
+								} else {
+									console.log("Couldn't find the parent");
+								}
+								
+								jQuery("#objective_title_"+jsonData.updates.objective_id).html(jsonData.updates.objective_name);
+								if (jQuery("#description_"+jsonData.updates.objective_id).length > 0) {
+									jQuery("#description_"+jsonData.updates.objective_id).html(jsonData.updates.objective_description);
+								} else {
+									var desc = jQuery(document.createElement("div"));
+									desc.attr("id", "#description_"+jsonData.updates.objective_id)
+										.addClass("objective-description")
+										.html(jsonData.updates.objective_description)
+										.insertAfter("#objective_" + jsonData.updates.objective_id + " .objective-controls");
+										
+								}
+								
+//								console.log(jsonData.updates.objective_id);
+							}
+						}
+					});
 					jQuery(this).dialog( "close" );
 				}
 			},
@@ -96,6 +145,39 @@ jQuery(document).ready(function(){
 		
 		modal_container.dialog({
 			title: "Add New Objective",
+			modal: true,
+			draggable: false,
+			resizable: false,
+			width: 700,
+			minHeight: 550,
+			maxHeight: 700,
+			buttons: {
+				Cancel : function() {
+					jQuery(this).dialog( "close" );
+				},
+				Add : function() {
+					console.log(modal_container.children("form").serialize());
+//					jQuery.ajax(function(){
+//						url: url
+//					});
+					jQuery(this).dialog( "close" );
+				}
+			},
+			close: function(event, ui){
+				modal_container.dialog("destroy");
+			}
+		});
+		return false;
+	});
+	
+	jQuery(".objective-delete-control").live("click", function(){
+		var objective_id = jQuery(this).attr("data-id");
+		var modal_container = jQuery(document.createElement("div"));
+		var url = SITE_URL + "/admin/settings/manage/objectives?org=1&section=delete&mode=ajax&id="+objective_id;
+		modal_container.load(url);
+		
+		modal_container.dialog({
+			title: "D Objective",
 			modal: true,
 			draggable: false,
 			resizable: false,
@@ -160,7 +242,10 @@ function buildDOM(children,id){
 						.attr('data-id',children[i].objective_id);
 			a_control = jQuery(document.createElement('i'))
 						.attr('class','objective-add-control')
-						.attr('data-id',children[i].objective_id);		
+						.attr('data-id',children[i].objective_id);	
+			d_control = jQuery(document.createElement('i'))
+						.attr('class','objective-delete-control')
+						.attr('data-id',children[i].objective_id);
 		} else {
 			check = 	jQuery(document.createElement('input'))
 						.attr('type','checkbox')
@@ -182,7 +267,8 @@ function buildDOM(children,id){
 		jQuery(controls).append(check);
 		if(EDITABLE == true){
 		jQuery(controls).append(e_control)
-						.append(a_control);
+						.append(a_control)
+						.append(d_control);
 		}
 		jQuery(container).append(title)
 							.append(controls)

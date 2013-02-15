@@ -39,6 +39,72 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+	
+	if (isset($_GET["id"]) && ($id = clean_input($_GET["id"], array("notags", "trim")))) {
+		$OBJECTIVE_ID = $id;
+	}
+	
+	if (isset($_GET["mode"]) && $_GET["mode"] == "ajax") {
+		$MODE = "ajax";
+	}
+	
+	if ($MODE == "ajax" && $OBJECTIVE_ID) {
+		
+		ob_clear_open_buffers();
+
+		$query = "	SELECT a.*, GROUP_CONCAT(c.`audience_value`) AS `audience` FROM `global_lu_objectives` AS a
+					JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
+					LEFT JOIN `objective_audience` AS c
+					ON a.`objective_id` = c.`objective_id`
+					AND b.`organisation_id` = c.`organisation_id`
+					WHERE (a.`objective_id` = ".$db->qstr($OBJECTIVE_ID)."
+					OR a.`objective_parent` = ".$db->qstr($OBJECTIVE_ID).")
+					AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+					AND a.`objective_active` = '1'";
+		$objective_details	= $db->GetRow($query);
+		
+		if ($objective_details) {
+			if ($objective_details["objective_parent"] != 0) {
+				?>
+				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
+				<colgroup>
+					<col style="width: 30%" />
+					<col style="width: 70%" />
+				</colgroup>
+				<thead>
+					<tr>
+						<td colspan="2"><h2>Delete Objective</h2></td>
+					</tr>
+				</thead>
+				<tbody>
+					<tr>
+						<td><strong>Objective Name:</strong></td>
+						<td><?php echo html_encode($objective_details["objective_name"]); ?></td>
+					</tr>
+					<?php if ($objective_details["objective_description"]) { ?>
+					<tr>
+						<td style="vertical-align: top"><strong>Objective Description: </strong></td>
+						<td><?php echo html_encode($objective_details["objective_description"]); ?></td>
+					</tr>
+					<?php } ?>
+				</tbody>
+				</table>
+				<?php
+				echo display_notice("Please confirm you wish to delete this objective by checking the box below and clicking the Delete button. This action will delete all child objectives.");
+				?>
+				<input type="checkbox" name="delete_objective" /> By checking this box you are confirming you wish to delete the objective.
+				<?php
+			} else {
+				echo display_error("Can't delete an objective set!");
+			}
+		} else {
+			echo display_error("Can't find that objective!");
+		}
+		
+		exit;
+	}
+	
 	$objective_ids	= array();
 	
 	$BREADCRUMB[]	= array("url" => "", "title" => "Delete Objectives");

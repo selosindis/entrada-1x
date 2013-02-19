@@ -3043,9 +3043,11 @@ class Evaluation {
 				/**
 				 * Update the $output array with any currently selected responses.
 				 */
-				$query		= "	SELECT *
-								FROM `evaluation_responses`
-								WHERE `eprogress_id` = ".$db->qstr($eprogress_id);
+				$query		= "SELECT a.*, b.`equestion_id`
+                                                        FROM `evaluation_responses` AS a
+                                                        JOIN `evaluation_form_questions` AS b
+                                                        ON a.`efquestion_id` = b.`efquestion_id`
+                                                        WHERE a.`eprogress_id` = ".$db->qstr($eprogress_id);
 				$responses	= $db->GetAll($query);
 				if ($responses) {
 					foreach ($responses as $response) {

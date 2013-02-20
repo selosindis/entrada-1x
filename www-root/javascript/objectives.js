@@ -158,7 +158,7 @@ jQuery(document).ready(function(){
 										 .append(jQuery(document.createElement("i")).addClass("objective-add-control").attr("data-id", jsonData.updates.objective_id))
 										 .append(jQuery(document.createElement("i")).addClass("objective-delete-control").attr("data-id", jsonData.updates.objective_id));
 													
-								if (jQuery("#children_" + parent_id).children().length > 0) {
+								if (jQuery("#children_" + parent_id + " .objective-list").children().length > 0) {
 									/*
 									 * add it to the dom
 									 */
@@ -167,6 +167,8 @@ jQuery(document).ready(function(){
 									} else {
 										jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).append(list_item);
 									}
+								} else {
+									jQuery("#objective_title_" + parent_id).click();
 								}
 							}
 

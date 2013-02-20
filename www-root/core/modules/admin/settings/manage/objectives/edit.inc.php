@@ -246,7 +246,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			}
 
 			if ($objective_details) {
-				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/settings/manage/objectives?".replace_query(array("section" => "edit")), "title" => "Editing Objective");
+				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/settings/manage/objectives?".replace_query(array("section" => "edit")), "title" => "Editing Objective Set");
 
 				// Error Checking
 				switch ($STEP) {
@@ -283,7 +283,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						* Required field "objective_order" / Objective Order
 						*/
 						if (isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int")))) {
-							$PROCESSED["objective_order"] = $objective_order;
+							$PROCESSED["objective_order"] = clean_input($_POST["objective_order"], array("int")) - 1;
 						} else {
 							$PROCESSED["objective_order"] = 0;
 						}
@@ -322,28 +322,58 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 							}
 						}
 
+//						if (!$ERROR) {
+//							if ($objective_details["objective_order"] != $PROCESSED["objective_order"]) {
+//								$query = "SELECT a.`objective_id` FROM `global_lu_objectives` AS a
+//											JOIN `objective_organisation` AS b
+//											ON a.`objective_id` = b.`objective_id`
+//											WHERE a.`objective_parent` = ".$db->qstr($PROCESSED["objective_parent"])."
+//											AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+//											AND a.`objective_id` != ".$db->qstr($OBJECTIVE_ID)."
+//											AND a.`objective_order` >= ".$db->qstr($PROCESSED["objective_order"])."
+//											AND a.`objective_active` = '1'
+//											ORDER BY a.`objective_order` ASC";
+//								$objectives = $db->GetAll($query);
+//								if ($objectives) {
+//									$count = $PROCESSED["objective_order"];
+//									foreach ($objectives as $objective) {
+//										$count++;
+//										if (!$db->AutoExecute("global_lu_objectives", array("objective_order" => $count), "UPDATE", "`objective_id` = ".$db->qstr($objective["objective_id"]))) {
+//											$ERROR++;
+//											$ERRORSTR[] = "There was a problem updating this objective in the system. The system administrator was informed of this error; please try again later.";
+//
+//											application_log("error", "There was an error updating an objective. Database said: ".$db->ErrorMsg());
+//										}
+//									}
+//								}
+//							}
+//						}
+						
 						if (!$ERROR) {
 							if ($objective_details["objective_order"] != $PROCESSED["objective_order"]) {
 								$query = "SELECT a.`objective_id` FROM `global_lu_objectives` AS a
-											JOIN `objective_organisation` AS b
+											LEFT JOIN `objective_organisation` AS b
 											ON a.`objective_id` = b.`objective_id`
 											WHERE a.`objective_parent` = ".$db->qstr($PROCESSED["objective_parent"])."
-											AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-											AND a.`objective_id` != ".$db->qstr($OBJECTIVE_ID)."
-											AND a.`objective_order` >= ".$db->qstr($PROCESSED["objective_order"])."
+											AND (b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)." OR b.`organisation_id` IS NULL)
+											AND a.`objective_id` != ".$db->qstr($OBJECTIVE_ID)./*"
+											AND a.`objective_order` >= ".$db->qstr($PROCESSED["objective_order"]).*/"
 											AND a.`objective_active` = '1'
 											ORDER BY a.`objective_order` ASC";
 								$objectives = $db->GetAll($query);
 								if ($objectives) {
-									$count = $PROCESSED["objective_order"];
+									$count = 0;
 									foreach ($objectives as $objective) {
-										$count++;
+										if($count === $PROCESSED["objective_order"]) {
+											$count++;
+										}
 										if (!$db->AutoExecute("global_lu_objectives", array("objective_order" => $count), "UPDATE", "`objective_id` = ".$db->qstr($objective["objective_id"]))) {
 											$ERROR++;
 											$ERRORSTR[] = "There was a problem updating this objective in the system. The system administrator was informed of this error; please try again later.";
 
 											application_log("error", "There was an error updating an objective. Database said: ".$db->ErrorMsg());
 										}
+										$count++;
 									}
 								}
 							}
@@ -386,7 +416,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 									$url = ENTRADA_URL . "/admin/settings/manage/objectives?org=".$ORGANISATION_ID;
 
 									$SUCCESS++;
-									$SUCCESSSTR[] = "Your org id is ".$ORGANISATION_ID.". You have successfully updated <strong>".html_encode($PROCESSED["objective_name"])."</strong> in the system.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+									$SUCCESSSTR[] = "You have successfully updated <strong>".html_encode($PROCESSED["objective_name"])."</strong> in the system.<br /><br />You will now be redirected to the objectives index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 									$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
@@ -475,17 +505,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 								});
 							});
 						</script>
+						<h1>Edit Objective Set</h1>
 						<form id="objective-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives"."?".replace_query(array("action" => "add", "step" => 2)); ?>" method="post">
+						<h2 class="collapsable" title="Objective Set Details Section">Objective <?php echo ($objective_details["objective_parent"] == 0) ? "Set " : ""; ?>Details</h2>
+						<div id="objective-set-details-section">
 						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
 						<colgroup>
 							<col style="width: 30%" />
 							<col style="width: 70%" />
 						</colgroup>
-						<thead>
-							<tr>
-								<td colspan="2"><h1>Objective <?php echo ($objective_details["objective_parent"] == 0) ? "Set " : ""; ?>Details</h1></td>
-							</tr>
-						</thead>
 						<tfoot>
 							<tr>
 								<td colspan="2" style="padding-top: 15px; text-align: right">
@@ -496,39 +524,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						</tfoot>
 						<tbody>
 							<tr>
-								<td><label for="objective_name" class="form-required">Objective Name:</label></td>
-								<td><input type="text" id="objective_name" name="objective_name" value="<?php echo ((isset($PROCESSED["objective_name"])) ? html_encode($PROCESSED["objective_name"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
-							</tr>
-							<tr>
-								<td><label for="objective_code" class="form-nrequired">Objective Code:</label></td>
+								<td><label for="objective_code" class="form-nrequired">Objective Set Code:</label></td>
 								<td><input type="text" id="objective_code" name="objective_code" value="<?php echo ((isset($PROCESSED["objective_code"])) ? html_encode($PROCESSED["objective_code"]) : ""); ?>" maxlength="100" style="width: 300px" /></td>
 							</tr>
 							<tr>
-								<td colspan="2">&nbsp;</td>
-							</tr>
-							<tr>
-								<td style="vertical-align: top; padding-top: 15px"><label for="objective_id" class="form-required">Objective Parent:</label></td>
-								<td style="vertical-align: top"><div id="selectObjectiveField"></div></td>
+								<td><label for="objective_name" class="form-required">Objective Set Name:</label></td>
+								<td><input type="text" id="objective_name" name="objective_name" value="<?php echo ((isset($PROCESSED["objective_name"])) ? html_encode($PROCESSED["objective_name"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
 							</tr>
 							<tr>
 								<td colspan="2">&nbsp;</td>
 							</tr>
 							<tr>
-								<td style="vertical-align: top"><label for="objective_id" class="form-required">Objective Order:</label></td>
-								<td style="vertical-align: top"><div id="selectOrderField"></div></td>
-							</tr>
-							<tr>
-								<td colspan="2">&nbsp;</td>
-							</tr>
-							<tr>
-								<td style="vertical-align: top"><label for="objective_description" class="form-nrequired">Objective Description: </label></td>
+								<td style="vertical-align: top"><label for="objective_description" class="form-nrequired">Objective Set Description: </label></td>
 								<td>
 									<textarea id="objective_description" name="objective_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ((isset($PROCESSED["objective_description"])) ? html_encode($PROCESSED["objective_description"]) : ""); ?></textarea>
 								</td>
 							</tr>
 							<?php if ($objective_details["objective_parent"] == 0) { ?>
 							<tr>
-								<td style="vertical-align: top"><label for="objective_audience" class="form-required">Objective Audience:</label></td>
+								<td colspan="2">&nbsp;</td>
+							</tr>
+							<tr>
+								<td style="vertical-align: top"><label for="objective_audience" class="form-required">Objective Set Audience:</label></td>
 								<td><input type="radio" name="objective_audience" value="all" <?php echo ($PROCESSED["objective_audience"] == "all" || $objective_details["audience"] == "all") ? "checked=\"checked\"" : ""; ?> /> All Courses<br />
 									<input type="radio" name="objective_audience" value="none" <?php echo ($PROCESSED["objective_audience"] == "none" || $objective_details["audience"] == "none") ? "checked=\"checked\"" : ""; ?> /> No Courses<br />
 									<input type="radio" name="objective_audience" value="selected" <?php echo ($PROCESSED["objective_audience"] == "selected" || $objective_details["audience"] == "selected") ? "checked=\"checked\"" : ""; ?> /> Selected Courses<br />
@@ -584,8 +601,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 								</td>
 							</tr>
 							<?php } ?>
+							<tr>
+								<td colspan="2">&nbsp;</td>
+							</tr>
+							<tr>
+								<td style="vertical-align: top"><label for="objective_id" class="form-required">Objective Set Order:</label></td>
+								<td style="vertical-align: top"><div id="selectOrderField"></div></td>
+							</tr>
 						</tbody>
 						</table>
+						</div>
 						</form>
 						<br />
 						<script type="text/javascript">
@@ -766,54 +791,58 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 									mapped.push(id);								
 								}
 							</script>
-							<h2>Child Objectives</h2>
-							<div style="float: right">
-								<ul class="page-action">
-									<li><a href="#" class="objective-add-control" data-id="<?php echo $OBJECTIVE_ID; ?>">Add New Objective</a></li>
-								</ul>
-							</div>
-							<div style="clear: both"></div>
-							<?php
-								$query = "SELECT a.* FROM `global_lu_objectives` a
-											LEFT JOIN `objective_organisation` b
-											ON a.`objective_id` = b.`objective_id`
-											AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-											WHERE a.`objective_parent` = ".$db->qstr($OBJECTIVE_ID)."
-											AND a.`objective_active` = '1'
-											ORDER BY a.`objective_order`";
-								$objectives = $db->GetAll($query);
-								if($objectives){ ?>
-								<div class="half left" id="children_<?php echo $OBJECTIVE_ID; ?>">
-									<ul class="objective-list" id="objective_list_<?php echo $OBJECTIVE_ID; ?>">
-							<?php		foreach($objectives as $objective){ ?>
-											<li class = "objective-container"
-												id = "objective_<?php echo $objective["objective_id"]; ?>">
-												<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-												<div 	class="objective-title draggable" 
-														id="objective_title_<?php echo $objective["objective_id"]; ?>" 
-														data-title="<?php echo $title;?>"
-														data-id = "<?php echo $objective["objective_id"]; ?>"
-														data-code = "<?php echo $objective["objective_code"]; ?>"
-														data-name = "<?php echo $objective["objective_name"]; ?>"
-														data-description = "<?php echo $objective["objective_description"]; ?>">
-													<?php echo $title; ?>
-												</div>
-												<div class="objective-controls">
-													<i class="objective-edit-control" data-id="<?php echo $objective["objective_id"]; ?>"></i>
-													<i class="objective-add-control" data-id="<?php echo $objective["objective_id"]; ?>"></i>
-													<i class="objective-delete-control" data-id="<?php echo $objective["objective_id"]; ?>"></i>
-												</div>
-												<div 	class="objective-children"
-														id="children_<?php echo $objective["objective_id"]; ?>">
-														<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>">
-														</ul>
-												</div>
-											</li>
-							<?php 		} ?>
+							<h2 class="collapsable" title="Child Objectives Section">Child Objectives</h2>
+							<div id="child-objectives-section">
+								<div style="float: right">
+									<ul class="page-action">
+										<li><a href="#" class="objective-add-control" data-id="<?php echo $OBJECTIVE_ID; ?>">Add New Objective</a></li>
 									</ul>
 								</div>
-						<?php } ?>
-							<div style="clear:both;"></div>
+								<div style="clear: both"></div>
+								<div class="half left" id="children_<?php echo $OBJECTIVE_ID; ?>">
+										<ul class="objective-list" id="objective_list_<?php echo $OBJECTIVE_ID; ?>">
+								<?php
+									$query = "SELECT a.* FROM `global_lu_objectives` a
+												LEFT JOIN `objective_organisation` b
+												ON a.`objective_id` = b.`objective_id`
+												AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+												WHERE a.`objective_parent` = ".$db->qstr($OBJECTIVE_ID)."
+												AND a.`objective_active` = '1'
+												ORDER BY a.`objective_order`";
+									$objectives = $db->GetAll($query);
+									if($objectives){ ?>
+									
+								<?php		foreach($objectives as $objective){ ?>
+												<li class = "objective-container"
+													id = "objective_<?php echo $objective["objective_id"]; ?>">
+													<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+													<div 	class="objective-title draggable" 
+															id="objective_title_<?php echo $objective["objective_id"]; ?>" 
+															data-title="<?php echo $title;?>"
+															data-id = "<?php echo $objective["objective_id"]; ?>"
+															data-code = "<?php echo $objective["objective_code"]; ?>"
+															data-name = "<?php echo $objective["objective_name"]; ?>"
+															data-description = "<?php echo $objective["objective_description"]; ?>">
+														<?php echo $title; ?>
+													</div>
+													<div class="objective-controls">
+														<i class="objective-edit-control" data-id="<?php echo $objective["objective_id"]; ?>"></i>
+														<i class="objective-add-control" data-id="<?php echo $objective["objective_id"]; ?>"></i>
+														<i class="objective-delete-control" data-id="<?php echo $objective["objective_id"]; ?>"></i>
+													</div>
+													<div 	class="objective-children"
+															id="children_<?php echo $objective["objective_id"]; ?>">
+															<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>">
+															</ul>
+													</div>
+												</li>
+								<?php 		} ?>
+										
+							<?php } ?>
+												</ul>
+									</div>
+								<div style="clear:both;"></div>
+							</div>
 						</div>
 
 

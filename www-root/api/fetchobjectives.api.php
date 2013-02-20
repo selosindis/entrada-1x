@@ -35,20 +35,46 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	ob_clear_open_buffers();
 	
 	$id = (int)$_GET["objective_id"];
+	$course_id = (int)(isset($_GET["course_id"])?$_GET["course_id"]:false);
+	$event_id = (int)(isset($_GET["event_id"])?$_GET["event_id"]:false);
+	$select = "a.*";
 
-	$query = "	SELECT * FROM `global_lu_objectives` 
-				WHERE `objective_parent` = ".$db->qstr($id)." 
-				AND `objective_active` = '1' 
-				ORDER BY `objective_order`";
+	if ($course_id){
+		$select .=", COALESCE(b.`cobjective_id`,0) AS `mapped`";
+	}elseif ($event_id) {
+		$select .=", COALESCE(b.`eobjective_id`,0) AS `mapped`";
+	}
+
+	$qu_arr = array("SELECT ".$select." FROM `global_lu_objectives` a");
+	
+	if ($course_id){
+		$qu_arr[1] = "LEFT JOIN `course_objectives` b
+					ON a.`objective_id` = b.`objective_id`";
+		$qu_arr[3] = "AND b.`course_id` = ".$db->qstr($course_id);					
+	} elseif ($event_id) {
+		$qu_arr[1] = "LEFT JOIN `event_objectives` b
+					ON a.`objective_id` = b.`objective_id`";
+		$qu_arr[3] = "AND b.`event_id` = ".$db->qstr($course_id);									
+	}	
+	
+	$qu_arr[2] = "WHERE a.`objective_parent` = ".$db->qstr($id)." 
+				AND a.`objective_active` = '1'";
+	$qu_arr[4] = "ORDER BY a.`objective_order`";
+	$query = implode(" ",$qu_arr);
+	error_log($query);
 	$objectives = $db->GetAll($query);
 	if ($objectives) {
 		$obj_array = array();
 		foreach($objectives as $objective){
-			$obj_array[] = array(	'objective_id'=>$objective["objective_id"],
+			$fields = array(	'objective_id'=>$objective["objective_id"],
 									'objective_code'=>$objective["objective_code"],
 									'objective_name'=>$objective["objective_name"],
 									'objective_description'=>$objective["objective_description"]
 								);
+			if ($course_id || $event_id){
+				$fields["mapped"] = $objective["mapped"];
+			}
+			$obj_array[] = $fields;
 		}
 		echo json_encode($obj_array);
 	} else {

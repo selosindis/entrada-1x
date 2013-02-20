@@ -1601,6 +1601,19 @@ function fetch_curriculum_objectives_children($parent_id = 0, &$objectives) {
 	return false;
 }
 
+function fetch_objective_set_for_objective_id($id){
+	global $db;
+	if (!$id) {return false;}
+	$parent_id = $id;
+
+	do{
+		$query = "SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($parent_id);
+		$parent = $db->GetRow($query);
+		$parent_id = $parent["objective_parent"];
+	}while($parent_id);
+	return $parent;
+}
+
 function fetch_event_topics() {
 	global $db, $ENTRADA_USER;
 

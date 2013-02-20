@@ -15689,3 +15689,54 @@ function event_text_change($event, $field) {
 	}
 	return $ret;
 }
+
+/*
+ * This funciton recursively deactivates child objectives.
+ * 
+ * @param int $parent_id
+ * @param int $organisation_id
+ * @param int $i
+ * @return boolean
+ */
+function deactivate_objective_children($parent_id, $organisation_id, $i = 0) {
+	if ($i > 99) {
+		exit;
+	}
+	global $db, $ENTRADA_USER;
+
+	$query = "	SELECT a.*, GROUP_CONCAT(b.`organisation_id`) AS `organisations` FROM `global_lu_objectives` AS a
+				JOIN `objective_organisation` AS b
+				ON a.`objective_id` = b.`objective_id`
+				WHERE a.`objective_parent` = ".$db->qstr($parent_id)."
+				AND a.`objective_active` = '1'
+				GROUP BY `objective_id`";
+	$objectives = $db->GetAll($query);
+	if ($objectives) {
+		$i = 0;
+		foreach ($objectives as $objective) {
+			$organisations = explode(",", $objective["organisations"]);
+			/*
+			* Remove the objective_organisation record.
+			*/
+			$query = "DELETE FROM `objective_organisation` WHERE `organisation_id` = ".$db->qstr($organisation_id)." AND `objective_id` = ".$db->qstr($objective["objective_id"]);
+			if (!$db->Execute($query)) {
+				application_log("Failed to remove entry from [objective_organisation], DB said: ".$db->ErrorMsg());
+				echo $db->ErrorMsg();
+			}
+			/*
+			* If $organisations has more than 1 entry the objective is active across multiple, and should not be deactivated in `global_lu_objectives`
+			*/
+			if (count($organisations) <= 1) {
+				$query = "UPDATE `global_lu_objectives` SET `objective_active` = '0', `updated_date` = " . $db->qstr(time()) . ", `updated_by` = " . $db->qstr($ENTRADA_USER->getID()) . " WHERE `objective_id` = ".$db->qstr($objective["objective_id"]);
+				if ($db->Execute($query)) {
+					deactivate_objective_children($objective["objective_id"], $organisation_id, $i);
+				}
+			}
+			$i++;
+		}
+		return true;
+	} else {
+		return false;
+	}
+
+}

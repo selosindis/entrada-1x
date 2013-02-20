@@ -54,6 +54,101 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 		
 		switch ($STEP) {
 			case 2 :
+				/**
+				* Required field "objective_name" / Objective Name
+				*/
+				if (isset($_POST["objective_name"]) && ($objective_name = clean_input($_POST["objective_name"], array("notags", "trim")))) {
+					$PROCESSED["objective_name"] = $objective_name;
+				} else {
+					$ERROR++;
+					$ERRORSTR[] = "The <strong>Objective Name</strong> is a required field.";
+				}
+
+				/**
+				* Non-required field "objective_code" / Objective Code
+				*/
+				if (isset($_POST["objective_code"]) && ($objective_code = clean_input($_POST["objective_code"], array("notags", "trim")))) {
+					$PROCESSED["objective_code"] = $objective_code;
+				} else {
+					$PROCESSED["objective_code"] = "";
+				}
+
+				/**
+				* Non-required field "objective_parent" / Objective Parent
+				*/
+				if (isset($_POST["objective_id"]) && ($objective_parent = clean_input($_POST["objective_id"], array("int")))) {
+					$PROCESSED["objective_parent"] = $objective_parent;
+
+					$_SESSION[APPLICATION_IDENTIFIER]["objectives"]["objective_parent"] = $objective_parent;
+				} else {
+					$PROCESSED["objective_parent"] = 0;
+				}
+				
+				/**
+				* Non-required field "objective_description" / Objective Description
+				*/
+				if (isset($_POST["objective_description"]) && ($objective_description = clean_input($_POST["objective_description"], array("notags", "trim")))) {
+					$PROCESSED["objective_description"] = $objective_description;
+				} else {
+					$PROCESSED["objective_description"] = "";
+				}
+
+				/**
+				* Required field "objective_order" / Objective Order
+				*/
+				if (isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int")))) {
+					$PROCESSED["objective_order"] = clean_input($_POST["objective_order"], array("int")) - 1;
+				} else {
+					$PROCESSED["objective_order"] = 0;
+				}
+				
+				if (!$ERROR && isset($PROCESSED["objective_order"])) {
+					$query = "SELECT a.`objective_id` FROM `global_lu_objectives` AS a
+								LEFT JOIN `objective_organisation` AS b
+								ON a.`objective_id` = b.`objective_id`
+								WHERE a.`objective_parent` = ".$db->qstr($PROCESSED["objective_parent"])."
+								AND a.`objective_order` >= ".$db->qstr($PROCESSED["objective_order"])."
+								AND a.`objective_active` = '1'
+								AND (b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)." OR b.`organisation_id` IS NULL)
+								ORDER BY a.`objective_order` ASC";
+					$objectives = $db->GetAll($query);
+					if ($objectives) {
+						$count = $PROCESSED["objective_order"];
+						foreach ($objectives as $objective) {
+							$count++;
+							if (!$db->AutoExecute("global_lu_objectives", array("objective_order" => $count), "UPDATE", "`objective_id` = ".$db->qstr($objective["objective_id"]))) {
+								$ERROR++;
+								$ERRORSTR[] = "There was a problem adding this objective to the system. The system administrator was informed of this error; please try again later.";
+
+								application_log("error", "There was an error updating an objective. Database said: ".$db->ErrorMsg());
+							}
+						}
+					}
+				}
+
+				if (!$ERROR) {
+					$PROCESSED["updated_date"] = time();
+					$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
+
+					if ($db->AutoExecute("global_lu_objectives", $PROCESSED, "INSERT")) {
+						if ($OBJECTIVE_ID = $db->Insert_Id()) {
+							$PROCESSED["objective_id"] = $OBJECTIVE_ID;
+							$params = array("objective_id"=>$OBJECTIVE_ID,"organisation_id"=>$ORGANISATION_ID);
+							if(!$db->AutoExecute("objective_organisation", $params, "INSERT")) {
+								$ERROR++;
+								echo json_encode(array("status" => "error", "msg" => "Error associating organisation with objective."));
+							}
+						}
+					} else {
+						$ERROR++;
+						echo json_encode(array("status" => "error", "msg" => "There was a problem inserting this objective into the system. The system administrator was informed of this error; please try again later."));
+					}
+				}
+				
+				if (!$ERROR) {
+					echo json_encode(array("status" => "success", "updates" => $PROCESSED));
+				}
+				
 			break;
 			case 1 :
 			default :
@@ -70,10 +165,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					}
 					jQuery(function(){
 						selectObjective(<?php echo $PARENT_ID; ?>);
-						selectOrder(<?php echo $PARENT_ID; ?>);
+						selectOrder(<?php echo $PARENT_ID; ?>, <?php echo $PARENT_ID; ?>);
 					});
 				</script>
-				<form action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives"."?".replace_query(array("action" => "add", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
+				<form id="objective-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives"."?".replace_query(array("action" => "add", "step" => 2, "mode" => "ajax")); ?>" method="post">
 					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
 					<colgroup>
 						<col style="width: 30%" />

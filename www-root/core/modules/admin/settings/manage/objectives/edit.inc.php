@@ -98,21 +98,51 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						}
 
 						/**
-						* Required field "objective_order" / Objective Order
-						*/
-						if (isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int")))) {
-							$PROCESSED["objective_order"] = $objective_order;
-						} else {
-							$PROCESSED["objective_order"] = 0;
-						}
-
-						/**
 						* Non-required field "objective_description" / Objective Description
 						*/
 						if (isset($_POST["objective_description"]) && ($objective_description = clean_input($_POST["objective_description"], array("notags", "trim")))) {
 							$PROCESSED["objective_description"] = $objective_description;
 						} else {
 							$PROCESSED["objective_description"] = "";
+						}
+						
+						/**
+						* Required field "objective_order" / Objective Order
+						*/
+						if (isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int")))) {
+							$PROCESSED["objective_order"] = clean_input($_POST["objective_order"], array("int")) - 1;
+						} else {
+							$PROCESSED["objective_order"] = 0;
+						}
+
+						if (!$ERROR) {
+							if ($objective_details["objective_order"] != $PROCESSED["objective_order"]) {
+								$query = "SELECT a.`objective_id` FROM `global_lu_objectives` AS a
+											LEFT JOIN `objective_organisation` AS b
+											ON a.`objective_id` = b.`objective_id`
+											WHERE a.`objective_parent` = ".$db->qstr($PROCESSED["objective_parent"])."
+											AND (b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)." OR b.`organisation_id` IS NULL)
+											AND a.`objective_id` != ".$db->qstr($OBJECTIVE_ID)./*"
+											AND a.`objective_order` >= ".$db->qstr($PROCESSED["objective_order"]).*/"
+											AND a.`objective_active` = '1'
+											ORDER BY a.`objective_order` ASC";
+								$objectives = $db->GetAll($query);
+								if ($objectives) {
+									$count = 0;
+									foreach ($objectives as $objective) {
+										if($count === $PROCESSED["objective_order"]) {
+											$count++;
+										}
+										if (!$db->AutoExecute("global_lu_objectives", array("objective_order" => $count), "UPDATE", "`objective_id` = ".$db->qstr($objective["objective_id"]))) {
+											$ERROR++;
+											$ERRORSTR[] = "There was a problem updating this objective in the system. The system administrator was informed of this error; please try again later.";
+
+											application_log("error", "There was an error updating an objective. Database said: ".$db->ErrorMsg());
+										}
+										$count++;
+									}
+								}
+							}
 						}
 						
 						if (!$ERROR) {
@@ -152,7 +182,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						});
 						</script>
 
-						<form id="objective-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives"."?".replace_query(array("action" => "add", "step" => 2, "mode" => "ajax")); ?>" method="post">
+						<form id="objective-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives"."?".replace_query(array("action" => "edit", "step" => 2, "mode" => "ajax")); ?>" method="post">
 							<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
 							<colgroup>
 								<col style="width: 30%" />
@@ -627,13 +657,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 									cursor:pointer;
 									float:left;
 								}
-								.objective-add-control {
+								.objective-controls .objective-add-control {
 									background-image:url("<?php echo ENTRADA_URL; ?>/images/add.png");
 								}
-								.objective-edit-control {
+								.objective-controls .objective-edit-control {
 									background-image:url("<?php echo ENTRADA_URL; ?>/images/edit_list.png");								
 								}
-								.objective-delete-control {
+								.objective-controls .objective-delete-control {
 									background-image:url("<?php echo ENTRADA_URL; ?>/images/action-delete.gif");								
 								}
 							</style>
@@ -736,26 +766,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 									mapped.push(id);								
 								}
 							</script>
-
 							<h2>Child Objectives</h2>
-	<!--						<div class="clearfix">
 							<div style="float: right">
 								<ul class="page-action">
-									<li><a href="<?php echo ENTRADA_URL."/admin/settings/manage/objectives?".replace_query(array("section" => "delete", "step" => 1, "org" => $ORGANISATION_ID)); ?>" class="strong-green">Add New Objective</a></li>
+									<li><a href="#" class="objective-add-control" data-id="<?php echo $OBJECTIVE_ID; ?>">Add New Objective</a></li>
 								</ul>
 							</div>
-							</div>-->
+							<div style="clear: both"></div>
 							<?php
 								$query = "SELECT a.* FROM `global_lu_objectives` a
-											JOIN `objective_organisation` b
+											LEFT JOIN `objective_organisation` b
 											ON a.`objective_id` = b.`objective_id`
 											AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 											WHERE a.`objective_parent` = ".$db->qstr($OBJECTIVE_ID)."
-											AND a.`objective_active` = '1'";
+											AND a.`objective_active` = '1'
+											ORDER BY a.`objective_order`";
 								$objectives = $db->GetAll($query);
 								if($objectives){ ?>
-								<div class="half left">
-									<ul class="objective-list" id="objective_list_0">
+								<div class="half left" id="children_<?php echo $OBJECTIVE_ID; ?>">
+									<ul class="objective-list" id="objective_list_<?php echo $OBJECTIVE_ID; ?>">
 							<?php		foreach($objectives as $objective){ ?>
 											<li class = "objective-container"
 												id = "objective_<?php echo $objective["objective_id"]; ?>">

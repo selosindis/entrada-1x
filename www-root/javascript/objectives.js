@@ -70,60 +70,19 @@ jQuery(document).ready(function(){
 							var jsonData = JSON.parse(data);
 							
 							if (jsonData.status == "success") {
-								var parent_found = false;
-//								var parents = jQuery("#objective_"+objective_id).parents("li");
-//								for (var i = 0; i < parents.length; i++) {
-//									if (parents[i].id == "objective_" + jsonData.updates.objective_parent) {
-//										parent_found = true;
-//										if (i == 0) {
-//											break;
-//										} else {
-//											var list_item = jQuery("#objective_"+objective_id);
-//											jQuery("#objective_" + objective_id).remove();
-//											if (jQuery("#objective_" + jsonData.updates.objective_parent + " .objective_children").length < 0) {
-//												var objective_children = jQuery(document.createElement("div"));
-//												objective_children.addClass("objective_children");
-//												jQuery("#objective_" + jsonData.updates.objective_parent).append(objective_children);
-//											}
-//											jQuery("#objective_" + jsonData.updates.objective_parent + " .objective_children").append(list_item)
-//											break;
-//										}
-//									}
-//								}
-//								if (parent_found == false) {
-//									jQuery("#objective_" + objective_id).remove();
-//								}
-//								console.log(jQuery(".objective-title[data-id=" + jsonData.updates.objective_parent + "]"));
+								var list_item = jQuery("#objective_"+objective_id);
+								var order = jsonData.updates.objective_order;
+								var objective_parent = jsonData.updates.objective_parent;
 								
-								if (jQuery("#objective_list_0").find("#objective_" + jsonData.updates.objective_parent) && jQuery("#objective_" + jsonData.updates.objective_parent).length > 0) {
-									console.log("#objective_" + jsonData.updates.objective_parent);
-									console.log("found the parent in the tree!");
-									var list_item = jQuery("#objective_"+objective_id);
-									jQuery("#objective_" + objective_id).remove();
-									if (jQuery("#objective_" + jsonData.updates.objective_parent + " .objective_children").length < 0) {
-										var objective_children = jQuery(document.createElement("div"));
-										objective_children.addClass("objective_children");
-										jQuery("#objective_" + jsonData.updates.objective_parent).append(objective_children);
+								jQuery("#objective_"+objective_id).remove();
+								
+								if (jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).children().length > 0) {
+									if (jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).children().length != order) {
+										jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent + " li").eq(order).before(list_item)
+									} else {
+										jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).append(list_item);
 									}
-									jQuery("#objective_" + jsonData.updates.objective_parent + " .objective_children").append(list_item)
-									jQuery("#objective_" + jsonData.updates.objective_parent).click();
-								} else {
-									console.log("Couldn't find the parent");
 								}
-								
-								jQuery("#objective_title_"+jsonData.updates.objective_id).html(jsonData.updates.objective_name);
-								if (jQuery("#description_"+jsonData.updates.objective_id).length > 0) {
-									jQuery("#description_"+jsonData.updates.objective_id).html(jsonData.updates.objective_description);
-								} else {
-									var desc = jQuery(document.createElement("div"));
-									desc.attr("id", "#description_"+jsonData.updates.objective_id)
-										.addClass("objective-description")
-										.html(jsonData.updates.objective_description)
-										.insertAfter("#objective_" + jsonData.updates.objective_id + " .objective-controls");
-										
-								}
-								
-//								console.log(jsonData.updates.objective_id);
 							}
 						}
 					});
@@ -156,10 +115,51 @@ jQuery(document).ready(function(){
 					jQuery(this).dialog( "close" );
 				},
 				Add : function() {
-					console.log(modal_container.children("form").serialize());
-//					jQuery.ajax(function(){
-//						url: url
-//					});
+					var url = modal_container.children("form").attr("action");
+					jQuery.ajax({
+						url: url,
+						type: "POST",
+						async: false,
+						data: modal_container.children("form").serialize(),
+						success: function(data) {
+
+							var jsonData = JSON.parse(data);
+							
+							var order = jsonData.updates.objective_order;
+							
+							if (jsonData.status == "success") {
+								
+								var objective_parent = jsonData.updates.objective_parent;
+								var list_item = jQuery(document.createElement("li"));
+
+								list_item.addClass("objective-container")
+										 .attr("id", "objective_"+jsonData.updates.objective_id)
+										 .attr("data-id", jsonData.updates.objective_id)
+										 .attr("data-code", jsonData.updates.objective_code)
+										 .attr("data-name", jsonData.updates.objective_name)
+										 .attr("data-desc", jsonData.updates.objective_description)
+										 .append(jQuery(document.createElement("div")).attr("id", "objective_title_"+jsonData.updates.objective_id).attr("data-title", jsonData.updates.objective_name).addClass("objective-title").html(jsonData.updates.objective_name))
+										 .append(jQuery(document.createElement("div")).addClass("objective-controls"))
+										 .append(jQuery(document.createElement("div")).attr("id", "description_"+jsonData.updates.objective_id).addClass("objective-description").html(jsonData.updates.objective_description))
+										 .append(jQuery(document.createElement("div")).attr("id", "children_"+jsonData.updates.objective_id).addClass("objective-children"));
+								list_item.children(".objective-controls").append(jQuery(document.createElement("i")).addClass("objective-edit-control").attr("data-id", jsonData.updates.objective_id))
+										 .append(jQuery(document.createElement("i")).addClass("objective-add-control").attr("data-id", jsonData.updates.objective_id))
+										 .append(jQuery(document.createElement("i")).addClass("objective-delete-control").attr("data-id", jsonData.updates.objective_id));
+													
+								if (jQuery("#children_" + parent_id).children().length > 0) {
+									/*
+									 * add it to the dom
+									 */
+									if (jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).children().length != order) {
+										jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent + " li").eq(order).before(list_item)
+									} else {
+										jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).append(list_item);
+									}
+								}
+							}
+
+						}
+					});
 					jQuery(this).dialog( "close" );
 				}
 			},
@@ -173,11 +173,11 @@ jQuery(document).ready(function(){
 	jQuery(".objective-delete-control").live("click", function(){
 		var objective_id = jQuery(this).attr("data-id");
 		var modal_container = jQuery(document.createElement("div"));
-		var url = SITE_URL + "/admin/settings/manage/objectives?org=1&section=delete&mode=ajax&id="+objective_id;
+		var url = SITE_URL + "/admin/settings/manage/objectives?org=1&section=delete&mode=ajax&objective_id="+objective_id;
 		modal_container.load(url);
 		
 		modal_container.dialog({
-			title: "D Objective",
+			title: "Delete Objective",
 			modal: true,
 			draggable: false,
 			resizable: false,
@@ -188,12 +188,25 @@ jQuery(document).ready(function(){
 				Cancel : function() {
 					jQuery(this).dialog( "close" );
 				},
-				Save : function() {
+				Delete : function() {
 					console.log(modal_container.children("form").serialize());
-//					jQuery.ajax(function(){
-//						url: url
-//					});
-					jQuery(this).dialog( "close" );
+					jQuery.ajax({
+						url: modal_container.children("form").attr("action"),
+						type: "POST",
+						async: false,
+						data: modal_container.children("form").serialize(),
+						success: function(data) {
+							var jsonData = JSON.parse(data);
+							if (jsonData.status != "error") {
+								jQuery("#objective_"+objective_id).remove();
+								modal_container.dialog( "close" );
+							} else {
+								if (jQuery(".ui-dialog .display-generic .check-err").length <= 0) {
+									jQuery(".ui-dialog .display-generic").append("<p class=\"check-err\"><strong>Please note:</strong> The checkbox below must be checked off to delete this objective and its children.</p>");
+								}
+							}
+						}
+					});
 				}
 			},
 			close: function(event, ui){

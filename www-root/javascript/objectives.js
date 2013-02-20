@@ -27,11 +27,18 @@ jQuery(document).ready(function(){
 					});
 
 		} else if (jQuery('#children_'+id).is(':visible')) {
-			jQuery('#children_'+id).slideUp();	
+			jQuery('#children_'+id).slideUp(600);	
 		} else {
 			// children = loaded[id];	
 			// buildDOM(children,id);
-			jQuery('#children_'+id).slideDown();	
+			if (jQuery("#objective_list_"+id).children('li').length == 0) {
+				if(!EDITABLE){
+					jQuery('#check_objective_'+id).trigger('click');
+					jQuery('#check_objective_'+id).trigger('change');
+				}
+			}	else {
+				jQuery('#children_'+id).slideDown(600);	
+			}
 		}
 	});
 
@@ -220,6 +227,13 @@ jQuery(document).ready(function(){
 function buildDOM(children,id){
 	var container,title,title_text,controls,check,d_control,e_control,a_control,description,child_container;
 	jQuery('#children_'+id).hide();
+	if(children.error !== undefined){
+		if(!EDITABLE){
+			jQuery('#check_objective_'+id).trigger('click');
+			jQuery('#check_objective_'+id).trigger('change');
+		}
+		return;
+	}
 	for(i = 0;i<children.length;i++){
 		//Javascript to create DOM elements from JSON response
 		container = jQuery(document.createElement('li'))
@@ -292,13 +306,6 @@ function buildDOM(children,id){
 							});
 		jQuery('#objective_list_'+id).append(container);
 	}	
-
-	if(children.error !== undefined){
-		var warning = jQuery(document.createElement('li'))
-						.attr('class','display-notice')
-						.html(children.error);
-		jQuery('#objective_list_'+id).append(warning);
-	}
 
 	jQuery('#children_'+id).slideDown();
 }

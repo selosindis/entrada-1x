@@ -1024,7 +1024,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							height:100%;
 							width:100%;
 						}
-						.remove{
+						.objective-remove{
 							cursor:pointer;
 						}
 						.draggable{
@@ -1175,7 +1175,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												<div class="objective-description"><?php echo $objective["objective_description"];?></div>
 												<div class="objective-controls">
 													<?php if (!$objective["mapped_to_course"]) { ?>
-													<a class="remove" id="objective_remove_<?php echo $objective["objective_id"];?>" data-id="<?php echo $objective["objective_id"];?>">x</a>
+													<a class="objective-remove" id="objective_remove_<?php echo $objective["objective_id"];?>" data-id="<?php echo $objective["objective_id"];?>">x</a>
 													<?php } ?>
 													<input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>																						
 												</div>
@@ -1201,7 +1201,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								<div class="objective-description"><?php echo $objective["objective_description"];?></div>
 								<div class="objective-controls">
 									<?php if (!$objective["mapped_to_course"]) { ?>									
-									<a class="remove" id="objective_remove_<?php echo $objective["objective_id"];?>" data-id="<?php echo $objective["objective_id"];?>">x</a>
+									<a class="objective-remove" id="objective_remove_<?php echo $objective["objective_id"];?>" data-id="<?php echo $objective["objective_id"];?>">x</a>
 									<?php } ?>					
 									<input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objecitve_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>																						
 								</div>

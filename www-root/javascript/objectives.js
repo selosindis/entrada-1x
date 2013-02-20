@@ -77,9 +77,14 @@ jQuery(document).ready(function(){
 							var jsonData = JSON.parse(data);
 							
 							if (jsonData.status == "success") {
-								var list_item = jQuery("#objective_"+objective_id);
+								
 								var order = jsonData.updates.objective_order;
 								var objective_parent = jsonData.updates.objective_parent;
+								
+								var list_item = jQuery("#objective_"+objective_id);
+								
+								jQuery("#objective_title_"+jsonData.updates.objective_id).html(jsonData.updates.objective_name);
+								jQuery("#description_"+jsonData.updates.objective_id).html(jsonData.updates.objective_description);
 								
 								jQuery("#objective_"+objective_id).remove();
 								

@@ -29,14 +29,15 @@ if ($result) {
 	if ($ERROR) {
 		echo display_error();
 	}
+	if ($result["page_url"] != '') {
+		if (isset($result["page_title"]) && trim($result["page_title"]) != "") {
+			echo "<h1>".html_encode($result["page_title"])."</h1>\n";
+		}
 
-	if (isset($result["page_title"]) && trim($result["page_title"]) != "") {
-		echo "<h1>".html_encode($result["page_title"])."</h1>\n";
+		echo "<div class=\"community-page-content\" style=\"margin-top: 10px;\">";
+		echo 	$result["page_content"];
+		echo "</div>";
 	}
-
-	echo "<div class=\"community-page-content\" style=\"margin-top: 10px;\">";
-	echo 	$result["page_content"];
-	echo "</div>";
 }
 
 $query	= "	SELECT *

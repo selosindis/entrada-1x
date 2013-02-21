@@ -878,7 +878,13 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									</tr>
 									<tr>
 										<td colspan="2">
-											<textarea id="page_content" name="page_content" style="margin-right: 10px;width: 95%; height: <?php echo (($PAGE_TYPE == "default") ? "400" : "200"); ?>px" rows="20" cols="70"><?php echo ((isset($PROCESSED["page_content"])) ? html_encode($PROCESSED["page_content"]) : ""); ?></textarea>
+										<?php if (!$home_page) { ?>
+												<textarea id="page_content" name="page_content" style="margin-right: 10px;width: 95%; height: <?php echo (($PAGE_TYPE == "default") ? "400" : "200"); ?>px" rows="20" cols="70"><?php echo ((isset($PROCESSED["page_content"])) ? html_encode($PROCESSED["page_content"]) : ""); ?></textarea>
+										<?php } else { 
+												echo "	<br />\n
+														<em>Please edit the Course Description through the <a href=\"".ENTRADA_URL."/admin/courses\">Manage Courses</a> module.</em>\n";
+										}
+										?>
 										</td>
 									</tr>
 									<?php

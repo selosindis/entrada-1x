@@ -87,14 +87,12 @@ jQuery(document).ready(function(){
 								jQuery("#description_"+jsonData.updates.objective_id).html(jsonData.updates.objective_description);
 								
 								jQuery("#objective_"+objective_id).remove();
-								
-								if (jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).children().length > 0) {
-									if (jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).children().length != order) {
-										jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent + " li").eq(order).before(list_item)
-									} else {
-										jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).append(list_item);
-									}
-								}
+							
+								if (jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).children().length != order) {
+									jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent + " li").eq(order).before(list_item)
+								} else {
+									jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).append(list_item);
+								}								
 							}
 						}
 					});
@@ -143,8 +141,7 @@ jQuery(document).ready(function(){
 								
 								var objective_parent = jsonData.updates.objective_parent;
 								var list_item = jQuery(document.createElement("li"));
-
-								list_item.addClass("objective-container")
+																	list_item.addClass("objective-container")
 										 .attr("id", "objective_"+jsonData.updates.objective_id)
 										 .attr("data-id", jsonData.updates.objective_id)
 										 .attr("data-code", jsonData.updates.objective_code)
@@ -158,22 +155,15 @@ jQuery(document).ready(function(){
 												jQuery(document.createElement("ul")).attr("id", "objective_list_"+jsonData.updates.objective_id).addClass("objective-list")
 											)
 										 );
-								list_item.children(".objective-controls").append(jQuery(document.createElement("i")).addClass("objective-edit-control").attr("data-id", jsonData.updates.objective_id))
+									list_item.children(".objective-controls").append(jQuery(document.createElement("i")).addClass("objective-edit-control").attr("data-id", jsonData.updates.objective_id))
 										 .append(jQuery(document.createElement("i")).addClass("objective-add-control").attr("data-id", jsonData.updates.objective_id))
 										 .append(jQuery(document.createElement("i")).addClass("objective-delete-control").attr("data-id", jsonData.updates.objective_id));
 													
-								if (parseInt(jQuery("#children_" + parent_id + " .objective-list").children().length) > 0) {
-									/*
-									 * add it to the dom
-									 */
 									if (jQuery("#children_" + parent_id + " #objective_list_" + objective_parent).children().length != order) {
 										jQuery("#children_" + parent_id + " #objective_list_" + objective_parent + " li").eq(order).before(list_item)
 									} else {
 										jQuery("#children_" + parent_id + " #objective_list_" + objective_parent).append(list_item);
 									}
-								} else {
-									jQuery("#objective_title_" + parent_id).click();
-								}
 							}
 
 						}

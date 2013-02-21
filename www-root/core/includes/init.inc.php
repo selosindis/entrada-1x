@@ -104,7 +104,19 @@ if ($ENTRADA_USER) {
 	}
 	//Load preferences into local variable as well as $_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]
 	$original_preferences = preferences_load("organisation_switcher");
-
+    if (isset($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) {
+        $query = "SELECT `id` FROM `user_access` 
+                    WHERE `user_id` = ".$db->qstr($ENTRADA_USER->getID())." 
+                    AND `access_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"])."
+					AND `account_active` = 'true'
+					AND (`access_starts` = '0' OR `access_starts` < ".$db->qstr(time()).")
+					AND (`access_expires` = '0' OR `access_expires` >= ".$db->qstr(time()).")
+					AND `app_id` = ".$db->qstr(AUTH_APP_ID);
+        $access_id = $db->GetOne($query);
+        if (!$access_id) {
+            unset($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]);
+        }
+    }
 	if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]) || !$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]) {
 		$query = "	SELECT a.`group`, a.`role`, a.`id`, a.`organisation_id`
 					FROM `" . AUTH_DATABASE . "`.`user_access` a

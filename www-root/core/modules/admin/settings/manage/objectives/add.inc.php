@@ -181,12 +181,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					</thead>
 					<tbody>
 						<tr>
+							<td><label for="objective_code" class="form-nrequired">Objective Code:</label></td>
+							<td><input type="text" id="objective_code" name="objective_code" value="<?php echo ((isset($PROCESSED["objective_code"])) ? html_encode($PROCESSED["objective_code"]) : ""); ?>" maxlength="100" style="width: 300px" /></td>
+						</tr>
+						<tr>
 							<td><label for="objective_name" class="form-required">Objective Name:</label></td>
 							<td><input type="text" id="objective_name" name="objective_name" value="<?php echo ((isset($PROCESSED["objective_name"])) ? html_encode($PROCESSED["objective_name"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
 						</tr>
 						<tr>
-							<td><label for="objective_code" class="form-nrequired">Objective Code:</label></td>
-							<td><input type="text" id="objective_code" name="objective_code" value="<?php echo ((isset($PROCESSED["objective_code"])) ? html_encode($PROCESSED["objective_code"]) : ""); ?>" maxlength="100" style="width: 300px" /></td>
+							<td colspan="2">&nbsp;</td>
+						</tr>
+						<tr>
+							<td style="vertical-align: top;"><label for="objective_description" class="form-nrequired">Objective Description: </label></td>
+							<td>
+								<textarea id="objective_description" name="objective_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ((isset($PROCESSED["objective_description"])) ? html_encode($PROCESSED["objective_description"]) : ""); ?></textarea>
+							</td>
 						</tr>
 						<tr>
 							<td colspan="2">&nbsp;</td>
@@ -202,15 +211,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 							<td style="vertical-align: top"><label for="objective_order" class="form-required">Objective Order:</label></td>
 							<td style="vertical-align: top"><div id="m_selectOrderField_<?php echo $time; ?>"></div></td>
 						</tr>
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top;"><label for="objective_description" class="form-nrequired">Objective Description: </label></td>
-							<td>
-								<textarea id="objective_description" name="objective_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ((isset($PROCESSED["objective_description"])) ? html_encode($PROCESSED["objective_description"]) : ""); ?></textarea>
-							</td>
-						</tr>
+						
 					</tbody>
 					</table>
 				</form>

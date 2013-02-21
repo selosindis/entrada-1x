@@ -150,22 +150,26 @@ jQuery(document).ready(function(){
 										 .attr("data-code", jsonData.updates.objective_code)
 										 .attr("data-name", jsonData.updates.objective_name)
 										 .attr("data-desc", jsonData.updates.objective_description)
-										 .append(jQuery(document.createElement("div")).attr("id", "objective_title_"+jsonData.updates.objective_id).attr("data-title", jsonData.updates.objective_name).addClass("objective-title").html(jsonData.updates.objective_name))
+										 .append(jQuery(document.createElement("div")).attr("id", "objective_title_"+jsonData.updates.objective_id).attr("data-title", jsonData.updates.objective_name).attr("data-id", jsonData.updates.objective_id).addClass("objective-title").html(jsonData.updates.objective_name))
 										 .append(jQuery(document.createElement("div")).addClass("objective-controls"))
 										 .append(jQuery(document.createElement("div")).attr("id", "description_"+jsonData.updates.objective_id).addClass("objective-description").html(jsonData.updates.objective_description))
-										 .append(jQuery(document.createElement("div")).attr("id", "children_"+jsonData.updates.objective_id).addClass("objective-children"));
+										 .append(
+											jQuery(document.createElement("div")).attr("id", "children_"+jsonData.updates.objective_id).addClass("objective-children").append(
+												jQuery(document.createElement("ul")).attr("id", "objective_list_"+jsonData.updates.objective_id).addClass("objective-list")
+											)
+										 );
 								list_item.children(".objective-controls").append(jQuery(document.createElement("i")).addClass("objective-edit-control").attr("data-id", jsonData.updates.objective_id))
 										 .append(jQuery(document.createElement("i")).addClass("objective-add-control").attr("data-id", jsonData.updates.objective_id))
 										 .append(jQuery(document.createElement("i")).addClass("objective-delete-control").attr("data-id", jsonData.updates.objective_id));
 													
-								if (jQuery("#children_" + parent_id + " .objective-list").children().length > 0) {
+								if (parseInt(jQuery("#children_" + parent_id + " .objective-list").children().length) > 0) {
 									/*
 									 * add it to the dom
 									 */
-									if (jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).children().length != order) {
-										jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent + " li").eq(order).before(list_item)
+									if (jQuery("#children_" + parent_id + " #objective_list_" + objective_parent).children().length != order) {
+										jQuery("#children_" + parent_id + " #objective_list_" + objective_parent + " li").eq(order).before(list_item)
 									} else {
-										jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).append(list_item);
+										jQuery("#children_" + parent_id + " #objective_list_" + objective_parent).append(list_item);
 									}
 								} else {
 									jQuery("#objective_title_" + parent_id).click();

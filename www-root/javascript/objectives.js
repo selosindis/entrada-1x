@@ -1,6 +1,6 @@
 var EDITABLE = false;
 var loaded = [];
-jQuery(document).ready(function(){
+jQuery(document).ready(function(){	
 	jQuery('.objective-collapse-control').live('click',function(){
 		var id = jQuery(this).attr('data-id');
 		if(jQuery('#children_'+id).is(':visible')){
@@ -16,13 +16,24 @@ jQuery(document).ready(function(){
 		var id = jQuery(this).attr('data-id');		
 		var children = [];
 		if (loaded[id] === undefined || !loaded[id]) {
+			var query = {'objective_id':id};
+			if(jQuery('#mapped_objectives').length>0){
+				var type = jQuery('#mapped_objectives').attr('data-resource-type');
+				var value = jQuery('#mapped_objectives').attr('data-resource-id');
+				if(type && value){
+					query[type+'_id'] = value;
+				}
+			}
+			// if(mapped != undefined){
+			// 	query['client'] = mapped;
+			// }
+			console.log(query);
 			jQuery.ajax({
 							url:SITE_URL+'/api/fetchobjectives.api.php',
-							data:{'objective_id':id},
+							data:query,
 							success:function(data,status,xhr){								
 								loaded[id] = jQuery.parseJSON(data);
-								children = loaded[id];
-								buildDOM(children,id);	
+								buildDOM(loaded[id],id);	
 							}
 					});
 
@@ -279,7 +290,10 @@ function buildDOM(children,id){
 						.attr('type','checkbox')
 						.attr('class','checked-objective')
 						.attr('id','check_objective_'+children[i].objective_id)
-						.val(children[i].objective_id);	
+						.val(children[i].objective_id);
+			if(children[i].mapped && children[i].mapped != 0){
+				jQuery(check).attr('checked','checked');
+			}	
 		}
 		description = 	jQuery(document.createElement('div'))
 						.attr('class','objective-description')

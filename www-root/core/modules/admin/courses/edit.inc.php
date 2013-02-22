@@ -932,9 +932,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							.tl-objective-list > li{
 								padding:5px;
 								margin-bottom:5px;								
-							}					
+							}								
+							.tl-objective-list > .objective-set h3{
+								-webkit-border-radius:5px;
+								-moz-border-radius:5px;
+								border-radius:5px;
+								background-color:#036!important;
+								color:#fff!important;
+								padding:10px;
+							}			
 						</style>
 							<div class="objectives half left">
+								<h2>Objective Sets</h2>
 								<ul class="tl-objective-list" id="objective_list_0">
 						<?php		foreach($objectives as $objective){ ?>
 										<li class = "objective-container objective-set"
@@ -960,23 +969,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</ul>
 							</div>
 
-						<div class="mapped_objectives right droppable">
+						<div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="course" data-resource-id="<?php echo $COURSE_ID;?>">
+							<h2>Mapped Objectives
 							<div style="float: right">
 								<ul class="page-action">
 									<li class="last">
 										<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Show Objective Sets</a>
 									</li>
 								</ul>
-							</div>
-							<div style="clear:both;"></div>
+							</div>								
+							</h2>
 							<p class="content-small">
 								<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left and drag it to this area to map it to the course, or check the checkbox.
 							</p>
-								<?php   $query = "	SELECT a.*,b.`objective_type`, b.`importance` FROM `global_lu_objectives` a
+								<?php   $query = "	SELECT a.*,b.`objective_type`, b.`importance` 
+													FROM `global_lu_objectives` a
 													JOIN `course_objectives` b
 													ON a.`objective_id` = b.`objective_id`
 													AND b.`course_id` = ".$db->qstr($COURSE_ID)."
 													WHERE a.`objective_active` = '1'
+													GROUP BY a.`objective_id`
 													ORDER BY b.`importance` ASC";
 										$mapped_objectives = $db->GetAll($query);													
 										$primary = false;
@@ -997,7 +1009,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											}
 										}
 										?>
-							<h2>Curriculum Objectives</h2>
+							<h3>Curriculum Objectives</h3>
 							<ul class="objective-list mapped-list" id="mapped_hierarchical_objectives" data-importance="hierarchical">
 									<?php
 										if ($hierarchical_objectives) { 
@@ -1015,7 +1027,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 															<option value="1"<?php echo $objective["importance"] == 1?' selected="selected"':'';?>>Primary</option>
 															<option value="2"<?php echo $objective["importance"] == 2?' selected="selected"':'';?>>Secondary</option>
 															<option value="3"<?php echo $objective["importance"] == 3?' selected="selected"':'';?>>Tertiary</option>
-														</select><a class="remove" data-id="<?php echo $objective["objective_id"];?>">x</a>
+														</select><a class="remove" id="objective_remove_<?php echo $objective["objective_id"];?>" data-id="<?php echo $objective["objective_id"];?>">x</a>
 													</div>
 												</li>
 
@@ -1024,7 +1036,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								 		} 	?>											
 							</ul>
 
-							<h2>Other Objectives</h2>
+							<h3>Other Objectives</h3>
 							<ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
 							<?php	
 								if ($flat_objectives) {
@@ -1038,7 +1050,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<strong><?php echo $title; ?></strong>
 									<div class="objective-description"><?php echo $objective["objective_description"];?></div>
 									<div class="objective-controls">
-										<a class="remove" data-id="<?php echo $objective["objective_id"];?>">x</a>
+										<a class="remove" id="objective_remove_<?php echo $objective["objective_id"];?>" data-id="<?php echo $objective["objective_id"];?>">x</a>
 									</div>
 								</li>
 

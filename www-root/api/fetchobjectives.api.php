@@ -54,7 +54,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	} elseif ($event_id) {
 		$qu_arr[1] = "LEFT JOIN `event_objectives` b
 					ON a.`objective_id` = b.`objective_id`";
-		$qu_arr[3] = "AND b.`event_id` = ".$db->qstr($course_id);									
+		$qu_arr[3] = "AND b.`event_id` = ".$db->qstr($event_id);									
 	}	
 	
 	$qu_arr[2] = "WHERE a.`objective_parent` = ".$db->qstr($id)." 

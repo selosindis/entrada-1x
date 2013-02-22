@@ -1,4 +1,5 @@
 	var mapped = [];
+	var listed = [];
 	jQuery(document).ready(function($){
 		jQuery('.objectives').hide();
 		jQuery('.draggable').draggable({
@@ -29,7 +30,7 @@
 		jQuery('.objective-remove').live('click',function(){
 			console.log($(this));
 			var id = jQuery(this).attr('data-id');
-			var list = jQuery('#check_mapped_'+id).parent().attr('data-importance');
+			var list = jQuery('#mapped_objective_'+id).parent().attr('data-importance');
 			var importance = 'checked';
 			if(list == "flat"){
 				importance = 'clinical';
@@ -44,8 +45,6 @@
 			// this grabs all parents above the object and then fetches the list from the immediate (last) parent
 			var sets_above = jQuery(this).parents('.objective-set');
 			var list = jQuery(sets_above[sets_above.length-1]).attr('data-list');
-			console.log(list);
-			console.log(sets_above);
 
 			var title = jQuery('#objective_title_'+id).attr('data-title');
 			var description = jQuery('#objective_'+id).attr('data-description');
@@ -121,6 +120,12 @@
 			}
 		});
 
+		/**
+		* Init Code
+		*/
+
+		jQuery('#event-topics-toggle').trigger('click');
+
 		if(jQuery('#mapped_hierarchical_objectives').children('li').length == 0 && jQuery('#mapped_flat_objectives').children('li').length == 0){
 			jQuery('#toggle_sets').trigger('click');
 		}			
@@ -133,6 +138,17 @@
 			mapped.push($(this).val());
 		});		
 
+		jQuery('#mapped_hierarchical_objectives').children('li').each(function(){
+			if(jQuery(this).attr('data-id') !== undefined && jQuery(this).attr('data-id')){
+				listed.push(jQuery(this).attr('data-id'));
+			}
+		});
+
+		jQuery('#mapped_flat_objectives').children('li').each(function(){			
+			if(jQuery(this).attr('data-id') !== undefined && jQuery(this).attr('data-id')){
+				listed.push(jQuery(this).attr('data-id'));
+			}
+		});		
 
 	});
 
@@ -143,13 +159,18 @@
 		}
 		console.log('key '+key+' id '+id+' list '+list+' importance '+importance);
 		if(jQuery('#mapped_objective_'+id+' .objective-remove').length > 0){
+			var lkey = jQuery.inArray(id,listed);
+			if(lkey != -1){
+				listed.splice(lkey,1);
+			}
 			console.log('Deletable');
 			console.log(jQuery('#mapped_objective_'+id))
 			jQuery('#mapped_objective_'+id).remove();																		
 		}		
 		jQuery("#"+importance+"_objectives_select option[value='"+id+"']").remove();				
 		jQuery('#check_objective_'+id).attr('checked','');
-
+		jQuery('#check_mapped_'+id).attr('checked','');
+		jQuery('#text_container_'+id).remove();
 		if(jQuery('#mapped_'+list+'_objectives').children('li').length == 0){
 			//do something, no warning anymore
 		}			
@@ -157,12 +178,12 @@
 	}
 
 	function mapObjective(id,title,description,list,create){
-		var key = jQuery.inArray(id,mapped);		
+		var key = jQuery.inArray(id,mapped);	
+		var lkey = jQuery.inArray(id,listed);		
 		console.log(id);
 		console.log(key);
 		console.log(mapped);
-		if(key != -1) return;
-
+		if(key != -1) return;	
 		var importance = 'checked';	
 		if(list === undefined || !list){			
 			list = 'flat';
@@ -175,7 +196,7 @@
 			description = '';
 		}
 		
-		if(create){
+		if(create && lkey == -1){
 			var li = jQuery(document.createElement('li'))
 							.attr('class','mapped-objective')
 							.attr('id','mapped_objective_'+id)
@@ -188,7 +209,7 @@
 							.html(description);
 			jQuery(li).append(desc);
 			var controls = 	jQuery(document.createElement('div'))
-								.attr('class','objective-controls');			
+								.attr('class','event-objective-controls');			
 			var check = jQuery(document.createElement('input'))
 							.attr('type','checkbox')
 							.attr('class','checked-mapped')
@@ -206,11 +227,40 @@
 			jQuery('#mapped_'+list+'_objectives').append(li);
 			jQuery('#mapped_'+list+'_objectives .display-notice').remove();
 			jQuery(li).append(controls);
+			listed.push(id);
 		}
-													
-		var option = jQuery(document.createElement('option'))
-						.val(id)
-						.html(title);														
-		jQuery('#'+importance+'_objectives_select').append(option);
+
+		var text_label = jQuery(document.createElement('label'))
+								.attr('for','objective_text_'+id)
+								.attr('class','content-small')
+								.attr('id','objective_'+id+'_append')
+								.attr('style','vertical-align:middle;')
+								.html('Provide your sessional free-text objective below as it relates to this curricular objective.');
+
+		var text_div = jQuery(document.createElement('div'))
+						.attr('id','text_container_'+id)
+						.attr('class','objective_text_container')
+						.attr('data-id',id);
+		var text = jQuery(document.createElement('textarea'))
+						.attr('name','objective_text['+id+']')
+						.attr('id',"objective_text_"+id)
+						.attr('data-id',id) 
+						.attr('class',"expandable")
+						.attr('style',"height: 28px; overflow: hidden;");
+						console.log(text);
+		jQuery(text_div).append(text_label).append(text);
+
+		jQuery('#mapped_objective_'+id).append(text_div);	
+		jQuery('#check_objective_'+id).attr('checked','checked');
+		jQuery('#check_mapped_'+id).attr('checked','checked');
+		console.log('importance is '+importance);
+		if(jQuery("#"+importance+"_objectives_select option[value='"+id+"']").length == 0){
+			var option = jQuery(document.createElement('option'))				
+				.val(id)
+				.attr('selected','selected')
+				.html(title);														
+			jQuery('#'+importance+'_objectives_select').append(option);
+		}
+
 		mapped.push(id);								
 	}

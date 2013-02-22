@@ -28,7 +28,7 @@
 		jQuery('.remove').live('click',function(){
 			var id = jQuery(this).attr('data-id');
 			var key = jQuery.inArray(id,mapped);
-			var list = jQuery(this).parents('.mapped-list').attr('data-importance');
+			var list = jQuery('#mapped_objective_'+id).parent().attr('data-importance');
 			var importance;
 			if(list == "flat"){
 				importance = 'clinical';
@@ -57,9 +57,8 @@
 				mapped.splice(key,1);
 			}
 			jQuery('#check_objective_'+id).attr('checked','');
-			
 			jQuery('#mapped_objective_'+id).remove();																		
-			jQuery("#mapped_"+importance+"_objectives_select option[value='"+id+"']").remove();
+			jQuery("#"+importance+"_objectives_select option[value='"+id+"']").remove();
 			if(jQuery('#mapped_'+list+'_objectives').children('li').length == 0){
 				var warning = jQuery(document.createElement('li'))
 								.attr('class','display-notice')
@@ -74,12 +73,10 @@
 			// this grabs all parents above the object and then fetches the list from the immediate (last) parent
 			var sets_above = jQuery(this).parents('.objective-set');
 			var list = jQuery(sets_above[sets_above.length-1]).attr('data-list');
-			console.log(list);
-			console.log(sets_above);
 
 			var title = jQuery('#objective_title_'+id).attr('data-title');
 			var description = jQuery('#objective_'+id).attr('data-description');
-			if (jQuery(this).is(':checked')) {
+			if (jQuery(this).is(':checked')) {				
 				mapObjective(id,title,description,list);
 			} else {
 				jQuery('#objective_remove_'+id).trigger('click');
@@ -141,8 +138,7 @@
 					new_importance = 'tertiary';
 					break;
 			}
-
-			var option = jQuery('#'+importance+'_objectives_select option[value="'+id+'"]').clone(true);
+			var option = jQuery('#'+importance+'_objectives_select option[value="'+id+'"]').clone(true);			
 			jQuery('#'+importance+'_objectives_select option[value="'+id+'"]').remove();
 			jQuery('#'+new_importance+'_objectives_select').append(option);
 
@@ -164,6 +160,10 @@
 	});
 
 	function mapObjective(id,title,description,list,importance){
+		var ismapped = jQuery.inArray(id,mapped);
+		if(ismapped !== -1){
+			return;
+		}		
 		if(list === undefined || !list){
 			list = 'flat';
 		}								
@@ -193,7 +193,8 @@
 		}else{									
 			var imp = 	jQuery(document.createElement('select'))
 								.attr('class','importance')
-								.attr('data-id',id);
+								.attr('data-id',id)
+								.attr('data-value',1);
 			var pri = jQuery(document.createElement('option')).val(1).html('Primary');
 			var sec = jQuery(document.createElement('option')).val(2).html('Secondary');
 			var ter = jQuery(document.createElement('option')).val(3).html('Tertiary');									
@@ -222,12 +223,16 @@
 		
 		jQuery(controls).append(rm);			
 		jQuery(li).append(controls);											
-		var option = jQuery(document.createElement('option'))
-						.val(id)
-						.html(title);														
+													
 		jQuery('#mapped_'+list+'_objectives').append(li);
 		jQuery('#mapped_'+list+'_objectives .display-notice').remove();
-		jQuery('#'+list_val+'_objectives_select').append(option);
+		if(jQuery("#"+list_val+"_objectives_select option[value='"+id+"']").length == 0){
+		var option = jQuery(document.createElement('option'))
+						.val(id)
+						.attr('checked','checked')
+						.html(title);													
+			jQuery('#'+list_val+'_objectives_select').append(option);
+		}		
 		jQuery(option).attr('selected','selected');
 		jQuery('#check_objective_'+id).attr('checked','checked');
 		mapped.push(id);								

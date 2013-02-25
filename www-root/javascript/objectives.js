@@ -160,7 +160,7 @@ jQuery(document).ready(function(){
 										 .attr("data-desc", jsonData.updates.objective_description)
 										 .append(jQuery(document.createElement("div")).attr("id", "objective_title_"+jsonData.updates.objective_id).attr("data-title", jsonData.updates.objective_name).attr("data-id", jsonData.updates.objective_id).addClass("objective-title").html(jsonData.updates.objective_name))
 										 .append(jQuery(document.createElement("div")).addClass("objective-controls"))
-										 .append(jQuery(document.createElement("div")).attr("id", "description_"+jsonData.updates.objective_id).addClass("objective-description").html(jsonData.updates.objective_description))
+										 .append(jQuery(document.createElement("div")).attr("id", "description_"+jsonData.updates.objective_id).addClass("objective-description").addClass("content-small").html(jsonData.updates.objective_description))
 										 .append(
 											jQuery(document.createElement("div")).attr("id", "children_"+jsonData.updates.objective_id).addClass("objective-children").append(
 												jQuery(document.createElement("ul")).attr("id", "objective_list_"+jsonData.updates.objective_id).addClass("objective-list")
@@ -296,7 +296,7 @@ function buildDOM(children,id){
 			}	
 		}
 		description = 	jQuery(document.createElement('div'))
-						.attr('class','objective-description')
+						.attr('class','objective-description content-small')
 						.attr('id','description_'+children[i].objective_id)
 						.html(children[i].objective_description);
 		child_container = 	jQuery(document.createElement('div'))

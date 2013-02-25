@@ -882,8 +882,10 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 												<textarea id="page_content" name="page_content" style="margin-right: 10px;width: 95%; height: <?php echo (($PAGE_TYPE == "default") ? "400" : "200"); ?>px" rows="20" cols="70"><?php echo ((isset($PROCESSED["page_content"])) ? html_encode($PROCESSED["page_content"]) : ""); ?></textarea>
 										<?php } else { 
 												echo "	<br />\n
-														<em>Please edit the Course Description through the <a href=\"".ENTRADA_URL."/admin/courses\">Manage Courses</a> module.</em>\n";
-										}
+														<div class=\"display-notice\">\n
+															Please edit the Course Description through the Manage Courses > Course Content tab found <a href=\"" . ENTRADA_URL . "/admin/courses\">here</a>.\n
+														</div>\n";
+												}
 										?>
 										</td>
 									</tr>
@@ -1041,7 +1043,9 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										 <tr>
 											<td colspan="2">
 												<br />
-												<strong>Please edit the Learning Objectives through the Content tab on your Course Admin page.</strong>
+												<div class="display-notice">
+													Please edit the Learning Objectives through the Manage Courses > Course Content tab found <a href="<?php echo ENTRADA_URL . "/admin/courses" ;?>">here</a>.
+												</div>
 											</td>
 										 </tr>
 								<?php
@@ -1050,7 +1054,9 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										<tr>
 											<td colspan="2">
 												<br />
-												<strong>Please edit the MCC Presentation Objectives through the Content tab on your Course Admin page.</strong>
+												<div class="display-notice">
+													Please edit the MCC Presentation Objectives through the Manage Courses > Course Content tab found <a href="<?php echo ENTRADA_URL . "/admin/courses" ;?>">here</a>.
+												</div>
 											</td>
 										 </tr>
 							    <?php

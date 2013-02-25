@@ -57,25 +57,30 @@ if (!defined("PARENT_INCLUDED")) {
 		
 		ob_clear_open_buffers();
 		
-		
-		$query = "	SELECT a.`objective_id`, a.`objective_name`, a.`objective_parent`, COUNT(DISTINCT d.`event_id`) AS `event_count`
-					FROM `global_lu_objectives` AS a 
-					JOIN `objective_organisation` AS b
-					ON a.`objective_id` = b.`objective_id`
-					
-					LEFT JOIN `course_objectives` AS c
-					ON a.`objective_id` = c.`objective_id`
-					
-					LEFT JOIN `event_objectives` AS d
-					ON a.`objective_id` = d.`objective_id`
-					LEFT JOIN `events` AS e 
-					ON d.`event_id` = e.`event_id`
-					
-					WHERE a.`objective_parent` = ".$db->qstr($PROCESSED["objective_parent"])." 
-					AND a.`objective_active` = 1
-					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-						
-					GROUP BY a.`objective_id`";
+		$query = "	SELECT a.`objective_id`, a.`objective_name`, a.`objective_parent`, 
+								COUNT(DISTINCT " . ($PROCESSED["course_id"] ? "IF(c.`course_id` = " . $db->qstr($PROCESSED["course_id"]) . ", c.`course_id`, NULL)" : "c.`course_id`" ) . ") AS `course_count`, 
+								COUNT(DISTINCT IF(f.`event_id` IS NOT NULL " . ($PROCESSED["course_id"] ? " && f.`course_id` = ".$db->qstr($PROCESSED["course_id"])." " : "") . ", f.`event_id`, NULL)) AS `event_count`
+							FROM `global_lu_objectives` AS a 
+							JOIN `objective_organisation` AS b
+							ON a.`objective_id` = b.`objective_id`
+
+							LEFT JOIN `course_objectives` AS c
+							ON a.`objective_id` = c.`objective_id`
+							LEFT JOIN `courses` AS d
+							ON c.`course_id` = d.`course_id`
+
+							LEFT JOIN `event_objectives` AS e
+							ON a.`objective_id` = e.`objective_id`
+							LEFT JOIN `events` AS f
+							ON e.`event_id` = f.`event_id`
+
+							WHERE a.`objective_parent` = " . $db->qstr($PROCESSED["objective_parent"]) . " 
+							AND a.`objective_active` = '1'
+							AND b.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()).
+							($PROCESSED["year"] ? " AND (IF (f.`event_id` IS NOT NULL, f.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).", '1' = '1'))" : "")."
+							AND (d.`course_active` = '1' OR d.`course_active` IS NULL)
+							GROUP BY a.`objective_id`
+							ORDER BY a.`objective_id` ASC";
 		$child_objectives = $db->GetAll($query);
 		
 		$query = "	SELECT b.`course_id`, b.`course_name`, `course_code`
@@ -87,9 +92,8 @@ if (!defined("PARENT_INCLUDED")) {
 					WHERE a.`objective_id` = ".$db->qstr($PROCESSED["objective_parent"])."
 					AND b.`course_active` = 1
 					AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation()).
-					($PROCESSED["course_id"] ? " AND (b.`course_id` = " . $db->qstr($PROCESSED["course_id"]).", '1' = '1'))" : "");
+					($PROCESSED["course_id"] ? " AND (a.`course_id` = " . $db->qstr($PROCESSED["course_id"]).", '1' = '1'))" : "");
 		$mapped_courses = $db->GetAll($query);
-//		$child_objectives["course_count"] = count($mapped_courses);
 		
 		$query = "	SELECT c.*, d.`objective_name`, e.`course_code`, e.`course_name`
 					FROM `event_objectives` AS a
@@ -103,11 +107,10 @@ if (!defined("PARENT_INCLUDED")) {
 					ON c.`course_id` = e.`course_id`
 					WHERE a.`objective_id` = ".$db->qstr($PROCESSED["objective_parent"])." 
 					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation()).
-					($PROCESSED["year"] ? " AND (IF (e.`event_id` IS NOT NULL, e.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).", '1' = '1'))" : "").
+					($PROCESSED["year"] ? " AND (IF (c.`event_id` IS NOT NULL, c.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).", '1' = '1'))" : "").
 					($PROCESSED["course_id"] ? " AND (IF (c.`course_id` IS NOT NULL, c.`course_id` = " . $db->qstr($PROCESSED["course_id"]).", '1' = '1'))" : "")."
 					ORDER BY c.`course_id`, c.`event_start` DESC";
 		$event_objectives = $db->GetAll($query);
-//		$child_objectives["event_count"] = count($event_objectives);
 		
 		if ($event_objectives) {
 			foreach ($event_objectives as $objective) {
@@ -252,25 +255,30 @@ if (!defined("PARENT_INCLUDED")) {
 				/*
 				 * Fetch the child objectives of the selected objective set.
 				 */
-				$query = "	SELECT a.`objective_id`, a.`objective_name`, COUNT(DISTINCT c.`cobjective_id`) AS `course_count`, COUNT(DISTINCT e.`event_id`) AS `event_count`
+				$query = "	SELECT a.`objective_id`, a.`objective_name`, a.`objective_parent`, 
+								COUNT(DISTINCT " . ($PROCESSED["course_id"] ? "IF(c.`course_id` = " . $db->qstr($PROCESSED["course_id"]) . ", c.`course_id`, NULL)" : "c.`course_id`" ) . ") AS `course_count`, 
+								COUNT(DISTINCT IF(f.`event_id` IS NOT NULL " . ($PROCESSED["course_id"] ? " && f.`course_id` = ".$db->qstr($PROCESSED["course_id"])." " : "") . ", f.`event_id`, NULL)) AS `event_count`
 							FROM `global_lu_objectives` AS a 
 							JOIN `objective_organisation` AS b
 							ON a.`objective_id` = b.`objective_id`
+
 							LEFT JOIN `course_objectives` AS c
 							ON a.`objective_id` = c.`objective_id`
-							LEFT JOIN `event_objectives` AS d
-							ON a.`objective_id` = d.`objective_id`
-							LEFT JOIN `events` AS e
-							ON d.`event_id` = e.`event_id`
-							LEFT JOIN `courses` AS f
-							ON c.`course_id` = f.`course_id`
-							WHERE a.`objective_parent` = ".$db->qstr($PROCESSED["objective_parent"])." 
-							AND a.`objective_active` = 1
-							AND (f.`course_active` = 1 OR f.`course_id` IS NULL)
-							AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation()).
-							($PROCESSED["year"] ? " AND (IF (e.`event_id` IS NOT NULL, e.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).", '1' = '1'))" : "").
-							($PROCESSED["course_id"] ? " AND (IF (f.`course_id` IS NOT NULL, f.`course_id` = " . $db->qstr($PROCESSED["course_id"]).", '1' = '1'))" : "")."
-							GROUP BY a.`objective_id`";
+							LEFT JOIN `courses` AS d
+							ON c.`course_id` = d.`course_id`
+
+							LEFT JOIN `event_objectives` AS e
+							ON a.`objective_id` = e.`objective_id`
+							LEFT JOIN `events` AS f
+							ON e.`event_id` = f.`event_id`
+
+							WHERE a.`objective_parent` = " . $db->qstr($PROCESSED["objective_parent"]) . " 
+							AND a.`objective_active` = '1'
+							AND b.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()).
+							($PROCESSED["year"] ? " AND (IF (f.`event_id` IS NOT NULL, f.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).", '1' = '1'))" : "")."
+							AND (d.`course_active` = '1' OR d.`course_active` IS NULL)
+							GROUP BY a.`objective_id`
+							ORDER BY a.`objective_id` ASC";
 				$objectives = $db->GetAll($query);
 				if ($objectives) {
 			?>

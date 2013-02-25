@@ -11878,6 +11878,142 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 	return $output;
 }
 
+/**
+* Calls event_objectives_bottom_leaves to get array of objectives to display, then calls event_objectives_display_leaf for each objective
+*/
+function event_objectives_display_leafs($objectives,$course_id,$event_id){
+	$leaves = event_objectives_bottom_leaves($objectives,$course_id,$event_id, false);
+	$displayed = array();
+	error_log(print_r($leaves,true));
+	foreach ($leaves as $importance=>$leafs) {
+	?>
+	<a name="#<?php echo $importance;?>-objective-list"></a>
+	<h2 title="<?php echo ucwords($importance);?> Objectives List" class="<?php echo $importance == 'primary'?'':'collapsed';?>"><?php echo ucwords($importance);?> Objectives</h2>
+	<div id="<?php echo $importance;?>-objectives-list">
+	<ul class="objective-list mapped-list" id="mapped_<?php echo $importance;?>_objectives" data-importance="hierarchical">
+	<?php
+		foreach($leafs as $leaf){
+			if (!in_array($leaf["objective_id"],$displayed)){
+				array_push($displayed,$leaf["objective_id"]);
+				event_objectives_display_leaf($leaf);
+			}
+		}
+	?>
+	</ul>
+	</div>
+	<?php
+	}	
+}
+
+/**
+* Recursively loops through children until it finds the loweest ancestor of mapped parents
+* If parent is mapped to the event (somehow), children of that parent are automatically mapped as well
+*/
+function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $parent_mapped = false, $parent_importance = false){
+	global $db;
+	$importances = array('primary','secondary','tertiary');
+	$list = array('primary' => array(),'secondary'=>array(),'tertiary'=>array());
+	foreach($objectives as $objective){
+		$imp = ($parent_importance?$parent_importance:($objective["importance"]?$objective["importance"]:3));
+		switch($imp){
+			case 1:
+				$importance = "primary";
+				break;
+			case 2:
+				$importance = "secondary";
+				break;				
+			case 3:
+				$importance = "tertiary";
+				break;		
+			default:
+				$importance;		
+		}
+		$query = "SELECT a.*,COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`, 
+					b.`importance`,c.`objective_details`, COALESCE(c.`eobjective_id`,0) AS `mapped`, 
+					COALESCE(b.`cobjective_id`,0) AS `mapped_to_course` 
+					FROM `global_lu_objectives` a
+					LEFT JOIN `course_objectives` b
+					ON a.`objective_id` = b.`objective_id`
+					AND b.`course_id` = ".$db->qstr($course_id)."
+					LEFT JOIN `event_objectives` c
+					ON c.`objective_id` = a.`objective_id` 			
+					AND c.`event_id` = ".$db->qstr($event_id)."									
+					WHERE a.`objective_active` = '1'
+					AND a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
+					GROUP BY a.`objective_id`
+					ORDER BY a.`objective_order` ASC
+					";				
+		error_log($query);				
+		$children = $db->GetAll($query);					
+		$map = ($parent_mapped?true:($objective["mapped"]?true:false));
+		if (!$children) {
+			if ($map) {
+				$objective["mapped"] = 1;
+			}
+			array_push($list[$importance],$objective);
+			error_log("Added objective");
+		}else{
+			error_log("Children exist");
+
+			$response = event_objectives_bottom_leaves($children,$course_id,$event_id,$map,$imp);			
+			if ($response) {
+				if ($parent_mapped) {
+					foreach($response as $imp=>$list){
+						foreach($list as $k=>$item){
+						$response[$imp][$k]["mapped"] = 1;	
+						}						
+					}
+				}
+				foreach($importances as $importance){
+					$list[$importance] = array_merge($list[$importance],$response[$importance]);
+				}
+			}
+		}
+		//error_log("After objective: ".$objective["objective_id"]." List is: ".print_r($list,true));
+	}	
+
+	return $list;
+}
+
+/**
+* Displays the objective leaf as it is on the event content page
+*/
+function event_objectives_display_leaf($objective){
+	$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);													
+	?>
+		<li class = "mapped-objective"
+			id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+			data-id = "<?php echo $objective["objective_id"]; ?>"
+			data-title="<?php echo $title;?>"
+			data-description="<?php echo htmlentities($objective["objective_description"]);?>">
+			<strong><?php echo $title; ?></strong>
+			<div class="objective-description">
+				<?php echo $objective["objective_description"];?>
+			</div>
+			<div class="event-objective-controls">
+				<input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>																						
+				<?php if (!$objective["mapped_to_course"]) { ?>
+				<a class="objective-remove" id="objective_remove_<?php echo $objective["objective_id"];?>" data-id="<?php echo $objective["objective_id"];?>">x</a>
+				<?php } ?>
+			</div>
+			<?php if ($objective["mapped"]) { ?>	
+			<div 	id="text_container_<?php echo $objective["objective_id"]; ?>" 
+					class="objective_text_container" 
+					data-id="<?php echo $objective["objective_id"]; ?>">
+				<label 	for="objective_text_<?php echo $objective["objective_id"]; ?>" 
+						class="content-small" id="objective_<?php echo $objective["objective_id"]; ?>_append" 
+						style="vertical-align: middle;">Provide your sessional free-text objective below as it relates to this curricular objective.</label>	
+				<textarea 	name="objective_text[<?php echo $objective["objective_id"]; ?>]" 
+							id="objective_text_<?php echo $objective["objective_id"]; ?>" 
+							data-id="<?php echo $objective["objective_id"]; ?>" 
+							class="expandable" 
+							style="height: 28px; overflow: hidden;"><?php echo $objective["objective_details"];?></textarea>
+			</div>
+			<?php } ?>
+		</li>	
+	<?php
+}
+
 function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_text = false, $parent_active = false, $importance = 1, $course = true, $top = true, $display_importance = "primary", $full_objective_list = false, $course_id = 0) {
 	global $edit_ajax, $ENTRADA_USER;
 

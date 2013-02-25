@@ -237,23 +237,25 @@
 								.attr('style','vertical-align:middle;')
 								.html('Provide your sessional free-text objective below as it relates to this curricular objective.');
 
-		var text_div = jQuery(document.createElement('div'))
-						.attr('id','text_container_'+id)
-						.attr('class','objective_text_container')
-						.attr('data-id',id);
-		var text = jQuery(document.createElement('textarea'))
-						.attr('name','objective_text['+id+']')
-						.attr('id',"objective_text_"+id)
-						.attr('data-id',id) 
-						.attr('class',"expandable")
-						.attr('style',"height: 28px; overflow: hidden;");
-						console.log(text);
-		jQuery(text_div).append(text_label).append(text);
+		if(importance == 'checked'){
+			var text_div = jQuery(document.createElement('div'))
+							.attr('id','text_container_'+id)
+							.attr('class','objective_text_container')
+							.attr('data-id',id);
+			var text = jQuery(document.createElement('textarea'))
+							.attr('name','objective_text['+id+']')
+							.attr('id',"objective_text_"+id)
+							.attr('data-id',id) 
+							.attr('class',"expandable")
+							.attr('style',"height: 28px; overflow: hidden;");
+							console.log(text);
+			jQuery(text_div).append(text_label).append(text);
+			jQuery('#mapped_objective_'+id).append(text_div);	
+		}
 
-		jQuery('#mapped_objective_'+id).append(text_div);	
+		
 		jQuery('#check_objective_'+id).attr('checked','checked');
 		jQuery('#check_mapped_'+id).attr('checked','checked');
-		console.log('importance is '+importance);
 		if(jQuery("#"+importance+"_objectives_select option[value='"+id+"']").length == 0){
 			var option = jQuery(document.createElement('option'))				
 				.val(id)

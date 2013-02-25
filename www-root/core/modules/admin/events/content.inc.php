@@ -1169,12 +1169,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<p class="content-small">
 							<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left and drag it to this area to map it to the course, or check the checkbox.
 						</p>
-							<?php   $query = "	SELECT a.*,COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`, b.`importance`,c.`objective_details`, COALESCE(c.`eobjective_id`,0) AS `mapped`, COALESCE(b.`cobjective_id`,0) AS `mapped_to_course` 
+							<?php   $query = "	SELECT a.*,COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`, 
+												b.`importance`,c.`objective_details`, COALESCE(c.`eobjective_id`,0) AS `mapped`, 
+												COALESCE(b.`cobjective_id`,0) AS `mapped_to_course` 
 												FROM `global_lu_objectives` a
 												LEFT JOIN `course_objectives` b
 												ON a.`objective_id` = b.`objective_id`
+												AND b.`course_id` = ".$db->qstr($COURSE_ID)."
 												LEFT JOIN `event_objectives` c
-												ON c.`objective_id` = a.`objective_id` 												
+												ON c.`objective_id` = a.`objective_id` 			
+												AND c.`event_id` = ".$db->qstr($EVENT_ID)."									
 												WHERE a.`objective_active` = '1'
 												AND (c.`event_id` = ".$db->qstr($EVENT_ID)." OR b.`course_id` = ".$db->qstr($COURSE_ID).")
 												GROUP BY a.`objective_id`
@@ -1201,92 +1205,54 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										}
 									}
 									?>
-						<h3>Curriculum Objectives</h3>
-						<ul class="objective-list mapped-list" id="mapped_hierarchical_objectives" data-importance="hierarchical">
-								<?php
-									if ($hierarchical_objectives) { 
-										foreach($hierarchical_objectives as $objective){ 
-												$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);													
-											?>
-											<li class = "mapped-objective"
-												id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-												data-id = "<?php echo $objective["objective_id"]; ?>"
-												data-title="<?php echo $title;?>"
-												data-description="<?php echo htmlentities($objective["objective_description"]);?>">
-												<strong><?php echo $title; ?></strong>
-												<div class="objective-description">
-													<?php echo $objective["objective_description"];?>
-												</div>
-												<div class="event-objective-controls">
-													<input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>																						
-													<?php if (!$objective["mapped_to_course"]) { ?>
-													<a class="objective-remove" id="objective_remove_<?php echo $objective["objective_id"];?>" data-id="<?php echo $objective["objective_id"];?>">x</a>
-													<?php } ?>
-												</div>
-												<?php if ($objective["mapped"]) { ?>	
-												<div 	id="text_container_<?php echo $objective["objective_id"]; ?>" 
-														class="objective_text_container" 
-														data-id="<?php echo $objective["objective_id"]; ?>">
-													<label 	for="objective_text_<?php echo $objective["objective_id"]; ?>" 
-															class="content-small" id="objective_<?php echo $objective["objective_id"]; ?>_append" 
-															style="vertical-align: middle;">Provide your sessional free-text objective below as it relates to this curricular objective.</label>	
-													<textarea 	name="objective_text[<?php echo $objective["objective_id"]; ?>]" 
-																id="objective_text_<?php echo $objective["objective_id"]; ?>" 
-																data-id="<?php echo $objective["objective_id"]; ?>" 
-																class="expandable" 
-																style="height: 28px; overflow: hidden;"><?php echo $objective["objective_details"];?></textarea>
-												</div>
-												<?php } ?>
-											</li>
 
-							<?php 			
-										} 				
-							 		} 	?>											
-						</ul>
+					<?php
+						if ($hierarchical_objectives) { 
+							//foreach($hierarchical_objectives as $objective){ 												
+								event_objectives_display_leafs($hierarchical_objectives,$COURSE_ID,$EVENT_ID);
+							//} 				
+				 		} 	?>											
+						<a name="clinical-objective-list"></a>
+						<h2 title="Clinical Objective List" class="collapsed">Other Objectives</h2>
+						<div id="clinical-objective-list">
+							<ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
+							<?php	
+								if ($flat_objectives) {
+									foreach($flat_objectives as $objective){ 
+											$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);													
+										?>
+								<li class = "mapped-objective"
+									id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+									data-id = "<?php echo $objective["objective_id"]; ?>"
+									data-title="<?php echo $title;?>"
+									data-description="<?php echo htmlentities($objective["objective_description"]);?>">
+									<strong><?php echo $title; ?></strong>
+									<div class="objective-description">
+										<?php echo $objective["objective_description"];?>								
+									</div>
 
-						<h3>Other Objectives</h3>
-						<ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
-						<?php	
-							if ($flat_objectives) {
-								foreach($flat_objectives as $objective){ 
-										$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);													
-									?>
-							<li class = "mapped-objective"
-								id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-								data-id = "<?php echo $objective["objective_id"]; ?>"
-								data-title="<?php echo $title;?>"
-								data-description="<?php echo htmlentities($objective["objective_description"]);?>">
-								<strong><?php echo $title; ?></strong>
-								<div class="objective-description">
-									<?php echo $objective["objective_description"];?>								
-								</div>
+									<div class="event-objective-controls">
+										<input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>																															
+										<?php if (!$objective["mapped_to_course"]) { ?>									
+										<a class="objective-remove" id="objective_remove_<?php echo $objective["objective_id"];?>" data-id="<?php echo $objective["objective_id"];?>">x</a>
+										<?php } ?>					
+									</div>
+									<?php if ($objective["mapped"]) { ?>	
+									<div 	id="text_container_<?php echo $objective["objective_id"]; ?>" 
+											class="objective_text_container" 
+											data-id="<?php echo $objective["objective_id"]; ?>">
+										<label 	for="objective_text_<?php echo $objective["objective_id"]; ?>" 
+												class="content-small" id="objective_<?php echo $objective["objective_id"]; ?>_append" 
+												style="vertical-align: middle;">Provide your sessional free-text objective below as it relates to this curricular objective.</label>											
+									</div>								
+									<?php } ?>
+								</li>
 
-								<div class="event-objective-controls">
-									<input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>																															
-									<?php if (!$objective["mapped_to_course"]) { ?>									
-									<a class="objective-remove" id="objective_remove_<?php echo $objective["objective_id"];?>" data-id="<?php echo $objective["objective_id"];?>">x</a>
-									<?php } ?>					
-								</div>
-								<?php if ($objective["mapped"]) { ?>	
-								<div 	id="text_container_<?php echo $objective["objective_id"]; ?>" 
-										class="objective_text_container" 
-										data-id="<?php echo $objective["objective_id"]; ?>">
-									<label 	for="objective_text_<?php echo $objective["objective_id"]; ?>" 
-											class="content-small" id="objective_<?php echo $objective["objective_id"]; ?>_append" 
-											style="vertical-align: middle;">Provide your sessional free-text objective below as it relates to this curricular objective.</label>											
-									<textarea 	name="objective_text[<?php echo $objective["objective_id"]; ?>]" 
-												id="objective_text_<?php echo $objective["objective_id"]; ?>" 
-												data-id="<?php echo $objective["objective_id"]; ?>" 
-												class="expandable" 
-												style="height: 28px; overflow: hidden;"><?php echo $objective["objective_details"];?></textarea>
-								</div>								
-								<?php } ?>
-							</li>
-
-						<?php 		
-								} 
-					 		} ?>
-						</ul>																																									
+							<?php 		
+									} 
+						 		} ?>
+							</ul>	
+						</div>																																								
 						<select id="checked_objectives_select" name="checked_objectives[]" multiple="multiple" style="display:none;">
 						<?php 
 							if ($mapped_event_objectives) {		

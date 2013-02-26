@@ -426,7 +426,7 @@ class Evaluation {
 			<ol id="form-questions-list">
 			<?php
 			if ($eprogress_id) {
-				$current_progress_record = Evaluation::loadProgress($eprogress_id);;
+				$current_progress_record = Evaluation::loadProgress($eprogress_id);
 			} else {
 				$current_progress_record = false;
 			}
@@ -3591,21 +3591,33 @@ class Evaluation {
 						case "tutor" :
 						case "director" :
 						case "pcoordinator" :
-								$query = "SELECT *, a.`eprogress_id` FROM `evaluation_progress` AS a
-											JOIN `evaluation_targets` AS b
-											ON a.`etarget_id` = b.`etarget_id`
-											LEFT JOIN `evaluation_progress_clerkship_events` AS c
-											ON a.`eprogress_id` = c.`eprogress_id`
-											WHERE b.`target_type` = ".$db->qstr($permission["target_type"])."
-											AND b.`target_value` = ".$db->qstr($permission["target_value"])."
-											".(isset($permission["evaluator_type"]) && $permission["evaluator_type"] == "cgroup_id" && $permission["evaluator_value"] ? "AND a.`proxy_id` IN (SELECT `proxy_id` FROM `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($permission["evaluator_value"])." AND `active` = 1)" : "")."
-											AND a.`evaluation_id` = ".$db->qstr($evaluation_id);
-								$temp_progress_records = $db->GetAll($query);
-								if ($temp_progress_records) {
-									foreach ($temp_progress_records as $temp_progress_record) {
-										$progress_records[] = $temp_progress_record;								
-									}
-								}
+                            $proxy_ids_string = "";
+                            if (isset($permission["evaluator_type"]) && $permission["evaluator_type"] == "cgroup_id" && $permission["evaluator_value"]) {
+                                $query = "SELECT `proxy_id` FROM `course_group_audience` 
+                                            WHERE `cgroup_id` = ".$db->qstr($permission["evaluator_value"])." 
+                                            AND `active` = 1";
+                                $proxy_ids = $db->GetAll($query);
+                                if ($proxy_ids) {
+                                    foreach ($proxy_ids as $proxy_id) {
+                                        $proxy_ids_string .= ($proxy_ids_string ? ", " : "").$db->qstr($proxy_id["proxy_id"]);
+                                    }
+                                }
+                            }
+                            $query = "SELECT *, a.`eprogress_id` FROM `evaluation_progress` AS a
+                                        JOIN `evaluation_targets` AS b
+                                        ON a.`etarget_id` = b.`etarget_id`
+                                        LEFT JOIN `evaluation_progress_clerkship_events` AS c
+                                        ON a.`eprogress_id` = c.`eprogress_id`
+                                        WHERE b.`target_type` = ".$db->qstr($permission["target_type"])."
+                                        AND b.`target_value` = ".$db->qstr($permission["target_value"])."
+                                        ".(isset($proxy_ids_string) && $proxy_ids_string ? "AND a.`proxy_id` IN (".$proxy_ids_string.")" : "")."
+                                        AND a.`evaluation_id` = ".$db->qstr($evaluation_id);
+                            $temp_progress_records = $db->GetAll($query);
+                            if ($temp_progress_records) {
+                                foreach ($temp_progress_records as $temp_progress_record) {
+                                    $progress_records[] = $temp_progress_record;								
+                                }
+                            }
 						break;
 						case "preceptor" :
 							$query = "SELECT *, a.`eprogress_id` FROM `evaluation_progress` AS a

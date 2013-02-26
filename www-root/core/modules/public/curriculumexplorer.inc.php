@@ -275,17 +275,32 @@ if (!defined("PARENT_INCLUDED")) {
 				if ($objectives) {
 			?>
 			<div id="objective-browser">
+				<div id="objective-breadcrumb">
+					<a class="objective-link" href="#" data-id="<?php echo $PROCESSED["objective_parent"]; ?>"><?php echo $objective_sets[$PROCESSED["objective_parent"]]["objective_name"]; ?></a>
+				</div>
 				<div id="objective-list">
 					<ul>
-						<?php 
+						<?php
 						foreach ($objectives as $objective) {
-							echo "<li><a class=\"objective-link\" href=\"#\" data-id=\"" . $objective["objective_id"] . "\"><span>".((!$PROCESSED["course_id"] ? $objective["course_count"] : 0) + $objective["event_count"])."</span>" . $objective["objective_name"] . "</a></li>\n";
+							$count = "";
+							if (!$PROCESSED["course_id"]) {
+								$count = $objective["course_count"] + $objective["event_count"];
+							} else {
+								$count = $objective["event_count"];
+							}
+							
+							$class= "";
+							if ($count < 5) {
+								$class = "red";
+							} else if ($count < 10) {
+								$class = "yellow";
+							} else {
+								$class = "green";
+							}
+							echo "<li><span class=\"". $class ."\">".(($count < 10 ? "0" . $count : $count))."</span><a class=\"objective-link\" href=\"#\" data-id=\"" . $objective["objective_id"] . "\">" . $objective["objective_name"] . "</a></li>\n";
 						}
 						?>
 					</ul>
-				</div>
-				<div id="objective-breadcrumb">
-					<a class="objective-link" href="#" data-id="<?php echo $PROCESSED["objective_parent"]; ?>"><?php echo $objective_sets[$PROCESSED["objective_parent"]]["objective_name"]; ?></a>
 				</div>
 				<div id="objective-container">
 					

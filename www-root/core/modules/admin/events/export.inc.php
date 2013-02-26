@@ -203,6 +203,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					case "event_type_durations":
 						$row[$key] = implode("; ", $event_type_durations);
 						break;
+					case "total_duration":
+						$row[$key] = (($event["event_finish"] - $event["event_start"]) / 60);
+						break;
 					case "release_date" :
 						$row[$key] = date("Y-m-d H:i", $event["event_start"]);
 						break;
@@ -353,9 +356,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						}
 						$row[$key] = implode("; ", $hot_topics);
 						break;
-						break;
 					case "parent_id":
-						if (is_null($event[$key])) {
+						if (is_null($event[$key]) || $event[$key] == 0) {
+							$row[$key] = 1;
+						} else {
 							$row[$key] = 0;
 						}
 						break;

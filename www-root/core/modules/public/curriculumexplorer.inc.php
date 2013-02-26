@@ -37,27 +37,6 @@ if (!defined("PARENT_INCLUDED")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
-	function fetch_objective_parents($objective_id, $level = 0) {
-		global $db, $ENTRADA_USER;
-		if ($level >= 99) {
-			exit;
-		}
-		$query = "	SELECT a.`objective_parent`, a.`objective_id`, a.`objective_name`
-					FROM `global_lu_objectives` AS a
-					JOIN `objective_organisation` AS b
-					ON a.`objective_id` = b.`objective_id`
-					WHERE a.`objective_id` = ".$db->qstr($objective_id)."
-					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
-		$objective = $db->GetAssoc($query);
-		if ($objective) {
-			foreach ($objective as $parent_id => $objective_data)
-			if ($parent_id != 0) {
-				$objective_data["parent"] = fetch_objective_parents($parent_id, $level++);
-			}
-			return $objective_data;
-		}
-	}
-	
 	$PAGE_META["title"]			= "Curriculum Explorer";
 	$PAGE_META["description"]	= "Allowing you to browse the curriculum by objective set, course, and date.";
 	$PAGE_META["keywords"]		= "";
@@ -301,78 +280,79 @@ if (!defined("PARENT_INCLUDED")) {
 	</script>
 	<?php } ?>
 	<?php 
-		switch ($STEP) {
-			case 2 :
-				/*
-				 * Fetch the child objectives of the selected objective set.
-				 */
-				$query = "	SELECT a.`objective_id`, a.`objective_name`, a.`objective_parent`, 
-								COUNT(DISTINCT " . ($PROCESSED["course_id"] ? "IF(c.`course_id` = " . $db->qstr($PROCESSED["course_id"]) . ", c.`course_id`, NULL)" : "c.`course_id`" ) . ") AS `course_count`, 
-								COUNT(DISTINCT IF(f.`event_id` IS NOT NULL " . ($PROCESSED["course_id"] ? " && f.`course_id` = ".$db->qstr($PROCESSED["course_id"])." " : "") . ", f.`event_id`, NULL)) AS `event_count`
-							FROM `global_lu_objectives` AS a 
-							JOIN `objective_organisation` AS b
-							ON a.`objective_id` = b.`objective_id`
+	switch ($STEP) {
+		case 2 :
+			/*
+			 * Fetch the child objectives of the selected objective set.
+			 */
+			$query = "	SELECT a.`objective_id`, a.`objective_name`, a.`objective_parent`, 
+							COUNT(DISTINCT " . ($PROCESSED["course_id"] ? "IF(c.`course_id` = " . $db->qstr($PROCESSED["course_id"]) . ", c.`course_id`, NULL)" : "c.`course_id`" ) . ") AS `course_count`, 
+							COUNT(DISTINCT IF(f.`event_id` IS NOT NULL " . ($PROCESSED["course_id"] ? " && f.`course_id` = ".$db->qstr($PROCESSED["course_id"])." " : "") . ", f.`event_id`, NULL)) AS `event_count`
+						FROM `global_lu_objectives` AS a 
+						JOIN `objective_organisation` AS b
+						ON a.`objective_id` = b.`objective_id`
 
-							LEFT JOIN `course_objectives` AS c
-							ON a.`objective_id` = c.`objective_id`
-							LEFT JOIN `courses` AS d
-							ON c.`course_id` = d.`course_id`
+						LEFT JOIN `course_objectives` AS c
+						ON a.`objective_id` = c.`objective_id`
+						LEFT JOIN `courses` AS d
+						ON c.`course_id` = d.`course_id`
 
-							LEFT JOIN `event_objectives` AS e
-							ON a.`objective_id` = e.`objective_id`
-							LEFT JOIN `events` AS f
-							ON e.`event_id` = f.`event_id`
+						LEFT JOIN `event_objectives` AS e
+						ON a.`objective_id` = e.`objective_id`
+						LEFT JOIN `events` AS f
+						ON e.`event_id` = f.`event_id`
 
-							WHERE a.`objective_parent` = " . $db->qstr($PROCESSED["objective_parent"]) . " 
-							AND a.`objective_active` = '1'
-							AND b.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()).
-							($PROCESSED["year"] ? " AND (IF (f.`event_id` IS NOT NULL, f.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).", '1' = '1'))" : "")."
-							AND (d.`course_active` = '1' OR d.`course_active` IS NULL)
-							GROUP BY a.`objective_id`
-							ORDER BY a.`objective_id` ASC";
-				$objectives = $db->GetAssoc($query);
-				if ($objectives) {
-			?>
-			<div id="objective-browser">
-				<div id="objective-breadcrumb">
-					<a class="objective-link" href="#" data-id="<?php echo $PROCESSED["objective_parent"]; ?>"><?php echo $objective_sets[$PROCESSED["objective_parent"]]["objective_name"]; ?></a>
-				</div>
-				<div id="objective-list">
-					<ul>
-						<?php
-						foreach ($objectives as $objective_id => $objective) {
-							$count = "";
-							if (!$PROCESSED["course_id"]) {
-								$count = $objective["course_count"] + $objective["event_count"];
-							} else {
-								$count = $objective["event_count"];
-							}
-							
-							$class= "";
-							if ($count < 5) {
-								$class = "red";
-							} else if ($count < 10) {
-								$class = "yellow";
-							} else {
-								$class = "green";
-							}
-							echo "<li><span class=\"". $class ."\">".(($count < 10 ? "0" . $count : $count))."</span><a class=\"objective-link\" href=\"#\" data-id=\"" . $objective_id . "\">" . $objective["objective_name"] . "</a></li>\n";
+						WHERE a.`objective_parent` = " . $db->qstr($PROCESSED["objective_parent"]) . " 
+						AND a.`objective_active` = '1'
+						AND b.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()).
+						($PROCESSED["year"] ? " AND (IF (f.`event_id` IS NOT NULL, f.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).", '1' = '1'))" : "")."
+						AND (d.`course_active` = '1' OR d.`course_active` IS NULL)
+						GROUP BY a.`objective_id`
+						ORDER BY a.`objective_id` ASC";
+			$objectives = $db->GetAssoc($query);
+			if ($objectives) {
+		?>
+		<div id="objective-browser">
+			<div id="objective-breadcrumb">
+				<a class="objective-link" href="#" data-id="<?php echo $PROCESSED["objective_parent"]; ?>"><?php echo $objective_sets[$PROCESSED["objective_parent"]]["objective_name"]; ?></a>
+			</div>
+			<div id="objective-list">
+				<ul>
+					<?php
+					foreach ($objectives as $objective_id => $objective) {
+						$count = "";
+						if (!$PROCESSED["course_id"]) {
+							$count = $objective["course_count"] + $objective["event_count"];
+						} else {
+							$count = $objective["event_count"];
 						}
-						?>
-					</ul>
-				</div>
-				<div id="objective-container">
-					
-					<div id="objective-details">
-						<h1><?php echo $objective_sets[$PROCESSED["objective_parent"]]["objective_name"]; ?></h1>
-						<div class="display-generic">Please select a objective from the list on the left.</div>
-					</div>
+
+						$class= "";
+						if ($count < 5) {
+							$class = "red";
+						} else if ($count < 10) {
+							$class = "yellow";
+						} else {
+							$class = "green";
+						}
+						echo "<li><span class=\"". $class ."\">".(($count < 10 ? "0" . $count : $count))."</span><a class=\"objective-link\" href=\"#\" data-id=\"" . $objective_id . "\">" . $objective["objective_name"] . "</a></li>\n";
+					}
+					?>
+				</ul>
+			</div>
+			<div id="objective-container">
+
+				<div id="objective-details">
+					<h1><?php echo $objective_sets[$PROCESSED["objective_parent"]]["objective_name"]; ?></h1>
+					<div class="display-generic">Please select a objective from the list on the left.</div>
 				</div>
 			</div>
-			<?php
-				} else {
-					echo "<pre>".$query."</pre>";
-				}
-			break;
-		}
+		</div>
+		<?php
+			} else {
+				echo display_error("We were unable to find any child objectives associated with this objective set. An administrator has been informed, please try again later.");
+				application_log("error", "Error occurred in curriculum browser while fetching objective children, DB said: ".$db->ErrorMsg());
+			}
+		break;
+	}
 }

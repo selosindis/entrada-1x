@@ -100,7 +100,7 @@ jQuery(function(){
 		jQuery(this).addClass("active");
 		var link = jQuery(this).clone();
 		link.children("span").remove();
-		jQuery("#objective-details").html("<img src=\""+SITE_URL+"/images/loading_med.gif\" />");
+		jQuery("#objective-details").html("<h1>"+link.html()+"</h1>" + "<div class=\"loading display-generic\">Loading...<br /><img src=\""+SITE_URL+"/images/loading.gif\" /></div>");
 		jQuery.ajax({
 			url: SITE_URL + "/curriculumexplorer?mode=ajax&objective_parent=" + jQuery(this).attr("data-id") + "&year=" + YEAR + "&course_id=" + COURSE,
 			success: function(data) {

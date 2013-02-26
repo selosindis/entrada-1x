@@ -4061,3 +4061,10 @@ Curriculum Browser CSS
 #objective-browser .course-container {
 	margin-bottom:20px;
 }
+#objective-browser .loading {
+	width:300px;
+	margin:auto;
+	color:#777;
+	text-align:center;
+	font-size:1.2em;
+}

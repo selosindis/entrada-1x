@@ -37,14 +37,47 @@ if (!defined("PARENT_INCLUDED")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
+	function fetch_objective_parents($objective_id, $level = 0) {
+		global $db, $ENTRADA_USER;
+		if ($level >= 99) {
+			exit;
+		}
+		$query = "	SELECT a.`objective_parent`, a.`objective_id`, a.`objective_name`
+					FROM `global_lu_objectives` AS a
+					JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
+					WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+		$objective = $db->GetAssoc($query);
+		if ($objective) {
+			foreach ($objective as $parent_id => $objective_data)
+			if ($parent_id != 0) {
+				$objective_data["parent"] = fetch_objective_parents($parent_id, $level++);
+			}
+			return $objective_data;
+		}
+	}
+	
+	$PAGE_META["title"]			= "Curriculum Explorer";
+	$PAGE_META["description"]	= "Allowing you to browse the curriculum by objective set, course, and date.";
+	$PAGE_META["keywords"]		= "";
+
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/curriculumexplorer", "title" => "Curriculum Explorer");
+
 	if (isset($_GET["mode"]) && $_GET["mode"] == "ajax") {
 		$MODE = "ajax";
 	}
 	
+	if (isset($_GET["id"]) && ($tmp_input = clean_input($_GET["id"], array("int")))) {
+		$PROCESSED["id"] = $tmp_input;
+	}
+	
 	if (isset($MODE) && $MODE == "ajax") {
 		
-		if ($_GET["objective_parent"] && ($tmp_input = clean_input($_GET["objective_parent"], array("int")))) {
+		if (!$PROCESSED["id"] && $_GET["objective_parent"] && ($tmp_input = clean_input($_GET["objective_parent"], array("int")))) {
 			$PROCESSED["objective_parent"] = $tmp_input;
+		} else {
+			$PROCESSED["objective_parent"] = $PROCESSED["id"];
 		}
 		if ($_GET["year"] && ($tmp_input = clean_input($_GET["year"], array("int")))) {
 			$PROCESSED["year"] = $tmp_input;
@@ -58,29 +91,29 @@ if (!defined("PARENT_INCLUDED")) {
 		ob_clear_open_buffers();
 		
 		$query = "	SELECT a.`objective_id`, a.`objective_name`, a.`objective_parent`, 
-								COUNT(DISTINCT " . ($PROCESSED["course_id"] ? "IF(c.`course_id` = " . $db->qstr($PROCESSED["course_id"]) . ", c.`course_id`, NULL)" : "c.`course_id`" ) . ") AS `course_count`, 
-								COUNT(DISTINCT IF(f.`event_id` IS NOT NULL " . ($PROCESSED["course_id"] ? " && f.`course_id` = ".$db->qstr($PROCESSED["course_id"])." " : "") . ", f.`event_id`, NULL)) AS `event_count`
-							FROM `global_lu_objectives` AS a 
-							JOIN `objective_organisation` AS b
-							ON a.`objective_id` = b.`objective_id`
+						COUNT(DISTINCT " . ($PROCESSED["course_id"] ? "IF(c.`course_id` = " . $db->qstr($PROCESSED["course_id"]) . ", c.`course_id`, NULL)" : "c.`course_id`" ) . ") AS `course_count`, 
+						COUNT(DISTINCT IF(f.`event_id` IS NOT NULL " . ($PROCESSED["course_id"] ? " && f.`course_id` = ".$db->qstr($PROCESSED["course_id"])." " : "") . ", f.`event_id`, NULL)) AS `event_count`
+					FROM `global_lu_objectives` AS a 
+					JOIN `objective_organisation` AS b
+					ON a.`objective_id` = b.`objective_id`
 
-							LEFT JOIN `course_objectives` AS c
-							ON a.`objective_id` = c.`objective_id`
-							LEFT JOIN `courses` AS d
-							ON c.`course_id` = d.`course_id`
+					LEFT JOIN `course_objectives` AS c
+					ON a.`objective_id` = c.`objective_id`
+					LEFT JOIN `courses` AS d
+					ON c.`course_id` = d.`course_id`
 
-							LEFT JOIN `event_objectives` AS e
-							ON a.`objective_id` = e.`objective_id`
-							LEFT JOIN `events` AS f
-							ON e.`event_id` = f.`event_id`
+					LEFT JOIN `event_objectives` AS e
+					ON a.`objective_id` = e.`objective_id`
+					LEFT JOIN `events` AS f
+					ON e.`event_id` = f.`event_id`
 
-							WHERE a.`objective_parent` = " . $db->qstr($PROCESSED["objective_parent"]) . " 
-							AND a.`objective_active` = '1'
-							AND b.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()).
-							($PROCESSED["year"] ? " AND (IF (f.`event_id` IS NOT NULL, f.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).", '1' = '1'))" : "")."
-							AND (d.`course_active` = '1' OR d.`course_active` IS NULL)
-							GROUP BY a.`objective_id`
-							ORDER BY a.`objective_id` ASC";
+					WHERE a.`objective_parent` = " . $db->qstr($PROCESSED["objective_parent"]) . " 
+					AND a.`objective_active` = '1'
+					AND b.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()).
+					($PROCESSED["year"] ? " AND (IF (f.`event_id` IS NOT NULL, f.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).", '1' = '1'))" : "")."
+					AND (d.`course_active` = '1' OR d.`course_active` IS NULL)
+					GROUP BY a.`objective_id`
+					ORDER BY a.`objective_id` ASC";
 		$child_objectives = $db->GetAll($query);
 		
 		$query = "	SELECT b.`course_id`, b.`course_name`, `course_code`
@@ -112,7 +145,11 @@ if (!defined("PARENT_INCLUDED")) {
 					ORDER BY c.`course_id`, c.`event_start` DESC";
 		$event_objectives = $db->GetAll($query);
 		
+		$objective_parents = fetch_objective_parents($PROCESSED["objective_parent"]);
+
+		
 		if ($event_objectives) {
+			$objective_name = $event_objectives[0]["objective_name"];
 			foreach ($event_objectives as $objective) {
 				$events[$objective["course_code"] . ": " . $objective["course_name"]][] = $objective;
 			}
@@ -120,7 +157,7 @@ if (!defined("PARENT_INCLUDED")) {
 			echo $db->ErrorMsg();
 		}
 		
-		echo json_encode(array("status" => "success", "objective_parent" => $PROCESSED["objective_parent"], "events" => $events, "courses" => $mapped_courses, "child_objectives" => $child_objectives));
+		echo json_encode(array("status" => "success", "objective_parent" => $PROCESSED["objective_parent"], "events" => $events, "courses" => $mapped_courses, "child_objectives" => $child_objectives, "objective_name" => $objective_name, "objective_parents" => $objective_parents));
 
 		exit;
 		
@@ -132,19 +169,19 @@ if (!defined("PARENT_INCLUDED")) {
 			/*
 			 * Objective Set ID
 			 */
-			if (isset($_POST["objective_parent"]) && ($tmp_input = clean_input($_POST["objective_parent"], array("int")))) {
+			if (isset($_GET["objective_parent"]) && ($tmp_input = clean_input($_GET["objective_parent"], array("int")))) {
 				$PROCESSED["objective_parent"] = $tmp_input;
 			}
 			/*
 			 * Course ID
 			 */
-			if (isset($_POST["course_id"]) && ($tmp_input = clean_input($_POST["course_id"], array("int")))) {
+			if (isset($_GET["course_id"]) && ($tmp_input = clean_input($_GET["course_id"], array("int")))) {
 				$PROCESSED["course_id"] = $tmp_input;
 			}
 			/*
 			 * Academic Year
 			 */
-			if (isset($_POST["year"]) && ($tmp_input = clean_input($_POST["year"], array("int")))) {
+			if (isset($_GET["year"]) && ($tmp_input = clean_input($_GET["year"], array("int")))) {
 				$PROCESSED["year"] = $tmp_input;
 				$SEARCH_DURATION["start"]	= mktime(0, 0, 0, 9, 1, $PROCESSED["year"]);
 				$SEARCH_DURATION["end"]		= strtotime("+1 year", $SEARCH_DURATION["start"]);
@@ -159,7 +196,7 @@ if (!defined("PARENT_INCLUDED")) {
 	
 	?>
 	<h1>Curriculum Explorer</h1>
-	<form action="<?php echo ENTRADA_URL; ?>/curriculumexplorer" method="POST">
+	<form action="<?php echo ENTRADA_URL; ?>/curriculumexplorer" method="GET">
 		<input type="hidden" name="step" value="2" />
 		<?php
 		if ($SEARCH_MODE == "timeline") {
@@ -249,6 +286,20 @@ if (!defined("PARENT_INCLUDED")) {
 	var OBJECTIVE_PARENT = "<?php echo $PROCESSED["objective_parent"]; ?>";
 	</script>
 	<script type="text/javascript" src="<?php echo ENTRADA_URL; ?>/javascript/curriculumexplorer.js" /></script>
+	<?php if ($PROCESSED["id"]) { ?>
+	<script type="text/javascript">
+	jQuery(function(){
+		var id = <?php echo $PROCESSED["id"]; ?>;
+		jQuery.getJSON("<?php echo ENTRADA_URL; ?>/curriculumexplorer?mode=ajax&id="+id, function(data) {
+			var link = jQuery(document.createElement("a")).addClass(".objective-link").attr("data-id", "<?php echo $PROCESSED["id"]; ?>").html(data.objective_name);
+			renderDOM(data, link);
+			if (jQuery(".objective-link[data-id="+id+"]").length > 0) {
+				jQuery(".objective-link[data-id="+id+"]").addClass("active");
+			}
+		});
+	});
+	</script>
+	<?php } ?>
 	<?php 
 		switch ($STEP) {
 			case 2 :
@@ -279,7 +330,7 @@ if (!defined("PARENT_INCLUDED")) {
 							AND (d.`course_active` = '1' OR d.`course_active` IS NULL)
 							GROUP BY a.`objective_id`
 							ORDER BY a.`objective_id` ASC";
-				$objectives = $db->GetAll($query);
+				$objectives = $db->GetAssoc($query);
 				if ($objectives) {
 			?>
 			<div id="objective-browser">
@@ -289,7 +340,7 @@ if (!defined("PARENT_INCLUDED")) {
 				<div id="objective-list">
 					<ul>
 						<?php
-						foreach ($objectives as $objective) {
+						foreach ($objectives as $objective_id => $objective) {
 							$count = "";
 							if (!$PROCESSED["course_id"]) {
 								$count = $objective["course_count"] + $objective["event_count"];
@@ -305,7 +356,7 @@ if (!defined("PARENT_INCLUDED")) {
 							} else {
 								$class = "green";
 							}
-							echo "<li><span class=\"". $class ."\">".(($count < 10 ? "0" . $count : $count))."</span><a class=\"objective-link\" href=\"#\" data-id=\"" . $objective["objective_id"] . "\">" . $objective["objective_name"] . "</a></li>\n";
+							echo "<li><span class=\"". $class ."\">".(($count < 10 ? "0" . $count : $count))."</span><a class=\"objective-link\" href=\"#\" data-id=\"" . $objective_id . "\">" . $objective["objective_name"] . "</a></li>\n";
 						}
 						?>
 					</ul>

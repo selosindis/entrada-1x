@@ -4004,6 +4004,7 @@ Curriculum Browser CSS
 	background-image: -o-linear-gradient(90deg, #696969 0%, #b3b3b3 100%); /* gradient fill */
 	background-image: -webkit-linear-gradient(90deg, #696969 0%, #b3b3b3 100%); /* gradient fill */
 	background-image: linear-gradient(top, #696969 0%, #b3b3b3 100%); /* gradient fill */
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#b3b3b3', endColorstr='#696969'); /* for IE */
 	border-bottom: none;
 	color: #fff;
 }

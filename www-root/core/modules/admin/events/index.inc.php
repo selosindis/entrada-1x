@@ -37,7 +37,54 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 } else {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_timestamp.js\"></script>\n";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
+	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/events_exporter.js\"></script>\n";
 
+	$default_csv_headings = array(
+			"event_id" => "Original Event",
+			"parent_id" => "Parent Event",
+			"event_term" => "Term",
+			"course_code" => "Course Code",
+			"course_name" => "Course Name",
+			"event_start_date" => "Date",
+			"event_start_time" => "Start Time",
+			"total_duration" => "Total Duration",
+			"event_type_durations" => "Event Type Durations",
+			"event_types" => "Event Types",
+			"event_title" => "Event Title",
+			"event_location" => "Location",
+			"audience_cohorts" => "Audience (Cohorts)",
+			"audience_groups" => "Audience (Groups)",
+			"audience_students" => "Audience (Students)",
+			"staff_numbers" => "Teacher Numbers",
+			"staff_names" => "Teacher Names"
+		);
+	
+	if ($_SESSION["my_export_options"]) {
+		$diff = array_diff($default_csv_headings, $_SESSION["my_export_options"]);
+		$default_csv_headings = $_SESSION["my_export_options"];
+	} 
+	
+	$additional_csv_headings = array(
+		"student_names" => "Student Names",
+		"release_date" => "Release Date",
+		"release_until" => "Release Until",
+		"event_children" => "Child Events",
+		"event_description" => "Event Description",
+		"event_message" => "Teachers Message",
+		"free_text_objectives" => "Free-Text Objectives",
+		"queens_objectives" => "Queen's Objectives",
+		"mcc_presentations" => "MCC Presentations",
+		"hot_topics" => "Hot Topics",
+		"attached_files" => "Attached Files",
+		"attached_links" => "Attached Links",
+		"attached_quizzes" => "Attached Quizzes",
+		"attendance" => "Attendance"
+	);
+	
+	if (isset($diff) && $diff && is_array($diff)) {
+		$additional_csv_headings = array_merge($additional_csv_headings, $diff);
+	}
+	
 	/**
 	 * Process any sorting or pagination requests.
 	 */
@@ -74,6 +121,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
             false);
 
 	echo "<h1>".$MODULES[strtolower($MODULE)]["title"]."</h1>";
+	
+	if ($_SESSION["export_error"]) {
+		$ERROR++;
+		$ERRORSTR[] = $_SESSION["export_error"];
+		echo display_error();
+	}
 
 	/**
 	 * Output the filter HTML.
@@ -161,7 +214,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
-							<input type="button" value="Export Results" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/export"; ?>';" />
+							<input type="button" value="Export Results" />
 							<?php
 						}
 						?>
@@ -170,6 +223,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			</tfoot>
 			<?php endif; ?>
 			<tbody>
+			
 			<?php
 
 			$count_modified = 0;
@@ -247,12 +301,88 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	echo "<form action=\"\" method=\"get\">\n";
 	echo "<input type=\"hidden\" id=\"dstamp\" name=\"dstamp\" value=\"".html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])."\" />\n";
-	echo "</form>\n";
+	echo "</form>\n"; ?>
 
+	<div id="modal_export_container" style="display: none;">
+				<p>Select the fields you would like to export by dragging them from the left to the right.  Remove fields from the 
+				   Export by dragging them from the right to the left.</p>
+				<div id="available_export_options_container" class="ui-widget-content">
+					<label for="available_export_options"><h3>Available Fields:</h3></label><br />
+					<ul id="available_export_options">
+					</ul>
+				</div>
+				<div id="selected_export_options_container" class="ui-widget-content">
+					<label for="selected_export_options"><h3>Export Fields:</h3></label><br />
+					<ul id="selected_export_options">
+						<?php 
+							if ($default_csv_headings) {
+								foreach($default_csv_headings as $key => $value) {
+									echo "<li class=\"ui-widget-content ui-state-default\" data-field=\"" . $key . "\"><span class=\"ui-icon ui-icon-arrowthick-2-n-s\"></span>" . $value . "</li>";
+								}
+							}
+						?>
+					</ul>
+				</div>
+				<form id="my_export_options_form" action="<?php echo ENTRADA_URL . "/admin/events/export"; ?>">
+					<input type="hidden" name="my_export_options" value="" />
+				</form>
+			</div>
+			
+			<script type="text/javascript">
+				jQuery(document).ready(function($){
+					var default_items = {};
+					var additional_items = {};
+					<?php 
+						echo "default_items = " . json_encode((object) $default_csv_headings) . ";";
+						echo "additional_items = " . json_encode((object) $additional_csv_headings) . ";";
+					?>
+					
+					$("ul#selected_export_options > li").sortable();
+					
+					for (var key in additional_items) {						
+						var item = $( "<li></li>" ).text( additional_items[key] ).addClass("ui-widget-content ui-state-default draggable");
+						item.attr("data-field", key);
+						item.appendTo( $("ul#available_export_options") );
+					}
+					
+					var my_export_options = default_items;
+					$('input[name=my_export_options]').val(JSON.stringify(my_export_options));
+					
+					$(".draggable").draggable({
+						revert:"invalid"
+					});
+				});
+			</script>
+			
+			<style type="text/css">
+				#available_export_options_container {
+					float: left;
+					width: 45%;
+					padding: 0.5em;
+				}
+				
+				#selected_export_options_container {
+					float: right;
+					width: 45%;
+					padding: 0.5em;
+				}
+				
+				li.ui-widget-content {
+					width: 50%;
+				}
+				
+				#selected_export_options { list-style-type: none; margin: 0; padding: 0; width: 100%; }
+				#selected_export_options li { margin: 0 3px 3px 3px; padding: 0.4em; padding-left: 1.5em; font-size: 1em; height: 13px; }
+				#selected_export_options li span { position: absolute; margin-left: -1.3em; }
+				
+				#available_export_options { list-style-type: none; margin: 0; padding: 0; width: 100%; }
+				#available_export_options li { margin: 0 3px 3px 3px; padding: 0.4em; padding-left: 0.5em; font-size: 1em; height: 13px; }
+			</style>
+<?php
 	/**
 	 * Output the sidebar for sorting and legend.
 	 */
 	events_output_sidebar("admin");
 
 	$ONLOAD[] = "initList()";
-}
+} 

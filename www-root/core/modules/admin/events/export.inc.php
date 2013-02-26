@@ -50,25 +50,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	 */
 	preferences_update($MODULE, $PREFERENCES);
 	
-	$csv_headings = array(
-		"event_id" => "Original Event",
-		"parent_id" => "Parent Event",
-		"event_term" => "Term",
-		"course_code" => "Course Code",
-		"course_name" => "Course Name",
-		"event_start_date" => "Date",
-		"event_start_time" => "Start Time",
-		"total_duration" => "Total Duration",
-		"event_type_durations" => "Event Type Durations",
-		"event_types" => "Event Types",
-		"event_title" => "Event Title",
-		"event_location" => "Location",
-		"audience_cohorts" => "Audience (Cohorts)",
-		"audience_groups" => "Audience (Groups)",
-		"audience_students" => "Audience (Students)",
-		"staff_numbers" => "Teacher Numbers",
-		"staff_names" => "Teacher Names"
-	);
+	if ((!isset($_GET["my_export_options"])) || (!$csv_headings = json_decode($_GET["my_export_options"], true)) || !is_array($csv_headings)  || !(sizeof($csv_headings) > 0)) {
+		$_SESSION["export_error"] = "No fields selected for export.";
+		application_log("error", "No fields selected for Event Export.");
+		header("Location: ".ENTRADA_URL."/admin/events");
+	} else {
+		$_SESSION["export_error"] = "";
+		$_SESSION["my_export_options"] = $csv_headings;
+	}
 	
 	$csv_delimiter = ",";
 	$csv_enclosure = '"';
@@ -118,7 +107,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			$audience_students = array();
 			$staff_numbers = array();
 			$staff_names = array();
-
+			$student_names = array();
 
 			// Event Type Durations, and Event Types
 			$query = "	SELECT a.`duration`, b.`eventtype_title`
@@ -139,23 +128,47 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						WHERE a.`event_id` = ".$db->qstr($event["event_id"]);
 			if ($results = $db->GetAll($query)) {
 				foreach ($results as $result) {
+					
 					switch ($result["audience_type"]) {
 						case "cohort" :
 							$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($result["audience_value"]);
 							if ($audience = $db->GetRow($query)) {
 								$audience_cohorts[] = $audience["group_name"];
 							}
+							$query = "	SELECT *
+										FROM `group_members` g
+										JOIN " . AUTH_DATABASE . ".`user_data` ud
+										ON g.`proxy_id` = ud.`id`
+										WHERE g.`group_id` = " . $db->qstr($result["audience_value"]);
+							$s_results = $db->GetAll($query);
+							if ($s_results) {
+								foreach($s_results as $audience) {
+									$student_names[] = $audience["firstname"] . " " . $audience["lastname"];
+								}
+							}
 						break;
 						case "proxy_id" :
-							$query = "SELECT `number` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($result["audience_value"]);
+							$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($result["audience_value"]);
 							if ($audience = $db->GetRow($query)) {
 								$audience_students[] = (int) $audience["number"];
+								$student_names[] = $audience["firstname"] . " " . $audience["lastname"];
 							}
 						break;
 						case "group_id" :
 							$query = "SELECT `group_name` FROM `course_groups` WHERE `cgroup_id` = ".$db->qstr($result["audience_value"]);
 							if ($audience = $db->GetRow($query)) {
 								$audience_groups[] = $audience["group_name"];
+							}
+							$query = "	SELECT *
+										FROM `course_group_audience` cga
+										JOIN " . AUTH_DATABASE . ".`user_data` ud
+										ON cga.`proxy_id` = ud.`id`
+										WHERE cga.`cgroup_id` = " . $db->qstr($result["audience_value"]);
+							$s_results = $db->GetAll($query);
+							if ($s_results) {
+								foreach($s_results as $audience) {
+									$student_names[] = $audience["firstname"] . " " . $audience["lastname"];
+								}
 							}
 						default :
 							continue;
@@ -178,26 +191,184 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					$staff_names[$key] = $result["fullname"];
 				}
 			}
-			
-			$row = array(
-				"event_id" => (int) $event["event_id"],
-				"parent_id" => (int) $event["parent_id"],
-				"event_term" => $event["event_term"],
-				"course_code" => $event["course_code"],
-				"course_name" => $event["course_name"],
-				"event_start_date" => date("Y-m-d", $event["event_start"]),
-				"event_start_time" => date("H:i", $event["event_start"]),
-				"total_duration" => (($event["event_finish"] - $event["event_start"]) / 60),
-				"event_type_durations" => implode("; ", $event_type_durations),
-				"event_types" => implode("; ", $event_types),
-				"event_title" => $event["event_title"],
-				"event_location" => $event["event_location"],
-				"audience_cohorts" => implode("; ", $audience_cohorts),
-				"audience_groups" => implode("; ", $audience_groups),
-				"audience_students" => implode("; ", $audience_students),
-				"staff_numbers" => implode("; ", $staff_numbers),
-				"staff_names" => implode("; ", $staff_names)
-			);
+			$row = array();
+			foreach ($csv_headings as $key => $value) {
+				switch($key) {
+					case "event_start_date" :
+						$row[$key] = date("Y-m-d", $event["event_start"]);
+						break;
+					case "event_start_time":
+						$row[key] = date("H:i", $event["event_start"]);
+						break;
+					case "event_type_durations":
+						$row[$key] = implode("; ", $event_type_durations);
+						break;
+					case "release_date" :
+						$row[$key] = date("Y-m-d H:i", $event["event_start"]);
+						break;
+					case "release_until" :
+						$row[$key] = date("Y-m-d H:i", $event["event_start"]);
+						break;
+					case "event_types":
+						$row[$key] = implode("; ", $event_types);
+						break;
+					case "audience_cohorts":
+						$row[$key] = implode("; ", $audience_cohorts);
+						break;
+					case "audience_groups":
+						$row[$key] = implode("; ", $audience_groups);
+						break;
+					case "audience_students":
+						$row[$key] = implode("; ", $audience_students);
+						break;
+					case "staff_numbers":
+						$row[$key] = implode("; ", $staff_numbers);
+						break;
+					case "staff_names":
+						$row[$key] = implode("; ", $staff_names);
+						break;
+					case "student_names":
+						$row[$key] = implode("; ", $student_names);
+						break;
+					case "free_text_objectives":
+						$free_text_objectives = array();
+						$query = "	SELECT *
+									FROM `event_objectives` eo
+									WHERE eo.`event_id` = " . $db->qstr($event["event_id"]) . "
+									AND eo.`objective_details` is NOT NULL
+									AND eo.`objective_details != ''";
+						$objs = $db->GetAll($query);
+						if ($objs) {
+							foreach ($objs as $o) {
+								$free_text_objectives[] = $o["objective_details"];
+							}
+						}
+						
+						$row[$key] = implode("; ", $free_text_objectives);
+						break;
+					case "mcc_presentations":
+						$mcc_presentations = array();
+						$query = "	SELECT *
+									FROM `events_lu_objectives` elo
+									JOIN `event_objectives` eo
+									ON elo.`objective_id` = eo.`objective_id`
+									WHERE eo.`event_id` = " . $db->qstr($event["event_id"]) . "
+									AND eo.`objective_type` = 'event'";
+						$objs = $db->GetAll($query);
+						if ($objs) {
+							foreach ($objs as $o) {
+								$mcc_presentations[] = $o["objective_name"];
+							}
+						}
+						
+						$row[$key] = implode("; ", $mcc_presentations);
+						break;
+					case "queens_objectives":
+						$queens_objectives = array();
+						$query = "	SELECT *
+									FROM `events_lu_objectives` elo
+									JOIN `event_objectives` eo
+									ON elo.`objective_id` = eo.`objective_id`
+									WHERE eo.`event_id` = " . $db->qstr($event["event_id"]) . "
+									AND eo.`objective_type` = 'course'";
+						$objs = $db->GetAll($query);
+						if ($objs) {
+							foreach ($objs as $o) {
+								$queens_objectives[] = $o["objective_name"];
+							}
+						}
+						
+						$row[$key] = implode("; ", $queens_objectives);
+						break;
+					case "attached_files":
+						$attached_files = array();
+						$query = "	SELECT *
+									FROM `event_files` ef
+									WHERE ef.`event_id` = " . $db->qstr($event["event_id"]);
+						$items = $db->GetAll($query);
+						if ($items) {
+							foreach ($items as $i) {
+								$attached_files[] = $f["file_name"];
+							}
+						}
+						
+						$row[$key] = implode("; ", $attached_files);
+						break;
+					case "attached_quizzes":
+						$attached_quizzes = array();
+						$query = "	SELECT *
+									FROM `attached_quizzes` aq
+									WHERE aq.`content_id` = " . $db->qstr($event["event_id"]) . "
+									AND	aq.`content_type` = 'event'";
+						$items = $db->GetAll($query);
+						if ($items) {
+							foreach ($items as $i) {
+								$attached_quizzes[] = $f["quiz_title"];
+							}
+						}
+						
+						$row[$key] = implode("; ", $attached_quizzes);
+						break;
+					case "attached_links":
+						$attached_links = array();
+						$query = "	SELECT *
+									FROM `event_links` el
+									WHERE el.`event_id` = " . $db->qstr($event["event_id"]);
+						$items = $db->GetAll($query);
+						if ($items) {
+							foreach ($items as $i) {
+								$attached_links[] = $f["link"];
+							}
+						}
+						
+						$row[$key] = implode("; ", $attached_links);
+						break;
+					case "attendance":
+						$attendance = array();
+						$query = "	SELECT *
+									FROM `event_attendance` ea
+									JOIN " . AUTH_DATABASE . ".`user_data` ud
+									ON ea.`proxy_id` = ud.`id`
+									WHERE ea.`event_id` = " . $db->qstr($event["event_id"]);
+						$s_results = $db->GetAll($query);
+						if ($s_results) {
+							foreach($s_results as $audience) {
+								$attendance[] = $audience["firstname"] . " " . $audience["lastname"];
+							}
+						}
+						$row[$key] = implode("; ", $attendance);
+						break;
+					case "hot_topics":
+						$hot_topics = array();
+						$query = "	SELECT *
+									FROM `event_topics` et
+									JOIN `event_lu_topics` elt
+									ON et.`topic_id` = elt.`topic_id`
+									WHERE et.`event_id` = " . $db->qstr($event["event_id"]);
+						$h_results = $db->GetAll($query);
+						if ($h_results) {
+							foreach($h_results as $t) {
+								$hot_topics[] = $t["topic_name"];
+							}
+						}
+						$row[$key] = implode("; ", $hot_topics);
+						break;
+						break;
+					case "parent_id":
+						if (is_null($event[$key])) {
+							$row[$key] = 0;
+						}
+						break;
+					default:
+						if (is_int($event[$key])) {
+							$row[$key] = (int) $event[$key];
+						} else {
+							$row[$key] = $event[$key];
+						}
+						break;
+				}
+				
+			}
 			
 			fputcsv($fp, $row, $csv_delimiter, $csv_enclosure);
 		}

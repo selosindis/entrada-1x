@@ -17,7 +17,7 @@ jQuery(function(){
 								.addClass("objective-link")
 								.attr("href", "#")
 								.attr("data-id", jsonResponse.child_objectives[i].objective_id)
-								.html("<span>" + ((COURSE != null && jsonResponse.child_objectives[i].course_count > 0 ? parseInt(jsonResponse.child_objectives[i].course_count) : 0) + parseInt(jsonResponse.child_objectives[i].event_count)) + "</span>" + jsonResponse.child_objectives[i].objective_name));
+								.html("<span>" + ((COURSE != "" ? 0 : parseInt(jsonResponse.child_objectives[i].course_count)) + parseInt(jsonResponse.child_objectives[i].event_count)) + "</span>" + jsonResponse.child_objectives[i].objective_name));
 						new_list.append(new_list_item);
 					}
 					jQuery("#objective-list").html(new_list);

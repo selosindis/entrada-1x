@@ -15889,3 +15889,31 @@ function deactivate_objective_children($parent_id, $organisation_id, $i = 0) {
 	}
 
 }
+
+/*
+ * Recursive function to fetch an objectives parents.
+ * 
+ * @param int $objective_id
+ * @param int $level
+ * @return array
+ */
+function fetch_objective_parents($objective_id, $level = 0) {
+	global $db, $ENTRADA_USER;
+	if ($level >= 99) {
+		exit;
+	}
+	$query = "	SELECT a.`objective_parent`, a.`objective_id`, a.`objective_name`
+				FROM `global_lu_objectives` AS a
+				JOIN `objective_organisation` AS b
+				ON a.`objective_id` = b.`objective_id`
+				WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+				AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+	$objective = $db->GetAssoc($query);
+	if ($objective) {
+		foreach ($objective as $parent_id => $objective_data)
+		if ($parent_id != 0) {
+			$objective_data["parent"] = fetch_objective_parents($parent_id, $level++);
+		}
+		return $objective_data;
+	}
+}

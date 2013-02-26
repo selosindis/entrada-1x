@@ -24,6 +24,7 @@ return array (
 			"events" => array ("title" => "Learning Events"),
 			"clerkship" => array ("title" => "Clerkship", "resource" => "clerkship", "permission" => "read"),
 			"search" => array ("title" => "Curriculum Search"),
+			"curriculumexplorer" => array ("title" => "Curriculum Explorer"),
 //			"curriculum" => array (
 //				"title" => "Curriculum",
 //				"children" => array (

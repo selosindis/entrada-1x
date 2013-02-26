@@ -304,29 +304,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	echo "</form>\n"; ?>
 
 	<div id="modal_export_container" style="display: none;">
-				<p>Select the fields you would like to export by dragging them from the left to the right.  Remove fields from the 
-				   Export by dragging them from the right to the left.</p>
-				<div id="available_export_options_container" class="ui-widget-content">
-					<label for="available_export_options"><h3>Available Fields:</h3></label><br />
-					<ul id="available_export_options">
-					</ul>
-				</div>
-				<div id="selected_export_options_container" class="ui-widget-content">
-					<label for="selected_export_options"><h3>Export Fields:</h3></label><br />
-					<ul id="selected_export_options">
-						<?php 
-							if ($default_csv_headings) {
-								foreach($default_csv_headings as $key => $value) {
-									echo "<li class=\"ui-widget-content ui-state-default\" data-field=\"" . $key . "\"><span class=\"ui-icon ui-icon-arrowthick-2-n-s\"></span>" . $value . "</li>";
-								}
-							}
-						?>
-					</ul>
-				</div>
-				<form id="my_export_options_form" action="<?php echo ENTRADA_URL . "/admin/events/export"; ?>">
-					<input type="hidden" name="my_export_options" value="" />
-				</form>
+		<div class="display-generic">
+			<p>Select the fields you would like to export by dragging them from the left to the right.  Remove fields from the Export by dragging them from the right to the left.</p>
+		</div>
+		<div id="available-wrap">
+			<h3>Available Fields:</h3>
+			<div id="available_export_options_container" class="ui-widget-content">
+				<ul id="available_export_options">
+				</ul>
 			</div>
+		</div>
+		<div id="export-wrap">
+			<h3>Export Fields:</h3>
+			<div id="selected_export_options_container" class="ui-widget-content">
+				<ul id="selected_export_options">
+					<?php 
+						if ($default_csv_headings) {
+							foreach($default_csv_headings as $key => $value) {
+								echo "<li class=\"ui-widget-content ui-state-default\" data-field=\"" . $key . "\"><span class=\"ui-icon ui-icon-arrowthick-2-n-s\"></span>" . $value . "</li>";
+							}
+						}
+					?>
+				</ul>
+			</div>
+			<form id="my_export_options_form" action="<?php echo ENTRADA_URL . "/admin/events/export"; ?>">
+				<input type="hidden" name="my_export_options" value="" />
+			</form>
+			
+		</div>
+	</div>
 			
 			<script type="text/javascript">
 				jQuery(document).ready(function($){
@@ -355,15 +361,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			</script>
 			
 			<style type="text/css">
+				#available-wrap {
+					float:left; 
+					width:49%;
+				}
+				
+				#export-wrap {
+					float:right;
+					width:49%;
+				}
+				
 				#available_export_options_container {
+					border:none;
 					float: left;
-					width: 45%;
+					width: 95%;
 					padding: 0.5em;
 				}
 				
 				#selected_export_options_container {
+					border:none;
 					float: right;
-					width: 45%;
+					width: 95%;
 					padding: 0.5em;
 				}
 				
@@ -371,12 +389,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					width: 50%;
 				}
 				
-				#selected_export_options { list-style-type: none; margin: 0; padding: 0; width: 100%; }
-				#selected_export_options li { margin: 0 3px 3px 3px; padding: 0.4em; padding-left: 1.5em; font-size: 1em; height: 13px; }
-				#selected_export_options li span { position: absolute; margin-left: -1.3em; }
+				#selected_export_options, #available_export_options { 
+					list-style-type: none; 
+					margin: 0; 
+					padding: 0; 
+					width: 100%; 
+				}
 				
-				#available_export_options { list-style-type: none; margin: 0; padding: 0; width: 100%; }
-				#available_export_options li { margin: 0 3px 3px 3px; padding: 0.4em; padding-left: 0.5em; font-size: 1em; height: 13px; }
+				#selected_export_options li, #available_export_options li { 
+					margin: 0 3px 3px 3px; 
+					padding: 0.4em; 
+					padding-left: 1.5em; 
+					font-size: 1em; 
+					height: 13px; 
+					cursor: move; 
+					width: 89%; 
+				}
+				
+				#available_export_options li {
+					padding-left: 0.5em; width: 94%
+				}
+				
+				#selected_export_options li span { 
+					position: absolute; margin-left: -1.3em; 
+				}
 			</style>
 <?php
 	/**

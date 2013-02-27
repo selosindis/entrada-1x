@@ -183,7 +183,31 @@
 				var d = jQuery('#'+list+'-toggle').next();
 				jQuery(d).slideUp();
 			}				
-		}		
+		}
+		var mapped_siblings = false;		
+		jQuery('#objective_'+id).siblings('li.objective-container').each(function(){
+			var oid = jQuery(this).attr('data-id');
+			if(jQuery('#check_objective_'+oid).attr('checked')){
+				mapped_siblings = true;
+			}
+		});
+		jQuery('#objective_'+id).parents('.objective-list').each(function(){
+			var mapped_cousins = false;
+			var pid = jQuery(this).attr('data-id');
+			if(mapped_siblings == false){
+				jQuery('#objective_list_'+pid+' > li').each(function(){
+					var cid = jQuery(this).attr('data-id');
+					if(jQuery('#check_objective_'+cid).attr('checked')){
+						mapped_cousins = true;
+					}
+				});
+				if(mapped_cousins == false){
+					jQuery('#check_objective_'+pid).attr('checked','');				
+					jQuery('#check_objective_'+pid).attr('disabled',false);
+				}
+			}								
+		});		
+
 	}
 
 	function mapObjective(id,title,description,list,create){

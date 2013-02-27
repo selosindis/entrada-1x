@@ -1168,7 +1168,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				
 									<li class = "objective-container objective-set"
 										id = "objective_<?php echo $objective["objective_id"]; ?>"
-										data-list="<?php echo $objective["objective_id"] == 1?'hierarchical':'flat'; ?>">
+										data-list="<?php echo $objective["objective_id"] == 1?'hierarchical':'flat'; ?>"
+										data-id="<?php echo $objective["objective_id"]; ?>">
 										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
 										<div 	class="objective-title" 
 												id="objective_title_<?php echo $objective["objective_id"]; ?>" 
@@ -1266,6 +1267,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										data-description="<?php echo htmlentities($objective["objective_description"]);?>">
 										<strong><?php echo $title; ?></strong>
 										<div class="objective-description">
+											<?php
+											$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+											if ($set) {
+												echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+											}
+											?>													
 											<?php echo $objective["objective_description"];?>								
 										</div>
 
@@ -1302,6 +1309,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										data-mapped="<?php echo $objective["mapped_to_course"]?1:0;?>">
 										<strong><?php echo $title; ?></strong>
 										<div class="objective-description">
+											<?php
+											$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+											if ($set) {
+												echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+											}
+											?>													
 											<?php echo $objective["objective_description"];?>								
 										</div>
 

@@ -816,7 +816,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<?php		foreach($objectives as $objective){ ?>
 									<li class = "objective-container objective-set"
 										id = "objective_<?php echo $objective["objective_id"]; ?>"
-										data-list="<?php echo $objective["objective_id"] == 1?'hierarchical':'flat'; ?>">
+										data-list="<?php echo $objective["objective_id"] == 1?'hierarchical':'flat'; ?>"
+										data-id="<?php echo $objective["objective_id"];?>">
 										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
 										<div 	class="objective-title" 
 												id="objective_title_<?php echo $objective["objective_id"]; ?>" 
@@ -884,26 +885,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											foreach($hierarchical_objectives as $objective){ 
 													$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);													
 												?>
-												<li class = "mapped-objective"
-													id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-													data-title="<?php echo $title;?>"
-													data-description="<?php echo $objective["objective_description"];?>">
-													<strong><?php echo $title; ?></strong>
-													<div class="objective-description"><?php echo $objective["objective_description"];?></div>
-													<div class="objective-controls">
-														<select 	class="importance" 
-																	data-id="<?php echo $objective["objective_id"];?>" 
-																	data-value="<?php echo $objective["importance"];?>">
-															<option value="1"<?php echo $objective["importance"] == 1?' selected="selected"':'';?>>Primary</option>
-															<option value="2"<?php echo $objective["importance"] == 2?' selected="selected"':'';?>>Secondary</option>
-															<option value="3"<?php echo $objective["importance"] == 3?' selected="selected"':'';?>>Tertiary</option>
-														</select>										
-														<img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif" 
-																class="objective-remove list-cancel-image" 
-																id="objective_remove_<?php echo $objective["objective_id"];?>" 
-																data-id="<?php echo $objective["objective_id"];?>">
-													</div>
-												</li>
+								<li class = "mapped-objective"
+									id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+									data-title="<?php echo $title;?>"
+									data-description="<?php echo $objective["objective_description"];?>">
+									<strong><?php echo $title; ?></strong>
+									<div class="objective-description">
+										<?php
+										$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+										if ($set) {
+											echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+										}
+										?>												
+										<?php echo $objective["objective_description"];?>
+									</div>
+									<div class="objective-controls">
+										<select 	class="importance" 
+													data-id="<?php echo $objective["objective_id"];?>" 
+													data-value="<?php echo $objective["importance"];?>">
+											<option value="1"<?php echo $objective["importance"] == 1?' selected="selected"':'';?>>Primary</option>
+											<option value="2"<?php echo $objective["importance"] == 2?' selected="selected"':'';?>>Secondary</option>
+											<option value="3"<?php echo $objective["importance"] == 3?' selected="selected"':'';?>>Tertiary</option>
+										</select>										
+										<img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif" 
+												class="objective-remove list-cancel-image" 
+												id="objective_remove_<?php echo $objective["objective_id"];?>" 
+												data-id="<?php echo $objective["objective_id"];?>">
+									</div>
+								</li>
 
 								<?php 			
 											} 				
@@ -924,7 +933,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									data-title="<?php echo $title;?>"
 									data-description="<?php echo $objective["objective_description"];?>">
 									<strong><?php echo $title; ?></strong>
-									<div class="objective-description"><?php echo $objective["objective_description"];?></div>
+									<div class="objective-description">
+										<?php
+										$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+										if ($set) {
+											echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+										}
+										?>												
+										<?php echo $objective["objective_description"];?>
+									</div>
 									<div class="objective-controls">
 										<img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif" 
 												class="objective-remove list-cancel-image" 

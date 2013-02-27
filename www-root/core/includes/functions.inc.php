@@ -1613,7 +1613,7 @@ function fetch_objective_set_for_objective_id($id = 0){
 	$level = 0;
 
 	do{
-		$level++
+		$level++;
 		$query = "	SELECT * FROM `global_lu_objectives` 
 					WHERE `objective_id` = ".$db->qstr($parent_id);
 		$parent = $db->GetRow($query);
@@ -12050,8 +12050,14 @@ function event_objectives_display_leaf($objective){
 			data-id = "<?php echo $objective["objective_id"]; ?>"
 			data-title="<?php echo $title;?>"
 			data-description="<?php echo htmlentities($objective["objective_description"]);?>">
-			<strong><?php echo $title; ?></strong>
+			<strong><?php echo $title; ?></strong>		
 			<div class="objective-description">
+				<?php
+				$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+				if ($set) {
+					echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+				}
+				?>					
 				<?php echo $objective["objective_description"];?>
 			</div>
 			<div class="event-objective-controls">

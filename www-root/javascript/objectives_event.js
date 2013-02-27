@@ -167,6 +167,7 @@
 		if(lkey == -1){
 			importance = 'checked';
 		}
+
 		jQuery("#"+importance+"_objectives_select option[value='"+id+"']").remove();				
 		jQuery('#check_objective_'+id).attr('checked','');
 		jQuery('#check_mapped_'+id).attr('checked','');
@@ -213,8 +214,15 @@
 							.html('<strong>'+title+'</strong>');
 			var desc = jQuery(document.createElement('div'))
 							.attr('class','objective-description')
-							.attr('data-description',description)
-							.html(description);
+							.attr('data-description',description);
+			var sets_above = jQuery('#objective_'+id).parents('.objective-set');
+			var set_id = jQuery(sets_above[sets_above.length-1]).attr('data-id');
+			var set_name = jQuery('#objective_title_'+set_id).attr('data-title');
+			if(set_name){
+				jQuery(desc).html("From the Objective Set: <strong>"+set_name+"</strong><br/>");
+			}
+			jQuery(desc).append(description);
+			
 			jQuery(li).append(desc);
 			var controls = 	jQuery(document.createElement('div'))
 								.attr('class','event-objective-controls');			

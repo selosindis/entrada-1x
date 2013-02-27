@@ -1152,11 +1152,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						}	
 					</style>
 					<?php
-					$query = "SELECT a.* FROM `global_lu_objectives` a
-								JOIN `objective_organisation` b
+					$query = "	SELECT a.* FROM `global_lu_objectives` a
+								JOIN `objective_audience` b
 								ON a.`objective_id` = b.`objective_id`
 								AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-								WHERE a.`objective_parent` = '0'
+								WHERE (
+										(b.`audience_value` = 'all')
+										OR
+										(b.`audience_type` = 'course' AND b.`audience_value` = ".$db->qstr($COURSE_ID).")
+										OR
+										(b.`audience_type` = 'event' AND b.`audience_value` = ".$db->qstr($EVENT_ID).")
+									)
+								AND a.`objective_parent` = '0'
 								AND a.`objective_active` = '1'";
 					$objectives = $db->GetAll($query);
 

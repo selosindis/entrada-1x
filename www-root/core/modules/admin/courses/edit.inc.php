@@ -845,11 +845,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						list($course_objectives,$top_level_id) = courses_fetch_objectives($course_details["organisation_id"], array($COURSE_ID), -1, 0, false, $posted_objectives);
 						require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-							$query = "SELECT a.* FROM `global_lu_objectives` a
-										JOIN `objective_organisation` b
+							$query = "	SELECT a.* FROM `global_lu_objectives` a
+										JOIN `objective_audience` b
 										ON a.`objective_id` = b.`objective_id`
 										AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-										WHERE a.`objective_parent` = '0'
+										WHERE (
+												(b.`audience_value` = 'all')
+												OR
+												(b.`audience_type` = 'course' AND b.`audience_value` = ".$db->qstr($COURSE_ID).")
+											)							
+										AND a.`objective_parent` = '0'
 										AND a.`objective_active` = '1'";
 							$objectives = $db->GetAll($query);
 							if($objectives) { ?>						

@@ -12062,9 +12062,6 @@ function event_objectives_display_leaf($objective){
 			</div>
 			<div class="event-objective-controls">
 				<input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>																						
-				<?php if (!$objective["mapped_to_course"]) { ?>
-				<a class="objective-remove" id="objective_remove_<?php echo $objective["objective_id"];?>" data-id="<?php echo $objective["objective_id"];?>">x</a>
-				<?php } ?>
 			</div>
 			<?php if ($objective["mapped"]) { ?>	
 			<div 	id="text_container_<?php echo $objective["objective_id"]; ?>" 

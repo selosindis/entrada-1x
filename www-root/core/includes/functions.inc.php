@@ -1601,16 +1601,29 @@ function fetch_curriculum_objectives_children($parent_id = 0, &$objectives) {
 	return false;
 }
 
-function fetch_objective_set_for_objective_id($id){
+function fetch_objective_set_for_objective_id($id = 0){
 	global $db;
-	if (!$id) {return false;}
-	$parent_id = $id;
+	
+	$parent_id = (int)$id;
+	
+	if (!$parent_id) {
+		return false;
+	}
+
+	$level = 0;
 
 	do{
-		$query = "SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($parent_id);
+		$level++
+		$query = "	SELECT * FROM `global_lu_objectives` 
+					WHERE `objective_id` = ".$db->qstr($parent_id);
 		$parent = $db->GetRow($query);
-		$parent_id = $parent["objective_parent"];
-	}while($parent_id);
+		$parent_id = (int)$parent["objective_parent"];
+	}while($parent_id && $level < 10);
+
+	if ($level == 10) {
+		return false;
+	}
+
 	return $parent;
 }
 
@@ -12092,26 +12105,28 @@ function event_objective_child_recursive($objectives,$objective_id,$course_id,$e
 	global $db;
 	$parents = array();
 	foreach ($objectives as $objective) {
-		$query = "	SELECT a.*
-					FROM `global_lu_objectives` a
-					LEFT JOIN `course_objectives` b
-					ON a.`objective_id` = b.`objective_id`
-					AND b.`course_id` = ".$db->qstr($course_id)."
-					LEFT JOIN `event_objectives` c
-					ON c.`objective_id` = a.`objective_id` 			
-					AND c.`event_id` = ".$db->qstr($event_id)."									
-					WHERE a.`objective_id` = ".$db->qstr($objective["objective_parent"])."
-					AND a.`objective_active` = '1'
-					GROUP BY a.`objective_id`
-					ORDER BY a.`objective_order` ASC
-					";								
-		$parent = $db->GetRow($query);
-		if ($parent) {
-			//if this parent is the objective id we're looking for, return true
-			if ($parent["objective_id"] == $objective_id) {
-				return true;
+		if ($objective["objective_parent"]) {
+			$query = "	SELECT a.*
+						FROM `global_lu_objectives` a
+						LEFT JOIN `course_objectives` b
+						ON a.`objective_id` = b.`objective_id`
+						AND b.`course_id` = ".$db->qstr($course_id)."
+						LEFT JOIN `event_objectives` c
+						ON c.`objective_id` = a.`objective_id` 			
+						AND c.`event_id` = ".$db->qstr($event_id)."									
+						WHERE a.`objective_id` = ".$db->qstr($objective["objective_parent"])."
+						AND a.`objective_active` = '1'
+						GROUP BY a.`objective_id`
+						ORDER BY a.`objective_order` ASC
+						";								
+			$parent = $db->GetRow($query);
+			if ($parent) {
+				//if this parent is the objective id we're looking for, return true
+				if ($parent["objective_id"] == $objective_id) {
+					return true;
+				}
+				$parents[] = $parent;
 			}
-			$parents[] = $parent;
 		}
 	}	
 	//if no parents have been found for this level of parents, no children exist for this id

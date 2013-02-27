@@ -9288,6 +9288,54 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
 	return array($objectives,$top_level_id);
 }
 
+/**
+* Recursively loops up tree from mapped course objectives checking each parent to see if its the passed objective id.
+* Parents are collected and passed to the next iteration as a group to save function calls
+*/
+function course_objective_has_child_mapped($objective_id,$course_id){
+	global $db;
+	$query = "	SELECT a.*
+				FROM `global_lu_objectives` a
+				LEFT JOIN `course_objectives` b
+				ON a.`objective_id` = b.`objective_id`
+				AND b.`course_id` = ".$db->qstr($course_id)."
+				WHERE b.`course_id` = ".$db->qstr($course_id)."
+				AND a.`objective_active` = '1'
+				GROUP BY a.`objective_id`
+				ORDER BY a.`objective_id` ASC";
+	$objectives = $db->GetAll($query);
+	if (!$objectives) return false;
+	return course_objective_child_recursive($objectives,$objective_id,$course_id);
+}
+
+function course_objective_child_recursive($objectives,$objective_id,$course_id){
+	global $db;
+	$parents = array();
+	foreach ($objectives as $objective) {
+		$query = "	SELECT a.*
+					FROM `global_lu_objectives` a
+					LEFT JOIN `course_objectives` b
+					ON a.`objective_id` = b.`objective_id`
+					AND b.`course_id` = ".$db->qstr($course_id)."
+					WHERE a.`objective_id` = ".$db->qstr($objective["objective_parent"])."
+					AND a.`objective_active` = '1'
+					GROUP BY a.`objective_id`
+					ORDER BY a.`objective_order` ASC
+					";								
+		$parent = $db->GetRow($query);
+		if ($parent) {
+			//if this parent is the objective id we're looking for, return true
+			if ($parent["objective_id"] == $objective_id) {
+				return true;
+			}
+			$parents[] = $parent;
+		}
+	}	
+	//if no parents have been found for this level of parents, no children exist for this id
+	if (!$parents) return false;
+	return course_objective_child_recursive($parents,$objective_id,$course_id);	
+}
+
 
 /**
  *
@@ -11886,9 +11934,11 @@ function event_objectives_display_leafs($objectives,$course_id,$event_id){
 	$displayed = array();
 	error_log(print_r($leaves,true));
 	foreach ($leaves as $importance=>$leafs) {
+		//if no leaves, don't show category
+		if($leafs && !empty($leafs)){
 	?>
 	<a name="#<?php echo $importance;?>-objective-list"></a>
-	<h2 title="<?php echo ucwords($importance);?> Objectives List" class="<?php echo $importance == 'primary'?'':'collapsed';?>"><?php echo ucwords($importance);?> Objectives</h2>
+	<h2 id="<?php echo $importance;?>-toggle"  title="<?php echo ucwords($importance);?> Objectives List" class="<?php echo $importance == 'primary'?'':'collapsed';?>"><?php echo ucwords($importance);?> Objectives</h2>
 	<div id="<?php echo $importance;?>-objectives-list">
 	<ul class="objective-list mapped-list" id="mapped_<?php echo $importance;?>_objectives" data-importance="hierarchical">
 	<?php
@@ -11902,11 +11952,12 @@ function event_objectives_display_leafs($objectives,$course_id,$event_id){
 	</ul>
 	</div>
 	<?php
+		}
 	}	
 }
 
 /**
-* Recursively loops through children until it finds the loweest ancestor of mapped parents
+* Recursively loops through children until it finds the lowest ancestor of mapped parents
 * If parent is mapped to the event (somehow), children of that parent are automatically mapped as well
 */
 function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $parent_mapped = false, $parent_importance = false){
@@ -12013,6 +12064,62 @@ function event_objectives_display_leaf($objective){
 		</li>	
 	<?php
 }
+
+/**
+* Recursively loops up tree from mapped event objectives checking each parent to see if its the passed objective id.
+* Parents are collected and passed to the next iteration as a group to save function calls
+*/
+function event_objective_has_child_mapped($objective_id,$event_id){
+	global $db;
+	$query = "	SELECT a.*, c.course_id
+				FROM `global_lu_objectives` a
+				LEFT JOIN `event_objectives` b
+				ON b.`objective_id` = a.`objective_id` 			
+				AND b.`event_id` = ".$db->qstr($event_id)."									
+				LEFT JOIN `events` c
+				ON b.`event_id` = c.`event_id`
+				WHERE b.`event_id` = ".$db->qstr($event_id)."
+				AND a.`objective_active` = '1'
+				GROUP BY a.`objective_id`
+				ORDER BY a.`objective_id` ASC";
+	$objectives = $db->GetAll($query);
+	if (!$objectives) return false;
+	$course_id = $objectives[0]["course_id"];
+	return event_objective_child_recursive($objectives,$objective_id,$course_id,$event_id);
+}
+
+function event_objective_child_recursive($objectives,$objective_id,$course_id,$event_id){
+	global $db;
+	$parents = array();
+	foreach ($objectives as $objective) {
+		$query = "	SELECT a.*
+					FROM `global_lu_objectives` a
+					LEFT JOIN `course_objectives` b
+					ON a.`objective_id` = b.`objective_id`
+					AND b.`course_id` = ".$db->qstr($course_id)."
+					LEFT JOIN `event_objectives` c
+					ON c.`objective_id` = a.`objective_id` 			
+					AND c.`event_id` = ".$db->qstr($event_id)."									
+					WHERE a.`objective_id` = ".$db->qstr($objective["objective_parent"])."
+					AND a.`objective_active` = '1'
+					GROUP BY a.`objective_id`
+					ORDER BY a.`objective_order` ASC
+					";								
+		$parent = $db->GetRow($query);
+		if ($parent) {
+			//if this parent is the objective id we're looking for, return true
+			if ($parent["objective_id"] == $objective_id) {
+				return true;
+			}
+			$parents[] = $parent;
+		}
+	}	
+	//if no parents have been found for this level of parents, no children exist for this id
+	if (!$parents) return false;
+	return event_objective_child_recursive($parents,$objective_id,$course_id,$event_id);	
+}
+
+
 
 function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_text = false, $parent_active = false, $importance = 1, $course = true, $top = true, $display_importance = "primary", $full_objective_list = false, $course_id = 0) {
 	global $edit_ajax, $ENTRADA_USER;

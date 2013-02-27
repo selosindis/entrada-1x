@@ -73,7 +73,13 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								);
 			if ($course_id || $event_id){
 				$fields["mapped"] = $objective["mapped"];
-			}
+				if ($course_id) {
+					$fields["has_child"] = course_objective_has_child_mapped($objective["objective_id"],$course_id);
+				}
+				if ($event_id) {
+					$fields["has_child"] = event_objective_has_child_mapped($objective["objective_id"],$event_id);
+				}				
+			}			
 			$obj_array[] = $fields;
 		}
 		echo json_encode($obj_array);

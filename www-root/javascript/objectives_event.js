@@ -2,30 +2,34 @@
 	var listed = [];
 	jQuery(document).ready(function($){
 		jQuery('.objectives').hide();
-		jQuery('.draggable').draggable({
-			revert:true
-		});
+		/**
+		* @todo fix bugs in draggable/droppable when version control added
+		* bugs include: dropping doesn't work when list expanded, artifacts display from draggable elements after drop
+		*/
+		// jQuery('.draggable').draggable({
+		// 	revert:true
+		// });
 
-		jQuery('.droppable').droppable({
-			drop: function(event,ui){										
-				var id = jQuery(ui.draggable[0]).attr('data-id');
-				var ismapped = jQuery.inArray(id,mapped);
-				if(ismapped == -1){
-					var title = jQuery('#objective_title_'+id).attr('data-title');
-					var description = jQuery('#objective_'+id).attr('data-description');										
-					var list = jQuery('#objective_'+id).parents('.objective-set').attr('data-list');
-					jQuery('#check_objective_'+id).attr('checked','checked');
-					mapObjective(id,title,description,list,true);
-				}
-				jQuery(this).removeClass('hover');											
-			},
-			over:function(event,ui){
-				jQuery(this).addClass('hover');
-			},
-			out: function(event,ui){
-				jQuery(this).removeClass('hover');	
-			}
-		});
+		// jQuery('.droppable').droppable({
+		// 	drop: function(event,ui){										
+		// 		var id = jQuery(ui.draggable[0]).attr('data-id');
+		// 		var ismapped = jQuery.inArray(id,mapped);
+		// 		if(ismapped == -1){
+		// 			var title = jQuery('#objective_title_'+id).attr('data-title');
+		// 			var description = jQuery('#objective_'+id).attr('data-description');										
+		// 			var list = jQuery('#objective_'+id).parents('.objective-set').attr('data-list');
+		// 			jQuery('#check_objective_'+id).attr('checked','checked');
+		// 			mapObjective(id,title,description,list,true);
+		// 		}
+		// 		jQuery(this).removeClass('hover');											
+		// 	},
+		// 	over:function(event,ui){
+		// 		jQuery(this).addClass('hover');
+		// 	},
+		// 	out: function(event,ui){
+		// 		jQuery(this).removeClass('hover');	
+		// 	}
+		// });
 
 		jQuery('.objective-remove').live('click',function(){
 			console.log($(this));
@@ -48,10 +52,9 @@
 
 			var title = jQuery('#objective_title_'+id).attr('data-title');
 			var description = jQuery('#objective_'+id).attr('data-description');
-			if($('#check_mapped_'+id).siblings('.objective-remove').length>0 && !jQuery(this).is(':checked')){
-				$('#check_mapped_'+id).siblings('.objective-remove').trigger('click');
-				//var obj_above = jQuery(this).parents('.mapped-objective');
-				//jQuery(obj_above[obj_above.length-1]).remove();
+			var lkey = jQuery.inArray(id,listed);
+			if(lkey == -100 && !jQuery(this).is(':checked')){
+				jQuery('#objective_remove_'+id).trigger('click');
 			}
 			if (jQuery(this).is(':checked')) {
 				mapObjective(id,title,description,list,true);
@@ -77,25 +80,17 @@
 			if (jQuery(this).is(':checked')) {
 				mapObjective(id,title,description,list,false);
 			} else {			
-				if($(this).siblings('.objective-remove').length > 0){
-					console.log($(this).siblings('.objective-remove'));
-					console.log('Found a Remove Element');
-					$(this).siblings('.objective-remove').trigger('click');	
-				}else{					
-					console.log('No Remove Element');
-					var importance = 'checked';
-					if(list == "flat"){
-						importance = 'clinical';
-					}					
-					console.log('id '+id+' list '+ list+' importance '+importance)
-					if(jQuery('#mapped_objective_'+id).is(':checked')){
-						mapObjective(id,title,description,list,false);
-					}else{
-						unmapObjective(id,list,importance);
-					}
-						
-				}
-				
+				console.log('No Remove Element');
+				var importance = 'checked';
+				if(list == "flat"){
+					importance = 'clinical';
+				}					
+				console.log('id '+id+' list '+ list+' importance '+importance)
+				if(jQuery('#mapped_objective_'+id).is(':checked')){
+					mapObjective(id,title,description,list,false);
+				}else{
+					unmapObjective(id,list,importance);
+				}				
 			}
 		});		
 
@@ -138,11 +133,21 @@
 			mapped.push($(this).val());
 		});		
 
-		jQuery('#mapped_hierarchical_objectives').children('li').each(function(){
+		jQuery('#mapped_primary_objectives').children('li').each(function(){
 			if(jQuery(this).attr('data-id') !== undefined && jQuery(this).attr('data-id')){
 				listed.push(jQuery(this).attr('data-id'));
 			}
 		});
+		jQuery('#mapped_secondary_objectives').children('li').each(function(){
+			if(jQuery(this).attr('data-id') !== undefined && jQuery(this).attr('data-id')){
+				listed.push(jQuery(this).attr('data-id'));
+			}
+		});		
+		jQuery('#mapped_tertiary_objectives').children('li').each(function(){
+			if(jQuery(this).attr('data-id') !== undefined && jQuery(this).attr('data-id')){
+				listed.push(jQuery(this).attr('data-id'));
+			}
+		});		
 
 		jQuery('#mapped_flat_objectives').children('li').each(function(){			
 			if(jQuery(this).attr('data-id') !== undefined && jQuery(this).attr('data-id')){
@@ -157,24 +162,27 @@
 		if(key != -1){
 			mapped.splice(key,1);
 		}
+		var lkey = jQuery.inArray(id,listed);
 		console.log('key '+key+' id '+id+' list '+list+' importance '+importance);
-		if(jQuery('#mapped_objective_'+id+' .objective-remove').length > 0){
-			var lkey = jQuery.inArray(id,listed);
-			if(lkey != -1){
-				listed.splice(lkey,1);
-			}
-			console.log('Deletable');
-			console.log(jQuery('#mapped_objective_'+id))
-			jQuery('#mapped_objective_'+id).remove();																		
-		}		
+		if(lkey == -1){
+			importance = 'checked';
+		}
 		jQuery("#"+importance+"_objectives_select option[value='"+id+"']").remove();				
 		jQuery('#check_objective_'+id).attr('checked','');
 		jQuery('#check_mapped_'+id).attr('checked','');
 		jQuery('#text_container_'+id).remove();
-		if(jQuery('#mapped_'+list+'_objectives').children('li').length == 0){
-			//do something, no warning anymore
-		}			
-
+		if(jQuery('#objective_remove_'+id).length > 0){
+			jQuery('#mapped_objective_'+id).remove();
+		}
+		var children_exist = jQuery("#mapped_event_objectives li").length;
+		if(lkey == -1 && !children_exist){
+			if(jQuery('#'+list+'-toggle').hasClass('expanded')){
+				jQuery('#'+list+'-toggle').removeClass('expanded');
+				jQuery('#'+list+'-toggle').addClass('collapsed');
+				var d = jQuery('#'+list+'-toggle').next();
+				jQuery(d).slideUp();
+			}				
+		}		
 	}
 
 	function mapObjective(id,title,description,list,create){
@@ -196,7 +204,7 @@
 			description = '';
 		}
 		
-		if(create && lkey == -1){
+		if(create && lkey == -1 && key == -1){
 			var li = jQuery(document.createElement('li'))
 							.attr('class','mapped-objective')
 							.attr('id','mapped_objective_'+id)
@@ -214,30 +222,45 @@
 							.attr('type','checkbox')
 							.attr('class','checked-mapped')
 							.attr('id','check_mapped_'+id)
-							.attr('checked','checked');													
-			
-			var rm = jQuery(document.createElement('a'))
+							.attr('checked','checked');	
+			var rm = jQuery(document.createElement('img'))
+							.attr('src',SITE_URL+'/images/action-delete.gif')
 							.attr('data-id',id)
-							.attr('class','objective-remove')
-							.attr('id','objective_remove_'+id)
-							.html('x');
+							.attr('class','objective-remove list-cancel-image')
+							.attr('id','objective_remove_'+id);
 			
-			jQuery(controls).append(check);
-			jQuery(controls).append(rm);			
-			jQuery('#mapped_'+list+'_objectives').append(li);
-			jQuery('#mapped_'+list+'_objectives .display-notice').remove();
+			jQuery(controls).append(rm);
 			jQuery(li).append(controls);
-			listed.push(id);
+			//jQuery(li).append(rm);			
+			jQuery('#mapped_event_objectives').append(li);
+			jQuery('#mapped_event_objectives .display-notice').remove();
+			jQuery('#objective_'+id).parents('.objective-list').each(function(){
+				var id = jQuery(this).attr('data-id');
+				jQuery('#check_objective_'+id).attr('checked','checked');
+				jQuery('#check_objective_'+id).attr('disabled',true);
+			});		
+			if(jQuery('#event-toggle').hasClass('collapsed')){
+				jQuery('#event-toggle').removeClass('collapsed');
+				jQuery('#event-toggle').addClass('expanded');
+				var d = jQuery('#event-toggle').next();
+				console.log(d);
+				jQuery(d).slideDown();
+			}
+			if(!jQuery('#event-list-wrapper').is(':visible')){
+				jQuery('#event-list-wrapper').show();
+			}
+			importance = 'checked';			
+			list = 'event';
 		}
 
 		var text_label = jQuery(document.createElement('label'))
-								.attr('for','objective_text_'+id)
-								.attr('class','content-small')
-								.attr('id','objective_'+id+'_append')
-								.attr('style','vertical-align:middle;')
-								.html('Provide your sessional free-text objective below as it relates to this curricular objective.');
+							.attr('for','objective_text_'+id)
+							.attr('class','content-small')
+							.attr('id','objective_'+id+'_append')
+							.attr('style','vertical-align:middle;')
+							.html('Provide your sessional free-text objective below as it relates to this curricular objective.');
 
-		if(importance == 'checked'){
+		if(importance == 'checked' && list != 'event'){
 			var text_div = jQuery(document.createElement('div'))
 							.attr('id','text_container_'+id)
 							.attr('class','objective_text_container')
@@ -258,11 +281,17 @@
 		jQuery('#check_mapped_'+id).attr('checked','checked');
 		if(jQuery("#"+importance+"_objectives_select option[value='"+id+"']").length == 0){
 			var option = jQuery(document.createElement('option'))				
-				.val(id)
-				.attr('selected','selected')
-				.html(title);														
+							.val(id)
+							.attr('selected','selected')
+							.html(title);														
 			jQuery('#'+importance+'_objectives_select').append(option);
 		}
+
+		jQuery('#objective_'+id).parents('.objective-list').each(function(){
+			var id = jQuery(this).attr('data-id');
+			jQuery('#check_objective_'+id).attr('checked','checked');
+			jQuery('#check_objective_'+id).attr('disabled',true);
+		});			
 
 		mapped.push(id);								
 	}

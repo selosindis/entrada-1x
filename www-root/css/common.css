@@ -3976,13 +3976,15 @@ Curriculum Browser CSS
 	position: absolute;
 	top: 7px;
 	left:8px;
+	padding-left: 5px;
 	padding-top: 7px;
-	padding-left:7px;
-	font-size: 10px;
+	font-size: 9px;
 }
 
 #objective-browser #objective-list ul li span.green {
 	background: url('../images/marker-green.png') no-repeat;
+
+
 }
 
 #objective-browser #objective-list ul li span.yellow {
@@ -3991,6 +3993,7 @@ Curriculum Browser CSS
 
 #objective-browser #objective-list ul li span.red {
 	background: url('../images/marker-red.png') no-repeat;
+
 }
 
 #objective-browser #objective-list ul li a {

@@ -15917,3 +15917,109 @@ function fetch_objective_parents($objective_id, $level = 0) {
 		return $objective_data;
 	}
 }
+
+function count_objective_child_events($objective_id = 0, $start = NULL, $end = NULL, $course_id = NULL, $level = 0) {
+	global $db, $ENTRADA_USER;
+	if ($level >= 99) {
+		application_log("error", "Recursion depth out of bounds in [count_objective_child_events].");
+		return false;
+	}
+
+	$objective_id = (int) $objective_id;
+
+	/* Fetch Objective Mapped Events */
+	$query = "	SELECT COUNT(DISTINCT a.`event_id`) AS `event_count`
+				FROM `event_objectives` AS a
+				JOIN `events` AS b
+				ON a.`event_id` = b.`event_id`
+				WHERE `objective_id` = ".$db->qstr($objective_id).
+				($start != NULL ? " AND (IF (b.`event_id` IS NOT NULL, b.`event_start` BETWEEN ".$db->qstr($start)." AND ".$db->qstr($end).", '1' = '1'))" : "").
+				($course_id != NULL ? " AND b.`course_id` = ".$db->qstr($course_id) : "");
+	$output[$objective_id] = $db->GetOne($query);
+
+	/* Fetch objective children */
+	$query = "	SELECT a.`objective_id` 
+				FROM `global_lu_objectives` AS a
+				JOIN `objective_organisation` AS b
+				ON a.`objective_id` = b.`objective_id`
+				WHERE a.`objective_parent` = ".$db->qstr($objective_id)."
+				AND a.`objective_active` = '1'
+				AND b.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation();
+	$children = $db->GetAll($query);
+	if ($children) {
+		foreach ($children as $child) {
+			$child_count = count_objective_child_events($child["objective_id"], $start, $end, $course_id, $level++);
+
+			if (is_array($child_count)) {
+					$return = array_sum($child_count);
+			} else {
+				$return = $event_count;
+			}
+			$output[$child["objective_id"]] = $return;
+		}
+	}
+
+	return $output;
+
+}
+
+function count_objective_child_courses($objective_id = 0, $level = 0) {
+	global $db, $ENTRADA_USER;
+	if ($level >= 99) {
+		application_log("error", "Recursion depth out of bounds in [count_objective_child_courses].");
+		return false;
+	}
+
+	$objective_id = (int) $objective_id;
+
+	/* Fetch Objective Mapped Courses */
+	$query = "	SELECT COUNT(DISTINCT a.`course_id`) AS `course_count`
+				FROM `course_objectives` AS a
+				JOIN `objective_organisation` AS b
+				ON a.`objective_id` = b.`objective_id`
+				JOIN `courses` AS c
+				ON a.`course_id` = c.`course_id`
+				WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+				AND c.`course_active` = '1'
+				AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+	$output[$objective_id] = $db->GetOne($query);
+
+	/* Fetch objective children */
+	$query = "	SELECT a.`objective_id` 
+				FROM `global_lu_objectives` AS a
+				JOIN `objective_organisation` AS b
+				ON a.`objective_id` = b.`objective_id`
+				WHERE a.`objective_parent` = ".$db->qstr($objective_id)."
+				AND a.`objective_active` = '1'
+				AND b.`organisation_id` = ".$ENTRADA_USER->getActiveOrganisation();
+	$children = $db->GetAll($query);
+	if ($children) {
+		foreach ($children as $child) {
+			$child_count = count_objective_child_courses($child["objective_id"], $level++);
+			if (is_array($child_count)) {
+					$return = array_sum($child_count);
+			} else {
+				$return = $course_count;
+			}	
+			$output[$child["objective_id"]] = $return;
+		}
+	}
+
+	return $output;
+
+}
+
+function flatten_array($array) {
+	if (!is_array($array)) {
+		// nothing to do if it's not an array
+		return array($array);
+	}
+
+	$result = array();
+	foreach ($array as $value) {
+		// explode the sub-array, and add the parts
+		$result = array_merge($result, flatten_array($value));
+	}
+
+	return $result;
+}

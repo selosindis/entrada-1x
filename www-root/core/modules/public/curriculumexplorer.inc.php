@@ -49,6 +49,9 @@ if (!defined("PARENT_INCLUDED")) {
 	
 	if (isset($_GET["id"]) && ($tmp_input = clean_input($_GET["id"], array("int")))) {
 		$PROCESSED["id"] = $tmp_input;
+		$query = "SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($PROCESSED["id"]);
+		$objective_info = $db->GetRow($query);
+		$objective_name = $objective_info["objective_name"];
 	}
 	
 	if (isset($MODE) && $MODE == "ajax") {
@@ -66,69 +69,101 @@ if (!defined("PARENT_INCLUDED")) {
 		if ($_GET["course_id"] && ($tmp_input = clean_input($_GET["course_id"], array("int")))) {
 			$PROCESSED["course_id"] = $tmp_input;
 		}
+		if ($_GET["count"] && ($tmp_input = clean_input($_GET["count"], array("int")))) {
+			$PROCESSED["count"] = $tmp_input;
+		}
 		
 		ob_clear_open_buffers();
 		
-		$query = "	SELECT a.`objective_id`, a.`objective_name`, a.`objective_parent`, 
-						COUNT(DISTINCT " . ($PROCESSED["course_id"] ? "IF(c.`course_id` = " . $db->qstr($PROCESSED["course_id"]) . ", c.`course_id`, NULL)" : "c.`course_id`" ) . ") AS `course_count`, 
-						COUNT(DISTINCT IF(f.`event_id` IS NOT NULL " . ($PROCESSED["course_id"] ? " && f.`course_id` = ".$db->qstr($PROCESSED["course_id"])." " : "") . ", f.`event_id`, NULL)) AS `event_count`
+		if ($PROCESSED["count"] == 1 || $PROCESSED["count"] == 2) {
+			$query = "	SELECT b.`course_id`, b.`course_name`, `course_code`
+						FROM `course_objectives` AS a
+						JOIN `courses` As b
+						ON a.`course_id` = b.`course_id`
+						JOIN `objective_organisation` AS c
+						ON a.`objective_id` = c.`objective_id`
+						WHERE a.`objective_id` = ".$db->qstr($PROCESSED["objective_parent"])."
+						AND b.`course_active` = 1
+						AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation()).
+						($PROCESSED["course_id"] ? " AND (a.`course_id` = " . $db->qstr($PROCESSED["course_id"]).", '1' = '1'))" : "");
+			$mapped_courses = $db->GetAll($query);
+		}
+		
+		if ($PROCESSED["count"] == 1 || $PROCESSED["count"] == 3) {
+			$query = "	SELECT c.`event_id`, c.`event_title`, c.`event_start`, d.`objective_name`, e.`course_code`, e.`course_name`
+						FROM `event_objectives` AS a
+						JOIN `objective_organisation` AS b
+						ON a.`objective_id` = b.`objective_id`
+						JOIN `events` AS c
+						ON a.`event_id` = c.`event_id`
+						JOIN `global_lu_objectives` AS d
+						ON a.`objective_id` = d.`objective_id`
+						JOIN `courses` AS e
+						ON c.`course_id` = e.`course_id`
+						WHERE a.`objective_id` = ".$db->qstr($PROCESSED["objective_parent"])." 
+						AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation()).
+						($PROCESSED["year"] ? " AND (IF (c.`event_id` IS NOT NULL, c.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).", '1' = '1'))" : "").
+						($PROCESSED["course_id"] ? " AND (IF (c.`course_id` IS NOT NULL, c.`course_id` = " . $db->qstr($PROCESSED["course_id"]).", '1' = '1'))" : "")."
+						ORDER BY c.`course_id`, c.`event_start` DESC";
+			$event_objectives = $db->GetAll($query);
+		}
+		
+		$query = "	SELECT a.`objective_id`, a.`objective_name`, a.`objective_parent`
+
 					FROM `global_lu_objectives` AS a 
 					JOIN `objective_organisation` AS b
 					ON a.`objective_id` = b.`objective_id`
 
-					LEFT JOIN `course_objectives` AS c
-					ON a.`objective_id` = c.`objective_id`
-					LEFT JOIN `courses` AS d
-					ON c.`course_id` = d.`course_id`
-
-					LEFT JOIN `event_objectives` AS e
-					ON a.`objective_id` = e.`objective_id`
-					LEFT JOIN `events` AS f
-					ON e.`event_id` = f.`event_id`
-
-					WHERE a.`objective_parent` = " . $db->qstr($PROCESSED["objective_parent"]) . " 
+					WHERE a.`objective_parent` = " . $db->qstr(($objective_info["objective_parent"] != 0 && $PROCESSED["objective_parent"] == $PROCESSED["id"] ? $objective_info["objective_parent"] : $PROCESSED["objective_parent"])) . " 
 					AND a.`objective_active` = '1'
-					AND b.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()).
-					($PROCESSED["year"] ? " AND (IF (f.`event_id` IS NOT NULL, f.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).", '1' = '1'))" : "")."
-					AND (d.`course_active` = '1' OR d.`course_active` IS NULL)
+					AND b.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation())."
+
 					GROUP BY a.`objective_id`
 					ORDER BY a.`objective_id` ASC";
 		$child_objectives = $db->GetAll($query);
-		
-		$query = "	SELECT b.`course_id`, b.`course_name`, `course_code`
-					FROM `course_objectives` AS a
-					JOIN `courses` As b
-					ON a.`course_id` = b.`course_id`
-					JOIN `objective_organisation` AS c
-					ON a.`objective_id` = c.`objective_id`
-					WHERE a.`objective_id` = ".$db->qstr($PROCESSED["objective_parent"])."
-					AND b.`course_active` = 1
-					AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation()).
-					($PROCESSED["course_id"] ? " AND (a.`course_id` = " . $db->qstr($PROCESSED["course_id"]).", '1' = '1'))" : "");
-		$mapped_courses = $db->GetAll($query);
-		
-		$query = "	SELECT c.*, d.`objective_name`, e.`course_code`, e.`course_name`
-					FROM `event_objectives` AS a
-					JOIN `objective_organisation` AS b
-					ON a.`objective_id` = b.`objective_id`
-					JOIN `events` AS c
-					ON a.`event_id` = c.`event_id`
-					JOIN `global_lu_objectives` AS d
-					ON a.`objective_id` = d.`objective_id`
-					JOIN `courses` AS e
-					ON c.`course_id` = e.`course_id`
-					WHERE a.`objective_id` = ".$db->qstr($PROCESSED["objective_parent"])." 
-					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation()).
-					($PROCESSED["year"] ? " AND (IF (c.`event_id` IS NOT NULL, c.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).", '1' = '1'))" : "").
-					($PROCESSED["course_id"] ? " AND (IF (c.`course_id` IS NOT NULL, c.`course_id` = " . $db->qstr($PROCESSED["course_id"]).", '1' = '1'))" : "")."
-					ORDER BY c.`course_id`, c.`event_start` DESC";
-		$event_objectives = $db->GetAll($query);
+
+		if ($child_objectives) {
+			$i = 0;
+			foreach ($child_objectives as $child) {
+				if ($PROCESSED["count"] == 1 || $PROCESSED["count"] == 2) {
+					$course_count = array_sum(count_objective_child_courses($child["objective_id"]));
+				} else {
+					$course_count = 0;
+				}
+				$child_objectives[$i]["course_count"] = $course_count;
+				
+				if ($PROCESSED["count"] == 1 || $PROCESSED["count"] == 3) {
+					$event_count = array_sum(count_objective_child_events($child["objective_id"], $SEARCH_DURATION["start"], $SEARCH_DURATION["end"], $PROCESSED["course_id"]));
+				} else {
+					$event_count = 0;
+				}
+				$child_objectives[$i]["event_count"] = $event_count;
+				
+				$i++;
+			}
+		}
 		
 		$objective_parents = fetch_objective_parents($PROCESSED["objective_parent"]);
+		if ($objective_parents) {
+			$flattened_objectives = flatten_array($objective_parents);
 
+			for ($i = 0; $i <= count($flattened_objectives); $i++) {
+				if ($i % 2 == 0 && (!empty($flattened_objectives[$i]) && ($flattened_objectives[$i] != $PROCESSED["objective_parent"] || count($objective_parents) == 2))) {
+					$o_breadcrumb[] = "<a class=\"objective-link\" href=\"".ENTRADA_URL. "/curriculumexplorer?objective_parent=".($flattened_objectives[$i+2] ? $flattened_objectives[$i+2] : 0)."&id=" . $flattened_objectives[$i]."&step=2\" data-id=\"".$flattened_objectives[$i]."\">".$flattened_objectives[$i+1]."</a>";
+				}
+			}
+
+			if ($o_breadcrumb) {
+				$breadcrumb = implode(" &gt; ", array_reverse($o_breadcrumb));
+			} else { 
+				$breadcrumb = null;
+			}
+		}
 		
 		if ($event_objectives) {
-			$objective_name = $event_objectives[0]["objective_name"];
+			if (!$objective_name) {
+				$objective_name = $event_objectives[0]["objective_name"];
+			}
 			foreach ($event_objectives as $objective) {
 				$events[$objective["course_code"] . ": " . $objective["course_name"]][] = $objective;
 			}
@@ -136,7 +171,7 @@ if (!defined("PARENT_INCLUDED")) {
 			echo $db->ErrorMsg();
 		}
 		
-		echo json_encode(array("status" => "success", "objective_parent" => $PROCESSED["objective_parent"], "events" => $events, "courses" => $mapped_courses, "child_objectives" => $child_objectives, "objective_name" => $objective_name, "objective_parents" => $objective_parents));
+		echo json_encode(array("status" => "success", "objective_parent" => $PROCESSED["objective_parent"], "events" => $events, "courses" => $mapped_courses, "child_objectives" => $child_objectives, "objective_name" => $objective_name, "breadcrumb" => $breadcrumb));
 
 		exit;
 		
@@ -165,7 +200,12 @@ if (!defined("PARENT_INCLUDED")) {
 				$SEARCH_DURATION["start"]	= mktime(0, 0, 0, 9, 1, $PROCESSED["year"]);
 				$SEARCH_DURATION["end"]		= strtotime("+1 year", $SEARCH_DURATION["start"]);
 			}
-			
+			/*
+			 * Count
+			 */
+			if (isset($_GET["count"]) && ($tmp_input = clean_input($_GET["count"], array("int")))) {
+				$PROCESSED["count"] = $tmp_input;
+			}
 			
 		break;
 		case 1 :
@@ -193,7 +233,7 @@ if (!defined("PARENT_INCLUDED")) {
 			<tbody>
 				<tr>
 					<td><label for="objective-set" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Objective Set:</label></td>
-					<td colspan="4">
+					<td>
 						<select id="objective-set" name="objective_parent" style="width: 250px" <?php echo (($SEARCH_MODE == "timeline") ? " disabled=\"disabled\"" : ""); ?>>
 							<?php
 								$query = "	SELECT a.* FROM `global_lu_objectives` AS a
@@ -215,6 +255,15 @@ if (!defined("PARENT_INCLUDED")) {
 									}
 								}
 							?>
+						</select>
+					</td>
+					<td>&nbsp;</td>
+					<td><label for="count" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Browse for:</label></td>
+					<td>
+						<select id="count" name="count" style="width: 250px">
+							<option value="1"<?php echo ($PROCESSED["count"] == "1" ? " selected=\"selected\"" : ""); ?>>Courses and Events</option>
+							<option value="2"<?php echo ($PROCESSED["count"] == "2" ? " selected=\"selected\"" : ""); ?>>Courses Only</option>
+							<option value="3"<?php echo ($PROCESSED["count"] == "3" ? " selected=\"selected\"" : ""); ?>>Events Only</option>
 						</select>
 					</td>
 				<tr>
@@ -263,14 +312,19 @@ if (!defined("PARENT_INCLUDED")) {
 	var YEAR = "<?php echo $PROCESSED["year"]; ?>";
 	var COURSE = "<?php echo $PROCESSED["course_id"]; ?>";
 	var OBJECTIVE_PARENT = "<?php echo $PROCESSED["objective_parent"]; ?>";
+	var COUNT = "<?php echo $PROCESSED["count"]; ?>";
 	</script>
 	<script type="text/javascript" src="<?php echo ENTRADA_URL; ?>/javascript/curriculumexplorer.js" /></script>
-	<?php if ($PROCESSED["id"]) { ?>
+	
 	<script type="text/javascript">
 	jQuery(function(){
-		var id = <?php echo $PROCESSED["id"]; ?>;
-		jQuery.getJSON("<?php echo ENTRADA_URL; ?>/curriculumexplorer?mode=ajax&id="+id, function(data) {
+		if (location.hash.length <= 0) {
+			location.hash = "id-"+OBJECTIVE_PARENT;
+		}
+		var id = parseInt(location.hash.substring(4, location.hash.length));
+		jQuery.getJSON("<?php echo ENTRADA_URL; ?>/curriculumexplorer?mode=ajax&id="+id + "&year=" + YEAR + "&course_id=" + COURSE + "&count=" + COUNT, function(data) {
 			var link = jQuery(document.createElement("a")).addClass(".objective-link").attr("data-id", "<?php echo $PROCESSED["id"]; ?>").html(data.objective_name);
+			console.log(data.objective_name);
 			renderDOM(data, link);
 			if (jQuery(".objective-link[data-id="+id+"]").length > 0) {
 				jQuery(".objective-link[data-id="+id+"]").addClass("active");
@@ -278,81 +332,23 @@ if (!defined("PARENT_INCLUDED")) {
 		});
 	});
 	</script>
-	<?php } ?>
 	<?php 
+	
 	switch ($STEP) {
 		case 2 :
-			/*
-			 * Fetch the child objectives of the selected objective set.
-			 */
-			$query = "	SELECT a.`objective_id`, a.`objective_name`, a.`objective_parent`, 
-							COUNT(DISTINCT " . ($PROCESSED["course_id"] ? "IF(c.`course_id` = " . $db->qstr($PROCESSED["course_id"]) . ", c.`course_id`, NULL)" : "c.`course_id`" ) . ") AS `course_count`, 
-							COUNT(DISTINCT IF(f.`event_id` IS NOT NULL " . ($PROCESSED["course_id"] ? " && f.`course_id` = ".$db->qstr($PROCESSED["course_id"])." " : "") . ", f.`event_id`, NULL)) AS `event_count`
-						FROM `global_lu_objectives` AS a 
-						JOIN `objective_organisation` AS b
-						ON a.`objective_id` = b.`objective_id`
-
-						LEFT JOIN `course_objectives` AS c
-						ON a.`objective_id` = c.`objective_id`
-						LEFT JOIN `courses` AS d
-						ON c.`course_id` = d.`course_id`
-
-						LEFT JOIN `event_objectives` AS e
-						ON a.`objective_id` = e.`objective_id`
-						LEFT JOIN `events` AS f
-						ON e.`event_id` = f.`event_id`
-
-						WHERE a.`objective_parent` = " . $db->qstr($PROCESSED["objective_parent"]) . " 
-						AND a.`objective_active` = '1'
-						AND b.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()).
-						($PROCESSED["year"] ? " AND (IF (f.`event_id` IS NOT NULL, f.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).", '1' = '1'))" : "")."
-						AND (d.`course_active` = '1' OR d.`course_active` IS NULL)
-						GROUP BY a.`objective_id`
-						ORDER BY a.`objective_id` ASC";
-			$objectives = $db->GetAssoc($query);
-			if ($objectives) {
 		?>
 		<div id="objective-browser">
 			<div id="objective-breadcrumb">
 				<a class="objective-link" href="#" data-id="<?php echo $PROCESSED["objective_parent"]; ?>"><?php echo $objective_sets[$PROCESSED["objective_parent"]]["objective_name"]; ?></a>
 			</div>
 			<div id="objective-list">
-				<ul>
-					<?php
-					foreach ($objectives as $objective_id => $objective) {
-						$count = "";
-						if (!$PROCESSED["course_id"]) {
-							$count = $objective["course_count"] + $objective["event_count"];
-						} else {
-							$count = $objective["event_count"];
-						}
-
-						$class= "";
-						if ($count < 5) {
-							$class = "red";
-						} else if ($count < 10) {
-							$class = "yellow";
-						} else {
-							$class = "green";
-						}
-						echo "<li><span class=\"". $class ."\">".(($count < 10 ? "0" . $count : $count))."</span><a class=\"objective-link\" href=\"#\" data-id=\"" . $objective_id . "\">" . $objective["objective_name"] . "</a></li>\n";
-					}
-					?>
-				</ul>
+				
 			</div>
 			<div id="objective-container">
-
-				<div id="objective-details">
-					<h1><?php echo $objective_sets[$PROCESSED["objective_parent"]]["objective_name"]; ?></h1>
-					<div class="display-generic">Please select a objective from the list on the left.</div>
-				</div>
+				<div id="objective-details"></div>
 			</div>
 		</div>
 		<?php
-			} else {
-				echo display_error("We were unable to find any child objectives associated with this objective set. An administrator has been informed, please try again later.");
-				application_log("error", "Error occurred in curriculum browser while fetching objective children, DB said: ".$db->ErrorMsg());
-			}
 		break;
 	}
 }

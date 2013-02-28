@@ -107,6 +107,7 @@ if ($COMMUNITY_ID) {
 							});
 							$('reorder_pages_button').value = "Reorder Pages";
 							$('delete_pages_button').removeClassName('disabled').removeAttribute("disabled","");
+							window.location = "<?php echo ENTRADA_URL . "/community" . $community_details["community_url"] . ":pages"; ?>";
 						} else {
 							$$('div.community-page-container a').each(function(e) {
 								e.observe('click', function(event) {event.stop();});

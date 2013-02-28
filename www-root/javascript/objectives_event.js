@@ -98,7 +98,7 @@
 			var state = $(this).attr('data-toggle');
 			if(state == "show"){
 				$(this).attr('data-toggle','hide');
-				$(this).html('Hide Objective Sets');
+				$(this).html('Hide Additional Objectives');
 				jQuery('.mapped_objectives').animate({width:'48%'},400,'swing',function(){
 					//jQuery('.objectives').animate({display:'block'},400,'swing');											
 					jQuery('.objectives').css({width:'0%'});
@@ -107,7 +107,7 @@
 				});										
 			}else{
 				$(this).attr('data-toggle','show');
-				$(this).html('Show Objective Sets');
+				$(this).html('Map Additional Objectives');
 				jQuery('.objectives').animate({width:'0%'},400,'linear',function(){
 					jQuery('.objectives').hide();
 					jQuery('.mapped_objectives').animate({width:'100%'},400,'swing');
@@ -121,7 +121,10 @@
 
 		jQuery('#event-topics-toggle').trigger('click');
 
-		if(jQuery('#mapped_hierarchical_objectives').children('li').length == 0 && jQuery('#mapped_flat_objectives').children('li').length == 0){
+		if(jQuery('#mapped_primary_objectives').children('li').length == 0 && 
+			jQuery('#mapped_secondary_objectives').children('li').length == 0 &&
+			jQuery('#mapped_tertiary_objectives').children('li').length == 0 &&
+			jQuery('#mapped_flat_objectives').children('li').length == 0){
 			jQuery('#toggle_sets').trigger('click');
 		}			
 

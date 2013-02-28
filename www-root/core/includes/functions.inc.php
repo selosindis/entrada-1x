@@ -1627,6 +1627,46 @@ function fetch_objective_set_for_objective_id($id = 0){
 	return $parent;
 }
 
+function fetch_objective_child_mapped_course($objective_id = 0,$course_id = 0){
+	global $db;
+	
+	$parent_id = (int)$objective_id;
+	
+	if (!$parent_id || !$course_id) {
+		return false;
+	}
+	$query = "	SELECT a.*, COALESCE(b.`cobjective_id`,0) AS `mapped` FROM `global_lu_objectives` a
+				LEFT JOIN `course_objectives` b
+				ON a.`objective_id` = b.`objective_id`
+				AND b.`course_id` = ".$db->qstr($course_id)."
+				WHERE `objective_parent` = ".$db->qstr($objective_id);
+	$children = $db->GetRow($query);
+	return children_check_mapped($children,$objective_id,$course_id);
+}
+
+function children_check_mapped($children,$objective_id,$course_id){
+	if (!$children || !$objective_id || !$course_id) {
+		return false;
+	}
+	foreach($children as $child){
+		if($child["mapped"]){
+			return true;
+		}
+		$query = "	SELECT a.*, COALESCE(b.`cobjective_id`,0) AS `mapped` FROM `global_lu_objectives` a
+					LEFT JOIN `course_objectives` b
+					ON a.`objective_id` = b.`objective_id`
+					AND b.`course_id` = ".$db->qstr($course_id)."
+					WHERE `objective_parent` = ".$db->qstr($child["objective_id"]);
+		$children = $db->GetRow($query);
+		$r = children_check_mapped($children,$objective_id,$course_id);
+		if ($r) {
+			return true;
+		}
+	}
+
+	return false;	
+}
+
 function fetch_event_topics() {
 	global $db, $ENTRADA_USER;
 
@@ -11992,7 +12032,7 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 			default:
 				$importance;		
 		}
-		$query = "SELECT a.*,COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`, 
+		$query = "SELECT a.*,COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description` ,COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`, 
 					b.`importance`,c.`objective_details`, COALESCE(c.`eobjective_id`,0) AS `mapped`, 
 					COALESCE(b.`cobjective_id`,0) AS `mapped_to_course` 
 					FROM `global_lu_objectives` a

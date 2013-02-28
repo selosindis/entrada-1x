@@ -1081,9 +1081,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							position:relative!important;
 							margin-left:15px;
 						}
-						.draggable{
-							cursor:pointer;
-						}
 						.droppable.hover{
 							background-color:#ddd;
 						}
@@ -1105,7 +1102,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							font-size: 11px;
 							font-style: normal;
 							color: #666;
-							margin-top:5px;
+							margin-top:5px;		
+							margin-left:5px;					
+						}
+						#mapped_objectives .objective-description{
+							margin-left:0px;					
 						}
 						.importance{
 							font-size:.8em;	
@@ -1118,7 +1119,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							position:absolute;
 							top:5px;
 							right:5px;
-						}							
+						}	
+						.objective-controls .loading{
+							margin-top:7px!important;
+						}						
 						.event-objective-controls{
 							position:absolute;
 							top:5px;
@@ -1167,15 +1171,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								AND a.`objective_active` = '1'";
 					$objectives = $db->GetAll($query);
 
-					if($objectives) { ?>						
+					if ($objectives) { 
+						$hierarchical_name = $translate->_("events_filter_controls");
+						$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];						
+						?>						
 						<div class="objectives half left">
 							<h2>Objective Sets</h2>
 							<ul class="tl-objective-list" id="objective_list_0">
-					<?php		foreach($objectives as $objective){ ?>
+					<?php		foreach($objectives as $objective){ 									
+									?>
 				
 									<li class = "objective-container objective-set"
 										id = "objective_<?php echo $objective["objective_id"]; ?>"
-										data-list="<?php echo $objective["objective_id"] == 1?'hierarchical':'flat'; ?>"
+										data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
 										data-id="<?php echo $objective["objective_id"]; ?>">
 										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
 										<div 	class="objective-title" 
@@ -1187,6 +1195,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												data-description = "<?php echo $objective["objective_description"]; ?>">
 											<h3><?php echo $title; ?></h3>
 										</div>
+										<div class="objective-controls" id="objective_controls_<?php echo $objective["objective_id"];?>">
+										</div>																														
 										<div 	class="objective-children"
 												id="children_<?php echo $objective["objective_id"]; ?>">
 												<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>">
@@ -1196,7 +1206,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					<?php 		} ?>				
 							</ul>
 						</div>
-			<?php   $query = "	SELECT a.*,COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`, 
+
+
+			<?php   $query = "	SELECT a.*, COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description`, COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`, 
 								b.`importance`,c.`objective_details`, COALESCE(c.`eobjective_id`,0) AS `mapped`, 
 								COALESCE(b.`cobjective_id`,0) AS `mapped_to_course` 
 								FROM `global_lu_objectives` a
@@ -1221,8 +1233,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					if ($mapped_objectives) {
 						foreach ($mapped_objectives as $objective) {	
 							//if its mapped to the event, but not the course, then it belongs in the event objective list
+							//echo $objective["objective_name"].' is '.$objective["mapped"].' and '.$objective["mapped_to_course"]."<br/>";
 							if ($objective["mapped"] && !$objective["mapped_to_course"]) {
-								$explicit_event_objectives[] = $objective;
+								if (!fetch_objective_child_mapped_course($objective["objective_id"],$COURSE_ID)) {								
+									$explicit_event_objectives[] = $objective;
+								} else {
+									if ($objective["objective_type"] == "course") {
+										//$objective_id = $objective["objective_id"];
+										$hierarchical_objectives[] = $objective;
+									} else {
+										$flat_objectives[] = $objective;
+									}
+								}
 							} else {							
 								if ($objective["objective_type"] == "course") {
 									//$objective_id = $objective["objective_id"];
@@ -1235,14 +1257,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							if ($objective["mapped"]) {
 								$mapped_event_objectives[] = $objective;												
 							}
-						}?>
+						}
+					}
+					?>	
 
 					<div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="event" data-resource-id="<?php echo $EVENT_ID;?>">
 						<h2>Mapped Objectives
 						<div style="float: right">
 							<ul class="page-action">
 								<li class="last">
-									<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Show Objective Sets</a>
+									<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Map Additional Objectives</a>
 								</li>
 							</ul>
 						</div>							
@@ -1368,10 +1392,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						?>
 						</select>							
 
-					</div>
-					<?php
-					}
-					?>					
+					</div>				
 					<div style="clear:both;"></div>					
 					<div style="float:right;margin-top:10px;">
 						<input type="submit" value="Save"/>

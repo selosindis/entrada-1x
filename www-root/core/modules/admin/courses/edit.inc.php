@@ -857,7 +857,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										AND a.`objective_parent` = '0'
 										AND a.`objective_active` = '1'";
 							$objectives = $db->GetAll($query);
-							if($objectives) { ?>						
+							if ($objectives) { 
+								$hierarchical_name = $translate->_("events_filter_controls");
+								$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];						
+								?>						
 					<a name="course-objectives-section"></a>
 					<h2 title="Course Objectives Section"><?php echo $module_singular_name; ?> Objectives</h2>
 					<div id="course-objectives-section">					
@@ -897,6 +900,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								margin-left:5px;
 								margin-top:-2px;
 							}
+							.objective-description{
+								font-size: 11px;
+								font-style: normal;
+								color: #666;
+								margin-top:5px;		
+								margin-left:5px;					
+							}
+							#mapped_objectives .objective-description{
+								margin-left:0px;					
+							}							
 							.objective-list{
 								padding-left:5px;
 							}
@@ -914,9 +927,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								width:100%;
 							}
 							.remove{
-								cursor:pointer;
-							}
-							.draggable{
 								cursor:pointer;
 							}
 							.droppable.hover{
@@ -947,6 +957,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								top:5px;
 								right:5px;
 							}
+							.objective-controls .loading{
+								margin-top:7px!important;
+							}							
 							.objective-remove{
 								display:block; 
 								float:right;
@@ -990,7 +1003,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<?php		foreach($objectives as $objective){ ?>
 										<li class = "objective-container objective-set"
 											id = "objective_<?php echo $objective["objective_id"]; ?>"
-											data-list="<?php echo $objective["objective_id"] == 1?'hierarchical':'flat'; ?>"
+											data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
 											data-id="<?php echo $objective["objective_id"];?>">
 											<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
 											<div 	class="objective-title" 
@@ -1002,6 +1015,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 													data-description = "<?php echo $objective["objective_description"]; ?>">
 												<h3><?php echo $title; ?></h3>
 											</div>
+											<div class="objective-controls" id="objective_controls_<?php echo $objective["objective_id"];?>">
+											</div>																															
 											<div 	class="objective-children"
 													id="children_<?php echo $objective["objective_id"]; ?>">
 													<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>">

@@ -28,15 +28,23 @@ jQuery(document).ready(function(){
 			// if(mapped != undefined){
 			// 	query['client'] = mapped;
 			// }
+			var loading = jQuery(document.createElement('img'))
+								.attr('src',SITE_URL+'/images/loading.gif')
+								.attr('width','15')
+								.attr('title','Loading...')
+								.attr('alt','Loading...')
+								.attr('class','loading')
+								.attr('id','loading_'+id);
+			jQuery('#objective_controls_'+id).append(loading);
 			jQuery.ajax({
-							url:SITE_URL+'/api/fetchobjectives.api.php',
-							data:query,
-							success:function(data,status,xhr){	
-								console.log(data);
-								loaded[id] = jQuery.parseJSON(data);
-								buildDOM(loaded[id],id);	
-							}
-					});
+					url:SITE_URL+'/api/fetchobjectives.api.php',
+					data:query,
+					success:function(data,status,xhr){	
+						jQuery('#loading_'+id).remove();
+						loaded[id] = jQuery.parseJSON(data);
+						buildDOM(loaded[id],id);	
+					}
+				});
 
 		} else if (jQuery('#children_'+id).is(':visible')) {
 			jQuery('#children_'+id).slideUp(600);	
@@ -294,7 +302,7 @@ function buildDOM(children,id){
 						.val(children[i].objective_id);
 			if(children[i].mapped && children[i].mapped != 0){
 				jQuery(check).attr('checked','checked');
-			}else if(children[i].has_child && children[i].has_child != 0){
+			}else if(children[i].child_mapped && children[i].child_mapped != 0){
 				jQuery(check).attr('checked','checked');
 				jQuery(check).attr('disabled',true);
 			}	
@@ -309,9 +317,12 @@ function buildDOM(children,id){
 		child_list = 	jQuery(document.createElement('ul'))
 							.attr('class','objective-list')
 							.attr('id','objective_list_'+children[i].objective_id)
-							.attr('data-id',children[i].objective_id);													
+							.attr('data-id',children[i].objective_id);																				
 		jQuery(child_container).append(child_list);			
-		jQuery(controls).append(check);
+		var type = jQuery('#mapped_objectives').attr('data-resource-type');								
+		if(type != 'event' || !children[i].has_child){
+			jQuery(controls).append(check);
+		}		
 		if(EDITABLE == true){
 		jQuery(controls).append(e_control)
 						.append(a_control)

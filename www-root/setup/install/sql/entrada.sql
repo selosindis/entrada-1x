@@ -1837,11 +1837,7 @@ CREATE TABLE IF NOT EXISTS `community_type_pages` (
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY (`ctpage_id`),
-  KEY `cpage_id` (`ctpage_id`,`type_id`,`page_url`,`page_active`),
-  KEY `community_id` (`type_id`,`parent_id`,`page_url`,`page_active`),
-  KEY `page_order` (`page_order`),
-  KEY `community_id_2` (`type_id`,`page_url`),
-  KEY `community_id_3` (`type_id`,`page_type`)
+  KEY `type_id` (`type_id`, `type_scope`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `community_type_pages` (`ctpage_id`, `type_id`, `type_scope`, `parent_id`, `page_order`, `page_type`, `menu_title`, `page_title`, `page_url`, `page_content`, `page_active`, `page_visible`, `allow_member_view`, `allow_troll_view`, `allow_public_view`, `lock_page`, `updated_date`, `updated_by`)

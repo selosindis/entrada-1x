@@ -338,7 +338,30 @@ if ($COMMUNITY_URL) {
 					$smarty->template_dir = COMMUNITY_ABSOLUTE."/templates/".$COMMUNITY_TEMPLATE;
 					$smarty->compile_id = md5($smarty->template_dir);
 				}
-
+                $COMMUNITY_LOCKED_PAGE_IDS = array();
+                $COMMUNITY_TYPE_OPTIONS = array();
+                if (isset($community_details["octype_id"]) && $community_details["octype_id"]) {
+                    $query = "SELECT * FROM `org_community_types` WHERE `octype_id` = ".$db->qstr($community_details["octype_id"]);
+                    $COMMUNITY_TYPE = $db->GetRow($query);
+                    if ($COMMUNITY_TYPE) {
+                        $COMMUNITY_TYPE_OPTIONS = json_decode($COMMUNITY_TYPE["community_type_options"], true);
+                        
+                        $query = "SELECT b.`cpage_id` FROM `community_type_pages` AS a
+                                    JOIN `community_pages` AS b
+                                    ON a.`page_url` = b.`page_url`
+                                    AND a.`page_type` = b.`page_type`
+                                    WHERE a.`type_id` = ".$db->qstr($COMMUNITY_TYPE["octype_id"])."
+                                    AND a.`type_scope` = 'organisation'
+                                    AND b.`community_id` = ".$db->qstr($COMMUNITY_ID);
+                        $locked_pages = $db->GetAll($query);
+                        if ($locked_pages) {
+                            foreach ($locked_pages as $locked_page) {
+                                $COMMUNITY_LOCKED_PAGE_IDS[] = $locked_page["cpage_id"];
+                            }
+                        }
+                    }
+                }
+                
 				/**
 				 * Get a list of modules which are enabled.
 				 */

@@ -73,7 +73,7 @@ if ($COMMUNITY_ID) {
 						?>
 						</a>
 				</div>
-				<?php echo communities_pages_inlists(0, 0, array('id'=>'pagelists')); ?>
+				<?php echo communities_pages_inlists(0, 0, array('id'=>'pagelists'), (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS) ? $COMMUNITY_LOCKED_PAGE_IDS : array()); ?>
 
 				<input type="submit" id="delete_pages_button" class="button" value="Delete Selected" />
 				<input type="button" id="reorder_pages_button" class="button" onclick="toggleSorting();" value="Reorder Pages">

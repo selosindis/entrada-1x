@@ -209,7 +209,9 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 						
 						$query = "	SELECT `organisation_id` FROM `courses` WHERE `course_id` = ".$db->qstr($results[0]["course_id"]);
 						$org_id = $db->GetOne($query);
-						list($course_objectives,$top_level_id) = courses_fetch_objectives($org_id,$course_ids, -1,1, false, false, 0, true);
+                        if ($PAGE_TYPE == "course" && $page_details["page_url"] == "objectives") {
+                            list($course_objectives,$top_level_id) = courses_fetch_objectives($org_id,$course_ids, -1,1, false, false, 0, true);
+                        }
 					}
 					
 									
@@ -221,7 +223,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							 * a normal page, so the page_type, menu_title, permissions, and page_title
 							 * will not be set when the page type is currently set to "course"
 							 */
-							if ($PAGE_TYPE != "course") {
+							if (array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
 								/**
 								 * Required field "page_type" / Page Type (Unchangeable for course content pages).
 								 */
@@ -360,7 +362,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									$PROCESSED["page_content"] = "";	
 								}
 							}
-							if (!$home_page && $PAGE_TYPE != "course") {
+							if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
 								if ($_POST["page_visibile"] == '0') {
 									$PROCESSED["page_visible"] = 0;
 								} else {
@@ -369,7 +371,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							}
 
 							if (!$ERROR) {
-								if ($PAGE_TYPE != "course" && !$home_page) {
+								if (array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false && !$home_page) {
 									/**
 									 * Non-required "page_order" / Page Position.
 									 * This special field will change the order which this page will appear under the parent.
@@ -801,7 +803,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									<td style="vertical-align: top">
 										<?php
 										if ((is_array($PAGE_TYPES)) && (count($PAGE_TYPES))) {
-											echo "<select id=\"page_type\" name=\"page_type\" style=\"width: 204px\" onchange=\"window.location = '".COMMUNITY_URL.$COMMUNITY_URL.":pages?section=edit&page=".($home_page ? "home" : $PAGE_ID)."&type='+this.options[this.selectedIndex].value\" ".($PAGE_TYPE == "course" ? "disabled=\"disabled\" " : "").">\n";
+											echo "<select id=\"page_type\" name=\"page_type\" style=\"width: 204px\" onchange=\"window.location = '".COMMUNITY_URL.$COMMUNITY_URL.":pages?section=edit&page=".($home_page ? "home" : $PAGE_ID)."&type='+this.options[this.selectedIndex].value\" ".(array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) !== false ? "disabled=\"disabled\" " : "").">\n";
 											foreach ($PAGE_TYPES as $page_type_info) {
 												echo "<option value=\"".html_encode($page_type_info["module_shortname"])."\"".(((isset($PAGE_TYPE)) && ($PAGE_TYPE == $page_type_info["module_shortname"])) || ((isset($page_details["page_type"])) && !isset($PAGE_TYPE) && ($page_details["page_type"] == $page_type_info["module_shortname"])) ? " selected=\"selected\"" : "").">".html_encode($page_type_info["module_title"])."</option>\n";
 											}
@@ -824,7 +826,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									</td>
 								</tr>
 								<?php 
-								if (!$home_page && $PAGE_TYPE != "course") {
+								if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
 										?>
 									<tr>
 										<td colspan="2">&nbsp;</td>
@@ -852,11 +854,11 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								</tr>
 								<tr>
 									<td><label for="menu_title" class="form-required">Menu Title:</label></td>
-									<td><input type="text" id="menu_title" name="menu_title" value="<?php echo ((isset($PROCESSED["menu_title"])) ? html_encode($PROCESSED["menu_title"]) : ((isset($page_details["menu_title"])) ? html_encode($page_details["menu_title"]) : "")); ?>" maxlength="32" style="width: 300px" onblur="fieldCopy('menu_title', 'page_title', 1)"<?php echo ($PAGE_TYPE == "course" ? " disabled=\"disabled\"" : ""); ?> /></td>
+									<td><input type="text" id="menu_title" name="menu_title" value="<?php echo ((isset($PROCESSED["menu_title"])) ? html_encode($PROCESSED["menu_title"]) : ((isset($page_details["menu_title"])) ? html_encode($page_details["menu_title"]) : "")); ?>" maxlength="32" style="width: 300px" onblur="fieldCopy('menu_title', 'page_title', 1)"<?php echo (array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) !== false ? " disabled=\"disabled\"" : ""); ?> /></td>
 								</tr>
 								<tr>
 									<td><label for="page_title" class="form-nrequired">Page Title:</label></td>
-									<td><input type="text" id="page_title" name="page_title" value="<?php echo ((isset($PROCESSED["page_title"])) ? html_encode($PROCESSED["page_title"]) : ""); ?>" maxlength="100" style="width: 300px"<?php echo ($PAGE_TYPE == "course" ? " disabled=\"disabled\"" : ""); ?> /></td>
+									<td><input type="text" id="page_title" name="page_title" value="<?php echo ((isset($PROCESSED["page_title"])) ? html_encode($PROCESSED["page_title"]) : ""); ?>" maxlength="100" style="width: 300px"<?php echo (array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) !== false ? " disabled=\"disabled\"" : ""); ?> /></td>
 								</tr>
 								<tr>
 									<td colspan="2">&nbsp;</td>
@@ -883,7 +885,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									</tr>
 									<?php
 								} 
-								if (!$home_page && $PAGE_TYPE != "course") {
+								if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
 									if ($PAGE_TYPE == "events" || $PAGE_TYPE == "announcements") {
 										?>
 										<tr>
@@ -1140,7 +1142,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									<td colspan="2">&nbsp;</td>
 								</tr>
 								<?php
-								if (($PAGE_TYPE == "url") || (!$home_page && $PAGE_TYPE != "course") || ($home_page && $PAGE_TYPE == "default")) {	
+								if (($PAGE_TYPE == "url") || (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) || ($home_page && $PAGE_TYPE == "default")) {	
 									?>
 									<tr>
 										<td colspan="2"><h2>Page Options</h2></td>
@@ -1176,7 +1178,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									</tr>			
 								<?php
 								}
-								if (!$home_page && $PAGE_TYPE != "course") {
+								if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
 									$query		= "SELECT `cpage_id`, `page_order`, `menu_title` FROM `community_pages` WHERE `cpage_id` <> ".$db->qstr($PAGE_ID)." AND `parent_id` = ".$db->qstr($PROCESSED["parent_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` != '' AND `page_type` != 'course' ORDER BY `page_order` ASC";
 									$results	= $db->GetAll($query);
 									if ($results) {

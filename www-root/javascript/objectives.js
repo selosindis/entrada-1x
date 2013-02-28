@@ -12,6 +12,7 @@ jQuery(document).ready(function(){
 		}
 	});
 	
+
 	jQuery('.objective-title').live('click',function(){
 		var id = jQuery(this).attr('data-id');		
 		var children = [];
@@ -27,11 +28,11 @@ jQuery(document).ready(function(){
 			// if(mapped != undefined){
 			// 	query['client'] = mapped;
 			// }
-			console.log(query);
 			jQuery.ajax({
 							url:SITE_URL+'/api/fetchobjectives.api.php',
 							data:query,
-							success:function(data,status,xhr){								
+							success:function(data,status,xhr){	
+								console.log(data);
 								loaded[id] = jQuery.parseJSON(data);
 								buildDOM(loaded[id],id);	
 							}
@@ -293,6 +294,9 @@ function buildDOM(children,id){
 						.val(children[i].objective_id);
 			if(children[i].mapped && children[i].mapped != 0){
 				jQuery(check).attr('checked','checked');
+			}else if(children[i].has_child && children[i].has_child != 0){
+				jQuery(check).attr('checked','checked');
+				jQuery(check).attr('disabled',true);
 			}	
 		}
 		description = 	jQuery(document.createElement('div'))
@@ -304,7 +308,8 @@ function buildDOM(children,id){
 							.attr('id','children_'+children[i].objective_id);
 		child_list = 	jQuery(document.createElement('ul'))
 							.attr('class','objective-list')
-							.attr('id','objective_list_'+children[i].objective_id);													
+							.attr('id','objective_list_'+children[i].objective_id)
+							.attr('data-id',children[i].objective_id);													
 		jQuery(child_container).append(child_list);			
 		jQuery(controls).append(check);
 		if(EDITABLE == true){
@@ -316,9 +321,9 @@ function buildDOM(children,id){
 							.append(controls)
 							.append(description)
 							.append(child_container);
-		jQuery(container).draggable({
-								revert:true
-							});
+		// jQuery(container).draggable({
+		// 						revert:true
+		// 					});
 		jQuery('#objective_list_'+id).append(container);
 	}	
 

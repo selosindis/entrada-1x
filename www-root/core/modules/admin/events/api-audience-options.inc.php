@@ -98,7 +98,7 @@ if (!defined("IN_EVENTS")) {
 							}
                             ?>
                             <tr>
-                                <td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_custom" value="custom" onclick="selectEventAudienceOption('custom')" style="vertical-align: middle"<?php echo ((($PROCESSED["event_audience_type"] == "custom") || (!$course_list && !$permission == "closed")) ? " checked=\"checked\"" : ""); ?> /></td>
+                                <td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_custom" value="custom" onclick="selectEventAudienceOption('custom')" style="vertical-align: middle"<?php echo ((($PROCESSED["event_audience_type"] == "custom") || (!$course_list && $permission != "closed")) ? " checked=\"checked\"" : ""); ?> /></td>
                                 <td colspan="2" style="padding-bottom: 15px">
                                     <label for="event_audience_type_custom" class="radio-group-title">A Custom Event Audience</label>
                                     <div class="content-small">This event is intended for a custom selection of learners.</div>

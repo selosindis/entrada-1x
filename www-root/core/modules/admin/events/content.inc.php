@@ -1172,7 +1172,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					$objectives = $db->GetAll($query);
 
 					if ($objectives) { 
-						$hierarchical_name = $translate->_("events_filter_controls");
+						$objective_name = $translate->_("events_filter_controls");						
 						$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];						
 						?>						
 						<div class="objectives half left">
@@ -1235,7 +1235,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							//if its mapped to the event, but not the course, then it belongs in the event objective list
 							//echo $objective["objective_name"].' is '.$objective["mapped"].' and '.$objective["mapped_to_course"]."<br/>";
 							if ($objective["mapped"] && !$objective["mapped_to_course"]) {
-								if (!fetch_objective_child_mapped_course($objective["objective_id"],$COURSE_ID)) {								
+								if (!event_objective_parent_mapped_course($objective["objective_id"],$EVENT_ID)) {															
 									$explicit_event_objectives[] = $objective;
 								} else {
 									if ($objective["objective_type"] == "course") {

@@ -77,7 +77,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					$fields["decendant_mapped"] = course_objective_has_child_mapped($objective["objective_id"],$course_id);
 				}
 				if ($event_id) {
-					$fields["decendant_mapped"] = event_objective_has_child_mapped($objective["objective_id"],$event_id);
+					$fields["decendant_mapped"] = event_objective_parent_mapped_course($objective["objective_id"],$event_id);
 					$query = "	SELECT * FROM `global_lu_objectives` 
 								WHERE `objective_parent` = ".$db->qstr($objective["objective_id"]);
 					$fields["has_child"] = $db->GetAll($query)?true:false;

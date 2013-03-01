@@ -9365,6 +9365,9 @@ function course_objective_child_recursive($objectives,$objective_id,$course_id){
 	global $db;
 	$parents = array();
 	foreach ($objectives as $objective) {
+		if ($objective["objective_id"] == $objective_id) {
+			return true;
+		}	
 		$query = "	SELECT a.*
 					FROM `global_lu_objectives` a
 					LEFT JOIN `course_objectives` b
@@ -12125,7 +12128,7 @@ function event_objectives_display_leaf($objective){
 * Recursively loops up tree from mapped event objectives checking each parent to see if its the passed objective id.
 * Parents are collected and passed to the next iteration as a group to save function calls
 */
-function event_objective_has_child_mapped($objective_id,$event_id){
+function event_objective_parent_mapped_course($objective_id,$event_id){	
 	global $db;
 	$query = "	SELECT a.*, c.course_id
 				FROM `global_lu_objectives` a
@@ -12141,13 +12144,16 @@ function event_objective_has_child_mapped($objective_id,$event_id){
 	$objectives = $db->GetAll($query);
 	if (!$objectives) return false;
 	$course_id = $objectives[0]["course_id"];
-	return event_objective_child_recursive($objectives,$objective_id,$course_id,$event_id);
+	return event_objective_parent_mapped_recursive($objectives,$objective_id,$course_id,$event_id);
 }
 
-function event_objective_child_recursive($objectives,$objective_id,$course_id,$event_id){
-	global $db;
+function event_objective_parent_mapped_recursive($objectives,$objective_id,$course_id,$event_id){
+	global $db;	
 	$parents = array();
 	foreach ($objectives as $objective) {
+		if ($objective["objective_id"] == $objective_id) {
+			return true;
+		}		
 		if ($objective["objective_parent"]) {
 			$query = "	SELECT a.*
 						FROM `global_lu_objectives` a
@@ -12174,10 +12180,8 @@ function event_objective_child_recursive($objectives,$objective_id,$course_id,$e
 	}	
 	//if no parents have been found for this level of parents, no children exist for this id
 	if (!$parents) return false;
-	return event_objective_child_recursive($parents,$objective_id,$course_id,$event_id);	
+	return event_objective_parent_mapped_recursive($parents,$objective_id,$course_id,$event_id);	
 }
-
-
 
 function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_text = false, $parent_active = false, $importance = 1, $course = true, $top = true, $display_importance = "primary", $full_objective_list = false, $course_id = 0) {
 	global $edit_ajax, $ENTRADA_USER;

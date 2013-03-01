@@ -52,10 +52,6 @@
 
 			var title = jQuery('#objective_title_'+id).attr('data-title');
 			var description = jQuery('#objective_'+id).attr('data-description');
-			var lkey = jQuery.inArray(id,listed);
-			if(lkey == -100 && !jQuery(this).is(':checked')){
-				jQuery('#objective_remove_'+id).trigger('click');
-			}
 			if (jQuery(this).is(':checked')) {
 				mapObjective(id,title,description,list,true);
 			} else {
@@ -167,15 +163,15 @@
 		}
 		var lkey = jQuery.inArray(id,listed);
 		console.log('key '+key+' id '+id+' list '+list+' importance '+importance);
-		if(lkey == -1){
+		if(lkey === -1){
 			importance = 'checked';
 		}
 
 		jQuery("#"+importance+"_objectives_select option[value='"+id+"']").remove();				
 		jQuery('#check_objective_'+id).attr('checked','');
 		jQuery('#check_mapped_'+id).attr('checked','');
-		jQuery('#text_container_'+id).remove();
-		if(jQuery('#objective_remove_'+id).length > 0){
+		jQuery('#text_container_'+id).remove();		
+		if(lkey === -1){
 			jQuery('#mapped_objective_'+id).remove();
 		}
 		var children_exist = jQuery("#mapped_event_objectives li").length;

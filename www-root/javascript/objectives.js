@@ -1,5 +1,6 @@
 var EDITABLE = false;
 var loaded = [];
+var loading_objectives = false;
 jQuery(document).ready(function(){	
 	jQuery('.objective-collapse-control').live('click',function(){
 		var id = jQuery(this).attr('data-id');
@@ -28,24 +29,27 @@ jQuery(document).ready(function(){
 			// if(mapped != undefined){
 			// 	query['client'] = mapped;
 			// }
-			var loading = jQuery(document.createElement('img'))
-								.attr('src',SITE_URL+'/images/loading.gif')
-								.attr('width','15')
-								.attr('title','Loading...')
-								.attr('alt','Loading...')
-								.attr('class','loading')
-								.attr('id','loading_'+id);
-			jQuery('#objective_controls_'+id).append(loading);
-			jQuery.ajax({
-					url:SITE_URL+'/api/fetchobjectives.api.php',
-					data:query,
-					success:function(data,status,xhr){	
-						jQuery('#loading_'+id).remove();
-						loaded[id] = jQuery.parseJSON(data);
-						buildDOM(loaded[id],id);	
-					}
-				});
-
+			if(!loading_objectives){
+				var loading = jQuery(document.createElement('img'))
+									.attr('src',SITE_URL+'/images/loading.gif')
+									.attr('width','15')
+									.attr('title','Loading...')
+									.attr('alt','Loading...')
+									.attr('class','loading')
+									.attr('id','loading_'+id);
+				jQuery('#objective_controls_'+id).append(loading);				
+				loading_objectives = true;				
+				jQuery.ajax({
+						url:SITE_URL+'/api/fetchobjectives.api.php',
+						data:query,
+						success:function(data,status,xhr){								
+							jQuery('#loading_'+id).remove();
+							loaded[id] = jQuery.parseJSON(data);
+							buildDOM(loaded[id],id);
+							loading_objectives = false;
+						}
+					});
+			}
 		} else if (jQuery('#children_'+id).is(':visible')) {
 			jQuery('#children_'+id).slideUp(600);	
 		} else {

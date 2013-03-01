@@ -768,6 +768,69 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 	return true;
 }
 
+/*
+ * Function that builds system feedback sidebar widget from language file.
+ *
+ * @param $group string or array
+ * @return bool
+ */
+function system_feedback_sidebar($group = "") {
+
+	global $translate, $SCRIPT;
+
+	if ($feedback_text = $translate->_("global_feedback_widget")) {
+		$SCRIPT[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/feedback.js\"></script>";
+
+		$sidebar_html = '<div id="feedback-widget">';
+		$sidebar_html .= '<ul class="menu feedback" data-enc="'.feedback_enc().'">';
+
+		/*
+		 * Global Feedback options
+		 */
+		foreach ($feedback_text["global"] as $css_class => $feedback) {
+			$sidebar_html .= '<li class="'.$css_class.'">';
+			$sidebar_html .= '<a href="'.ENTRADA_URL.'/agent-feedback.php"><strong>'.$feedback["link-text"].'</strong></a><br />';
+			$sidebar_html .= '<span class="content-small">'.$feedback["link-desc"].'</span>';
+			$sidebar_html .= '</li>';
+		}
+
+		/*
+		 * Group Specific feedback options
+		 */
+		if (is_array($group)) {
+			foreach ($group as $groupname) {
+				if (!empty($feedback_text[$groupname])) {
+					foreach ($feedback_text[$groupname] as $css_class => $feedback) {
+						$sidebar_html .= '<li class="'.$css_class.'">';
+						$sidebar_html .= '<a href="'.ENTRADA_URL.'/agent-feedback.php"><strong>'.$feedback["link-text"].'</strong></a><br />';
+						$sidebar_html .= '<span class="content-small">'.$feedback["link-desc"].'</span>';
+						$sidebar_html .= '</li>';
+					}
+				}
+			}
+		} else if (is_string($group)) {
+			if (!empty($feedback_text[$group])) {
+				foreach ($feedback_text[$group] as $css_class => $feedback) {
+					$sidebar_html .= '<li class="'.$css_class.'">';
+					$sidebar_html .= '<a href="'.ENTRADA_URL.'/agent-feedback.php"><strong>'.$feedback["link-text"].'</strong></a><br />';
+					$sidebar_html .= '<span class="content-small">'.$feedback["link-desc"].'</span>';
+					$sidebar_html .= '</li>';
+				}
+			}
+		}
+
+
+
+		$sidebar_html .= '</ul>';
+		$sidebar_html .= '</div>';
+
+		new_sidebar_item("Feedback", $sidebar_html, "page-feedback", "open");
+
+		return true;
+	} else {
+		return false;
+	}
+}
 
 /**
  * Clears all open buffers so you can start with a clean page. This function is

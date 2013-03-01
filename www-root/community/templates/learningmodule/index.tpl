@@ -25,6 +25,7 @@
 	<script src="{$template_relative}/js/libs/modernizr-1.7.min.js"></script>
 	{$page_head}
 	<link rel="stylesheet" href="{$template_relative}/css/ie.css">
+	<link rel="stylesheet" href="{$template_relative}/css/stylesheet.css">
 	<link rel="stylesheet" href="{$template_relative}/css/screen.css">
 </head>
 <body>

@@ -929,6 +929,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					if ($SUCCESS) {
 						echo display_success();
 					}
+
+                    $ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID."\\'', 5000)";
 				break;
 				case 1 :
 				default:
@@ -981,9 +983,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					}
 				continue;
 			}
-
-			$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID."\\'', 5000)";
-
 		}
 	} else {
 		if ($RECORD_ID) {

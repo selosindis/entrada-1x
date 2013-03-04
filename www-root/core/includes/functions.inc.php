@@ -7365,7 +7365,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 			break;
 		case "reply" :
 			$query = "	SELECT DISTINCT(a.`proxy_id`) FROM `community_members` AS a
-						LEFT JOIN `medtech_auth`.`user_data` AS b
+						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 						ON a.`proxy_id` = b.`id`
 						LEFT JOIN `community_notify_members` AS c
 						ON c.`community_id` = ".$db->qstr($community_id)."

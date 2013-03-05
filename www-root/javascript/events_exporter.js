@@ -78,7 +78,7 @@ jQuery(document).ready(function($){
 					if ($('#display-error-box').length > 0) {
 						$('#display-error-box').remove();
 					}
-					var url = modal_container.find("form").attr("action") + "?" + modal_container.find("form").serialize();
+					var url = modal_container.find("#my_export_options_form").attr("action") + "?" + modal_container.find("#my_export_options_form").serialize();
 					window.location=url;
 					$(this).dialog( "close" );
 				}

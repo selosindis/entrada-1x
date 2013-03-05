@@ -327,11 +327,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					?>
 				</ul>
 			</div>
-			<form id="my_export_options_form" action="<?php echo ENTRADA_URL . "/admin/events/export"; ?>">
-				<input type="hidden" name="my_export_options" value="" />
-			</form>
-			
 		</div>
+		<form id="my_export_options_form" action="<?php echo ENTRADA_URL . "/admin/events/export"; ?>">
+			<input type="hidden" name="my_export_options" value="" />
+		</form>
 	</div>
 			
 			<script type="text/javascript">

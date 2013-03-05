@@ -68,6 +68,17 @@
 					{include file="sidebar-blocks/community_block.tpl"}
 				{/if}
 			</aside>
+			{if $is_sequential_nav}
+				<section style="text-align:right;" class="span-23">
+					{if $next_page_url != "#" && $previous_page_url != "#"}
+						<p><a href="{$previous_page_url}"><< Previous</a> | <a href="{$next_page_url}">Next >></a></p>
+					{elseif $next_page_url != "#" && $previous_page_url == "#"}
+						<p> <a href="{$next_page_url}"> Next >></a></p>
+					{else $next_page_url == "#" && $previous_page_url != "#"}
+						<p><a href="{$previous_page_url}"><< Previous</a> </p>
+					{/if}
+				</section>
+			{/if}
 		</div>
 		<footer class="span-24">
 			<p>{php}echo COPYRIGHT_STRING;{/php}</p>

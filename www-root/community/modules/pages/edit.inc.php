@@ -238,6 +238,15 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									$ERRORSTR[] = "The <strong>Page Type</strong> field is required and is either empty or an invalid value.";
 								}
 
+								$PROCESSED["page_navigation"] = array();
+								if ((isset($_POST["show_nav"]))) {
+									$show_nav = clean_input($_POST["show_nav"], array("trim", "notags"));
+									if ($show_nav == 0) {
+										$PROCESSED["page_navigation"]["show_nav"] = "0";
+									} else {
+										$PROCESSED["page_navigation"]["show_nav"] = "1";
+									}
+								}
 	
 								/**
 								 * Required field "parent_id" / Page Parent.
@@ -499,21 +508,21 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								$PROCESSED["updated_date"]	= time();
 								$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 								
-								if ($db->AutoExecute("community_pages", $PROCESSED, "UPDATE", "cpage_id = ".$PAGE_ID)) {
+								if ($db->AutoExecute("community_pages", $PROCESSED, "UPDATE", "cpage_id = ".$PAGE_ID)) {									
 									if ($home_page) {
 										if ($PAGE_TYPE == "default" || $PAGE_TYPE == "course") {
 											if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["show_announcements"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["show_announcements"]["cpoption_id"]))) {
 												if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["show_events"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["show_events"]["cpoption_id"]))) {
-													if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["show_history"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["show_history"]["cpoption_id"]))) {
+													if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["show_history"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["show_history"]["cpoption_id"]))) {											
 														if (!$ERROR) {
 															communities_log_history($COMMUNITY_ID, 0, 0, "community_history_edit_home_page", 1);
 															$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
-							
+
 															$SUCCESS++;
 															$SUCCESSSTR[]	= "You have successfully updated the home page of the community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-							
+
 															$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
-							
+
 															application_log("success", "Home Page [".$PAGE_ID."] updated in the system.");
 														}
 													} else {
@@ -703,6 +712,16 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 											application_log("success", "Page [".$PAGE_ID."] updated in the system.");
 										}
 									}
+									$PROCESSED["page_navigation"]["updated_date"] = time();
+									$PROCESSED["page_navigation"]["updated_by"] = $ENTRADA_USER->getID();
+									if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && $update_sql = $db->AutoExecute("community_page_navigation", $PROCESSED["page_navigation"], "UPDATE", "cpage_id = " . $db->qstr($PAGE_ID))) {
+										
+									} else {
+										$ERROR++;
+										$ERRORSTR[] = "There was a problem updating the page navigation. The application administrator has been informed them of this error.";
+
+										application_log("error", "There was a problem updating the page navigation for cpage_id: " . $PAGE_ID . ". Database said: ".$db->ErrorMsg());
+									}
 								} else {
 									$ERROR++;
 									$ERRORSTR[] = "There was a problem updating this page of the community. The application administrator has been informed them of this error.";
@@ -718,6 +737,12 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 						case 1 :
 						default :
 							$PROCESSED = $page_details;
+							
+							$query			= "	SELECT * 
+												FROM `community_page_navigation` 
+												WHERE `cpage_id` = ".$db->qstr($PAGE_ID)." 
+												AND `community_id` = ".$db->qstr($COMMUNITY_ID);
+							$PROCESSED["page_navigation"] = $db->GetRow($query);
 		
 							if ((isset($PAGE_TYPE)) && ($PAGE_TYPE != "")) {
 								$PROCESSED["page_type"] = $PAGE_TYPE;
@@ -1177,7 +1202,19 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										</td>
 									</tr>			
 								<?php
+								} else if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && $COMMUNITY_TYPE_OPTIONS["sequential_navigation"] == "1") { ?>
+									<tr>
+										<td><label for="show_nav" class="form-nrequired">Show Left/Right Navigation</label></td>
+										<td>
+											<select id="show_nav" name="show_nav">
+												<option value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_nav"]) || ((int) $PROCESSED["page_navigation"]["show_nav"] == 1) ? " selected=\"selected\"" : ""); ?>>Show page navigation on this page</option>
+												<option value="0"<?php echo (isset($PROCESSED["page_navigation"]["show_nav"]) && ((int) $PROCESSED["page_navigation"]["show_nav"] == 0) ? " selected=\"selected\"" : ""); ?>>Do not show page navigation on this page</option>
+											</select>
+										</td>
+									</tr>
+								<?php
 								}
+								
 								if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
 									$query		= "SELECT `cpage_id`, `page_order`, `menu_title` FROM `community_pages` WHERE `cpage_id` <> ".$db->qstr($PAGE_ID)." AND `parent_id` = ".$db->qstr($PROCESSED["parent_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` != '' AND `page_type` != 'course' ORDER BY `page_order` ASC";
 									$results	= $db->GetAll($query);

@@ -217,6 +217,15 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 						} else {
 							$PROCESSED["page_visible"] = 1;
 						}
+						$PROCESSED["page_navigation"] = array();
+						if ((isset($_POST["show_nav"]))) {
+							$show_nav = clean_input($_POST["show_nav"], array("trim", "notags"));
+							if ($show_nav == 0) {
+								$PROCESSED["page_navigation"]["show_nav"] = "0";
+							} else {
+								$PROCESSED["page_navigation"]["show_nav"] = "1";
+							}
+						}
 						
 						if (!$ERROR) {
 							/**
@@ -284,18 +293,28 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							
 							if (($db->AutoExecute("community_pages", $PROCESSED, "INSERT")) && ($PAGE_ID = $db->Insert_Id())) {
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, 0, "community_history_add_page", 1);
+								$PROCESSED["page_navigation"]["cpage_id"] = $PAGE_ID;
+								$PROCESSED["page_navigation"]["updated_date"] = time();
+								$PROCESSED["page_navigation"]["updated_by"] = $ENTRADA_USER->getID();
+								if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && !$update_sql = $db->AutoExecute("community_page_navigation", $PROCESSED["page_navigation"], "INSERT")) {
+									$ERROR++;
+									$ERRORSTR[] = "There was a problem updating the page navigation. The application administrator has been informed them of this error.";
+
+									application_log("error", "There was a problem updating the page navigation for cpage_id: " . $PAGE_ID . ". Database said: ".$db->ErrorMsg());
+								}
+								
 								if ($PAGE_TYPE == "announcements" || $PAGE_TYPE == "events") {
 									if ($db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'moderate_posts', `option_value` = ".$db->qstr($page_options["moderate_posts"]["option_value"]))) {
 										if ($db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'allow_member_posts', `option_value` = ".$db->qstr($page_options["allow_member_posts"]["option_value"]))) {
 											if ($db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'allow_troll_posts', `option_value` = ".$db->qstr($page_options["allow_troll_posts"]["option_value"]))) {
 												if (!$ERROR) {
 													$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
-				
+
 													$SUCCESS++;
 													$SUCCESSSTR[]	= "You have successfully added the <strong>".html_encode($PROCESSED["menu_title"])."</strong> page to your community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-					
+
 													$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
-					
+
 													application_log("success", "Page [".$PAGE_ID."] was just created in community_id [".$COMMUNITY_ID."].");
 												}
 											} else {
@@ -663,6 +682,17 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 											</tr>
 										</tbody>
 										</table>
+									</td>
+								</tr>
+							<?php
+							} else if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && $COMMUNITY_TYPE_OPTIONS["sequential_navigation"] == "1") { ?>
+								<tr>
+									<td><label for="show_nav" class="form-nrequired">Show Left/Right Navigation</label></td>
+									<td>
+										<select id="show_nav" name="show_nav">
+												<option value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_nav"]) || ((int) $PROCESSED["page_navigation"]["show_nav"] == 1) ? " selected=\"selected\"" : ""); ?>>Show page navigation on this page</option>
+												<option value="0"<?php echo (isset($PROCESSED["page_navigation"]["show_nav"]) && ((int) $PROCESSED["page_navigation"]["show_nav"] == 0) ? " selected=\"selected\"" : ""); ?>>Do not show page navigation on this page</option>
+										</select>
 									</td>
 								</tr>
 							<?php

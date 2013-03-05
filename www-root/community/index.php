@@ -207,12 +207,14 @@ if ($COMMUNITY_URL) {
 						$PAGE_ACTIVE = true;
 					break;
 					default :
-						$query = "SELECT `cpage_id`, `page_type`, `page_content`, `page_active`, `menu_title` FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` = ".$db->qstr($PAGE_URL);
+						$query = "SELECT * FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` = ".$db->qstr($PAGE_URL);
 						$result = $db->GetRow($query);
 						if ($result) {
 							$PAGE_ID = $result["cpage_id"];
 							$COMMUNITY_MODULE = $result["page_type"];
 							$MENU_TITLE = $result["menu_title"];
+							$PAGE_ORDER = $result["page_order"];
+							$PARENT_ID = $result["parent_id"];
 							if (((int)$result["page_active"]) == '1') {
 								$PAGE_ACTIVE = true;
 								if ($COMMUNITY_MODULE == "url") {
@@ -221,7 +223,7 @@ if ($COMMUNITY_URL) {
 								}
 							}
 						} else {
-							$query = "SELECT `page_type`, `page_url`, `page_active`, `menu_title` FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_type` = ".$db->qstr(($PAGE_URL == "calendar" ? "events" : $PAGE_URL))." ORDER BY `page_order` ASC";
+							$query = "SELECT * FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_type` = ".$db->qstr(($PAGE_URL == "calendar" ? "events" : $PAGE_URL))." ORDER BY `page_order` ASC";
 							$result	= $db->GetRow($query);
 							if ($result) {
 								if (((int)$result["page_active"]) == '1') { 
@@ -230,6 +232,8 @@ if ($COMMUNITY_URL) {
 									$COMMUNITY_MODULE = $result["page_type"];
 									$MENU_TITLE = $result["menu_title"];
 									$PAGE_URL = $result["page_url"];
+									$PAGE_ORDER = $result["page_order"];
+									$PARENT_ID = $result["parent_id"];
 								}
 							} else {
 								$COMMUNITY_MODULE = "default";
@@ -238,7 +242,7 @@ if ($COMMUNITY_URL) {
 					break;
 				}
 			} else {
-				$query = "SELECT `cpage_id`, `page_type`, `page_content`, `menu_title` FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` = ''";
+				$query = "SELECT * FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` = ''";
 				$result	= $db->GetRow($query);
 				if ($result) {
 					$PAGE_ID = $result["cpage_id"];
@@ -246,6 +250,8 @@ if ($COMMUNITY_URL) {
 					$MENU_TITLE = $result["menu_title"];
 					$PAGE_ACTIVE = true;
 					$HOME_PAGE = true;
+					$PAGE_ORDER = $result["page_order"];
+					$PARENT_ID = $result["parent_id"];
 					if ($COMMUNITY_MODULE == "url") {
 						header("Location: ".$result["page_content"]);
 						exit;
@@ -360,6 +366,28 @@ if ($COMMUNITY_URL) {
                             }
                         }
                     }
+					if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && $COMMUNITY_TYPE_OPTIONS["sequential_navigation"] == "1" && $COMMUNITY_MODULE != "pages") {
+						$is_sequential_nav = true;
+						$smarty->assign("is_sequential_nav", $is_sequential_nav);
+						
+						$result = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER);
+						
+						if ($result) {
+							$next_page_url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":" . $result["page_url"];
+						} else {
+							$next_page_url = "#";
+						}
+						$smarty->assign("next_page_url", $next_page_url);
+						
+						$result = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER);
+						
+						if ($result) {
+							$previous_page_url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":" . $result["page_url"];
+						} else {
+							$previous_page_url = "#";
+						}
+						$smarty->assign("previous_page_url", $previous_page_url);
+					}
                 }
                 
 				/**

@@ -50,7 +50,7 @@ if (!defined("IN_EVALUATIONS")) {
 		<div style="clear: both"></div>
 		<?php
 	}
-	
+
     $evaluations = Evaluation::getAuthorEvaluations();
 
 	if (count($evaluations)) {
@@ -58,7 +58,7 @@ if (!defined("IN_EVALUATIONS")) {
 		$HEAD[] = "<script type=\"text/javascript\">
 		jQuery(document).ready(function() {
 			jQuery('#evaluations').dataTable(
-				{    
+				{
 					'sPaginationType': 'full_numbers',
 					'bInfo': false,
 					'aoColumns': [
@@ -109,7 +109,7 @@ if (!defined("IN_EVALUATIONS")) {
 			<?php
 			foreach ($evaluations as $result) {
 				$url = ENTRADA_URL."/admin/evaluations?section=progress&evaluation=".$result["evaluation_id"];
-				
+
 				echo "<tr id=\"evaluation-".$result["evaluation_id"]."\" class=\"evaluation\">\n";
 				echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["evaluation_id"]."\" /></td>\n";
 				echo "	<td class=\"title\"><a href=\"".$url."\">".html_encode($result["evaluation_title"])."</a></td>\n";
@@ -134,31 +134,6 @@ if (!defined("IN_EVALUATIONS")) {
 		</div>
 		<?php
 	}
-
-	/**
-	 * Sidebar item that will provide another method for sorting, ordering, etc.
-	 */
-	$sidebar_html  = "Sort columns:\n";
-	$sidebar_html .= "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "title") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "title"))."\" title=\"Sort by Evaluation Title\">by evaluation title</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "evaluation_start") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "evaluation_start"))."\" title=\"Sort by Evaluation Start\">by evaluation start</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "evalluation_finish") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "evaluation_finish"))."\" title=\"Sort by Evaluation Finish\">by evaluation finish</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == "evaluation_type") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("sb" => "evaluation_type"))."\" title=\"Sort by Evaluation Type\">by evaluation type</a></li>\n";
-	$sidebar_html .= "</ul>\n";
-	$sidebar_html .= "Order columns:\n";
-	$sidebar_html .= "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "asc") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("so" => "asc"))."\" title=\"Ascending Order\">in ascending order</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("so" => "desc"))."\" title=\"Descending Order\">in descending order</a></li>\n";
-	$sidebar_html .= "</ul>\n";
-	$sidebar_html .= "Rows per page:\n";
-	$sidebar_html .= "<ul class=\"menu\">\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "5") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("pp" => "5"))."\" title=\"Display 5 Rows Per Page\">5 rows per page</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "15") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\">15 rows per page</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "25") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("pp" => "25"))."\" title=\"Display 25 Rows Per Page\">25 rows per page</a></li>\n";
-	$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == "50") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/evaluations?".replace_query(array("pp" => "50"))."\" title=\"Display 50 Rows Per Page\">50 rows per page</a></li>\n";
-	$sidebar_html .= "</ul>\n";
-
-	new_sidebar_item("Sort Results", $sidebar_html, "sort-results", "open");
 
 	$ONLOAD[] = "initList()";
 }

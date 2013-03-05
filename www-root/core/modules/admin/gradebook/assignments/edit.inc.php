@@ -529,7 +529,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 															if($course_assessments){
 																echo '<optgroup label="'.$group["group_name"].'">';
 																foreach($course_assessments as $course_assessment){
-																	?><option value="<?php echo $course_assessment["assessment_id"];?>"<?php echo ($PROCESSED["assessment_id"] && $PROCESSED["assessment_id"] == $course_assessment["assessment_id"]?" checked=\"checked\"":"");?>><?php echo $course_assessment["name"];?></option><?php
+																	?><option value="<?php echo $course_assessment["assessment_id"];?>"<?php echo ($PROCESSED["assessment_id"] && $PROCESSED["assessment_id"] == $course_assessment["assessment_id"]?" selected=\"selected\"":"");?>><?php echo $course_assessment["name"];?></option><?php
 																}
 																echo '</optgroup>';
 															}

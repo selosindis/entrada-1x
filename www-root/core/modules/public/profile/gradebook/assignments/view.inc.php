@@ -1,18 +1,18 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
- * 
+ *
  * Used to view the details of / download the specified file within a folder.
- * 
+ *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Brandon Thorn <brandon.thorn@queensu.ca>
  * @copyright Copyright 2012 Queen's University. All Rights Reserved.
- * 
+ *
 */
 if ((!defined("IN_PUBLIC_ASSIGNMENTS"))) {
 	exit;
-} 
+}
 
 if (!$RECORD_ID) {
 	if (isset($_GET["id"]) && $tmp = clean_input($_GET["id"], "int")) {
@@ -30,15 +30,15 @@ $iscontact = $db->GetRow($query);
 
 if ($RECORD_ID) {
 
-	$query = "	SELECT a.*,b.`organisation_id` 
+	$query = "	SELECT a.*,b.`organisation_id`
 				FROM `assignments` a
 				JOIN `courses` b
-				ON a.`course_id` = b.`course_id` 
+				ON a.`course_id` = b.`course_id`
 				WHERE a.`assignment_id` = ".$db->qstr($RECORD_ID)."
 				AND a.`assignment_active` = '1'";
-	$assignment = $db->GetRow($query);	
-	
-	
+	$assignment = $db->GetRow($query);
+
+
 	if (isset($_GET["pid"]) && $tmp = clean_input($_GET["pid"], "int")) {
 		if ($iscontact) {
 			$USER_ID = $tmp;
@@ -53,8 +53,8 @@ if ($RECORD_ID) {
 		header("Location: ".ENTRADA_URL."/admin/gradebook/assignments?section=grade&id=".$assignment["course_id"]."&assignment_id=".$RECORD_ID);
 	} else {
 		$USER_ID = $ENTRADA_USER->getID();
-	}	
-	
+	}
+
 	if ($USER_ID) {
 		if($assignment){
 			$course_ids = groups_get_enrolled_course_ids($USER_ID);
@@ -62,7 +62,7 @@ if ($RECORD_ID) {
 				$query			= "
 								SELECT a.*, b.`course_id`, b.`assignment_title`
 								FROM `assignment_files` AS a
-								JOIN `assignments` AS b 
+								JOIN `assignments` AS b
 								ON a.`assignment_id` = b.`assignment_id`
 								JOIN `".AUTH_DATABASE."`.`user_data` AS c
 								ON a.`proxy_id` = c.`id`
@@ -89,7 +89,7 @@ if ($RECORD_ID) {
 							$query	= "
 									SELECT *
 									FROM `assignment_file_versions`
-									WHERE `assignment_id` = ".$db->qstr($RECORD_ID)."					
+									WHERE `assignment_id` = ".$db->qstr($RECORD_ID)."
 									AND `afile_id` = ".$db->qstr($dfile_id)."
 									AND `file_active` = '1'
 									AND `file_version` = ".$db->qstr((int) $DOWNLOAD);
@@ -162,7 +162,7 @@ if ($RECORD_ID) {
 								add_statistic("community:".$COMMUNITY_ID.":shares", "file_download", "csfile_id", $RECORD_ID);
 								echo @file_get_contents($download_file, FILE_BINARY);
 								exit;
-							}							
+							}
 						}
 
 
@@ -218,7 +218,7 @@ if ($RECORD_ID) {
 											}
 										}
 										});
-								});		
+								});
 								jQuery('.delete-version').click(function(){
 									id = jQuery(this).attr('id').substring(7);
 									jQuery("#dialog-confirm").dialog({
@@ -235,8 +235,8 @@ if ($RECORD_ID) {
 											}
 										}
 										});
-								});								
-							});	
+								});
+							});
 
 							<?php if ($community_shares_select != "") { ?>
 							function fileMove(id) {
@@ -258,7 +258,7 @@ if ($RECORD_ID) {
 									}
 								);
 							}
-							<?php 
+							<?php
 							}
 							if (false){//shares_file_module_access($RECORD_ID, "delete-revision")) {
 								?>
@@ -357,7 +357,7 @@ if ($RECORD_ID) {
 
 								</script>
 								<?php
-								$ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$RECORD_ID."&type=file-notify&action=view')";						
+								$ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&id=".$RECORD_ID."&type=file-notify&action=view')";
 							}
 							?>
 							<div>
@@ -370,7 +370,7 @@ if ($RECORD_ID) {
 											SELECT a.*,  CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `uploader`, b.`username` AS `uploader_username`
 											FROM `assignment_file_versions` AS a
 											JOIN `assignment_files` AS c
-											ON a.`afile_id` = c.`afile_id` 
+											ON a.`afile_id` = c.`afile_id`
 											LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 											ON a.`proxy_id` = b.`id`
 											WHERE a.`afile_id` = ".$db->qstr($file_record["afile_id"])."
@@ -381,7 +381,7 @@ if ($RECORD_ID) {
 								$results	= $db->GetAll($query);
 								if ($results) {
 									$total_releases	= @count($results);
-									echo "<h2>Submission</h2>";
+									echo "<h2>Assignment Submission</h2>";
 									echo "<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
 									echo "<colgroup>\n";
 									echo "	<col style=\"width: 8%\" />\n";
@@ -439,7 +439,7 @@ if ($RECORD_ID) {
 											SELECT a.*,  CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `uploader`, b.`username` AS `uploader_username`
 											FROM `assignment_file_versions` AS a
 											JOIN `assignment_files` AS c
-											ON a.`afile_id` = c.`afile_id` 
+											ON a.`afile_id` = c.`afile_id`
 											LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 											ON a.`proxy_id` = b.`id`
 											WHERE c.`parent_id` = ".$db->qstr($file_record["afile_id"])."
@@ -508,14 +508,14 @@ if ($RECORD_ID) {
 								if (($ADD_REVISION) || ($ADD_COMMENT) || ($MOVE_FILE)) {
 									?>
 									<ul class="page-action">
-										<?php if (isset($iscontact) && $iscontact) { 
+										<?php if (isset($iscontact) && $iscontact) {
 											if ($teacher_file) {?>
 											<li><a href="<?php echo ENTRADA_URL."/admin/gradebook/assignments"; ?>?section=response-revision&id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Upload Response Revision</a></li>
-										<?php } else { 
+										<?php } else {
 											?><li><a href="<?php echo ENTRADA_URL."/admin/gradebook/assignments"; ?>?section=submit-response&id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Hand Back Response</a></li><?php
-											} 
+											}
 										} elseif ($ADD_REVISION) {?>
-										<li><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>">Upload Revised File</a></li>										
+										<li><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>">Upload Revised File</a></li>
 										<?php } ?>
 										<?php if ($ADD_COMMENT) : ?>
 										<li><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Add File Comment</a></li>
@@ -582,32 +582,30 @@ if ($RECORD_ID) {
 									?>
 									</tbody>
 									</table>
-									<?php
+                                    <?php
+                                    if (($ADD_REVISION) || ($ADD_COMMENT) || ($MOVE_FILE)) {
+                                        ?>
+                                        <ul class="page-action" style="margin-top: 15px">
+                                            <?php if (isset($iscontact) && $iscontact) {
+                                                if ($teacher_file) {?>
+                                                <li><a href="<?php echo ENTRADA_URL."/admin/gradebook/assignments"; ?>?section=response-revision&id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Upload Response Revision</a></li>
+                                            <?php } else {
+                                                ?><li><a href="<?php echo ENTRADA_URL."/admin/gradebook/assignments"; ?>?section=submit-response&id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Hand Back Response</a></li><?php
+                                                }
+                                            } elseif ($ADD_REVISION) {?>
+                                            <li><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>">Upload Revised File</a></li>
+                                            <?php } ?>
+                                            <?php if ($ADD_COMMENT) : ?>
+                                            <li><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Add File Comment</a></li>
+                                            <?php endif; ?>
+                                        </ul>
+                                        <?php
+                                    }
 								}
 								?>
 									<div id="dialog-confirm" title="Delete?" style="display: none">
 										<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>This item will be permanently deleted and cannot be recovered. Are you sure you want to delete it?</p>
 									</div>
-							<?php
-								if (($ADD_REVISION) || ($ADD_COMMENT) || ($MOVE_FILE)) {
-									?>
-									<ul class="page-action">
-										<?php if (isset($iscontact) && $iscontact) { 
-											if ($teacher_file) {?>
-											<li><a href="<?php echo ENTRADA_URL."/admin/gradebook/assignments"; ?>?section=response-revision&id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Upload Response Revision</a></li>
-										<?php } else { 
-											?><li><a href="<?php echo ENTRADA_URL."/admin/gradebook/assignments"; ?>?section=submit-response&id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Hand Back Response</a></li><?php
-											} 
-										} elseif ($ADD_REVISION) {?>
-										<li><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-revision&id=<?php echo $RECORD_ID; ?>">Upload Revised File</a></li>										
-										<?php } ?>
-										<?php if ($ADD_COMMENT) : ?>
-										<li><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Add File Comment</a></li>
-										<?php endif; ?>
-									</ul>
-									<?php
-								}
-								?>
 							</div>
 							<?php
 						} else {
@@ -630,7 +628,7 @@ if ($RECORD_ID) {
 				application_log("error", "The provided file id was invalid [".$RECORD_ID."] (View File).");
 				add_error('Invalid id specified. No assignment found for that id.');
 				echo display_error();
-				exit;		
+				exit;
 		}
 
 	} else {
@@ -640,7 +638,7 @@ if ($RECORD_ID) {
 } else {
 	application_log("error", "No assignment id was provided to view. (View File)");
 	add_error('No id specified');
-	echo display_error();	
+	echo display_error();
 	exit;
 }
 ?>

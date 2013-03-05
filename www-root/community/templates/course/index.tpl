@@ -112,6 +112,17 @@
 					<div class="content" style="padding-left: 10px;">
 						{$page_content}
 					</div>
+					{if $is_sequential_nav}
+						<div style="text-align:right;">
+							{if $next_page_url != "#" && $previous_page_url != "#"}
+								<p><a href="{$previous_page_url}"><< Previous</a> | <a href="{$next_page_url}">Next >></a></p>
+							{elseif $next_page_url != "#" && $previous_page_url == "#"}
+								<p> <a href="{$next_page_url}"> Next >></a></p>
+							{else $next_page_url == "#" && $previous_page_url != "#"}
+								<p><a href="{$previous_page_url}"><< Previous</a> </p>
+							{/if}
+						</div>
+					{/if}
 				</td>
 			</tr>
 		</tbody>

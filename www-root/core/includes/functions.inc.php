@@ -25,6 +25,135 @@
  *
 */
 
+
+function get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER) {
+	global $db;
+	
+	$prev_page_order = $PAGE_ORDER - 1;
+	$query = "	SELECT *
+				FROM `community_pages` cp
+				WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
+				AND cp.`page_order` <= " . $db->qstr($prev_page_order) . "
+				AND cp.`parent_id` = " . $db->qstr($PARENT_ID) . "
+				AND cp.`page_active` = '1'
+				ORDER BY cp.`page_order` DESC";
+	$result1 = $db->GetRow($query);
+	if ($result1) {
+		$result2 = get_prev_sibling_ancestors($COMMUNITY_ID, $result1["cpage_id"]);
+		if(!$result2) {
+			return $result1;
+		}
+		return $result2;
+	} else {
+		$query = "	SELECT *
+					FROM `community_pages` cp
+					WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
+					AND cp.`cpage_id` = " . $db->qstr($PARENT_ID) . "
+					AND cp.`page_active` = '1'";
+		$result1 = $db->GetRow($query);
+		return $result1;
+	}
+}
+
+function get_prev_sibling_ancestors($COMMUNITY_ID, $PARENT_ID, $PAGE_ORDER = 0) {
+	global $db;
+	
+	//get prev siblings ancestors
+	$query = "	SELECT *
+				FROM `community_pages` cp
+				WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
+				AND cp.`parent_id` = " . $db->qstr($PARENT_ID) . "
+				AND cp.`page_active` = '1'
+				ORDER BY `page_order` DESC";
+	$result2 = $db->GetRow($query);
+		
+	if (!$result2) {
+		$query = "	SELECT *
+				FROM `community_pages` cp
+				WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
+				AND cp.`cpage_id` = " . $db->qstr($PARENT_ID) . "
+				AND cp.`page_active` = '1'
+				ORDER BY `page_order` DESC";
+		$result2 = $db->GetRow($query);
+		return $result2;
+	} else {
+		return get_prev_sibling_ancestors($COMMUNITY_ID, $result2["cpage_id"]);
+	}
+}
+
+function get_next_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER) {
+	global $db;
+	
+	$query = "	SELECT *
+				FROM `community_pages` cp
+				WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
+				AND cp.`parent_id` = " . $db->qstr($PAGE_ID) . "
+				AND cp.`page_active` = '1'
+				ORDER BY `page_order` ASC";
+	$result = $db->GetRow($query);
+	//if no children
+	if (!$result) {
+		$next_page_order = $PAGE_ORDER + 1;
+		$query = "	SELECT *
+					FROM `community_pages` cp
+					WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
+					AND cp.`page_order` = " . $db->qstr($next_page_order) . "
+					AND cp.`parent_id` = " . $db->qstr($PARENT_ID) . "
+					AND cp.`page_active` = '1'";
+		$result = $db->GetRow($query);
+		//if no sibling then find my next ancestor sibling if it exists.
+		if (!$result) {
+			$result = get_next_ancestor_sibling($COMMUNITY_ID, $PARENT_ID, $PAGE_ORDER);
+			return $result;
+		}
+		
+		return $result;
+		
+	} else {
+		return $result;
+	}
+}
+
+function get_next_ancestor_sibling($COMMUNITY_ID, $PARENT_ID, $PAGE_ORDER) {
+	global $db;
+	
+	if ($PARENT_ID != 0) {
+		$query = "	SELECT *
+					FROM `community_pages` cp
+					WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "							
+					AND cp.`cpage_id` = " . $db->qstr($PARENT_ID) . "
+					AND cp.`page_active` = '1'";
+		$result = $db->GetRow($query);
+		$NEXT_PARENT_ID = $result["parent_id"];
+		$NEXT_PAGE_ORDER = $result["page_order"] + 1;
+	} else {
+		$NEXT_PARENT_ID = 0;
+		$NEXT_PAGE_ORDER = $PAGE_ORDER + 1;
+		$query = "	SELECT max(`page_order`)
+					FROM `community_pages` cp
+					WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "							
+					AND cp.`parent_id` = " . $db->qstr($NEXT_PARENT_ID) . "
+					AND cp.`page_active` = '1'";
+		$max_page_order = $db->GetOne($query);
+		if ($NEXT_PAGE_ORDER > $max_page_order) {
+			return 0;
+		}
+	}
+	
+	$query = "	SELECT *
+				FROM `community_pages` cp
+				WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "							
+				AND cp.`parent_id` = " . $db->qstr($NEXT_PARENT_ID) . "
+				AND cp.`page_order` >= " . $db->qstr($NEXT_PAGE_ORDER) . "
+				AND cp.`page_active` = '1'
+				ORDER BY cp.`page_order` ASC";
+	$result2 = $db->GetRow($query);
+	if (!$result2) {
+		return get_next_ancestor_sibling($COMMUNITY_ID, $NEXT_PARENT_ID, $PAGE_ORDER);
+	} else {
+		return $result2;
+	}
+}
 /**
  * Returns username and password based matching employee / student number returned by CAS.
  *

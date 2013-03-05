@@ -768,6 +768,69 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 	return true;
 }
 
+/*
+ * Function that builds system feedback sidebar widget from language file.
+ *
+ * @param $group string or array
+ * @return bool
+ */
+function system_feedback_sidebar($group = "") {
+
+	global $translate, $SCRIPT;
+
+	if ($feedback_text = $translate->_("global_feedback_widget")) {
+		$SCRIPT[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/feedback.js\"></script>";
+
+		$sidebar_html = '<div id="feedback-widget">';
+		$sidebar_html .= '<ul class="menu feedback" data-enc="'.feedback_enc().'">';
+
+		/*
+		 * Global Feedback options
+		 */
+		foreach ($feedback_text["global"] as $css_class => $feedback) {
+			$sidebar_html .= '<li class="'.$css_class.'">';
+			$sidebar_html .= '<a href="'.ENTRADA_URL.'/agent-feedback.php"><strong>'.$feedback["link-text"].'</strong></a><br />';
+			$sidebar_html .= '<span class="content-small">'.$feedback["link-desc"].'</span>';
+			$sidebar_html .= '</li>';
+		}
+
+		/*
+		 * Group Specific feedback options
+		 */
+		if (is_array($group)) {
+			foreach ($group as $groupname) {
+				if (!empty($feedback_text[$groupname])) {
+					foreach ($feedback_text[$groupname] as $css_class => $feedback) {
+						$sidebar_html .= '<li class="'.$css_class.'">';
+						$sidebar_html .= '<a href="'.ENTRADA_URL.'/agent-feedback.php"><strong>'.$feedback["link-text"].'</strong></a><br />';
+						$sidebar_html .= '<span class="content-small">'.$feedback["link-desc"].'</span>';
+						$sidebar_html .= '</li>';
+					}
+				}
+			}
+		} else if (is_string($group)) {
+			if (!empty($feedback_text[$group])) {
+				foreach ($feedback_text[$group] as $css_class => $feedback) {
+					$sidebar_html .= '<li class="'.$css_class.'">';
+					$sidebar_html .= '<a href="'.ENTRADA_URL.'/agent-feedback.php"><strong>'.$feedback["link-text"].'</strong></a><br />';
+					$sidebar_html .= '<span class="content-small">'.$feedback["link-desc"].'</span>';
+					$sidebar_html .= '</li>';
+				}
+			}
+		}
+
+
+
+		$sidebar_html .= '</ul>';
+		$sidebar_html .= '</div>';
+
+		new_sidebar_item("Feedback", $sidebar_html, "page-feedback", "open");
+
+		return true;
+	} else {
+		return false;
+	}
+}
 
 /**
  * Clears all open buffers so you can start with a clean page. This function is
@@ -1178,17 +1241,21 @@ function order_link($field, $name, $order, $sort, $location = "public") {
  * @param string $field_name
  * @return string
  */
-function public_order_link($field_id, $field_name) {
+function public_order_link($field_id, $field_name, $url = "") {
 	global $MODULE;
+
+    if (!$url) {
+        $url = ENTRADA_URL."/".$MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : "");
+    }
 
 	if(isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == strtolower($field_id)) {
 		if(strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") {
-			return "<a href=\"".ENTRADA_URL."/".$MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : "")."?".replace_query(array("so" => "asc"))."\" title=\"Order by ".$field_name.", Sort Ascending\">".$field_name."</a>";
+			return "<a href=\"".$url."?".replace_query(array("so" => "asc"))."\" title=\"Order by ".$field_name.", Sort Ascending\">".$field_name."</a>";
 		} else {
-			return "<a href=\"".ENTRADA_URL."/".$MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : "")."?".replace_query(array("so" => "desc"))."\" title=\"Order by ".$field_name.", Sort Decending\">".$field_name."</a>";
+			return "<a href=\"".$url."?".replace_query(array("so" => "desc"))."\" title=\"Order by ".$field_name.", Sort Decending\">".$field_name."</a>";
 		}
 	} else {
-		return "<a href=\"".ENTRADA_URL."/".$MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : "")."?".replace_query(array("sb" => $field_id))."\" title=\"Order by ".$field_name."\">".$field_name."</a>";
+		return "<a href=\"".$url."?".replace_query(array("sb" => $field_id))."\" title=\"Order by ".$field_name."\">".$field_name."</a>";
 	}
 }
 
@@ -2498,12 +2565,12 @@ function preferences_update($module, $original_preferences = array()) {
 		if (serialize($_SESSION[APPLICATION_IDENTIFIER][$module]) != serialize($original_preferences)) {
 			$query	= "SELECT `preference_id` FROM `".AUTH_DATABASE."`.`user_preferences` WHERE `app_id`=".$db->qstr(AUTH_APP_ID)." AND `proxy_id`=".$db->qstr($ENTRADA_USER->getID())." AND `module`=".$db->qstr($module);
 			$result	= $db->GetRow($query);
-			if($result) {				
+			if($result) {
 				if(!$db->AutoExecute("`".AUTH_DATABASE."`.`user_preferences`", array("preferences" => @serialize($_SESSION[APPLICATION_IDENTIFIER][$module]), "updated" => time()), "UPDATE", "preference_id = ".$db->qstr($result["preference_id"]))) {
 					application_log("error", "Unable to update the users database preferences for this module. Database said: ".$db->ErrorMsg());
 
 					return false;
-				} 
+				}
 			} else {
 				if(!$db->AutoExecute(AUTH_DATABASE.".user_preferences", array("app_id" => AUTH_APP_ID, "proxy_id" => $ENTRADA_USER->getID(), "module" => $module, "preferences" => @serialize($_SESSION[APPLICATION_IDENTIFIER][$module]), "updated" => time()), "INSERT")) {
 					application_log("error", "Unable to insert the users database preferences for this module. Database said: ".$db->ErrorMsg());
@@ -7298,7 +7365,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 			break;
 		case "reply" :
 			$query = "	SELECT DISTINCT(a.`proxy_id`) FROM `community_members` AS a
-						LEFT JOIN `medtech_auth`.`user_data` AS b
+						LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 						ON a.`proxy_id` = b.`id`
 						LEFT JOIN `community_notify_members` AS c
 						ON c.`community_id` = ".$db->qstr($community_id)."

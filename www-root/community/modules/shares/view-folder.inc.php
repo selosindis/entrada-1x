@@ -153,7 +153,7 @@ if ($RECORD_ID) {
 						{
 							id:				'requestDialog',
 							width:			350,
-							height:			125,
+							height:			165,
 							title:			'Delete Confirmation',
 							className:		'medtech',
 							okLabel:		'Yes',
@@ -174,7 +174,7 @@ if ($RECORD_ID) {
 						{
 							id:				'requestDialog',
 							width:			350,
-							height:			165,
+							height:			205,
 							title:			'Move File',
 							className:		'medtech',
 							okLabel:		'Yes',
@@ -212,7 +212,7 @@ if ($RECORD_ID) {
 							{
 								id:				'requestDialog',
 								width:			350,
-								height:			75,
+								height:			95,
 								title:			'Notification Confirmation',
 								className:		'medtech',
 								okLabel:		'Yes',

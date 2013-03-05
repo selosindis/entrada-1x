@@ -119,7 +119,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<div style="float: right; text-align: right; width:400px;">
 					<ul class="page-action">
 						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "edit","assignment_id"=>$assignment["assignment_id"], "step" => false)); ?>" class="strong-green">Edit Assignment Drop Box</a></li>
-						<?php if (isset($assessment) && $assessment){ ?><li><a href="#" id="advanced-options" class="strong-green">Show Options</a></li><?php } ?>
+						<?php if (isset($assessment) && $assessment && $students){ ?><li><a href="#" id="advanced-options" class="strong-green">Show Options</a></li><?php } ?>
 					</ul>
 				</div>
 				<div style="clear: both;"></div>
@@ -644,7 +644,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<?php
 				else:
 				?>
-				<div class="display-notice">No one has submitted their assignment yet.</div>
+				<div class="display-generic">No one has submitted their assignment just yet, but when they do you will see them here.</div>
 				<?php endif;
 			} else {
 				$ERROR++;

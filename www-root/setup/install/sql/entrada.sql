@@ -1584,6 +1584,19 @@ CREATE TABLE IF NOT EXISTS `community_page_options` (
   KEY `cpage_id` (`cpage_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE `community_page_navigation` (
+  `cpnav_id` INT(12) NOT NULL AUTO_INCREMENT,
+  `community_id` INT(12) NOT NULL,
+  `cpage_id` INT(12) NOT NULL DEFAULT '0',
+  `show_nav` INT(1) NOT NULL DEFAULT '1',
+  `nav_title` VARCHAR(100) NOT NULL DEFAULT 'Next',
+  `nav_type` ENUM('next','previous') NOT NULL DEFAULT 'next',
+  `updated_date` BIGINT(64) NOT NULL DEFAULT '0',
+  `updated_by` INT(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`cpnav_id`),
+  KEY `cpage_id` (`cpage_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `community_permissions` (
   `cpermission_id` int(12) NOT NULL AUTO_INCREMENT,
   `community_id` int(12) NOT NULL DEFAULT '0',

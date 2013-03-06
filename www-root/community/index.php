@@ -372,16 +372,41 @@ if ($COMMUNITY_URL) {
 						
 						$result = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER);
 						
-						if ($result) {
+						$query = "	SELECT *
+									FROM `community_page_navigation`
+									WHERE `community_id` = " . $db->qstr($COMMUNITY_ID) . "
+									AND `cpage_id` = " . $db->qstr($PAGE_ID) . "
+									AND `nav_type` = 'next'";
+						
+						$nav_result = $db->GetRow($query);
+						if ($nav_result) {
+							$show_right_nav = $nav_result["show_nav"];
+						} else {
+							$show_right_nav = 1;
+						}
+						
+						if ($result && $show_right_nav) {
 							$next_page_url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":" . $result["page_url"];
 						} else {
 							$next_page_url = "#";
 						}
 						$smarty->assign("next_page_url", $next_page_url);
 						
-						$result = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER);
+						$query = "	SELECT *
+									FROM `community_page_navigation`
+									WHERE `community_id` = " . $db->qstr($COMMUNITY_ID) . "
+									AND `cpage_id` = " . $db->qstr($PAGE_ID) . "
+									AND `nav_type` = 'previous'";
+						$nav_result = $db->GetRow($query);
+					
+						if ($nav_result) {
+							$show_left_nav = $nav_result["show_nav"];
+						} else {
+							$show_left_nav = 1;
+						}
 						
-						if ($result) {
+						$result = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER);
+						if ($result && $show_left_nav) {
 							$previous_page_url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":" . $result["page_url"];
 						} else {
 							$previous_page_url = "#";

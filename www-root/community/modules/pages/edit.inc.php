@@ -239,13 +239,26 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								}
 
 								$PROCESSED["page_navigation"] = array();
-								if ((isset($_POST["show_nav"]))) {
-									$show_nav = clean_input($_POST["show_nav"], array("trim", "notags"));
-									if ($show_nav == 0) {
-										$PROCESSED["page_navigation"]["show_nav"] = "0";
+								$nav_elements = array();
+								if ((isset($_POST["show_left_nav"]))) {
+									$show_left_nav = clean_input($_POST["show_left_nav"], array("trim", "notags"));
+									if ($show_left_nav == 0) {
+										$nav_elements[] = array("nav_type" => "previous", "nav_title" => "Previous", "show_nav" => "0");
 									} else {
-										$PROCESSED["page_navigation"]["show_nav"] = "1";
+										$nav_elements[] = array("nav_type" => "previous", "nav_title" => "Previous", "show_nav" => "1");
 									}
+								} else {
+									$nav_elements[] = array("nav_type" => "previous", "nav_title" => "Previous", "show_nav" => "0");
+								}
+								if ((isset($_POST["show_right_nav"]))) {
+									$show_right_nav = clean_input($_POST["show_right_nav"], array("trim", "notags"));
+									if ($show_right_nav == 0) {
+										$nav_elements[] = array("nav_type" => "next", "nav_title" => "Next", "show_nav" => "0");
+									} else {
+										$nav_elements[] = array("nav_type" => "next", "nav_title" => "Next", "show_nav" => "1");
+									}
+								} else {
+									$nav_elements[] = array("nav_type" => "next", "nav_title" => "Next", "show_nav" => "0");
 								}
 	
 								/**
@@ -712,15 +725,38 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 											application_log("success", "Page [".$PAGE_ID."] updated in the system.");
 										}
 									}
-									$PROCESSED["page_navigation"]["updated_date"] = time();
-									$PROCESSED["page_navigation"]["updated_by"] = $ENTRADA_USER->getID();
-									if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && $update_sql = $db->AutoExecute("community_page_navigation", $PROCESSED["page_navigation"], "UPDATE", "cpage_id = " . $db->qstr($PAGE_ID))) {
+									foreach($nav_elements as $n) {
+										$PROCESSED["page_navigation"] = array();
+										$PROCESSED["page_navigation"]["cpage_id"] = $PAGE_ID;
+										$PROCESSED["page_navigation"]["community_id"] = $COMMUNITY_ID;
+										$PROCESSED["page_navigation"]["nav_type"] = $n["nav_type"];
+										$PROCESSED["page_navigation"]["nav_title"] = $n["nav_title"];
+										$PROCESSED["page_navigation"]["show_nav"] = $n["show_nav"];
+										$PROCESSED["page_navigation"]["updated_date"] = time();
+										$PROCESSED["page_navigation"]["updated_by"] = $ENTRADA_USER->getID();
 										
-									} else {
-										$ERROR++;
-										$ERRORSTR[] = "There was a problem updating the page navigation. The application administrator has been informed them of this error.";
+										$query = "	SELECT *
+													FROM `community_page_navigation`
+													WHERE `cpage_id` = " . $db->qstr($PAGE_ID) . "
+													AND `nav_type` = " . $db->qstr($n["nav_type"]);
+										
+										$result = $db->GetRow($query);
+										
+										if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"])) {
+											$update_sql = 0;
+											$insert_sql = 0;
+											if ($result) {
+												$update_sql = $db->AutoExecute("community_page_navigation", $PROCESSED["page_navigation"], "UPDATE", "cpage_id = " . $db->qstr($PAGE_ID) . " AND " . "nav_type = " . $db->qstr($n["nav_type"]));
+											} else {
+												$insert_sql = $db->AutoExecute("community_page_navigation", $PROCESSED["page_navigation"], "INSERT");
+											}
+											if (!$update_sql && !$insert_sql) {
+												$ERROR++;
+												$ERRORSTR[] = "There was a problem updating the page navigation. The application administrator has been informed them of this error.";
 
-										application_log("error", "There was a problem updating the page navigation for cpage_id: " . $PAGE_ID . ". Database said: ".$db->ErrorMsg());
+												application_log("error", "There was a problem updating the page navigation for cpage_id: " . $PAGE_ID . ". Database said: ".$db->ErrorMsg());
+											}
+										}
 									}
 								} else {
 									$ERROR++;
@@ -742,7 +778,12 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 												FROM `community_page_navigation` 
 												WHERE `cpage_id` = ".$db->qstr($PAGE_ID)." 
 												AND `community_id` = ".$db->qstr($COMMUNITY_ID);
-							$PROCESSED["page_navigation"] = $db->GetRow($query);
+							$results = $db->GetAll($query);
+							if ($results) {
+								foreach ($results as $result) {
+									$PROCESSED["page_navigation"]["show_" . $result["nav_type"] . "_nav"] = $result["show_nav"];
+								}
+							}
 		
 							if ((isset($PAGE_TYPE)) && ($PAGE_TYPE != "")) {
 								$PROCESSED["page_type"] = $PAGE_TYPE;
@@ -1204,12 +1245,19 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								<?php
 								} else if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && $COMMUNITY_TYPE_OPTIONS["sequential_navigation"] == "1") { ?>
 									<tr>
-										<td><label for="show_nav" class="form-nrequired">Show Left/Right Navigation</label></td>
 										<td>
-											<select id="show_nav" name="show_nav">
-												<option value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_nav"]) || ((int) $PROCESSED["page_navigation"]["show_nav"] == 1) ? " selected=\"selected\"" : ""); ?>>Show page navigation on this page</option>
-												<option value="0"<?php echo (isset($PROCESSED["page_navigation"]["show_nav"]) && ((int) $PROCESSED["page_navigation"]["show_nav"] == 0) ? " selected=\"selected\"" : ""); ?>>Do not show page navigation on this page</option>
-											</select>
+											<label for="show_left_nav" class="form-nrequired">Show Left Navigation</label>
+										</td>
+										<td>
+											<input id="show_left_nav" name="show_left_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_previous_nav"]) || ((int) $PROCESSED["page_navigation"]["show_previous_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<label for="show_right_nav" class="form-nrequired">Show Right Navigation</label>
+										</td>
+										<td>
+											<input id="show_right_nav" name="show_right_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_next_nav"]) || ((int) $PROCESSED["page_navigation"]["show_next_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
 										</td>
 									</tr>
 								<?php

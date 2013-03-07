@@ -70,28 +70,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				 */
 				load_rte();
 
-				$LASTUPDATED = $event_info["updated_date"];
-
 				/**
 				 * Fetch event content history
-                 * @todo This seems very strange to me.
 				 */
-				$query = "	SELECT a.`history_message` AS message, a.`history_timestamp` AS timestamp, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`
-							FROM `event_history` AS a
-							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-							ON a.`proxy_id` = b.`id`
-							WHERE a.`event_id`  = ".$db->qstr($EVENT_ID)."
-							ORDER BY `history_timestamp` DESC, `history_message` ASC";
-				$history = $db->GetAll($query);
+				$history = $db->GetRow("SELECT * FROM `event_history` WHERE `event_id`  = ".$db->qstr($EVENT_ID));
 
-				if (!$history) {
-					$query = "	SELECT CONCAT_WS(' ', `firstname`, `lastname`) AS `fullname`,
-								$LASTUPDATED AS timestamp, 'created this learning event.' AS message
-								FROM `".AUTH_DATABASE."`.`user_data`
-								WHERE `id`  = ".$db->qstr($event_info["updated_by"]);
-					$history = $db->GetAll($query);
-					if(count($_POST)) {		// An update so add the create record for this event
-						history_log($EVENT_ID, $history[0]["message"], $event_info["updated_by"], $LASTUPDATED);
+				if (!$history) { // Create the first history record of the event's creation when another user updates the event
+					if(count($_POST) && ($ENTRADA_USER->getID() != $event_info["updated_by"])) {	// Ignore starting history when it's the sole author initially adding content. 
+                                            history_log($EVENT_ID, 'created this learning event.', $event_info["updated_by"], $event_info["updated_date"]);
 					}
 				}
 
@@ -157,17 +143,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					if (((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"])))) {
 						foreach ($_POST["clinical_presentations"] as $objective_id) {
 							if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
-								$query	= "SELECT a.`objective_id`
-											FROM `global_lu_objectives` AS a
-											JOIN `course_objectives` AS b
-											ON b.`course_id` = ".$event_info["course_id"]."
-											AND a.`objective_id` = b.`objective_id`
-											JOIN `objective_organisation` AS c
-											ON a.`objective_id` = c.`objective_id`
-											WHERE a.`objective_id` = ".$db->qstr($objective_id)."
-											AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-											AND b.`objective_type` = 'event'
-											AND a.`objective_active` = '1'";
+								$query	= "	SELECT a.`objective_id`
+										FROM `global_lu_objectives` AS a
+										JOIN `course_objectives` AS b
+										ON b.`course_id` = ".$event_info["course_id"]."
+										AND a.`objective_id` = b.`objective_id`
+										JOIN `objective_organisation` AS c
+										ON a.`objective_id` = c.`objective_id`
+										WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+										AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+										AND b.`objective_type` = 'event'
+										AND a.`objective_active` = '1'";
 								$result	= $db->GetRow($query);
 								if ($result) {
 									$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
@@ -232,14 +218,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$event_eventtypes		= array();
 
 				$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a
-								LEFT JOIN `eventtype_organisation` AS c
-								ON a.`eventtype_id` = c.`eventtype_id`
-								LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
-								ON b.`organisation_id` = c.`organisation_id`
-								WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-								AND a.`eventtype_active` = '1'
-								ORDER BY a.`eventtype_order`
-				";
+							LEFT JOIN `eventtype_organisation` AS c
+							ON a.`eventtype_id` = c.`eventtype_id`
+							LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
+							ON b.`organisation_id` = c.`organisation_id`
+							WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+							AND a.`eventtype_active` = '1'
+							ORDER BY a.`eventtype_order`";
 
 				$results	= $db->GetAll($query);
 				if ($results) {
@@ -420,12 +405,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									if ((isset($curriculum_objectives)) && (is_array($curriculum_objectives)) && (count($curriculum_objectives))) {
 										foreach ($curriculum_objectives as $objective_id => $objective_text) {
 											if ($objective_id = (int) $objective_id) {
-												$query	= "SELECT a.* FROM `global_lu_objectives` AS a
-															JOIN `objective_organisation` AS b
-															ON a.`objective_id` = b.`objective_id`
-															WHERE a.`objective_id` = ".$db->qstr($objective_id)."
-															AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-															AND a.`objective_active` = '1'";
+												$query	= "	SELECT a.* FROM `global_lu_objectives` AS a
+														JOIN `objective_organisation` AS b
+														ON a.`objective_id` = b.`objective_id`
+														WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+														AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+														AND a.`objective_active` = '1'";
 												$result	= $db->GetRow($query);
 												if ($result) {
 													if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "course", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
@@ -1137,7 +1122,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     <td colspan="4" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
                                 </tr>
                             </tfoot>
-                            <tr>
+							<tr>
                                 <td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
                                 <td><span style="font-weight: bold; color: #003366;">Major</span></td>
                                 <td><span style="font-weight: bold; color: #003366;">Minor</span></td>
@@ -1176,7 +1161,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             ?>
                         </table>
                     </div>
-                    <?php
+                            <?php
                 }
                 ?>
 				</form>
@@ -1435,43 +1420,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				</script>
 				<?php
 				/**
-				 * View event content history if applicable
-				 */
-				if ($history) {
-                    ?>
-                    <a name="event-history-section"></a>
-                    <h2 title="Event History Section">Event History</h2>
-                    <div id="event-history-section">
-                        <p>
-                        <?php
-                        if (count($_POST)) {
-                            $query = "	SELECT a.`history_message` AS message, a.`history_timestamp` AS timestamp, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`
-                                        FROM `event_history` AS a
-                                        LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-                                        ON a.`proxy_id` = b.`id`
-                                        WHERE a.`event_id`  = ".$db->qstr($EVENT_ID)."
-                                        ORDER BY `history_timestamp` DESC, `history_message` ASC";
-                            $history = $db->GetAll($query);
-                        }
-                        $previous_day = 0;
-                        foreach ($history as $key => $result) {
-                            $current_day = mktime(0, 0, 0, date("m",$result["timestamp"]), date("d", $result["timestamp"]), date("Y", $result["timestamp"]));
-                            if ($current_day != $previous_day) {
-                                $previous_day = $current_day;
-                                if ($key > 0) {
-                                    echo "</ul></p>";
-                                }
-                                echo "<strong>".date("F j, Y",$current_day)."</strong><ul class=\"history\">\n";
-                            }
-                            echo "<li>".date("g:ia ", $result["timestamp"]).$result["fullname"]." ".$result["message"]."</li>";
-                        }
-                        ?>
-                        </ul></p>
-                    </div>
-                    <?php
-				}
-
-				/**
 				 * Sidebar item that will provide the links to the different sections within this page.
 				 */
 				$sidebar_html  = "<ul class=\"menu\">\n";
@@ -1479,9 +1427,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#event-audience-section\" onclick=\"$('event-audience-section').scrollTo(); return false;\" title=\"Event Audience\">Event Audience</a></li>\n";
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#event-objectives-section\" onclick=\"$('event-objectives-section').scrollTo(); return false;\" title=\"Event Objectives\">Event Objectives</a></li>\n";
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#event-resources-section\" onclick=\"$('event-resources-section').scrollTo(); return false;\" title=\"Event Resources\">Event Resources</a></li>\n";
-                if ($history) {
-                    $sidebar_html .= "	<li class=\"link\"><a href=\"#event-history-section\" onclick=\"$('event-history-section').scrollTo(); return false;\" title=\"Event History\">Event History</a></li>\n";
-                }
 				$sidebar_html .= "</ul>\n";
 
 				new_sidebar_item("Page Anchors", $sidebar_html, "page-anchors", "open", "1.9");

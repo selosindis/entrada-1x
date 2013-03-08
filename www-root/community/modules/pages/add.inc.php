@@ -217,33 +217,38 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 						} else {
 							$PROCESSED["page_visible"] = 1;
 						}
+						
 						$PROCESSED["page_navigation"] = array();
 						$nav_elements = array();
-						if ((isset($_POST["show_left_nav"]))) {
-							$show_left_nav = clean_input($_POST["show_left_nav"], array("trim", "notags"));
-							if ($show_left_nav == 0) {
-								$nav_elements[] = array("nav_type" => "previous", "nav_title" => "Previous", "show_nav" => "0");
-								$PROCESSED["page_navigation"]["show_left_nav"] = 1;
-							} else {
-								$nav_elements[] = array("nav_type" => "previous", "nav_title" => "Previous", "show_nav" => "1");
-								$PROCESSED["page_navigation"]["show_left_nav"] = 1;
-							}
-						} else {
-							$nav_elements[] = array("nav_type" => "previous", "nav_title" => "Previous", "show_nav" => "0");
-							$PROCESSED["page_navigation"]["show_left_nav"] = 0;
-						}
 						if ((isset($_POST["show_right_nav"]))) {
 							$show_right_nav = clean_input($_POST["show_right_nav"], array("trim", "notags"));
-							if ($show_right_nav == 0) {
-								$nav_elements[] = array("nav_type" => "next", "nav_title" => "Next", "show_nav" => "0");
-								$PROCESSED["page_navigation"]["show_right_nav"] = 0;
+							if ((isset($_POST["selected_nav_next_page_url"]))) {
+								$nav_next_page_url = $_POST["selected_nav_next_page_url"]; //clean_input($_POST["selected_nav_next_page_url"], array("trim", "notags"));
 							} else {
-								$nav_elements[] = array("nav_type" => "next", "nav_title" => "Next", "show_nav" => "1");
-								$PROCESSED["page_navigation"]["show_right_nav"] = 1;
+								$nav_next_page_url = "";
+							}
+							if ($show_right_nav == 0) {
+								$nav_elements[] = array("nav_type" => "next", "nav_title" => "Next", "show_nav" => "0", "nav_url" => $nav_next_page_url);
+							} else {
+								$nav_elements[] = array("nav_type" => "next", "nav_title" => "Next", "show_nav" => "1", "nav_url" => $nav_next_page_url);
 							}
 						} else {
-							$nav_elements[] = array("nav_type" => "next", "nav_title" => "Next", "show_nav" => "0");
-							$PROCESSED["page_navigation"]["show_right_nav"] = 0;
+							$nav_elements[] = array("nav_type" => "next", "nav_title" => "Next", "show_nav" => "0", "nav_url" => "");
+						}
+						if ((isset($_POST["show_left_nav"]))) {
+							$show_left_nav = clean_input($_POST["show_left_nav"], array("trim", "notags"));
+							if ((isset($_POST["selected_nav_previous_page_url"]))) {
+								$nav_previous_page_url = $_POST["selected_nav_previous_page_url"]; //clean_input($_POST["selected_nav_previous_page_url"], array("trim", "notags"));
+							} else {
+								$nav_previous_page_url = "";
+							}
+							if ($show_left_nav == 0) {
+								$nav_elements[] = array("nav_type" => "previous", "nav_title" => "Previous", "show_nav" => "0", "nav_url" => $nav_previous_page_url);
+							} else {
+								$nav_elements[] = array("nav_type" => "previous", "nav_title" => "Previous", "show_nav" => "1", "nav_url" => $nav_previous_page_url);
+							}
+						} else {
+							$nav_elements[] = array("nav_type" => "previous", "nav_title" => "Pevious", "show_nav" => "0", "nav_url" => "");
 						}
 						
 						if (!$ERROR) {
@@ -312,22 +317,41 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							
 							if (($db->AutoExecute("community_pages", $PROCESSED, "INSERT")) && ($PAGE_ID = $db->Insert_Id())) {
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, 0, "community_history_add_page", 1);
+								$default_next_page = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $page_details["parent_id"], $page_details["page_order"]);
+								$default_previous_page = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $page_details["parent_id"], $page_details["page_order"]);
+
 								foreach($nav_elements as $n) {
+									$PROCESSED["page_navigation"] = array();
 									$PROCESSED["page_navigation"]["cpage_id"] = $PAGE_ID;
 									$PROCESSED["page_navigation"]["community_id"] = $COMMUNITY_ID;
 									$PROCESSED["page_navigation"]["nav_type"] = $n["nav_type"];
 									$PROCESSED["page_navigation"]["nav_title"] = $n["nav_title"];
+									if ($n["nav_type"] == "next") {
+										$default_page_url = $default_next_page["page_url"];
+									} elseif ($n["nav_type"] == "previous") {
+										$default_page_url = $default_previous_page["page_url"];
+									}
+									if ($default_page_url != $n["nav_url"]) {
+										$PROCESSED["page_navigation"]["nav_url"] = $n["nav_url"];
+									} else {
+										$PROCESSED["page_navigation"]["nav_url"] = null;
+									}
 									$PROCESSED["page_navigation"]["show_nav"] = $n["show_nav"];
 									$PROCESSED["page_navigation"]["updated_date"] = time();
 									$PROCESSED["page_navigation"]["updated_by"] = $ENTRADA_USER->getID();
-									if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && !$insert_sql = $db->AutoExecute("community_page_navigation", $PROCESSED["page_navigation"], "INSERT")) {
-										$ERROR++;
-										$ERRORSTR[] = "There was a problem updating the page navigation. The application administrator has been informed them of this error.";
 
-										application_log("error", "There was a problem updating the page navigation for cpage_id: " . $PAGE_ID . ". Database said: ".$db->ErrorMsg());
+									if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"])) {
+										$insert_sql = 0;
+										$insert_sql = $db->AutoExecute("community_page_navigation", $PROCESSED["page_navigation"], "INSERT");
+										if (!$insert_sql) {
+											$ERROR++;
+											$ERRORSTR[] = "There was a problem updating the page navigation. The application administrator has been informed them of this error.";
+
+											application_log("error", "There was a problem updating the page navigation for cpage_id: " . $PAGE_ID . ". Database said: ".$db->ErrorMsg());
+										}
 									}
 								}
-								
+
 								if ($PAGE_TYPE == "announcements" || $PAGE_TYPE == "events") {
 									if ($db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'moderate_posts', `option_value` = ".$db->qstr($page_options["moderate_posts"]["option_value"]))) {
 										if ($db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'allow_member_posts', `option_value` = ".$db->qstr($page_options["allow_member_posts"]["option_value"]))) {
@@ -396,6 +420,9 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 					break;
 					case 1 :
 					default :
+						$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/community/javascript/page_navigation.js\"></script>\n";
+						$default_next_page = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $page_details["parent_id"], $page_details["page_order"]);
+						$default_previous_page = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $page_details["parent_id"], $page_details["page_order"]);
 						$PROCESSED = $result;
 	
 						if ((isset($PAGE_TYPE)) && ($PAGE_TYPE != "")) {
@@ -716,7 +743,9 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										<label for="show_left_nav" class="form-nrequired">Show Left Navigation</label>
 									</td>
 									<td>
-										<input id="show_left_nav" name="show_left_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_left_nav"]) || ((int) $PROCESSED["page_navigation"]["show_left_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
+										<input id="show_left_nav" name="show_left_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_previous_nav"]) || ((int) $PROCESSED["page_navigation"]["show_previous_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
+										<input id="change_previous_nav_button" name="change_previous_nav_button" type="button" value="Previous Page" />
+										<input type="hidden" name="selected_nav_previous_page_url" id="selected_nav_previous_page_url" <?php echo (isset($PROCESSED["page_navigation"]["previous_nav_url"]) ? "value = \"" . $PROCESSED["page_navigation"]["previous_nav_url"] . "\"" : "value = \"NULL\"") ?> />
 									</td>
 								</tr>
 								<tr>
@@ -724,7 +753,9 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										<label for="show_right_nav" class="form-nrequired">Show Right Navigation</label>
 									</td>
 									<td>
-										<input id="show_right_nav" name="show_right_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_right_nav"]) || ((int) $PROCESSED["page_navigation"]["show_right_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
+										<input id="show_right_nav" name="show_right_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_next_nav"]) || ((int) $PROCESSED["page_navigation"]["show_next_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
+										<input id="change_next_nav_button" name="change_next_nav_button" type="button" value="Next Page" />
+										<input type="hidden" name="selected_nav_next_page_url" id="selected_nav_next_page_url" <?php echo (isset($PROCESSED["page_navigation"]["next_nav_url"]) ? "value = \"" . $PROCESSED["page_navigation"]["next_nav_url"] . "\"" : "value = \"NULL\"") ?> />
 									</td>
 								</tr>
 							<?php
@@ -741,7 +772,39 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							</tr>
 						</tbody>
 						</table>
+						<div id="modal_page_navigation" style="display: none; text-align: left;">
+							<?php echo communities_pages_inradio(0, 0, array('id'=>'next_page_list', "nav_type" => "next")); ?>
+						</div>
+						<div id="modal_previous_page_navigation" style="display: none; text-align: left;">
+							<?php echo communities_pages_inradio(0, 0, array('id'=>'previous_page_list', "nav_type" => "previous")); ?>
+						</div>
 						</form>
+						<script type="text/javascript">	
+							jQuery(document).ready(function($){
+								var all_pages = $('#previous_page_list input:radio');
+								var parent_id = $('#parent_id').val();
+								if (parent_id == 0) {
+									var elem = $('#previous_page_list input:radio')[all_pages.length - 1];
+									$(elem).attr('checked', 'checked');
+								} else {
+									var sub_pages = $('#content_previous_page_list_' + parent_id + ' input:radio');
+									var elem = $('#previous_page_list input:radio')[sub_pages.length - 1];
+									$(elem).attr('checked', 'checked');
+								}
+								
+								$("#change_previous_nav_button").live("click", function() {
+									var parent_id = $('#parent_id').val();
+									var sub_pages = $('#content_previous_page_list_' + parent_id + ' input:radio');
+									var elem = $(sub_pages)[sub_pages.length - 1];
+									$(elem).attr('checked', 'checked');
+									var next_sibling = $('#content_next_page_list_' + parent_id).next();
+									if ($(next_sibling).attr("id") != null) {
+										var next_page_id = $(next_sibling).attr("id").split('content_next_page_list_')[1];
+										$('#nav_next_page_url' + next_page_id).attr('checked', 'checked');
+									}
+								});
+							});
+						</script>
 						<?php
 					break;
 				}

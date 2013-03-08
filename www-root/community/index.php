@@ -379,6 +379,7 @@ if ($COMMUNITY_URL) {
 									AND `nav_type` = 'next'";
 						
 						$nav_result = $db->GetRow($query);
+						
 						if ($nav_result) {
 							$show_right_nav = $nav_result["show_nav"];
 						} else {
@@ -386,7 +387,12 @@ if ($COMMUNITY_URL) {
 						}
 						
 						if ($result && $show_right_nav) {
-							$next_page_url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":" . $result["page_url"];
+							if ($nav_result["nav_url"]) {
+								$url = $nav_result["nav_url"];
+							} else {
+								$url = $result["page_url"];
+							}
+							$next_page_url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":" . $url;
 						} else {
 							$next_page_url = "#";
 						}
@@ -407,7 +413,12 @@ if ($COMMUNITY_URL) {
 						
 						$result = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER);
 						if ($result && $show_left_nav) {
-							$previous_page_url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":" . $result["page_url"];
+							if ($nav_result["nav_url"]) {
+								$url = $nav_result["nav_url"];
+							} else {
+								$url = $result["page_url"];
+							}
+							$previous_page_url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":" . $url;
 						} else {
 							$previous_page_url = "#";
 						}

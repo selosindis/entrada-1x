@@ -1279,7 +1279,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										</td>
 										<td>
 											<input id="show_left_nav" name="show_left_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_previous_nav"]) || ((int) $PROCESSED["page_navigation"]["show_previous_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
-											<input id="change_previous_nav_button" name="change_previous_nav_button" type="button" value="Change Previous Page" />
+											<input id="change_previous_nav_button" name="change_previous_nav_button" type="button" value="Previous Page" />
 											<input type="hidden" name="selected_nav_previous_page_url" id="selected_nav_previous_page_url" <?php echo (isset($PROCESSED["page_navigation"]["previous_nav_url"]) ? "value = \"" . $PROCESSED["page_navigation"]["previous_nav_url"] . "\"" : "value = \"" . $default_previous_page["page_url"]) . "\"" ?> />
 										</td>
 									</tr>
@@ -1289,7 +1289,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										</td>
 										<td>
 											<input id="show_right_nav" name="show_right_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_next_nav"]) || ((int) $PROCESSED["page_navigation"]["show_next_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
-											<input id="change_next_nav_button" name="change_next_nav_button" type="button" value="Change Next Page" />
+											<input id="change_next_nav_button" name="change_next_nav_button" type="button" value="Next Page" />
 											<input type="hidden" name="selected_nav_next_page_url" id="selected_nav_next_page_url" <?php echo (isset($PROCESSED["page_navigation"]["next_nav_url"]) ? "value = \"" . $PROCESSED["page_navigation"]["next_nav_url"] . "\"" : "value = \"" . $default_next_page["page_url"] . "\"") ?> />
 										</td>
 									</tr>

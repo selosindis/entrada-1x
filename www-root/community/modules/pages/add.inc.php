@@ -791,18 +791,6 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									var elem = $('#previous_page_list input:radio')[sub_pages.length - 1];
 									$(elem).attr('checked', 'checked');
 								}
-								
-								$("#change_previous_nav_button").live("click", function() {
-									var parent_id = $('#parent_id').val();
-									var sub_pages = $('#content_previous_page_list_' + parent_id + ' input:radio');
-									var elem = $(sub_pages)[sub_pages.length - 1];
-									$(elem).attr('checked', 'checked');
-									var next_sibling = $('#content_next_page_list_' + parent_id).next();
-									if ($(next_sibling).attr("id") != null) {
-										var next_page_id = $(next_sibling).attr("id").split('content_next_page_list_')[1];
-										$('#nav_next_page_url' + next_page_id).attr('checked', 'checked');
-									}
-								});
 							});
 						</script>
 						<?php

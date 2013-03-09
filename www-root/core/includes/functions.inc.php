@@ -6223,6 +6223,7 @@ function communities_pages_inradio($identifier = 0, $indent = 0, $options = arra
 								html_encode($result["menu_title"])."</a></span>\n";
 			}
 			$output .= "</div>";
+			$options["id"] = $ul_id;
 			$output .= communities_pages_inradio($result["cpage_id"], $indent + 1, $options);
 			$output .= "</li>\n";
 

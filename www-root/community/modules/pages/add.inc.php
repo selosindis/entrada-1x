@@ -317,8 +317,8 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							
 							if (($db->AutoExecute("community_pages", $PROCESSED, "INSERT")) && ($PAGE_ID = $db->Insert_Id())) {
 								communities_log_history($COMMUNITY_ID, $PAGE_ID, 0, "community_history_add_page", 1);
-								$default_next_page = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $page_details["parent_id"], $page_details["page_order"]);
-								$default_previous_page = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $page_details["parent_id"], $page_details["page_order"]);
+								$default_next_page = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $PROCESSED["parent_id"], $PROCESSED["page_order"]);
+								$default_previous_page = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $PROCESSED["parent_id"], $PROCESSED["page_order"]);
 
 								foreach($nav_elements as $n) {
 									$PROCESSED["page_navigation"] = array();
@@ -421,8 +421,8 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 					case 1 :
 					default :
 						$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/community/javascript/page_navigation.js\"></script>\n";
-						$default_next_page = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $page_details["parent_id"], $page_details["page_order"]);
-						$default_previous_page = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $page_details["parent_id"], $page_details["page_order"]);
+						$default_next_page = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $PROCESSED["parent_id"], $PROCESSED["page_order"]);
+						$default_previous_page = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $PROCESSED["parent_id"], $PROCESSED["page_order"]);
 						$PROCESSED = $result;
 	
 						if ((isset($PAGE_TYPE)) && ($PAGE_TYPE != "")) {
@@ -456,6 +456,18 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							echo display_error();
 						}
 						?>
+						<script type="text/javascript">
+						function parentChange (parent_id) {
+							new Ajax.Updater('modal_page_navigation','<?php echo ENTRADA_URL; ?>/api/community-page-navigation.api.php', {
+								method: 'post',
+								parameters: {parent_id: parent_id, community_id: <?php echo $COMMUNITY_ID; ?>, nav_type: 'next'}
+							});
+							new Ajax.Updater('modal_previous_page_navigation','<?php echo ENTRADA_URL; ?>/api/community-page-navigation.api.php', {
+								method: 'post',
+								parameters: {parent_id: parent_id, community_id: <?php echo $COMMUNITY_ID; ?>, nav_type: 'previous'}
+							});
+						}
+						</script>
 						<form action="<?php echo ENTRADA_URL."/community".$community_details["community_url"].":pages"."?".replace_query(array("action" => "add", "step" => 2)); ?>" method="post" enctype="multipart/form-data">
 						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
 						<colgroup>
@@ -505,9 +517,9 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							<tr>
 								<td><label for="parent_id" class="form-required">Page Parent:</label></td>
 								<td>
-									<select id="parent_id" name="parent_id" style="width: 304px">
+									<select id="parent_id" name="parent_id" onchange="parentChange(this.value)" style="width: 304px">
 									<?php
-									echo "<option value=\"0\" selected=\"selected\">-- No Parent Page --</option>\n";
+									echo "<option value=\"0\"".(!$PROCESSED["parent_id"] ? " selected=\"selected\"" : "").">-- No Parent Page --</option>\n";
 									
 									$current_selected	= array(((isset($PROCESSED["parent_id"])) ? $PROCESSED["parent_id"] : 0));
 									$exclude			= 0;

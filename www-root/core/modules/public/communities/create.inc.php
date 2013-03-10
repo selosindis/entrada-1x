@@ -181,6 +181,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			} else {
 				$PROCESSED["community_description"] = "";
 			}
+			
+			if((isset($_POST["page_ids"])) && (is_array($_POST["page_ids"])) ) {
+				$PROCESSED["page_ids"] = $_POST["page_ids"];
+			} else {
+				$PROCESSED["page_ids"] = array();
+			}
 
 			if((isset($_POST["community_shortname"])) && ($community_shortname = clean_input($_POST["community_shortname"], array("notags", "lower", "trim")))) {
 			/**
@@ -255,6 +261,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						$PROCESSED["community_template"] = $community_template["template_name"];
 					}
 				}
+			}
+			
+			/**
+			 * Check for a community category to proceed.
+			 */
+			if((isset($_GET["type_id"])) && ((int) trim($_GET["type_id"]))) {
+				$PROCESSED["octype_id"]	= (int) trim($_GET["type_id"]);
+			} elseif((isset($_POST["type_id"])) && ((int) trim($_POST["type_id"]))) {
+				$PROCESSED["octype_id"]	= (int) trim($_POST["type_id"]);
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "You must specify a Community Type for this new community.";
 			}
 			
 			if(isset($_POST["community_registration"])) {
@@ -332,27 +350,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				$ERRORSTR[] = "You must specify the Registration Options for this new community.";
 			}
 
-			if((is_array($_POST["community_modules"])) && (count($_POST["community_modules"]))) {
-				$community_modules = array();
-				foreach($_POST["community_modules"] as $module_id) {
-					if($module_id = (int) $module_id) {
-						$query	= "SELECT * FROM `communities_modules` WHERE `module_active` = '1' AND `module_id` = ".$db->qstr($module_id);
-						$result	= $db->GetRow($query);
-						if($result) {
-							$community_modules[] = $module_id;
-						}
-					}
-				}
-
-				if(!count($community_modules)) {
-					$ERROR++;
-					$ERRORSTR[] = "You must enable at least one module in your new community, otherwise there will be nothing to do once the community has been created.";
-				}
-			} else {
-				$ERROR++;
-				$ERRORSTR[] = "You must enable at least one module in your new community, otherwise there will be nothing to do once the community has been created.";
-			}
-
+            $query	= "SELECT * FROM `communities_modules` WHERE `module_active` = '1'";
+            $results	= $db->GetAll($query);
+            foreach($results as $module) {
+                $community_modules[] = $module["module_id"];
+            }
 			if(!$ERROR) {
 				$PROCESSED["community_opened"]	= time();
 				$PROCESSED["updated_date"]		= time();
@@ -370,41 +372,36 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							}
 						}
 
-						$query = "INSERT INTO `community_pages` (`community_id`, `parent_id`, `page_order`, `page_type`, `menu_title`, `page_title`, `page_url`, `page_content`, `allow_member_view`, `allow_troll_view`, `allow_public_view`, `updated_date`, `updated_by`) VALUES
-								(".$db->qstr($community_id).", '0', '0', 'default', 'Home', 'Home', '', '', '1', '1', '1', ".$db->qstr(time()).", ".$db->qstr($ENTRADA_USER->getActiveId()).")";
-						if (!$db->Execute($query)) {
-							$ERROR++;
-							$ERRORSTR[] = "Your community was successfully created; however, a home page could not be creared for the community.<br /><br />The system administrator has been informed of this problem, and they will resolve it shortly.";
-							application_log("error", "Could not create a home page in community [".$community_id."]. Database said: ".$db->ErrorMsg());
-						} else {
-							$query = "INSERT INTO `community_page_options` (`community_id`, `option_title`) VALUES
-									(".$db->qstr($community_id).", 'show_announcements')";
-							if (!$db->Execute($query)) {
-								$ERROR++;
-								$ERRORSTR[] = "Your community was successfully created; however, the 'show announcements' option could not be set for the community home page.<br /><br />The system administrator has been informed of this problem, and they will resolve it shortly.";
-								application_log("error", "Could not add 'show_announcement` option for community [".$community_id."]. Database said: ".$db->ErrorMsg());
-							}
-							$query = "INSERT INTO `community_page_options` (`community_id`, `option_title`) VALUES
-									(".$db->qstr($community_id).", 'show_events')";
-							if (!$db->Execute($query)) {
-								$ERROR++;
-								$ERRORSTR[] = "Your community was successfully created; however, the 'show events' option could not be set for the community home page.<br /><br />The system administrator has been informed of this problem, and they will resolve it shortly.";
-								application_log("error", "Could not add 'show_event` option for community [".$community_id."]. Database said: ".$db->ErrorMsg());
-							}
-							$query = "INSERT INTO `community_page_options` (`community_id`, `option_title`) VALUES
-									(".$db->qstr($community_id).", 'show_history')";
-							if (!$db->Execute($query)) {
-								$ERROR++;
-								$ERRORSTR[] = "Your community was successfully created; however, the 'show history' option could not be set for the community home page.<br /><br />The system administrator has been informed of this problem, and they will resolve it shortly.";
-								application_log("error", "Could not add 'show_history` option for community [".$community_id."]. Database said: ".$db->ErrorMsg());
+						foreach ($PROCESSED["page_ids"] as $page_id) {
+							$query = "SELECT * FROM `community_type_pages` WHERE `ctpage_id` = ".$db->qstr($page_id);
+							$page = $db->GetRow($query);
+							if ($page) {
+								$query = "SELECT * FROM `community_type_page_options` WHERE `ctpage_id` = ".$db->qstr($page_id);
+								$page_options = $db->GetAll($query);
+								$page["community_id"] = $community_id;
+								$page["updated_date"] = time();
+								$page["updated_by"] = $ENTRADA_USER->getActiveId();
+								if ($db->AutoExecute("community_pages", $page, "INSERT") && ($cpage_id = $db->Insert_Id())) {
+									communities_log_history($community_id, $cpage_id, 0, "community_history_add_page", 1);
+									$page_options["cpage_id"] = $cpage_id;
+									if (!$db->AutoExecute("community_page_options", $page, "INSERT")) {
+										$ERROR++;
+										$ERRORSTR[] = "An issue was encountered while attempting to insert page options for a newly created page.";
+										application_log("error", "Could not create a page option record in community page [".$cpage_id."]. Database said: ".$db->ErrorMsg());
+									}
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "An issue was encountered while attempting to insert a page in this newly created community.";
+									application_log("error", "Could not create a new page in community [".$community_id."]. Database said: ".$db->ErrorMsg());
+								}
 							}
 						}
 
-					if(!$PROCESSED["community_active"]) {
-						if ($MAILING_LISTS["active"]) {
-							$mail_list = new MailingList($community_id, $PROCESSED["community_list_mode"]);
-						}
-						$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/communities\\'', 10000)";
+						if(!$PROCESSED["community_active"]) {
+							if ($MAILING_LISTS["active"]) {
+								$mail_list = new MailingList($community_id, $PROCESSED["community_list_mode"]);
+							}
+							$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/communities\\'', 10000)";
 
 							if(communities_approval_notice($community_id)) {
 								$SUCCESS++;
@@ -446,7 +443,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			}
 
 			if($ERROR) {
-				$PROCESSED	= $_POST;
 				$STEP		= 2;
 			} else {
 				application_log("success", "Community ID ".$community_id." was successfully created.");
@@ -473,8 +469,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			}
 			break;
 		case 2 :
-			$ONLOAD[] = "validateShortname('".html_encode($PROCESSED["community_shortname"])."')";
-
+			if (isset($PROCESSED["community_shortname"]) && $PROCESSED["community_shortname"]) {
+				$ONLOAD[] = "validateShortname('".html_encode($PROCESSED["community_shortname"])."')";
+			}
 			if((!isset($PROCESSED["community_registration"])) || (!(int) $PROCESSED["community_registration"])) {
 				$ONLOAD[] = "selectRegistrationOption('0')";
 			} else {
@@ -503,6 +500,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			}
 			?>
 <script type="text/javascript">
+    function loadCommunityType(community_type_id) {
+        new Ajax.Updater('type_options', '<?php echo ENTRADA_URL; ?>/api/community-type-options.api.php', {
+            parameters: { 
+							community_type_id: community_type_id, 
+							'page_ids[]' : $$('input[name="page_ids[]"]:checked').pluck('value'),
+							category_id: <?php echo $CATEGORY_ID; ?>,
+							group: '<?php echo $GROUP; ?>',
+							
+						}
+        });
+		$("type_options").show();
+    }
 	jQuery(function() {
 		jQuery( ".large-view-1" ).click(function() {
 			jQuery(".default-large").dialog({ 
@@ -631,7 +640,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			</td>
 		</tr>
 					<?php
-					if(is_array($community_parents)) {
+					if(isset($community_parents) && is_array($community_parents)) {
 						?>
 		<tr>
 			<td></td>
@@ -651,7 +660,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			<td><?php echo help_create_button("Community Name", ""); ?></td>
 			<td><label for="community_title" class="form-required">Community Name</label></td>
 			<td>
-				<input type="text" id="community_title" name="community_title" value="<?php echo html_encode($PROCESSED["community_title"]); ?>" maxlength="64" style="width: 250px" onkeyup="validateShortname(this.value)" />
+				<input type="text" id="community_title" name="community_title" value="<?php echo (isset($PROCESSED["community_title"]) && $PROCESSED["community_title"] ? html_encode($PROCESSED["community_title"]) : ""); ?>" maxlength="64" style="width: 250px" onkeyup="validateShortname(this.value)" />
 				<span class="content-small">(<strong>Example:</strong> Medicine Club)</span>
 			</td>
 		</tr>
@@ -659,13 +668,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			<td><?php echo help_create_button("Community Keywords", ""); ?></td>
 			<td><label for="community_keywords" class="form-nrequired">Community Keywords</label></td>
 			<td>
-				<input type="text" id="community_keywords" name="community_keywords" value="<?php echo html_encode($PROCESSED["community_keywords"]); ?>" maxlength="255" style="width: 90%" />
+				<input type="text" id="community_keywords" name="community_keywords" value="<?php echo (isset($PROCESSED["community_keywords"]) && $PROCESSED["community_keywords"] ? html_encode($PROCESSED["community_keywords"]) : ""); ?>" maxlength="255" style="width: 90%" />
 			</td>
 		</tr>
 		<tr>
 			<td style="vertical-align: top"><?php echo help_create_button("Community Description", ""); ?></td>
 			<td style="vertical-align: top"><label for="community_description" class="form-nrequired">Community Description</label></td>
-			<td><textarea id="community_description" name="community_description" style="width: 90%; height: 75px"><?php echo html_encode($PROCESSED["community_description"]); ?></textarea></td>
+			<td><textarea id="community_description" name="community_description" style="width: 90%; height: 75px"><?php echo (isset($PROCESSED["community_description"]) && $PROCESSED["community_description"] ? html_encode($PROCESSED["community_description"]) : ""); ?></textarea></td>
 		</tr>
 		<tr>
 			<td colspan="3">&nbsp;</td>
@@ -685,7 +694,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				<br /><br />
 							<?php
 							echo ENTRADA_URL."/community/";
-							if(is_array($community_parents)) {
+							if(isset($community_parents) && is_array($community_parents)) {
 								foreach($community_parents as $result) {
 									echo html_encode($result["community_shortname"])."/";
 								}
@@ -693,153 +702,146 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							?><span id="displayed_shortname"></span>
 			</td>
 		</tr>
-		<tr>
-			<td style="padding-top:6px;"><?php echo help_create_button("Community Template", "community_template"); ?></td>
-			<td style="padding-top:6px;"><label for="community_template" class="form-nrequired">Community Template</label></td>
-			<td>
-				<div>
-					<?php
-						$query = "SELECT * FROM `community_templates`"; 
-						$results = $db->GetAll($query);
-						if ($results) {
-						?>
-							<ul class="community-themes">
-							<?php
-							$default_templates = array();
-							$groups = array();
-							$category = array();
-							$default_categories = array();
-							$default_groups = array();
-							foreach($results as $community_template) {
-								$permissions_query = "SELECT * FROM `communities_template_permissions` WHERE `template`=". $db->qstr($community_template["template_name"]);
-								$template_permissions = $db->GetAll($permissions_query);
-								if ($template_permissions) {
-									foreach ($template_permissions as $template_permission) {
-										if ($template_permission["permission_type"] == "group") {
-											$groups = explode(",",$template_permission["permission_value"]);
-										}
-										if (($template_permission["permission_type"] == null && $template_permission["permission_value"] == null)) {
-											$default_templates[] = $template_permission["template"];
-										}
-										if (($template_permission["permission_type"] == "category_id" && $template_permission["permission_value"] != null)) {
-											$category = explode(",",$template_permission["permission_value"]);
-										}
-										if (($template_permission["permission_type"] == "category_id" && $template_permission["permission_value"] == null)) {
-											$category_permissions_query = " SELECT * FROM `communities_template_permissions` 
-																			WHERE `permission_type`= 'group' 
-																			AND `template`=". $db->qstr($template_permission["template"]);
-											$category_permissions = $db->GetAll($category_permissions_query);
-											if($category_permissions) {
-												foreach ($category_permissions as $category_permission) {
-													$default_categories = explode(",", $category_permission["permission_value"]);
-													if (in_array($GROUP, $default_categories)) {
-														$default_categories[] = $category_permission["template"];
-													}
-													
+        <?php
+       $query = "SELECT * FROM `org_community_types`
+                    WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->GetActiveOrganisation())."
+                    AND `community_type_active` = 1";
+        $community_types = $db->GetAll($query);
+        if ($community_types) {
+            ?>
+            <tr>
+                <td>&nbsp;</td>
+                <td><label for="type_id" class="form-required">Community Type</label></td>
+                <td class="content-small" style="padding-bottom: 15px">
+                <?php
+                echo "<select name=\"type_id\" id=\"type_id\" onchange=\"loadCommunityType(this.options[this.selectedIndex].value)\">";
+                echo "<option value=\"0\">-- Select a Community Type --</option>";
+                foreach ($community_types as $community_type) {
+                    echo "<option value = \"".$community_type["octype_id"]."\"".(isset($PROCESSED["octype_id"]) && $PROCESSED["octype_id"] == $community_type["octype_id"] ? " selected=\"selected\"" : "").">".$community_type["community_type_name"]."</option>";
+                }
+                echo "</select>";
+                ?>
+                </td>
+            </tr>
+            <?php
+		}
+		?>
+		<tbody id="type_options"<?php echo (!isset($PROCESSED["octype_id"]) || !$PROCESSED["octype_id"] ? " style=\"display: none;\"" : ""); ?>>
+			<tr>
+				<td style="padding-top:6px;"><?php echo help_create_button("Community Template", "community_template"); ?></td>
+				<td style="padding-top:6px;"><label for="community_template" class="form-nrequired">Community Template</label></td>
+				<td>
+					<div>
+						<?php
+							if (isset($PROCESSED["octype_id"]) && $PROCESSED["octype_id"]) { 
+								$query = "SELECT a.* FROM `community_templates` AS a
+											JOIN `community_type_templates` AS b
+											ON a.`template_id` = b.`template_id`
+											WHERE b.`type_id` = ".$db->qstr($PROCESSED["octype_id"])."
+											AND b.`type_scope` = 'organisation'"; 
+								$results = $db->GetAll($query);
+								if ($results) {
+								?>
+									<ul class="community-themes">
+									<?php
+									$default_templates = array();
+									$groups = array();
+									$category = array();
+									$default_categories = array();
+									$default_groups = array();
+									foreach($results as $community_template) {
+										$permissions_query = "SELECT * FROM `communities_template_permissions` WHERE `template`=". $db->qstr($community_template["template_name"]);
+										$template_permissions = $db->GetAll($permissions_query);
+										if ($template_permissions) {
+											foreach ($template_permissions as $template_permission) {
+												if ($template_permission["permission_type"] == "group") {
+													$groups = explode(",",$template_permission["permission_value"]);
 												}
+												if (($template_permission["permission_type"] == null && $template_permission["permission_value"] == null)) {
+													$default_templates[] = $template_permission["template"];
+												}
+												if (($template_permission["permission_type"] == "category_id" && $template_permission["permission_value"] != null)) {
+													$category = explode(",",$template_permission["permission_value"]);
+												}
+												if (($template_permission["permission_type"] == "category_id" && $template_permission["permission_value"] == null)) {
+													$category_permissions_query = " SELECT * FROM `communities_template_permissions` 
+																					WHERE `permission_type`= 'group' 
+																					AND `template`=". $db->qstr($template_permission["template"]);
+													$category_permissions = $db->GetAll($category_permissions_query);
+													if($category_permissions) {
+														foreach ($category_permissions as $category_permission) {
+															$default_categories = explode(",", $category_permission["permission_value"]);
+															if (in_array($GROUP, $default_categories)) {
+																$default_categories[] = $category_permission["template"];
+															}
+
+														}
+													}
+												}
+												?>
+												<?php
 											}
-										}
-										?>
-										<?php
+											if ((in_array($GROUP, $groups) && in_array($CATEGORY_ID, $category)) || (in_array($community_template["template_name"], $default_templates)) || (in_array($community_template["template_name"], $default_categories))) {
+											?>
+											<li id="<?php echo $community_template["template_name"]."-template"; ?>">
+												<div class="template-rdo">
+													<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
+												</div>
+												<div class="large-view">
+													<a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
+												</div>
+												<label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
+											</li>
+											<?php
+											}
+										} 
 									}
-									if ((in_array($GROUP, $groups) && in_array($CATEGORY_ID, $category)) || (in_array($community_template["template_name"], $default_templates)) || (in_array($community_template["template_name"], $default_categories))) {
 									?>
-									<li id="<?php echo $community_template["template_name"]."-template"; ?>">
-										<div class="template-rdo">
-											<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
-										</div>
-										<div class="large-view">
-											<a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
-										</div>
-										<label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
-									</li>
+									</ul>
+									<div class="default-large" style="display:none;">
+										<img src="<?php echo ENTRADA_URL."/images/template-default-large.gif" ?>" alt="Default Template Screen shot" />
+									</div>
+									<div class="committee-large" style="display:none;">
+										<img src="<?php echo ENTRADA_URL."/images/template-meeting-large.gif" ?>" alt="Committee Template Screen shot" />
+									</div> 
+									<div class="vp-large" style="display:none;">
+										<img src="<?php echo ENTRADA_URL."/images/template-vp-large.gif" ?>" alt="Virtual Patient Template Screen shot" />
+									</div> 
+									<div class="learningModule-large" style="display:none;">
+										<img src="<?php echo ENTRADA_URL."/images/template-education-large.gif" ?>" alt="Learning Template Screen shot" />
+									</div>
+									<div class="course-large" style="display:none;">
+										<img src="<?php echo ENTRADA_URL."/images/template-course-large.gif" ?>" alt="Course Template Screen shot" />
+									</div> 
 									<?php
 									}
-								} 
 							}
-							?>
-							</ul>
-							<div class="default-large" style="display:none;">
-								<img src="<?php echo ENTRADA_URL."/images/template-default-large.gif" ?>" alt="Default Template Screen shot" />
-							</div>
-							<div class="committee-large" style="display:none;">
-								<img src="<?php echo ENTRADA_URL."/images/template-meeting-large.gif" ?>" alt="Committee Template Screen shot" />
-							</div> 
-							<div class="vp-large" style="display:none;">
-								<img src="<?php echo ENTRADA_URL."/images/template-vp-large.gif" ?>" alt="Virtual Patient Template Screen shot" />
-							</div> 
-							<div class="learningModule-large" style="display:none;">
-								<img src="<?php echo ENTRADA_URL."/images/template-education-large.gif" ?>" alt="Learning Template Screen shot" />
-							</div>
-							<div class="course-large" style="display:none;">
-								<img src="<?php echo ENTRADA_URL."/images/template-course-large.gif" ?>" alt="Course Template Screen shot" />
-							</div> 
-							<?php
-							}
-							?>
-				</div>
-			</td>
-		</tr>
-		<tr>
-			<td colspan="3">&nbsp;</td>
-		</tr>
-		<?php /* <tr>
-			<td><?php echo help_create_button("Contact E-Mail Address", ""); ?></td>
-			<td><label for="community_email" class="form-nrequired">Contact E-Mail</label></td>
-			<td><input type="text" id="community_email" name="community_email" value="<?php echo html_encode($PROCESSED["community_email"]); ?>" maxlength="128" style="width: 250px" /></td>
-		</tr>
-		<tr>
-			<td><?php echo help_create_button("External Website", ""); ?></td>
-			<td><label for="community_website" class="form-nrequired">External Website</label></td>
-			<td><input type="text" id="community_website" name="community_website" value="<?php echo html_encode($PROCESSED["community_website"]); ?>" maxlength="1055" style="width: 250px" /></td>
-		</tr> */ ?>
-		<tr>
-			<td colspan="3" style="padding-top: 20px">
-				<h2>Community Modules</h2>
-			</td>
-		</tr>
-		<tr>
-			<td style="vertical-align: top"><?php echo help_create_button("Available Modules", ""); ?></td>
-			<td style="vertical-align: top"><span class="form-required">Available Modules</span></td>
-			<td>
-							<?php
-							$query	= "SELECT * FROM `communities_modules` WHERE `module_active` = '1' AND `module_visible` = '1' ORDER BY `module_title` ASC";
-							$results	= $db->GetAll($query);
-							if($results) {
-								?>
-				<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Setting Available Modules">
-					<colgroup>
-						<col style="width: 3%" />
-						<col style="width: 97%" />
-					</colgroup>
-					<tbody>
-										<?php
-										foreach($results as $result) {
-											?>
-						<tr>
-							<td style="padding-bottom: 5px; vertical-align: top"><input type="checkbox" name="community_modules[]" id="community_modules_<?php echo $result["module_id"]; ?>" value="<?php echo $result["module_id"]; ?>" style="vertical-align: middle"<?php echo (((!isset($PROCESSED["community_modules"])) || ((isset($PROCESSED["community_modules"])) && (is_array($PROCESSED["community_modules"])) && (in_array($result["module_id"], $PROCESSED["community_modules"])))) ? " checked=\"checked\"" : ""); ?> /></td>
-							<td style="padding-bottom: 5px; vertical-align: top">
-								<label for="community_modules_<?php echo $result["module_id"]; ?>" class="normal-green"><?php echo html_encode($result["module_title"]); ?></label>
-								<div class="content-small"><?php echo html_encode($result["module_description"]); ?></div>
-							</td>
-						</tr>
-										<?php
-										}
-										?>
-					</tbody>
-				</table>
-							<?php
-							} else {
-								$ERROR++;
-								$ERRORSTR[] = "There has been an error obtaining the required Community Modules from the database. The MEdTech Unit has been informed of the issue, please try again later.";
-
-								echo display_error();
-
-								application_log("error", "Unable to fetch Community Modules from database. Database said: ".$db->ErrorMsg());
-							}
-							?>
-			</td>
-		</tr>
+						?>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3">&nbsp;</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="padding-top: 20px">
+					<h2>Community Pages</h2>
+				</td>
+			</tr>
+			<tr>
+				<td style="vertical-align: top"><?php echo help_create_button("Pages to be generated in the community upon creation.", ""); ?></td>
+				<td style="vertical-align: top"><span class="form-required">Available Default Pages</span></td>
+				<td id="community_type_pages">
+					<?php
+						if (isset($PROCESSED["octype_id"]) && $PROCESSED["octype_id"]) {
+							echo community_type_pages_inlists($PROCESSED["octype_id"], 0, 0, array(), $PROCESSED["page_ids"]);
+						} else {
+							echo display_notice("No community type selected.");
+						}
+					?>
+				</td>
+			</tr>
+		</tbody>
 		<tr>
 			<td colspan="3" style="padding-top: 10px">
 				<h2>Community Permissions</h2>

@@ -750,11 +750,6 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										} elseif ($n["nav_type"] == "previous") {
 											$default_page_url = $default_previous_page["page_url"];
 										}
-										if ($default_page_url != $n["nav_url"]) {
-											$PROCESSED["page_navigation"]["nav_url"] = $n["nav_url"];
-										} else {
-											$PROCESSED["page_navigation"]["nav_url"] = null;
-										}
 										$PROCESSED["page_navigation"]["show_nav"] = $n["show_nav"];
 										$PROCESSED["page_navigation"]["updated_date"] = time();
 										$PROCESSED["page_navigation"]["updated_by"] = $ENTRADA_USER->getID();
@@ -798,7 +793,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 						default :
 							$PROCESSED = $page_details;
 							
-							$query			= "	SELECT * 
+							$query			= "SELECT * 
 												FROM `community_page_navigation` 
 												WHERE `cpage_id` = ".$db->qstr($PAGE_ID)." 
 												AND `community_id` = ".$db->qstr($COMMUNITY_ID);
@@ -806,7 +801,6 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							if ($results) {
 								foreach ($results as $result) {
 									$PROCESSED["page_navigation"]["show_" . $result["nav_type"] . "_nav"] = $result["show_nav"];
-									$PROCESSED["page_navigation"][$result["nav_type"] . "_nav_url"] = $result["nav_url"];
 								}
 							}	
 							if ((isset($PAGE_TYPE)) && ($PAGE_TYPE != "")) {
@@ -872,6 +866,47 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									}
 								}
 							}
+							
+							function parentChange (parent_id) {
+								var page_order = ($('page_order').value != 'no' ? $('page_order').value : <?php echo $page_details["page_order"]; ?>);
+								if (parent_id == <?php echo $PROCESSED["parent_id"]?>) { 
+									$('page_order').disabled = false; } else { $('page_order').disabled = true; 
+								}
+								new Ajax.Updater('modal_page_navigation','<?php echo ENTRADA_URL; ?>/api/community-page-navigation.api.php', {
+									method: 'post',
+									parameters: {cpage_id: <?php echo $PAGE_ID; ?>, parent_id: parent_id, page_order: page_order, nav_type: 'next'}
+								});
+								new Ajax.Updater('modal_previous_page_navigation','<?php echo ENTRADA_URL; ?>/api/community-page-navigation.api.php', {
+									method: 'post',
+									parameters: {cpage_id: <?php echo $PAGE_ID; ?>, parent_id: parent_id, page_order: page_order, nav_type: 'previous'}
+								});
+							}
+							
+							function orderChange (page_order) {
+								var parent_id = $('parent_id').value;
+								new Ajax.Request('<?php echo ENTRADA_URL; ?>/api/community-page-navigation.api.php', {
+									method: 'post',
+									parameters: {cpage_id: <?php echo $PAGE_ID; ?>, parent_id: parent_id, page_order: page_order, nav_type: 'next_id'},
+									onSuccess: function (response) {
+										if (response && response.responseText) {
+											$$('input:checked[type="radio"][name="nav_next_page_url"]').each(function(radio){ radio.checked = false; });
+											$('nav_next_page_url'+response.responseText).checked = true;
+										}
+									}
+								});
+								new Ajax.Request('<?php echo ENTRADA_URL; ?>/api/community-page-navigation.api.php', {
+									method: 'post',
+									parameters: {cpage_id: <?php echo $PAGE_ID; ?>, parent_id: parent_id, page_order: page_order, nav_type: 'previous_id'},
+									onSuccess: function (response) {
+										if (response && response.responseText) {
+											$$('input:checked[type="radio"][name="nav_previous_page_url"]').each(function(radio){ radio.checked = false; });
+											$('nav_previous_page_url'+response.responseText).checked = true;
+											$('content_previous_page_list_'+response.responseText).up('li.parent_'+parent_id).insert($('content_previous_page_list_<?php echo $PAGE_ID; ?>'));
+											$('content_next_page_list_'+response.responseText).up('li.parent_'+parent_id).insert($('content_next_page_list_<?php echo $PAGE_ID; ?>'));
+										}
+									}
+								});
+							}
 							</script>
 							<form id="edit_page_form" action="<?php echo ENTRADA_URL."/community".$community_details["community_url"].":pages?".replace_query(array("action" => "edit", "step" => 2)); ?>" method="post" enctype="multipart/form-data" onsubmit="selIt()">
 							<table style="width: 95%;" cellspacing="0" cellpadding="2" border="0" summary="Editing Page">
@@ -929,9 +964,9 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									<tr>
 										<td><label for="parent_id" class="form-required">Page Parent:</label></td>
 										<td>
-											<select id="parent_id" name="parent_id" onchange="if (this.value == <?php echo $PROCESSED["parent_id"]?>) { $('page_order').disabled = false; } else { $('page_order').disabled = true; } " style="width: 304px">
+											<select id="parent_id" name="parent_id" onchange="parentChange(this.value)" style="width: 304px">
 											<?php
-											echo "<option value=\"0\" selected=\"selected\">-- No Parent Page --</option>\n";
+											echo "<option value=\"0\"".(!$page_details["parent_id"] ? " selected=\"selected\"" : "").">-- No Parent Page --</option>\n";
 											
 											$current_selected	= array($page_details["parent_id"]);
 											$exclude			= array($PAGE_ID);
@@ -1304,7 +1339,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										<tr>
 											<td><label for="page_order" class="form-nrequired">Page Position:</label></td>
 											<td>
-												<select id="page_order" name="page_order" style="width: 304px">
+												<select id="page_order" name="page_order" style="width: 304px" onchange="orderChange(this.value)">
 													<option value="no">Do Not Move Page</option>
 													<?php
 													if ((int) $PROCESSED["parent_id"]) {

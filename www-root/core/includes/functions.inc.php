@@ -83,16 +83,17 @@ function get_prev_sibling_ancestors($COMMUNITY_ID, $PARENT_ID, $PAGE_ORDER = 0) 
 
 function get_next_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER) {
 	global $db;
-	
-	$query = "	SELECT *
-				FROM `community_pages` cp
-				WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
-				AND cp.`parent_id` = " . $db->qstr($PAGE_ID) . "
-				AND cp.`page_active` = '1'
-				ORDER BY `page_order` ASC";
-	$result = $db->GetRow($query);
+	if ($PAGE_ID) {
+		$query = "	SELECT *
+					FROM `community_pages` cp
+					WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
+					AND cp.`parent_id` = " . $db->qstr($PAGE_ID) . "
+					AND cp.`page_active` = '1'
+					ORDER BY `page_order` ASC";
+		$result = $db->GetRow($query);
+	}
 	//if no children
-	if (!$result) {
+	if (!$PAGE_ID || !$result) {
 		$next_page_order = $PAGE_ORDER + 1;
 		$query = "	SELECT *
 					FROM `community_pages` cp
@@ -5159,14 +5160,6 @@ function communities_module_activate($community_id = 0, $module_id = 0) {
 				} else {
 					$page_order = 0;
 				}
-
-				if(($db->AutoExecute("community_pages", array("community_id" => $community_id, "page_order" => $page_order, "page_type" => $module_info["module_shortname"], "menu_title" => $module_info["module_title"], "page_title" => $module_info["module_title"], "page_url" => $module_info["module_shortname"], "page_content" => "", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) && ($cpage_id = $db->Insert_Id())) {
-
-					communities_log_history($community_id, $cpage_id, 0, "community_history_add_page", 1);
-
-				} else {
-					application_log("error", "Unable to create page for module ".(int) $module_id." for new community id ".(int) $community_id.". Database said: ".$db->ErrorMsg());
-				}
 			}
 		} else {
 			application_log("error", "Module_id [".$module_id."] requested activation in community_id [".$community_id."] but the module is either missing or inactive.");
@@ -6107,7 +6100,7 @@ function clerkship_rotations_access() {
  * @return string
  */
 function communities_pages_inlists($identifier = 0, $indent = 0, $options = array(), $locked_ids = array()) {
-	global $db, $MODULE, $COMMUNITY_ID, $COMMUNITY_URL;
+	global $db, $COMMUNITY_ID, $COMMUNITY_URL;
 
 	if($indent > 99) {
 		die("Preventing infinite loop");
@@ -6170,7 +6163,7 @@ function communities_pages_inlists($identifier = 0, $indent = 0, $options = arra
 }
 
 function communities_pages_inradio($identifier = 0, $indent = 0, $options = array(), $locked_ids = array()) {
-	global $db, $MODULE, $COMMUNITY_ID, $COMMUNITY_URL;
+	global $db, $COMMUNITY_ID, $COMMUNITY_URL;
 
 	if($indent > 99) {
 		die("Preventing infinite loop");
@@ -6195,6 +6188,10 @@ function communities_pages_inradio($identifier = 0, $indent = 0, $options = arra
 		if(isset($options["nav_type"])) {
 			$nav_type = $options["nav_type"];
 		}
+		if(isset($options["parent_swap"])) {
+			$new_parent = $options["parent_swap"]["parent_id"];
+			$page_id = $options["parent_swap"]["page_id"];
+		}
 	}
 
 	$identifier	= (int) $identifier;
@@ -6203,14 +6200,35 @@ function communities_pages_inradio($identifier = 0, $indent = 0, $options = arra
 	if(($identifier) && ($indent === 0)) {
 		$query	= "SELECT `cpage_id`, `page_url`, `menu_title`, `parent_id`, `page_visible`, `page_type` FROM `community_pages` WHERE `community_id` = ".$COMMUNITY_ID." AND `cpage_id` = ".$db->qstr((int) $identifier)." AND `page_url` != '0' AND `page_active` = '1' ORDER BY `page_order` ASC";
 	} else {
-		$query	= "SELECT `cpage_id`, `page_url`, `menu_title`, `parent_id`, `page_visible`, `page_type` FROM `community_pages` WHERE `community_id` = ".$COMMUNITY_ID." AND `parent_id` = ".$db->qstr((int) $identifier)." AND `page_active` = '1' ORDER BY `page_order` ASC";
+		if (!isset($options["parent_swap"])) {
+			$query	= "SELECT `cpage_id`, `page_url`, `menu_title`, `parent_id`, `page_visible`, `page_type` FROM `community_pages` WHERE `community_id` = ".$COMMUNITY_ID." AND `parent_id` = ".$db->qstr((int) $identifier)." AND `page_active` = '1' ORDER BY `page_order` ASC";
+		} else {
+			$query	= "SELECT `cpage_id`, `page_url`, `menu_title`, `parent_id`, `page_visible`, `page_type` 
+						FROM `community_pages` 
+						WHERE `community_id` = ".$COMMUNITY_ID." 
+						AND `parent_id` = ".$db->qstr((int) $identifier)."
+						AND `cpage_id` != ".$db->qstr($page_id)."
+						AND `page_active` = '1'
+						ORDER BY `page_order` ASC";
+		}
 	}
 
 	$results	= $db->GetAll($query);
+	if (isset($options["parent_swap"]) && $options["parent_swap"] && $identifier == $new_parent && $page_id) {
+		$query	= "SELECT `cpage_id`, `page_url`, `menu_title`, `parent_id`, `page_visible`, `page_type` 
+					FROM `community_pages` 
+					WHERE `community_id` = ".$COMMUNITY_ID." 
+					AND `cpage_id` = ".$db->qstr((int) $page_id)." 
+					AND `page_url` != '0' 
+					AND `page_active` = '1' 
+					ORDER BY `page_order` ASC";
+		$additional_page = $db->GetRow($query);
+		array_push($results, $additional_page);
+	}
 	if($results) {
 		$output .= "<ul class=\"community-page-list\" ".(isset($ul_id) ? "id = \"".$ul_id."\"" : "").">";
 		foreach ($results as $result) {
-			$output .= "<li id=\"content_".$ul_id."_".$result["cpage_id"]."\">\n";
+			$output .= "<li id=\"content_".$ul_id."_".$result["cpage_id"]."\"".(!($identifier) || ($indent !== 0) ? " class=\"parent_".$identifier."\"" : "").">\n";
 			$output .= "<div class=\"community-page-container\">";
 			if(($indent > 0) && (!$selectable_children)) {
 				$output .= "	<span class=\"delete\">&nbsp;</span>\n";
@@ -6243,8 +6261,88 @@ function communities_pages_inradio($identifier = 0, $indent = 0, $options = arra
  * @param int $indent
  * @return string
  */
+function community_type_pages_inlists($community_type_id, $identifier = 0, $indent = 0, $options = array(), $checked_ids = array()) {
+	global $db;
+
+	if($indent > 99) {
+		die("Preventing infinite loop");
+	}
+
+	$selected				= 0;
+	$selectable_children	= true;
+
+	if(is_array($options)) {
+		if((isset($options["selected"])) && ($tmp_input = clean_input($options["selected"], array("nows", "int")))) {
+			$selected = $tmp_input;
+		}
+
+		if(isset($options["selectable_children"])) {
+			$selectable_children = (bool) $options["selectable_children"];
+		}
+
+		if(isset($options["id"])) {
+			$ul_id = $options["id"];
+			$options["id"] = null;
+		}
+	}
+	$locked_ids = array();
+	$query = "SELECT `ctpage_id` FROM `community_type_pages` 
+				WHERE `type_id` = ".$db->qstr($community_type_id)."
+				AND `type_scope` = 'organisation'
+				AND `lock_page` = 1";
+	$locked_pages = $db->CacheGetAll(CACHE_TIMEOUT, $query);
+	if ($locked_pages) {
+		foreach ($locked_pages as $locked_page) {
+			$locked_ids[] = $locked_page["ctpage_id"];
+		}
+	}
+	$identifier	= (int) $identifier;
+	$output		= "";
+
+	if(($identifier) && ($indent === 0)) {
+		$query	= "SELECT `ctpage_id`, `page_url`, `menu_title`, `parent_id`, `page_visible`, `page_type` FROM `community_type_pages` WHERE `type_id` = ".$community_type_id." AND `type_scope` = 'organisation' AND `ctpage_id` = ".$db->qstr((int) $identifier)." AND `page_url` != '0' AND `page_active` = '1' ORDER BY `page_order` ASC";
+	} else {
+		$query	= "SELECT `ctpage_id`, `page_url`, `menu_title`, `parent_id`, `page_visible`, `page_type` FROM `community_type_pages` WHERE `type_id` = ".$community_type_id." AND `type_scope` = 'organisation' AND `parent_id` = ".$db->qstr((int) $identifier)." AND `page_active` = '1' ORDER BY `page_order` ASC";
+	}
+
+	$results	= $db->GetAll($query);
+	if($results) {
+		$output .= "<ul class=\"community-page-list\" ".(isset($ul_id) ? "id = \"".$ul_id."\"" : "").">";
+		foreach ($results as $result) {
+			$output .= "<li id=\"content_".$result["ctpage_id"]."\">\n";
+			$output .= "<div class=\"community-page-container\">";
+			if(($indent > 0) && (!$selectable_children)) {
+				$output .= "	<span class=\"include\">&nbsp;</span>\n";
+				$output .= "	<span class=\"".(((int) $result["page_visible"]) == 0 ? "hidden-page " : "")."next off\">".html_encode($result["menu_title"])."</span>\n";
+			} else {
+				$output .= "	<span class=\"include\"><input type=\"checkbox\" id=\"page_".$result["ctpage_id"]."\" name=\"page_ids[]\" value=\"".$result["ctpage_id"]."\"".(array_search($result["ctpage_id"], $locked_ids) !== false || array_search($result["ctpage_id"], $checked_ids) !== false ? " checked=\"checked\"" : "").(array_search($result["ctpage_id"], $locked_ids) !== false ? " disabled=\"disabled\"" : "")." /></span>\n";
+				$output .= "	<span class=\"".(((int) $result["page_visible"]) == 0 ? "hidden-page " : "")."next\">".html_encode($result["menu_title"])."</span>\n";
+				if (array_search($result["ctpage_id"], $locked_ids) !== false) {
+					$output .= "	<input type=\"hidden\" name=\"page_ids[]\" value=\"".$result["ctpage_id"]."\" />";
+				}
+			}
+			$output .= "</div>";
+			$output .= community_type_pages_inlists($community_type_id, $result["ctpage_id"], $indent + 1, $options);
+			$output .= "</li>\n";
+
+		}
+		$output .= "</ul>";
+	} else {
+		$output .= "<ul class=\"community-page-list empty\"></ul>";
+	}
+
+	return $output;
+}
+
+/**
+ * Function will return all pages below the specified parent_id, the current user has access to.
+ *
+ * @param int $identifier
+ * @param int $indent
+ * @return string
+ */
 function communities_pages_intable($identifier = 0, $indent = 0, $options = array(), $locked_ids = array()) {
-	global $db, $MODULE, $COMMUNITY_ID, $COMMUNITY_URL;
+	global $db, $COMMUNITY_ID, $COMMUNITY_URL;
 
 	if($indent > 99) {
 		die("Preventing infinite loop");
@@ -6306,7 +6404,7 @@ function communities_pages_intable($identifier = 0, $indent = 0, $options = arra
  * @return string
  */
 function communities_pages_inselect($parent_id = 0, &$current_selected, $indent = 0, &$exclude = array()) {
-	global $db, $MODULE, $COMMUNITY_ID;
+	global $db, $COMMUNITY_ID;
 
 	if($indent > 99) {
 		die("Preventing infinite loop");
@@ -6326,7 +6424,7 @@ function communities_pages_inselect($parent_id = 0, &$current_selected, $indent 
 			} else {
 				$exclude[] = (int) $result["cpage_id"];
 			}
-			$output .= communities_pages_inselect($result["cpage_id"], $current_selected, $indent + 1, $exclude, $community_id);
+			$output .= communities_pages_inselect($result["cpage_id"], $current_selected, $indent + 1, $exclude);
 		}
 	}
 

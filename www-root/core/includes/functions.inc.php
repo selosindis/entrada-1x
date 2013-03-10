@@ -6235,7 +6235,7 @@ function communities_pages_inradio($identifier = 0, $indent = 0, $options = arra
 				$output .= "	<span class=\"".(((int) $result["page_visible"]) == 0 ? "hidden-page " : "")."next off\">".
 								html_encode($result["menu_title"])."</span>\n";
 			} else {
-				$output .= "	<span class=\"delete\">".(array_search($result["cpage_id"], $locked_ids) === false ? "<input type=\"radio\" id=\"nav_" . $nav_type . "_page_url".$result["cpage_id"]."\" name=\"nav_" . $nav_type . "_page_url\" value=\"".$result["page_url"]."\"".(($selected == $result["cpage_id"]) ? " checked=\"checked\"" : "")." />" : "<div class=\"course-spacer\">&nbsp;</div>")."</span>\n";
+				$output .= "	<span class=\"delete\">".(array_search($result["cpage_id"], $locked_ids) === false ? "<input type=\"radio\" id=\"nav_" . $nav_type . "_page_id".$result["cpage_id"]."\" name=\"nav_" . $nav_type . "_page_id\" value=\"".$result["cpage_id"]."\"".(($selected == $result["cpage_id"]) ? " checked=\"checked\"" : "")." />" : "<div class=\"course-spacer\">&nbsp;</div>")."</span>\n";
 				$output .= "	<span class=\"".(((int) $result["page_visible"]) == 0 ? "hidden-page " : "")."next\">
 								<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":pages?".replace_query(array("action" => "edit", "step" => 1, "page" => $result["cpage_id"]))."\">".
 								html_encode($result["menu_title"])."</a></span>\n";

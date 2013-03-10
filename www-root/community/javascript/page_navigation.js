@@ -27,7 +27,7 @@ jQuery(document).ready(function($){
 		}
 	});
 	
-	$('#next_page_list input:radio[value=\'' + $('#selected_nav_next_page_url').val() + '\']').attr('checked', 'checked');
+	$('#next_page_list input:radio[value=\'' + $('#selected_nav_next_page_id').val() + '\']').attr('checked', 'checked');
 	
 	$("#change_next_nav_button").live("click", function() {
 		var modal_container = $("#modal_page_navigation");
@@ -46,8 +46,8 @@ jQuery(document).ready(function($){
 					$(this).dialog( "close" );
 				},
 				OK : function() {
-					var selected_page = $('input[name=\'nav_next_page_url\']:checked').val();
-					$('#selected_nav_next_page_url').attr("value", selected_page);
+					var selected_page = $('input[name=\'nav_next_page_id\']:checked').val();
+					$('#selected_nav_next_page_id').attr("value", selected_page);
 					$(this).dialog( "close" );
 				}
 			},
@@ -58,7 +58,7 @@ jQuery(document).ready(function($){
 		return false;
 	});
 	
-	$('#previous_page_list input:radio[value=\'' + $('#selected_nav_previous_page_url').val() + '\']').attr('checked', 'checked');
+	$('#previous_page_list input:radio[value=\'' + $('#selected_nav_previous_page_id').val() + '\']').attr('checked', 'checked');
 	
 	$("#change_previous_nav_button").live("click", function() {
 		var modal_container = $("#modal_previous_page_navigation");
@@ -77,8 +77,8 @@ jQuery(document).ready(function($){
 					$(this).dialog( "close" );
 				},
 				OK : function() {
-					var selected_page = $('input[name=\'nav_previous_page_url\']:checked').val();
-					$('#selected_nav_previous_page_url').attr("value", selected_page);
+					var selected_page = $('input[name=\'nav_previous_page_id\']:checked').val();
+					$('#selected_nav_previous_page_id').attr("value", selected_page);
 					$(this).dialog( "close" );
 				}
 			},

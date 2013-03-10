@@ -373,10 +373,12 @@ if ($COMMUNITY_URL) {
 						
 						$result = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER);
 						
-						$query = "	SELECT *
-									FROM `community_page_navigation`
-									WHERE `community_id` = " . $db->qstr($COMMUNITY_ID) . "
-									AND `cpage_id` = " . $db->qstr($PAGE_ID) . "
+						$query = "	SELECT a.*, b.`page_url` AS `nav_url`
+									FROM `community_page_navigation` AS a
+									LEFT JOIN `community_pages` AS b
+									ON a.`nav_page_id` = b.`cpage_id`
+									WHERE a.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
+									AND a.`cpage_id` = " . $db->qstr($PAGE_ID) . "
 									AND `nav_type` = 'next'";
 						
 						$nav_result = $db->GetRow($query);
@@ -387,7 +389,7 @@ if ($COMMUNITY_URL) {
 							$show_right_nav = 1;
 						}
 						
-						if ($result && $show_right_nav) {
+						if (($result || (isset($nav_result["nav_url"]) && $nav_result["nav_url"])) && $show_right_nav) {
 							if ($nav_result["nav_url"]) {
 								$url = $nav_result["nav_url"];
 							} else {
@@ -399,10 +401,12 @@ if ($COMMUNITY_URL) {
 						}
 						$smarty->assign("next_page_url", $next_page_url);
 						
-						$query = "	SELECT *
-									FROM `community_page_navigation`
-									WHERE `community_id` = " . $db->qstr($COMMUNITY_ID) . "
-									AND `cpage_id` = " . $db->qstr($PAGE_ID) . "
+						$query = "	SELECT a.*, b.`page_url` AS `nav_url`
+									FROM `community_page_navigation` AS a
+									LEFT JOIN `community_pages` AS b
+									ON a.`nav_page_id` = b.`cpage_id`
+									WHERE a.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
+									AND a.`cpage_id` = " . $db->qstr($PAGE_ID) . "
 									AND `nav_type` = 'previous'";
 						$nav_result = $db->GetRow($query);
 					
@@ -413,7 +417,7 @@ if ($COMMUNITY_URL) {
 						}
 						
 						$result = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER);
-						if ($result && $show_left_nav) {
+						if (($result || (isset($nav_result["nav_url"]) && $nav_result["nav_url"])) && $show_left_nav) {
 							if ($nav_result["nav_url"]) {
 								$url = $nav_result["nav_url"];
 							} else {

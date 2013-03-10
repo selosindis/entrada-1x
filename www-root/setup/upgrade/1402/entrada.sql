@@ -125,6 +125,7 @@ CREATE TABLE `community_page_navigation` (
   `cpnav_id` INT(12) NOT NULL AUTO_INCREMENT,
   `community_id` INT(12) NOT NULL,
   `cpage_id` INT(12) NOT NULL DEFAULT '0',
+  `nav_page_id` int(11) DEFAULT NULL,
   `show_nav` INT(1) NOT NULL DEFAULT '1',
   `nav_title` VARCHAR(100) NOT NULL DEFAULT 'Next',
   `nav_type` ENUM('next','previous') NOT NULL DEFAULT 'next',

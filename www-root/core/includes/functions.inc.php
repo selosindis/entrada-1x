@@ -2695,12 +2695,12 @@ function preferences_update($module, $original_preferences = array()) {
 		if (serialize($_SESSION[APPLICATION_IDENTIFIER][$module]) != serialize($original_preferences)) {
 			$query	= "SELECT `preference_id` FROM `".AUTH_DATABASE."`.`user_preferences` WHERE `app_id`=".$db->qstr(AUTH_APP_ID)." AND `proxy_id`=".$db->qstr($ENTRADA_USER->getID())." AND `module`=".$db->qstr($module);
 			$result	= $db->GetRow($query);
-			if($result) {
+			if($result) {				
 				if(!$db->AutoExecute("`".AUTH_DATABASE."`.`user_preferences`", array("preferences" => @serialize($_SESSION[APPLICATION_IDENTIFIER][$module]), "updated" => time()), "UPDATE", "preference_id = ".$db->qstr($result["preference_id"]))) {
 					application_log("error", "Unable to update the users database preferences for this module. Database said: ".$db->ErrorMsg());
 
 					return false;
-				}
+				} 
 			} else {
 				if(!$db->AutoExecute(AUTH_DATABASE.".user_preferences", array("app_id" => AUTH_APP_ID, "proxy_id" => $ENTRADA_USER->getID(), "module" => $module, "preferences" => @serialize($_SESSION[APPLICATION_IDENTIFIER][$module]), "updated" => time()), "INSERT")) {
 					application_log("error", "Unable to insert the users database preferences for this module. Database said: ".$db->ErrorMsg());
@@ -9800,6 +9800,7 @@ function events_subnavigation($event_info,$tab='content'){
 
 	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"],"step"=>false))."\" style=\"font-size: 10px; margin-right: 8px\">Event Attendance</a></li>";
 
+	echo "		<li".($tab=='history'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "history", "id" => $event_info["event_id"],"step"=>false))."\" style=\"font-size: 10px; margin-right: 8px\">Event History</a></li>";
 	echo "	</ul>";
 	echo "</div>\n";
 
@@ -16005,7 +16006,7 @@ function categories_inarray($parent_id, $indent = 0) {
  */
 function history_log($event, $message, $updater=0, $time=0) {
 	global $db, $ENTRADA_USER;
-	if (!$updater) { // Ignore noting updates if made by the sole author.
+	if (!$updater) { // Ignore recording updates if made by the sole author.
 	 $result = $db->GetOne("SELECT count(*) FROM `event_history` WHERE `event_id` = ".$db->qstr($event));
 	 if (!$result) {
 	  $result = $db->GetOne("SELECT `updated_by` FROM `events` WHERE `event_id` = ".$db->qstr($event));

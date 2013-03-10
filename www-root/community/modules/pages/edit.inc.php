@@ -878,7 +878,15 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									</tr>
 									<tr>
 										<td colspan="2">
-											<textarea id="page_content" name="page_content" style="margin-right: 10px;width: 95%; height: <?php echo (($PAGE_TYPE == "default") ? "400" : "200"); ?>px" rows="20" cols="70"><?php echo ((isset($PROCESSED["page_content"])) ? html_encode($PROCESSED["page_content"]) : ""); ?></textarea>
+										<?php if (!$home_page) { ?>
+												<textarea id="page_content" name="page_content" style="margin-right: 10px;width: 95%; height: <?php echo (($PAGE_TYPE == "default") ? "400" : "200"); ?>px" rows="20" cols="70"><?php echo ((isset($PROCESSED["page_content"])) ? html_encode($PROCESSED["page_content"]) : ""); ?></textarea>
+										<?php } else { 
+												echo "	<br />\n
+														<div class=\"display-notice\">\n
+															Please edit the Course Description through the Manage Courses > Course Content tab found <a href=\"" . ENTRADA_URL . "/admin/courses\">here</a>.\n
+														</div>\n";
+												}
+										?>
 										</td>
 									</tr>
 									<?php
@@ -1031,109 +1039,27 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										<?php
 									}
 								} elseif ($PAGE_TYPE == "course" && strpos($page_record["page_url"], "objectives") !== false) {
-									if ((is_array($course_objectives["primary_ids"]) && count($course_objectives["primary_ids"])) || (is_array($course_objectives["secondary_ids"]) && count($course_objectives["secondary_ids"])) || (is_array($course_objectives["tertiary_ids"]) && count($course_objectives["tertiary_ids"]))) {
-										?>
+								?>
+										 <tr>
+											<td colspan="2">
+												<br />
+												<div class="display-notice">
+													Please edit the Learning Objectives through the Manage Courses > Course Content tab found <a href="<?php echo ENTRADA_URL . "/admin/courses" ;?>">here</a>.
+												</div>
+											</td>
+										 </tr>
+								<?php
+								} elseif ($PAGE_TYPE == "course" && strpos($page_record["page_url"], "mcc_presentations") !== false) {
+								?>
 										<tr>
 											<td colspan="2">
 												<br />
-												<h1 style="font-size: 17px;" title="Course Objectives Section">Curriculum Objectives</h1>
-												<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
-												<input type="hidden" name="type" value="objectives" />
-												<input type="hidden" id="objectives_head" name="course_objectives" value="" />
-												<?php
-												if (is_array($course_objectives["primary_ids"])) {
-													foreach ($course_objectives["primary_ids"] as $objective_id) {
-														echo "<input type=\"hidden\" class=\"primary_objectives\" id=\"primary_objective_".$objective_id."\" name=\"primary_objectives[]\" value=\"".$objective_id."\" />\n";
-													}
-												}
-												if (is_array($course_objectives["secondary_ids"])) {
-													foreach ($course_objectives["secondary_ids"] as $objective_id) {
-														echo "<input type=\"hidden\" class=\"secondary_objectives\" id=\"secondary_objective_".$objective_id."\" name=\"secondary_objectives[]\" value=\"".$objective_id."\" />\n";
-													}
-												}
-												if (is_array($course_objectives["tertiary_ids"])) {
-													foreach ($course_objectives["tertiary_ids"] as $objective_id) {
-														echo "<input type=\"hidden\" class=\"tertiary_objectives\" id=\"tertiary_objective_".$objective_id."\" name=\"tertiary_objectives[]\" value=\"".$objective_id."\" />\n";
-													}
-												}
-												?>
-												<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
-												<colgroup>
-													<col width="22%" />
-													<col width="78%" />
-												</colgroup>
-												<tbody>
-													<tr>
-														<td colspan="2">
-															<div id="objectives_list">
-															<?php echo event_objectives_in_list($course_objectives, $top_level_id,$top_level_id, true); ?>
-															</div>
-														</td>
-													</tr>
-												</tbody>
-												</table>
-												</form>
-												<?php
-												if ((@is_array($edit_ajax)) && (@count($edit_ajax))) {
-													echo "<script type=\"text/javascript\">\n";
-													foreach ($edit_ajax as $objective_id) {
-														echo "var editor_".$objective_id." = new Ajax.InPlaceEditor('objective_description_".$objective_id."', '".ENTRADA_RELATIVE."/api/objective-details.api.php', { rows: 7, cols: 62, okText: \"Save Changes\", cancelText: \"Cancel Changes\", externalControl: \"edit_mode_".$objective_id."\", submitOnBlur: \"true\", callback: function(form, value) { return 'id=".$objective_id."&cids=".$course_ids_string."&objective_details='+escape(value) } });\n";
-													}
-													echo "</script>\n";
-												}
-												?>
+												<div class="display-notice">
+													Please edit the MCC Presentation Objectives through the Manage Courses > Course Content tab found <a href="<?php echo ENTRADA_URL . "/admin/courses" ;?>">here</a>.
+												</div>
 											</td>
-										</tr>
-										<?php
-									}
-								} elseif ($PAGE_TYPE == "course" && strpos($page_record["page_url"], "mcc_presentations") !== false) {
-									$organisation_id = $db->GetOne("SELECT `organisation_id` FROM `courses` WHERE `course_id` = ".$db->qstr($course_ids[0]));
-									?>
-									<tr>
-										<td colspan="2">
-											<?php
-											echo "<h3>Clinical Presentations</h3>";
-											$query = "	SELECT b.*
-														FROM `course_objectives` AS a
-														JOIN `global_lu_objectives` AS b
-														ON a.`objective_id` = b.`objective_id`
-														JOIN `objective_organisation` AS c
-														ON b.`objective_id` = c.`objective_id`
-														WHERE a.`objective_type` = 'event'
-														AND b.`objective_active` = '1'
-														AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-														AND a.`course_id` IN (".$course_ids_string.")
-														GROUP BY b.`objective_id`
-														ORDER BY b.`objective_order`";
-											$results = $db->GetAll($query);
-											if ($results) {
-												
-												if($ENTRADA_ACL->amIAllowed(new CourseResource($course_ids[0], $organisation_id), "update")) {
-													echo "<div class=\"no-printing\">\n";
-													echo "	<div style=\"float: right\">\n";
-													echo "<a href=\"".ENTRADA_URL."/admin/courses?section=edit&id=".$course_ids[0]."\"><img src=\"".ENTRADA_URL."/images/event-details.gif\" width=\"16\" height=\"16\" alt=\"Edit course details\" title=\"Edit course details\" border=\"0\" style=\"vertical-align: middle; margin-bottom: 2px;\" /></a> <a href=\"".ENTRADA_URL."/admin/courses?section=edit&id=".$course_ids[0]."\" style=\"font-size: 10px; margin-right: 8px\">Edit course details</a>\n";
-													echo "	</div>\n";
-													echo "</div>\n";
-													echo "<br />";
-												}
-												echo "<ul class=\"objectives\">\n";
-												foreach ($results as $result) {
-													if ($result["objective_name"]) {
-														echo "	<li>".$result["objective_name"]."</li>\n";
-													}
-												}
-												echo "</ul>\n";
-											} else {
-												if($ENTRADA_ACL->amIAllowed(new CourseResource($course_ids[0], $organisation_id), "update")) {
-													echo "<div class=\"display-notice\">While medical presentations may be used to illustrate concepts in this course, there are no specific presentations from the Medical Council of Canada that have been selected. If you would like to add a clinical presentation to this course, please click <a href=\"".ENTRADA_URL."/admin/courses?section=edit&id=".$course_ids[0]."\">here</a>. </div>\n";
-												} else {
-													echo "<div class=\"display-notice\">While medical presentations may be used to illustrate concepts in this course, there are no specific presentations from the Medical Council of Canada that have been selected. </div>";
-												}
-											}
-											?>
-										</td>
-									</tr>
-									<?php
+										 </tr>
+							    <?php
 								}
 								?>
 								<tr>

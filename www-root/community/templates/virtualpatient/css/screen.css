@@ -911,7 +911,8 @@ ul.page-action li:last-child {
 }
 div.community-page-list.home {
 	border-bottom:1px dotted #eee;
-	padding-left:21px;
+	margin-left: 27px;
+	padding-left: 15px;
 }
 
 /*From buttons*/

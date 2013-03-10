@@ -137,3 +137,45 @@ background-color:#FFF;
 vertical-align:top;
 padding:10px;
 }
+
+ul.community-page-list {
+	margin-top: 0px;
+	padding-left: 0px;
+}
+.community-page-list li {
+	list-style-type: none;
+}
+div.community-page-container {
+	border-bottom: 1px solid #CCC;
+	padding: 4px 0;
+}
+.community-page-list li span.next {
+	margin-left: 5px;
+	padding-left: 15px;
+	background: url(../../../../images/record-next-on.gif) no-repeat top left;
+}
+.community-page-list li span.next.off {
+	background-image: url(../../../../images/record-next-off.gif);
+}
+div.community-page-list.home {
+	background: url(../../../../images/record-next-on.gif) no-repeat 29px 6px;
+	padding: 4px 0px 4px 46px;
+	border-bottom: 1px solid #CCC;
+}ul.community-page-list ul span.delete {
+	padding-right: 25px;
+}
+ul.community-page-list ul ul span.delete {
+	padding-right: 50px;
+}
+ul.community-page-list ul ul ul span.delete {
+	padding-right: 75px;
+}
+ul.community-page-list ul ul ul ul span.delete {
+	padding-right: 100px;
+}
+ul.community-page-list ul ul ul ul ul span.delete {
+	padding-right: 125px;
+}
+ul.community-page-list ul ul ul ul ul ul span.delete {
+	padding-right: 150px;
+}

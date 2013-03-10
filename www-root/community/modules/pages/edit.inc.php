@@ -209,7 +209,9 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 						
 						$query = "	SELECT `organisation_id` FROM `courses` WHERE `course_id` = ".$db->qstr($results[0]["course_id"]);
 						$org_id = $db->GetOne($query);
-						list($course_objectives,$top_level_id) = courses_fetch_objectives($org_id,$course_ids, -1,1, false, false, 0, true);
+                        if ($PAGE_TYPE == "course" && $page_details["page_url"] == "objectives") {
+                            list($course_objectives,$top_level_id) = courses_fetch_objectives($org_id,$course_ids, -1,1, false, false, 0, true);
+                        }
 					}
 					
 									
@@ -221,7 +223,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							 * a normal page, so the page_type, menu_title, permissions, and page_title
 							 * will not be set when the page type is currently set to "course"
 							 */
-							if ($PAGE_TYPE != "course") {
+							if (array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
 								/**
 								 * Required field "page_type" / Page Type (Unchangeable for course content pages).
 								 */
@@ -236,6 +238,38 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									$ERRORSTR[] = "The <strong>Page Type</strong> field is required and is either empty or an invalid value.";
 								}
 
+								$PROCESSED["page_navigation"] = array();
+								$nav_elements = array();
+								if ((isset($_POST["show_right_nav"]))) {
+									$show_right_nav = clean_input($_POST["show_right_nav"], array("trim", "notags"));
+									if ((isset($_POST["selected_nav_next_page_id"]))) {
+										$nav_next_page_id = $_POST["selected_nav_next_page_id"];
+									} else {
+										$nav_next_page_id = "";
+									}
+									if ($show_right_nav == 0) {
+										$nav_elements[] = array("nav_type" => "next", "nav_title" => "Next", "show_nav" => "0", "cpage_id" => $nav_next_page_id);
+									} else {
+										$nav_elements[] = array("nav_type" => "next", "nav_title" => "Next", "show_nav" => "1", "cpage_id" => $nav_next_page_id);
+									}
+								} else {
+									$nav_elements[] = array("nav_type" => "next", "nav_title" => "Next", "show_nav" => "0", "cpage_id" => "");
+								}
+								if ((isset($_POST["show_left_nav"]))) {
+									$show_left_nav = clean_input($_POST["show_left_nav"], array("trim", "notags"));
+									if ((isset($_POST["selected_nav_previous_page_id"]))) {
+										$nav_previous_page_id = $_POST["selected_nav_previous_page_id"];
+									} else {
+										$nav_previous_page_id = "";
+									}
+									if ($show_left_nav == 0) {
+										$nav_elements[] = array("nav_type" => "previous", "nav_title" => "Previous", "show_nav" => "0", "cpage_id" => $nav_previous_page_id);
+									} else {
+										$nav_elements[] = array("nav_type" => "previous", "nav_title" => "Previous", "show_nav" => "1", "cpage_id" => $nav_previous_page_id);
+									}
+								} else {
+									$nav_elements[] = array("nav_type" => "previous", "nav_title" => "Previous", "show_nav" => "0", "cpage_id" => "");
+								}
 	
 								/**
 								 * Required field "parent_id" / Page Parent.
@@ -360,7 +394,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									$PROCESSED["page_content"] = "";	
 								}
 							}
-							if (!$home_page && $PAGE_TYPE != "course") {
+							if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
 								if ($_POST["page_visibile"] == '0') {
 									$PROCESSED["page_visible"] = 0;
 								} else {
@@ -369,7 +403,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							}
 
 							if (!$ERROR) {
-								if ($PAGE_TYPE != "course" && !$home_page) {
+								if (array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false && !$home_page) {
 									/**
 									 * Non-required "page_order" / Page Position.
 									 * This special field will change the order which this page will appear under the parent.
@@ -497,21 +531,21 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								$PROCESSED["updated_date"]	= time();
 								$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 								
-								if ($db->AutoExecute("community_pages", $PROCESSED, "UPDATE", "cpage_id = ".$PAGE_ID)) {
+								if ($db->AutoExecute("community_pages", $PROCESSED, "UPDATE", "cpage_id = ".$PAGE_ID)) {									
 									if ($home_page) {
 										if ($PAGE_TYPE == "default" || $PAGE_TYPE == "course") {
 											if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["show_announcements"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["show_announcements"]["cpoption_id"]))) {
 												if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["show_events"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["show_events"]["cpoption_id"]))) {
-													if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["show_history"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["show_history"]["cpoption_id"]))) {
+													if ($db->Execute("UPDATE `community_page_options` SET `option_value` = ".$db->qstr($page_options["show_history"]["option_value"])." WHERE `cpoption_id` = ".$db->qstr($page_options["show_history"]["cpoption_id"]))) {											
 														if (!$ERROR) {
 															communities_log_history($COMMUNITY_ID, 0, 0, "community_history_edit_home_page", 1);
 															$url = ENTRADA_URL."/community".$community_details["community_url"].":pages";
-							
+
 															$SUCCESS++;
 															$SUCCESSSTR[]	= "You have successfully updated the home page of the community.<br /><br />You will now be redirected to the page management index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-							
+
 															$HEAD[]			= "<script type=\"text/javascript\"> setTimeout('window.location=\\'".$url."\\'', 5000); </script>";
-							
+
 															application_log("success", "Home Page [".$PAGE_ID."] updated in the system.");
 														}
 													} else {
@@ -701,6 +735,43 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 											application_log("success", "Page [".$PAGE_ID."] updated in the system.");
 										}
 									}
+									
+									$default_next_page = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $page_details["parent_id"], $page_details["page_order"]);
+									$default_previous_page = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $page_details["parent_id"], $page_details["page_order"]);
+									foreach($nav_elements as $n) {
+										$PROCESSED["page_navigation"] = array();
+										$PROCESSED["page_navigation"]["cpage_id"] = $PAGE_ID;
+										$PROCESSED["page_navigation"]["nav_page_id"] = $n["cpage_id"];
+										$PROCESSED["page_navigation"]["community_id"] = $COMMUNITY_ID;
+										$PROCESSED["page_navigation"]["nav_type"] = $n["nav_type"];
+										$PROCESSED["page_navigation"]["nav_title"] = $n["nav_title"];
+										$PROCESSED["page_navigation"]["show_nav"] = $n["show_nav"];
+										$PROCESSED["page_navigation"]["updated_date"] = time();
+										$PROCESSED["page_navigation"]["updated_by"] = $ENTRADA_USER->getID();
+										
+										$query = "	SELECT *
+													FROM `community_page_navigation`
+													WHERE `cpage_id` = " . $db->qstr($PAGE_ID) . "
+													AND `nav_type` = " . $db->qstr($n["nav_type"]);
+										
+										$result = $db->GetRow($query);
+										
+										if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"])) {
+											$update_sql = 0;
+											$insert_sql = 0;
+											if ($result) {
+												$update_sql = $db->AutoExecute("community_page_navigation", $PROCESSED["page_navigation"], "UPDATE", "cpage_id = " . $db->qstr($PAGE_ID) . " AND " . "nav_type = " . $db->qstr($n["nav_type"]));
+											} else {
+												$insert_sql = $db->AutoExecute("community_page_navigation", $PROCESSED["page_navigation"], "INSERT");
+											}
+											if (!$update_sql && !$insert_sql) {
+												$ERROR++;
+												$ERRORSTR[] = "There was a problem updating the page navigation. The application administrator has been informed them of this error.";
+
+												application_log("error", "There was a problem updating the page navigation for cpage_id: " . $PAGE_ID . ". Database said: ".$db->ErrorMsg());
+											}
+										}
+									}
 								} else {
 									$ERROR++;
 									$ERRORSTR[] = "There was a problem updating this page of the community. The application administrator has been informed them of this error.";
@@ -716,10 +787,28 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 						case 1 :
 						default :
 							$PROCESSED = $page_details;
-		
+							
+							$query			= "SELECT * 
+												FROM `community_page_navigation` 
+												WHERE `cpage_id` = ".$db->qstr($PAGE_ID)." 
+												AND `community_id` = ".$db->qstr($COMMUNITY_ID);
+							$results = $db->GetAll($query);
+							if ($results) {
+								foreach ($results as $result) {
+									$PROCESSED["page_navigation"]["show_" . $result["nav_type"] . "_nav"] = $result["show_nav"];
+									if ($result["nav_type"] == "next") {
+										$nav_next_page_id = $result["nav_page_id"];
+									} elseif ($result["nav_type"] == "previous") {
+										$nav_previous_page_id = $result["nav_page_id"];
+									}
+								}
+							}	
 							if ((isset($PAGE_TYPE)) && ($PAGE_TYPE != "")) {
 								$PROCESSED["page_type"] = $PAGE_TYPE;
 							}
+							
+							$default_next_page = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $page_details["parent_id"], $page_details["page_order"]);
+							$default_previous_page = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $page_details["parent_id"], $page_details["page_order"]);
 						break;
 					}
 				
@@ -751,6 +840,8 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							if ($page_type == "course" && $page_details["page_url"] == "objectives") {
 								require_once("../javascript/courses.js.php");
 							}
+							
+							$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/community/javascript/page_navigation.js\"></script>\n";
 							?>
 							<script type="text/javascript">
 							var text = new Array();
@@ -775,8 +866,49 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									}
 								}
 							}
+							
+							function parentChange (parent_id) {
+								var page_order = ($('page_order').value != 'no' ? $('page_order').value : <?php echo $page_details["page_order"]; ?>);
+								if (parent_id == <?php echo $PROCESSED["parent_id"]?>) { 
+									$('page_order').disabled = false; } else { $('page_order').disabled = true; 
+								}
+								new Ajax.Updater('modal_page_navigation','<?php echo ENTRADA_URL; ?>/api/community-page-navigation.api.php', {
+									method: 'post',
+									parameters: {cpage_id: <?php echo $PAGE_ID; ?>, parent_id: parent_id, page_order: page_order, nav_type: 'next'}
+								});
+								new Ajax.Updater('modal_previous_page_navigation','<?php echo ENTRADA_URL; ?>/api/community-page-navigation.api.php', {
+									method: 'post',
+									parameters: {cpage_id: <?php echo $PAGE_ID; ?>, parent_id: parent_id, page_order: page_order, nav_type: 'previous'}
+								});
+							}
+							
+							function orderChange (page_order) {
+								var parent_id = $('parent_id').value;
+								new Ajax.Request('<?php echo ENTRADA_URL; ?>/api/community-page-navigation.api.php', {
+									method: 'post',
+									parameters: {cpage_id: <?php echo $PAGE_ID; ?>, parent_id: parent_id, page_order: page_order, nav_type: 'next_id'},
+									onSuccess: function (response) {
+										if (response && response.responseText) {
+											$$('input:checked[type="radio"][name="nav_next_page_id"]').each(function(radio){ radio.checked = false; });
+											$('nav_next_page_id'+response.responseText).checked = true;
+										}
+									}
+								});
+								new Ajax.Request('<?php echo ENTRADA_URL; ?>/api/community-page-navigation.api.php', {
+									method: 'post',
+									parameters: {cpage_id: <?php echo $PAGE_ID; ?>, parent_id: parent_id, page_order: page_order, nav_type: 'previous_id'},
+									onSuccess: function (response) {
+										if (response && response.responseText) {
+											$$('input:checked[type="radio"][name="nav_previous_page_id"]').each(function(radio){ radio.checked = false; });
+											$('nav_previous_page_id'+response.responseText).checked = true;
+											$('content_previous_page_list_'+response.responseText).up('li.parent_'+parent_id).insert($('content_previous_page_list_<?php echo $PAGE_ID; ?>'));
+											$('content_next_page_list_'+response.responseText).up('li.parent_'+parent_id).insert($('content_next_page_list_<?php echo $PAGE_ID; ?>'));
+										}
+									}
+								});
+							}
 							</script>
-							<form action="<?php echo ENTRADA_URL."/community".$community_details["community_url"].":pages?".replace_query(array("action" => "edit", "step" => 2)); ?>" method="post" enctype="multipart/form-data" onsubmit="selIt()">
+							<form id="edit_page_form" action="<?php echo ENTRADA_URL."/community".$community_details["community_url"].":pages?".replace_query(array("action" => "edit", "step" => 2)); ?>" method="post" enctype="multipart/form-data" onsubmit="selIt()">
 							<table style="width: 95%;" cellspacing="0" cellpadding="2" border="0" summary="Editing Page">
 							<colgroup>
 								<col style="width: 30%" />
@@ -801,7 +933,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									<td style="vertical-align: top">
 										<?php
 										if ((is_array($PAGE_TYPES)) && (count($PAGE_TYPES))) {
-											echo "<select id=\"page_type\" name=\"page_type\" style=\"width: 204px\" onchange=\"window.location = '".COMMUNITY_URL.$COMMUNITY_URL.":pages?section=edit&page=".($home_page ? "home" : $PAGE_ID)."&type='+this.options[this.selectedIndex].value\" ".($PAGE_TYPE == "course" ? "disabled=\"disabled\" " : "").">\n";
+											echo "<select id=\"page_type\" name=\"page_type\" style=\"width: 204px\" onchange=\"window.location = '".COMMUNITY_URL.$COMMUNITY_URL.":pages?section=edit&page=".($home_page ? "home" : $PAGE_ID)."&type='+this.options[this.selectedIndex].value\" ".(array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) !== false ? "disabled=\"disabled\" " : "").">\n";
 											foreach ($PAGE_TYPES as $page_type_info) {
 												echo "<option value=\"".html_encode($page_type_info["module_shortname"])."\"".(((isset($PAGE_TYPE)) && ($PAGE_TYPE == $page_type_info["module_shortname"])) || ((isset($page_details["page_type"])) && !isset($PAGE_TYPE) && ($page_details["page_type"] == $page_type_info["module_shortname"])) ? " selected=\"selected\"" : "").">".html_encode($page_type_info["module_title"])."</option>\n";
 											}
@@ -824,7 +956,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									</td>
 								</tr>
 								<?php 
-								if (!$home_page && $PAGE_TYPE != "course") {
+								if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
 										?>
 									<tr>
 										<td colspan="2">&nbsp;</td>
@@ -832,9 +964,9 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									<tr>
 										<td><label for="parent_id" class="form-required">Page Parent:</label></td>
 										<td>
-											<select id="parent_id" name="parent_id" onchange="if (this.value == <?php echo $PROCESSED["parent_id"]?>) { $('page_order').disabled = false; } else { $('page_order').disabled = true; } " style="width: 304px">
+											<select id="parent_id" name="parent_id" onchange="parentChange(this.value)" style="width: 304px">
 											<?php
-											echo "<option value=\"0\" selected=\"selected\">-- No Parent Page --</option>\n";
+											echo "<option value=\"0\"".(!$page_details["parent_id"] ? " selected=\"selected\"" : "").">-- No Parent Page --</option>\n";
 											
 											$current_selected	= array($page_details["parent_id"]);
 											$exclude			= array($PAGE_ID);
@@ -852,11 +984,11 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								</tr>
 								<tr>
 									<td><label for="menu_title" class="form-required">Menu Title:</label></td>
-									<td><input type="text" id="menu_title" name="menu_title" value="<?php echo ((isset($PROCESSED["menu_title"])) ? html_encode($PROCESSED["menu_title"]) : ((isset($page_details["menu_title"])) ? html_encode($page_details["menu_title"]) : "")); ?>" maxlength="32" style="width: 300px" onblur="fieldCopy('menu_title', 'page_title', 1)"<?php echo ($PAGE_TYPE == "course" ? " disabled=\"disabled\"" : ""); ?> /></td>
+									<td><input type="text" id="menu_title" name="menu_title" value="<?php echo ((isset($PROCESSED["menu_title"])) ? html_encode($PROCESSED["menu_title"]) : ((isset($page_details["menu_title"])) ? html_encode($page_details["menu_title"]) : "")); ?>" maxlength="32" style="width: 300px" onblur="fieldCopy('menu_title', 'page_title', 1)"<?php echo (array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) !== false ? " disabled=\"disabled\"" : ""); ?> /></td>
 								</tr>
 								<tr>
 									<td><label for="page_title" class="form-nrequired">Page Title:</label></td>
-									<td><input type="text" id="page_title" name="page_title" value="<?php echo ((isset($PROCESSED["page_title"])) ? html_encode($PROCESSED["page_title"]) : ""); ?>" maxlength="100" style="width: 300px"<?php echo ($PAGE_TYPE == "course" ? " disabled=\"disabled\"" : ""); ?> /></td>
+									<td><input type="text" id="page_title" name="page_title" value="<?php echo ((isset($PROCESSED["page_title"])) ? html_encode($PROCESSED["page_title"]) : ""); ?>" maxlength="100" style="width: 300px"<?php echo (array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) !== false ? " disabled=\"disabled\"" : ""); ?> /></td>
 								</tr>
 								<tr>
 									<td colspan="2">&nbsp;</td>
@@ -891,7 +1023,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									</tr>
 									<?php
 								} 
-								if (!$home_page && $PAGE_TYPE != "course") {
+								if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
 									if ($PAGE_TYPE == "events" || $PAGE_TYPE == "announcements") {
 										?>
 										<tr>
@@ -1066,7 +1198,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									<td colspan="2">&nbsp;</td>
 								</tr>
 								<?php
-								if (($PAGE_TYPE == "url") || (!$home_page && $PAGE_TYPE != "course") || ($home_page && $PAGE_TYPE == "default")) {	
+								if (($PAGE_TYPE == "url") || (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) || ($home_page && $PAGE_TYPE == "default")) {	
 									?>
 									<tr>
 										<td colspan="2"><h2>Page Options</h2></td>
@@ -1101,8 +1233,31 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										</td>
 									</tr>			
 								<?php
+								} else if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && $COMMUNITY_TYPE_OPTIONS["sequential_navigation"] == "1") { ?>
+									<tr>
+										<td>
+											<label for="show_left_nav" class="form-nrequired">Show Left Navigation</label>
+										</td>
+										<td>
+											<input id="show_left_nav" name="show_left_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_previous_nav"]) || ((int) $PROCESSED["page_navigation"]["show_previous_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
+											<input id="change_previous_nav_button" name="change_previous_nav_button" type="button" value="Previous Page" />
+											<input type="hidden" name="selected_nav_previous_page_id" id="selected_nav_previous_page_id" <?php echo (isset($nav_previous_page_id) && $nav_previous_page_id ? "value = \"" . $nav_previous_page_id . "\"" : "value = \"" . $default_previous_page["cpage_id"]) . "\"" ?> />
+										</td>
+									</tr>
+									<tr>
+										<td>
+											<label for="show_right_nav" class="form-nrequired">Show Right Navigation</label>
+										</td>
+										<td>
+											<input id="show_right_nav" name="show_right_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_next_nav"]) || ((int) $PROCESSED["page_navigation"]["show_next_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
+											<input id="change_next_nav_button" name="change_next_nav_button" type="button" value="Next Page" />
+											<input type="hidden" name="selected_nav_next_page_id" id="selected_nav_next_page_id" <?php echo (isset($nav_next_page_id) && $nav_next_page_id ? "value = \"" . $nav_next_page_id . "\"" : "value = \"" . $default_next_page["cpage_id"] . "\"") ?> />
+										</td>
+									</tr>
+								<?php
 								}
-								if (!$home_page && $PAGE_TYPE != "course") {
+								
+								if (!$home_page && array_search($PAGE_ID, (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS ? $COMMUNITY_LOCKED_PAGE_IDS : array())) === false) {
 									$query		= "SELECT `cpage_id`, `page_order`, `menu_title` FROM `community_pages` WHERE `cpage_id` <> ".$db->qstr($PAGE_ID)." AND `parent_id` = ".$db->qstr($PROCESSED["parent_id"])." AND `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` != '' AND `page_type` != 'course' ORDER BY `page_order` ASC";
 									$results	= $db->GetAll($query);
 									if ($results) {
@@ -1110,7 +1265,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										<tr>
 											<td><label for="page_order" class="form-nrequired">Page Position:</label></td>
 											<td>
-												<select id="page_order" name="page_order" style="width: 304px">
+												<select id="page_order" name="page_order" style="width: 304px" onchange="orderChange(this.value)">
 													<option value="no">Do Not Move Page</option>
 													<?php
 													if ((int) $PROCESSED["parent_id"]) {
@@ -1187,6 +1342,12 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								?>
 							</tbody>
 							</table>
+							<div id="modal_page_navigation" style="display: none; text-align: left;">
+								<?php echo communities_pages_inradio(0, 0, array('id'=>'next_page_list', "nav_type" => "next", "selected" => (isset($nav_next_page_id) && $nav_next_page_id ? $nav_next_page_id : $default_next_page["cpage_id"]))); ?>
+							</div>
+							<div id="modal_previous_page_navigation" style="display: none; text-align: left;">
+								<?php echo communities_pages_inradio(0, 0, array('id'=>'previous_page_list', "nav_type" => "previous", "selected" => (isset($nav_previous_page_id) && $nav_previous_page_id ? $nav_previous_page_id : $default_previous_page["cpage_id"]))); ?>
+							</div>
 							</form>
 							<?php
 						break;

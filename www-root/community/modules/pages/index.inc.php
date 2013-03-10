@@ -26,6 +26,8 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 
 	echo display_notice();
 }
+$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/effects.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/dragdrop.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/sortable_tree.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 /**
  * Ensure that the selected community is editable by you.
@@ -73,16 +75,16 @@ if ($COMMUNITY_ID) {
 						?>
 						</a>
 				</div>
-				<?php echo communities_pages_inlists(0, 0, array('id'=>'pagelists')); ?>
+				<?php echo communities_pages_inlists(0, 0, array('id'=>'pagelists'), (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS) ? $COMMUNITY_LOCKED_PAGE_IDS : array()); ?>
 
 				<input type="submit" id="delete_pages_button" class="button" value="Delete Selected" />
 				<input type="button" id="reorder_pages_button" class="button" onclick="toggleSorting();" value="Reorder Pages">
-				<input type="submit" id="save_pages_order_button" class="button" value="Save Ordering" style="display:none;"/>
 				</form>
 				<form action="<?php echo COMMUNITY_URL.$community_details["community_url"].":pages?".replace_query(array("action" => "reorder", "step" => 1)); ?>" method="post">
 					<div id="reorder-info" style="display: none;">
 						<textarea id="pageorder" name="pageorder" style="display: none;"></textarea>
 						<p class="content-small">Rearrange the pages in the table above by dragging them, and then press the <strong>Save Ordering</strong> button.</p>
+						<input type="submit" id="save_pages_order_button" class="button" value="Save Ordering" style="display:none;"/>
 					</div>
 				</form>
 				<script type="text/javascript">
@@ -107,6 +109,7 @@ if ($COMMUNITY_ID) {
 							});
 							$('reorder_pages_button').value = "Reorder Pages";
 							$('delete_pages_button').removeClassName('disabled').removeAttribute("disabled","");
+							window.location = "<?php echo ENTRADA_URL . "/community" . $community_details["community_url"] . ":pages"; ?>";
 						} else {
 							$$('div.community-page-container a').each(function(e) {
 								e.observe('click', function(event) {event.stop();});

@@ -28,7 +28,7 @@
 
 function get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER) {
 	global $db;
-	
+
 	$prev_page_order = $PAGE_ORDER - 1;
 	$query = "	SELECT *
 				FROM `community_pages` cp
@@ -57,7 +57,7 @@ function get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDE
 
 function get_prev_sibling_ancestors($COMMUNITY_ID, $PARENT_ID, $PAGE_ORDER = 0) {
 	global $db;
-	
+
 	//get prev siblings ancestors
 	$query = "	SELECT *
 				FROM `community_pages` cp
@@ -66,7 +66,7 @@ function get_prev_sibling_ancestors($COMMUNITY_ID, $PARENT_ID, $PAGE_ORDER = 0) 
 				AND cp.`page_active` = '1'
 				ORDER BY `page_order` DESC";
 	$result2 = $db->GetRow($query);
-		
+
 	if (!$result2) {
 		$query = "	SELECT *
 				FROM `community_pages` cp
@@ -107,9 +107,9 @@ function get_next_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDE
 			$result = get_next_ancestor_sibling($COMMUNITY_ID, $PARENT_ID, $PAGE_ORDER);
 			return $result;
 		}
-		
+
 		return $result;
-		
+
 	} else {
 		return $result;
 	}
@@ -117,11 +117,11 @@ function get_next_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDE
 
 function get_next_ancestor_sibling($COMMUNITY_ID, $PARENT_ID, $PAGE_ORDER) {
 	global $db;
-	
+
 	if ($PARENT_ID != 0) {
 		$query = "	SELECT *
 					FROM `community_pages` cp
-					WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "							
+					WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
 					AND cp.`cpage_id` = " . $db->qstr($PARENT_ID) . "
 					AND cp.`page_active` = '1'";
 		$result = $db->GetRow($query);
@@ -132,7 +132,7 @@ function get_next_ancestor_sibling($COMMUNITY_ID, $PARENT_ID, $PAGE_ORDER) {
 		$NEXT_PAGE_ORDER = $PAGE_ORDER + 1;
 		$query = "	SELECT max(`page_order`)
 					FROM `community_pages` cp
-					WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "							
+					WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
 					AND cp.`parent_id` = " . $db->qstr($NEXT_PARENT_ID) . "
 					AND cp.`page_active` = '1'";
 		$max_page_order = $db->GetOne($query);
@@ -140,10 +140,10 @@ function get_next_ancestor_sibling($COMMUNITY_ID, $PARENT_ID, $PAGE_ORDER) {
 			return 0;
 		}
 	}
-	
+
 	$query = "	SELECT *
 				FROM `community_pages` cp
-				WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "							
+				WHERE cp.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
 				AND cp.`parent_id` = " . $db->qstr($NEXT_PARENT_ID) . "
 				AND cp.`page_order` >= " . $db->qstr($NEXT_PAGE_ORDER) . "
 				AND cp.`page_active` = '1'
@@ -1800,9 +1800,9 @@ function fetch_curriculum_objectives_children($parent_id = 0, &$objectives) {
 
 function fetch_objective_set_for_objective_id($id = 0){
 	global $db;
-	
+
 	$parent_id = (int)$id;
-	
+
 	if (!$parent_id) {
 		return false;
 	}
@@ -1811,7 +1811,7 @@ function fetch_objective_set_for_objective_id($id = 0){
 
 	do{
 		$level++;
-		$query = "	SELECT * FROM `global_lu_objectives` 
+		$query = "	SELECT * FROM `global_lu_objectives`
 					WHERE `objective_id` = ".$db->qstr($parent_id);
 		$parent = $db->GetRow($query);
 		$parent_id = (int)$parent["objective_parent"];
@@ -1826,9 +1826,9 @@ function fetch_objective_set_for_objective_id($id = 0){
 
 function fetch_objective_child_mapped_course($objective_id = 0,$course_id = 0){
 	global $db;
-	
+
 	$parent_id = (int)$objective_id;
-	
+
 	if (!$parent_id || !$course_id) {
 		return false;
 	}
@@ -1861,7 +1861,7 @@ function children_check_mapped($children,$objective_id,$course_id){
 		}
 	}
 
-	return false;	
+	return false;
 }
 
 function fetch_event_topics() {
@@ -2761,12 +2761,12 @@ function preferences_update($module, $original_preferences = array()) {
 		if (serialize($_SESSION[APPLICATION_IDENTIFIER][$module]) != serialize($original_preferences)) {
 			$query	= "SELECT `preference_id` FROM `".AUTH_DATABASE."`.`user_preferences` WHERE `app_id`=".$db->qstr(AUTH_APP_ID)." AND `proxy_id`=".$db->qstr($ENTRADA_USER->getID())." AND `module`=".$db->qstr($module);
 			$result	= $db->GetRow($query);
-			if($result) {				
+			if($result) {
 				if(!$db->AutoExecute("`".AUTH_DATABASE."`.`user_preferences`", array("preferences" => @serialize($_SESSION[APPLICATION_IDENTIFIER][$module]), "updated" => time()), "UPDATE", "preference_id = ".$db->qstr($result["preference_id"]))) {
 					application_log("error", "Unable to update the users database preferences for this module. Database said: ".$db->ErrorMsg());
 
 					return false;
-				} 
+				}
 			} else {
 				if(!$db->AutoExecute(AUTH_DATABASE.".user_preferences", array("app_id" => AUTH_APP_ID, "proxy_id" => $ENTRADA_USER->getID(), "module" => $module, "preferences" => @serialize($_SESSION[APPLICATION_IDENTIFIER][$module]), "updated" => time()), "INSERT")) {
 					application_log("error", "Unable to insert the users database preferences for this module. Database said: ".$db->ErrorMsg());
@@ -6269,9 +6269,9 @@ function communities_pages_inradio($identifier = 0, $indent = 0, $options = arra
 		if (!isset($options["parent_swap"])) {
 			$query	= "SELECT `cpage_id`, `page_url`, `menu_title`, `parent_id`, `page_visible`, `page_type` FROM `community_pages` WHERE `community_id` = ".$COMMUNITY_ID." AND `parent_id` = ".$db->qstr((int) $identifier)." AND `page_active` = '1' ORDER BY `page_order` ASC";
 		} else {
-			$query	= "SELECT `cpage_id`, `page_url`, `menu_title`, `parent_id`, `page_visible`, `page_type` 
-						FROM `community_pages` 
-						WHERE `community_id` = ".$COMMUNITY_ID." 
+			$query	= "SELECT `cpage_id`, `page_url`, `menu_title`, `parent_id`, `page_visible`, `page_type`
+						FROM `community_pages`
+						WHERE `community_id` = ".$COMMUNITY_ID."
 						AND `parent_id` = ".$db->qstr((int) $identifier)."
 						AND `cpage_id` != ".$db->qstr($page_id)."
 						AND `page_active` = '1'
@@ -6281,12 +6281,12 @@ function communities_pages_inradio($identifier = 0, $indent = 0, $options = arra
 
 	$results	= $db->GetAll($query);
 	if (isset($options["parent_swap"]) && $options["parent_swap"] && $identifier == $new_parent && $page_id) {
-		$query	= "SELECT `cpage_id`, `page_url`, `menu_title`, `parent_id`, `page_visible`, `page_type` 
-					FROM `community_pages` 
-					WHERE `community_id` = ".$COMMUNITY_ID." 
-					AND `cpage_id` = ".$db->qstr((int) $page_id)." 
-					AND `page_url` != '0' 
-					AND `page_active` = '1' 
+		$query	= "SELECT `cpage_id`, `page_url`, `menu_title`, `parent_id`, `page_visible`, `page_type`
+					FROM `community_pages`
+					WHERE `community_id` = ".$COMMUNITY_ID."
+					AND `cpage_id` = ".$db->qstr((int) $page_id)."
+					AND `page_url` != '0'
+					AND `page_active` = '1'
 					ORDER BY `page_order` ASC";
 		$additional_page = $db->GetRow($query);
 		array_push($results, $additional_page);
@@ -6352,7 +6352,7 @@ function community_type_pages_inlists($community_type_id, $identifier = 0, $inde
 		}
 	}
 	$locked_ids = array();
-	$query = "SELECT `ctpage_id` FROM `community_type_pages` 
+	$query = "SELECT `ctpage_id` FROM `community_type_pages`
 				WHERE `type_id` = ".$db->qstr($community_type_id)."
 				AND `type_scope` = 'organisation'
 				AND `lock_page` = 1";
@@ -9268,6 +9268,15 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 	}
 }
 
+function search_subnavigation($tab = "details") {
+	echo "<div class=\"no-printing\">\n";
+    echo "  <ul class=\"nav nav-tabs\">\n";
+    echo "      <li".($tab == "search" ? " class=\"active\"" : "")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/curriculum/search\" style=\"font-size: 10px; margin-right: 8px\">Curriculum Search</a></li>\n";
+    echo "      <li".($tab == "explorer" ? " class=\"active\"" : "")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/curriculum/explorer\" style=\"font-size: 10px; margin-right: 8px\">Curriculum Explorer</a></li>\n";
+	echo "  </ul>\n";
+	echo "</div>\n";
+}
+
 function courses_subnavigation($course_details, $tab="details") {
 	global $ENTRADA_ACL, $module_singular_name;
 
@@ -9728,7 +9737,7 @@ function course_objective_child_recursive($objectives,$objective_id,$course_id){
 	foreach ($objectives as $objective) {
 		if ($objective["objective_id"] == $objective_id) {
 			return true;
-		}	
+		}
 		$query = "	SELECT a.*
 					FROM `global_lu_objectives` a
 					LEFT JOIN `course_objectives` b
@@ -9738,7 +9747,7 @@ function course_objective_child_recursive($objectives,$objective_id,$course_id){
 					AND a.`objective_active` = '1'
 					GROUP BY a.`objective_id`
 					ORDER BY a.`objective_order` ASC
-					";								
+					";
 		$parent = $db->GetRow($query);
 		if ($parent) {
 			//if this parent is the objective id we're looking for, return true
@@ -9747,10 +9756,10 @@ function course_objective_child_recursive($objectives,$objective_id,$course_id){
 			}
 			$parents[] = $parent;
 		}
-	}	
+	}
 	//if no parents have been found for this level of parents, no children exist for this id
 	if (!$parents) return false;
-	return course_objective_child_recursive($parents,$objective_id,$course_id);	
+	return course_objective_child_recursive($parents,$objective_id,$course_id);
 }
 
 
@@ -12371,7 +12380,7 @@ function event_objectives_display_leafs($objectives,$course_id,$event_id){
 	</div>
 	<?php
 		}
-	}	
+	}
 }
 
 /**
@@ -12390,30 +12399,30 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 				break;
 			case 2:
 				$importance = "secondary";
-				break;				
+				break;
 			case 3:
 				$importance = "tertiary";
-				break;		
+				break;
 			default:
-				$importance;		
+				$importance;
 		}
-		$query = "SELECT a.*,COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description` ,COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`, 
-					b.`importance`,c.`objective_details`, COALESCE(c.`eobjective_id`,0) AS `mapped`, 
-					COALESCE(b.`cobjective_id`,0) AS `mapped_to_course` 
+		$query = "SELECT a.*,COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description` ,COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`,
+					b.`importance`,c.`objective_details`, COALESCE(c.`eobjective_id`,0) AS `mapped`,
+					COALESCE(b.`cobjective_id`,0) AS `mapped_to_course`
 					FROM `global_lu_objectives` a
 					LEFT JOIN `course_objectives` b
 					ON a.`objective_id` = b.`objective_id`
 					AND b.`course_id` = ".$db->qstr($course_id)."
 					LEFT JOIN `event_objectives` c
-					ON c.`objective_id` = a.`objective_id` 			
-					AND c.`event_id` = ".$db->qstr($event_id)."									
+					ON c.`objective_id` = a.`objective_id`
+					AND c.`event_id` = ".$db->qstr($event_id)."
 					WHERE a.`objective_active` = '1'
 					AND a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
 					GROUP BY a.`objective_id`
 					ORDER BY a.`objective_order` ASC
-					";				
-		error_log($query);				
-		$children = $db->GetAll($query);					
+					";
+		error_log($query);
+		$children = $db->GetAll($query);
 		$map = ($parent_mapped?true:($objective["mapped"]?true:false));
 		if (!$children) {
 			if ($map) {
@@ -12424,13 +12433,13 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 		}else{
 			error_log("Children exist");
 
-			$response = event_objectives_bottom_leaves($children,$course_id,$event_id,$map,$imp);			
+			$response = event_objectives_bottom_leaves($children,$course_id,$event_id,$map,$imp);
 			if ($response) {
 				if ($parent_mapped) {
 					foreach($response as $imp=>$list){
 						foreach($list as $k=>$item){
-						$response[$imp][$k]["mapped"] = 1;	
-						}						
+						$response[$imp][$k]["mapped"] = 1;
+						}
 					}
 				}
 				foreach($importances as $importance){
@@ -12439,7 +12448,7 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 			}
 		}
 		//error_log("After objective: ".$objective["objective_id"]." List is: ".print_r($list,true));
-	}	
+	}
 
 	return $list;
 }
@@ -12448,41 +12457,41 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 * Displays the objective leaf as it is on the event content page
 */
 function event_objectives_display_leaf($objective){
-	$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);													
+	$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
 	?>
 		<li class = "mapped-objective"
 			id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
 			data-id = "<?php echo $objective["objective_id"]; ?>"
 			data-title="<?php echo $title;?>"
 			data-description="<?php echo htmlentities($objective["objective_description"]);?>">
-			<strong><?php echo $title; ?></strong>		
+			<strong><?php echo $title; ?></strong>
 			<div class="objective-description">
 				<?php
 				$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
 				if ($set) {
 					echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
 				}
-				?>					
+				?>
 				<?php echo $objective["objective_description"];?>
 			</div>
 			<div class="event-objective-controls">
-				<input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>																						
+				<input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>
 			</div>
-			<?php if ($objective["mapped"]) { ?>	
-			<div 	id="text_container_<?php echo $objective["objective_id"]; ?>" 
-					class="objective_text_container" 
+			<?php if ($objective["mapped"]) { ?>
+			<div 	id="text_container_<?php echo $objective["objective_id"]; ?>"
+					class="objective_text_container"
 					data-id="<?php echo $objective["objective_id"]; ?>">
-				<label 	for="objective_text_<?php echo $objective["objective_id"]; ?>" 
-						class="content-small" id="objective_<?php echo $objective["objective_id"]; ?>_append" 
-						style="vertical-align: middle;">Provide your sessional free-text objective below as it relates to this curricular objective.</label>	
-				<textarea 	name="objective_text[<?php echo $objective["objective_id"]; ?>]" 
-							id="objective_text_<?php echo $objective["objective_id"]; ?>" 
-							data-id="<?php echo $objective["objective_id"]; ?>" 
-							class="expandable" 
+				<label 	for="objective_text_<?php echo $objective["objective_id"]; ?>"
+						class="content-small" id="objective_<?php echo $objective["objective_id"]; ?>_append"
+						style="vertical-align: middle;">Provide your sessional free-text objective below as it relates to this curricular objective.</label>
+				<textarea 	name="objective_text[<?php echo $objective["objective_id"]; ?>]"
+							id="objective_text_<?php echo $objective["objective_id"]; ?>"
+							data-id="<?php echo $objective["objective_id"]; ?>"
+							class="expandable"
 							style="height: 28px; overflow: hidden;"><?php echo $objective["objective_details"];?></textarea>
 			</div>
 			<?php } ?>
-		</li>	
+		</li>
 	<?php
 }
 
@@ -12490,13 +12499,13 @@ function event_objectives_display_leaf($objective){
 * Recursively loops up tree from mapped event objectives checking each parent to see if its the passed objective id.
 * Parents are collected and passed to the next iteration as a group to save function calls
 */
-function event_objective_parent_mapped_course($objective_id,$event_id){	
+function event_objective_parent_mapped_course($objective_id,$event_id){
 	global $db;
 	$query = "	SELECT a.*, c.course_id
 				FROM `global_lu_objectives` a
 				LEFT JOIN `event_objectives` b
-				ON b.`objective_id` = a.`objective_id` 			
-				AND b.`event_id` = ".$db->qstr($event_id)."									
+				ON b.`objective_id` = a.`objective_id`
+				AND b.`event_id` = ".$db->qstr($event_id)."
 				LEFT JOIN `events` c
 				ON b.`event_id` = c.`event_id`
 				WHERE b.`event_id` = ".$db->qstr($event_id)."
@@ -12510,12 +12519,12 @@ function event_objective_parent_mapped_course($objective_id,$event_id){
 }
 
 function event_objective_parent_mapped_recursive($objectives,$objective_id,$course_id,$event_id){
-	global $db;	
+	global $db;
 	$parents = array();
 	foreach ($objectives as $objective) {
 		if ($objective["objective_id"] == $objective_id) {
 			return true;
-		}		
+		}
 		if ($objective["objective_parent"]) {
 			$query = "	SELECT a.*
 						FROM `global_lu_objectives` a
@@ -12523,13 +12532,13 @@ function event_objective_parent_mapped_recursive($objectives,$objective_id,$cour
 						ON a.`objective_id` = b.`objective_id`
 						AND b.`course_id` = ".$db->qstr($course_id)."
 						LEFT JOIN `event_objectives` c
-						ON c.`objective_id` = a.`objective_id` 			
-						AND c.`event_id` = ".$db->qstr($event_id)."									
+						ON c.`objective_id` = a.`objective_id`
+						AND c.`event_id` = ".$db->qstr($event_id)."
 						WHERE a.`objective_id` = ".$db->qstr($objective["objective_parent"])."
 						AND a.`objective_active` = '1'
 						GROUP BY a.`objective_id`
 						ORDER BY a.`objective_order` ASC
-						";								
+						";
 			$parent = $db->GetRow($query);
 			if ($parent) {
 				//if this parent is the objective id we're looking for, return true
@@ -12539,10 +12548,10 @@ function event_objective_parent_mapped_recursive($objectives,$objective_id,$cour
 				$parents[] = $parent;
 			}
 		}
-	}	
+	}
 	//if no parents have been found for this level of parents, no children exist for this id
 	if (!$parents) return false;
-	return event_objective_parent_mapped_recursive($parents,$objective_id,$course_id,$event_id);	
+	return event_objective_parent_mapped_recursive($parents,$objective_id,$course_id,$event_id);
 }
 
 function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_text = false, $parent_active = false, $importance = 1, $course = true, $top = true, $display_importance = "primary", $full_objective_list = false, $course_id = 0) {
@@ -16372,7 +16381,7 @@ function event_text_change($event, $field) {
 
 /*
  * This funciton recursively deactivates child objectives.
- * 
+ *
  * @param int $parent_id
  * @param int $organisation_id
  * @param int $i
@@ -16423,7 +16432,7 @@ function deactivate_objective_children($parent_id, $organisation_id, $i = 0) {
 
 /*
  * Recursive function to fetch an objectives parents.
- * 
+ *
  * @param int $objective_id
  * @param int $level
  * @return array
@@ -16469,7 +16478,7 @@ function count_objective_child_events($objective_id = 0, $start = NULL, $end = N
 	$output[$objective_id] = $db->GetOne($query);
 
 	/* Fetch objective children */
-	$query = "	SELECT a.`objective_id` 
+	$query = "	SELECT a.`objective_id`
 				FROM `global_lu_objectives` AS a
 				JOIN `objective_organisation` AS b
 				ON a.`objective_id` = b.`objective_id`
@@ -16516,7 +16525,7 @@ function count_objective_child_courses($objective_id = 0, $level = 0) {
 	$output[$objective_id] = $db->GetOne($query);
 
 	/* Fetch objective children */
-	$query = "	SELECT a.`objective_id` 
+	$query = "	SELECT a.`objective_id`
 				FROM `global_lu_objectives` AS a
 				JOIN `objective_organisation` AS b
 				ON a.`objective_id` = b.`objective_id`
@@ -16531,7 +16540,7 @@ function count_objective_child_courses($objective_id = 0, $level = 0) {
 					$return = array_sum($child_count);
 			} else {
 				$return = $course_count;
-			}	
+			}
 			$output[$child["objective_id"]] = $return;
 		}
 	}

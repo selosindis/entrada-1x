@@ -4,13 +4,13 @@ function renderDOM(jsonResponse, link) {
 		for (var i=0; i < jsonResponse.child_objectives.length; i++) {
 			var new_list_item = jQuery(document.createElement("li"));
 			var count;
-			
+
 			if (jsonResponse.child_objectives[i].course_count || jsonResponse.child_objectives[i].event_count) {
 				count = ((COURSE != "" ? 0 : parseInt(jsonResponse.child_objectives[i].course_count)) + parseInt(jsonResponse.child_objectives[i].event_count));
 			} else {
 				count = parseInt((jsonResponse.courses != null ? jsonResponse.courses.length : 0)) + parseInt((jsonResponse.events != null ? jsonResponse.events.length : 0));
 			}
-			 
+
 			var color = "green";
 			if (count < 5) {
 				color = "red";
@@ -20,7 +20,7 @@ function renderDOM(jsonResponse, link) {
 			new_list_item.append(
 				jQuery(document.createElement("a"))
 					.addClass("objective-link")
-					.attr("href", SITE_URL + "/curriculumexplorer?objective_parent="+jsonResponse.child_objectives[i].objective_parent + "&id=" + jsonResponse.child_objectives[i].objective_id + "&step=2")
+					.attr("href", SITE_URL + "/curriculum/explorer?objective_parent="+jsonResponse.child_objectives[i].objective_parent + "&id=" + jsonResponse.child_objectives[i].objective_id + "&step=2")
 					.attr("data-id", jsonResponse.child_objectives[i].objective_id)
 					.html(jsonResponse.child_objectives[i].objective_name))
 					.prepend("<span class=\"" + color + "\">" + ((COURSE != "" ? 0 : parseInt(jsonResponse.child_objectives[i].course_count)) + parseInt(jsonResponse.child_objectives[i].event_count)) + "</span>");
@@ -83,7 +83,7 @@ function renderDOM(jsonResponse, link) {
 	}
 
 	if (typeof jsonResponse.breadcrumb != "undefined") {
-		jQuery("#objective-breadcrumb").html(jsonResponse.breadcrumb);	
+		jQuery("#objective-breadcrumb").html(jsonResponse.breadcrumb);
 	}
 }
 
@@ -95,7 +95,7 @@ jQuery(function(){
 		link.children("span").remove();
 		jQuery("#objective-details").html("<h1>"+link.html()+"</h1>" + "<div class=\"loading display-generic\">Loading...<br /><img src=\""+SITE_URL+"/images/loading.gif\" /></div>");
 		jQuery.ajax({
-			url: SITE_URL + "/curriculumexplorer?mode=ajax&objective_parent=" + jQuery(this).attr("data-id") + "&year=" + YEAR + "&course_id=" + COURSE + "&count=" + COUNT,
+			url: SITE_URL + "/curriculum/explorer?mode=ajax&objective_parent=" + jQuery(this).attr("data-id") + "&year=" + YEAR + "&course_id=" + COURSE + "&count=" + COUNT,
 			success: function(data) {
 				var jsonResponse = JSON.parse(data);
 				renderDOM(jsonResponse, link);

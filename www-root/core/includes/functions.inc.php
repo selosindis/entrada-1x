@@ -25,7 +25,6 @@
  *
 */
 
-
 function get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER) {
 	global $db;
 
@@ -155,6 +154,7 @@ function get_next_ancestor_sibling($COMMUNITY_ID, $PARENT_ID, $PAGE_ORDER) {
 		return $result2;
 	}
 }
+
 /**
  * Returns username and password based matching employee / student number returned by CAS.
  *
@@ -641,7 +641,7 @@ function navigator_tabs() {
 
 			if (isset($module_item["children"]) && is_array($module_item["children"]) && !empty($module_item["children"])) {
 				$has_children = true;
-				$css_classes[] = "sub-menu";
+				$css_classes[] = "dropdown";
 			}
 
 			if ($counter == 1) {
@@ -649,7 +649,7 @@ function navigator_tabs() {
 			}
 
 			if ($has_children) {
-				$tab_children .= "<ul class=\"drop_options\">";
+				$tab_children .= "<ul class=\"dropdown-menu\">";
 
 				foreach ($module_item["children"] as $child_shortname => $child_item) {
 					$child_active = false;
@@ -687,10 +687,12 @@ function navigator_tabs() {
 			}
 
 			$tab  = "<li".(!empty($css_classes) ? " class=\"".implode(" ", $css_classes)."\"" : "").">";
-			$tab .= "	<a href=\"".ENTRADA_RELATIVE."/".$shortname."\"><span>".$module_item["title"]."</span></a>";
 			if ($tab_children) {
+    			$tab .= "<a href=\"#\" class=\"dropdown-toggle\" data-toggle=\"dropdown\">".$module_item["title"]." <b class=\"caret\"></b></a>";
 				$tab .= $tab_children;
-			}
+			} else {
+    			$tab .= "<a href=\"".ENTRADA_RELATIVE."/".$shortname."\">".$module_item["title"]."</a>";
+            }
 			$tab .= "</li>\n";
 
 			// Push excess public tabs into more

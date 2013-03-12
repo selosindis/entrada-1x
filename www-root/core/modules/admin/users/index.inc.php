@@ -110,8 +110,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 									AND b.`group` = ".$db->qstr($browse_group)."
-									".(($browse_role) ? "AND b.`role` = ".$db->qstr($browse_role) : "")."
-									GROUP BY a.`id`";
+									".(($browse_role) ? "AND b.`role` = ".$db->qstr($browse_role) : "");
 				$query_search	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -152,8 +151,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									LEFT JOIN `".AUTH_DATABASE."`.`user_departments` AS c
 									ON c.`user_id` = a.`id`
 									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									AND c.`dep_id` = ".$db->qstr($browse_department)."
-									GROUP BY a.`id`";
+									AND c.`dep_id` = ".$db->qstr($browse_department);
 				$query_search = "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -176,14 +174,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			if (!$ERROR) {
 				$search_query_text = "Newest ".(int) $browse_number." User".(($browse_number != 1) ? "s" : "");
 
-				$query_counter = "	SELECT ".(int) $browse_number." AS `total_rows`";
-				$query_search = "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
+				$query_counter = "	SELECT COUNT(DISTINCT(a.`id`)) AS `total_rows`
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+									JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
 									AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									ORDER BY `id` DESC
+									ORDER BY a.`id` DESC
+									LIMIT 0, ".(int) $browse_number;
+				$query_search = "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
+									FROM `".AUTH_DATABASE."`.`user_data` AS a
+									JOIN `".AUTH_DATABASE."`.`user_access` AS b
+									ON b.`user_id` = a.`id`
+									AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+                                    GROUP BY a.`id`
+									ORDER BY a.`id` DESC
 									LIMIT 0, ".(int) $browse_number;
 			}
 		break;
@@ -404,10 +408,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					<td style="vertical-align: top"><label for="number" class="form-required">Number of Newest Users:</label></td>
 					<td>
 						<select id="number" name="n" style="width: 100px">
-						<option value="25">25</option>
-						<option value="50">50</option>
-						<option value="75">75</option>
-						<option value="100">100</option>
+						<option value="25"<?php echo (isset($browse_number) && $browse_number == 25 ? " selected=\"selected\"" : ""); ?>>25</option>
+						<option value="50"<?php echo (isset($browse_number) && $browse_number == 50 ? " selected=\"selected\"" : ""); ?>>50</option>
+						<option value="75"<?php echo (isset($browse_number) && $browse_number == 75 ? " selected=\"selected\"" : ""); ?>>75</option>
+						<option value="100"<?php echo (isset($browse_number) && $browse_number == 100 ? " selected=\"selected\"" : ""); ?>>100</option>
 						</select>
 					</td>
 				</tr>

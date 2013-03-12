@@ -22,7 +22,7 @@
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
-*/
+ */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	exit;
@@ -721,9 +721,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 													<option value="0">-- Select the course this event belongs to --</option>
 													<?php
 													foreach($results as $result) {
-														if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $event_info["organisation_id"]), "create")) {
+														if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $event_info["organisation_id"]), "create") || $ENTRADA_ACL->amIAllowed(new EventClosedResource($EVENT_ID, $result["course_id"], $event_info["organisation_id"]), "update")) {
 															echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode(($result["course_code"] ? $result["course_code"].": " : "").$result["course_name"])."</option>\n";
-														}
+                                                        }
 													}
 													?>
 												</select>
@@ -825,13 +825,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											<input type="hidden" id="associated_faculty" name="associated_faculty" />
 											<input type="button" class="button-sm" id="add_associated_faculty" value="Add" style="vertical-align: middle" />
 											<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+											<script type="text/javascript">
+											jQuery(function(){
+												jQuery("#faculty_list img.list-cancel-image").live("click", function(){
+													var proxy_id = jQuery(this).attr("rel");
+													if ($('faculty_'+proxy_id)) {
+														var associated_faculty = jQuery("#associated_faculty").val().split(",");
+														var remove_index = associated_faculty.indexOf(proxy_id);
+
+														associated_faculty.splice(remove_index, 1);
+
+														jQuery("#associated_faculty").val(associated_faculty.join());
+
+														$('faculty_'+proxy_id).remove();
+													}
+												});
+											});
+											</script>
 											<ul id="faculty_list" class="menu" style="margin-top: 15px">
 												<?php
 												if (is_array($PROCESSED["associated_faculty"]) && count($PROCESSED["associated_faculty"])) {
 													foreach ($PROCESSED["associated_faculty"] as $faculty) {
 														if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
 															?>
-															<li class="user" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name ="faculty_role[]" style="float:right;margin-right:30px;margin-top:-5px;"><option value="teacher" <?php if($PROCESSED["display_role"][$faculty] == "teacher") echo "SELECTED";?>>Teacher</option><option value="tutor" <?php if($PROCESSED["display_role"][$faculty] == "tutor") echo "SELECTED";?>>Tutor</option><option value="ta" <?php if($PROCESSED["display_role"][$faculty] == "ta") echo "SELECTED";?>>Teacher's Assistant</option><option value="auditor" <?php if($PROCESSED["display_role"][$faculty] == "auditor") echo "SELECTED";?>>Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+															<li class="user" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name ="faculty_role[]" style="float:right;margin-right:30px;margin-top:-5px;"><option value="teacher" <?php if($PROCESSED["display_role"][$faculty] == "teacher") echo "SELECTED";?>>Teacher</option><option value="tutor" <?php if($PROCESSED["display_role"][$faculty] == "tutor") echo "SELECTED";?>>Tutor</option><option value="ta" <?php if($PROCESSED["display_role"][$faculty] == "ta") echo "SELECTED";?>>Teacher's Assistant</option><option value="auditor" <?php if($PROCESSED["display_role"][$faculty] == "auditor") echo "SELECTED";?>>Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" rel="<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" class="list-cancel-image" /></li>
 															<?php
 														}
 													}
@@ -927,6 +944,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							var audience_type;
 
 							function showMultiSelect() {
+                                if ($('display-notice-box')) {
+                                    $('display-notice-box').hide();
+                                }
+
 								$$('select_multiple_container').invoke('hide');
 								audience_type = $F('audience_type');
 								course_id = $F('course_id');

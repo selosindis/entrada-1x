@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * This file displays the list of objectives pulled 
+ * This file displays the list of objectives pulled
  * from the entrada.global_lu_objectives table.
  *
  * @author Organisation: Queen's University
@@ -41,30 +41,27 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/sortable_tree.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-	
-	echo "<h1>Manage Objectives</h1>";
-	if($ENTRADA_ACL->amIAllowed('objective', 'create', false)) { 
-		?>
 
+	echo "<h1>Manage Objective Sets</h1>";
+	if($ENTRADA_ACL->amIAllowed('objective', 'create', false)) {
+		?>
 		<div class="clearfix">
 			<div class="pull-right">
 				<a href="<?php echo ENTRADA_URL; ?>/admin/settings/manage/objectives?section=add&amp;org=<?php echo $ORGANISATION_ID; ?>&amp;step=1" class="btn btn-primary">Add New Objective</a>
 			</div>
-
 		</div>
 		<div style="clear: both"></div>
-		<?php 
+		<?php
 	}
-	
+
 	$query = "	SELECT a.* FROM `global_lu_objectives` AS a
 				LEFT JOIN `objective_organisation` AS b
 				ON a.`objective_id` = b.`objective_id`
-				WHERE a.`objective_parent` = '0' 
-				AND a.`objective_active` = '1' 
+				WHERE a.`objective_parent` = '0'
+				AND a.`objective_active` = '1'
 				AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 				ORDER BY a.`objective_order` ASC";
 	$result = $db->GetAll($query);
-	
 	if(isset($result) && count($result)>0){
 		?>
 		<form action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives?".replace_query(array("section" => "delete", "step" => 1, "org" => $ORGANISATION_ID)); ?>" method="post">
@@ -72,13 +69,19 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				<thead>
 					<tr>
 						<td class="modified">&nbsp;</td>
-						<td class="title">Objectives</td>
+						<td class="title">Objective Sets</td>
 					</tr>
 				</thead>
-			</table>	
+			</table>
+			<ul class="objectives-list">
 			<?php
-			echo objectives_inlists_conf(0, 0, array('id'=>'pagelists'));
+//			echo objectives_inlists_conf(0, 0, array('id'=>'pagelists'));
+			foreach ($result as $objective) {
+				echo "<li><div class=\"objective-container\"><span class=\"delete\" style=\"width:27px;display:inline-block;\"><input type=\"checkbox\" id=\"delete_".$objective["objective_id"]."\" name=\"delete[".$objective["objective_id"]."][objective_id]\" value=\"".$objective["objective_id"]."\"".(($selected == $objective["objective_id"]) ? " checked=\"checked\"" : "")." onclick=\"$$('#".$objective["objective_id"]."-children input[type=checkbox]').each(function(e){e.checked = $('delete_".$objective["objective_id"]."').checked; if (e.checked) e.disable(); else e.enable();});\"/></span>\n";
+				echo "<a href=\"" . ENTRADA_URL . "/admin/settings/manage/objectives?" . replace_query(array("section" => "edit", "id" => $objective["objective_id"])) . "\">".$objective["objective_name"]."</a></div></li>";
+			}
 			?>
+			</ul>
 			<input type="submit" class="button" value="Delete Selected" />
 		</form>
 		<?php

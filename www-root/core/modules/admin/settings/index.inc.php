@@ -37,28 +37,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	?>
 	<h1>Manage Organisations</h1>
 	<?php
-		if($ENTRADA_ACL->amIAllowed("configuration", "create")){?>
-		<div class="pull-right">
-				<a href="<?php echo ENTRADA_URL; ?>/admin/settings?section=add" class="btn btn-primary">Add New Organisation</a>
-		</div>	
-	<?php
-		}
+    if($ENTRADA_ACL->amIAllowed("configuration", "create")) {
+        ?>
+        <div class="pull-right">
+            <a href="<?php echo ENTRADA_URL; ?>/admin/settings?section=add" class="btn btn-primary">Add New Organisation</a>
+        </div>
+        <?php
+    }
 
-	if (strtolower($ENTRADA_USER->getActiveGroup()) == "medtech" && strtolower($ENTRADA_USER->getActiveRole()) == "admin") {
-		$query = "	SELECT a.*
-					FROM `" . AUTH_DATABASE . "`.`organisations` AS a
-					WHERE a.`organisation_active` = '1'
-					ORDER BY a.`organisation_title` ASC";
-	} else {
-		$query = "	SELECT a.*
-					FROM `".AUTH_DATABASE."`.`organisations` AS a
-					JOIN `".AUTH_DATABASE."`.`user_access` AS b
-					ON a.`organisation_id` = b.`organisation_id`
-					WHERE b.`user_id` = ".$db->qstr($ENTRADA_USER->getID())."
-					AND a.`organisation_active` = '1'
-					GROUP BY a.`organisation_id`
-					ORDER BY a.`organisation_title` ASC";
-	}
+    $query = "	SELECT a.*
+                FROM `" . AUTH_DATABASE . "`.`organisations` AS a
+                WHERE a.`organisation_active` = '1'
+                ORDER BY a.`organisation_title` ASC";
 	$results = $db->GetAll($query);
 	if ($results) {
 		$organisations = array();

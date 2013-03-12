@@ -28,8 +28,9 @@ require_once("Entrada/authentication/aclfactory.inc.php");
 require_once("Entrada/authentication/entrada_acl.inc.php");
 
 if (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] && isset($_SESSION["details"])) {
+	$access_hash_flag = (User::getAccessHash() == $ENTRADA_CACHE->load("access_hash_" . $ENTRADA_USER->getID())) ? true : false;
 	if ((isset($ENTRADA_CACHE)) && (!DEVELOPMENT_MODE)) {
-		if (!($ENTRADA_CACHE->test("acl_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID()))) {
+		if (!($ENTRADA_CACHE->test("acl_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID())) || !$access_hash_flag) {
 			$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
 			$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
 		} else {

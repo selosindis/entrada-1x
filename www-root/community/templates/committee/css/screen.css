@@ -541,7 +541,7 @@ section.left-space{
 	color:#616161;
 }
 .content {
-	margin-right:10px;
+	margin-right:0 15px;
 }
 .content h1{
 	font-size:2.6em;
@@ -979,7 +979,8 @@ ul.page-action li:last-child {
 div.community-page-list.home {
 	border-bottom:1px dotted #eee;
 	margin-top:10px;
-	padding-left:21px;
+	margin-left: 27px;
+	padding-left: 15px;
 }
 
 /*From buttons*/

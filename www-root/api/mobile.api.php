@@ -1,5 +1,4 @@
 <?php
-
 @set_include_path(implode(PATH_SEPARATOR, array(
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
@@ -17,11 +16,13 @@ $user_details = array();
 if (isset($_POST["method"]) && $tmp_input = clean_input($_POST["method"], "alphanumeric")) {
 	$method = $tmp_input;
 }
-if (isset($_POST["sub_method"]) && $tmp_input = clean_input($_POST["sub_method"], "alphanumeric")) {
-	$sub_method = $tmp_input;
-}
+
 if (isset($_POST["notice_id"]) && $tmp_input = clean_input($_POST["notice_id"], "alphanumeric")) {
 	$notice_id = $tmp_input;
+}
+
+if (isset($_POST["total_notices"]) && $tmp_input = clean_input($_POST["total_notices"], "alphanumeric")) {
+	$total_notices = $tmp_input;
 }
 
 if (isset($_POST["username"]) && isset($_POST["password"]) && !empty($_POST["username"]) && !empty($_POST["password"])) {
@@ -127,11 +128,15 @@ if ($isAuthenticated) {
 	
 	$ENTRADA_USER = User::get($user_details["id"]);
 	$user_details["access_id"] = $ENTRADA_USER->getAccessId();
+	
 	$ENTRADA_ACL = new Entrada_Acl($user_details);
 	
 	switch ($method) {
-		case "fetchHash" :
+		case "hash" :
 			echo $user_details["private_hash"];
+			break;
+		case "credentials" :
+			echo true;
 			break;
 		case "agenda":
 			$user_proxy_id = $user_details["id"];
@@ -178,9 +183,7 @@ if ($isAuthenticated) {
 								"end_date" => date("o-m-d G:i", $event["event_finish"]),
 								"text" => strip_tags($event["event_title"]),
 								"details" => $event["event_description"]. "<br /><b>Event Duration: </b>". $event["event_duration"] . " minutes <br /><b>Location: </b>". ($event["event_location"] == "" ? "To be announced" : $event["event_location"]) ."<br /><a href='https://meds.queensu.ca/central/events?id=".$event["event_id"]."' data-role='button' class='back' rel='external' target='_blank'>Review Learning Event</a>",
-								
 					);
-
 				}
 			}
 
@@ -253,57 +256,34 @@ if ($isAuthenticated) {
 						ORDER BY a.`updated_date` DESC, a.`display_until` ASC";
 			$notices_to_display = array();
 			$results = $db->GetAll($query);
+			$previous_notices = array();
+			
 			if ($results) {
 				$rows = 0;
-				switch ($sub_method) {
-					//case "fetchnotices" :
-						/*$output = "";
-						foreach ($results as $result) {
-							$date = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
-							if ((!$result["statistic_id"]) || ($result["last_read"] <= $result["updated_date"])) {
-								//$output .= "<li data-theme='d' data-role='button' id=".$result['notice_id']." class='ui-btn notice_button'><a href='#notice_page' data-transition='slide'>".$date."</a><br />";
-								
-								$output .= "<div data-role=\"collapsible\" data-theme=\"b\" data-content-theme=\"b\" id=\"notice-container".$result["notice_id"]."\" class=\"new-notice-container\">";
-								$output .=	   "<h3 id='date".$result["notice_id"]."'>".$date."</h3>";
-								$output .=     "<a href='#' id='".$result["notice_id"]."' style=\"width:190px;\" data-role='button' data-icon='delete' class='mark_read'>Mark as Read</a>";
-								$output .=     "<p id='summary".$result["notice_id"]."'>".$result["notice_summary"]."</p>";
-								$output .= "</div>";
-								
-								//$output .=	"</li>";
-							}
-							
-							//$result["last_read"] = date(DEFAULT_DATE_FORMAT, $result["last_read"]);
-							$notices_to_display[] = $result;
-						}
-						echo json_encode($notices_to_display);
-						//echo $output;
-					break;*/
-					case "fetchnotices" :
-						foreach ($results as $result) {
-							//$result["default_date"][] = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
-							//$result["last_read"] = date(DEFAULT_DATE_FORMAT, $result["last_read"]);
-							$result["updated_date"] = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
-							$notices_to_display[] = $result;
-						}
-						echo json_encode($notices_to_display);
-					break;
-					case "countnotices" :
-						foreach ($results as $result) {
-							if ((!$result["statistic_id"]) || ($result["last_read"] <= $result["updated_date"])) {
-								$rows ++;
-							}
-						}
-						echo $rows;
-					break;
-					case "markread" :
-						add_statistic("notices", "read", "notice_id", $notice_id, $user_proxy_id);
-					break;
-
+				foreach ($results as $result) {
+					if ((!$result["statistic_id"]) || ($result["last_read"] <= $result["updated_date"])) {
+						$result['notice_status'] = 'new';
+						$result["updated_date"] = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
+						$notices_to_display[] = $result;
+					} else {
+						$result['notice_status'] = 'read';
+						$result["updated_date"] = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
+						$notices_to_display[] = $result;
+					}
+					$rows ++;
+				}
+				
+				if ($rows != $total_notices) {
+					echo json_encode($notices_to_display, JSON_FORCE_OBJECT);
+				} else {
+					echo 'false';
 				}
 			}
 			break;
+		case 'mark':
+			add_statistic("notices", "read", "notice_id", $notice_id, $user_details['id']);
+			echo $notice_id;
+			break;
 	}
 }
-
-	
 ?>

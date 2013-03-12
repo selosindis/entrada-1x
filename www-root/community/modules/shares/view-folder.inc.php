@@ -103,7 +103,7 @@ if ($RECORD_ID) {
 					AND c.`cpage_id` = ".$db->qstr($PAGE_ID)."
 					AND a.`file_active` = '1'
 					".((!$LOGGED_IN) ? " AND c.`allow_public_read` = '1'" : (($COMMUNITY_MEMBER) ? ((!$COMMUNITY_ADMIN) ? " AND c.`allow_member_read` = '1'" : "") : " AND c.`allow_troll_read` = '1'"))."
-					".((!$COMMUNITY_ADMIN) ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "");
+					".((!$COMMUNITY_ADMIN) ? ($LOGGED_IN ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR " : " AND (")."(a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "");
 			$result	= $db->GetRow($query);
 			if ($result) {
 				$TOTAL_ROWS	= $result["total_rows"];
@@ -153,7 +153,7 @@ if ($RECORD_ID) {
 						{
 							id:				'requestDialog',
 							width:			350,
-							height:			125,
+							height:			165,
 							title:			'Delete Confirmation',
 							className:		'medtech',
 							okLabel:		'Yes',
@@ -174,7 +174,7 @@ if ($RECORD_ID) {
 						{
 							id:				'requestDialog',
 							width:			350,
-							height:			165,
+							height:			205,
 							title:			'Move File',
 							className:		'medtech',
 							okLabel:		'Yes',
@@ -204,7 +204,7 @@ if ($RECORD_ID) {
 				?>
 			</div>
 			<div style="padding-top: 10px; clear: both">
-				<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) { ?>
+				<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $LOGGED_IN && $_SESSION["details"]["notifications"]) { ?>
 					<div id="notifications-toggle" style="position: absolute; padding-top: 14px;"></div>
 					<script type="text/javascript">
 					function promptNotifications(enabled) {
@@ -212,7 +212,7 @@ if ($RECORD_ID) {
 							{
 								id:				'requestDialog',
 								width:			350,
-								height:			75,
+								height:			95,
 								title:			'Notification Confirmation',
 								className:		'medtech',
 								okLabel:		'Yes',
@@ -272,7 +272,7 @@ if ($RECORD_ID) {
 								AND a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
 								AND a.`file_active` = '1'
 								".((!$LOGGED_IN) ? " AND c.`allow_public_read` = '1'" : (($COMMUNITY_MEMBER) ? ((!$COMMUNITY_ADMIN) ? " AND c.`allow_member_read` = '1'" : "") : " AND c.`allow_troll_read` = '1'"))."
-								".((!$COMMUNITY_ADMIN) ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "")."
+								".((!$COMMUNITY_ADMIN) ? ($LOGGED_IN ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR " : " AND (")."(a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "")."
 								ORDER BY %s
 								LIMIT %s, %s";
 				$query		= sprintf($query, $SORT_BY, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"]);
@@ -337,8 +337,9 @@ if ($RECORD_ID) {
 				?>
 			</div>
 			<?php
-			
-			add_statistic("community:".$COMMUNITY_ID.":shares", "folder_view", "cshare_id", $RECORD_ID);
+			if ($LOGGED_IN) {
+				add_statistic("community:".$COMMUNITY_ID.":shares", "folder_view", "cshare_id", $RECORD_ID);
+			}
 		} else {
 			if ($ERROR) {
 				echo display_error();

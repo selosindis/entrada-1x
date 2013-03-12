@@ -152,6 +152,7 @@ class NotificationUser {
 			case "evaluation" :
 			case "evaluation_overdue" :
 			case "evaluation_threshold" :
+			case "evaluation_request" :
 				$query = "SELECT `target_title` FROM `evaluations_lu_targets` AS a
 							JOIN `evaluation_forms` AS b
 							ON a.`target_id` = b.`target_id`
@@ -195,6 +196,7 @@ class NotificationUser {
 			case "evaluation" :
 			case "evaluation_threshold" :
 			case "evaluation_overdue" :
+			case "evaluation_request" :
 				$query = "SELECT `evaluation_title` FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($this->record_id);
 				if ($evaluation_title = $db->GetOne($query)) {
 					$content_title = $evaluation_title;
@@ -228,6 +230,7 @@ class NotificationUser {
 			case "evaluation" :
 			case "evaluation_threshold" :
 			case "evaluation_overdue" :
+			case "evaluation_request" :
 				$query = "SELECT `evaluation_description` FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($this->record_id);
 				if ($evaluation_description = $db->GetOne($query)) {
 					$content_body = $evaluation_description;
@@ -259,6 +262,7 @@ class NotificationUser {
 			break;
 			case "evaluation" :
 			case "evaluation_overdue" :
+			case "evaluation_request" :
 				$content_url = ENTRADA_URL."/evaluations?section=attempt&id=".$this->getRecordID();
 			break;
 			case "evaluation_threshold" :

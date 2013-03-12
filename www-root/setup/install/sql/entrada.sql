@@ -1150,6 +1150,7 @@ CREATE TABLE IF NOT EXISTS `communities` (
   `community_parent` int(12) NOT NULL DEFAULT '0',
   `category_id` int(12) NOT NULL DEFAULT '0',
   `community_url` text NOT NULL,
+  `octype_id` int(12) NOT NULL DEFAULT '1',
   `community_template` varchar(30) NOT NULL DEFAULT 'default',
   `community_theme` varchar(12) NOT NULL DEFAULT 'default',
   `community_shortname` varchar(32) NOT NULL,
@@ -1254,7 +1255,7 @@ INSERT INTO `communities_modules` (`module_id`, `module_shortname`, `module_vers
 (4, 'shares', '1.0.0', 'Document Sharing', 'The Document Sharing module gives you the ability to upload and share documents within your community.', 1, 1, 'a:15:{s:11:"add-comment";i:0;s:10:"add-folder";i:1;s:8:"add-file";i:0;s:9:"move-file";i:0;s:12:"add-revision";i:0;s:14:"delete-comment";i:0;s:13:"delete-folder";i:1;s:11:"delete-file";i:0;s:15:"delete-revision";i:0;s:12:"edit-comment";i:0;s:11:"edit-folder";i:1;s:9:"edit-file";i:0;s:5:"index";i:0;s:11:"view-folder";i:0;s:9:"view-file";i:0;}', 1173116408, 1),
 (5, 'polls', '1.0.0', 'Polling', 'This module allows communities to create their own polls for everything from adhoc open community polling to individual community member votes.', 1, 1, 'a:10:{s:8:"add-poll";i:1;s:12:"add-question";i:1;s:13:"edit-question";i:1;s:15:"delete-question";i:1;s:11:"delete-poll";i:1;s:9:"edit-poll";i:1;s:9:"view-poll";i:0;s:9:"vote-poll";i:0;s:5:"index";i:0;s:8:"my-votes";i:0;}', 1216256830, 1408),
 (6, 'events', '1.0.0', 'Events', 'The Events module allows you to post events to your community which will be accessible through iCalendar ics files or viewable in the community.', 1, 1, 'a:4:{s:3:"add";i:1;s:6:"delete";i:1;s:4:"edit";i:1;s:5:"index";i:0;}', 1225209600, 3499),
-(7, 'quizzes', '1.0.0', 'Quizzes', 'This module allows communities to create their own quizzes for summative or formative evaluation.', 1, 1, 'a:1:{s:5:\"index\";i:0;}', 1216256830, 3499),
+(7, 'quizzes', '1.0.0', 'Quizzes', 'This module allows communities to create their own quizzes for summative or formative evaluation.', 1, 1, 'a:4:{s:5:"index";i:0;s:7:"attempt";i:0;s:7:"results";i:0;s:13:"save-response";i:0;}', 1216256830, 3499),
 (8, 'mtdtracking', '1.0.0', 'MTD Tracking', 'The MTD Tracking module allows Program Assistants to enter the weekly schedule for each of their Residents.', 0, 0, 'a:2:{s:4:\"edit\";i:1;s:5:\"index\";i:0;}', 1216256830, 5440);
 
 CREATE TABLE IF NOT EXISTS `communities_most_active` (
@@ -1583,6 +1584,21 @@ CREATE TABLE IF NOT EXISTS `community_page_options` (
   KEY `cpage_id` (`cpage_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE `community_page_navigation` (
+  `cpnav_id` INT(12) NOT NULL AUTO_INCREMENT,
+  `community_id` INT(12) NOT NULL,
+  `cpage_id` INT(12) NOT NULL DEFAULT '0',
+  `nav_page_id` int(11) DEFAULT NULL,
+  `show_nav` INT(1) NOT NULL DEFAULT '1',
+  `nav_title` VARCHAR(100) NOT NULL DEFAULT 'Next',
+  `nav_type` ENUM('next','previous') NOT NULL DEFAULT 'next',
+  `nav_url` varchar(1000) DEFAULT NULL,
+  `updated_date` BIGINT(64) NOT NULL DEFAULT '0',
+  `updated_by` INT(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`cpnav_id`),
+  KEY `cpage_id` (`cpage_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `community_permissions` (
   `cpermission_id` int(12) NOT NULL AUTO_INCREMENT,
   `community_id` int(12) NOT NULL DEFAULT '0',
@@ -1806,6 +1822,103 @@ INSERT INTO `community_templates` (`template_id`, `template_name`, `template_des
 (4,'learningmodule','',NULL,NULL,NULL),
 (5,'course','',NULL,NULL,NULL);
 
+CREATE TABLE IF NOT EXISTS `community_type_page_options` (
+  `ctpoption_id` int(12) NOT NULL AUTO_INCREMENT,
+  `ctpage_id` int(12) NOT NULL,
+  `option_title` varchar(32) NOT NULL,
+  `option_value` int(12) NOT NULL DEFAULT '1',
+  `proxy_id` int(12) NOT NULL DEFAULT '0',
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`ctpoption_id`,`ctpage_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `community_type_pages` (
+  `ctpage_id` int(12) NOT NULL AUTO_INCREMENT,
+  `type_id` int(12) NOT NULL DEFAULT '0',
+  `type_scope` enum('organisation','global') NOT NULL DEFAULT 'global',
+  `parent_id` int(12) NOT NULL DEFAULT '0',
+  `page_order` int(3) NOT NULL DEFAULT '0',
+  `page_type` varchar(16) NOT NULL DEFAULT 'default',
+  `menu_title` varchar(48) NOT NULL,
+  `page_title` text NOT NULL,
+  `page_url` varchar(512) DEFAULT NULL,
+  `page_content` longtext NOT NULL,
+  `page_active` tinyint(1) NOT NULL DEFAULT '1',
+  `page_visible` tinyint(1) NOT NULL DEFAULT '1',
+  `allow_member_view` tinyint(1) NOT NULL DEFAULT '1',
+  `allow_troll_view` tinyint(1) NOT NULL DEFAULT '1',
+  `allow_public_view` tinyint(1) NOT NULL DEFAULT '0',
+  `lock_page` tinyint(1) NOT NULL DEFAULT '0',
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`ctpage_id`),
+  KEY `type_id` (`type_id`, `type_scope`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `community_type_pages` (`ctpage_id`, `type_id`, `type_scope`, `parent_id`, `page_order`, `page_type`, `menu_title`, `page_title`, `page_url`, `page_content`, `page_active`, `page_visible`, `allow_member_view`, `allow_troll_view`, `allow_public_view`, `lock_page`, `updated_date`, `updated_by`)
+VALUES
+	(1,1,'global',0,0,'default','Home','Home','','',1,1,1,1,1,1,1362062187,1),
+	(2,1,'global',0,1,'announcements','Announcements','Announcements','announcements','',1,1,1,1,0,0,1362062187,1),
+	(3,1,'global',0,2,'discussions','Discussions','Discussions','discussions','',1,1,1,1,0,0,1362062187,1),
+	(8,1,'global',0,3,'shares','Document Sharing','Document Sharing','shares','',1,1,1,1,0,0,1362062187,1),
+	(4,1,'global',0,4,'events','Events','Events','events','',1,1,1,1,0,0,1362062187,1),
+	(5,1,'global',0,5,'galleries','Galleries','Galleries','galleries','',1,1,1,1,0,0,1362062187,1),
+	(6,1,'global',0,6,'polls','Polling','Polling','polls','',1,1,1,1,0,0,1362062187,1),
+	(7,1,'global',0,7,'quizzes','Quizzes','Quizzes','quizzes','',1,1,1,1,0,0,1362062187,1),
+	(9,2,'global',0,0,'course','Background','Background Information','',' ',1,1,1,0,1,1,1362062187,1),
+	(10,2,'global',0,1,'course','Course Calendar','Course Calendar','course_calendar',' ',1,1,1,0,1,1,1362062187,1),
+	(11,2,'global',0,2,'default','Prerequisites','Prerequisites (Foundational Knowledge)','prerequisites',' ',1,1,1,0,1,1,1362062187,1),
+	(12,2,'global',0,3,'default','Course Aims','Aims of the Course','course_aims',' ',1,1,1,0,1,1,1362062187,1),
+	(13,2,'global',0,4,'course','Learning Objectives','Learning Objectives','objectives',' ',1,1,1,0,1,1,1362062187,1),
+	(14,2,'global',0,5,'course','MCC Presentations','MCC Presentations','mcc_presentations',' ',1,1,1,0,1,1,1362062187,1),
+	(15,2,'global',0,6,'default','Teaching Strategies','Teaching and Learning Strategies','teaching_strategies',' ',1,1,1,0,1,1,1362062187,1),
+	(16,2,'global',0,7,'default','Assessment Strategies','Assessment Strategies','assessment_strategies',' ',1,1,1,0,1,1,1362062187,1),
+	(17,2,'global',0,8,'default','Resources','Resources','resources',' ',1,1,1,0,1,1,1362062187,1),
+	(18,2,'global',0,9,'default','Expectations of Students','What is Expected of Students','expectations_of_students',' ',1,1,1,0,1,1,1362062187,1),
+	(19,2,'global',0,10,'default','Expectations of Faculty','What is Expected of Course Faculty','expectations_of_faculty',' ',1,1,1,0,1,1,1362062187,1),
+	(20,1,'organisation',0,0,'default','Home','Home','','',1,1,1,1,1,1,1362062187,1),
+	(21,1,'organisation',0,0,'announcements','Announcements','Announcements','announcements','',1,1,1,1,0,0,1362062187,1),
+	(22,1,'organisation',0,1,'discussions','Discussions','Discussions','discussions','',1,1,1,1,0,0,1362062187,1),
+	(23,1,'organisation',0,3,'events','Events','Events','events','',1,1,1,1,0,0,1362062187,1),
+	(24,1,'organisation',0,4,'galleries','Galleries','Galleries','galleries','',1,1,1,1,0,0,1362062187,1),
+	(25,1,'organisation',0,5,'polls','Polling','Polling','polls','',1,1,1,1,0,0,1362062187,1),
+	(26,1,'organisation',0,6,'quizzes','Quizzes','Quizzes','quizzes','',1,1,1,1,0,0,1362062187,1),
+	(27,1,'organisation',0,2,'shares','Document Sharing','Document Sharing','shares','',1,1,1,1,0,0,1362062187,1),
+	(28,2,'organisation',0,0,'course','Background','Background Information','',' ',1,1,1,0,1,1,1362062187,1),
+	(29,2,'organisation',0,1,'course','Course Calendar','Course Calendar','course_calendar',' ',1,1,1,0,1,1,1362062187,1),
+	(30,2,'organisation',0,2,'default','Prerequisites','Prerequisites (Foundational Knowledge)','prerequisites',' ',1,1,1,0,1,1,1362062187,1),
+	(31,2,'organisation',0,3,'default','Course Aims','Aims of the Course','course_aims',' ',1,1,1,0,1,1,1362062187,1),
+	(32,2,'organisation',0,4,'course','Learning Objectives','Learning Objectives','objectives',' ',1,1,1,0,1,1,1362062187,1),
+	(33,2,'organisation',0,5,'course','MCC Presentations','MCC Presentations','mcc_presentations',' ',1,1,1,0,1,1,1362062187,1),
+	(34,2,'organisation',0,6,'default','Teaching Strategies','Teaching and Learning Strategies','teaching_strategies',' ',1,1,1,0,1,1,1362062187,1),
+	(35,2,'organisation',0,7,'default','Assessment Strategies','Assessment Strategies','assessment_strategies',' ',1,1,1,0,1,1,1362062187,1),
+	(36,2,'organisation',0,8,'default','Resources','Resources','resources',' ',1,1,1,0,1,1,1362062187,1),
+	(37,2,'organisation',0,9,'default','Expectations of Students','What is Expected of Students','expectations_of_students',' ',1,1,1,0,1,1,1362062187,1),
+	(38,2,'organisation',0,10,'default','Expectations of Faculty','What is Expected of Course Faculty','expectations_of_faculty',' ',1,1,1,0,1,1,1362062187,1);
+
+CREATE TABLE IF NOT EXISTS `community_type_templates` (
+  `cttemplate_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `template_id` int(12) unsigned NOT NULL,
+  `type_id` int(12) unsigned NOT NULL,
+  `type_scope` enum('organisation','global') NOT NULL DEFAULT 'global',
+  PRIMARY KEY (`cttemplate_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `community_type_templates` (`cttemplate_id`, `template_id`, `type_id`, `type_scope`)
+VALUES
+	(1,1,1,'global'),
+	(2,2,1,'global'),
+	(3,3,1,'global'),
+	(4,4,1,'global'),
+	(5,5,1,'global'),
+	(6,5,2,'global'),
+	(7,1,1,'organisation'),
+	(8,2,1,'organisation'),
+	(9,3,1,'organisation'),
+	(10,4,1,'organisation'),
+	(11,5,1,'organisation'),
+	(12,5,2,'organisation');
+
 CREATE TABLE IF NOT EXISTS `courses` (
   `course_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `organisation_id` int(12) NOT NULL DEFAULT '0',
@@ -2021,6 +2134,8 @@ CREATE TABLE IF NOT EXISTS `evaluations` (
   `max_submittable` tinyint(1) NOT NULL DEFAULT '1',
   `evaluation_mandatory` tinyint(1) NOT NULL DEFAULT '1',
   `allow_target_review` tinyint(1) NOT NULL DEFAULT '0',
+  `allow_target_request` tinyint(1) NOT NULL DEFAULT '0',
+  `allow_repeat_targets` tinyint(1) NOT NULL DEFAULT '0',
   `show_comments` tinyint(1) NOT NULL DEFAULT '0',
   `threshold_notifications_type` enum('reviewers','tutors','directors','pcoordinators','authors','disabled') NOT NULL DEFAULT 'disabled',
   `release_date` bigint(64) NOT NULL,
@@ -2028,6 +2143,35 @@ CREATE TABLE IF NOT EXISTS `evaluations` (
   `updated_date` bigint(64) NOT NULL,
   `updated_by` bigint(64) NOT NULL,
   PRIMARY KEY (`evaluation_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `evaluations_lu_questions` (
+  `equestion_id` int(12) NOT NULL AUTO_INCREMENT,
+  `efquestion_id` int(12) NOT NULL DEFAULT '0',
+  `question_parent_id` int(12) NOT NULL DEFAULT '0',
+  `questiontype_id` int(12) NOT NULL,
+  `question_text` longtext NOT NULL,
+  `allow_comments` tinyint(1) NOT NULL DEFAULT '1',
+  `question_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`equestion_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `evaluations_lu_question_responses` (
+  `eqresponse_id` int(12) NOT NULL AUTO_INCREMENT,
+  `efresponse_id` int(12) NOT NULL,
+  `equestion_id` int(12) NOT NULL,
+  `response_text` longtext NOT NULL,
+  `response_order` tinyint(3) NOT NULL DEFAULT '0',
+  `response_is_html` tinyint(1) NOT NULL DEFAULT '0',
+  `minimum_passing_level` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`eqresponse_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `evaluations_lu_question_response_criteria` (
+  `eqrcriteria_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `eqresponse_id` int(11) DEFAULT NULL,
+  `criteria_text` text,
+  PRIMARY KEY (`eqrcriteria_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `evaluations_lu_questiontypes` (
@@ -2045,6 +2189,13 @@ INSERT INTO `evaluations_lu_questiontypes` (`questiontype_id`, `questiontype_sho
 (3, 'rubric', 'Rubric', 'The rating scale allows evaluators to rate each question based on the scale you provide, while also providing a short description of the requirements to meet each level on the scale (i.e. Level 1 to 4 of \\\"Professionalism\\\" for an assignment are qualified with what traits the learner is expected to show to meet each level, and while the same scale is used for \\\"Collaborator\\\", the requirements at each level are defined differently).', 1),
 (4, 'free_text', 'Free Text Comments', 'Allows the user to be asked for a simple free-text response. This can be used to get additional details about prior questions, or to simply ask for any comments from the evaluator regarding a specific topic.', 1);
 
+CREATE TABLE `evaluations_lu_rubrics` (
+  `erubric_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `rubric_title` varchar(32) DEFAULT NULL,
+  `rubric_description` text,
+  `efrubric_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`erubric_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `evaluations_lu_targets` (
   `target_id` int(11) NOT NULL AUTO_INCREMENT,
@@ -2063,8 +2214,15 @@ INSERT INTO `evaluations_lu_targets` (`target_id`, `target_shortname`, `target_t
 (5, 'rotation_elective', 'Clerkship Elective Rotation Evaluation', '', 1),
 (6, 'preceptor', 'Clerkship Preceptor Evaluation', '', 1),
 (7, 'peer', 'Peer Assessment', '', 1),
-(8, 'self', 'Self Assessment', '', 1);
+(8, 'self', 'Self Assessment', '', 1),
+(9, 'resident', 'Resident Evaluation', '', 1);
 
+CREATE TABLE `evaluations_related_questions` (
+  `erubric_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `related_equestion_id` int(11) unsigned NOT NULL,
+  `equestion_id` int(11) unsigned NOT NULL,
+  PRIMARY KEY (`erubric_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `evaluation_contacts` (
   `econtact_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -2133,8 +2291,7 @@ CREATE TABLE IF NOT EXISTS `evaluation_forms` (
 CREATE TABLE IF NOT EXISTS `evaluation_form_questions` (
   `efquestion_id` int(12) NOT NULL AUTO_INCREMENT,
   `eform_id` int(121) NOT NULL,
-  `questiontype_id` int(12) NOT NULL,
-  `question_text` longtext NOT NULL,
+  `equestion_id` int(12) NOT NULL,
   `question_order` tinyint(3) NOT NULL DEFAULT '0',
   `allow_comments` tinyint(1) NOT NULL DEFAULT '1',
   `send_threshold_notifications` tinyint(1) NOT NULL DEFAULT '0',
@@ -2148,38 +2305,6 @@ CREATE TABLE IF NOT EXISTS `evaluation_form_question_objectives` (
   `updated_date` bigint(64) DEFAULT NULL,
   `updated_by` int(12) DEFAULT NULL,
   PRIMARY KEY (`efqobjective_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `evaluation_form_response_criteria` (
-  `efrcriteria_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `efresponse_id` int(11) DEFAULT NULL,
-  `criteria_text` text,
-  PRIMARY KEY (`efrcriteria_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `evaluation_form_responses` (
-  `efresponse_id` int(12) NOT NULL AUTO_INCREMENT,
-  `efquestion_id` int(12) NOT NULL,
-  `response_text` longtext NOT NULL,
-  `response_order` tinyint(3) NOT NULL DEFAULT '0',
-  `response_is_html` tinyint(1) NOT NULL DEFAULT '0',
-  `minimum_passing_level` tinyint(1) NOT NULL DEFAULT '0',
-  PRIMARY KEY (`efresponse_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `evaluation_form_rubric_questions` (
-  `efrquestion_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `efrubric_id` int(11) DEFAULT NULL,
-  `efquestion_id` int(11) DEFAULT NULL,
-  PRIMARY KEY (`efrquestion_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `evaluation_form_rubrics` (
-  `efrubric_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
-  `eform_id` int(11) NOT NULL,
-  `rubric_title` varchar(32) DEFAULT NULL,
-  `rubric_description` text,
-  PRIMARY KEY (`efrubric_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `evaluation_progress` (
@@ -2208,11 +2333,19 @@ CREATE TABLE IF NOT EXISTS `evaluation_responses` (
   `eform_id` int(12) NOT NULL,
   `proxy_id` int(12) NOT NULL,
   `efquestion_id` int(12) NOT NULL,
-  `efresponse_id` int(12) NOT NULL,
-  `comments` text NULL,
+  `eqresponse_id` int(12) NOT NULL,
+  `comments` text,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
   PRIMARY KEY (`eresponse_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `evaluation_rubric_questions` (
+  `efrquestion_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `erubric_id` int(11) DEFAULT NULL,
+  `equestion_id` int(11) DEFAULT NULL,
+  `question_order` int(3) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`efrquestion_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `evaluation_targets` (
@@ -2743,6 +2876,39 @@ CREATE TABLE IF NOT EXISTS `drafts` (
   `preserve_elements` binary(4) DEFAULT NULL,
   PRIMARY KEY (`draft_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `global_lu_community_type_options` (
+  `ctoption_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `option_shortname` varchar(32) NOT NULL DEFAULT '',
+  `option_name` varchar(84) NOT NULL DEFAULT '',
+  PRIMARY KEY (`ctoption_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `global_lu_community_type_options` (`ctoption_id`, `option_shortname`, `option_name`)
+VALUES
+	(1,'course_website','Course Website Functionality'),
+	(2,'sequential_navigation','Learning Module Sequential Navigation');
+
+CREATE TABLE IF NOT EXISTS `global_lu_community_types` (
+  `ctype_id` int(12) NOT NULL AUTO_INCREMENT,
+  `community_type_name` varchar(84) DEFAULT NULL,
+  `default_community_template` varchar(30) NOT NULL DEFAULT 'default',
+  `default_community_theme` varchar(12) NOT NULL DEFAULT 'default',
+  `default_community_keywords` varchar(255) NOT NULL DEFAULT '',
+  `default_community_protected` int(1) NOT NULL DEFAULT '1',
+  `default_community_registration` int(1) NOT NULL DEFAULT '1',
+  `default_community_members` text NOT NULL,
+  `default_mail_list_type` enum('announcements','discussion','inactive') NOT NULL DEFAULT 'inactive',
+  `default_community_type_options` text NOT NULL,
+  `community_type_active` int(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`ctype_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `global_lu_community_types` (`ctype_id`, `community_type_name`, `default_community_template`, `default_community_theme`, `default_community_keywords`, `default_community_protected`, `default_community_registration`, `default_community_members`, `default_mail_list_type`, `default_community_type_options`, `community_type_active`)
+VALUES
+	(1,'Other','default','default','',1,0,'','inactive','{}',1),
+	(2,'Course Website','course','course','',1,0,'','inactive','{\"course_website\":\"1\"}',1),
+	(3,'Online Learning Module','learningmodule','default','',1,0,'','inactive','{\"sequential_navigation\":\"1\"}',1);
 
 CREATE TABLE IF NOT EXISTS `global_lu_countries` (
   `countries_id` int(6) NOT NULL AUTO_INCREMENT,
@@ -3786,6 +3952,28 @@ CREATE TABLE IF NOT EXISTS `objective_organisation` (
 
 INSERT INTO `objective_organisation` SELECT `objective_id`, 1 FROM `global_lu_objectives`;
 
+CREATE TABLE IF NOT EXISTS `org_community_types` (
+  `octype_id` int(12) NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(12) NOT NULL,
+  `community_type_name` varchar(84) NOT NULL DEFAULT '',
+  `default_community_template` varchar(30) NOT NULL DEFAULT 'default',
+  `default_community_theme` varchar(12) NOT NULL DEFAULT 'default',
+  `default_community_keywords` varchar(255) NOT NULL DEFAULT '',
+  `default_community_protected` int(1) NOT NULL DEFAULT '1',
+  `default_community_registration` int(1) NOT NULL DEFAULT '1',
+  `default_community_members` text NOT NULL,
+  `default_mail_list_type` enum('announcements','discussion','inactive') NOT NULL DEFAULT 'inactive',
+  `community_type_options` text NOT NULL,
+  `community_type_active` int(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`octype_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `org_community_types` (`octype_id`, `organisation_id`, `community_type_name`, `default_community_template`, `default_community_theme`, `default_community_keywords`, `default_community_protected`, `default_community_registration`, `default_community_members`, `default_mail_list_type`, `community_type_options`, `community_type_active`)
+VALUES
+	(1,1,'Community','default','default','',1,0,'','inactive','{}',1),
+	(2,1,'Course Website','course','course','',1,0,'','inactive','{\"course_website\":\"1\"}',1),
+	(3,1,'Learning Module','learningmodule','default','',1,0,'','inactive','{\"sequential_navigation\":\"1\"}',1);
+
 CREATE TABLE IF NOT EXISTS `permissions` (
   `permission_id` int(12) NOT NULL AUTO_INCREMENT,
   `assigned_by` int(12) NOT NULL DEFAULT '0',
@@ -3939,8 +4127,8 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1400'),
-('version_entrada', '1.4.0');
+('version_db', '1410'),
+('version_entrada', '1.4.1');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -4393,7 +4581,9 @@ CREATE TABLE IF NOT EXISTS `groups` (
 INSERT INTO `groups` (`group_id`, `group_name`, `group_type`, `group_active`, `updated_date`, `updated_by`)	VALUES
 (1, CONCAT('Class of ', YEAR(CURRENT_DATE())), 'cohort', 1, UNIX_TIMESTAMP(), 1),
 (2, CONCAT('Class of ', YEAR(CURRENT_DATE())+1), 'cohort', 1, UNIX_TIMESTAMP(), 1),
-(3, CONCAT('Class of ', YEAR(CURRENT_DATE())+2), 'cohort', 1, UNIX_TIMESTAMP(), 1);
+(3, CONCAT('Class of ', YEAR(CURRENT_DATE())+2), 'cohort', 1, UNIX_TIMESTAMP(), 1),
+(4, CONCAT('Class of ', YEAR(CURRENT_DATE())+3), 'cohort', 1, UNIX_TIMESTAMP(), 1),
+(5, CONCAT('Class of ', YEAR(CURRENT_DATE())+4), 'cohort', 1, UNIX_TIMESTAMP(), 1);
 
 CREATE TABLE IF NOT EXISTS `group_members` (
   `gmember_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -4423,7 +4613,9 @@ CREATE TABLE IF NOT EXISTS `group_organisations` (
 INSERT INTO `group_organisations` (`gorganisation_id`, `group_id`, `organisation_id`, `updated_by`, `updated_date`) VALUES
 (1, 1, 1, 1, UNIX_TIMESTAMP()),
 (2, 2, 1, 1, UNIX_TIMESTAMP()),
-(3, 3, 1, 1, UNIX_TIMESTAMP());
+(3, 3, 1, 1, UNIX_TIMESTAMP()),
+(4, 4, 1, 1, UNIX_TIMESTAMP()),
+(5, 5, 1, 1, UNIX_TIMESTAMP());
 
 CREATE TABLE IF NOT EXISTS `pg_eval_response_rates` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
@@ -4663,3 +4855,14 @@ INSERT INTO `curriculum_level_organisation` (`org_id`,`curriculum_level_id`)
 VALUES
 	(1, 1),
 	(1, 2);
+
+CREATE TABLE IF NOT EXISTS `objective_audience` (
+  `oaudience_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `objective_id` int(12) NOT NULL,
+  `organisation_id` int(12) NOT NULL,
+  `audience_type` enum('COURSE','EVENT') NOT NULL DEFAULT 'COURSE',
+  `audience_value` varchar(12) NOT NULL DEFAULT '',
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`oaudience_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;

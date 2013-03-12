@@ -1,11 +1,11 @@
 <script type="text/javascript">
 	function updateResponses(noResponses) {
 		categories = {};
-		categories["evaluation_form_responses"] = {};
+		categories["evaluation_question_responses"] = {};
 		$$('input.response_text').each(function (i) {
 			var index = i.id.replace(/[A-Za-z$_\-]/g, '');
-			categories["evaluation_form_responses"][index] = {};
-			categories["evaluation_form_responses"][index]["response_text"] = i.value;
+			categories["evaluation_question_responses"][index] = {};
+			categories["evaluation_question_responses"][index]["response_text"] = i.value;
 		});
 		new Ajax.Updater({ success: 'response_list' }, '<?php echo ENTRADA_URL; ?>/api/evaluations-question-response-list.api.php?responses='+noResponses, {
 			method: 'post',
@@ -21,17 +21,17 @@
 	
 	function updateColumns(noColumns, noCategories) {
 		categories = {};
-		categories["evaluation_form_responses"] = {};
-		categories["evaluation_form_category_criteria"] = {};
+		categories["evaluation_question_responses"] = {};
+		categories["evaluation_rubric_category_criteria"] = {};
 		$$('input.response_text').each(function (i) {
 			var index = i.id.replace(/[A-Za-z$_\-]/g, '');
-			categories["evaluation_form_responses"][index] = {};
-			categories["evaluation_form_category_criteria"][index] = {};
-			categories["evaluation_form_responses"][index]["response_text"] = i.value;
+			categories["evaluation_question_responses"][index] = {};
+			categories["evaluation_rubric_category_criteria"][index] = {};
+			categories["evaluation_question_responses"][index]["response_text"] = i.value;
 			$$('textarea.criteria_'+index).each(function (j) {
 				var jindex = j.id.replace(/[A-Za-z$_\-]/g, '');
-				categories["evaluation_form_category_criteria"][index][jindex] = {};
-				categories["evaluation_form_category_criteria"][index][jindex]["criteria"] = j.value;
+				categories["evaluation_rubric_category_criteria"][index][jindex] = {};
+				categories["evaluation_rubric_category_criteria"][index][jindex]["criteria"] = j.value;
 			});
 		});
 		new Ajax.Updater({ success: 'columns_list' }, '<?php echo ENTRADA_URL; ?>/api/evaluations-rubric-column-list.api.php?columns='+noColumns, {
@@ -52,20 +52,20 @@
 	var categories;
 	function loadCategories (noColumns, noCategories, removeIndex) {
 		categories = {};
-			categories["evaluation_form_categories"] = {};
-			categories["evaluation_form_category_criteria"] = {};
+			categories["evaluation_rubric_categories"] = {};
+			categories["evaluation_rubric_category_criteria"] = {};
 		$$('input.category').each(function (i) {
 			var index = i.id.replace(/[A-Za-z$_\-]/g, '');
 			if (removeIndex && index > removeIndex) {
 				index--;
 			}
-			categories["evaluation_form_categories"][index] = {};
-			categories["evaluation_form_category_criteria"][index] = {};
-			categories["evaluation_form_categories"][index]["category"] = i.value;
+			categories["evaluation_rubric_categories"][index] = {};
+			categories["evaluation_rubric_category_criteria"][index] = {};
+			categories["evaluation_rubric_categories"][index]["category"] = i.value;
 			$$('textarea.criteria_'+index).each(function (j) {
 				var jindex = j.id.replace(/[A-Za-z$_\-]/g, '');
-				categories["evaluation_form_category_criteria"][index][jindex] = {};
-				categories["evaluation_form_category_criteria"][index][jindex]["criteria"] = j.value;
+				categories["evaluation_rubric_category_criteria"][index][jindex] = {};
+				categories["evaluation_rubric_category_criteria"][index][jindex]["criteria"] = j.value;
 			});
 		});
 		if (noCategories != parseInt($('categories_count').value)) {

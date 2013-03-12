@@ -50,7 +50,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 </div>
 
 <div style="padding-top: 10px; clear: both">
-	<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) { ?>
+	<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $LOGGED_IN && $_SESSION["details"]["notifications"]) { ?>
 		<div id="notifications-toggle" style="position: absolute; padding-top: 4px;"></div>
 		<script type="text/javascript">
 		function promptNotifications(enabled) {
@@ -144,7 +144,11 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 				$allowVote  = FALSE;
 				$voteInfo	= communities_polls_latest($result["cpolls_id"]);
 				$specificMembers = communities_polls_specific_access($result['cpolls_id']);
-				$vote_record = communities_polls_votes_cast_by_member($result["cpolls_id"], $ENTRADA_USER->getActiveId());
+				if ($LOGGED_IN) {
+					$vote_record = communities_polls_votes_cast_by_member($result["cpolls_id"], $ENTRADA_USER->getActiveId());
+				} else {
+					$vote_record = array("votes" => 0);
+				}
 				$allow_main_load = false;
 
 				if ((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {

@@ -46,7 +46,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		$m_query = "	SELECT * FROM `assessment_marking_schemes`
 						WHERE `enabled` = 1;";
 		$MARKING_SCHEMES = $db->GetAll($m_query);
-		
+
 		$assessment_options_query = "SELECT `id`, `title`, `active`
 									 FROM `assessments_lu_meta_options`
 									 WHERE `active` = '1'";
@@ -55,75 +55,75 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			function return_id($arr) {
 				return $arr["id"];
 			}
-			
+
 			$MARKING_SCHEME_IDS = array_map("return_id", $MARKING_SCHEMES);
-			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "add", "id" => $COURSE_ID, "step" => false)), "title" => "Adding Assignment");
-			
+			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "add", "id" => $COURSE_ID, "step" => false)), "title" => "Add Assignment Drop Box");
+
 			// Error Checking
 			switch($STEP) {
 				case 2 :
-					if(isset($_POST["assignment_title"]) && $tmp_title = clean_input($_POST["assignment_title"],array("trim","notags"))){
+					if (isset($_POST["assignment_title"]) && $tmp_title = clean_input($_POST["assignment_title"],array("trim","notags"))){
 						$PROCESSED["assignment_title"] = $tmp_title;
 					}else{
 						$ERROR++;
 						$ERRORSTR[] = "Assignment Title is a required Field.";
 					}
-					
-					if(isset($_POST["assignment_description"]) && $tmp_desc = clean_input($_POST["assignment_description"],array("trim","notags"))){
+
+					if (isset($_POST["assignment_description"]) && $tmp_desc = clean_input($_POST["assignment_description"],array("trim","notags"))){
 						$PROCESSED["assignment_description"] = $tmp_desc;
 					}else{
 						$PROCESSED["assignment_description"] = "";
 					}
-					
-					if(isset($_POST["assignment_uploads"]) && $tmp_uploads = clean_input($_POST["assignment_uploads"],array("trim","notags"))){
+
+					if (isset($_POST["assignment_uploads"]) && $tmp_uploads = clean_input($_POST["assignment_uploads"],array("trim","notags"))){
 						$PROCESSED["assignment_uploads"] = $tmp_uploads == "allow"?0:1;
 					}else{
 						$PROCESSED["assignment_uploads"] = 1;
 					}
-					
-					if(isset($_POST["assessment_id"]) && $tmp_ass = clean_input($_POST["assessment_id"],array("trim","notags"))){
+
+					if (isset($_POST["assessment_id"]) && $tmp_ass = clean_input($_POST["assessment_id"],array("trim","notags"))){
 						$PROCESSED["assessment_id"] = $tmp_ass;
 					}else{
 						$PROCESSED["assessment_id"] = 0;
-					}								
-					
-					if($PROCESSED["assessment_id"] === "N"){
+					}
+
+					if ($PROCESSED["assessment_id"] === "N"){
 						if (isset($_POST["associated_audience"]) && $_POST["associated_audience"] == "manual_select") {
 
-							if((isset($_POST["cohort"])) && ($cohort = clean_input($_POST["cohort"], "credentials"))) {
+							if ((isset($_POST["cohort"])) && ($cohort = clean_input($_POST["cohort"], "credentials"))) {
 								$PROCESSED["cohort"] = $cohort;
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "You must select an <strong>Audience</strong> for this assessment.";
 							}
-						} elseif($group_id = (int)$_POST["associated_audience"]) {
+						} elseif ($group_id = (int)$_POST["associated_audience"]) {
 							$PROCESSED["cohort"] = $group_id;
 						} else {
 								$ERROR++;
 								$ERRORSTR[] = "You must select an <strong>Audience</strong> for this assessment.";
 						}
 
-						if((isset($_POST["name"])) && ($name = clean_input($_POST["name"], array("notags", "trim")))) {
+						if ((isset($_POST["name"])) && ($name = clean_input($_POST["name"], array("notags", "trim")))) {
 							$PROCESSED["name"] = $name;
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "You must supply a valid <strong>Name</strong> for this assessment.";
 						}
 
-						if((isset($_POST["grade_weighting"])) && ($_POST["grade_weighting"] !== NULL)) {
+						if ((isset($_POST["grade_weighting"])) && ($_POST["grade_weighting"] !== NULL)) {
 							$PROCESSED["grade_weighting"] = clean_input($_POST["grade_weighting"], "float");
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "You must supply a <strong>Grade Weighting</strong> for this assessment.";
 						}
-						if((isset($_POST["description"])) && ($description = clean_input($_POST["description"], array("notags", "trim")))) {
+						if ((isset($_POST["description"])) && ($description = clean_input($_POST["description"], array("notags", "trim")))) {
 							$PROCESSED["description"] = $description;
 						} else {
 							$PROCESSED["description"] = "";
 						}
 
-						if((isset($_POST["type"])) && ($type = clean_input($_POST["type"], array("trim")))) {
-							if((@in_array($type, $ASSESSMENT_TYPES))) {
+						if ((isset($_POST["type"])) && ($type = clean_input($_POST["type"], array("trim")))) {
+							if ((@in_array($type, $ASSESSMENT_TYPES))) {
 								$PROCESSED["type"] = $type;
 							} else {
 								$ERROR++;
@@ -135,7 +135,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							$ERRORSTR[] = "You must pick a valid <strong>Type</strong> for this assessment.";
 						}
 
-						if((isset($_POST["marking_scheme_id"])) && ($marking_scheme_id = clean_input($_POST["marking_scheme_id"], array("trim","int")))) {
+						if ((isset($_POST["marking_scheme_id"])) && ($marking_scheme_id = clean_input($_POST["marking_scheme_id"], array("trim","int")))) {
 							if (@in_array($marking_scheme_id, $MARKING_SCHEME_IDS)) {
 								$PROCESSED["marking_scheme_id"] = $marking_scheme_id;
 							} else {
@@ -204,7 +204,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$assessment_options_selected = array();
 							foreach ($_POST["option"] as $option_id) {
 								if ($option_id = (int) $option_id) {
-									$query = "SELECT * FROM `assessments_lu_meta_options` 
+									$query = "SELECT * FROM `assessments_lu_meta_options`
 											  WHERE id = " .$db->qstr($option_id)."
 											  AND `active` = '1'";
 									$results = $db->GetAll($query);
@@ -220,9 +220,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							$PROCESSED["numeric_grade_points_total"] = $points_total;
 						} else {
 							$PROCESSED["numeric_grade_points_total"] = "";
-							if(isset($PROCESSED["marking_scheme_id"])) {
+							if (isset($PROCESSED["marking_scheme_id"])) {
 								// Numberic marking scheme, hardcoded, lame
-								if($PROCESSED["marking_scheme_id"] == 3) {
+								if ($PROCESSED["marking_scheme_id"] == 3) {
 									$ERROR++;
 									$ERRORSTR[] = "The <strong>Maximum Points</strong> field is a required field when using the <strong>Numeric</strong> marking scheme.";
 								}
@@ -234,14 +234,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									FROM `assessments`
 									WHERE `course_id` = ".$db->qstr($COURSE_ID);
 							$order = $db->GetOne($query);
-						
+
 							$PROCESSED["order"]			= $order;
 							$PROCESSED["updated_date"]	= time();
 							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 							$PROCESSED["course_id"]		= $COURSE_ID;
 
-							if ($db->AutoExecute("assessments", $PROCESSED, "INSERT")) {		
-								if($ASSESSMENT_ID = $db->Insert_Id()) {
+							if ($db->AutoExecute("assessments", $PROCESSED, "INSERT")) {
+								if ($ASSESSMENT_ID = $db->Insert_Id()) {
 									application_log("success", "Successfully added assessment ID [".$ASSESSMENT_ID."]");
 								} else {
 									application_log("error", "Unable to fetch the newly inserted assessment identifier for this assessment.");
@@ -298,7 +298,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						}
 					}
 
-					
+
 					/**
 					 * Required field "event_start" / Event Date & Time Start (validated through validate_calendars function).
 					 */
@@ -321,28 +321,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$PROCESSED["due_date"] = (int) $due_date["finish"];
 					} else {
 						$PROCESSED["due_date"] = 0;
-					}			
+					}
 
 					if (isset($_POST["post_action"])) {
-						if(@in_array($_POST["post_action"], array("new", "index", "parent", "grade"))) {
+						if (@in_array($_POST["post_action"], array("new", "index", "parent", "grade"))) {
 							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = $_POST["post_action"];
 						} else {
 							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
 						}
 					} else {
 						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
-					}					
-					
-					if(!$ERROR){
-						
+					}
+
+					if (!$ERROR){
+
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 						$PROCESSED["course_id"]		= $COURSE_ID;
 						$PROCESSED["assignment_active"] = 1;
 
 						if ($db->AutoExecute("assignments", $PROCESSED, "INSERT")) {
-							if($ASSIGNMENT_ID = $db->Insert_Id()) {
-								
+							if ($ASSIGNMENT_ID = $db->Insert_Id()) {
+
 								$PROCESSED["assignment_id"] = $ASSIGNMENT_ID;
 								$PROCESSED["proxy_id"] = $ENTRADA_USER->getID();
 								$PROCESSED["contact_order"] = 0;
@@ -351,27 +351,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								if ($db->AutoExecute("assignment_contacts", $PROCESSED, "INSERT")) {
 									if ((isset($_POST["associated_director"])) && ($associated_directors = explode(",", $_POST["associated_director"])) && (@is_array($associated_directors)) && (@count($associated_directors))) {
 										$order = 0;
-										foreach($associated_directors as $proxy_id) {
+										foreach ($associated_directors as $proxy_id) {
 											if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
-												if($proxy_id !== $ENTRADA_USER->getID()){
+												if ($proxy_id !== $ENTRADA_USER->getID()){
 													if (!$db->AutoExecute("assignment_contacts", array("assignment_id" => $ASSIGNMENT_ID, "proxy_id" => $proxy_id, "contact_order" => $order+1, "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getID()), "INSERT")) {
 														add_error("There was an error when trying to insert a &quot;" . $module_singular_name . " Director&quot; into the system. The system administrator was informed of this error; please try again later.");
 
 														application_log("error", "Unable to insert a new course_contact to the database when updating an event. Database said: ".$db->ErrorMsg());
 													} else {
-														$order++;	
+														$order++;
 													}
 												}
 											}
 										}
-									}																		
+									}
 									application_log("success", "Successfully added assignment ID [".$ASSIGNMENT_ID."]");
 								} else {
 									application_log("error", "Unable to add you as an assignment contact. Please contact an administrator.");
-								}																																																															
+								}
 							} else {
 								application_log("error", "Unable to fetch the newly inserted assignment identifier for this assignment.");
-							}							
+							}
 						} else {
 							application_log("error", "Unable to fetch the newly inserted assignment identifier for this assignment.");
 						}
@@ -404,7 +404,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					}
 				break;
 				case 1 :
-					
+
 				default :
 					continue;
 				break;
@@ -422,7 +422,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					if ($ERROR) {
 						echo display_error();
 					}
-					break;
+				break;
 				case 1 :
 				default :
 					$assignment_directors = array();
@@ -439,563 +439,540 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								ORDER BY `fullname` ASC";
 					$results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
 					if ($results) {
-						foreach($results as $result) {
+						foreach ($results as $result) {
 							$assignment_directors[$result["proxy_id"]] = array('proxy_id'=>$result["proxy_id"], 'fullname'=>$result["fullname"], 'organisation_id'=>$result['organisation_id']);
 						}
 						$DIRECTOR_LIST = $assignment_directors;
-					}					
-				?>
-				<h1>Add Assignment</h1>
-				<?php
-				if ($ERROR) {
-					echo display_error();
-				}
-				?>
-				<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assignments?<?php echo replace_query(array("step" => 2)); ?>" method="post" class="form-horizontal">
-					<h2>Assignment Details</h2>
-<<<<<<< HEAD
-					<div class="control-group">
-						<label class="control-label form-nrequired">Assignment Name:</label>
-						<div class="controls">
-							<input type="text" name="assignment_title" value="<?php echo ($PROCESSED["assignment_title"]?$PROCESSED["assignment_title"]:"");?>"/>
-						</div>
-					</div>
-					<div class="control-group">
-						<label class="control-label form-nrequired">Associated Assessment</label>
-						<div class="controls">
-							<select name="assessment_id" id="assessment-selector">
-										<option value="0">No Assessment</option>
-										<option value="N" selected="selected">New Assessment</option>
-=======
-					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Assignment">
-						<colgroup>
-							<col style="width: 3%" />
-							<col style="width: 22%" />
-							<col style="width: 75%" />
-						</colgroup>
-						<tbody>
-							
-							<tr>
-								<td></td>
-								<td><label class="form-nrequired">Assignment Name</label></td>
-								<td>
-									<input type="text" name="assignment_title" style="width: 243px" value="<?php echo ($PROCESSED["assignment_title"]?$PROCESSED["assignment_title"]:"");?>"/>
-								</td>
-							</tr>							
-							<tr>
-								<td></td>
-								<td style="vertical-align: top;"><label class="form-nrequired">Associated Assessment</label></td>
-								<td>
-									<select name="assessment_id" id="assessment-selector" style="width: 250px">
-										<option value="0"<?php echo isset($PROCESSED["assessment_id"]) && $PROCESSED["assessment_id"]==0?' selected="selected"':'';?>>No Assessment</option>
-										<option value="N" <?php echo !isset($PROCESSED["assessment_id"])?' selected="selected"':'';?>>New Assessment</option>
->>>>>>> develop
-										<?php
-											$query = "	SELECT a.`group_id`, a.`group_name` FROM `groups` a 
-														JOIN `assessments` b
-														ON a.`group_id` = b.`cohort`
-														WHERE b.`course_id` = ".$db->qstr($COURSE_ID)."
-														GROUP BY a.`group_id`";
-											if($groups = $db->GetAll($query)){
-												foreach($groups as $group){
-													$query = "SELECT * FROM `assessments` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `cohort` = ".$db->qstr($group["group_id"]);
-													$course_assessments = $db->GetAll($query);
-													if($course_assessments){
-														echo '<optgroup label="'.$group["group_name"].'">';
-														foreach($course_assessments as $course_assessment){
-															?><option value="<?php echo $course_assessment["assessment_id"];?>"<?php echo ($PROCESSED["assessment_id"] && $PROCESSED["assessment_id"] == $course_assessment["assessment_id"]?" checked=\"checked\"":"");?>><?php echo $course_assessment["name"];?></option><?php
-														}
-														echo '</optgroup>';
-													}	
-												}
-											}
+					}
+                    ?>
+                    <h1>Add Assignment Drop Box</h1>
+                    <?php
+                    if ($ERROR) {
+                        echo display_error();
+                    }
+                    ?>
+                    <form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assignments?<?php echo replace_query(array("step" => 2)); ?>" method="post" class="form-horizontal">
+                        <h2>Drop Box Details</h2>
 
-										?>
-									</select>
-									<div class="content-small">The assessment determines how the assignment should be marked. You can either select one if it already exists, or create a new one now.</div>
-						</div>
-					</div> <!--/control-group-->
-					<div class="control-group">
-						<label class="control-label form-nrequired">Assignment Contacts:</label>
-						<div class="controls">
-							<script type="text/javascript">															
-									jQuery('#assessment-section').hide();
+                        <div class="control-group">
+                            <label class="control-label form-nrequired">Assignment Name:</label>
+                            <div class="controls">
+                                <input type="text" name="assignment_title" value="<?php echo ($PROCESSED["assignment_title"]?$PROCESSED["assignment_title"]:"");?>"/>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label form-nrequired">Associated Assessment</label>
+                            <div class="controls">
+                                <select name="assessment_id" id="assessment-selector">
+                                    <option value="0">No Assessment</option>
+                                    <option value="N" selected="selected">New Assessment</option>
+                                    <?php
+                                    $query = "	SELECT a.`group_id`, a.`group_name` FROM `groups` a
+                                                JOIN `assessments` b
+                                                ON a.`group_id` = b.`cohort`
+                                                WHERE b.`course_id` = ".$db->qstr($COURSE_ID)."
+                                                GROUP BY a.`group_id`";
+                                    if ($groups = $db->GetAll($query)){
+                                        foreach ($groups as $group){
+                                            $query = "SELECT * FROM `assessments` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `cohort` = ".$db->qstr($group["group_id"]);
+                                            $course_assessments = $db->GetAll($query);
+                                            if ($course_assessments){
+                                                echo '<optgroup label="'.$group["group_name"].'">';
+                                                foreach ($course_assessments as $course_assessment){
+                                                    ?><option value="<?php echo $course_assessment["assessment_id"];?>"<?php echo ($PROCESSED["assessment_id"] && $PROCESSED["assessment_id"] == $course_assessment["assessment_id"]?" checked=\"checked\"":"");?>><?php echo $course_assessment["name"];?></option><?php
+                                                }
+                                                echo '</optgroup>';
+                                            }
+                                        }
+                                    }
+                                    ?>
+                                </select>
+                                <div class="content-small">The assessment determines how the assignment should be marked. You can either select one if it already exists, or create a new one now.</div>
+                            </div>
+                        </div> <!--/control-group-->
+                        <div class="control-group">
+                            <label class="control-label form-nrequired">Assignment Contacts:</label>
+                            <div class="controls">
+                                <script type="text/javascript">
+                                jQuery('#assessment-section').hide();
 
-									jQuery(document).ready(function(){
-										if(jQuery('#assessment-selector').val() == 'N'){
-											jQuery('#assessment-section').slideDown('slow');
-										}else{
-											jQuery('#assessment-section').slideUp('slow');
-										}
-									});
+                                jQuery(document).ready(function(){
+                                    if (jQuery('#assessment-selector').val() == 'N'){
+                                        jQuery('#assessment-section').slideDown('slow');
+                                    }else{
+                                        jQuery('#assessment-section').slideUp('slow');
+                                    }
+                                });
 
-									jQuery('#assessment-selector').bind('change',function(){
-										if(jQuery(this).val() == 'N'){
-											jQuery('#assessment-section').slideDown('slow');
-										}else{
-											jQuery('#assessment-section').slideUp('slow');
-										}
-									});									
-									
-									var sortables = new Array();
-									function updateOrder(type) {
-										$('associated_'+type).value = Sortable.sequence(type+'_list');
-									}
+                                jQuery('#assessment-selector').bind('change',function(){
+                                    if (jQuery(this).val() == 'N'){
+                                        jQuery('#assessment-section').slideDown('slow');
+                                    }else{
+                                        jQuery('#assessment-section').slideUp('slow');
+                                    }
+                                });
 
-									function addItem(type) {
-										if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
-											var li = new Element('li', {'class':'community', 'id':type+'_'+$(type+'_id').value, 'style':'cursor: move;'}).update($(type+'_name').value);
-											$(type+'_name').value = '';
-											li.insert({bottom: '<img src=\"<?php echo ENTRADA_URL; ?>/images/action-delete.gif\" class=\"list-cancel-image\" onclick=\"removeItem(\''+$(type+'_id').value+'\', \''+type+'\')\" />'});
-											$(type+'_id').value	= '';
-											$(type+'_list').appendChild(li);
-											sortables[type] = Sortable.destroy($(type+'_list'));
-											Sortable.create(type+'_list', {onUpdate : function(){updateOrder(type);}});
-											updateOrder(type);
-										} else if ($(type+'_'+$(type+'_id').value) != null) {
-											alert('Important: Each user may only be added once.');
-											$(type+'_id').value = '';
-											$(type+'_name').value = '';
-											return false;
-										} else if ($(type+'_name').value != '' && $(type+'_name').value != null) {
-											alert('Important: When you see the correct name pop-up in the list as you type, make sure you select the name with your mouse, do not press the Enter button.');
-											return false;
-										} else {
-											return false;
-										}
-									}
+                                var sortables = new Array();
+                                function updateOrder(type) {
+                                    $('associated_'+type).value = Sortable.sequence(type+'_list');
+                                }
 
-									function addItemNoError(type) {
-										if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
-											addItem(type);
-										}
-									}
+                                function addItem(type) {
+                                    if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
+                                        var li = new Element('li', {'class':'community', 'id':type+'_'+$(type+'_id').value, 'style':'cursor: move;'}).update($(type+'_name').value);
+                                        $(type+'_name').value = '';
+                                        li.insert({bottom: '<img src=\"<?php echo ENTRADA_URL; ?>/images/action-delete.gif\" class=\"list-cancel-image\" onclick=\"removeItem(\''+$(type+'_id').value+'\', \''+type+'\')\" />'});
+                                        $(type+'_id').value	= '';
+                                        $(type+'_list').appendChild(li);
+                                        sortables[type] = Sortable.destroy($(type+'_list'));
+                                        Sortable.create(type+'_list', {onUpdate : function(){updateOrder(type);}});
+                                        updateOrder(type);
+                                    } else if ($(type+'_'+$(type+'_id').value) != null) {
+                                        alert('Important: Each user may only be added once.');
+                                        $(type+'_id').value = '';
+                                        $(type+'_name').value = '';
+                                        return false;
+                                    } else if ($(type+'_name').value != '' && $(type+'_name').value != null) {
+                                        alert('Important: When you see the correct name pop-up in the list as you type, make sure you select the name with your mouse, do not press the Enter button.');
+                                        return false;
+                                    } else {
+                                        return false;
+                                    }
+                                }
 
-									function copyItem(type) {
-										if (($(type+'_name') != null) && ($(type+'_ref') != null)) {
-											$(type+'_ref').value = $(type+'_name').value;
-										}
+                                function addItemNoError(type) {
+                                    if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
+                                        addItem(type);
+                                    }
+                                }
 
-										return true;
-									}
+                                function copyItem(type) {
+                                    if (($(type+'_name') != null) && ($(type+'_ref') != null)) {
+                                        $(type+'_ref').value = $(type+'_name').value;
+                                    }
 
-									function checkItem(type) {
-										if (($(type+'_name') != null) && ($(type+'_ref') != null) && ($(type+'_id') != null)) {
-											if ($(type+'_name').value != $(type+'_ref').value) {
-												$(type+'_id').value = '';
-											}
-										}
+                                    return true;
+                                }
 
-										return true;
-									}
+                                function checkItem(type) {
+                                    if (($(type+'_name') != null) && ($(type+'_ref') != null) && ($(type+'_id') != null)) {
+                                        if ($(type+'_name').value != $(type+'_ref').value) {
+                                            $(type+'_id').value = '';
+                                        }
+                                    }
 
-									function removeItem(id, type) {
-										if ($(type+'_'+id)) {
-											$(type+'_'+id).remove();
-											Sortable.destroy($(type+'_list'));
-											Sortable.create(type+'_list', {onUpdate : function (type) {updateOrder(type)}});
-											updateOrder(type);
-										}
-									}
+                                    return true;
+                                }
 
-									function selectItem(id, type) {
-										if ((id != null) && ($(type+'_id') != null)) {
-											$(type+'_id').value = id;
-										}
-									}
+                                function removeItem(id, type) {
+                                    if ($(type+'_'+id)) {
+                                        $(type+'_'+id).remove();
+                                        Sortable.destroy($(type+'_list'));
+                                        Sortable.create(type+'_list', {onUpdate : function (type) {updateOrder(type)}});
+                                        updateOrder(type);
+                                    }
+                                }
 
-									function loadCurriculumPeriods(ctype_id) {
-										var updater = new Ajax.Updater('curriculum_type_periods', '<?php echo ENTRADA_URL."/api/curriculum_type_periods.api.php"; ?>',{
-											method:'post',
-											parameters: {
-												'ctype_id': ctype_id
-											},
-											onFailure: function(transport){
-												$('curriculum_type_periods').update(new Element('div', {'class':'display-error'}).update('No Periods were found for this Curriculum Category.'));
-											}
-										});
-									}								
-									</script>
-									<input type="text" id="director_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('director')" onblur="addItemNoError('director')" />
-									<script type="text/javascript">
-										$('director_name').observe('keypress', function(event){
-											if (event.keyCode == Event.KEY_RETURN) {
-												addItem('director');
-												Event.stop(event);
-											}
-										});
-									</script>
-									<?php
-									$ONLOAD[] = "Sortable.create('director_list', {onUpdate : function() {updateOrder('director')}})";
-									$ONLOAD[] = "$('associated_director').value = Sortable.sequence('director_list')";
-									?>
-									<div class="autocomplete" id="director_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('director_name', 'director_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=director', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'director'); copyItem('director');}});</script>
-									<input type="hidden" id="associated_director" name="associated_director" />
-									<input type="button" class="button-sm" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
-									<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
-									<ul id="director_list" class="menu" style="margin-top: 15px">
-										<?php
-										if (is_array($chosen_course_directors) && count($chosen_course_directors)) {
-											foreach ($chosen_course_directors as $director) {
-												if ((array_key_exists($director, $DIRECTOR_LIST)) && is_array($DIRECTOR_LIST[$director])) {
-													?>
-														<li class="community" id="director_<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>" style="cursor: move;"><?php echo $DIRECTOR_LIST[$director]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>', 'director');"/></li>								
-													<?php
-												}
-											}
-										}
-										?>
-									</ul>
-									<input type="hidden" id="director_ref" name="director_ref" value="" />
-									<input type="hidden" id="director_id" name="director_id" value="" />
-						</div>
-					</div> <!--/control-group-->
-					<div class="control-group">
-						<label class="control-label form-nrequired">Assignment Description:</label>
-						<div class="controls">
-							<textarea id="assignment_description" name="assignment_description" style="width: 100%; height: 150px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($PROCESSED["assignment_description"], array("font")))); ?></textarea>
-						</div>
-					</div>
-					<div class="control-group">
-						<label class="control-label form-nrequired">Allow Revisions:</label>
-						<div class="controls">
-							<table>
-										<tbody>
-												<tr>
-													<td style="vertical-align: top"><input type="radio" name="assignment_uploads" value="allow" style="vertical-align: middle" checked="checked"></td>
-													<td colspan="2" style="padding-bottom: 15px">
-														<label for="event_audience_type_course" class="radio-group-title">Allow Submission Revision</label>
-														<div class="content-small">Allow students to upload a newer version of their assignment after they've already made their submission as long as its still before the due date.</div>
-													</td>
-												</tr>
-												<tr>
-													<td style="vertical-align: top"><input type="radio" name="assignment_uploads" value="deny" style="vertical-align: middle;"></td>
-													<td colspan="2" style="padding-bottom: 15px">
-														<label for="event_audience_type_course" class="radio-group-title">Do Not Allow Submission Revision</label>
-														<div class="content-small">Do not allow students to upload a newer version of their assignment after they've already uploaded one.</div>
-													</td>
-												</tr>
-															
-										</tbody>
-									</table>
-						</div>
-					</div>
-					<div class="control-group">
-						<table><tr>
-						<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-						<?php echo generate_calendars("due", "", false, false,  0, true, false,  ((isset($PROCESSED["due_date"])) ? $PROCESSED["due_date"] : 0)); ?>
-						</tr></table>
-					</div>
-					
-					<div id="assessment-section">
-				<h2>Assessment Details</h2>
-					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Assessment">
-					<colgroup>
-						<col style="width: 3%" />
-						<col style="width: 22%" />
-						<col style="width: 75%" />
-					</colgroup>
-					<tbody>
-						<tr>
-							<td></td>
-							<td><label class="form-nrequired">Course Name</label></td>
-							<td>
-								<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
-							</td>
-						</tr>
-						<?php 					
-						$query = "SELECT * FROM `groups` WHERE `group_type` = 'course_list' AND `group_value` = ".$db->qstr($COURSE_ID);
-						$course_list = $db->GetRow($query);
-						if($course_list){
-							?>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td><input type="radio" name="associated_audience" id="course_list" value ="<?php echo $course_list["group_id"];?>" checked="checked"/></td>
-							<td><label for="cohort" class="form-required">Course List</label></td>
-							<td>
-								<span class="radio-group-title">All Learners in the <?php echo $course_details["course_code"];?> Course List Group</span>
-								<div class="content-small">This assessment is intended for all learners that are members of the <?php echo $course_details["course_code"];?> Course List.</div>
-							</td>
-						</tr>
-						<?php
-						}
-						?>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td><input type="radio" name="associated_audience" id="manual_select" value="manual_select"<?php echo (!$course_list?" checked=\"checked\"":"");?>/></td>
-							<td><label for="cohort" class="form-required">Cohort</label></td>
-							<td>
-								<select id="cohort" name="cohort" style="width: 250px">
-								<?php
-								$active_cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
-								if (isset($active_cohorts) && !empty($active_cohorts)) {
-									foreach ($active_cohorts as $cohort) {
-										echo "<option value=\"".$cohort["group_id"]."\"".(($PROCESSED["cohort"] == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
-									}
-								}
-								?>
-								</select>							
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td><label for="name" class="form-required">Assessment Name</label></td>
-							<td><input type="text" id="name" name="name" value="<?php echo html_encode($PROCESSED["name"]); ?>" maxlength="64" style="width: 243px" /></td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td style="vertical-align: top"><label for="description" class="form-nrequired">Assessment Description</label></td>
-							<td><textarea id="description" name="description" class="expandable" style="width: 99%; height: 150px"><?php echo html_encode($PROCESSED["description"]); ?></textarea></td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td><label for="grade_weighting" class="form-nrequired">Assessment Weighting</label></td>
-							<td>
-								<input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (int) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="5" style="width: 40px" autocomplete="off" />
-								<span class="content-small"><strong>Tip:</strong> The percentage or numeric value of the final grade this assessment is worth.</span>
-							</td>
-						</tr>
-					</tbody>
-					<tbody id="assessment_required_options" style="display: none;">
-						<tr>
-							<td>&nbsp;</td>
-							<td colspan="2" style="padding-top: 10px">
-								<label class="form-nrequired" for="assessment_required_0">Is this assessment <strong>optional</strong> or <strong>required</strong>?</label>
-								<div style="margin: 5px 0 0 25px">
-									<input type="radio" name="assessment_required" value="0" id="assessment_required_0" <?php echo (($PROCESSED["required"] == 0)) ? " checked=\"checked\"" : "" ?> /> <label class="form-nrequired" for="assessment_required_0">Optional</label><br />
-									<input type="radio" name="assessment_required" value="1" id="assessment_required_1" <?php echo (($PROCESSED["required"] == 1)) ? " checked=\"checked\"" : "" ?> /> <label class="form-nrequired" for="assessment_required_1">Required</label>
-								</div>
-							</td>
-						</tr>
-					</tbody>
-					<tbody>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td><label for="assessment_characteristic" class="form-required">Characteristic</label></td>
-							<td>
-								<select id="assessment_characteristic" name="assessment_characteristic">
-									<option value="">-- Select Assessment Characteristic --</option>
-									<?php
-									$query = "	SELECT *
-												FROM `assessments_lu_meta`
-												WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-												AND `active` = '1'
-												ORDER BY `type` ASC, `title` ASC";
-									$assessment_characteristics = $db->GetAll($query);
-									if ($assessment_characteristics) {
-										$type = "";
-										foreach ($assessment_characteristics as $key => $characteristic) {
-											if ($type != $characteristic["type"]) {
-												if ($key) {
-													echo "</optgroup>";
-												}
-												echo "<optgroup label=\"".ucwords(strtolower($characteristic["type"]))."s\">";
+                                function selectItem(id, type) {
+                                    if ((id != null) && ($(type+'_id') != null)) {
+                                        $(type+'_id').value = id;
+                                    }
+                                }
 
-												$type = $characteristic["type"];
-											}
+                                function loadCurriculumPeriods(ctype_id) {
+                                    var updater = new Ajax.Updater('curriculum_type_periods', '<?php echo ENTRADA_URL."/api/curriculum_type_periods.api.php"; ?>',{
+                                        method:'post',
+                                        parameters: {
+                                            'ctype_id': ctype_id
+                                        },
+                                        onFailure: function(transport){
+                                            $('curriculum_type_periods').update(new Element('div', {'class':'display-error'}).update('No Periods were found for this Curriculum Category.'));
+                                        }
+                                    });
+                                }
+                                </script>
+                                <input type="text" id="director_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('director')" onblur="addItemNoError('director')" />
+                                <script type="text/javascript">
+                                    $('director_name').observe('keypress', function(event){
+                                        if (event.keyCode == Event.KEY_RETURN) {
+                                            addItem('director');
+                                            Event.stop(event);
+                                        }
+                                    });
+                                </script>
+                                <?php
+                                $ONLOAD[] = "Sortable.create('director_list', {onUpdate : function() {updateOrder('director')}})";
+                                $ONLOAD[] = "$('associated_director').value = Sortable.sequence('director_list')";
+                                ?>
+                                <div class="autocomplete" id="director_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('director_name', 'director_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=director', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'director'); copyItem('director');}});</script>
+                                <input type="hidden" id="associated_director" name="associated_director" />
+                                <input type="button" class="button-sm" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
+                                <span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+                                <ul id="director_list" class="menu" style="margin-top: 15px">
+                                    <?php
+                                    if (is_array($chosen_course_directors) && count($chosen_course_directors)) {
+                                        foreach ($chosen_course_directors as $director) {
+                                            if ((array_key_exists($director, $DIRECTOR_LIST)) && is_array($DIRECTOR_LIST[$director])) {
+                                                ?>
+                                                    <li class="community" id="director_<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>" style="cursor: move;"><?php echo $DIRECTOR_LIST[$director]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>', 'director');"/></li>
+                                                <?php
+                                            }
+                                        }
+                                    }
+                                    ?>
+                                </ul>
+                                <input type="hidden" id="director_ref" name="director_ref" value="" />
+                                <input type="hidden" id="director_id" name="director_id" value="" />
+                            </div>
+                        </div> <!--/control-group-->
+                        <div class="control-group">
+                            <label class="control-label form-nrequired">Assignment Description:</label>
+                            <div class="controls">
+                                <textarea id="assignment_description" name="assignment_description" style="width: 100%; height: 150px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($PROCESSED["assignment_description"], array("font")))); ?></textarea>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label class="control-label form-nrequired">Allow Revisions:</label>
+                            <div class="controls">
+                                <table>
+                                    <tbody>
+                                            <tr>
+                                                <td style="vertical-align: top"><input type="radio" name="assignment_uploads" id="assignment_uploads_allow" value="allow" style="vertical-align: middle" checked="checked"></td>
+                                                <td colspan="2" style="padding-bottom: 15px">
+                                                    <label for="assignment_uploads_allow" class="radio-group-title">Allow Submission Revision</label>
+                                                    <div class="content-small">Allow students to upload a newer version of their assignment after they have already made their submission as long as its still before the due date.</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="vertical-align: top"><input type="radio" name="assignment_uploads" id="assignment_uploads_deny" value="deny" style="vertical-align: middle;"></td>
+                                                <td colspan="2" style="padding-bottom: 15px">
+                                                    <label for="assignment_uploads_deny" class="radio-group-title">Do Not Allow Submission Revision</label>
+                                                    <div class="content-small">Do not allow students to upload a newer version of their assignment after initial upload.</div>
+                                                </td>
+                                            </tr>
 
-											echo "<option value=\"" . $characteristic["id"] . "\" assessmenttype=\"" . $characteristic["type"] . "\"".(($PROCESSED["characteristic_id"] == $characteristic["id"]) ? " selected=\"selected\"" : "").">".$characteristic["title"]."</option>";
-										}
-										echo "</optgroup>";
-									}
-									?>
-								</select>
-							</td>
-						</tr>
-					</tbody>
-					<tbody id="assessment_options" style="display: none;">
-						<tr>
-							<td></td>
-							<td style="vertical-align: top;"><label class="form-nrequired">Extended Options:</label></td>
-							<td>
-								<?php 
-								if ($assessment_options) {
-									foreach ($assessment_options as $assessment_option) {
-										echo "<input type=\"checkbox\" value=\"".$assessment_option["id"]."\" name=\"option[]\"" .((is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected)) ? " checked=\"checked\"" : "") . " id=\"extended_option".$assessment_option["id"]. "\" /><label for=\"extended_option".$assessment_option["id"]."\">".$assessment_option["title"]."</label><br />";
-									}
-								}
-								?>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-					</tbody>
-					<tbody>
-						<tr>
-							<td></td>
-							<td><label for="marking_scheme_id" class="form-required">Marking Scheme:</label></td>
-							<td>
-								<select id="marking_scheme_id" name="marking_scheme_id">
-								<?php
-								foreach ($MARKING_SCHEMES as $scheme) {
-									echo "<option value=\"".$scheme["id"]."\"".(($PROCESSED["marking_scheme_id"] == $scheme["id"]) ? " selected=\"selected\"" : "").">".$scheme["name"]."</option>";	
-								}
-								?>
-								</select>
-							</td>
-						</tr>
-						<tr id="numeric_marking_scheme_details" style="display: none;">
-							<td></td>
-							<td><label for="numeric_grade_points_total" class="form-required">Maximum Points:</label></td>
-							<td>
-								<input type="text" id="numeric_grade_points_total" name="numeric_grade_points_total" value="<?php echo html_encode($PROCESSED["numeric_grade_points_total"]); ?>" maxlength="5" style="width: 50px" />
-								<span class="content-small"><strong>Tip:</strong> Maximum points possible for this assessment (i.e. <strong>20</strong> for &quot;X out of 20).</span>
-							</td>
-						</tr>
-						<tr>
-							<td></td>
-							<td><label for="type" class="form-required">Assessment Type:</label></td>
-							<td>
-								<select id="type" name="type">
-								<?php
-								foreach ($ASSESSMENT_TYPES as $type) {
-									echo "<option value=\"".$type."\"".(($PROCESSED["type"] == $type) ? " selected=\"selected\"" : "").">".$type."</option>";
-								}
-								?>
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-					</tbody>
-					<tbody>
-						<tr>
-							<td colspan="3"><input type="radio" name="show_learner_option" value="0" id="show_learner_option_0" <?php echo (($PROCESSED["show_learner"] == 0)) ? " checked=\"checked\"" : "" ?> style="margin-right: 5px;" /><label class="form-nrequired" for="show_learner_option_0">Don't Show this Assessment in Learner Gradebook</label></td>
-						</tr>
-						<tr>
-							<td colspan="3"><input type="radio" name="show_learner_option" value="1" id="show_learner_option_1" <?php echo (($PROCESSED["show_learner"] == 1)) ? " checked=\"checked\"" : "" ?> style="margin-right: 5px;" /><label class="form-nrequired" for="show_learner_option_1">Show this Assessment in Learner Gradebook</label></td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-					</tbody>
-					<tbody id="gradebook_release_options" style="display: none;">
-						<tr>
-							<td></td>
-							<td><?php echo generate_calendars("show", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, false, " in Gradebook After", " in Gradebook Until"); ?></td>
-							<td></td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-					</tbody>
-					<tbody>
-						<tr>
-							<td><input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /></td>
-							<td colspan="2">
-								<label for="narrative_assessment" class="form-nrequired">This is a <strong>narrative assessment</strong>.</label>
-							</td>
-						</tr>
-					</tbody>
-				</table>
-				</div>
-				<script type="text/javascript" charset="utf-8">
-					jQuery(function($) {
-						jQuery('#marking_scheme_id').change(function() {
-							if(jQuery(':selected', this).val() == 3 || jQuery(':selected', this).text() == "Numeric") {
-								jQuery('#numeric_marking_scheme_details').show();
-							} else {
-								jQuery('#numeric_marking_scheme_details').hide();
-							}
-						}).trigger('change');
-						
-						jQuery('#grade_weighting').keyup(function() {
-							if (parseInt(jQuery('#grade_weighting').val())) {
-								jQuery('#assessment_required_1').attr('checked', 'checked');
-								jQuery('#assessment_required_options').hide();
-								
-							} else {
-								jQuery('#assessment_required_0').attr('checked', 'checked');
-								jQuery('#assessment_required_options').show();
-								
-							}
-						});
-						
-						jQuery('#grade_weighting').ready(function() {
-							if (parseInt(jQuery('#grade_weighting').val())) {
-								jQuery('#assessment_required_1').attr('checked', 'checked');
-								jQuery('#assessment_required_options').hide();
-								
-							} else {
-								jQuery('#assessment_required_options').show();
-								
-							}
-						});
-						
-						jQuery('#assessment_characteristic').change(function (){
-							jQuery('#assessment_options input:[type=checkbox]').removeAttr('checked');
-							var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
-							if(assessmentType == 'exam' || assessmentType == 'quiz') {
-								jQuery('#assessment_options').show();
-							} else {
-								jQuery('#assessment_options').hide();
-							}
-						});
-						
-						jQuery('#assessment_characteristic').ready(function (){
-							var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
-							if(assessmentType == 'exam' || assessmentType == 'quiz') {
-								jQuery('#assessment_options').show();
-							} else {
-								jQuery('#assessment_options').hide();
-							}
-						});
-						
-						jQuery("input[name='show_learner_option']").change(function(){
-							if (jQuery("input[name='show_learner_option']:checked").val() == 1) {
-								jQuery('#gradebook_release_options').show();
-							}
-							else if (jQuery("input[name='show_learner_option']:checked").val() == 0) {
-								jQuery('#gradebook_release_options').hide();
-							}
-						});
-						
-						jQuery(document).ready(function(){
-							if (jQuery("input[name='show_learner_option']:checked").val() == 1) {
-								jQuery('#gradebook_release_options').show();
-							}
-							else if (jQuery("input[name='show_learner_option']:checked").val() == 0) {
-								jQuery('#gradebook_release_options').hide();
-							}
-						});
-					});
-				</script>
-				<div style="padding-top: 25px">
-					<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-						<tr>
-							<td style="width: 25%; text-align: left">
-								<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view", "assessment_id" => false)); ?>'" />
-							</td>
-							<td style="width: 75%; text-align: right; vertical-align: middle">
-								<span class="content-small">After saving:</span>
-								<select id="post_action" name="post_action">
-									<option value="grade"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "grade") ? " selected=\"selected\"" : ""); ?>>Grade assessment</option>
-									<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another assessment</option>
-									<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to assessment list</option>
-									<option value="parent"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "parent") ? " selected=\"selected\"" : ""); ?>>Return to all gradebooks list</option>
-								</select>
-								<input type="submit" class="btn btn-primary" value="Save" />
-							</td>
-						</tr>
-					</table>
-				</div>					
-			</form>
-			<?php
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <table>
+                                <tr>
+                                    <?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+                                    <?php echo generate_calendars("due", "", false, false,  0, true, false,  ((isset($PROCESSED["due_date"])) ? $PROCESSED["due_date"] : 0)); ?>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <div id="assessment-section">
+                        <h2>Assessment Details</h2>
+                        <table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Assessment">
+                        <colgroup>
+                            <col style="width: 3%" />
+                            <col style="width: 22%" />
+                            <col style="width: 75%" />
+                        </colgroup>
+                        <tbody>
+                            <tr>
+                                <td></td>
+                                <td><label class="form-nrequired">Course Name</label></td>
+                                <td>
+                                    <a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
+                                </td>
+                            </tr>
+                            <?php
+                            $query = "SELECT * FROM `groups` WHERE `group_type` = 'course_list' AND `group_value` = ".$db->qstr($COURSE_ID);
+                            $course_list = $db->GetRow($query);
+                            if ($course_list){
+                                ?>
+                            <tr>
+                                <td colspan="3">&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td><input type="radio" name="associated_audience" id="course_list" value ="<?php echo $course_list["group_id"];?>" checked="checked"/></td>
+                                <td><label for="cohort" class="form-required">Course List</label></td>
+                                <td>
+                                    <span class="radio-group-title">All Learners in the <?php echo $course_details["course_code"];?> Course List Group</span>
+                                    <div class="content-small">This assessment is intended for all learners that are members of the <?php echo $course_details["course_code"];?> Course List.</div>
+                                </td>
+                            </tr>
+                            <?php
+                            }
+                            ?>
+                            <tr>
+                                <td colspan="3">&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td><input type="radio" name="associated_audience" id="manual_select" value="manual_select"<?php echo (!$course_list?" checked=\"checked\"":"");?>/></td>
+                                <td><label for="cohort" class="form-required">Cohort</label></td>
+                                <td>
+                                    <select id="cohort" name="cohort" style="width: 250px">
+                                    <?php
+                                    $active_cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
+                                    if (isset($active_cohorts) && !empty($active_cohorts)) {
+                                        foreach ($active_cohorts as $cohort) {
+                                            echo "<option value=\"".$cohort["group_id"]."\"".(($PROCESSED["cohort"] == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
+                                        }
+                                    }
+                                    ?>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="3">&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td><label for="name" class="form-required">Assessment Name</label></td>
+                                <td><input type="text" id="name" name="name" value="<?php echo html_encode($PROCESSED["name"]); ?>" maxlength="64" style="width: 243px" /></td>
+                            </tr>
+                            <tr>
+                                <td>&nbsp;</td>
+                                <td style="vertical-align: top"><label for="description" class="form-nrequired">Assessment Description</label></td>
+                                <td><textarea id="description" name="description" class="expandable" style="width: 99%; height: 150px"><?php echo html_encode($PROCESSED["description"]); ?></textarea></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3">&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td><label for="grade_weighting" class="form-nrequired">Assessment Weighting</label></td>
+                                <td>
+                                    <input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (int) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="5" style="width: 40px" autocomplete="off" />
+                                    <span class="content-small"><strong>Tip:</strong> The percentage or numeric value of the final grade this assessment is worth.</span>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tbody id="assessment_required_options" style="display: none;">
+                            <tr>
+                                <td>&nbsp;</td>
+                                <td colspan="2" style="padding-top: 10px">
+                                    <label class="form-nrequired" for="assessment_required_0">Is this assessment <strong>optional</strong> or <strong>required</strong>?</label>
+                                    <div style="margin: 5px 0 0 25px">
+                                        <input type="radio" name="assessment_required" value="0" id="assessment_required_0" <?php echo (($PROCESSED["required"] == 0)) ? " checked=\"checked\"" : "" ?> /> <label class="form-nrequired" for="assessment_required_0">Optional</label><br />
+                                        <input type="radio" name="assessment_required" value="1" id="assessment_required_1" <?php echo (($PROCESSED["required"] == 1)) ? " checked=\"checked\"" : "" ?> /> <label class="form-nrequired" for="assessment_required_1">Required</label>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tbody>
+                            <tr>
+                                <td colspan="3">&nbsp;</td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td><label for="assessment_characteristic" class="form-required">Characteristic</label></td>
+                                <td>
+                                    <select id="assessment_characteristic" name="assessment_characteristic">
+                                        <option value="">-- Select Assessment Characteristic --</option>
+                                        <?php
+                                        $query = "	SELECT *
+                                                    FROM `assessments_lu_meta`
+                                                    WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+                                                    AND `active` = '1'
+                                                    ORDER BY `type` ASC, `title` ASC";
+                                        $assessment_characteristics = $db->GetAll($query);
+                                        if ($assessment_characteristics) {
+                                            $type = "";
+                                            foreach ($assessment_characteristics as $key => $characteristic) {
+                                                if ($type != $characteristic["type"]) {
+                                                    if ($key) {
+                                                        echo "</optgroup>";
+                                                    }
+                                                    echo "<optgroup label=\"".ucwords(strtolower($characteristic["type"]))."s\">";
+
+                                                    $type = $characteristic["type"];
+                                                }
+
+                                                echo "<option value=\"" . $characteristic["id"] . "\" assessmenttype=\"" . $characteristic["type"] . "\"".(($PROCESSED["characteristic_id"] == $characteristic["id"]) ? " selected=\"selected\"" : "").">".$characteristic["title"]."</option>";
+                                            }
+                                            echo "</optgroup>";
+                                        }
+                                        ?>
+                                    </select>
+                                </td>
+                            </tr>
+                        </tbody>
+                        <tbody id="assessment_options" style="display: none;">
+                            <tr>
+                                <td></td>
+                                <td style="vertical-align: top;"><label class="form-nrequired">Extended Options:</label></td>
+                                <td>
+                                    <?php
+                                    if ($assessment_options) {
+                                        foreach ($assessment_options as $assessment_option) {
+                                            echo "<input type=\"checkbox\" value=\"".$assessment_option["id"]."\" name=\"option[]\"" .((is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected)) ? " checked=\"checked\"" : "") . " id=\"extended_option".$assessment_option["id"]. "\" /><label for=\"extended_option".$assessment_option["id"]."\">".$assessment_option["title"]."</label><br />";
+                                        }
+                                    }
+                                    ?>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="3">&nbsp;</td>
+                            </tr>
+                        </tbody>
+                        <tbody>
+                            <tr>
+                                <td></td>
+                                <td><label for="marking_scheme_id" class="form-required">Marking Scheme:</label></td>
+                                <td>
+                                    <select id="marking_scheme_id" name="marking_scheme_id">
+                                    <?php
+                                    foreach ($MARKING_SCHEMES as $scheme) {
+                                        echo "<option value=\"".$scheme["id"]."\"".(($PROCESSED["marking_scheme_id"] == $scheme["id"]) ? " selected=\"selected\"" : "").">".$scheme["name"]."</option>";
+                                    }
+                                    ?>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr id="numeric_marking_scheme_details" style="display: none;">
+                                <td></td>
+                                <td><label for="numeric_grade_points_total" class="form-required">Maximum Points:</label></td>
+                                <td>
+                                    <input type="text" id="numeric_grade_points_total" name="numeric_grade_points_total" value="<?php echo html_encode($PROCESSED["numeric_grade_points_total"]); ?>" maxlength="5" style="width: 50px" />
+                                    <span class="content-small"><strong>Tip:</strong> Maximum points possible for this assessment (i.e. <strong>20</strong> for &quot;X out of 20).</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td><label for="type" class="form-required">Assessment Type:</label></td>
+                                <td>
+                                    <select id="type" name="type">
+                                    <?php
+                                    foreach ($ASSESSMENT_TYPES as $type) {
+                                        echo "<option value=\"".$type."\"".(($PROCESSED["type"] == $type) ? " selected=\"selected\"" : "").">".$type."</option>";
+                                    }
+                                    ?>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td colspan="3">&nbsp;</td>
+                            </tr>
+                        </tbody>
+                        <tbody>
+                            <tr>
+                                <td colspan="3"><input type="radio" name="show_learner_option" value="0" id="show_learner_option_0" <?php echo (($PROCESSED["show_learner"] == 0)) ? " checked=\"checked\"" : "" ?> style="margin-right: 5px;" /><label class="form-nrequired" for="show_learner_option_0">Don't Show this Assessment in Learner Gradebook</label></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3"><input type="radio" name="show_learner_option" value="1" id="show_learner_option_1" <?php echo (($PROCESSED["show_learner"] == 1)) ? " checked=\"checked\"" : "" ?> style="margin-right: 5px;" /><label class="form-nrequired" for="show_learner_option_1">Show this Assessment in Learner Gradebook</label></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3">&nbsp;</td>
+                            </tr>
+                        </tbody>
+                        <tbody id="gradebook_release_options" style="display: none;">
+                            <tr>
+                                <td></td>
+                                <td><?php echo generate_calendars("show", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, false, " in Gradebook After", " in Gradebook Until"); ?></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td colspan="3">&nbsp;</td>
+                            </tr>
+                        </tbody>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /></td>
+                                <td colspan="2">
+                                    <label for="narrative_assessment" class="form-nrequired">This is a <strong>narrative assessment</strong>.</label>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    </div>
+                    <script type="text/javascript" charset="utf-8">
+                    jQuery(function($) {
+                        jQuery('#marking_scheme_id').change(function() {
+                            if (jQuery(':selected', this).val() == 3 || jQuery(':selected', this).text() == "Numeric") {
+                                jQuery('#numeric_marking_scheme_details').show();
+                            } else {
+                                jQuery('#numeric_marking_scheme_details').hide();
+                            }
+                        }).trigger('change');
+
+                        jQuery('#grade_weighting').keyup(function() {
+                            if (parseInt(jQuery('#grade_weighting').val())) {
+                                jQuery('#assessment_required_1').attr('checked', 'checked');
+                                jQuery('#assessment_required_options').hide();
+
+                            } else {
+                                jQuery('#assessment_required_0').attr('checked', 'checked');
+                                jQuery('#assessment_required_options').show();
+
+                            }
+                        });
+
+                        jQuery('#grade_weighting').ready(function() {
+                            if (parseInt(jQuery('#grade_weighting').val())) {
+                                jQuery('#assessment_required_1').attr('checked', 'checked');
+                                jQuery('#assessment_required_options').hide();
+
+                            } else {
+                                jQuery('#assessment_required_options').show();
+
+                            }
+                        });
+
+                        jQuery('#assessment_characteristic').change(function (){
+                            jQuery('#assessment_options input:[type=checkbox]').removeAttr('checked');
+                            var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
+                            if (assessmentType == 'exam' || assessmentType == 'quiz') {
+                                jQuery('#assessment_options').show();
+                            } else {
+                                jQuery('#assessment_options').hide();
+                            }
+                        });
+
+                        jQuery('#assessment_characteristic').ready(function (){
+                            var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
+                            if (assessmentType == 'exam' || assessmentType == 'quiz') {
+                                jQuery('#assessment_options').show();
+                            } else {
+                                jQuery('#assessment_options').hide();
+                            }
+                        });
+
+                        jQuery("input[name='show_learner_option']").change(function(){
+                            if (jQuery("input[name='show_learner_option']:checked").val() == 1) {
+                                jQuery('#gradebook_release_options').show();
+                            }
+                            else if (jQuery("input[name='show_learner_option']:checked").val() == 0) {
+                                jQuery('#gradebook_release_options').hide();
+                            }
+                        });
+
+                        jQuery(document).ready(function(){
+                            if (jQuery("input[name='show_learner_option']:checked").val() == 1) {
+                                jQuery('#gradebook_release_options').show();
+                            }
+                            else if (jQuery("input[name='show_learner_option']:checked").val() == 0) {
+                                jQuery('#gradebook_release_options').hide();
+                            }
+                        });
+                    });
+                    </script>
+                    <div style="padding-top: 25px">
+                        <table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <td style="width: 25%; text-align: left">
+                                    <input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view", "assessment_id" => false)); ?>'" />
+                                </td>
+                                <td style="width: 75%; text-align: right; vertical-align: middle">
+                                    <span class="content-small">After saving:</span>
+                                    <select id="post_action" name="post_action">
+                                        <option value="grade"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "grade") ? " selected=\"selected\"" : ""); ?>>Grade assessment</option>
+                                        <option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another assessment</option>
+                                        <option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to assessment list</option>
+                                        <option value="parent"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "parent") ? " selected=\"selected\"" : ""); ?>>Return to all gradebooks list</option>
+                                    </select>
+                                    <input type="submit" class="btn btn-primary" value="Save" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </form>
+                <?php
 			}
 		} else {
 			$ERROR++;

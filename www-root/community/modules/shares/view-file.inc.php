@@ -118,7 +118,10 @@ if ($RECORD_ID) {
 								header("Content-Transfer-Encoding: binary\n");
 							break;
 						}
-						add_statistic("community:".$COMMUNITY_ID.":shares", "file_download", "csfile_id", $RECORD_ID);
+
+						if ($LOGGED_IN) {
+							add_statistic("community:".$COMMUNITY_ID.":shares", "file_download", "csfile_id", $RECORD_ID);
+						}
 						echo @file_get_contents($download_file, FILE_BINARY);
 						exit;
 					}
@@ -157,7 +160,7 @@ if ($RECORD_ID) {
 						{
 							id:				'requestDialog',
 							width:			350,
-							height:			125,
+							height:			165,
 							title:			'Delete Confirmation',
 							className:		'medtech',
 							okLabel:		'Yes',
@@ -178,7 +181,7 @@ if ($RECORD_ID) {
 						{
 							id:				'requestDialog',
 							width:			350,
-							height:			165,
+							height:			205,
 							title:			'Delete Confirmation',
 							className:		'medtech',
 							okLabel:		'Yes',
@@ -256,7 +259,7 @@ if ($RECORD_ID) {
 				?>
 				<a name="top"></a>
 				<h1 id="file-<?php echo $RECORD_ID; ?>-title"><?php echo html_encode($file_record["file_title"]); ?></h1>
-				<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) { ?>
+				<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $LOGGED_IN && $_SESSION["details"]["notifications"]) { ?>
 					<div id="notifications-toggle" style="height: 2em;"></div>
 					<script type="text/javascript">
 					function promptNotifications(enabled) {
@@ -467,7 +470,9 @@ if ($RECORD_ID) {
 					?>
 				</div>
 				<?php
-				add_statistic("community:".$COMMUNITY_ID.":shares", "file_view", "csfile_id", $RECORD_ID);
+				if ($LOGGED_IN) {
+					add_statistic("community:".$COMMUNITY_ID.":shares", "file_view", "csfile_id", $RECORD_ID);
+				}
 			} else {
 				if ($ERROR) {
 					echo display_error();

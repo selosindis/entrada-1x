@@ -52,47 +52,29 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			else
 				$ORGANISATION_ID = 1;
 		}
-		
-		
+
+
 		list($course_objectives,$top_level_id) = courses_fetch_objectives($ORGANISATION_ID,array($COURSE_ID),-1, 1, false, false, 0, true);
-		
-		$query			= "	SELECT * FROM `courses` 
+
+		$query			= "	SELECT * FROM `courses`
 							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 							AND `course_active` = '1'";
 		$course_details	= $db->GetRow($query);
 		if($course_details) {
 			if(!$ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), 'update')) {
 				application_log("error", "A program coordinator attempted to modify content for a course [".$COURSE_ID."] that they were not the coordinator of.");
-				
+
 				header("Location: ".ENTRADA_URL."/admin/".$MODULE);
 				exit;
 			} else {
-				$query	= "	SELECT a.*, b.`community_url`, c.`cpage_id`
+				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID)), "title" => $module_singular_name . " Content");
+
+				$query	= "	SELECT a.*, b.`community_url`
 							FROM `community_courses` AS a
 							JOIN `communities` AS b
 							ON a.`community_id` = b.`community_id`
-							JOIN `community_pages` AS c
-							ON a.`community_id` = c.`community_id`
 							WHERE a.`course_id` = ".$db->qstr($COURSE_ID);
-				$result = $db->getRow($query);
-				if ($result) {
-					$query = "SELECT b.`course_id`, b.`organisation_id` FROM `course_contacts` AS a
-								JOIN `courses` AS b
-								ON a.`course_id` = b.`course_id`
-								WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-								AND b.`course_active` = 1
-								GROUP BY b.`course_id`
-								UNION
-								SELECT `course_id`, `organisation_id` FROM `courses`
-								WHERE `pcoord_id` = ".$db->qstr($ENTRADA_USER->getID())."
-								AND `course_active` = 1";
-					$admin_course_ids = $db->GetAll($query);
-					if (!isset($admin_course_ids) || !$admin_course_ids || count($admin_course_ids) > 1 || $admin_course_ids[0]["course_id"] != $COURSE_ID || ($ENTRADA_ACL->amIAllowed(new CourseResource($admin_course_ids[0]["course_id"], $admin_course_ids[0]["organisation_id"]), 'update'))) {
-						header("Location: ".ENTRADA_URL."/community".$result["community_url"].":pages");
-						exit;
-					}
-				}
-				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "content", "id" => $COURSE_ID)), "title" => $module_singular_name . " Content");
+				$course_community = $db->getRow($query);
 
 				$PROCESSED		= $course_details;
 				/**
@@ -103,7 +85,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						case "text" :
 							$PROCESSED["updated_date"]	= time();
 							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-							
+
 							/**
 							 * Not-Required: course_url | External Website Url
 							 */
@@ -112,7 +94,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							} else {
 								$PROCESSED["course_url"] = "";
 							}
-							
+
 							/**
 							 * Not-Required: course_description | Course Description
 							 */
@@ -121,7 +103,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							} else {
 								$PROCESSED["course_description"] = "";
 							}
-							
+
 							/**
 							 * Not-Required: course_objectives | Course Objectives
 							 */
@@ -139,9 +121,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							} else {
 								$PROCESSED["course_message"] = "";
 							}
-							
+
 							if($db->AutoExecute("courses", $PROCESSED, "UPDATE", "`course_id` = ".$db->qstr($COURSE_ID))) {
-								
+
 								$SUCCESS++;
 								$SUCCESSSTR[] = "You have successfully updated the <strong>".html_encode($course_details["course_name"])."</strong> " . $module_singular_name . " details section.";
 
@@ -288,11 +270,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$LASTUPDATED		= $course_details["updated_date"];
 
 				$OTHER_DIRECTORS	= array();
-					
+
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js\"></script>";
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/wizard.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 				$HEAD[] = "<link href=\"".ENTRADA_URL."/css/wizard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
-				?>								
+				?>
 
 				<iframe id="upload-frame" name="upload-frame" onload="frameLoad()" style="display: none;"></iframe>
 				<a id="false-link" href="#placeholder"></a>
@@ -318,7 +300,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						}
 					});
 				});
-				
+
 				function openDialog (url) {
 					if (url && url != ajax_url) {
 						ajax_url = url;
@@ -354,9 +336,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						return false;
 					}
 				}
-				
+
 				var text = new Array();
-				
+
 				function objectiveClick(element, id, default_text) {
 					if (element.checked) {
 						var textarea = document.createElement('textarea');
@@ -377,7 +359,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						}
 					}
 				}
-				</script>				
+				</script>
 				<?php
 
 				$sub_query		= "SELECT `proxy_id` FROM `course_contacts` WHERE `course_contacts`.`course_id`=".$db->qstr($COURSE_ID)." AND `course_contacts`.`contact_type` = 'director' ORDER BY `contact_order` ASC";
@@ -425,13 +407,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<?php
 						echo "<tr>\n";
 						echo "	<td><label for=\"course_url\" class=\"form-nrequired\">External Website URL</label></td>\n";
-						echo "	<td><input type=\"text\" id=\"course_url\" name=\"course_url\" value=\"".((isset($PROCESSED["course_url"]) && ($PROCESSED["course_url"] != "")) ? html_encode($PROCESSED["course_url"]) : "http://")."\" style=\"width: 450px\" />
-								<br /><span class=\"content-small\"><strong>Example:</strong> http://meds.queensu.ca</span></td>\n";
-						echo "</tr>\n";
-						echo "<tr>\n";
-						echo "	<td>&nbsp;</td>\n";
-						echo "	<td><span class=\"content-small\"><strong>Please Note:</strong> If you have an external " . strtolower($module_singular_name) . " website or have created a Community for your course, please enter the URL here and a link will be automatically created on the public side.</span></td>\n";
-						echo "</tr>\n";
+						if (!$course_community) {
+							echo "	<td><input type=\"text\" id=\"course_url\" name=\"course_url\" value=\"".((isset($PROCESSED["course_url"]) && ($PROCESSED["course_url"] != "")) ? html_encode($PROCESSED["course_url"]) : "http://")."\" style=\"width: 450px\" />
+									<br /><span class=\"content-small\"><strong>Example:</strong> http://meds.queensu.ca</span></td>\n";
+							echo "</tr>\n";
+							echo "<tr>\n";
+							echo "	<td>&nbsp;</td>\n";
+							echo "	<td><span class=\"content-small\"><strong>Please Note:</strong> If you have an external " . strtolower($module_singular_name) . " website or have created a Community for your course, please enter the URL here and a link will be automatically created on the public side.</span></td>\n";
+							echo "</tr>\n";
+						} else {
+							echo "	<td><a href=\"" . ENTRADA_URL."/community" . $course_community["community_url"] . "\">" . ENTRADA_URL."/community" . $course_community["community_url"] . "</a></td>\n";
+							echo "</tr>\n";
+						}
 						echo "<tr>\n";
 						echo "	<td colspan=\"2\">&nbsp;</td>\n";
 						echo "</tr>\n";
@@ -525,8 +512,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				<?php
 				$query = "	SELECT COUNT(*) FROM course_objectives WHERE course_id = ".$db->qstr($COURSE_ID);
 				$result = $db->GetOne($query);
-				
-				
+
+
 				if ($result) {
 					?>
 					<a name="course-objectives-section"></a>
@@ -572,14 +559,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										GROUP BY b.`objective_id`
 										ORDER BY b.`objective_order`";
 							$results = $db->GetAll($query);
-																			
+
 							if ($results) { ?>
 							<tr>
 								<td colspan="2">&nbsp;</td>
 							</tr>
 							<tr>
-								<td colspan="2">							
-										<?php 
+								<td colspan="2">
+										<?php
 										echo "<h3>Clinical Presentations</h3>";
 										echo "<ul class=\"objectives\">\n";
 										foreach ($results as $result) {
@@ -626,9 +613,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<h3>Attached Files</h3>
 						</div>
 						<div style="float: right; margin-bottom: 5px">
-							
-								<a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')" class="btn btn-primary">Add A File</a>
-							
+							<a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')" class="btn btn-primary">Add A File</a>
 						</div>
 						<div class="clear"></div>
 						<?php
@@ -678,7 +663,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								echo "	<td class=\"file-category\">".((isset($RESOURCE_CATEGORIES["course"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["course"][$result["file_category"]]) : "Unknown Category")."</td>\n";
 								echo "	<td class=\"title\">\n";
 								echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />";
-								echo "		<a href=\"#page-top\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-course.api.php?action=edit&id=".$COURSE_ID."&fid=".$result["id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
+								echo "		<a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-course.api.php?action=edit&id=".$COURSE_ID."&fid=".$result["id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions")."</span></td>\n";
@@ -703,9 +688,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<h3>Attached Links</h3>
 						</div>
 						<div style="float: right; margin-bottom: 5px">
-							
-								<a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')" class="btn btn-primary">Add A Link</a>
-							
+							<a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')" class="btn btn-primary">Add A Link</a>
 						</div>
 						<div class="clear"></div>
 						<?php
@@ -747,7 +730,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								echo "		<a href=\"".ENTRADA_URL."/link-course.php?id=".$result["id"]."\" target=\"_blank\"><img src=\"".ENTRADA_URL."/images/url-visit.gif\" width=\"16\" height=\"16\" alt=\"Visit ".html_encode($result["link"])."\" title=\"Visit ".html_encode($result["link"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-								echo "		<a href=\"#page-top\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-course.api.php?action=edit&id=".$COURSE_ID."&lid=".$result["id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
+								echo "		<a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-course.api.php?action=edit&id=".$COURSE_ID."&lid=".$result["id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
 								echo "	</td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions")."</span></td>\n";
 								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions")."</span></td>\n";
@@ -776,16 +759,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-objectives-section\" onclick=\"$('course-objectives-section').scrollTo(); return false;\" title=\"Course Objectives\">" . $module_singular_name . " Objectives</a></li>\n";
 				$sidebar_html .= "	<li class=\"link\"><a href=\"#course-resources-section\" onclick=\"$('course-resources-section').scrollTo(); return false;\" title=\"Course Resources\">" . $module_singular_name . " Resources</a></li>\n";
 				$sidebar_html .= "</ul>\n";
-	
+
 				new_sidebar_item("Page Anchors", $sidebar_html, "page-anchors", "open", "1.9");
-				
+
 				/**
 				 * Sidebar item that will provide link to reports.
 				 */
 				$sidebar_html  = "<ul class=\"menu\">\n";
 				$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/courses?id=".$COURSE_ID."&section=course-eventtype-report\" title=\"Event Types Report\">Event Types Report</a></li>\n";
 				$sidebar_html .= "</ul>\n";
-	
+
 				new_sidebar_item("Reports", $sidebar_html, "reports", "open", "1.9");
 			}
 		} else {

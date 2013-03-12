@@ -24,6 +24,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+    /**
+     * This function should not exist, but the way this page is built it sort of has to.
+     * @param int $entry_year
+     * @param int $grad_year
+     */
+    function build_entry_grad_year_container($entry_year = "", $grad_year = "") {
+        $output  = "<div id=\"entry_year_container\" style=\"float: left; margin-right: 20px;\">\n";
+        $output .= "    <label for=\"entry_year\" class=\"form-required\" style=\"display: block;\">Year of Program Entry</label>&nbsp;\n";
+        $output .= "    <select id=\"entry_year\" name=\"entry_year\" style=\"width: 140px\">\n";
+
+        $selected_year = ($entry_year) ? $entry_year : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
+        for($i = fetch_first_year(); $i >= 1995; $i--) {
+            $selected = $selected_year == $i;
+            $output .= build_option($i, $i, $selected);
+        }
+        $output .= "    </select>\n";
+        $output .= "</div>\n";
+        $output .= "&nbsp;&nbsp;\n";
+        $output .= "<div id=\"grad_year_container\" style=\"float: left;\">\n";
+        $output .= "    <label for=\"grad_year\" class=\"form-required\" style=\"display: block;\">Expected Graduation Year</label>&nbsp;\n";
+        $output .= "    <select id=\"grad_year\" name=\"grad_year\" style=\"width: 140px;\">\n";
+
+        for($i = (fetch_first_year() + 1); $i >= 1995; $i--) {
+            $selected = ($grad_year == $i);
+            $output .= build_option($i, $i, $selected);
+        }
+
+        $output .= "    </select>\n";
+        $output .= " </div>\n";
+
+        return $output;
+    }
+
 	if ($PROXY_ID) {
 		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($PROXY_ID);
 		$user_record = $db->GetRow($query);
@@ -379,18 +412,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 													$entry_year = clean_input($perm["entry_year"],"int");
 													$grad_year = clean_input($perm["grad_year"],"int");
 													$sanity_start = 1995;
-													$sanity_end = fetch_first_year();
+													$sanity_end = (fetch_first_year() + 1);
 													if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
 														$PROCESSED["grad_year"] = $grad_year;
 													} else {
 														$ERROR++;
-														$ERRORSTR[] = "You must provide a valid graduation year";
+														$ERRORSTR[] = "You must provide a valid graduation year.";
 													}
 													if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
 														$PROCESSED["entry_year"] = $entry_year;
 													} else {
 														$ERROR++;
-														$ERRORSTR[] = "You must provide a valid program entry year";
+														$ERRORSTR[] = "You must provide a valid program entry year.";
 													}
 													if (!$ERROR) {
 														$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
@@ -438,9 +471,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							} //end if delete user_access records
 
 							if (is_array($PROCESSED_PHOTO)) {
-							/**
-							 * This section of code handles updating the user_photos table.
-							 */
+                                /**
+                                 * This section of code handles updating the user_photos table.
+                                 */
 								if (!$db->AutoExecute(AUTH_DATABASE.".user_photos", $PROCESSED_PHOTO, "UPDATE", "proxy_id = ".$db->qstr($PROXY_ID)." AND photo_type = '1'")) {
 									$ERROR++;
 									$ERRORSTR[] = "We were unable to properly update your <strong>User Photos</strong> settings. The system administrator has been informed of this error, please try again later.";
@@ -475,43 +508,55 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								}
 							}
 
-							$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."' AND `group_type` = 'cohort' AND `group_active` = 1";
-							$group_id = $db->GetOne($query);
+                            /**
+                             * Remove the user from any cohorts they may reside in.
+                             */
+                            $cohort_ids = array();
 
-							if($group_id){
-								$query = "SELECT * FROM `group_members` WHERE `group_id` = ".$db->qstr($group_id)." AND `proxy_id` = ".$db->qstr($PROXY_ID)." AND `member_active` = 1";
+                            $query = "  SELECT a.`group_id`
+                                        FROM `groups` AS a
+                                        JOIN `group_organisations` AS b
+                                        ON a.`group_id` = b.`group_id`
+                                        AND b.`organisation_id` = ".$db->qstr($PROCESSED_ACCESS["organisation_id"])."
+                                        WHERE `group_type` = 'cohort'
+                                        AND `group_active` = 1";
+                            $cohorts = $db->GetAll($query);
+                            if ($cohorts) {
+                                foreach ($cohorts as $cohort) {
+                                    $cohort_ids[] = $cohort["group_id"];
+                                }
+                            }
 
-								$result = $db->GetRow($query);
-								if(!$result){
-									$query = "SELECT `group_id` FROM `groups` WHERE `group_type` = 'cohort' AND `group_active` = 1";
-									$cohorts = $db->GetAll($query);
+                            $query = "DELETE FROM `group_members` WHERE `proxy_id` = ".$db->qstr($PROXY_ID)." AND `group_id` IN (".implode(",", $cohort_ids).")";
+                            $db->Execute($query);
 
-									$cohort_ids = array();
-									if($cohorts){
-										foreach($cohorts as $cohort){
-											$cohort_ids[] = $cohort["group_id"];
-										}
-									}
-
-
-									$query = "DELETE FROM `group_members` WHERE `proxy_id` = ".$db->qstr($PROXY_ID)." AND `member_active` = '1' AND `group_id` IN(".implode(",",$cohort_ids).")";
-									//$db->AutoExecute("group_members",array("member_active"=>"0"),"UPDATE",$where);
-									$db->Execute($query);
-									$gmember = array(
-										'group_id' => $group_id,
-										'proxy_id' => $PROXY_ID,
-										'start_date' => time(),
-										'finish_date' => 0,
-										'member_active' => 1,
-										'entrada_only' => 1,
-										'updated_date' => time(),
-										'updated_by' => $ENTRADA_USER->getID()
-									);
-									$db->AutoExecute("group_members", $gmember, "INSERT");
-								}
-
-							}
-
+                            /**
+                             * If this is a student, try and find a cohort to add them to.
+                             */
+                            if ($PROCESSED_ACCESS["group"] == "student") {
+                                $query = "  SELECT a.`group_id`
+                                            FROM `groups` AS a
+                                            JOIN `group_organisations` AS b
+                                            ON a.`group_id` = b.`group_id`
+                                            AND b.`organisation_id` = ".$db->qstr($PROCESSED_ACCESS["organisation_id"])."
+                                            WHERE a.`group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."'
+                                            AND a.`group_type` = 'cohort'
+                                            AND a.`group_active` = 1";
+                                $group_id = $db->GetOne($query);
+                                if ($group_id) {
+                                    $gmember = array (
+                                        'group_id' => $group_id,
+                                        'proxy_id' => $PROXY_ID,
+                                        'start_date' => 0,
+                                        'finish_date' => 0,
+                                        'member_active' => 1,
+                                        'entrada_only' => 1,
+                                        'updated_date' => time(),
+                                        'updated_by' => $ENTRADA_USER->getID()
+                                    );
+                                    $db->AutoExecute("group_members", $gmember, "INSERT");
+                                }
+                            }
 
 							$url = ENTRADA_URL."/admin/users/manage?id=".$PROXY_ID;
 
@@ -552,8 +597,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						}
 					}
 
-					$gender = @file_get_contents(webservice_url("gender", $user_record["number"]));
-
 					//Initialize Organisation ID array for initial page display
 					$organisation_ids = array();
 					$query = "SELECT `organisation_id` FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($PROXY_ID);
@@ -572,6 +615,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					$my_orgs_groups_roles = $db->GetAll($query);
 				break;
 			}
+
 			// Display Page.
 			switch ($STEP) {
 				case 2 :
@@ -668,6 +712,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						$size_upload = getimagesize(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload");
 					}
 					$ONLOAD[] = "provStateFunction('".$PROCESSED["country_id"]."', '".$PROCESSED["province_id"]."')";
+
+
+
 					?>
 					<h1>Edit <strong><?php echo html_encode($user_record["firstname"]." ".$user_record["lastname"]); ?></strong></h1>
 
@@ -999,6 +1046,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												<th></th>
 												<th></th>
 												<th></th>
+												<th></th>
 											</tr>
 										</thead>
 										<tbody>
@@ -1025,7 +1073,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 													$options = "<input id=\"clinical_" . $result["organisation_id"] . "\" name=\"clinical_"  . $result["organisation_id"] . "\" type=\"checkbox\" " . $checked . " /><label for=\"clincal" . $result["organisation_id"] . "\">This new user is a <strong>clinical</strong> faculty member.</label>";
 												break;
 												case "student":
-													$options = "";
+													$options = build_entry_grad_year_container($result["entry_year"], $result["grad_year"]);
 												break;
 												default:
 													$options = "";
@@ -1063,11 +1111,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										</tbody>
 										<tfoot>
 											<tr>
-												<td colspan="3"><h3>Options</h3></td>
+												<td colspan="4"><h3>Options</h3></td>
 											</tr>
 											<tr>
-												<td></td>
-												<td colspan="2">
+												<td>&nbsp;</td>
+												<td colspan="3">
 													<label for="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="display: block;">Departments</label><br />
 													<select id="<?php echo "in_departments_" . $result["organisation_id"]; ?>" name="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="">
 														<option value="0">-- Select Departments --</option>
@@ -1160,31 +1208,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				<input type="hidden" id="permissions" name="permissions" value="0" />
 			</form>
 			<div style="display: none;" id="entry_grad_year_container">
-				<div id="grad_year_container" style="float: left; margin-right: 20px;">
-					<label for="grad_year" class="form-required" style="display: block;">Expected Graduation Year</label><br />
-					<select id="grad_year" name="grad_year" style="width: 140px;">
-					<?php
-					for($i = fetch_first_year(); $i >= 1995; $i--) {
-						$selected = (isset($PROCESSED["grad_year"]) && $PROCESSED["grad_year"] == $i);
-						echo build_option($i, $i, $selected);
-					}
-					?>
-					</select>
-				</div>
-				&nbsp;&nbsp;
-				<div id="entry_year_container" style="float: left;">
-					<label for="entry_year" class="form-required" style="display: block;">Year of Program Entry</label><br />
-					<select id="entry_year" name="entry_year" style="width: 140px">
-					<?php
-					$selected_year = (isset($PROCESSED["entry_year"])) ? $PROCESSED["entry_year"] : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
-					for($i = fetch_first_year(); $i >= 1995; $i--) {
-						$selected = $selected_year == $i;
-						echo build_option($i, $i, $selected);
-					}
-					?>
-					</select>
-				</div>
-			</div>
+                <?php echo build_entry_grad_year_container($PROCESSED["entry_year"], $PROCESSED["grad_year"]); ?>
+            </div>
 			<style>
 				td {
 					text-align: left;
@@ -1392,9 +1417,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 						$('select[id=entry_year]').live("change", function() {
 							var org_id = $(this).closest('table').attr("id").split("_")[2]
-							for (i = 0; i < permissions.length; i++) {
-								if (permissions[i].org_id == org_id) {
-									permissions[i].entry_year = $(this).val();
+							for (i = 0; i < permissions.acl.length; i++) {
+								if (permissions.acl[i].org_id == org_id) {
+									permissions.acl[i].entry_year = $(this).val();
 								}
 							}
 							$('input[name=permissions]').val(JSON.stringify(permissions));
@@ -1402,9 +1427,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 						$('select[id=grad_year]').live("change", function() {
 							var org_id = $(this).closest('table').attr("id").split("_")[2];
-							for (i = 0; i < permissions.length; i++) {
-								if (permissions[i].org_id == org_id) {
-									permissions[i].grad_year = $(this).val();
+							for (i = 0; i < permissions.acl.length; i++) {
+								if (permissions.acl[i].org_id == org_id) {
+                            		permissions.acl[i].grad_year = $(this).val();
 								}
 							}
 							$('input[name=permissions]').val(JSON.stringify(permissions));

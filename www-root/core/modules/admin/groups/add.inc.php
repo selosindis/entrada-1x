@@ -44,7 +44,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 
 	echo "<script language=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
-	
+
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/groups?".replace_query(array("section" => "add")), "title" => "Adding Group");
 
 	$group_type = "individual";
@@ -53,9 +53,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 	$number_of_groups ="";
 	$populate = 0;
 	$GROUP_IDS = array();
+    $PROCESSED = array();
 
 	echo "<h1>Add Group</h1>\n";
-	
+
 	// Error Checking
 	switch($STEP) {
 		case 2 :
@@ -63,7 +64,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			 * Get the active organisation_id and add it to the PROCESSED array.
 			 */
 			$PROCESSED["organisation_id"] = $ENTRADA_USER->getActiveOrganisation();
-			
+
 			/**
 			 * Required field "group_name" / Group Name.
 			 */
@@ -73,7 +74,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				$ERROR++;
 				$ERRORSTR[] = "The <strong>Group Name</strong> field is required.";
 			}
-			
+
 			/**
 			 * Required field "group_type" / Group Type.
 			 */
@@ -83,7 +84,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				$ERROR++;
 				$ERRORSTR[] = "The <strong>Group Type</strong> field is required.";
 			}
-			
+
 			/**
 			 * Required field "course_id" / Course ID.
 			 */
@@ -93,7 +94,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				} else {
 					$ERROR++;
 					$ERRORSTR[] = "The <strong>Course</strong> field is required for course lists.";
-				}				
+				}
 			} else {
 				$PROCESSED["group_value"] = false;
 			}
@@ -116,13 +117,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			}
 
 			$proxy_ids = explode(',', $_POST["group_member_ids"]);
-			
+
 			foreach ($proxy_ids as &$proxy_id) {
 				$proxy_id = (int) $proxy_id;
 			}
-			$PROCESSED["updated_date"]	= time();
+
+            $PROCESSED["entrada_only"] = 1;
+			$PROCESSED["updated_date"] = time();
 			$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
-			
+
 			if (!$ERROR) {
 				$result = $db->GetRow("SELECT `group_id` FROM `groups` WHERE `group_name` = ".$db->qstr($PROCESSED["group_name"]));
 				if ($result) {
@@ -298,13 +301,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 												<td>
 													<div id="group_name_title"></div>
 												</td>
-											</tr>			
+											</tr>
 											<tr>
 												<td colspan="2" style="vertical-align: top">
 													<div class="member-add-type" id="existing-member-add-type">
 													<?php
 														$nmembers_results	= false;
-				
+
 														$nmembers_query	= "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`username`, a.`organisation_id`, b.`group`, b.`role`
 																			FROM `".AUTH_DATABASE."`.`user_data` AS a
 																			LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -315,7 +318,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 																			AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 																			GROUP BY a.`id`
 																			ORDER BY a.`lastname` ASC, a.`firstname` ASC";
-				
+
 														//Fetch list of categories
 														$query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
 														$organisation_results	= $db->GetAll($query);
@@ -327,7 +330,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 																}
 															}
 														}
-				
+
 														$current_member_list	= array();
 														$query		= "SELECT `proxy_id` FROM `group_members` WHERE `group_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
 														$results	= $db->GetAll($query);
@@ -338,7 +341,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 																}
 															}
 														}
-				
+
 														$nmembers_results = $db->GetAll($nmembers_query);
 														if($nmembers_results) {
 															$members = $member_categories;
@@ -346,14 +349,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 																$organisation_id = $member['organisation_id'];
 																$group = $member['group'];
 																$role = $member['role'];
-																
+
 																if($group == "student" && !isset($members[$organisation_id]['options'][$group.$role])) {
 																	$members[$organisation_id]['options'][$group.$role] = array('text' => $group. ' > '.$role, 'value' => $organisation_id.'|'.$group.'|'.$role);
 																} elseif ($group != "guest" && $group != "student" && !isset($members[$organisation_id]['options'][$group."all"])) {
 																	$members[$organisation_id]['options'][$group."all"] = array('text' => $group. ' > all', 'value' => $organisation_id.'|'.$group.'|all');
 																}
 															}
-				
+
 															$added_ids = array();
 															$added_people = array();
 															$key_value = 1;
@@ -395,7 +398,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 																	'selectboxname'=>'group and role',
 																	'default-option'=>'-- Select Group & Role --',
 																	'category_check_all'=>true));
-				
+
 														} else {
 															echo "No One Available [1]";
 														}
@@ -446,7 +449,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 							jQuery('#course_select_row').hide();
 						}
 					});
-				});				
+				});
 				<?php
 				if (isset($added_ids) && $added_ids) {
 					?>
@@ -466,15 +469,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 							}
 						}
 					}
-				} else { 
+				} else {
 					?>
 					var people = [[]];
 					var ids = [[]];
-					<?php 
-				} 
+					<?php
+				}
 				?>
 				var disablestatus = 0;
-		
+
 				//Updates the People Being Added div with all the options
 				function updatePeopleList(newoptions, index) {
 					if ($('group_members_index').value == index) {
@@ -497,21 +500,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						$('group_members_index').value = index;
 					}
 				}
-		
+
 				$('group_members_select_filter').observe('keypress', function(event){
 				    if(event.keyCode == Event.KEY_RETURN) {
 						Event.stop(event);
 					}
 				});
-		
+
 				//Reload the multiselect every time the category select box changes
 				var multiselect;
-		
+
 				$('group_members_category_select').observe('change', function(event) {
-		
+
 					if ($('group_members_category_select').selectedIndex != 0) {
 						$('group_members_scroll').update(new Element('div', {'style':'width: 100%; height: 100%; background: transparent url(<?php echo ENTRADA_URL;?>/images/loading.gif) no-repeat center'}));
-			
+
 						//Grab the new contents
 						var updater = new Ajax.Updater('group_members_scroll', '<?php echo ENTRADA_URL."/admin/groups?section=membersapi";?>',{
 							method:'post',
@@ -574,7 +577,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						disablestatus = 1;
 						toggleDisabled($('additions'),true);
 						$('delbutton').style.display = 'block';
-						$('additions').fade({ duration: 0.3, to: 0.25 }); 
+						$('additions').fade({ duration: 0.3, to: 0.25 });
 					} else if (!$$('.delchk:checked').length&&disablestatus) {
 						disablestatus = 0;
 						toggleDisabled($('additions'),false);

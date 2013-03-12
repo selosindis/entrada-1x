@@ -65,11 +65,11 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		if (isset($_REQUEST["type"]) && $_REQUEST["type"] == "order") {
 			if ($parent_id) {
 				$query = "SELECT a.* FROM `global_lu_objectives` AS a
-							JOIN `objective_organisation` AS b
+							LEFT JOIN `objective_organisation` AS b
 							ON a.`objective_id` = b.`objective_id`
 							WHERE a.`objective_parent` = ".$db->qstr($parent_id)."
 							AND a.`objective_active` = '1'
-							AND b.`organisation_id` = ".$db->qstr($organisation_id)."
+							AND (b.`organisation_id` = ".$db->qstr($organisation_id)." OR b.`organisation_id` IS NULL)
 							ORDER BY a.`objective_order` ASC";
 			} else {
 				$query = "	SELECT * FROM `global_lu_objectives` AS a
@@ -77,7 +77,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 							ON a.`objective_id` = b.`objective_id`
 							WHERE a.`objective_parent` = '0' 
 							AND a.`objective_active` = '1' 
-							AND b.`organisation_id` = ".$db->qstr($organisation_id)."
+							AND (b.`organisation_id` = ".$db->qstr($organisation_id)." OR b.`organisation_id` IS NULL)
 							ORDER BY a.`objective_order` ASC";
 			}
 			$objectives = $db->GetAll($query);

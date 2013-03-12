@@ -32,6 +32,7 @@ class Entrada_ACL extends ACL_Factory {
 				"evaluationform" => array (
 					"evaluationformquestion"
 				),
+				"evaluationquestion"
 			),			
 			"gradebook" => array(
 				"assessment"
@@ -599,13 +600,18 @@ class CourseEnrollmentAssertion implements Zend_Acl_Assert_Interface {
 							}
 							break;
 						case "group_id":
-							$query = "  SELECT *
-										FROM `group_members`
-										WHERE `group_id` = ".$db->qstr($result["audience_value"]) . "
-										AND `proxy_id` = " . $db->qstr($user_id) . "
-										AND `member_active` = 1
-										AND ((UNIX_TIMESTAMP() BETWEEN `start_date` AND `finish_date`) OR (start_date = 0 AND finish_date = 0)
-										OR (start_date IS NULL AND finish_date IS NULL))";
+							$query = "  SELECT a.*
+										FROM `group_members` AS a
+										JOIN `groups` AS b
+										ON a.`group_id` = b.`group_id`
+										WHERE a.`group_id` = ".$db->qstr($result["audience_value"]) . "
+										AND a.`proxy_id` = " . $db->qstr($user_id) . "
+										AND a.`member_active` = 1
+										AND b.`group_active` = 1
+										AND (
+											(UNIX_TIMESTAMP() >= a.`start_date` OR a.`start_date` = 0) AND 
+											(UNIX_TIMESTAMP() <= a.`finish_date` OR a.`finish_date` = 0)
+										)";
 							$result = $db->GetRow($query);
 
 							if ($result) {
@@ -717,12 +723,20 @@ class NotEventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
                             return true;
                         }
                         break;
+                    case "cohort":
                     case "group_id":
-                        $query = "    SELECT *
-                                    FROM `group_members`
-                                    WHERE `group_id` = ".$db->qstr($event["audience_value"]) . "
-                                    AND `proxy_id` = " . $db->qstr($user_id) . "
-                                    AND `member_active` = 1";
+						$query = "  SELECT a.*
+									FROM `group_members` AS a
+									JOIN `groups` AS b
+									ON a.`group_id` = b.`group_id`
+									WHERE a.`group_id` = ".$db->qstr($result["audience_value"]) . "
+									AND a.`proxy_id` = " . $db->qstr($user_id) . "
+									AND a.`member_active` = 1
+									AND b.`group_active` = 1
+									AND (
+										(UNIX_TIMESTAMP() >= a.`start_date` OR a.`start_date` = 0) AND 
+										(UNIX_TIMESTAMP() <= a.`finish_date` OR a.`finish_date` = 0)
+									)";
                         $result = $db->GetRow($query);
                         if ($result) {
                             return true;
@@ -733,7 +747,7 @@ class NotEventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
                                     FROM `course_group_audience` cga
                                     JOIN `curriculum_periods` cp
                                     ON cga.`cperiod_id` = cp.`cperiod_id`
-                                    WHERE cga.`cgroup_id` = ".$db->qstr($event["audience_value"]) . "
+                                    WHERE cga.`cgroup_id` = ".$db->qstr($result["audience_value"]) . "
                                     AND cga.`proxy_id` = " . $db->qstr($user_id) . "
                                     AND    cga.`active` = 1
                                     AND UNIX_TIMESTAMP() BETWEEN cp.`start_date` AND cp.`finish_date`";
@@ -887,11 +901,19 @@ class EventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
                         }
                         break;
                     case "group_id":
-                        $query = "    SELECT *
-                                    FROM `group_members`
-                                    WHERE `group_id` = ".$db->qstr($event["audience_value"]) . "
-                                    AND `proxy_id` = " . $db->qstr($user_id) . "
-                                    AND `member_active` = 1";
+                    case "cohort":
+						$query = "  SELECT a.*
+									FROM `group_members` AS a
+									JOIN `groups` AS b
+									ON a.`group_id` = b.`group_id`
+									WHERE a.`group_id` = ".$db->qstr($result["audience_value"]) . "
+									AND a.`proxy_id` = " . $db->qstr($user_id) . "
+									AND a.`member_active` = 1
+									AND b.`group_active` = 1
+									AND (
+										(UNIX_TIMESTAMP() >= a.`start_date` OR a.`start_date` = 0) AND 
+										(UNIX_TIMESTAMP() <= a.`finish_date` OR a.`finish_date` = 0)
+									)";
                         $result = $db->GetRow($query);
                         if ($result) {
                             return true;
@@ -902,7 +924,7 @@ class EventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
                                     FROM `course_group_audience` cga
                                     JOIN `curriculum_periods` cp
                                     ON cga.`cperiod_id` = cp.`cperiod_id`
-                                    WHERE cga.`cgroup_id` = ".$db->qstr($event["audience_value"]) . "
+                                    WHERE cga.`cgroup_id` = ".$db->qstr($result["audience_value"]) . "
                                     AND cga.`proxy_id` = " . $db->qstr($user_id) . "
                                     AND    cga.`active` = 1
                                     AND UNIX_TIMESTAMP() BETWEEN cp.`start_date` AND cp.`finish_date`";
@@ -2616,6 +2638,17 @@ class EvaluationFormResource extends EvaluationResource {
 	}
 	public function getResourceId() {
 		return "evaluationform".($this->specific ? $this->evaluation_id : "");
+	}
+}
+
+class EvaluationQuestionResource extends EvaluationResource {
+	var $equestion_id;
+
+	function __construct($equestion_id, $assert = null) {
+		$this->equestion_id = $equestion_id;
+	}
+	public function getResourceId() {
+		return "evaluationquestion".($this->specific ? $this->equestion_id : "");
 	}
 }
 

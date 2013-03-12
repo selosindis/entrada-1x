@@ -28,7 +28,7 @@ require_once("Models/users/Cohort.class.php");
 
 /**
  * User class with basic information and access to user related info
- * 
+ *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Jonathan Fingland <jonathan.fingland@quensu.ca>
@@ -101,9 +101,9 @@ class User {
 									"l" => "lastname",
 									"p" => "prefix"
 									);
-	
+
 	function __construct() {}
-	
+
 	/**
 	 * Returns the id of the user
 	 * @return int
@@ -141,14 +141,14 @@ class User {
 	 */
 	public function setActiveId($value) {
 		global $db;
-		
+
 		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access` WHERE `id` = ".$db->qstr($value);
 		$active_id = $db->GetOne($query);
 		if ($active_id) {
 			$this->active_id = $active_id;
 		}
 	}
-		
+
 	/**
 	 * Returns the username of the user
 	 * @return string
@@ -156,7 +156,7 @@ class User {
 	function getUsername() {
 		return $this->username;
 	}
-	
+
 	/**
 	 * Returns the graduating year of the user, if available
 	 * @return int
@@ -164,7 +164,7 @@ class User {
 	function getGradYear() {
 		return $this->grad_year;
 	}
-	
+
 	/**
 	 * Returns the cohort of the user, if available
 	 * @return int
@@ -172,7 +172,7 @@ class User {
 	function getCohort() {
 		return $this->cohort;
 	}
-	
+
 	/**
 	 * Sets the cohort of the user, if available
 	 * @param int $value : The cohort with which the given user is associated.
@@ -180,7 +180,7 @@ class User {
 	public function setCohort($value) {
 		$this->cohort = $value;
 	}
-	
+
 	/**
 	 * Returns the entire class of the same cohort
 	 * @return Cohort
@@ -190,7 +190,7 @@ class User {
 			return Cohort::get($this->cohort);
 		}
 	}
-	
+
 	/**
 	 * Returns the year a student enetered med school, if available
 	 * @return int
@@ -198,15 +198,15 @@ class User {
 	function getEntryYear() {
 		return $this->entry_year;
 	}
-	
+
 	/**
 	 * Returns the first name of the user
 	 * @return string
 	 */
 	function getFirstname(){
 		return $this->firstname;
-	} 
-	
+	}
+
 	/**
 	 * Returns the last name of the user
 	 * @return string
@@ -214,7 +214,7 @@ class User {
 	function getLastname() {
 		return $this->lastname;
 	}
-	
+
 	/**
 	 * Returns the Last and First names formatted as "lastname, firstname"
 	 * @return string
@@ -226,7 +226,7 @@ class User {
 			return $this->getName("%f %l");
 		}
 	}
-	
+
 	/**
 	 * Returns the user's name formatted according to the format string supplied. Default format is "%f %l" (firstname, lastname)
 	 * <code>
@@ -235,7 +235,7 @@ class User {
 	 * } else {
 	 *   echo $user->getName("%f %l"); //i.e. John Smith
 	 * }
-	 * </code> 
+	 * </code>
 	 * @see User::$format_keys
 	 * @param string $format
 	 * @return string
@@ -248,15 +248,15 @@ class User {
 		$format = preg_replace("/%%/", "%", $format);
 		return $format;
 	}
-	
+
 	/**
 	 * Returns the User's specified prefix, if any. e.g. Mr, Mrs, Dr,...
 	 * @return string
 	 */
 	function getPrefix() {
 		return $this->prefix;
-	} 
-	
+	}
+
 	/**
 	 * Returns the user's email address, if available
 	 * @return string
@@ -264,7 +264,7 @@ class User {
 	function getEmail() {
 		return $this->email;
 	}
-	
+
 	/**
 	 * Returns the user's alternate email address, if available
 	 * @return string
@@ -272,7 +272,7 @@ class User {
 	function getEmailAlternate() {
 		return $this->email_alt;
 	}
-	
+
 	/**
 	 * Returns the real world student number/employee number
 	 * @return int
@@ -280,16 +280,16 @@ class User {
 	function getNumber() {
 		return $this->number;
 	}
-	
+
 	/**
 	 * Not supported yet.
-	 * 
+	 *
 	 * @return Organisation
 	 */
 //	function getOrganisation() {
 //		return Organisation::get($this->organisation_id);
 //	}
-	
+
 	/**
 	 * Returns the ID of the organisation to which the user belongs
 	 * @return int
@@ -297,9 +297,9 @@ class User {
 	function getOrganisationId() {
 		return $this->organisation_id;
 	}
-	
+
 	/**
-	 * Returns a collection of photos belonging to the user. 
+	 * Returns a collection of photos belonging to the user.
 	 * @return UserPhotos
 	 */
 	function getPhotos() {
@@ -327,7 +327,7 @@ class User {
 
 	/**
 	 * Sets the active organisation.
-	 * 
+	 *
 	 * @param <String> $value - the active, i.e., current org
 	 */
 	public function setActiveOrganisation($value){
@@ -352,7 +352,7 @@ class User {
 	function setAllOrganisations($value) {
 		$this->all_organisations = $value;
 	}
-	
+
 	/**
 	 * Returns the int/boolean of the user's "clinical" status.
 	 *
@@ -398,7 +398,7 @@ class User {
 		}
 		$this->access_id = $value;
 		$this->setActiveId($value);
-		
+
 		// Get all of the users orgs
 		$query = "SELECT b.`organisation_id`, b.`organisation_title`
 					  FROM `" . AUTH_DATABASE . "`.`user_access` a
@@ -454,13 +454,13 @@ class User {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param int proxy_id
 	 * @return User
 	 */
 	public static function get($proxy_id) {
 		global $db, $ENTRADA_CACHE;
-		
+
 		if (!isset($ENTRADA_CACHE) || !($user = $ENTRADA_CACHE->load("user_".AUTH_APP_ID."_".$proxy_id))) {
 			$user = new User();
 			$query = "	SELECT a.*, b.`group`, b.`role`
@@ -493,7 +493,7 @@ class User {
 								AND (b.`access_starts` = '0' OR b.`access_starts` < ?)
 								AND (b.`access_expires` = '0' OR b.`access_expires` >= ?)
 								AND b.`app_id` = ?
-								AND a.`assigned_to` = ? 
+								AND a.`assigned_to` = ?
 								AND a.`valid_from` <= ?
 								AND a.`valid_until` >= ?";
 					$mask_available = $db->getRow($query, array($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"], time(), time(), AUTH_APP_ID, $user->getID(), time(), time()));
@@ -525,24 +525,6 @@ class User {
 				$user->setCohort($result);
 			}
 
-			//get all of the users orgs
-			$query = "SELECT b.`organisation_id`, b.`organisation_title`
-						  FROM `" . AUTH_DATABASE . "`.`user_access` a
-						  JOIN `" . AUTH_DATABASE . "`.`organisations` b
-						  ON a.`organisation_id` = b.`organisation_id`
-						  WHERE a.`user_id` = ?
-						  AND a.`app_id` = ?";
-			$results = $db->getAll($query, array($proxy_id, AUTH_APP_ID));
-
-			//every user should have at least one org.
-			if ($results) {
-				$organisation_list = array();
-				foreach ($results as $result) {
-					$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
-				}
-				$user->setAllOrganisations($organisation_list);
-			}
-
 			//get all of the users groups and roles for each organisation
 			$query = "SELECT b.`organisation_id`, b.`organisation_title`, a.`group`, a.`role`, a.`id`
 						FROM `" . AUTH_DATABASE . "`.`user_access` a
@@ -555,32 +537,61 @@ class User {
 						AND a.`app_id` = ?
 						ORDER BY a.`id` ASC";
 
-			$results = $db->getAll($query, array($proxy_id, time(), time(), AUTH_APP_ID));		
+			$results = $db->getAll($query, array($proxy_id, time(), time(), AUTH_APP_ID));
 
-			if ($results) {			
+			//every user should have at least one org.
+			if ($results) {
+				$organisation_list = array();
 				$org_group_role = array();
+				
 				foreach ($results as $result) {
-					if ((!isset($user->default_access_id) || !$user->default_access_id) && $result["organisation_id"] == $user->getOrganisationId()) {
+					$organisation_list[$result["organisation_id"]] = html_encode($result["organisation_title"]);
+				}
+				
+				$user->setAllOrganisations($organisation_list);
+				
+				foreach ($results as $result) {
+					if ((!isset($user->default_access_id) || !$user->default_access_id)) {
 						if (!isset($_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) || !$_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) {
 							$_SESSION["permissions"][$user->getAccessId()]["organisation_id"] = $result["organisation_id"];
-							$user->setActiveOrganisation($result["organisation_id"]);												
+							$user->setActiveOrganisation($result["organisation_id"]);
 						}
 						$user->setDefaultAccessId($result["id"]);
-					} 
-					$org_group_role[$result["organisation_id"]][html_encode($result["group"])] = array(html_encode($result["role"]), $result["id"]);
+					}
+    				$org_group_role[$result["organisation_id"]][] = array("group" => html_encode($result["group"]), "role" => html_encode($result["role"]), "access_id" => $result["id"]);
 				}
 				if ((!isset($_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) || !$_SESSION["permissions"][$user->getAccessId()]["organisation_id"]) && isset($results[0]["organisation_id"]) && $results[0]["organisation_id"]) {
 					$_SESSION["permissions"][$user->getAccessId()]["organisation_id"] = $results[0]["organisation_id"];
-					$user->setActiveOrganisation($results[0]["organisation_id"]);				
+					$user->setActiveOrganisation($results[0]["organisation_id"]);
 				}
+
 				$user->setOrganisationGroupRole($org_group_role);
 			}
-			
+
 			$ENTRADA_CACHE->save($user, "user_".AUTH_APP_ID."_".$proxy_id, array("auth"), 300);
+			$ENTRADA_CACHE->save(md5(serialize($results)), "access_hash_" . $proxy_id, array("access_hash"), 300);
 		}
 		return $user;
 	}
 	
+	public static function getAccessHash() {
+		global $db, $ENTRADA_USER;
+		//get all of the users groups and roles for each organisation
+		$query = "		SELECT b.`organisation_id`, b.`organisation_title`, a.`group`, a.`role`, a.`id`
+						FROM `" . AUTH_DATABASE . "`.`user_access` a
+						JOIN `" . AUTH_DATABASE . "`.`organisations` b
+						ON a.`organisation_id` = b.`organisation_id`
+						WHERE a.`user_id` = ?
+						AND a.`account_active` = 'true'
+						AND (a.`access_starts` = '0' OR a.`access_starts` < ?)
+						AND (a.`access_expires` = '0' OR a.`access_expires` >= ?)
+						AND a.`app_id` = ?
+						ORDER BY a.`id` ASC";
+
+		$results = $db->getAll($query, array($ENTRADA_USER->getID(), time(), time(), AUTH_APP_ID));
+		return md5(serialize($results));
+	}
+
 	/**
 	 * Returns a User object created using the array inputs supplied
 	 * @param array $arr
@@ -621,17 +632,17 @@ class User {
 
 		return $user;
 	}
-	
+
 	/**
 	 * @return Departments
 	 */
 	public function getDepartments() {
 		return Departments::getByUser($this->user_id);
 	}
-	
+
 		/**
-	 * Returns the active group for the active organisation.  
-	 * 
+	 * Returns the active group for the active organisation.
+	 *
 	 * @return array
 	 */
 	public function getActiveGroup() {
@@ -642,19 +653,19 @@ class User {
 			return $this->group;
 		}
 	}
-	
+
 	/**
 	 * Sets the active group.
-	 * 
+	 *
 	 * @param type $string
 	 */
 	public function setActiveGroup($group) {
 		$this->active_group = $group;
 	}
-	
+
 	/**
-	 * Returns the active role for the active organisation.  
-	 * 
+	 * Returns the active role for the active organisation.
+	 *
 	 * @return array
 	 */
 	public function getActiveRole() {
@@ -663,29 +674,29 @@ class User {
 		}
 		else {
 			return $this->role;
-		}			
+		}
 	}
-	
+
 	/**
 	 * Sets the active role.
-	 * 
+	 *
 	 * @param type string
 	 */
 	public function setActiveRole($role) {
 		$this->active_role = $role;
 	}
-	
+
 	/**
-	 * Returns the access group to which this user belongs e.g. student, faculty, ... 
+	 * Returns the access group to which this user belongs e.g. student, faculty, ...
 	 * @return string
 	 */
 	public function getGroup() {
 		if (is_null($this->group) && !$this->getAccess()) {
 			return;
 		}
-		return $this->group; 
+		return $this->group;
 	}
-	
+
 	/**
 	 * Returns the access role to which the user belongs
 	 * @return string
@@ -694,18 +705,18 @@ class User {
 		if (is_null($this->role) && !$this->getAccess()) {
 			return;
 		}
-		return $this->role; 
+		return $this->role;
 	}
-	
+
 	/**
 	 * Sets the active role.
-	 * 
+	 *
 	 * @param type string
 	 */
 	public function setRole($role) {
 		$this->role = $role;
 	}
-	
+
 	/**
 	 * Internal function for getting access information for a user
 	 * @return bool
@@ -723,11 +734,11 @@ class User {
 		if ($result) {
 			$this->group = $result["group"];
 			$this->role = $result["role"];
-			
+
 			return true;
-		}			
+		}
 	}
-	
+
 	/**
 	 * Returns the user-specified (numeric) privacy level
 	 * @return int
@@ -735,21 +746,21 @@ class User {
 	public function getPrivacyLevel(){
 		return $this->privacy_level;
 	}
-	
+
 	/**
 	 * @return string
 	 */
 	public function getAlternateEmail() {
 		return $this->email_alt;
 	}
-	
+
 	/**
 	 * @return string
 	 */
 	public function getCity() {
 		return $this->city;
 	}
-		
+
 	/**
 	 * NOTE: also used for zip codes and the like
 	 * @return string
@@ -757,7 +768,7 @@ class User {
 	public function getPostalCode() {
 		return $this->postcode;
 	}
-	
+
 	/**
 	 * @return Region
 	 */
@@ -778,9 +789,9 @@ class User {
 		}
 		return $this->cached_province;
 	}
-	
+
 	/**
-	 * Returns a Country object for the user's specified country. Legacy Support: Note that some users may not have country_id specified and rely on older country names. In those cases a new object is returned and can be operated in the same manner as newer country data 
+	 * Returns a Country object for the user's specified country. Legacy Support: Note that some users may not have country_id specified and rely on older country names. In those cases a new object is returned and can be operated in the same manner as newer country data
 	 * @return Country
 	 */
 	public function getCountry() {
@@ -793,7 +804,7 @@ class User {
 		}
 		return $this->cached_country;
 	}
-	
+
 	/**
 	 * Returns the street address portion of a user's provided address. For excample: 123 Fourth Street
 	 * @return string
@@ -801,34 +812,34 @@ class User {
 	public function getAddress() {
 		return $this->address;
 	}
-	
+
 	/**
 	 * @return string
 	 */
 	public function getTelephone() {
 		return $this->telephone;
 	}
-	
+
 	/**
 	 * @return string
 	 */
 	public function getFax() {
 		return $this->fax;
 	}
-	
+
 	/**
 	 * @return string
 	 */
 	public function getOfficeHours() {
 		return $this->office_hours;
 	}
-	
+
 	/**
 	 * @return Users
 	 */
 	public function getAssistants() {
 		global $db;
-		
+
 		$query		= "	SELECT b.*, a.*
 								FROM `permissions` AS a
 								LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -836,7 +847,7 @@ class User {
 								WHERE a.`assigned_by`=?
 								AND (a.`valid_from` = '0' OR a.`valid_from` <= ?) AND (a.`valid_until` = '0' OR a.`valid_until` > ?)
 								ORDER BY `valid_until` ASC";
-		
+
 		$time = time();
 		$results = $db->getAll($query, array($this->getID(), $time, $time));
 		$users = array();
@@ -853,35 +864,35 @@ class User {
 	 * Creates a user account and updates object, returns true or false.
 	 * $user_data requires: "username", "firstname", "lastname", "email", "password", "organisation_id"
 	 * $user_access requires: "group", "role", "app_id"
-	 * 
+	 *
 	 * @param array $user_data User data array, keys match table fields. Ex: array("id" => "1", "username" => "foo").
 	 * @param array $user_access User access array, keys match table fields. Ex: array("group" => "admin").
 	 * @return boolean
 	 */
 	public function createUser(array $user_data, array $user_access) {
 		global $db;
-		
+
 		$required_user_data		= array("username", "firstname", "lastname", "email", "password", "organisation_id");
 		$required_user_access	= array("group", "role", "app_id");
-		
+
 		foreach ($required_user_data as $data) {
 			if (!array_key_exists($data, $user_data)) {
 				$error = true;
 			}
 		}
-		
+
 		foreach ($required_user_access as $data) {
 			if (!array_key_exists($data, $user_access)) {
 				$error = true;
 			}
 		}
-		
+
 		if (!$error) {
-		
+
 			foreach ($user_data as $fieldname => $data) {
 				$processed["user_data"][$fieldname] = clean_input($data, array("trim", "striptags"));
 			}
-			
+
 			foreach ($user_access as $fieldname => $data) {
 				$processed["user_access"][$fieldname] = clean_input($data, array("trim", "striptags"));
 			}
@@ -900,41 +911,41 @@ class User {
 					application_log("error", "Failed to add user, DB said: ".$db->ErrorMsg());
 					$return = false;
 				} else {
-					
+
 					$params = get_class_vars(__CLASS__);
 
 					foreach ($params as $param_name => $param) {
 						$this->$param_name = (isset($processed["user_data"][$param_name]) ? $processed["user_data"][$param_name] : (isset($processed["user_access"][$param_name]) ? $processed["user_access"][$param_name] : $param));
 					}
-					
+
 					$return = true;
 				}
-				
+
 			} else {
 				application_log("error", "Failed to add user, DB said: ".$db->ErrorMsg());
 				$return = false;
 			}
-		
+
 		} else {
 			$return = false;
 		}
-		
+
 		return $return;
 	}
-	
+
 	/**
 	 * Updates a user account and updates object, returns true or false.
 	 * @param $user_data User data array, keys match table fields. Ex: array("id" => "1", "username" => "foo")
-	 * @param $user_access User access array, keys match table fields. Assumes user_id from $user_data["id"]. Ex: array("group" => "admin"). 
+	 * @param $user_access User access array, keys match table fields. Assumes user_id from $user_data["id"]. Ex: array("group" => "admin").
 	 * @return boolean
 	 */
 	public function updateUser(array $user_data, array $user_access = array()) {
 		global $db;
-		
+
 		if (!isset($user_data["id"]) || empty($user_data["id"])) {
 			$processed["user_data"]["id"] = $this->getID();
 		}
-		
+
 		foreach ($user_data as $fieldname => $data) {
 			$processed["user_data"][$fieldname] = clean_input($data, array("trim", "striptags"));
 		}
@@ -964,11 +975,11 @@ class User {
 			application_log("error", "Failed to update user [".$processed["user_data"]["id"]."], DB said: ".$db->ErrorMsg());
 			$return = false;
 		}
-		
-		
+
+
 		return $return;
 	}
-	
+
 	/**
 	 * Deactivates a user account and returns true or false.
 	 * @param int $id The userid to activate. Uses objects ID if empty.
@@ -976,13 +987,13 @@ class User {
 	 */
 	public function deactivateUser($id = "") {
 		global $db;
-		
+
 		if (!empty($id)) {
 			$proxy_id = (int) $id;
 		} else {
 			$proxy_id = $this->getID();
 		}
-		
+
 		if ($proxy_id) {
 			$processed["account_active"] = "false";
 			if (!$db->AutoExecute("`".AUTH_DATABASE."`.`user_access`", $processed, "UPDATE", "user_id = ".$db->qstr($proxy_id))) {
@@ -997,7 +1008,7 @@ class User {
 		}
 
 		return $return;
-		
+
 	}
-	
+
 }

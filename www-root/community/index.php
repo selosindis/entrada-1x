@@ -101,14 +101,15 @@ if (isset($_SERVER["PATH_INFO"])) {
 	}
 }
 
-$query = "	SELECT a.`community_protected`, b.`allow_public_view`
-			FROM `communities` AS a
-			LEFT JOIN `community_pages` AS b
-			ON b.`community_id` = a.`community_id`
-			WHERE `community_url` = ".$db->qstr($COMMUNITY_URL)."
-			AND `page_url` = ".$db->qstr($PAGE_URL);
-$page_permissions = $db->GetRow($query);
-
+if (isset($PAGE_URL) && $PAGE_URL) {
+    $query = "	SELECT a.`community_protected`, b.`allow_public_view`
+                FROM `communities` AS a
+                LEFT JOIN `community_pages` AS b
+                ON b.`community_id` = a.`community_id`
+                WHERE `community_url` = ".$db->qstr($COMMUNITY_URL)."
+                AND `page_url` = ".$db->qstr($PAGE_URL);
+    $page_permissions = $db->GetRow($query);
+}
 $PAGE_PROTECTED = ($page_permissions && ($page_permissions["community_protected"] == 1 || $page_permissions["allow_public_view"] == 0) ? true : false);
 
 if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
@@ -207,12 +208,14 @@ if ($COMMUNITY_URL) {
 						$PAGE_ACTIVE = true;
 					break;
 					default :
-						$query = "SELECT `cpage_id`, `page_type`, `page_content`, `page_active`, `menu_title` FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` = ".$db->qstr($PAGE_URL);
+						$query = "SELECT * FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` = ".$db->qstr($PAGE_URL);
 						$result = $db->GetRow($query);
 						if ($result) {
 							$PAGE_ID = $result["cpage_id"];
 							$COMMUNITY_MODULE = $result["page_type"];
 							$MENU_TITLE = $result["menu_title"];
+							$PAGE_ORDER = $result["page_order"];
+							$PARENT_ID = $result["parent_id"];
 							if (((int)$result["page_active"]) == '1') {
 								$PAGE_ACTIVE = true;
 								if ($COMMUNITY_MODULE == "url") {
@@ -221,7 +224,7 @@ if ($COMMUNITY_URL) {
 								}
 							}
 						} else {
-							$query = "SELECT `page_type`, `page_url`, `page_active`, `menu_title` FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_type` = ".$db->qstr(($PAGE_URL == "calendar" ? "events" : $PAGE_URL))." ORDER BY `page_order` ASC";
+							$query = "SELECT * FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_type` = ".$db->qstr(($PAGE_URL == "calendar" ? "events" : $PAGE_URL))." ORDER BY `page_order` ASC";
 							$result	= $db->GetRow($query);
 							if ($result) {
 								if (((int)$result["page_active"]) == '1') { 
@@ -230,6 +233,8 @@ if ($COMMUNITY_URL) {
 									$COMMUNITY_MODULE = $result["page_type"];
 									$MENU_TITLE = $result["menu_title"];
 									$PAGE_URL = $result["page_url"];
+									$PAGE_ORDER = $result["page_order"];
+									$PARENT_ID = $result["parent_id"];
 								}
 							} else {
 								$COMMUNITY_MODULE = "default";
@@ -238,7 +243,7 @@ if ($COMMUNITY_URL) {
 					break;
 				}
 			} else {
-				$query = "SELECT `cpage_id`, `page_type`, `page_content`, `menu_title` FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` = ''";
+				$query = "SELECT * FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_url` = ''";
 				$result	= $db->GetRow($query);
 				if ($result) {
 					$PAGE_ID = $result["cpage_id"];
@@ -246,6 +251,8 @@ if ($COMMUNITY_URL) {
 					$MENU_TITLE = $result["menu_title"];
 					$PAGE_ACTIVE = true;
 					$HOME_PAGE = true;
+					$PAGE_ORDER = $result["page_order"];
+					$PARENT_ID = $result["parent_id"];
 					if ($COMMUNITY_MODULE == "url") {
 						header("Location: ".$result["page_content"]);
 						exit;
@@ -338,7 +345,92 @@ if ($COMMUNITY_URL) {
 					$smarty->template_dir = COMMUNITY_ABSOLUTE."/templates/".$COMMUNITY_TEMPLATE;
 					$smarty->compile_id = md5($smarty->template_dir);
 				}
-
+                $COMMUNITY_LOCKED_PAGE_IDS = array();
+                $COMMUNITY_TYPE_OPTIONS = array();
+                if (isset($community_details["octype_id"]) && $community_details["octype_id"]) {
+                    $query = "SELECT * FROM `org_community_types` WHERE `octype_id` = ".$db->qstr($community_details["octype_id"]);
+                    $COMMUNITY_TYPE = $db->GetRow($query);
+                    if ($COMMUNITY_TYPE) {
+                        $COMMUNITY_TYPE_OPTIONS = json_decode($COMMUNITY_TYPE["community_type_options"], true);
+                        
+                        $query = "SELECT b.`cpage_id` FROM `community_type_pages` AS a
+                                    JOIN `community_pages` AS b
+                                    ON a.`page_url` = b.`page_url`
+                                    AND a.`page_type` = b.`page_type`
+                                    WHERE a.`type_id` = ".$db->qstr($COMMUNITY_TYPE["octype_id"])."
+                                    AND a.`type_scope` = 'organisation'
+                                    AND b.`community_id` = ".$db->qstr($COMMUNITY_ID);
+                        $locked_pages = $db->GetAll($query);
+                        if ($locked_pages) {
+                            foreach ($locked_pages as $locked_page) {
+                                $COMMUNITY_LOCKED_PAGE_IDS[] = $locked_page["cpage_id"];
+                            }
+                        }
+                    }
+					if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && $COMMUNITY_TYPE_OPTIONS["sequential_navigation"] == "1" && $COMMUNITY_MODULE != "pages") {
+						$is_sequential_nav = true;
+						$smarty->assign("is_sequential_nav", $is_sequential_nav);
+						
+						$result = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER);
+						
+						$query = "	SELECT a.*, b.`page_url` AS `nav_url`
+									FROM `community_page_navigation` AS a
+									LEFT JOIN `community_pages` AS b
+									ON a.`nav_page_id` = b.`cpage_id`
+									WHERE a.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
+									AND a.`cpage_id` = " . $db->qstr($PAGE_ID) . "
+									AND `nav_type` = 'next'";
+						
+						$nav_result = $db->GetRow($query);
+						
+						if ($nav_result) {
+							$show_right_nav = $nav_result["show_nav"];
+						} else {
+							$show_right_nav = 1;
+						}
+						
+						if (($result || (isset($nav_result["nav_url"]) && $nav_result["nav_url"])) && $show_right_nav) {
+							if ($nav_result["nav_url"]) {
+								$url = $nav_result["nav_url"];
+							} else {
+								$url = $result["page_url"];
+							}
+							$next_page_url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":" . $url;
+						} else {
+							$next_page_url = "#";
+						}
+						$smarty->assign("next_page_url", $next_page_url);
+						
+						$query = "	SELECT a.*, b.`page_url` AS `nav_url`
+									FROM `community_page_navigation` AS a
+									LEFT JOIN `community_pages` AS b
+									ON a.`nav_page_id` = b.`cpage_id`
+									WHERE a.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
+									AND a.`cpage_id` = " . $db->qstr($PAGE_ID) . "
+									AND `nav_type` = 'previous'";
+						$nav_result = $db->GetRow($query);
+					
+						if ($nav_result) {
+							$show_left_nav = $nav_result["show_nav"];
+						} else {
+							$show_left_nav = 1;
+						}
+						
+						$result = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER);
+						if (($result || (isset($nav_result["nav_url"]) && $nav_result["nav_url"])) && $show_left_nav) {
+							if ($nav_result["nav_url"]) {
+								$url = $nav_result["nav_url"];
+							} else {
+								$url = $result["page_url"];
+							}
+							$previous_page_url = ENTRADA_URL . "/community" . $community_details["community_url"] . ":" . $url;
+						} else {
+							$previous_page_url = "#";
+						}
+						$smarty->assign("previous_page_url", $previous_page_url);
+					}
+                }
+                
 				/**
 				 * Get a list of modules which are enabled.
 				 */
@@ -616,8 +708,12 @@ if ($COMMUNITY_URL) {
 				$PAGE_META["title"] = $community_details["community_title"];
 				$PAGE_META["description"] = trim(str_replace(array("\t", "\n", "\r"), " ", html_encode(strip_tags($community_details["community_description"]))));
 				$PAGE_META["keywords"] = trim(str_replace(array("\t", "\n", "\r"), " ", html_encode(strip_tags($community_details["community_keywords"]))));"";
-				
-				$member_name = html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+
+				if ($LOGGED_IN) {
+					$member_name = html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+				} else {
+					$member_name = "Guest";
+				}
 				$date_joined = "Joined: ".date("Y-m-d", $COMMUNITY_MEMBER_SINCE);
 				
 				$smarty->assign("template_relative", COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE);

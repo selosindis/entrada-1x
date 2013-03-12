@@ -39,14 +39,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 } else {
 	if ($COURSE_ID) {
 		/**
-		 * Handles the AJAX re-ordering of assessments. 
+		 * Handles the AJAX re-ordering of assessments.
 		 */
 		if (isset($_POST["mode"]) && ($_POST["mode"] == "ajax") && isset($_POST["order"]) && is_array($_POST["order"]) && !empty($_POST["order"])) {
 			ob_clear_open_buffers();
 
 			foreach ($_POST["order"] as $assessment_id => $order) {
 				$order = (int) $order[0];
-				
+
 				$query = "UPDATE `assessments` SET `order` = ".$db->qstr($order)." WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `assessment_id` = ".$db->qstr((int) $assessment_id);
 				if($db->Execute($query)) {
 					$error = false;
@@ -58,17 +58,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			}
 
 			echo ($error == false ? 1 : 0);
-			
+
 			exit;
-		}		
-		
-		$query = "	SELECT * FROM `courses` 
+		}
+
+		$query = "	SELECT * FROM `courses`
 					WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 					AND `course_active` = '1'";
 		$course_details	= $db->GetRow($query);
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "id" => $COURSE_ID, "step" => false)), "title" => "Assessments");
-			
+
 			/**
 			 * Update requested column to sort by.
 			 * Valid: director, name
@@ -118,7 +118,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] = DEFAULT_ROWS_PER_PAGE;
 				}
 			}
-			
+
 			/**
 			 * Check if preferences need to be updated on the server at this point.
 			 */
@@ -141,8 +141,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					$sort_by = "`assessments`.`order` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 				break;
 			}
-			
-			$query	= "	SELECT COUNT(*) AS `total_rows` FROM `assessments` WHERE `course_id` = ".$db->qstr($COURSE_ID);			
+
+			$query	= "	SELECT COUNT(*) AS `total_rows` FROM `assessments` WHERE `course_id` = ".$db->qstr($COURSE_ID);
 			$result	= $db->GetRow($query);
 			if ($result) {
 				$total_rows	= $result["total_rows"];
@@ -175,25 +175,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			if ($total_pages > 1) {
 				$pagination = new Pagination($page_current, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $total_rows, ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), replace_query());
 			}
-			
+
 			$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $page_current) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-						
+
             courses_subnavigation($course_details,"gradebook");
-			
+
 			$curriculum_path = curriculum_hierarchy($COURSE_ID);
 			if ((is_array($curriculum_path)) && (count($curriculum_path))) {
 				echo "<h1>" . implode(": ", $curriculum_path) . " Gradebook </h1>";
 			}
-			
-			if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) { ?>				
+
+			if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) { ?>
 				<div class="pull-right">
-						<a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="btn btn-primary">Add New Assessment</a>
+					<a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="btn btn-primary">Add New Assessment</a>
 				</div>
 				<h2>Assessments</h2>
 				<div style="clear: both"></div>
-			<?php
+                <?php
 			}
-			
+
 			$query =  "SELECT DISTINCT `assessments`.`course_id`, `assessments`.`cohort` FROM `assessments`
 					   WHERE `course_id` =". $db->qstr($COURSE_ID)."
 					   ORDER BY `cohort`";
@@ -208,7 +208,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					echo "<form action=\"".ENTRADA_URL . "/admin/gradebook/assessments?".replace_query(array("section" => "delete", "step"=>1))."\" method=\"post\">";
 				}
 				?>
-				<table class="tableList" cellspacing="0" summary="List of Assessments" id="assessment_list">			
+				<table class="tableList" cellspacing="0" summary="List of Assessments" id="assessment_list">
 					<tfoot>
 						<tr>
 							<td style="padding-top: 10px; border-bottom:0;"colspan="3">
@@ -218,16 +218,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											var id = e.target.id.substring(5);
 											jQuery('#'+id).trigger('click');
 										});
-										
+
 										var reordering = false;
 										var orderChanged = false;
-										
+
 										jQuery('#reorder').click(function(){
 											jQuery('.ordermsg').remove();
 											if (reordering == false) {
 												jQuery('#saveorder').show();
 												jQuery('#delete, #export').hide();
-												
+
 												jQuery('#assessment_list tbody tr td.modified .delete').hide();
 												jQuery('#assessment_list tbody tr td.modified').append('<span class="handle"></span>');
 												jQuery('#assessment_list tbody').sortable({
@@ -253,21 +253,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 												if (orderChanged == true) {
 													// if you try to cancel the sortable and the order hasn't changed javascript breaks.
 													jQuery('#assessment_list tbody').sortable('cancel').sortable('destroy');
-												} else { 
+												} else {
 													jQuery('#assessment_list tbody').sortable('destroy');
 												}
 											}
 											return false;
 										});
-										
+
 										jQuery('#saveorder').click(function(){
 											jQuery('.ordermsg').remove();
-											
-											// assign order to assessment 
+
+											// assign order to assessment
 											jQuery('#assessment_list tbody tr td.modified .order').each(function(){
 												jQuery(this).attr('value',jQuery(this).parent().parent().index()-1);
 											});
-											
+
 											// serialize the form data to pass to the ajax updater
 											var formData = jQuery('#assessment_list').parent().serialize();
 
@@ -288,16 +288,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											});
 
 											reordering = false;
-											
+
 											jQuery(this).hide();
 											jQuery('#assessment_list tbody tr td .handle').remove();
 											jQuery('#assessment_list tbody tr td.modified .delete').show();
 											jQuery('#reorder').attr('value', 'Reorder');
 											jQuery('#assessment_list tbody').sortable('destroy');
 											jQuery('#delete, #export').show();
-										});										
+										});
 									});
-									
+
 									function exportSelected() {
 										var ids = [];
 										$$('#assessment_list .modified input:checked').each(function(checkbox) {
@@ -323,7 +323,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						</tr>
 					</tfoot>
 					<tbody>
-					
+
 					<?php
 					if ($cohorts) {
 						foreach ($cohorts as $cohort) {
@@ -332,20 +332,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							echo "<td style=\"width: 400px;\"><h2 style=\"border-bottom: 0;\">".groups_get_name($cohort["cohort"])."</h2></td>";
 							echo "<td colspan=\"2\"><h2 style=\"border-bottom: 0;\">Grade Weighting</h2></td>";
 							echo "</tr>";
-							
+
 							$query = "	SELECT `course_id`, `assessment_id`, `name`, `grade_weighting`, `order`
 										FROM `assessments`
 										WHERE `cohort` =" . $db->qstr($cohort["cohort"])."
 										AND `course_id` =". $db->qstr($COURSE_ID)."
 										ORDER BY `order` ASC";
-							
+
 							$results = $db->GetAll($query);
 							if ($results) {
 								$total_grade_weight = 0;
-								
+
 								foreach ($results as $result) {
 									$total_grade_weight += $result["grade_weighting"];
-									
+
 									$url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&amp;id=".$COURSE_ID."&amp;assessment_id=".$result["assessment_id"];
 									echo "<tr id=\"assessment-".$result["assessment_id"]."\" class=\"assessment\">";
 									if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
@@ -354,7 +354,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										echo "	<td class=\"modified\" width=\"20\"><input type=\"hidden\" name=\"order[".$result["assessment_id"]."][]\" value=\"sortorder\" class=\"order\" /><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
 									}
 									echo "<td><a href=\"$url\" width=\"367\">".$result["name"]."</a></td>";
-									echo "<td colspan=\"2\"><a href=\"$url\">".$result["grade_weighting"]. "%</a></td>"; 
+									echo "<td colspan=\"2\"><a href=\"$url\">".$result["grade_weighting"]. "%</a></td>";
 									echo "</tr>";
 								}
 								echo "<tr>";
@@ -375,24 +375,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			} else {
 				// No assessments in this course.
 				?>
-				<div class="display-notice">
+				<div class="display-generic">
 					<h3>No Assessments for <?php echo $course_details["course_name"]; ?></h3>
-					There are no assessments in the system for this course. You can create new ones by clicking the <strong>Add New Assessment</strong> link above.
+					There are currently no assessments entered for this course. You can create new ones by clicking the <strong>Add New Assessment</strong> link above.
 				</div>
 				<?php
 			}
-			
+
 			//Assignment
 			if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) {
 				?>
 				<div class="pull-right">
-						<a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="btn btn-primary">Add New Assignment</a>
+					<a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="btn btn-primary">Add New Assignment</a>
 				</div>
-				<h2>Assignments</h2>				
+				<h2>Assignment Drop Boxes</h2>
 				<div style="clear: both"></div>
 				<?php
 			}
-			
+
 			$query =  "SELECT DISTINCT `assignments`.`course_id` FROM `assignments`
 					   WHERE `course_id` =". $db->qstr($COURSE_ID)."
 					   ORDER BY `course_id`";
@@ -407,8 +407,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					echo "<form action=\"".ENTRADA_URL . "/admin/gradebook/assignments?".replace_query(array("section" => "delete", "step"=>1))."\" method=\"post\">";
 				}
 				?>
-				
-				<table class="tableList" cellspacing="0" summary="List of Assignments" id="assignment_list">			
+
+				<table class="tableList" cellspacing="0" summary="List of Assignments" id="assignment_list">
 					<tfoot>
 						<tr>
 							<td style="padding-top: 10px; border-bottom:0;"colspan="2">
@@ -420,7 +420,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											jQuery('#'+id).trigger('click');
 										});
 									});
-									
+
 									function exportSelected() {
 										var ids = [];
 										$$('#assessment_list .modified input:checked').each(function(checkbox) {
@@ -444,13 +444,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						</tr>
 					</tfoot>
 					<tbody>
-					
+
 					<?php
 					if ($cohorts) {
-						foreach ($cohorts as $cohort) {						
+						foreach ($cohorts as $cohort) {
 							$query =  "SELECT `assignments`.`course_id`, `assignments`.`assignment_id`, `assignments`.`assignment_title` FROM `assignments`
 									   WHERE `course_id` =". $db->qstr($COURSE_ID);
-							
+
 							$results = $db->GetAll($query);
 							if ($results) {
 								foreach ($results as $result) {
@@ -462,7 +462,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										echo "	<td class=\"modified\" width=\"20\"><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
 									}
 									echo "<td colspan=\"3\"><a href=\"$url\">".$result["assignment_title"]."</a></td>";
-									//echo "<td colspan=\"2\"><a href=\"$url\">".$result["grade_weighting"]. "%</a></td>"; 
+									//echo "<td colspan=\"2\"><a href=\"$url\">".$result["grade_weighting"]. "%</a></td>";
 									echo "</tr>";
 								}
 							}
@@ -479,13 +479,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			} else {
 				// No assignments in this course.
 				?>
-				<div class="display-notice">
+				<div class="display-generic">
 					<h3>No Assignments for <?php echo $course_details["course_name"]; ?></h3>
-					There are no assignments in the system for this course. You can create new ones by clicking the <strong>Add New Assignment</strong> link above.
+					There are currently no assignment drop boxes for this course. You can create new ones by clicking the <strong>Add New Assignment Drop Box</strong> link above.
 				</div>
 				<?php
 			}
-			
+
 			//end Assignment
 		} else {
 			$ERROR++;

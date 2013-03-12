@@ -94,7 +94,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 					GROUP BY a.`id`";
 		$result = $db->GetRow($query);
 		if ($result) {
-			// If $ENTRADA_USER was previously initialized in init.inc.php before the 
+			// If $ENTRADA_USER was previously initialized in init.inc.php before the
 			// session was authorized it is set to false and needs to be re-initialized.
 			if ($ENTRADA_USER == false) {
 				$ENTRADA_USER = User::get($result["id"]);
@@ -161,9 +161,9 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			unset($username, $password);
 		}
 	}
-	
+
 	$ENTRADA_USER = User::get($user_proxy_id);
-	
+
 	$details = array();
 	$details["app_id"] = (int) AUTH_APP_ID;
 	$details["id"] = $user_proxy_id;
@@ -205,8 +205,10 @@ if ($user_proxy_id) {
 			events_filters_defaults($user_proxy_id, $user_group, $user_role),
 			true,
 			1,
-			1750);
-	
+			1750,
+            0,
+            ($user_group == "student" ? true : false));
+
 	if ($ENTRADA_ACL->amIAllowed("clerkship", "read")) {
 		$query = "	SELECT c.*
 					FROM `".CLERKSHIP_DATABASE."`.`events` AS a
@@ -223,8 +225,8 @@ if ($user_proxy_id) {
 		if (isset($clerkship_schedule) && $clerkship_schedule && $clerkship_schedule["rotation_id"] != MAX_ROTATION) {
 			$course_id = $clerkship_schedule["course_id"];
 			$course_ids = array();
-			$query 	= "SELECT `course_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` 
-					WHERE `course_id` <> ".$db->qstr($course_id)." 
+			$query 	= "SELECT `course_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations`
+					WHERE `course_id` <> ".$db->qstr($course_id)."
 					AND `course_id` <> 0";
 			$course_ids_array = $db->GetAll($query);
 			foreach ($course_ids_array as $id) {
@@ -237,7 +239,7 @@ if ($user_proxy_id) {
 			}
 		}
 	}
-	
+
 	switch ($calendar_type) {
 		case "ics" :
 			add_statistic("calendar.api", "view", "type", "ics");

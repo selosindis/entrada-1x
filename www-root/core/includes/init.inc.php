@@ -102,23 +102,64 @@ if ($ENTRADA_USER) {
 			}
 		}
 	}
-
+	//Load preferences into local variable as well as $_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]
+	$original_preferences = preferences_load("organisation_switcher");
+    if (isset($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) {
+        $query = "SELECT `id` FROM `user_access` 
+                    WHERE `user_id` = ".$db->qstr($ENTRADA_USER->getID())." 
+                    AND `access_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"])."
+					AND `account_active` = 'true'
+					AND (`access_starts` = '0' OR `access_starts` < ".$db->qstr(time()).")
+					AND (`access_expires` = '0' OR `access_expires` >= ".$db->qstr(time()).")
+					AND `app_id` = ".$db->qstr(AUTH_APP_ID);
+        $access_id = $db->GetOne($query);
+        if (!$access_id) {
+            unset($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]);
+        }
+    }
 	if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]) || !$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]) {
-		$query = "	SELECT a.`group`, a.`role`, a.`id`
+		$query = "	SELECT a.`group`, a.`role`, a.`id`, a.`organisation_id`
 					FROM `" . AUTH_DATABASE . "`.`user_access` a
-					WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getID()) . "
+					WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getActiveId()) . "
 					AND a.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
 					AND a.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
 					ORDER BY a.`id` ASC";
 		$result = $db->getRow($query);
 		if ($result) {
 			$ENTRADA_USER->setAccessId($result["id"]);
+			$ENTRADA_USER->setActiveOrganisation($result["organisation_id"]);
 			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $ENTRADA_USER->getAccessId();
 			$_SESSION["permissions"] = permissions_load();
 		}
 	} else {
 		$ENTRADA_USER->setAccessId($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]);
+		$query = "	SELECT a.`group`, a.`role`, a.`id`, a.`organisation_id`
+					FROM `" . AUTH_DATABASE . "`.`user_access` a
+					WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getActiveId()) . "
+					AND a.`id` = " . $db->qstr($ENTRADA_USER->getAccessId()) . "
+					AND a.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
+					ORDER BY a.`id` ASC";
+		$result = $db->getRow($query);
+		$ENTRADA_USER->setActiveOrganisation($result["organisation_id"]);
 		$_SESSION["permissions"] = permissions_load();
+	}
+	
+	if ((!isset($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) || !$_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) && $ENTRADA_USER->getActiveId() == $ENTRADA_USER->getID()) {
+		$_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"] = $ENTRADA_USER->getAccessId();
+	}
+		
+	if (isset($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"] && $ENTRADA_USER->getActiveId() == $ENTRADA_USER->getID()) {
+		$ENTRADA_USER->setAccessId($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]);
+		$query = "	SELECT a.`group`, a.`role`, a.`id`, a.`organisation_id`
+					FROM `" . AUTH_DATABASE . "`.`user_access` a
+					WHERE a.`user_id` = " . $db->qstr($ENTRADA_USER->getActiveId()) . "
+					AND a.`id` = " . $db->qstr($ENTRADA_USER->getAccessId()) . "
+					AND a.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
+					ORDER BY a.`id` ASC";
+		$result = $db->getRow($query);
+		if ($result) {
+			$ENTRADA_USER->setActiveOrganisation($result["organisation_id"]);
+		}
 	}
 
 	if (isset($_GET["organisation_id"])) {
@@ -143,6 +184,7 @@ if ($ENTRADA_USER) {
 			$result = $db->getRow($query);
 			if ($result) {
 				$ENTRADA_USER->setAccessId($result["id"]);
+				$_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"] = $ENTRADA_USER->getAccessId();
 				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $ENTRADA_USER->getAccessId();
 				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["organisation_id"] = $organisation;
 			}
@@ -152,9 +194,11 @@ if ($ENTRADA_USER) {
 	if (isset($_GET["ua_id"])) {
 		$ua_id = clean_input($_GET["ua_id"], array("trim", "notags", "int"));
 		$ENTRADA_USER->setAccessId($ua_id);
+		$_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"] = $ENTRADA_USER->getAccessId();
 		$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $ENTRADA_USER->getAccessId();
 		$_SESSION["permissions"] = permissions_load();
 	}
+	preferences_update("organisation_switcher", $original_preferences);
 
  	$query = "SELECT `template` FROM `" . AUTH_DATABASE . "`.`organisations` WHERE `organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation());
 	$ENTRADA_ACTIVE_TEMPLATE = $db->CacheGetOne(CACHE_TIMEOUT, $query);

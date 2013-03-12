@@ -1,17 +1,17 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
- * 
+ *
  * This is the template for the default English language file for Entrada.
- * 
+ *
  * @author Organisation: University of Calgary
  * @author Unit: Faculty of Veterinary Medicine
  * @author Developer: Szemir Khangyi <skhangyi@ucalgary.ca>
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2008 University of Calgary. All Rights Reserved.
- * 
+ *
 */
-    
+global $AGENT_CONTACTS;
 return array (
 	/**
 	 * Core Navigation
@@ -20,24 +20,20 @@ return array (
 		"public" => array (
 			"dashboard" => array ("title" => "Dashboard"),
 			"communities" => array ("title" => "Communities"),
+			"curriculum/search" => array (
+				"title" => "Curriculum",
+				"children" => array (
+					"curriculum/search" => array (
+						"title" => "Curriculum Search"
+					),
+					"curriculum/explorer" => array (
+						"title" => "Curriculum Explorer"
+					)
+				)
+			),
 			"courses" => array ("title" => "Courses"),
 			"events" => array ("title" => "Learning Events"),
 			"clerkship" => array ("title" => "Clerkship", "resource" => "clerkship", "permission" => "read"),
-			"search" => array ("title" => "Curriculum Search"),
-//			"curriculum" => array (
-//				"title" => "Curriculum",
-//				"children" => array (
-//					"curriculum/overview" => array (
-//						"title" => "Overview"
-//					),
-//					"curriculum/search" => array (
-//						"title" => "Search"
-//					),
-//					"curriculum/objectives" => array (
-//						"title" => "Objective Map"
-//					)
-//				)
-//			),
 			"people" => array ("title" => "People Search"),
 			"evaluations" => array ("title" => "My Evaluations"),
 			"tasks" => array ("title" => "My Tasks", "resource" => "tasktab", "permission" => "read"),
@@ -59,7 +55,7 @@ return array (
 			"groups" => array ("title" => "Manage Groups", "resource" => "group", "permission" => "update"),
 			"events" => array ("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update"),
 			"gradebook" => array ("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update"),
-			"tasks" => array ("title" => "Manage Tasks", "resource" => "task", "permission" => "create"), 
+			"tasks" => array ("title" => "Manage Tasks", "resource" => "task", "permission" => "create"),
 			"notices" => array ("title" => "Manage Notices", "resource" => "notice", "permission" => "update"),
 			"configuration" => array ("title" => "Manage Configuration", "resource" => "configuration", "permission" => "update"),
 			"objectives" => array ("title" => "Manage Objectives", "resource" => "objective", "permission" => "update"),
@@ -69,11 +65,11 @@ return array (
 			"users" => array ("title" => "Manage Users", "resource" => "user", "permission" => "update"),
 			"regionaled" => array ("title" => "Regional Education", "resource" => "regionaled", "permission" => "update"),
 			"reports" => array ("title" => "System Reports", "resource" => "reportindex", "permission" => "read"),
-			"annualreport" => array ("title" => "Annual Reports", "resource" => "annualreportadmin", "permission" => "read")			
+			"annualreport" => array ("title" => "Annual Reports", "resource" => "annualreportadmin", "permission" => "read")
 		)
 */
 	),
-	
+
 	"events_filter_controls" => array (
 		"teacher" => array (
 			"label" => "Teacher Filters"
@@ -108,13 +104,31 @@ return array (
 			"label" => "Department Filters"
 		),
 	),
-	
+
 	/**
 	 * Global terminology used across different Entrada modules.
 	 */
     "global_button_save" => "Save",
     "global_button_cancel" => "Cancel",
     "global_button_proceed" => "Proceed",
+
+	"global_feedback_widget" => array(
+		"global" => array(
+			"system"		=> array(
+				"link-text" => APPLICATION_NAME." Feedback",
+				"link-desc" => "Please share any feedback you may have about this page.",
+				"form"		=> array(
+					"title" => "Feedback about ".APPLICATION_NAME,
+					"description" => "This form is provided so you can efficiently provide our developers with important feedback regarding this application. Whether you are reporting a bug, feature request or just general feedback, all messages are important to us and appreciated.<br /><br />
+									<span class=\"content-small\">Please note: If you are submitting a bug or problem, please try to be specific as to the issue. If possible also let us know how to recreate the problem.</span>",
+					"anon"	=> false,
+					"recipients" => array(
+						$AGENT_CONTACTS["administrator"]["email"] => $AGENT_CONTACTS["administrator"]["name"]
+					)
+				)
+			)
+		)
+	),
 
 	/**
 	 * Public Dashboard Module
@@ -188,7 +202,7 @@ return array (
     "public_communities_heading_line" => "Creating a <strong>new community</strong> in the <strong>Entrada Community System</strong> gives you a <strong>place to connect</strong> on-line.",
     "public_communities_title" => "Entrada Communities",
     "breadcrumb_communities_title"=> "Entrada Communities",
-    
+
 	/**
 	 * Community System History Strings
 	 * community
@@ -234,7 +248,7 @@ return array (
     "community_history_activate_module" => "The <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%\">%RECORD_TITLE%</a> module was activated for this community.",
     "community_history_move_file" => "The <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-file&id=%RECORD_ID%\">%RECORD_TITLE%</a> file was moved to a different <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-folder&id=%PARENT_ID%\">folder</a>.",
 	"community_history_move_photo" => "The <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-photo&id=%RECORD_ID%\">%RECORD_TITLE%</a> photo was moved to a different <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-gallery&id=%PARENT_ID%\">gallery</a>.",
-	
+
 	/**
 	 * mspr messages
 	 */
@@ -254,12 +268,12 @@ return array (
 	"mspr_observership_invalid_dates" => "A valid start date is required.",
 	"mspr_too_many_critical_enquiry" => "Cannot have more than one Critical Enquiry on MSPR. Please edit the existing project or remove it before adding a new one.",
 	"mspr_too_many_community_based_project" => "Cannot have more than one Community-Based Project on MSPR. Please edit the existing project or remove it before adding a new one.",
-	
-	
+
+
 	/*****************
 	 * Tasks Module  *
 	 *****************/
-	
+
 	/** Heading labels **/
 	"task_heading_create" => "Create Task",
 	"task_heading_edit" => "Edit Task",
@@ -268,13 +282,13 @@ return array (
 	"task_heading_verification_options" => "Task Verification Options",
 	"task_heading_time_release_options" => "Time Release Options",
 	"task_heading_description" => "Task Description",
-	
+
 	/** field labels **/
 	"task_field_title" => "Task Title",
 	"task_field_deadline" => "Deadline",
 	"task_field_time_required" => "Estimated Time Required",
 	"task_field_course" => "Course",
-	"task_field_associated_faculty" => "Associated Faculty", 
+	"task_field_associated_faculty" => "Associated Faculty",
 	"task_field_description" => "Task Description",
 	"task_field_recipients_class" => "Entire Class Task",
 	"task_field_cohort" => "Cohort",
@@ -289,11 +303,11 @@ return array (
 	"task_field_verification_faculty" => "Selected Faculty Verification",
 	"task_field_verification_other" => "Other Specified Individual Verification",
 	"task_field_verification_other_names" => "Designated Verifier",
-	"task_field_notification_types" => "Notification Types", 
+	"task_field_notification_types" => "Notification Types",
 	"task_field_verification_notification_dashboard" => "Dashboard Notification [disabled]",
 	"task_field_verification_notificaiton_email" => "Email Notification",
 	"task_field_after_saving_options" => "After Saving:",
-	 
+
 
 	/** button labels **/
 	"task_button_add" => "Add",
@@ -304,12 +318,12 @@ return array (
 	"task_instructions_recipients_class" => "This task is intended for an entire class",
 	"task_instructions_recipients_students" => "This task is intended for a specific student or students",
 	"task_instructions_recipients_organisation" => "This task is intended for every member of an organisation",
-	"task_instructions_faculty_name" => "(<strong>Example:</strong> %MY_FULLNAME%)",	
+	"task_instructions_faculty_name" => "(<strong>Example:</strong> %MY_FULLNAME%)",
 	"task_instructions_associated_students" => "(<strong>Example:</strong> %MY_FULLNAME%)",
 	"task_instructions_verification_other_names" => "(<strong>Example:</strong> %MY_FULLNAME%)",
 	"task_instructions_verification_none" => "No external verification required. Task recipients assertion of completion functions as self-verification.",
 	"task_instructions_verification_other" => "The individual specified will receive all verification requests (if applicable) and will be granted verification authority where they might not otherwise have it.",
-	"task_instructions_verification_faculty" => "The selected associated faculty will receive verification requests (if applicable)",	
+	"task_instructions_verification_faculty" => "The selected associated faculty will receive verification requests (if applicable)",
 
 	/** option labels **/
 	"task_option_complete_allow_comments" => "Allow comments",
@@ -319,10 +333,10 @@ return array (
 	"task_option_faculty_selection_off" => "Off",
 	"task_option_faculty_selection_allow" => "Allowed",
 	"task_option_faculty_selection_require" => "Required",
-	
+
 	/** misc labels **/
 	"task_misc_minutes" => "minutes",
-	
+
 	/** errors **/
 	"task_title_too_short" => "The <strong>Task Title</strong> field is required.",
 	"task_course_invalid" => "The <strong>Course</strong> you selected does not exist.",
@@ -338,8 +352,8 @@ return array (
 	"task_organisation_invalid" => "The <strong>Organisation</strong> you selected does not exist.",
 	"task_verification_no_verifier" => "You have chosen <strong>Other Specified Individual Verifiction</strong>, but have not selected an individual as <strong>Designated Verifier</strong>.",
 	"task_completion_comment_policy_invalid" => "Invalid completion comment policy provided. Please select one of the options from the list.",
-	"task_rejection_comment_policy_invalid" => "Invalid rejection comment policy provided. Please select one of the options from the list.", 
-	
+	"task_rejection_comment_policy_invalid" => "Invalid rejection comment policy provided. Please select one of the options from the list.",
+
 	/** notices **/
 	"task_title_too_long" => "The <strong>Task Title</strong> field has a maximum length of %MAX_LENGTH% characters. The title was truncated to accomodate this.", //note, the field has the same restriction, so the user is unlikely to receive this message
 
@@ -347,6 +361,6 @@ return array (
 	"course" => "Course",
 	"courses" => "Courses",
 	"evaluation_filtered_words" => "Dr. Doctor; Firstname Lastname"
-	
+
 	);
 ?>

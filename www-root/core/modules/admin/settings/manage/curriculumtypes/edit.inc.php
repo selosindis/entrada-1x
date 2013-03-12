@@ -37,7 +37,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/curriculumtypes?".replace_query(array("section" => "add"))."&amp;org=".$ORGANISATION_ID, "title" => "Edit");
 	//$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-	
+
 	if ((isset($_GET["type_id"])) && ($type = clean_input($_GET["type_id"], array("notags", "trim")))) {
 		$PROCESSED["curriculum_type_id"] = $type;
 	}
@@ -63,7 +63,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			} else {
 				$PROCESSED["curriculum_type_description"] = "";
 			}
-			
+
 			/**
 			 * Required field "curriculum_level_id" / Curriculum Level
 			 */
@@ -74,42 +74,69 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				$ERRORSTR[] = "The <strong>Curriculum Level</strong> is a required field.";
 			}
 
-			/**
-			 * Optional field Period Start Date
-			 */
-			if (isset($_POST["curriculum_start_date"]) && count($_POST["curriculum_start_date"])) {
-				foreach($_POST["curriculum_start_date"] AS $key=>$date){
-					$PROCESSED["periods"][$key]["start_date"] = strtotime(clean_input($date,array("trim","notags")));
-					$PROCESSED["periods"][$key]["finish_date"] = strtotime(clean_input($_POST["curriculum_finish_date"][$key],array("trim","notags")));
-					$PROCESSED["periods"][$key]["active"] = clean_input($_POST["curriculum_active"][$key],array("trim","int"));
-				}
-			}			
-			
-			
 			if (!$ERROR) {
 				$PROCESSED["updated_date"] = time();
 				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 				$PROCESSED["curriculum_type_active"] = 1;
 				$PROCESSED["curriculum_type_order"] = 1;
-				
+
 				if ($db->AutoExecute("curriculum_lu_types", $PROCESSED, "UPDATE","`curriculum_type_id`=".$db->qstr($PROCESSED["curriculum_type_id"]))) {
 
-					$query = "DELETE FROM `curriculum_periods` WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"]);
-					$db->Execute($query);
-					
-					if ($PROCESSED["periods"]) {						
-						foreach($PROCESSED["periods"] as $period){
-							$period["curriculum_type_id"] = $PROCESSED["curriculum_type_id"];
-							if ($db->AutoExecute("curriculum_periods", $period, "INSERT")) {
-								$SUCCESS++;
-								$SUCCESSSTR[] = "You have successfully added a curriculum period to the system.";										
-							} else {
-								$ERROR++;
-								$ERRORSTR[] = "There was an error while processing a curriculum period. Please try adding it again from the Edit page.";
-							}
+                    $active_cperiod_ids = array();
 
-						}
-					}
+                    /**
+                     * Optional field Period Start Date
+                     */
+                    if (isset($_POST["curriculum_start_date"]) && count($_POST["curriculum_start_date"])) {
+                        foreach($_POST["curriculum_start_date"] as $key => $date){
+                            $pieces = explode("-", $key);
+                            $period_action = trim($pieces[0]);
+                            $period_id = (int) trim($pieces[1]);
+
+                            if (in_array($period_action, array("add", "edit")) && $period_id) {
+                                $period_entry = array();
+                                $period_entry["curriculum_type_id"] = $PROCESSED["curriculum_type_id"];
+                                $period_entry["start_date"] = strtotime(clean_input($date, array("trim", "notags")));
+                                $period_entry["finish_date"] = strtotime(clean_input($_POST["curriculum_finish_date"][$key], array("trim", "notags")));
+                                $period_entry["active"] = 1;
+
+                                switch ($period_action) {
+                                    case "add" :
+                                        if ($db->AutoExecute("curriculum_periods", $period_entry, "INSERT")) {
+                                            $period_id = $db->Insert_Id();
+
+                                            $active_cperiod_ids[] = $period_id;
+
+                                            $key = "edit-".$period_id;
+                                        } else {
+                                            application_log("error", "Unable add new curriculum period to curriculum_type_id [".$PROCESSED["curriculum_type_id"]."]. Database said: ".$db->ErrorMsg());
+                                        }
+                                        break;
+                                    case "edit" :
+                                        $query = "SELECT * FROM `curriculum_periods` WHERE `cperiod_id` = ".$db->qstr($period_id)." AND `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"]);
+                                        $result = $db->GetRow($query);
+                                        if ($result) {
+                                            if ($db->AutoExecute("curriculum_periods", $period_entry, "UPDATE", "cperiod_id = " . $period_id)) {
+                                                $active_cperiod_ids[] = $period_id;
+                                            } else {
+                                                application_log("error", "Unable add update curriculum period id [".$period_id."] in curriculum_type_id [".$PROCESSED["curriculum_type_id"]."]. Database said: ".$db->ErrorMsg());
+                                            }
+                                        }
+                                        break;
+                                    default :
+                                        continue;
+                                    break;
+                                }
+
+                                $PROCESSED["periods"][$key] = $period_entry;
+                            }
+                        }
+                    }
+
+                    $query = "UPDATE `curriculum_periods` SET active = '0' WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"]).(!empty($active_cperiod_ids) ? " AND `cperiod_id` NOT IN (".implode(", ", $active_cperiod_ids).")" : "");
+                    if (!$db->Execute($query)) {
+                        application_log("error", "Unable to deactive old curriculum_periods. Database said: ".$db->ErrorMsg());
+                    }
 
 					$url = ENTRADA_URL . "/admin/settings/manage/curriculumtypes?org=".$ORGANISATION_ID;
 					$SUCCESS++;
@@ -132,7 +159,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		break;
 		case 1 :
 		default :
-						
+
 			$query = "SELECT * FROM `curriculum_lu_types` WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"]);
 			$result = $db->GetRow($query);
 			if($result){
@@ -141,19 +168,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				$PROCESSED["curriculum_level_id"] = $result["curriculum_level_id"];
 			}
 
-			
-			$query = "SELECT * FROM `curriculum_periods` WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"])." ORDER BY `start_date`,`active`";
+
+			$query = "SELECT * FROM `curriculum_periods` WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"])." AND `active` = '1' ORDER BY `start_date` ASC";
 			$result = $db->GetAll($query);
-			
+
 			if($result){
 				foreach($result as $key=>$row){
-					$PROCESSED["periods"][$key]["start_date"] = $row["start_date"];
-					$PROCESSED["periods"][$key]["finish_date"] = $row["finish_date"];
-					$PROCESSED["periods"][$key]["active"] = $row["active"];
+					$PROCESSED["periods"]["edit-".$row["cperiod_id"]]["start_date"] = $row["start_date"];
+					$PROCESSED["periods"]["edit-".$row["cperiod_id"]]["finish_date"] = $row["finish_date"];
+					$PROCESSED["periods"]["edit-".$row["cperiod_id"]]["active"] = $row["active"];
 				}
 			}
-			
-			
+
+
 		break;
 	}
 
@@ -173,7 +200,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			}
 		break;
 		case 1 :
-		default:	
+		default:
 			if ($ERROR) {
 				echo display_error();
 			}
@@ -202,7 +229,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				<tr>
 					<td colspan="2" style="padding-top: 15px; text-align: right">
 						<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/curriculumtypes?org=<?php echo $ORGANISATION_ID;?>'" />
-                        <input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+                        <input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />
 					</td>
 				</tr>
 			</tfoot>
@@ -259,41 +286,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							</ul>
 						</div><br />
 						<div id="curriculum_periods_table">
-							<table class="tableList" cellspacing="0" cellpadding="1" border="0" summary="List of Organisations">
+							<table class="tableList" cellspacing="0" cellpadding="1" border="0" summary="List of Curriculum Periods">
 								<colgroup>
-									<col class="modified"/>
-									<col class="start" />
-									<col class="end" />
-									<col class="active" />
+									<col class="modified" />
+									<col class="date" />
+									<col class="date" />
 								</colgroup>
-								<thead>
-								<tr>
-									<td class="modified">&nbsp;</td>
-									<td class="start" width="200">Start Date</td>
-									<td class="end" width="200">Finish Date</td>
-									<td class="active">Active</td></tr>
-								</tr>
-								</thead>
 								<tfoot>
 									<tr id="delete_btn_row">
-										<td colspan="4" style="padding-top: 15px; text-align: left">
-											<input type="button" class="button" id="delete_selected" value="Delete Selected" />                           
+										<td colspan="3" style="padding-top: 15px; text-align: left">
+											<input type="button" class="button" id="delete_selected" value="Remove Selected" />
 										</td>
 									</tr>
 								</tfoot>
 								<tbody id="curriculum_periods">
 									<?php
-										if($PROCESSED["periods"]){
-											$currentIdx = 1;
-											foreach($PROCESSED["periods"] as $key=>$period){
-											?>	<tr id="period_<?php echo $currentIdx;?>" class="curriculum_period">
-												<td><input type="checkbox" class="remove_checkboxes" id="remove_<?php echo $currentIdx;?>" value="<?php echo $currentIdx;?>"/></td>
-												<td><input type="text" name="curriculum_start_date[]" id="start_<?php echo $currentIdx;?>" class="start_date" disabled = "disabled" value="<?php echo date("Y-m-d",$period["start_date"]);?>" style="border:none;"/><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" alt="Select Start Date" class="calendar" id="start_calendar_<?php echo $currentIdx;?>" style="float:right;cursor:pointer;"/></td>
-												<td><input type="text" name="curriculum_finish_date[]" id="finish_<?php echo $currentIdx;?>" class="end_date" disabled = "disabled" value="<?php echo date("Y-m-d",$period["finish_date"]);?>" style="border:none;"/><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" alt="Select End Date" class="calendar" id="finish_calendar_<?php echo $currentIdx;?>" style="float:right;cursor:pointer;"/></td>
-														
-												<td><select name="curriculum_active[]"><option value="1" selected="selected">Active</option><option value="0" <?php echo (($period["active"] == 0)?"selected=\"selected\"":"");?>>Inactive</option></select></td>
-											</tr><?php
-											$currentIdx++;
+										if ($PROCESSED["periods"]) {
+											foreach ($PROCESSED["periods"] as $currentIdx => $period){
+                                                ?>
+                                                <tr id="period_<?php echo $currentIdx;?>" class="curriculum_period">
+                                                    <td class="modified"><input type="checkbox" class="remove_checkboxes" id="remove_<?php echo $currentIdx;?>" value="<?php echo $currentIdx;?>"/></td>
+                                                    <td class="date"><input type="text" name="curriculum_start_date[<?php echo $currentIdx;?>]" id="start_<?php echo $currentIdx;?>" class="start_date" disabled = "disabled" value="<?php echo date("Y-m-d",$period["start_date"]);?>" style="border:none;"/><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" alt="Select Start Date" class="calendar" id="start_calendar_<?php echo $currentIdx;?>" style="float:right;cursor:pointer;"/></td>
+                                                    <td class="date"><input type="text" name="curriculum_finish_date[<?php echo $currentIdx;?>]" id="finish_<?php echo $currentIdx;?>" class="end_date" disabled = "disabled" value="<?php echo date("Y-m-d",$period["finish_date"]);?>" style="border:none;"/><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" alt="Select End Date" class="calendar" id="finish_calendar_<?php echo $currentIdx;?>" style="float:right;cursor:pointer;"/></td>
+                                                </tr>
+                                                <?php
 											}
 										}
 									?>
@@ -301,21 +317,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							</table>
 						</div>
 						<div id="no_period_msg">
-						<?php 
+						<?php
 									add_notice("There are no active periods for this curriculum type.");
 									echo display_notice();
 						?>
 						</div>
 						<script type="text/javascript">
 						var rowTemplate = '<tr id="period_:id" class="curriculum_period">\n\
-												<td><input type="checkbox" class="remove_checkboxes" id="remove_:id" value=":id"/></td>\n\
-												<td><input type="text" name="curriculum_start_date[]" id="start_:id" class="start_date" disabled = "disabled" value=":date" style="border:none;"/><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" alt="Select Start Date" class="calendar" id="start_calendar_:id" style="float:right;cursor:pointer;"/></td>\n\
-												<td><input type="text" name="curriculum_finish_date[]" id="finish_:id" class="end_date" disabled = "disabled" value=":date" style="border:none;"/><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" alt="Select End Date" class="calendar" id="finish_calendar_:id" style="float:right;cursor:pointer;"/></td>\n\
-												<td><select name="curriculum_active[]"><option value="1">Active</option><option value="0">Inactive</option></select></td>\n\
+												<td class="modified"><input type="checkbox" class="remove_checkboxes" id="remove_:id" value=":id"/></td>\n\
+												<td class="date"><input type="text" name="curriculum_start_date[:id]" id="start_:id" class="start_date" disabled = "disabled" value=":date" style="border:none;"/><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" alt="Select Start Date" class="calendar" id="start_calendar_:id" style="float:right;cursor:pointer;"/></td>\n\
+												<td class="date"><input type="text" name="curriculum_finish_date[:id]" id="finish_:id" class="end_date" disabled = "disabled" value=":date" style="border:none;"/><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" alt="Select End Date" class="calendar" id="finish_calendar_:id" style="float:right;cursor:pointer;"/></td>\n\
 											</tr>';
-													
+
 						var currentIdx = 1;
-						var numRows = 0;												
+						var numRows = 0;
 
 						jQuery(function($){
 							$(document).ready(function(){
@@ -328,28 +343,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 									currentIdx++;
 									numRows++;
 								});
-								
+
 								if(currentIdx>1){
 									$('#delete_btn_row').show();
-									$('#no_period_msg').hide();									
+									$('#no_period_msg').hide();
 								}
-								
+
 							});
-							
+
 							$('#add_period').click(function(){
 								var today = new Date();
 								var month = ((today.getMonth()+1)/10 > 1)?today.getMonth()+1:"0"+(today.getMonth()+1);
 								var day = (today.getDate()/10 > 1)?today.getDate():"0"+(today.getDate());
 								var date = today.getFullYear()+"-"+month+"-"+day;
-								var formattedRow = rowTemplate.replace(/:id/g,currentIdx).replace(/:date/g,date);
+								var formattedRow = rowTemplate.replace(/:id/g,'add-' + currentIdx).replace(/:date/g,date);
 								$('#curriculum_periods').append(formattedRow);
-								
+
 								currentIdx++;
 								numRows++;
 								$('#delete_btn_row').show();
 								$('#no_period_msg').hide();
 							});
-														
+
 
 							$('#delete_selected').click(function(){
 								$('.remove_checkboxes:checked').each(function(){
@@ -362,24 +377,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 									}
 								});
 							});
-							
-						
+
+
 							$('#curriculum_form').submit(function(){
 								$('.start_date').each(function(){
 									$(this).removeAttr('disabled');
 								});
-								
+
 								$('.end_date').each(function(){
 									$(this).removeAttr('disabled');
 								});
 							});
-							
-						});		
-						
 
-						
+						});
+
+
+
 						</script>
-						
+
 					</td>
 				</tr>
 

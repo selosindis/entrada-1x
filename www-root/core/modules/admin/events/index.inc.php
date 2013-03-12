@@ -37,6 +37,53 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 } else {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_timestamp.js\"></script>\n";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
+	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/events_exporter.js\"></script>\n";
+
+	$default_csv_headings = array(
+			"event_id" => "Original Event",
+			"parent_id" => "Parent Event",
+			"event_term" => "Term",
+			"course_code" => "Course Code",
+			"course_name" => "Course Name",
+			"event_start_date" => "Date",
+			"event_start_time" => "Start Time",
+			"total_duration" => "Total Duration",
+			"event_type_durations" => "Event Type Durations",
+			"event_types" => "Event Types",
+			"event_title" => "Event Title",
+			"event_location" => "Location",
+			"audience_cohorts" => "Audience (Cohorts)",
+			"audience_groups" => "Audience (Groups)",
+			"audience_students" => "Audience (Students)",
+			"staff_numbers" => "Teacher Numbers",
+			"staff_names" => "Teacher Names"
+		);
+
+	if ($_SESSION["my_export_options"]) {
+		$diff = array_diff($default_csv_headings, $_SESSION["my_export_options"]);
+		$default_csv_headings = $_SESSION["my_export_options"];
+	}
+
+	$additional_csv_headings = array(
+		"student_names" => "Student Names",
+		"release_date" => "Release Date",
+		"release_until" => "Release Until",
+		"event_children" => "Child Events",
+		"event_description" => "Event Description",
+		"event_message" => "Teachers Message",
+		"free_text_objectives" => "Free-Text Objectives",
+		"queens_objectives" => "Queen's Objectives",
+		"mcc_presentations" => "MCC Presentations",
+		"hot_topics" => "Hot Topics",
+		"attached_files" => "Attached Files",
+		"attached_links" => "Attached Links",
+		"attached_quizzes" => "Attached Quizzes",
+		"attendance" => "Attendance"
+	);
+
+	if (isset($diff) && $diff && is_array($diff)) {
+		$additional_csv_headings = array_merge($additional_csv_headings, $diff);
+	}
 
 	/**
 	 * Process any sorting or pagination requests.
@@ -58,8 +105,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	 */
 	$learning_events = events_fetch_filtered_events(
 			$ENTRADA_USER->getActiveId(),
-			$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"],
-			$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"],
+			$ENTRADA_USER->getActiveGroup(),
+			$ENTRADA_USER->getActiveRole(),
 			$ENTRADA_USER->getActiveOrganisation(),
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"],
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["so"],
@@ -69,9 +116,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"],
 			true,
 			(isset($_GET["pv"]) ? (int) trim($_GET["pv"]) : 1),
-			$_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]);
+			$_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"],
+            false,
+            false);
 
 	echo "<h1>".$MODULES[strtolower($MODULE)]["title"]."</h1>";
+
+	if ($_SESSION["export_error"]) {
+		$ERROR++;
+		$ERRORSTR[] = $_SESSION["export_error"];
+		echo display_error();
+	}
 
 	/**
 	 * Output the filter HTML.
@@ -158,7 +213,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
-							<input type="button" class="btn" value="Export Results" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/export"; ?>';" />
+							<input type="button" value="Export Results" />
 							<?php
 						}
 						?>
@@ -167,6 +222,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			</tfoot>
 			<?php endif; ?>
 			<tbody>
+
 			<?php
 
 			$count_modified = 0;
@@ -244,8 +300,119 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	echo "<form action=\"\" method=\"get\">\n";
 	echo "<input type=\"hidden\" id=\"dstamp\" name=\"dstamp\" value=\"".html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])."\" />\n";
-	echo "</form>\n";
+	echo "</form>\n"; ?>
 
+	<div id="modal_export_container" style="display: none;">
+		<div class="display-generic">
+			<p>Select the fields you would like to export by dragging them from the left to the right.  Remove fields from the Export by dragging them from the right to the left.</p>
+		</div>
+		<div id="available-wrap">
+			<h3>Available Fields:</h3>
+			<div id="available_export_options_container" class="ui-widget-content">
+				<ul id="available_export_options">
+				</ul>
+			</div>
+		</div>
+		<div id="export-wrap">
+			<h3>Export Fields:</h3>
+			<div id="selected_export_options_container" class="ui-widget-content">
+				<ul id="selected_export_options">
+					<?php
+						if ($default_csv_headings) {
+							foreach($default_csv_headings as $key => $value) {
+								echo "<li class=\"ui-widget-content ui-state-default\" data-field=\"" . $key . "\"><span class=\"ui-icon ui-icon-arrowthick-2-n-s\"></span>" . $value . "</li>";
+							}
+						}
+					?>
+				</ul>
+			</div>
+		</div>
+		<form id="my_export_options_form" action="<?php echo ENTRADA_URL . "/admin/events/export"; ?>">
+			<input type="hidden" name="my_export_options" value="" />
+		</form>
+	</div>
+
+			<script type="text/javascript">
+				jQuery(document).ready(function($){
+					var default_items = {};
+					var additional_items = {};
+					<?php
+						echo "default_items = " . json_encode((object) $default_csv_headings) . ";";
+						echo "additional_items = " . json_encode((object) $additional_csv_headings) . ";";
+					?>
+
+					$("ul#selected_export_options > li").sortable();
+
+					for (var key in additional_items) {
+						var item = $( "<li></li>" ).text( additional_items[key] ).addClass("ui-widget-content ui-state-default draggable");
+						item.attr("data-field", key);
+						item.appendTo( $("ul#available_export_options") );
+					}
+
+					var my_export_options = default_items;
+					$('input[name=my_export_options]').val(JSON.stringify(my_export_options));
+
+					$(".draggable").draggable({
+						revert:"invalid"
+					});
+				});
+			</script>
+
+			<style type="text/css">
+				#available-wrap {
+					float:left;
+					width:49%;
+				}
+
+				#export-wrap {
+					float:right;
+					width:49%;
+				}
+
+				#available_export_options_container {
+					border:none;
+					float: left;
+					width: 95%;
+					padding: 0.5em;
+				}
+
+				#selected_export_options_container {
+					border:none;
+					float: right;
+					width: 95%;
+					padding: 0.5em;
+				}
+
+				li.ui-widget-content {
+					width: 50%;
+				}
+
+				#selected_export_options, #available_export_options {
+					list-style-type: none;
+					margin: 0;
+					padding: 0;
+					width: 100%;
+				}
+
+				#selected_export_options li, #available_export_options li {
+					margin: 0 3px 3px 3px;
+					padding: 0.4em;
+					padding-left: 1.5em;
+					font-size: 1em;
+					height: 13px;
+					cursor: move;
+					width: 89%;
+				}
+
+				#available_export_options li {
+					padding-left: 0.5em; width: 94%
+				}
+
+				#selected_export_options li span {
+					position: absolute; margin-left: -1.3em;
+				}
+			</style>
+<?php
 	/**
 	 * Output the sidebar for sorting and legend.
 	 */

@@ -35,18 +35,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($COURSE_ID) {
-		$query = "	SELECT * FROM `courses` 
+		$query = "	SELECT * FROM `courses`
 					WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 					AND `course_active` = '1'";
 		$course_details	= $db->GetRow($query);
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
+			$HEAD[] = "<script type=\"text/javascript\">var SITE_URL = '".ENTRADA_URL."';</script>";
 			$HEAD[] = "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/action-delete.gif';</script>";
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
-			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
+			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_course.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing " . $module_singular_name);
 
-			/** 
+			/**
 			* Fetch the Clinical Presentation details.
 			*/
 			$clinical_presentations_list	= array();
@@ -61,7 +64,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				$clinical_presentations_list = false;
 			}
 
-			if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
+			// if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
 			if ((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"]))) {
 				foreach ($_POST["clinical_presentations"] as $objective_id) {
 					if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
@@ -81,34 +84,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			} else {
 					$clinical_presentations = array();
 				}
-			} else {
-				$query		= "SELECT `objective_id` FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($COURSE_ID);
-				$results	= $db->GetAll($query);
-				if ($results) {
-					foreach ($results as $result) {
-						if (!empty($clinical_presentations_list[$result["objective_id"]])) {
-						$clinical_presentations[$result["objective_id"]] = $clinical_presentations_list[$result["objective_id"]];
-						}
-					}
-				}
-			}			
-						
+			// } else {
+			// 	$query		= "SELECT `objective_id` FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($COURSE_ID);
+			// 	$results	= $db->GetAll($query);
+			// 	if ($results) {
+			// 		foreach ($results as $result) {
+			// 			if (!empty($clinical_presentations_list[$result["objective_id"]])) {
+			// 			$clinical_presentations[$result["objective_id"]] = $clinical_presentations_list[$result["objective_id"]];
+			// 			}
+			// 		}
+			// 	}
+			// }
+
 			courses_subnavigation($course_details,"details");
 			echo "<h1>Editing " . $module_singular_name  . "</h1>\n";
 
 			$PROCESSED["permission"] = $course_details["permission"];
 			$PROCESSED["sync_ldap"] = $course_details["sync_ldap"];
-			
+
 			// Error Checking
 			switch($STEP) {
 				case 2 :
-					if ($ENTRADA_ACL->amIAllowed(new CourseResource(null, $ENTRADA_USER->getActiveOrganisation()), "update")) {
+					if ($ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $ENTRADA_USER->getActiveOrganisation()), "update")) {
 						$PROCESSED["organisation_id"] = $ENTRADA_USER->getActiveOrganisation();
 					} else {
 						add_error("You do not have permission to update a course for this organisation. This error has been logged and will be investigated.");
 						application_log("error", "Proxy id [".$_SESSION['details']['proxy_id']."] tried to create a course within an organisation [".$ENTRADA_USER->getActiveOrganisation()."] they didn't have permissions on. ");
 					}
-			
+
 					/**
 					 * Non-required field "curriculum_type_id" / Curriculum Category
 					 */
@@ -161,8 +164,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						$PROCESSED["sync_ldap"] = 1;
 					} else {
 						$PROCESSED["sync_ldap"] = 0;
-					}					
-					
+					}
+
 					/**
 					 * Non-required field "course_directors" / Course Directors (array of proxy ids).
 					 * This is actually accomplished after the course is modified below.
@@ -191,8 +194,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$TERTIARY_OBJECTIVES[] = clean_input($objective, "int");
 							$posted_objectives["tertiary"][] = clean_input($objective, "int");
 						}
-					}					
-					
+					}
+
 
 					/**
 					 * Non-required field "pcoord_id" .
@@ -202,7 +205,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					} else {
 						$PROCESSED["pcoord_id"] = 0;
 					}
-					
+
 					/**
 					 * Non-required field "evalrep_id".
 					 */
@@ -211,7 +214,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					} else {
 						$PROCESSED["evalrep_id"] = 0;
 					}
-					
+
 					/**
 					 * Non-required field "studrep_id" .
 					 */
@@ -241,9 +244,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					if (isset($_POST["periods"]) && is_array($_POST["periods"]) && $periods = $_POST["periods"]) {
 						foreach ($periods as $key=>$unproced_period) {
 							$period_id = (int)$unproced_period;
-												
+
 							$period_list[]=$period_id;
-							
+
 							if (isset($_POST["group_audience_members"][$key]) && strlen($_POST["group_audience_members"][$key]) && $group_member_string = clean_input($_POST["group_audience_members"][$key],array("trim","notags"))) {
 								$group_members = explode(",",$group_member_string);
 								if ($group_members) {
@@ -266,20 +269,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										//$query = "	INSERT INTO `course_audience` VALUES(NULL,".$db->qstr($COURSE_ID).",'proxy_id',".$db->qstr($member).",0,0,1)";
 									}
 								}
-							}								
+							}
 
 						}
 
-					}					
-					
+					}
 
-					
+
+
 					if (!has_error()) {
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
 						if ($db->AutoExecute("courses", $PROCESSED, "UPDATE", "`course_id`=".$db->qstr($COURSE_ID))) {
-							
+
 							/**
 							 * Update corresponding course website contacts if one exists for this course.
 							 */
@@ -299,7 +302,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									$db->Execute("UPDATE `community_members` SET `member_acl` = '0' WHERE `proxy_id` IN (".$delete_ids_string.") AND `community_id` = ".$db->qstr($community_id));
 								}
 							}
-							
+
 							/**
 							 * Insert Clinical Presentations.
 							 */
@@ -315,7 +318,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									}
 								}
 							}
-							
+
 							$query = "DELETE FROM `course_contacts` WHERE `course_id`=".$db->qstr($COURSE_ID)." AND `contact_type` != 'pcoordinator'";
 							if ($db->Execute($query)) {
 								if ((isset($_POST["associated_director"])) && ($associated_directors = explode(",", $_POST["associated_director"])) && (@is_array($associated_directors)) && (@count($associated_directors))) {
@@ -329,18 +332,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 												application_log("error", "Unable to insert a new course_contact to the database when updating an event. Database said: ".$db->ErrorMsg());
 											} else {
 												$order++;
-												
+
 												$community_member = $db->GetOne("SELECT `proxy_id` FROM `community_members` WHERE `proxy_id` = ".$db->qstr($proxy_id)." AND `community_id` = ".$db->qstr($community_id));
 												if (!$community_member) {
 													if ($community_id && !$db->AutoExecute("community_members", array("community_id" => $community_id, "proxy_id" => $proxy_id, "member_active" => 1, "member_joined" => time(), "member_acl" => 1), "INSERT")) {
 														add_error("There was an error when trying to insert a &quot;Curriculum Coordinator&quot; into the system. The system administrator was informed of this error; please try again later.");
-		
+
 														application_log("error", "Unable to insert a new community_member to the database when updating an event. Database said: ".$db->ErrorMsg());
 													}
 												} else {
 													if ($community_id && !$db->AutoExecute("community_members", array("member_active" => 1, "member_acl" => 1), "UPDATE", "`community_id` = ".$db->qstr($community_id)." AND `proxy_id` = ".$db->qstr($proxy_id))) {
 														add_error("There was an error when trying to insert a &quot;Curriculum Coordinator&quot; into the system. The system administrator was informed of this error; please try again later.");
-		
+
 														application_log("error", "Unable to insert a new community_member to the database when updating an event. Database said: ".$db->ErrorMsg());
 													}
 												}
@@ -348,7 +351,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										}
 									}
 								}
-								
+
 								if ((isset($_POST["associated_coordinator"])) && ($associated_coordinators = explode(",", $_POST["associated_coordinator"])) && (@is_array($associated_coordinators)) && (@count($associated_coordinators))) {
 									$community_member = false;
 									foreach($associated_coordinators as $proxy_id) {
@@ -362,13 +365,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 												if (!$community_member) {
 													if ($community_id && !$db->AutoExecute("community_members", array("community_id" => $community_id, "proxy_id" => $proxy_id, "member_active" => 1, "member_joined" => time(), "member_acl" => 1), "INSERT")) {
 														add_error("There was an error when trying to insert a &quot;Curriculum Coordinator&quot; into the system. The system administrator was informed of this error; please try again later.");
-		
+
 														application_log("error", "Unable to insert a new community_member to the database when updating an event. Database said: ".$db->ErrorMsg());
 													}
 												} else {
 													if ($community_id && !$db->AutoExecute("community_members", array("member_active" => 1, "member_acl" => 1), "UPDATE", "`community_id` = ".$db->qstr($community_id)." AND `proxy_id` = ".$db->qstr($proxy_id))) {
 														add_error("There was an error when trying to insert a &quot;Curriculum Coordinator&quot; into the system. The system administrator was informed of this error; please try again later.");
-		
+
 														application_log("error", "Unable to insert a new community_member to the database when updating an event. Database said: ".$db->ErrorMsg());
 													}
 												}
@@ -376,7 +379,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										}
 									}
 								}
-								
+
 								if (isset($PROCESSED["pcoord_id"]) && $PROCESSED["pcoord_id"]) {
 									if ($community_id && !$db->AutoExecute("community_members", array("community_id" => $community_id, "proxy_id" => $PROCESSED["pcoord_id"], "member_active" => 1, "member_joined" => time(), "member_acl" => 1), "INSERT")) {
 										add_error("There was an error when trying to insert a &quot;Curriculum Coordinator&quot; into the system. The system administrator was informed of this error; please try again later.");
@@ -397,7 +400,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									}
 								}
 							}
-							
+
 							$db->Execute("DELETE FROM `course_objectives` WHERE `objective_type` = 'course' AND `course_id` = ".$db->qstr($COURSE_ID));
 							if (is_array($PRIMARY_OBJECTIVES) && count($PRIMARY_OBJECTIVES)) {
 								foreach($PRIMARY_OBJECTIVES as $objective_id) {
@@ -407,7 +410,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									}
 								}
 							}
-							
+
 							if (is_array($SECONDARY_OBJECTIVES) && count($SECONDARY_OBJECTIVES)) {
 								foreach($SECONDARY_OBJECTIVES as $objective_id) {
 									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($ENTRADA_USER->getID()).", `importance` = '2', `objective_details` = ".(isset($objective_details[$objective_id]) && $objective_details[$objective_id] ? $db->qstr($objective_details[$objective_id]["details"]) : "NULL"));
@@ -416,7 +419,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									}
 								}
 							}
-							
+
 							if (is_array($TERTIARY_OBJECTIVES) && count($TERTIARY_OBJECTIVES)) {
 								foreach($TERTIARY_OBJECTIVES as $objective_id) {
 									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($ENTRADA_USER->getID()).", `importance` = '3', `objective_details` = ".(isset($objective_details[$objective_id]) && $objective_details[$objective_id] ? $db->qstr($objective_details[$objective_id]["details"]) : "NULL"));
@@ -425,7 +428,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									}
 								}
 							}
-							
+
 							if (is_array($objective_details) && count($objective_details)) {
 								foreach($objective_details as $objective_id => $objective) {
 									if (!$objective["found"]) {
@@ -435,30 +438,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 
 
-							
-							
+
+
 							$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID).(isset($period_list)?" AND `cperiod_id` NOT IN (".implode(",",$period_list).")":"");
 							$db->Execute($query);
-										
-							
-							
+
+
+
 							if ($PROCESSED["periods"]) {
 								foreach ($PROCESSED["periods"] as $period_id=>$period) {
 									$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `cperiod_id` = ".$db->qstr($period_id)." AND `audience_type` = 'group_id'".(isset($group_list[$period_id])?" AND `audience_value` NOT IN (".implode(",",$group_list[$period_id]).")":"");
 									$db->Execute($query);
-									
+
 									$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `cperiod_id` = ".$db->qstr($period_id)." AND `audience_type` = 'proxy_id'".(isset($individual_list[$period_id])?" AND `audience_value` NOT IN (".implode(",",$individual_list[$period_id]).")":"");
 									$db->Execute($query);
-									
+
 									foreach ($period as $key=>$audience) {
 										$audience["course_id"] = $COURSE_ID;
-										$query = "	SELECT * FROM	`course_audience` 
+										$query = "	SELECT * FROM	`course_audience`
 													WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 													AND `cperiod_id` = ".$db->qstr($audience["cperiod_id"])."
 													AND `audience_type` = ".$db->qstr($audience["audience_type"])."
 													AND `audience_value` = ".$db->qstr($audience["audience_value"])."
 													AND `audience_active` = 1";
-										
+
 										if (!$row=$db->GetRow($query)) {
 											//if(!$db->AutoExecute("course_audience",$PROCESSED["periods"][$period_id][(count($PROCESSED["periods"][$period_id])-1)],"INSERT")) {
 											if(!$db->AutoExecute("course_audience",$audience,"INSERT")) {
@@ -472,7 +475,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID);
 								$db->Execute($query);
 							}
-							
+
 							if (!has_error()) {
 								switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 									case "content" :
@@ -549,7 +552,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					?>
 					</script>
 					<?php
-					
+
 					$LASTUPDATED = $course_details["updated_date"];
 
 					$course_directors = array();
@@ -559,8 +562,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					$query = "SELECT a.* FROM `course_audience` AS a
 								JOIN `curriculum_periods` AS b
 								ON a.`cperiod_id` = b.`cperiod_id`
-								WHERE a.`course_id` = ".$db->qstr($COURSE_ID)." 
-								AND a.`audience_active` = 1 
+								WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
+								AND a.`audience_active` = 1
 								AND (a.`enroll_finish` = 0 OR a.`enroll_finish` > ".$db->qstr(time()).")
 								AND b.`finish_date` >= ".$db->qstr(time());
 					$course_audience = $db->GetAll($query);
@@ -578,7 +581,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 						}
 					}
-					
+
 					$query = "	SELECT * FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `audience_active` = 1";
 					$audience = $db->GetAll($query);
 					$PROCESSED["periods"] = array();
@@ -588,7 +591,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$PROCESSED["periods"][$member["cperiod_id"]][]=$member;
 						}
 					}
-					
+
 					$query	= "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`, `".AUTH_DATABASE."`.`organisations`.`organisation_id`
 								FROM `".AUTH_DATABASE."`.`user_data`
 								LEFT JOIN `".AUTH_DATABASE."`.`user_access`
@@ -648,7 +651,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 						}
 					}
-					
+
 					if ((isset($_POST["associated_coordinator"]))) {
 						$associated_coordinator = explode(',', $_POST["associated_coordinator"]);
 						foreach($associated_coordinator as $contact_order => $proxy_id) {
@@ -668,7 +671,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 					// Compiles Program Coordinator list
 					$programcoodinators = array();
-		
+
 					$query = "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
 								FROM `".AUTH_DATABASE."`.`user_data`
 								LEFT JOIN `".AUTH_DATABASE."`.`user_access`
@@ -686,10 +689,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$programcoodinators[$result["proxy_id"]] = $result["fullname"]. ' (' . $result['organisation_title'].')';
 						}
 					}
-		
+
 					// Compiles Evaluation Representative (evalrep_id)  list
 					$evaluationreps = array();
-		
+
 					$query = "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
 								FROM `".AUTH_DATABASE."`.`user_data`
 								LEFT JOIN `".AUTH_DATABASE."`.`user_access`
@@ -706,10 +709,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$evaluationreps[$result["proxy_id"]] = $result["fullname"] . ' (' . $result['organisation_title'].')';
 						}
 					}
-		
+
 					// Compiles Student Representative (evalrep_id)  list
 					$studentreps = array();
-		
+
 					$query = "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`,`".AUTH_DATABASE."`.`user_data`.`id`, `".AUTH_DATABASE."`.`organisations`.`organisation_title`
 								FROM `".AUTH_DATABASE."`.`user_data`
 								LEFT JOIN `".AUTH_DATABASE."`.`user_access`
@@ -726,7 +729,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$studentreps[$result["proxy_id"]] = $result["fullname"] . ' (' . $result['organisation_title'].')';
 						}
 					}
-					
+
 					/**
 					 * Compiles the list of students.
 					 */
@@ -748,7 +751,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							$STUDENT_LIST[$result["proxy_id"]] = array('proxy_id'=>$result["proxy_id"], 'fullname'=>$result["fullname"], 'organisation_id'=>$result['organisation_id']);
 						}
 					}
-					
+
 					if (has_error()) {
 						echo display_error();
 					}
@@ -770,10 +773,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<select id="curriculum_type_id" name="curriculum_type_id" style="width: 250px" onchange="loadCurriculumPeriods(this.options[this.selectedIndex].value)">
 										<option value="0"<?php echo (((!isset($PROCESSED["curriculum_type_id"])) || (!(int) $PROCESSED["curriculum_type_id"])) ? " selected=\"selected\"" : ""); ?>>- Select Curriculum Category -</option>
 										<?php
-										$query = "	SELECT a.* FROM `curriculum_lu_types` AS a 
-													JOIN `curriculum_type_organisation` AS b 
-													ON a.`curriculum_type_id` = b.`curriculum_type_id` 
-													WHERE a.`curriculum_type_active` = 1 
+										$query = "	SELECT a.* FROM `curriculum_lu_types` AS a
+													JOIN `curriculum_type_organisation` AS b
+													ON a.`curriculum_type_id` = b.`curriculum_type_id`
+													WHERE a.`curriculum_type_active` = 1
 													AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 													ORDER BY `curriculum_type_order` ASC";
 										$results = $db->GetAll($query);
@@ -832,226 +835,378 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<div class="content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>
 								</td>
 							</tr>
-						<?php }?>							
+						<?php }?>
 						</tbody>
 						</table>
 					</div>
 
-					<?php 
-					
+					<?php
+
 						list($course_objectives,$top_level_id) = courses_fetch_objectives($course_details["organisation_id"], array($COURSE_ID), -1, 0, false, $posted_objectives);
 						require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-					?>
+							$query = "	SELECT a.* FROM `global_lu_objectives` a
+										JOIN `objective_audience` b
+										ON a.`objective_id` = b.`objective_id`
+										AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+										WHERE (
+												(b.`audience_value` = 'all')
+												OR
+												(b.`audience_type` = 'course' AND b.`audience_value` = ".$db->qstr($COURSE_ID).")
+											)
+										AND a.`objective_parent` = '0'
+										AND a.`objective_active` = '1'";
+							$objectives = $db->GetAll($query);
+							if ($objectives) {
+								$hierarchical_name = $translate->_("events_filter_controls");
+								$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
+								?>
 					<a name="course-objectives-section"></a>
 					<h2 title="Course Objectives Section"><?php echo $module_singular_name; ?> Objectives</h2>
 					<div id="course-objectives-section">
-						<input type="hidden" id="objectives_head" name="course_objectives" value="" />
-						<?php
-						if ($course_objectives) {
-							if (is_array($course_objectives["primary_ids"])) {
-								foreach ($course_objectives["primary_ids"] as $objective_id) {
-									echo "<input type=\"hidden\" class=\"primary_objectives\" id=\"primary_objective_".$objective_id."\" name=\"primary_objectives[]\" value=\"".$objective_id."\" />\n";
-								}
+						<style>
+							ul.objective-list{
+								position: relative;
+								padding: 0px;
+								margin: 0px;
+								list-style: none;
 							}
-							if (is_array($course_objectives["secondary_ids"])) {
-								foreach ($course_objectives["secondary_ids"] as $objective_id) {
-									echo "<input type=\"hidden\" class=\"secondary_objectives\" id=\"secondary_objective_".$objective_id."\" name=\"secondary_objectives[]\" value=\"".$objective_id."\" />\n";
-								}
+							ul.objective-list{
+								position:relative;
 							}
-							if (is_array($course_objectives["tertiary_ids"])) {
-								foreach ($course_objectives["tertiary_ids"] as $objective_id) {
-									echo "<input type=\"hidden\" class=\"tertiary_objectives\" id=\"tertiary_objective_".$objective_id."\" name=\"tertiary_objectives[]\" value=\"".$objective_id."\" />\n";
-								}
+							ul.objective-list ul{
+								list-style-type: none;
+								background:transparent url('<?php echo ENTRADA_URL;?>/images/vline.png') repeat-y;
+								margin: 0 0 0 10px;
+								padding:0;
 							}
-						}
-						?>
-						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
-						<colgroup>
-							<col width="3%" />
-							<col width="22%" />
-							<col width="75%" />
-						</colgroup>
-						<tbody>
-							<?php if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) { ?>
-							<tr>
-								<td>&nbsp;</td>
-								<td style="vertical-align: top">
-									Clinical Presentations
-									<div class="content-small" style="margin-top: 5px">
-										<strong>Note:</strong> For more detailed information please refer to the <a href="https://apps.mcc.ca/objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Presentations for the Qualifying Examination</a>.
-									</div>
-								</td>
-								<td id="mandated_objectives_section">
-									<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
-								<?php	foreach ($clinical_presentations as $objective_id => $presentation_name) {
-											echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
-										}?>
-									</select>
-									<div style="float: left; display: inline">
-										<input type="button" id="clinical_presentations_list_state_btn" class="btn" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
-									</div>
-									<div style="float: right; display: inline">
-										<input type="button" id="clinical_presentations_list_remove_btn" class="btn" onclick="delIt()" value="Remove" />
-										<input type="button" id="clinical_presentations_list_add_btn" class="btn" onclick="addIt()" style="display: none" value="Add" />
-									</div>
-									<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
-										<h2>Clinical Presentations List</h2>
-										<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
-										<?php
-										if ((is_array($clinical_presentations_list)) && (count($clinical_presentations_list))) {
-											$ONLOAD[] = "$('clinical_presentations_list').style.display = 'none'";
-											foreach ($clinical_presentations_list as $objective_id => $presentation_name) {
-												if (!array_key_exists($objective_id, $clinical_presentations)) {
-													echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
+
+							#mapped_objectives ul.objective-list li, ul.tl-objective-list > li > .objective-children > ul.objective-list > li{
+								background:none!important;
+
+							}
+							#mapped_objectives ul.objective-list li{
+								border-left:2px solid #CCCCCC!important;
+							}
+							ul.objective-list li{
+								background:transparent url('<?php echo ENTRADA_URL;?>/images/node.png') no-repeat;
+								padding-left:5px;
+								display:block;
+								overflow:hidden;
+								line-height: 125%;
+								border-left:none!important;
+							}
+							.objective-title{
+								cursor:pointer;
+								margin-left:5px;
+								margin-top:-2px;
+							}
+							.objective-description{
+								font-size: 11px;
+								font-style: normal;
+								color: #666;
+								margin-top:5px;
+								margin-left:5px;
+							}
+							#mapped_objectives .objective-description{
+								margin-left:0px;
+							}
+							.objective-list{
+								padding-left:5px;
+							}
+							#mapped_objectives,#objective_list_0{
+								margin-left:0px;
+								padding-left: 0px;
+							}
+							.objectives{
+								width:48%;
+								float:left;
+							}
+							.mapped_objectives{
+								float:right;
+								height:100%;
+								width:100%;
+							}
+							.remove{
+								cursor:pointer;
+							}
+							.droppable.hover{
+								background-color:#ddd;
+							}
+							.objective-title{
+								font-weight:bold;
+							}
+							.objective-children{
+								margin-top:5px;
+							}
+							.objective-container{
+								position:relative;
+								padding-right:0px!important;
+								margin-right:0px!important;
+							}
+							.objective-description{
+								font-size: 11px;
+								font-style: normal;
+								color: #666;
+								margin-top:5px;
+							}
+							.mapped-objective{
+								position:relative;
+							}
+							.objective-controls{
+								position:absolute;
+								top:5px;
+								right:5px;
+							}
+							.objective-controls .loading{
+								margin-top:7px!important;
+							}
+							.objective-remove{
+								display:block;
+								float:right;
+							}
+							.importance{
+								font-size:.8em;
+								margin-right:30px;
+								float:left;
+							}
+							li.display-notice{
+								border:1px #FC0 solid!important;
+								padding-top:10px!important;
+								text-align:center;
+							}
+
+							.hide{
+								display:none;
+							}
+							.tl-objective-list{
+								padding-left:0px;
+								padding-top:5px;
+								padding-bottom:5px;
+								list-style: none;
+							}
+							.tl-objective-list > li{
+								padding:5px;
+								margin-bottom:5px;
+							}
+							.tl-objective-list > .objective-set h3{
+								-webkit-border-radius:5px;
+								-moz-border-radius:5px;
+								border-radius:5px;
+								background-color:#036!important;
+								color:#fff!important;
+								padding:10px;
+							}
+						</style>
+							<div class="objectives half left">
+								<h2>Objective Sets</h2>
+								<ul class="tl-objective-list" id="objective_list_0">
+						<?php		foreach($objectives as $objective){ ?>
+										<li class = "objective-container objective-set"
+											id = "objective_<?php echo $objective["objective_id"]; ?>"
+											data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
+											data-id="<?php echo $objective["objective_id"];?>">
+											<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+											<div 	class="objective-title"
+													id="objective_title_<?php echo $objective["objective_id"]; ?>"
+													data-title="<?php echo $title;?>"
+													data-id = "<?php echo $objective["objective_id"]; ?>"
+													data-code = "<?php echo $objective["objective_code"]; ?>"
+													data-name = "<?php echo $objective["objective_name"]; ?>"
+													data-description = "<?php echo $objective["objective_description"]; ?>">
+												<h3><?php echo $title; ?></h3>
+											</div>
+											<div class="objective-controls" id="objective_controls_<?php echo $objective["objective_id"];?>">
+											</div>
+											<div 	class="objective-children"
+													id="children_<?php echo $objective["objective_id"]; ?>">
+													<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>">
+													</ul>
+											</div>
+										</li>
+						<?php 		} ?>
+								</ul>
+							</div>
+
+						<div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="course" data-resource-id="<?php echo $COURSE_ID;?>">
+							<h2>Mapped Objectives
+							<div style="float: right">
+								<ul class="page-action">
+									<li class="last">
+										<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Show Objective Sets</a>
+									</li>
+								</ul>
+							</div>
+							</h2>
+							<p class="content-small">
+								<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left to map it to the course.
+							</p>
+								<?php   $query = "	SELECT a.*,b.`objective_type`, b.`importance`
+													FROM `global_lu_objectives` a
+													JOIN `course_objectives` b
+													ON a.`objective_id` = b.`objective_id`
+													AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+													WHERE a.`objective_active` = '1'
+													GROUP BY a.`objective_id`
+													ORDER BY b.`importance` ASC";
+										$mapped_objectives = $db->GetAll($query);
+										$primary = false;
+										$secondary = false;
+										$tertiary = false;
+										$hierarchical_objectives = array();
+										$flat_objectives = array();
+										$objective_importance = array();
+										if ($mapped_objectives) {
+											foreach($mapped_objectives as $objective){
+												//this should be using id from language file, not hardcoded to 1
+												if($objective["objective_type"] == "course"){
+													$hierarchical_objectives[] = $objective;
+													$objective_importance[$objective["importance"]][] = $objective;
+												}else{
+													$flat_objectives[] = $objective;
 												}
 											}
 										}
 										?>
-										</select>
-									</div>
-									<input type="hidden" value="1" name="clinical_presentations_submit" />
-									<script type="text/javascript">
-									if($('PickList')){
-										$('PickList').observe('keypress', function(event) {
-											if (event.keyCode == Event.KEY_DELETE) {
-												delIt();
-											}
-										});
-									}
-									if($('SelectList')){
-										$('SelectList').observe('keypress', function(event) {
-											if (event.keyCode == Event.KEY_RETURN) {
-												addIt();
-											}
-										});
-									}
-									</script>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<?php }	?>
-							<tr>
-								<td>&nbsp;</td>
-								<td>
-									<label for="objective_select" class="form-nrequired">Curriculum Objectives</label>
-								</td>
-								<td>
+							<a name="curriculum-objective-list"></a>
+							<h2 id="hierarchical-toggle" title="Curriculum Objective List">Curriculum Objectives</h2>
+							<div id="curriculum-objective-list">
+								<ul class="objective-list mapped-list" id="mapped_hierarchical_objectives" data-importance="hierarchical">
+										<?php
+											if ($hierarchical_objectives) {
+												foreach($hierarchical_objectives as $objective){
+														$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+													?>
+													<li class = "mapped-objective"
+														id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+														data-title="<?php echo $title;?>"
+														data-description="<?php echo $objective["objective_description"];?>">
+														<strong><?php echo $title; ?></strong>
+														<div class="objective-description">
+															<?php
+															$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+															if ($set) {
+																echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+															}
+															?>
+															<?php echo $objective["objective_description"];?>
+														</div>
+														<div class="objective-controls">
+															<select 	class="importance"
+																		data-id="<?php echo $objective["objective_id"];?>"
+																		data-value="<?php echo $objective["importance"];?>">
+																<option value="1"<?php echo $objective["importance"] == 1?' selected="selected"':'';?>>Primary</option>
+																<option value="2"<?php echo $objective["importance"] == 2?' selected="selected"':'';?>>Secondary</option>
+																<option value="3"<?php echo $objective["importance"] == 3?' selected="selected"':'';?>>Tertiary</option>
+															</select>
+															<img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
+																	class="objective-remove list-cancel-image"
+																	id="objective_remove_<?php echo $objective["objective_id"];?>"
+																	data-id="<?php echo $objective["objective_id"];?>">
+														</div>
+													</li>
+
 									<?php
-									if (!empty($course_objectives["objectives"])) {
-										?>
-										<select id="objective_select" onchange="showMultiSelect()">
-										<option value="">- Select Competency -</option>
-										<?php
-										$objective_select = "";
-										foreach ($course_objectives["objectives"] as $parent_id => $parent) {
-											if ($parent["parent"] == $top_level_id) {
-												echo "<optgroup label=\"".$parent["name"]."\">";
-												foreach($course_objectives["objectives"] as $objective_id => $objective) {
-													if ($objective["parent"] == $parent_id) {
-														echo "<option value=\"id_".$objective_id."\">".$objective["name"]."</option>";
-														foreach ($course_objectives["objectives"] as $child_id => $child) {
-															if ($child["parent"] == $objective_id) {
-																if (array_search($child_id, $course_objectives["used_ids"]) !== false) {
-																	$checked = "checked=\"checked\"";
-																} else {
-																	$checked = "";
-																}
-																$selectable_objectives[$child_id] = array("text" => $child["name"], "value" => $child_id, "checked" => $checked, "category" => true);
-																foreach($course_objectives["objectives"] as $grandkid_id => $grandkid) {
-																	if ($grandkid["parent"] == $child_id) {
-																		if (array_search($grandkid_id, $course_objectives["used_ids"]) !== false) {
-																			$checked = "checked=\"checked\"";
-																		} else {
-																			$checked = "";
-																		}
-																		if ($grandkid["parent"] == $child_id) {
-																			$selectable_objectives[$grandkid_id] = array("text" => "<strong>".$grandkid["name"]."</strong><br />".$grandkid["description"], "value" => $grandkid_id, "checked" => $checked);
-																		}
-																	}
-																}
-															}
-														}
-														$objective_select .= course_objectives_multiple_select_options_checked("id_".$objective_id, $selectable_objectives, array("title" => "Please select program or curricular objectives", "cancel" => true, "cancel_text" => "Close", "submit" => false, "width" => "550px"));
-													}
-													unset($selectable_objectives);
 												}
-												echo "\n</optgroup>";
+									 		} 	?>
+								</ul>
+							</div>
+							<a name="other-objective-list"></a>
+							<h2 id="flat-toggle" title="Other Objective List" class="collapsed">Other Objectives</h2>
+							<div id="other-objective-list">
+								<ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
+								<?php
+									if ($flat_objectives) {
+										foreach($flat_objectives as $objective){
+												$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+											?>
+									<li class = "mapped-objective"
+										id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+										data-title="<?php echo $title;?>"
+										data-description="<?php echo $objective["objective_description"];?>">
+										<strong><?php echo $title; ?></strong>
+										<div class="objective-description">
+											<?php
+											$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+											if ($set) {
+												echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
 											}
+											?>
+											<?php echo $objective["objective_description"];?>
+										</div>
+										<div class="objective-controls">
+											<img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
+													class="objective-remove list-cancel-image"
+													id="objective_remove_<?php echo $objective["objective_id"];?>"
+													data-id="<?php echo $objective["objective_id"];?>">
+										</div>
+									</li>
+
+								<?php
 										}
+							 		} ?>
+								</ul>
+							</div>
+							<select id="primary_objectives_select" name="primary_objectives[]" multiple="multiple" style="display:none;">
+							<?php
+								if (isset($objective_importance[1]) && $objective_importance[1]) {
+									foreach($objective_importance[1] as $objective){
+										if($objective["importance"] == 1) {
 										?>
-										</select>
-										<?php
+										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+										<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+									<?php
+										}
 									}
-									?>
-								</td>
-							</tr>
-							<tr>
-								<td>&nbsp;</td>
-								<td>&nbsp;</td>
-								<td>
-									<span class="content-small"><strong>Helpful Tip:</strong> Select a competency from the select box above, and a list of <?php echo strtolower($module_singular_name); ?> and curricular objectives will then be displayed. Once you have selected an objective it will be placed in the list below and you may leave it as primary or change the importance to secondary or tertiary.</span>
-									<?php echo $objective_select; ?>
-									<script type="text/javascript">
-										var multiselect = [];
-										var id;
-										function showMultiSelect() {
-											$$('select_multiple_container').invoke('hide');
-											id = $F('objective_select');
-											if (multiselect[id]) {
-												$('objective_select').hide();
-												multiselect[id].container.show();
-												multiselect[id].container.down("input").activate();
-											} else {
-												if ($(id+'_options')) {
-													$(id+'_options').addClassName('multiselect-processed');
-													multiselect[id] = new Control.SelectMultiple('objectives_head',id+'_options',{
-														checkboxSelector: 'table.select_multiple_table tr td input[type=checkbox]',
-														nameSelector: 'table.select_multiple_table tr td.select_multiple_name label',
-														resize: id+'_scroll',
-														afterCheck: function(element) {
-															if (element.checked) {
-																addObjective(element);
-															} else {
-																removeObjective(element);
-															}
-														}
-													});
-	
-													$(id+'_cancel').observe('click',function(event){
-														this.container.hide();
-														$('objective_select').show();
-														$('objective_select').options.selectedIndex = 0;
-														return false;
-													}.bindAsEventListener(multiselect[id]));;
-	
-													$('objective_select').hide();
-													multiselect[id].container.show();
-													multiselect[id].container.down("input").activate();
-												}
-											}
-											return false;
+								}
+							?>
+							</select>
+							<select id="secondary_objectives_select" name="secondary_objectives[]" multiple="multiple" style="display:none;">
+							<?php
+								if (isset($objective_importance[2]) && $objective_importance[2]) {
+									foreach($objective_importance[2] as $objective){
+										if($objective["importance"] == 2) {
+										?>
+										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+										<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+									<?php
 										}
-									</script>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="2">&nbsp;</td>
-								<td style="padding-top: 5px;">
-									<div id="objectives_list">
-									<?php echo course_objectives_in_list($course_objectives,$top_level_id, $top_level_id, true, false, 1, false, true, "primary", true, false); ?>
-									</div>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-						</tbody>
-						</table>
+									}
+								}
+							?>
+							</select>
+							<select id="tertiary_objectives_select" name="tertiary_objectives[]" multiple="multiple" style="display:none;">
+							<?php
+								if (isset($objective_importance[3]) && $objective_importance[3]) {
+									foreach($objective_importance[3] as $objective){
+										if($objective["importance"] == 3) {
+										?>
+										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+										<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+									<?php
+										}
+									}
+								}
+							?>
+							</select>
+							<select id="clinical_objectives_select" name="clinical_presentations[]" multiple="multiple" style="display:none;">
+							<?php
+								if ($flat_objectives) {
+									foreach($flat_objectives as $objective){
+										?>
+										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+										<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+									<?php
+									}
+								}
+							?>
+							</select>
+
+						</div>
+						<div style="clear:both;"></div>
 					</div>
-					
+					<?php 	} 	?>
+
 					<h2 title="Course Contacts Section"><?php echo $module_singular_name; ?> Contacts</h2>
 					<div id="course-contacts-section">
 						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing <?php echo $module_singular_name; ?> Contacts">
@@ -1070,7 +1225,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									function updateOrder(type) {
 										$('associated_'+type).value = Sortable.sequence(type+'_list');
 									}
-							
+
 									function addItem(type) {
 										if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
 											var li = new Element('li', {'class':'community', 'id':type+'_'+$(type+'_id').value, 'style':'cursor: move;'}).update($(type+'_name').value);
@@ -1093,31 +1248,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											return false;
 										}
 									}
-									
+
 									function addItemNoError(type) {
 										if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
 											addItem(type);
 										}
 									}
-					
+
 									function copyItem(type) {
 										if (($(type+'_name') != null) && ($(type+'_ref') != null)) {
 											$(type+'_ref').value = $(type+'_name').value;
 										}
-					
+
 										return true;
 									}
-					
+
 									function checkItem(type) {
 										if (($(type+'_name') != null) && ($(type+'_ref') != null) && ($(type+'_id') != null)) {
 											if ($(type+'_name').value != $(type+'_ref').value) {
 												$(type+'_id').value = '';
 											}
 										}
-					
+
 										return true;
 									}
-					
+
 									function removeItem(id, type) {
 										if ($(type+'_'+id)) {
 											$(type+'_'+id).remove();
@@ -1126,13 +1281,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											updateOrder(type);
 										}
 									}
-					
+
 									function selectItem(id, type) {
 										if ((id != null) && ($(type+'_id') != null)) {
 											$(type+'_id').value = id;
 										}
 									}
-									
+
 									function loadCurriculumPeriods(ctype_id) {
 										var updater = new Ajax.Updater('curriculum_type_periods', '<?php echo ENTRADA_URL."/api/curriculum_type_periods.api.php"; ?>',{
 											method:'post',
@@ -1168,7 +1323,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											foreach ($chosen_course_directors as $director) {
 												if ((array_key_exists($director, $DIRECTOR_LIST)) && is_array($DIRECTOR_LIST[$director])) {
 													?>
-														<li class="community" id="director_<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>" style="cursor: move;"><?php echo $DIRECTOR_LIST[$director]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>', 'director');"/></li>								
+														<li class="community" id="director_<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>" style="cursor: move;"><?php echo $DIRECTOR_LIST[$director]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>', 'director');"/></li>
 													<?php
 												}
 											}
@@ -1209,7 +1364,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											foreach ($chosen_ccoordinators as $coordinator) {
 												if ((array_key_exists($coordinator, $COORDINATOR_LIST)) && is_array($COORDINATOR_LIST[$coordinator])) {
 													?>
-														<li class="community" id="coordinator_<?php echo $COORDINATOR_LIST[$coordinator]["proxy_id"]; ?>" style="cursor: move;"><?php echo $COORDINATOR_LIST[$coordinator]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $COORDINATOR_LIST[$coordinator]["proxy_id"]; ?>', 'coordinator');"/></li>								
+														<li class="community" id="coordinator_<?php echo $COORDINATOR_LIST[$coordinator]["proxy_id"]; ?>" style="cursor: move;"><?php echo $COORDINATOR_LIST[$coordinator]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $COORDINATOR_LIST[$coordinator]["proxy_id"]; ?>', 'coordinator');"/></li>
 													<?php
 												}
 											}
@@ -1223,7 +1378,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<tr>
 								<td colspan="3">&nbsp;</td>
 							</tr>
-							
+
 							<!-- Listing the Program Coordinator for the selected course -->
 							<tr>
 								<td></td>
@@ -1299,9 +1454,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</tbody>
 						</table>
 					</div>
-					
-					<!-- Course Audience-->	
-					<h2><?php echo $module_singular_name; ?> Enrollment</h2>
+
+					<!-- Course Audience-->
+					<h2><?php echo $module_singular_name; ?> Enrolment</h2>
 					<div>
 						<table>
 							<colgroup>
@@ -1309,13 +1464,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<col style="width: 22%" />
 								<col style="width: 75%" />
 							</colgroup>
-							<tbody>			
+							<tbody>
 								<tr>
 									<td>&nbsp;</td>
-									<td><label for="period" class="form-nrequired">Enrollment Periods</label></td>
+									<td><label for="period" class="form-nrequired">Enrolment Periods</label></td>
 									<td>
 										<div id="curriculum_type_periods" style="margin-left:53px;width:558px;">
-											<?php 
+											<?php
 											if ($PROCESSED["curriculum_type_id"]) {
 													$query = "SELECT * FROM `curriculum_periods` WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"])." AND `active` = 1 AND `finish_date` >= ".$db->qstr(time());
 													if ($periods = $db->GetAll($query)) {
@@ -1343,82 +1498,83 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</table>
 						<div id="period_list">
 							<h1 style="font-size:14px;">Active Periods</h1>
-							<?php 
+							<?php
 							if (isset($PROCESSED["periods"])) {
 								foreach ($PROCESSED["periods"] as $key=>$period) {
 									$query = "SELECT * FROM `curriculum_periods` WHERE `cperiod_id` = ".$db->qstr($key);
 									$period_data = $db->GetRow($query);
-									?>
-									<div class="period_item" id="period_item_<?php echo $key;?>" style="margin-bottom:20px;">
-										<h3><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif" style="vertical-align:top;margin-right:20px;cursor:pointer;" class="remove_period" id="remove_period_<?php echo $key;?>"/><?php echo date("F jS,Y",$period_data["start_date"])." to ".date("F jS,Y",$period_data["finish_date"]);?></h3>
-										<div class="audience_list" id="audience_list_<?php echo $key;?>" style="margin-bottom:10px;">
-											<h4>Associated Groups</h4>	
-										<ol id="audience_container_<?php echo $key;?>" class="sortableList"">
-											<?php 
-											foreach ($period as $audience) {
-												switch($audience["audience_type"]){
-													case 'group_id':
-														$query = "SELECT `group_name` AS `title` FROM `groups` WHERE `group_id`=".$db->qstr($audience["audience_value"]);
-														$group_ids[$key][] = $audience["audience_value"];
-														$audience["type"] = 'cohort';
-														$audience["title"] = $db->GetOne($query);
-														?>
-														<li id="audience_<?php echo $audience["type"]."_".$audience["audience_value"];?>" class="audience_cohort"><?php echo $audience["title"];?><span style="cursor:pointer;float:right;" class="remove_audience"><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif"></span></li>
-														<?php
-														break;
-												}
+                                    if ($period_data) {
+                                        ?>
+                                        <div class="period_item" id="period_item_<?php echo $key;?>" style="margin-bottom:20px;">
+                                            <h3><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif" style="vertical-align:top;margin-right:20px;cursor:pointer;" class="remove_period" id="remove_period_<?php echo $key;?>"/><?php echo date("F jS,Y",$period_data["start_date"])." to ".date("F jS,Y",$period_data["finish_date"]);?></h3>
+                                            <div class="audience_list" id="audience_list_<?php echo $key;?>" style="margin-bottom:10px;">
+                                                <h4>Associated Groups</h4>
+                                            <ol id="audience_container_<?php echo $key;?>" class="sortableList">
+                                                <?php
+                                                foreach ($period as $audience) {
+                                                    switch($audience["audience_type"]){
+                                                        case 'group_id':
+                                                            $query = "SELECT `group_name` AS `title` FROM `groups` WHERE `group_id`=".$db->qstr($audience["audience_value"]);
+                                                            $group_ids[$key][] = $audience["audience_value"];
+                                                            $audience["type"] = 'cohort';
+                                                            $audience["title"] = $db->GetOne($query);
+                                                            ?>
+                                                            <li id="audience_<?php echo $audience["type"]."_".$audience["audience_value"];?>" class="audience_cohort"><?php echo $audience["title"];?><span style="cursor:pointer;float:right;" class="remove_audience"><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif"></span></li>
+                                                            <?php
+                                                            break;
+                                                    }
 
-											}
-											?>
-										</ol>
-											<h4>Associated Students</h4>
-											<ul id="student_<?php echo $key;?>_list" class="menu" style="margin-top: 15px;width:390px;">
-											<?php
-											foreach ($period as $audience) {
-												switch ($audience["audience_type"]) {
-													case 'proxy_id':
-														$query = "SELECT CONCAT_WS(',',`lastname`,`firstname`) AS `title` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($audience["audience_value"]);
-														$individual_ids[$key][]=$audience["audience_value"];
-														$audience["type"]='individual';
-														$audience["title"] = $db->GetOne($query);
-														
-													?>
-												<li id="student_<?php echo $key.'_'.$audience["audience_value"];?>" style="cursor: move; position: relative; " class="user"><?php echo $audience["title"];?><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $audience["audience_value"];?>','student_<?php echo $key;?>')"></li>
-														<?php
-														break;
-												}
-											}
-											?>
-											</ul>
-										</div>
-										<select class="audience_type_select" id="audience_type_select_<?php echo $key;?>" onchange="showSelect(<?php echo $key;?>,this.options[this.selectedIndex].value)"><option value="0">-- Select Audience Type --</option></option><option value="cohort">Cohort</option><option value="individual">Individual</option></select>
-										<select style="display:none;" class="type_select" id="cohort_select_<?php echo $key;?>" onchange="addAudience(<?php echo $key;?>,this.options[this.selectedIndex].text,'cohort',this.options[this.selectedIndex].value)"><option value="0">-- Add Cohort --</option>
-										<?php 
-										foreach($groups as $group) {
-											echo "<option value=\"".$group["group_id"]."\"".((in_array($group["group_id"],$group_ids[$key]))?" disabled=\"disabled\"":"").">".$group["group_name"]."</option>";
-										}
-										?>
-										</select>
-										<input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" name="fullname" class="type_select" id="student_<?php echo $key;?>_name" autocomplete="off"/><input style="display:none;" type="button" class="btn type_select" id="add_associated_student_<?php echo $key;?>" value="Add" style="vertical-align: middle" />
-										<div class="autocomplete" id="student_<?php echo $key;?>_name_auto_complete" style="margin-left:200px;"></div>
-										<div id="student_<?php echo $key;?>">(Example: Thorn, Brandon)</div>
-										<input type="hidden" name="group_audience_members[]" id="group_audience_members_<?php echo $key;?>" value="<?php echo implode(',',$group_ids[$key]);?>"/>
-										<input type="hidden" name="individual_audience_members[]" id="associated_student_<?php echo $key;?>"/>
-										<input type="hidden" name="student_id[]" id="student_<?php echo $key;?>_id"/>
-										<input type="hidden" name="student_ref[]" id="student_<?php echo $key;?>_ref"/>
-										<input type="hidden" name="periods[]" value="<?php echo $key;?>"/>
-										<?php
-										$ONLOAD[] = "new AutoCompleteList({ type: 'student_".$key."', url: '".ENTRADA_RELATIVE."/api/personnel.api.php?type=student', remove_image: '".ENTRADA_RELATIVE."/images/action-delete.gif'})";
-										?>
-									</div>
+                                                }
+                                                ?>
+                                            </ol>
+                                                <h4>Associated Students</h4>
+                                                <ul id="student_<?php echo $key;?>_list" class="menu" style="margin-top: 15px;width:390px;">
+                                                <?php
+                                                foreach ($period as $audience) {
+                                                    switch ($audience["audience_type"]) {
+                                                        case 'proxy_id':
+                                                            $query = "SELECT CONCAT_WS(',',`lastname`,`firstname`) AS `title` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id`=".$db->qstr($audience["audience_value"]);
+                                                            $individual_ids[$key][]=$audience["audience_value"];
+                                                            $audience["type"]='individual';
+                                                            $audience["title"] = $db->GetOne($query);
 
-									<?php
+                                                        ?>
+                                                    <li id="student_<?php echo $key.'_'.$audience["audience_value"];?>" style="cursor: move; position: relative; " class="user"><?php echo $audience["title"];?><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $audience["audience_value"];?>','student_<?php echo $key;?>')"></li>
+                                                            <?php
+                                                            break;
+                                                    }
+                                                }
+                                                ?>
+                                                </ul>
+                                            </div>
+                                            <select class="audience_type_select" id="audience_type_select_<?php echo $key;?>" onchange="showSelect(<?php echo $key;?>,this.options[this.selectedIndex].value)"><option value="0">-- Select Audience Type --</option></option><option value="cohort">Cohort</option><option value="individual">Individual</option></select>
+                                            <select style="display:none;" class="type_select" id="cohort_select_<?php echo $key;?>" onchange="addAudience(<?php echo $key;?>,this.options[this.selectedIndex].text,'cohort',this.options[this.selectedIndex].value)"><option value="0">-- Add Cohort --</option>
+                                            <?php
+                                            foreach($groups as $group) {
+                                                echo "<option value=\"".$group["group_id"]."\"".((in_array($group["group_id"],$group_ids[$key]))?" disabled=\"disabled\"":"").">".$group["group_name"]."</option>";
+                                            }
+                                            ?>
+                                            </select>
+                                            <input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" name="fullname" class="type_select" id="student_<?php echo $key;?>_name" autocomplete="off"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_<?php echo $key;?>" value="Add" style="vertical-align: middle" />
+                                            <div class="autocomplete" id="student_<?php echo $key;?>_name_auto_complete" style="margin-left:200px;"></div>
+                                            <div id="student_<?php echo $key;?>">(Example: Thorn, Brandon)</div>
+                                            <input type="hidden" name="group_audience_members[]" id="group_audience_members_<?php echo $key;?>" value="<?php echo implode(',',$group_ids[$key]);?>"/>
+                                            <input type="hidden" name="individual_audience_members[]" id="associated_student_<?php echo $key;?>"/>
+                                            <input type="hidden" name="student_id[]" id="student_<?php echo $key;?>_id"/>
+                                            <input type="hidden" name="student_ref[]" id="student_<?php echo $key;?>_ref"/>
+                                            <input type="hidden" name="periods[]" value="<?php echo $key;?>"/>
+                                            <?php
+                                            $ONLOAD[] = "new AutoCompleteList({ type: 'student_".$key."', url: '".ENTRADA_RELATIVE."/api/personnel.api.php?type=student', remove_image: '".ENTRADA_RELATIVE."/images/action-delete.gif'})";
+                                            ?>
+                                        </div>
+                                        <?php
+                                    }
 								}
-							} 
+							}
 							?>
 						</div>
 					</div>
-					
+
 					<script type="text/javascript">
 					var updaters = new Array();
 					function addPeriod(period_id,period_text,index){
@@ -1453,7 +1609,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					function showSelect(period_id,type){
 						jQuery('.type_select').each(function(){
 							$(this).hide();
-						});				
+						});
 
 						if (type=='cohort') {
 							jQuery('#'+type+'_select_'+period_id).show();
@@ -1467,10 +1623,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							jQuery(this).val('0');
 						});
 						jQuery("#audience_type_select_"+period_id).show();
-						jQuery("#audience_type_select_"+period_id+" option[value='"+type+"']").attr('selected','selected');					
+						jQuery("#audience_type_select_"+period_id+" option[value='"+type+"']").attr('selected','selected');
 					}
 
-					function getGroupOptions(){					
+					function getGroupOptions(){
 						var markup = '';
 						if (is_groups) {
 							for (i=0;i<group_ids.length;i++) {
@@ -1519,7 +1675,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						$$('.course_audience').invoke('hide');
 						$$('.'+type+'_audience').invoke('show');
 					}
-				
+
 
 					jQuery('.remove_period').live('click',function(e){
 						var id_info = e.target.id.split('_');
@@ -1545,8 +1701,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						}
 						$(e.target).up().up().remove();
 
-					});						
-						
+					});
+
 					//$('student_list').observe('change', checkConditions);
 					//$('group_order').observe('change', checkConditions);
 
@@ -1578,7 +1734,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							});
 						}
 					</script>
-					
+
 					<div style="padding-top: 25px">
 						<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 						<tr>

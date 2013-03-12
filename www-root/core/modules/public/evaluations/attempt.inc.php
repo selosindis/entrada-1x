@@ -127,6 +127,20 @@ if ($RECORD_ID) {
 				 * Get the number of completed attempts this user has made.
 				 */
 				$completed_attempts = evaluations_fetch_attempts($RECORD_ID);
+				
+				$evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID());
+				$max_submittable = $evaluation_record["max_submittable"];
+				if ($evaluation_targets_list) {
+					$evaluation_targets_count = count($evaluation_targets_list);
+					if (array_search($evaluation_record["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation_record["max_submittable"]) {
+						$max_submittable = ($evaluation_targets_count * (int) $evaluation_record["max_submittable"]);
+					} elseif ($evaluation_record["target_shortname"] == "peer" && $evaluation_record["max_submittable"] == 0) {
+						$max_submittable = $evaluation_targets_count;
+					}
+					if (isset($max_submittable) && $max_submittable) {
+						$evaluation_record["max_submittable"] = $max_submittable;
+					}
+				}
 
 				/**
 				 * Providing they can still still make attempts at this evaluation, allow them to continue.
@@ -169,17 +183,17 @@ if ($RECORD_ID) {
 								$target_record = $db->GetRow($query);
 								//If course_id or proxy_id, set based on target_value
 								switch ($target_record["target_type"]) {
-									case "proxy_id" :
-									case "course_id" :
-									case "rotation_id" :
-									default :
-										$target_record_id = $target_record["target_value"];
-									break;
 									case "cgroup_id" :
 									case "cohort" :
 										if (isset($_POST["target_record_id"]) && ($tmp_value = clean_input($_POST["target_record_id"], array("trim", "int")))) {
 											$target_record_id = $tmp_value;
 										}
+									break;
+									case "proxy_id" :
+									case "course_id" :
+									case "rotation_id" :
+									default :
+										$target_record_id = $target_record["target_value"];
 									break;
 								}
 								if ((isset($target_record_id) && $target_record_id) || ((isset($_POST["target_record_id"])) && ($target_record_id = clean_input($_POST["target_record_id"], array("trim", "int"))))) {
@@ -268,8 +282,10 @@ if ($RECORD_ID) {
 									 * Get a list of all of the multiple choice questions in this evaluation so we
 									 * can run through a clean set of questions.
 									 */
-									$query		= "	SELECT a.*
+									$query		= "	SELECT a.*, b.*
 													FROM `evaluation_form_questions` AS a
+													JOIN `evaluations_lu_questions` AS b
+													ON a.`equestion_id` = b.`equestion_id`
 													WHERE a.`eform_id` = ".$db->qstr($evaluation_record["eform_id"])."
 													AND `questiontype_id` NOT IN (2, 4)
 													ORDER BY a.`question_order` ASC";
@@ -283,48 +299,50 @@ if ($RECORD_ID) {
 
 										foreach ($questions as $question) {
 											/**
-											 * Checking to see if the efquestion_id was submitted with the
+											 * Checking to see if the equestion_id was submitted with the
 											 * response $_POST, and if they've actually answered the question.
 											 */
-											if ((isset($_POST["responses"][$question["efquestion_id"]])) && ($efresponse_id = clean_input($_POST["responses"][$question["efquestion_id"]], "int"))) {
-												if ((isset($_POST["comments"][$question["efquestion_id"]])) && clean_input($_POST["comments"][$question["efquestion_id"]], array("trim", "notags"))) {
-													$comments = clean_input($_POST["comments"][$question["efquestion_id"]], array("trim", "notags"));
+											if ((isset($_POST["responses"][$question["equestion_id"]])) && ($eqresponse_id = clean_input($_POST["responses"][$question["equestion_id"]], "int"))) {
+												if ((isset($_POST["comments"][$question["equestion_id"]])) && clean_input($_POST["comments"][$question["equestion_id"]], array("trim", "notags"))) {
+													$comments = clean_input($_POST["comments"][$question["equestion_id"]], array("trim", "notags"));
 												} else {
 													$comments = NULL;
 												}
-												if (!evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["efquestion_id"], $efresponse_id, $comments)) {
+												if (!evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["equestion_id"], $eqresponse_id, $comments)) {
 													$ERROR++;
 													$ERRORSTR[] = "A problem was found storing a question response, please verify your responses and try again.";
 
-													$problem_questions[] = $question["efquestion_id"];
+													$problem_questions[] = $question["equestion_id"];
 												}
 											} else {
 												$ERROR++;
-												$problem_questions[] = $question["efquestion_id"];
+												$problem_questions[] = $question["equestion_id"];
 											}
 										}
 										if ($ERROR && empty($ERRORSTR)) {
 											$ERRORSTR[] = "A problem was found storing a question response, please verify your responses and try again.";
 										}
 									}
-									$query		= "	SELECT a.*
+									$query		= "	SELECT a.*, b.*
 													FROM `evaluation_form_questions` AS a
+													JOIN `evaluations_lu_questions` AS b
+													ON a.`equestion_id` = b.`equestion_id`
 													WHERE a.`eform_id` = ".$db->qstr($evaluation_record["eform_id"])."
 													AND `questiontype_id` = (4)
 													ORDER BY a.`question_order` ASC";
 									$questions	= $db->GetAll($query);
 									if ($questions) {
 										foreach ($questions as $question) {
-											if ((isset($_POST["comments"][$question["efquestion_id"]])) && clean_input($_POST["comments"][$question["efquestion_id"]], array("trim", "notags"))) {
-												$comments = clean_input($_POST["comments"][$question["efquestion_id"]], array("trim", "notags"));
+											if ((isset($_POST["comments"][$question["equestion_id"]])) && clean_input($_POST["comments"][$question["equestion_id"]], array("trim", "notags"))) {
+												$comments = clean_input($_POST["comments"][$question["equestion_id"]], array("trim", "notags"));
 											} else {
 												$comments = NULL;
 											}
-											if (!evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["efquestion_id"], 0, $comments)) {
+											if (!evaluation_save_response($eprogress_id, $progress_record["eform_id"], $question["equestion_id"], 0, $comments)) {
 												$ERROR++;
 												$ERRORSTR[] = "A problem was found storing a question response, please verify your responses and try again.";
 
-												$problem_questions[] = $question["efquestion_id"];
+												$problem_questions[] = $question["equestion_id"];
 											}
 										}
 									} elseif (!$questions_found) {
@@ -486,6 +504,9 @@ if ($RECORD_ID) {
 								}
 
 								if ($eprogress_id) {
+									if ((isset($_GET["proxy_id"])) && ($proxy_id = clean_input($_GET["proxy_id"], array("trim", "int"))) && array_search($PROCESSED["target_shortname"], array("peer", "student", "teacher", "resident")) !== false) {
+										$PROCESSED["target_record_id"] = $proxy_id;
+									}
 									?>
 									<form name="evaluation-form" id="evaluation-form" action="<?php echo ENTRADA_URL."/".$MODULE; ?>?section=attempt&id=<?php echo $RECORD_ID; ?>" method="post">
 									<?php
@@ -497,6 +518,9 @@ if ($RECORD_ID) {
 										if (count($evaluation_targets) == 1) {
 											echo "<input type=\"hidden\" id=\"evaluation_target\" name=\"evaluation_target\" value=\"".$evaluation_targets[0]["etarget_id"]."\" />";
 											if ($PROCESSED["target_shortname"] == "teacher") {
+												echo "<input type=\"hidden\" id=\"target_record_id\" name=\"target_record_id\" value=\"".$evaluation_targets[0]["proxy_id"]."\" />";
+												$target_name = $evaluation_targets[0]["firstname"]." ".$evaluation_targets[0]["lastname"];
+											} elseif ($PROCESSED["target_shortname"] == "resident") {
 												echo "<input type=\"hidden\" id=\"target_record_id\" name=\"target_record_id\" value=\"".$evaluation_targets[0]["proxy_id"]."\" />";
 												$target_name = $evaluation_targets[0]["firstname"]." ".$evaluation_targets[0]["lastname"];
 											} elseif ($PROCESSED["target_shortname"] == "course") {
@@ -577,6 +601,17 @@ if ($RECORD_ID) {
 											}
 											echo "</select>";
 											echo "</div>";
+										} elseif ($PROCESSED["target_shortname"] == "resident") {
+											echo "<div class=\"content-small\">Please choose a resident to evaluate: \n";
+											echo "<select id=\"evaluation_target\" name=\"evaluation_target\">";
+											echo "<option value=\"0\">-- Select a resident --</option>\n";
+											foreach ($evaluation_targets as $evaluation_target) {
+												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
+													echo "<option value=\"".$evaluation_target["etarget_id"]."\"".($PROCESSED["etarget_id"] == $evaluation_target["etarget_id"] || $PROCESSED["target_record_id"] == $evaluation_target["proxy_id"] ? " selected=\"selected\"" : "").">".$evaluation_target["firstname"]." ".$evaluation_target["lastname"]."</option>\n";
+												}
+											}
+											echo "</select>";
+											echo "</div>";
 										}
 									}
 
@@ -596,10 +631,12 @@ if ($RECORD_ID) {
 									?>
 									<input type="hidden" name="step" value="2" />
 									<?php
-									$query				= "	SELECT a.*, b.`questiontype_shortname`
+									$query				= "	SELECT a.*, b.*, c.`questiontype_shortname`
 															FROM `evaluation_form_questions` AS a
-															JOIN `evaluations_lu_questiontypes` AS b
-															ON a.`questiontype_id` = b.`questiontype_id`
+															JOIN `evaluations_lu_questions` AS b
+															ON a.`equestion_id` = b.`equestion_id`
+															JOIN `evaluations_lu_questiontypes` AS c
+															ON b.`questiontype_id` = c.`questiontype_id`
 															WHERE a.`eform_id` = ".$db->qstr($evaluation_record["eform_id"])."
 															ORDER BY a.`question_order` ASC";
 									$questions			= $db->GetAll($query);
@@ -611,47 +648,6 @@ if ($RECORD_ID) {
 											<div id="form-questions-list">
 												<?php
 												echo Evaluation::getQuestionAnswerControls($questions, $PROCESSED["eform_id"], false, true, $eprogress_id);
-												/*
-												$question_number = 0;
-												foreach ($questions as $key => $question) {
-													switch ($question["questiontype_shortname"]) {
-														case "descriptive_text" :
-															echo "<div style=\"display: block; padding-top: 15px;\"".(($key % 2) ? " class=\"odd\"" : "").">".$question["question_text"]."</div>";
-															break;
-														case "matrix_single" :
-														default :
-															$question_number++;
-															echo "<div value=\"".$question_number."\" id=\"question_".$question["efquestion_id"]."\"".(($key % 2) ? " class=\"odd\"" : "").">";
-															echo "	<span style=\"margin-left: -30px; position: absolute;\">".$question_number.".</span>";
-															echo "	<div id=\"question_text_".$question["efquestion_id"]."\" class=\"question\">\n";
-															echo "		".clean_input($question["question_text"], "specialchars");
-															echo "	</div>\n";
-															echo "	<div class=\"responses\">\n";
-															$query = "	SELECT a.*
-																		FROM `evaluation_form_responses` AS a
-																		WHERE a.`efquestion_id` = ".$db->qstr($question["efquestion_id"])."
-																		ORDER BY a.`response_order` ASC";
-															$responses = $db->GetAll($query);
-															if ($responses) {
-																$response_width = floor(100 / count($responses));
-
-																foreach ($responses as $response) {
-																	echo "<div style=\"width: ".$response_width."%\">\n";
-																	echo "	<label for=\"".$response["efquestion_id"]."_".$response["efresponse_id"]."\">".clean_input($response["response_text"], "specialchars")."</label><br />";
-																	echo "	<input type=\"radio\" id=\"response_".$question["efquestion_id"]."_".$response["efresponse_id"]."\" name=\"responses[".$question["efquestion_id"]."]\" value=\"".$response["efresponse_id"]."\"".(($ajax_load_progress[$question["efquestion_id"]]["efresponse_id"] == $response["efresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question["efquestion_id"]."', '".$response["efresponse_id"]."', $('".$response["efquestion_id"]."_comment').value) : false)\" />";
-																	echo "</div>\n";
-																}
-															}
-															echo "	</div>\n";
-															echo "	<div class=\"clear\"></div>";
-															echo "	<div class=\"comments\">";
-															echo "	<label for=\"".$question["efquestion_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
-															echo "	<textarea id=\"".$question["efquestion_id"]."_comment\" class=\"expandable\" name=\"comments[".$question["efquestion_id"]."]\" style=\"width:95%; height:40px;\"  onblur=\"storeResponse('".$question["efquestion_id"]."', Form.getInputs('evaluation-form','radio','responses[".$question["efquestion_id"]."]').find(function(radio) { return radio.checked; }).value, $('".$question["efquestion_id"]."_comment').value)\">".clean_input($ajax_load_progress[$question["efquestion_id"]]["comments"], array("trim", "notags", "specialchars"))."</textarea>";
-															echo "	</div>";
-															echo "</div>";
-															break;
-													}
-												}*/
 												?>
 											</div>
 										</div>

@@ -29,19 +29,21 @@ if ($result) {
 	if ($ERROR) {
 		echo display_error();
 	}
+	if ($result["page_url"] != '') {
+		if (isset($result["page_title"]) && trim($result["page_title"]) != "") {
+			echo "<h1>".html_encode($result["page_title"])."</h1>\n";
+		}
 
-	if (isset($result["page_title"]) && trim($result["page_title"]) != "") {
-		echo "<h1>".html_encode($result["page_title"])."</h1>\n";
+		echo "<div class=\"community-page-content\" style=\"margin-top: 10px;\">";
+		echo 	$result["page_content"];
+		echo "</div>";
 	}
-
-	echo "<div class=\"community-page-content\" style=\"margin-top: 10px;\">";
-	echo 	$result["page_content"];
-	echo "</div>";
 }
 
 $query	= "	SELECT *
 			FROM `community_courses`
-			WHERE `community_id` = ".$db->qstr($COMMUNITY_ID);
+			WHERE `community_id` = ".$db->qstr($COMMUNITY_ID) . "
+		    ORDER BY `course_id` ASC";
 $community_courses	= $db->GetAll($query);
 if ($community_courses) {
 	$course_ids = array();
@@ -61,6 +63,28 @@ if ($community_courses) {
 	
 	switch ($PAGE_URL) {
 		case "" :
+			$query = "	SELECT *
+						FROM `courses`
+						WHERE `course_id` = " . $course_ids[0] . "
+						AND `course_active` = 1";
+			$result = $db->GetRow($query);
+			if ($result) {
+				if ($result["course_description"] && $result["course_description"] != "") {
+					echo "<h1>Course Description</h1>\n";
+					echo "<div class=\"community-page-content\" style=\"margin-top: 10px;\">
+						  <p>\n";
+					echo $result["course_description"] . "\n";
+					echo "</p></div>\n";
+				}
+				if ($result["course_message"] && $result["course_message"] != "") {
+					echo "<h1>Directors Message</h1>\n";
+					echo "<div class=\"community-page-content\" style=\"margin-top: 10px;\">
+						  <p>\n";
+					echo $result["course_message"] . "\n";
+					echo "</p></div>\n";
+				}
+			}
+			
 			$query = "	SELECT b.*, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, c.`account_active`, c.`access_starts`, c.`access_expires`, c.`last_login`, c.`role`, c.`group`
 						FROM `course_contacts` AS a
 						JOIN `".AUTH_DATABASE."`.`user_data` AS b

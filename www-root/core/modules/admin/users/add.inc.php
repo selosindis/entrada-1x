@@ -186,9 +186,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				}
 
 				if ((!$permissions_only) && (!$ERROR)) {
-				/**
-				 * Required field "password" / Password.
-				 */
+                    /**
+                     * Required field "password" / Password.
+                     */
 					if ((isset($_POST["password"])) && ($password = clean_input($_POST["password"], "trim"))) {
 						if ((strlen($password) >= 6) && (strlen($password) <= 24)) {
 							$PROCESSED["password"] = $password;
@@ -206,18 +206,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							$entry_year = clean_input($_POST["entry_year"],"int");
 							$grad_year = clean_input($_POST["grad_year"],"int");
 							$sanity_start = 1995;
-							$sanity_end = fetch_first_year();
+							$sanity_end = (fetch_first_year() + 1);
 							if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
 								$PROCESSED["grad_year"] = $grad_year;
 							} else {
 								$ERROR++;
-								$ERRORSTR[] = "You must provide a valid graduation year";
+								$ERRORSTR[] = "You must provide a valid graduation year.";
 							}
 							if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
 								$PROCESSED["entry_year"] = $entry_year;
 							} else {
 								$ERROR++;
-								$ERRORSTR[] = "You must provide a valid program entry year";
+								$ERRORSTR[] = "You must provide a valid program entry year.";
 							}
 						}
 					}
@@ -445,18 +445,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									$entry_year = clean_input($perm["entry_year"],"int");
 									$grad_year = clean_input($perm["grad_year"],"int");
 									$sanity_start = 1995;
-									$sanity_end = fetch_first_year();
+									$sanity_end = (fetch_first_year() + 1);
 									if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
 										$PROCESSED["grad_year"] = $grad_year;
 									} else {
 										$ERROR++;
-										$ERRORSTR[] = "You must provide a valid graduation year";
+										$ERRORSTR[] = "You must provide a valid graduation year.";
 									}
 									if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
 										$PROCESSED["entry_year"] = $entry_year;
 									} else {
 										$ERROR++;
-										$ERRORSTR[] = "You must provide a valid program entry year";
+										$ERRORSTR[] = "You must provide a valid program entry year.";
 									}
 									if (!$ERROR) {
 										$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
@@ -508,24 +508,51 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 
 								/**
-								* Add user to cohort if they're a student
-								*/
+								 * Add user to cohort if they're a student
+                                 *
+                                 * @todo Wow, this is just plain lazy. Someone needs to fix this dirty bit.
+								 */
 								if ($PROCESSED_ACCESS["group"] == "student") {
-									$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."' AND `group_type` = 'cohort' AND `group_active` = 1";
+                                    $query = "  SELECT a.`group_id`
+                                                FROM `groups` AS a
+                                                JOIN `group_organisations` AS b
+                                                ON a.`group_id` = b.`group_id`
+                                                AND b.`organisation_id` = ".$db->qstr($PROCESSED_ACCESS["organisation_id"])."
+                                                WHERE a.`group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."'
+                                                AND a.`group_type` = 'cohort'
+                                                AND a.`group_active` = 1";
 									$group_id = $db->GetOne($query);
-									if($group_id){
-										$gmember = array(
-											'group_id' => $group_id,
-											'proxy_id' => $PROCESSED_ACCESS["user_id"],
-											'start_date' => time(),
-											'finish_date' => 0,
-											'member_active' => 1,
-											'entrada_only' => 1,
-											'updated_date' => time(),
-											'updated_by' => $ENTRADA_USER->getID()
-										);
+									if ($group_id) {
+                                        $query = "SELECT * FROM `group_members` WHERE `group_id`=".$db->qstr($group_id)." AND `proxy_id`=".$db->qstr($PROCESSED_ACCESS["user_id"]);
+                                        $result = $db->GetRow($query);
+                                        if ($result) {
+                                            /**
+                                             * Update existing group_member record.
+                                             */
+                                            $gmember = array(
+                                                'member_active' => 1,
+                                                'updated_date' => time(),
+                                                'updated_by' => $ENTRADA_USER->getID()
+                                            );
 
-										$db->AutoExecute("group_members", $gmember, "INSERT");
+                                            $db->AutoExecute("group_members", $gmember, "UPDATE", "gmember_id = ".$result["gmember_id"]);
+                                        } else {
+                                            /**
+                                             * Create new group_member record.
+                                             */
+                                            $gmember = array(
+                                                'group_id' => $group_id,
+                                                'proxy_id' => $PROCESSED_ACCESS["user_id"],
+                                                'start_date' => 0,
+                                                'finish_date' => 0,
+                                                'member_active' => 1,
+                                                'entrada_only' => 1,
+                                                'updated_date' => time(),
+                                                'updated_by' => $ENTRADA_USER->getID()
+                                            );
+
+                                            $db->AutoExecute("group_members", $gmember, "INSERT");
+                                        }
 									}
 								}
 
@@ -579,18 +606,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											$entry_year = clean_input($perm["entry_year"],"int");
 											$grad_year = clean_input($perm["grad_year"],"int");
 											$sanity_start = 1995;
-											$sanity_end = fetch_first_year();
+                							$sanity_end = (fetch_first_year() + 1);
 											if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
 												$PROCESSED["grad_year"] = $grad_year;
 											} else {
 												$ERROR++;
-												$ERRORSTR[] = "You must provide a valid graduation year";
+												$ERRORSTR[] = "You must provide a valid graduation year.";
 											}
 											if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
 												$PROCESSED["entry_year"] = $entry_year;
 											} else {
 												$ERROR++;
-												$ERRORSTR[] = "You must provide a valid program entry year";
+												$ERRORSTR[] = "You must provide a valid program entry year.";
 											}
 											if (!$ERROR) {
 												$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
@@ -628,31 +655,59 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												application_log("error", "USER NOTICE: A new user (".$PROCESSED["firstname"]." ".$PROCESSED["lastname"].") was added to ".APPLICATION_NAME." as ".$PROCESSED_ACCESS["group"]." > ".$PROCESSED_ACCESS["role"].".");
 											}
 
-											/**
-											* Add user to cohort if they're a student
-											*/
-											if ($PROCESSED_ACCESS["group"] == "student") {
-												$query = "SELECT `group_id` FROM `groups` WHERE `group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."' AND `group_type` = 'cohort' AND `group_active` = 1";
-												$group_id = $db->GetOne($query);
-												if($group_id){
-													$gmember = array(
-														'group_id' => $group_id,
-														'proxy_id' => $PROCESSED_ACCESS["user_id"],
-														'start_date' => time(),
-														'finish_date' => 0,
-														'member_active' => 1,
-														'entrada_only' => 1,
-														'updated_date' => time(),
-														'updated_by' => $ENTRADA_USER->getID()
-													);
+                                            /**
+                                             * Add user to cohort if they're a student
+                                             *
+                                             * @todo Wow, this is just plain lazy. Someone needs to fix this dirty bit.
+                                             */
+                                            if ($PROCESSED_ACCESS["group"] == "student") {
+                                                $query = "  SELECT a.`group_id`
+                                                            FROM `groups` AS a
+                                                            JOIN `group_organisations` AS b
+                                                            ON a.`group_id` = b.`group_id`
+                                                            AND b.`organisation_id` = ".$db->qstr($PROCESSED_ACCESS["organisation_id"])."
+                                                            WHERE a.`group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."'
+                                                            AND a.`group_type` = 'cohort'
+                                                            AND a.`group_active` = 1";
+                                                $group_id = $db->GetOne($query);
+                                                if ($group_id) {
+                                                    $query = "SELECT * FROM `group_members` WHERE `group_id`=".$db->qstr($group_id)." AND `proxy_id`=".$db->qstr($PROCESSED_ACCESS["user_id"]);
+                                                    $result = $db->GetRow($query);
+                                                    if ($result) {
+                                                        /**
+                                                         * Update existing group_member record.
+                                                         */
+                                                        $gmember = array(
+                                                            'member_active' => 1,
+                                                            'updated_date' => time(),
+                                                            'updated_by' => $ENTRADA_USER->getID()
+                                                        );
 
-													$db->AutoExecute("group_members", $gmember, "INSERT");
-												}
-											}
+                                                        $db->AutoExecute("group_members", $gmember, "UPDATE", "gmember_id = ".$result["gmember_id"]);
+                                                    } else {
+                                                        /**
+                                                         * Create new group_member record.
+                                                         */
+                                                        $gmember = array(
+                                                            'group_id' => $group_id,
+                                                            'proxy_id' => $PROCESSED_ACCESS["user_id"],
+                                                            'start_date' => 0,
+                                                            'finish_date' => 0,
+                                                            'member_active' => 1,
+                                                            'entrada_only' => 1,
+                                                            'updated_date' => time(),
+                                                            'updated_by' => $ENTRADA_USER->getID()
+                                                        );
+
+                                                        $db->AutoExecute("group_members", $gmember, "INSERT");
+                                                    }
+                                                }
+                                            }
+
 											/**
-											* Handle the inserting of user data into the user_departments table
-											* if departmental information exists in the form.
-											*/
+											 * Handle the inserting of user data into the user_departments table
+											 * if departmental information exists in the form.
+											 */
 											if (isset($_POST["my_departments"]) && $in_departments = json_decode($_POST["my_departments"], true)) {
 												$in_departments = json_decode($in_departments["list"], true);
 													if (is_array($in_departments)) {
@@ -923,531 +978,335 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				});
 			}
 			</script>
-			
+
 			<form id="addUser" action="<?php echo ENTRADA_URL; ?>/admin/users?section=add&amp;step=2" method="post" onsubmit="$('username').enable()" class="form-horizontal">
-			<h2>Account Details</h2>
-			<div class="control-group">
-				<label for="number" class="form-nrequired control-label">Staff / Student Number:</label>
-				<div class="controls">
-					<input type="text" id="number" name="number" value="<?php echo ((isset($PROCESSED["number"])) ? html_encode($PROCESSED["number"]) : ""); ?>" style="width: 250px" maxlength="25" onblur="findExistingUser('number', this.value)" />
-								<span id="number-searching" class="content-small" style="display: none;"><img src="<?php echo ENTRADA_RELATIVE ?>/images/indicator.gif" /> Searching system for this number... </span>
-								<span id="number-default" class="content-small">(<strong>Important:</strong> Required when ever possible)</span>
-				</div>
-			</div>
-			<!--- End control-group ---->
-			
-			<div class="control-group">
-				<label class="control-label form-required" for="username">Username:</label>
-				<div class="controls">
-					<input type="text" id="username" name="username" value="<?php echo ((isset($PROCESSED["username"])) ? html_encode($PROCESSED["username"]) : ""); ?>" style="width: 250px" maxlength="25" onblur="findExistingUser('username', this.value)" />
-					<span id="username-searching" class="content-small" style="display: none;"><img src="<?php echo ENTRADA_RELATIVE ?>/images/indicator.gif" /> Searching system for this username... </span>
-				</div>
-			</div>
-			
-			<!--- End control-group ---->
-			<div class="control-group">
-				<label for="password" class="form-required control-label">Password:</label>
-				<div class="controls"><input type="text" id="password" name="password" value="<?php echo ((isset($PROCESSED["password"])) ? html_encode($PROCESSED["password"]) : generate_password(8)); ?>" style="width: 250px" maxlength="25" /></div>
-			</div>
-			<!--- End control-group ---->
-			
-			<h2>Account Options</h2>
-			<div class="control-group">
-				<label for="account_active" class="control-label form-required">Account Status</label>
-				<div class="controls">
-					<select id="account_active" name="account_active" style="width: 209px">
-						<option value="true"<?php echo (((!isset($PROCESSED_ACCESS["account_active"])) || ($PROCESSED_ACCESS["account_active"] == "true")) ? " selected=\"selected\"" : ""); ?>>Active</option>
-						<option value="false"<?php echo (($PROCESSED_ACCESS["account_active"] == "false") ? " selected=\"selected\"" : ""); ?>>Disabled</option>
-					</select>
-				</div>
-			</div>
-			<!--- End control-group ---->
-			<div class="control-group">
-					<table>
-					<?php echo generate_calendars("access", "Access", true, true, ((isset($PROCESSED["access_starts"])) ? $PROCESSED["access_starts"] : time()), true, false, 0); ?>
-				</table>
-				</div>
-			
-			<h2>Personal Information</h2>
-			<div class="control-group">
-				<label for="prefix" class="control-label form-nrequired">Prefix</label>
-				<div class="controls">
-					<select id="prefix" name="prefix" class="input-small">
-									<option value=""<?php echo ((!$result["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
-									<?php
-									if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
-										foreach($PROFILE_NAME_PREFIX as $key => $prefix) {
-											echo "<option value=\"".html_encode($prefix)."\"".(((isset($PROCESSED["prefix"])) && ($PROCESSED["prefix"] == $prefix)) ? " selected=\"selected\"" : "").">".html_encode($prefix)."</option>\n";
-										}
-									}
-									?>
-<<<<<<< HEAD
-					</select>
-				</div>
-			</div>
-			<!--- End control-group ---->
-			<div class="control-group">
-				<label for="firstname" class="control-label form-required">Firstname:</label>
-				<div class="controls"><input type="text" id="firstname" name="firstname" value="<?php echo ((isset($PROCESSED["firstname"])) ? html_encode($PROCESSED["firstname"]) : ""); ?>" maxlength="35" /></div>
-			</div>
-			<!--- End control-group ---->
-			<div class="control-group">
-				<label for="lastname" class="control-label form-required">Lastname:</label>
-				<div class="controls">
-					<input type="text" id="lastname" name="lastname" value="<?php echo ((isset($PROCESSED["lastname"])) ? html_encode($PROCESSED["lastname"]) : ""); ?>"  maxlength="35" />
-				</div>
-			</div>
-			<!--- End control-group ---->
-			<div class="control-group">
-				<label for="email" class="control-label form-required">Primary E-Mail:</label>
-				<div class="controls">
-					<input type="text" id="email" name="email" value="<?php echo ((isset($PROCESSED["email"])) ? html_encode($PROCESSED["email"]) : ""); ?>"  maxlength="128" />
-					<span class="content-small">(<strong>Important:</strong> Official e-mail accounts only)</span>
-				</div>
-			</div>
-			<!--- End control-group ---->
-			<div class="control-group">
-				<label for="email_alt" class="control-label form-nrequired">Alternative E-Mail:</label>
-				<div class="controls">
-					<input type="text" id="email_alt" name="email_alt" value="<?php echo ((isset($PROCESSED["email_alt"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>"  maxlength="128" />
-				</div>
-			</div>
-			<!--- End control-group ---->
-			<div class="control-group">
-				<label for="telephone" class="control-label form-nrequired">Telephone Number:</label>
-				<div class="controls">
-					<input type="text" id="telephone" name="telephone" value="<?php echo ((isset($PROCESSED["telephone"])) ? html_encode($PROCESSED["telephone"]) : ""); ?>"  maxlength="25" />
-					<span class="content-small">(<strong>Example:</strong> 613-533-6000 x74918)</span>
-				</div>
-			</div>
-			<!--- End control-group ---->
-			<div class="control-group">
-				<label for="fax" class="control-label form-nrequired">Fax Number:</label>
-				<div class="controls">
-					<input type="text" id="fax" name="fax" value="<?php echo ((isset($PROCESSED["fax"])) ? html_encode($PROCESSED["fax"]) : ""); ?>"  maxlength="25" />
-					<span class="content-small">(<strong>Example:</strong> 613-533-3204)</span>
-				</div>
-			</div>
-			<!--- End control-group ---->
-			<div class="control-group">
-				<label for="country_id" class="control-label form-required">Country:</label>
-				<div class="controls">
-					<?php
-=======
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="firstname" class="form-required">Firstname</label></td>
-							<td><input type="text" id="firstname" name="firstname" value="<?php echo ((isset($PROCESSED["firstname"])) ? html_encode($PROCESSED["firstname"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="35" /></td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="lastname" class="form-required">Lastname</label></td>
-							<td><input type="text" id="lastname" name="lastname" value="<?php echo ((isset($PROCESSED["lastname"])) ? html_encode($PROCESSED["lastname"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="35" /></td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="gender" class="form-nrequired">Gender</label></td>
-							<td>
-								<select name="gender" id="gender" style="width: 256px">
-									<option value="0"<?php echo ($PROCESSED["gender"] == 0 ? " selected=\"selected\"" : ""); ?>>Not Specified</option>
-									<option value="1"<?php echo ($PROCESSED["gender"] == 1 ? " selected=\"selected\"" : ""); ?>>Female</option>
-									<option value="2"<?php echo ($PROCESSED["gender"] == 2 ? " selected=\"selected\"" : ""); ?>>Male</option>
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="email" class="form-required">Primary E-Mail</label></td>
-							<td>
-								<input type="text" id="email" name="email" value="<?php echo ((isset($PROCESSED["email"])) ? html_encode($PROCESSED["email"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
-								<span class="content-small">(<strong>Important:</strong> Official e-mail accounts only)</span>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="email_alt" class="form-nrequired">Alternative E-Mail</label></td>
-							<td><input type="text" id="email_alt" name="email_alt" value="<?php echo ((isset($PROCESSED["email_alt"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" /></td>
-						</tr>
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="telephone" class="form-nrequired">Telephone Number</label></td>
-							<td>
-								<input type="text" id="telephone" name="telephone" value="<?php echo ((isset($PROCESSED["telephone"])) ? html_encode($PROCESSED["telephone"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
-								<span class="content-small">(<strong>Example:</strong> 613-533-6000 x74918)</span>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="fax" class="form-nrequired">Fax Number</label></td>
-							<td>
-								<input type="text" id="fax" name="fax" value="<?php echo ((isset($PROCESSED["fax"])) ? html_encode($PROCESSED["fax"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
-								<span class="content-small">(<strong>Example:</strong> 613-533-3204)</span>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
+                <h2>Account Details</h2>
+                <div class="control-group">
+                    <label for="number" class="form-nrequired control-label">Staff / Student Number:</label>
+                    <div class="controls">
+                        <input type="text" id="number" name="number" value="<?php echo ((isset($PROCESSED["number"])) ? html_encode($PROCESSED["number"]) : ""); ?>" style="width: 250px" maxlength="25" onblur="findExistingUser('number', this.value)" />
+                        <span id="number-searching" class="content-small" style="display: none;"><img src="<?php echo ENTRADA_RELATIVE ?>/images/indicator.gif" /> Searching system for this number... </span>
+                        <span id="number-default" class="content-small">(<strong>Important:</strong> Required when ever possible)</span>
+                    </div>
+                </div>
+                <!--- End control-group ---->
 
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="country_id" class="form-required">Country</label></td>
-							<td>
-								<?php
->>>>>>> develop
-								$countries = fetch_countries();
-								if ((is_array($countries)) && (count($countries))) {
-									echo "<select id=\"country_id\" name=\"country_id\" onchange=\"provStateFunction();\">\n";
-									echo "<option value=\"0\">-- Select Country --</option>\n";
-									foreach ($countries as $country) {
-										echo "<option value=\"".(int) $country["countries_id"]."\"".(((!isset($PROCESSED["country_id"]) && ($country["countries_id"] == DEFAULT_COUNTRY_ID)) || ($PROCESSED["country_id"] == $country["countries_id"])) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
-									}
-									echo "</select>\n";
-								} else {
-									echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
-									echo "Country information not currently available.\n";
-								}
-								?>
-<<<<<<< HEAD
-				</div>
-			</div>
-			<!--- End control-group ---->
-			<div class="control-group">
-				<label id="prov_state_label" for="prov_state_div" class="control-label form-nrequired">Province / State:</label>
-				<div id="prov_state_div controls" class="content-small" style="margin-left:20px;display:inline-block;">Please select a <strong>Country</strong> from above first.</div>
-				
-			</div>
-			<!--- End control-group ---->
-			<div class="control-group">
-				<label for="city" class="control-label form-nrequired">City:</label>
-				<div class="controls">
-					<input type="text" id="city" name="city" value="<?php echo ((isset($PROCESSED["city"])) ? html_encode($PROCESSED["city"]) : "Kingston"); ?>" maxlength="35" />
-				</div>
-			</div>
-			<!--- End control-group ---->
-			<div class="control-group">
-				<label for="address" class="control-label form-nrequired">Address:</label>
-				<div class="controls">
-					<input type="text" id="address" name="address" value="<?php echo ((isset($PROCESSED["address"])) ? html_encode($PROCESSED["address"]) : ""); ?>"  maxlength="255" />
-				</div>
-			</div>
-			<!--- End control-group ---->
-			<div class="control-group">
-				<label for="postcode" class="control-label form-nrequired">Postal Code:</label>
-				<div class="controls">
-					<input type="text" id="postcode" name="postcode" value="<?php echo ((isset($PROCESSED["postcode"])) ? html_encode($PROCESSED["postcode"]) : "K7L 3N6"); ?>" maxlength="7" />
-					<span class="content-small">(<strong>Example:</strong> K7L 3N6)</span>
-				</div>
-			</div>
-			
-			<div class="control-group">
-				<label for="office_hours" class="control-label form-nrequired">Office Hours:</label>
-				<div class="controls">
-					<textarea id="office_hours" name="office_hours" style="height: 40px;" maxlength="100"><?php echo (isset($PROCESSED["office_hours"]) && $PROCESSED["office_hours"] ? html_encode($PROCESSED["office_hours"]) : ""); ?></textarea>
-				</div>
-			</div>
-			<div class="control-group">
-				<label for="notes" class="control-label form-nrequired">General Comments</label>
-				<div class="controls">
-					<textarea id="notes" class="expandable" name="notes" height: 75px"><?php echo ((isset($PROCESSED["notes"])) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
-				</div>
-			</div>
-			<!--- End control-group ---->
-			<h2>Permissions</h2>
-			<?php
-								$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title` 
-												FROM `".AUTH_DATABASE."`.`user_access` ua
-												JOIN `" . AUTH_DATABASE . "`.`organisations` o
-												ON ua.`organisation_id` = o.`organisation_id`
-												WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getID());
-													
-=======
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label id="prov_state_label" for="prov_state_div" class="form-nrequired">Province / State</label></td>
-							<td>
-								<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="city" class="form-nrequired">City</label></td>
-							<td>
-								<input type="text" id="city" name="city" value="<?php echo ((isset($PROCESSED["city"])) ? html_encode($PROCESSED["city"]) : "Kingston"); ?>" style="width: 250px; vertical-align: middle" maxlength="35" />
-							</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="address" class="form-nrequired">Address</label></td>
-							<td>
-								<input type="text" id="address" name="address" value="<?php echo ((isset($PROCESSED["address"])) ? html_encode($PROCESSED["address"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="255" />
-							</td>
-						</tr>
+                <div class="control-group">
+                    <label class="control-label form-required" for="username">Username:</label>
+                    <div class="controls">
+                        <input type="text" id="username" name="username" value="<?php echo ((isset($PROCESSED["username"])) ? html_encode($PROCESSED["username"]) : ""); ?>" style="width: 250px" maxlength="25" onblur="findExistingUser('username', this.value)" />
+                        <span id="username-searching" class="content-small" style="display: none;"><img src="<?php echo ENTRADA_RELATIVE ?>/images/indicator.gif" /> Searching system for this username... </span>
+                    </div>
+                </div>
 
+                <!--- End control-group ---->
+                <div class="control-group">
+                    <label for="password" class="form-required control-label">Password:</label>
+                    <div class="controls"><input type="text" id="password" name="password" value="<?php echo ((isset($PROCESSED["password"])) ? html_encode($PROCESSED["password"]) : generate_password(8)); ?>" style="width: 250px" maxlength="25" /></div>
+                </div>
+                <!--- End control-group ---->
 
-						<tr>
-							<td>&nbsp;</td>
-							<td><label for="postcode" class="form-nrequired">Postal Code</label></td>
-							<td>
-								<input type="text" id="postcode" name="postcode" value="<?php echo ((isset($PROCESSED["postcode"])) ? html_encode($PROCESSED["postcode"]) : "K7L 3N6"); ?>" style="width: 250px; vertical-align: middle" maxlength="7" />
-								<span class="content-small">(<strong>Example:</strong> K7L 3N6)</span>
-							</td>
-						</tr>
+                <h2>Account Options</h2>
+                <div class="control-group">
+                    <label for="account_active" class="control-label form-required">Account Status</label>
+                    <div class="controls">
+                        <select id="account_active" name="account_active" style="width: 209px">
+                            <option value="true"<?php echo (((!isset($PROCESSED_ACCESS["account_active"])) || ($PROCESSED_ACCESS["account_active"] == "true")) ? " selected=\"selected\"" : ""); ?>>Active</option>
+                            <option value="false"<?php echo (($PROCESSED_ACCESS["account_active"] == "false") ? " selected=\"selected\"" : ""); ?>>Disabled</option>
+                        </select>
+                    </div>
+                </div>
+                <!--- End control-group ---->
+                <div class="control-group">
+                    <table>
+                        <?php echo generate_calendars("access", "Access", true, true, ((isset($PROCESSED["access_starts"])) ? $PROCESSED["access_starts"] : time()), true, false, 0); ?>
+                    </table>
+                </div>
 
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td style="vertical-align: top"><label for="office_hours">Office Hours</label></td>
-							<td>
-								<textarea id="office_hours" name="office_hours" style="width: 254px; height: 40px;" maxlength="100"><?php echo (isset($PROCESSED["office_hours"]) && $PROCESSED["office_hours"] ? html_encode($PROCESSED["office_hours"]) : ""); ?></textarea>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td style="vertical-align: top"><label for="notes" class="form-nrequired">General Comments</label></td>
-							<td>
-								<textarea id="notes" class="expandable" name="notes" style="width: 246px; height: 75px"><?php echo ((isset($PROCESSED["notes"])) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">
-								<h2>Permissions</h2>
-							</td>
-						</tr>
-						<?php
-								if (strtolower($ENTRADA_USER->getActiveGroup()) == "medtech" && strtolower($ENTRADA_USER->getActiveRole()) == "admin") {
-									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
-													FROM `" . AUTH_DATABASE . "`.`organisations` o";
-								} else {
-									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
-													FROM `".AUTH_DATABASE."`.`user_access` ua
-													JOIN `" . AUTH_DATABASE . "`.`organisations` o
-													ON ua.`organisation_id` = o.`organisation_id`
-													WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getID()) . "
-													AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);								}
->>>>>>> develop
-								$results	= $db->GetAll($query);
+                <h2>Personal Information</h2>
+                <div class="control-group">
+                    <label for="prefix" class="control-label form-nrequired">Prefix</label>
+                    <div class="controls">
+                        <select id="prefix" name="prefix" class="input-small">
+                            <option value=""<?php echo ((!$result["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
+                            <?php
+                            if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
+                                foreach($PROFILE_NAME_PREFIX as $key => $prefix) {
+                                    echo "<option value=\"".html_encode($prefix)."\"".(((isset($PROCESSED["prefix"])) && ($PROCESSED["prefix"] == $prefix)) ? " selected=\"selected\"" : "").">".html_encode($prefix)."</option>\n";
+                                }
+                            }
+                            ?>
+                        </select>
+                    </div>
+                </div>
+                <!--- End control-group ---->
+                <div class="control-group">
+                    <label for="firstname" class="control-label form-required">Firstname:</label>
+                    <div class="controls"><input type="text" id="firstname" name="firstname" value="<?php echo ((isset($PROCESSED["firstname"])) ? html_encode($PROCESSED["firstname"]) : ""); ?>" maxlength="35" /></div>
+                </div>
+                <!--- End control-group ---->
 
-								if ($results) {
-									 ?>
-<<<<<<< HEAD
-			<div class="row-fluid">
-				<div class="span4">
-					<label for="organisations">Organisation:</label><br />
-					<select id="organisations" name="organisations">
-=======
-						<tr>
-							<td colspan="3">
-								<table class="org_table" style="width:100%">
-									<tbody>
-										<tr>
-											<td style="padding-top:10px">
-											<label for="organisations"><strong>Organisation</strong></label><br />
-											<select id="organisations" name="organisations" style="width:200px">
->>>>>>> develop
-										<?php
-											foreach($results as $result) {
-												echo build_option($result["organisation_id"], ucfirst($result["organisation_title"]), $selected);
-											}
-										?>
-<<<<<<< HEAD
-					</select>
-				</div>
-				<div class="span4">
-					<label for="groups">Groups:</label><br />
-											<select id="groups" name="groups" >
-												<option value="0">Select a Group</option>
-											</select>
-				</div>
-				<div class="span3">
-					<label for="roles">Role:</label><br />
-											<select id="roles" name="roles" style="width:115px">
-												<option value="0">Select a Role</option>
-											</select>
-				</div>
-				<div class="span1">
-					<input id="add_permissions" name="add_permissions" type="button" value="Add" class="btn" style="margin-top:20px"/>
-				</div>
-				
-			</div>
-			
-				<?php } ?>
-				<hr/>
-				<div class="row-fluid">
-					<?php 
-=======
-											</select>
-											</td>
-											<td style="padding-top:10px;">
-											<label for="groups"><strong>Groups</strong></label><br />
-											<select id="groups" name="groups" style="width:200px">
-												<option value="0">Select a Group</option>
-											</select>
-											</td>
-											<td style="padding-top:10px">
-											<label for="roles"><strong>Role</strong></label><br />
-											<select id="roles" name="roles" style="width:200px">
-												<option value="0">Select a Role</option>
-											</select>
-											</td>
-										</tr>
-										<tr>
-											<td>&nbsp;</td>
-											<td>&nbsp;</td>
-											<td style="text-align: right;"><br /><input id="add_permissions" name="add_permissions" type="button" value="Add" /></td>
-										</tr>
-									</tbody>
-								</table>
-								<hr />
-							</td>
-						</tr>
-						<?php } ?>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td colspan="3">
-<<<<<<< HEAD
-								<?php 
->>>>>>> develop
-=======
-								<?php
->>>>>>> develop
-									foreach($results as $result) { ?>
-					<table class="table tableList" style="display: none; width: 100%;" id="<?php echo "perm_organisation_" . $result["organisation_id"]; ?>" >
-						<caption><h2 style="text-align: left;"><?php echo $result["organisation_title"]; ?></h2></caption>
-										<colgroup>
-											<col style="width: 15%" />
-											<col style="width: 15%" />
-											<col style="width: 60%" />
-											<col style="width: 10%" />
-<<<<<<< HEAD
-										</colgroup>										
-										
-										<tbody>											
-=======
-										</colgroup>
-										<thead>
-											<tr>
-												<th></th>
-												<th></th>
-												<th></th>
-											</tr>
-										</thead>
-										<tbody>
->>>>>>> develop
-											<tr>
-												<td colspan="4"><h3>Profiles</h3></td>
-											</tr>
-										
+                <div class="control-group">
+                    <label for="lastname" class="control-label form-required">Lastname:</label>
+                    <div class="controls">
+                        <input type="text" id="lastname" name="lastname" value="<?php echo ((isset($PROCESSED["lastname"])) ? html_encode($PROCESSED["lastname"]) : ""); ?>"  maxlength="35" />
+                    </div>
+                </div>
+                <!--- End control-group ---->
 
-											<tr>
-												<td colspan="4"><h3>Options</h3></td>
-											</tr>
-											<tr>
-												<td></td>
-												<td colspan="2">
-													<label for="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="display: block;">Departments</label><br />
-													<select id="<?php echo "in_departments_" . $result["organisation_id"]; ?>" name="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="">
-														<option value="0">-- Select Departments --</option>
-													<?php
+                <div class="control-group">
+                    <label for="gender" class="control-label form-required">Gender:</label>
+                    <div class="controls">
+                        <select name="gender" id="gender">
+                            <option value="0"<?php echo ($PROCESSED["gender"] == 0 ? " selected=\"selected\"" : ""); ?>>Not Specified</option>
+                            <option value="1"<?php echo ($PROCESSED["gender"] == 1 ? " selected=\"selected\"" : ""); ?>>Female</option>
+                            <option value="2"<?php echo ($PROCESSED["gender"] == 2 ? " selected=\"selected\"" : ""); ?>>Male</option>
+                        </select>
+                    </div>
+                </div>
+                <!--- End control-group ---->
 
-														foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
-															if ($result["organisation_id"] == $organisation_id){
-																foreach($dlist as $d){
-																	echo build_option($d["department_id"], $d["department_title"], $selected);
-																}
-															}
-														}
-													?>
-													</select><br />
-													<div id="departments_notice_<?php echo $result["organisation_id"]; ?>" class="content-small"><div style="margin: 5px 0 5px 0"><strong>Note:</strong> Selected departments will appear here.</div></div>
-													<hr />
-													<ol id="departments_container_<?php echo $result["organisation_id"]; ?>" class="sortableList" style="display: none;">
-													</ol>
-												</td>
-											</tr>
-										</tbody>
-<<<<<<< HEAD
-					</table>
-					<?php
-									}									
-=======
-									</table>
-									<br />
-								<?php
-									}
->>>>>>> develop
-								?>
-					<input id="my_departments" name="my_departments" type="hidden" value="0" />
-				</div>
-				<h2>Notification Options</h2>
-				<table>
-					<tr>
-						</tr>
-						<tr>
-							<td><input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle" onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" /></td>
-							<td colspan="2"><label for="send_notification" class="form-nrequired">Send this new user a password reset e-mail after adding them.</label></td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td colspan="2">
-								<div id="send_notification_msg" style="display: block">
-									<label for="notification_message" class="form-required">Notification Message:</label><br />
-									<textarea id="notification_message" name="notification_message" rows="10" cols="65" style="width: 95%; height: 200px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_NEW_USER_NOTIFICATION); ?></textarea>
-									<div class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</div>
-								</div>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-					</tbody>
-				</table>
-				<input id="permissions" name="permissions" type="hidden" value="" />
-				<div class="left" style="margin-left:20px">
-					<input type="submit" class="btn btn-primary" value="Add User" />
-				</div>
-			</form>
-			
+                <div class="control-group">
+                    <label for="email" class="control-label form-required">Primary E-Mail:</label>
+                    <div class="controls">
+                        <input type="text" id="email" name="email" value="<?php echo ((isset($PROCESSED["email"])) ? html_encode($PROCESSED["email"]) : ""); ?>"  maxlength="128" />
+                        <span class="content-small">(<strong>Important:</strong> Official e-mail accounts only)</span>
+                    </div>
+                </div>
+                <!--- End control-group ---->
+                <div class="control-group">
+                    <label for="email_alt" class="control-label form-nrequired">Alternative E-Mail:</label>
+                    <div class="controls">
+                        <input type="text" id="email_alt" name="email_alt" value="<?php echo ((isset($PROCESSED["email_alt"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>"  maxlength="128" />
+                    </div>
+                </div>
+                <!--- End control-group ---->
+                <div class="control-group">
+                    <label for="telephone" class="control-label form-nrequired">Telephone Number:</label>
+                    <div class="controls">
+                        <input type="text" id="telephone" name="telephone" value="<?php echo ((isset($PROCESSED["telephone"])) ? html_encode($PROCESSED["telephone"]) : ""); ?>"  maxlength="25" />
+                        <span class="content-small">(<strong>Example:</strong> 613-533-6000 x74918)</span>
+                    </div>
+                </div>
+                <!--- End control-group ---->
+                <div class="control-group">
+                    <label for="fax" class="control-label form-nrequired">Fax Number:</label>
+                    <div class="controls">
+                        <input type="text" id="fax" name="fax" value="<?php echo ((isset($PROCESSED["fax"])) ? html_encode($PROCESSED["fax"]) : ""); ?>"  maxlength="25" />
+                        <span class="content-small">(<strong>Example:</strong> 613-533-3204)</span>
+                    </div>
+                </div>
+                <!--- End control-group ---->
+                <div class="control-group">
+                    <label for="country_id" class="control-label form-required">Country:</label>
+                    <div class="controls">
+                        <?php
+                        $countries = fetch_countries();
+                        if ((is_array($countries)) && (count($countries))) {
+                            echo "<select id=\"country_id\" name=\"country_id\" onchange=\"provStateFunction();\">\n";
+                            echo "<option value=\"0\">-- Select Country --</option>\n";
+                            foreach ($countries as $country) {
+                                echo "<option value=\"".(int) $country["countries_id"]."\"".(((!isset($PROCESSED["country_id"]) && ($country["countries_id"] == DEFAULT_COUNTRY_ID)) || ($PROCESSED["country_id"] == $country["countries_id"])) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
+                            }
+                            echo "</select>\n";
+                        } else {
+                            echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
+                            echo "Country information not currently available.\n";
+                        }
+                        ?>
+                    </div>
+                </div>
+                <!--- End control-group ---->
+                <div class="control-group">
+                    <label id="prov_state_label" for="prov_state_div" class="control-label form-nrequired">Province / State:</label>
+                    <div id="prov_state_div controls" class="content-small" style="margin-left:20px;display:inline-block;">Please select a <strong>Country</strong> from above first.</div>
+                </div>
+                <!--- End control-group ---->
+                <div class="control-group">
+                    <label for="city" class="control-label form-nrequired">City:</label>
+                    <div class="controls">
+                        <input type="text" id="city" name="city" value="<?php echo ((isset($PROCESSED["city"])) ? html_encode($PROCESSED["city"]) : "Kingston"); ?>" maxlength="35" />
+                    </div>
+                </div>
+                <!--- End control-group ---->
+                <div class="control-group">
+                    <label for="address" class="control-label form-nrequired">Address:</label>
+                    <div class="controls">
+                        <input type="text" id="address" name="address" value="<?php echo ((isset($PROCESSED["address"])) ? html_encode($PROCESSED["address"]) : ""); ?>"  maxlength="255" />
+                    </div>
+                </div>
+                <!--- End control-group ---->
+                <div class="control-group">
+                    <label for="postcode" class="control-label form-nrequired">Postal Code:</label>
+                    <div class="controls">
+                        <input type="text" id="postcode" name="postcode" value="<?php echo ((isset($PROCESSED["postcode"])) ? html_encode($PROCESSED["postcode"]) : "K7L 3N6"); ?>" maxlength="7" />
+                        <span class="content-small">(<strong>Example:</strong> K7L 3N6)</span>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <label for="office_hours" class="control-label form-nrequired">Office Hours:</label>
+                    <div class="controls">
+                        <textarea id="office_hours" name="office_hours" style="height: 40px;" maxlength="100"><?php echo (isset($PROCESSED["office_hours"]) && $PROCESSED["office_hours"] ? html_encode($PROCESSED["office_hours"]) : ""); ?></textarea>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="notes" class="control-label form-nrequired">General Comments</label>
+                    <div class="controls">
+                        <textarea id="notes" class="expandable" name="notes" height: 75px"><?php echo ((isset($PROCESSED["notes"])) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
+                    </div>
+                </div>
+                <!--- End control-group ---->
+
+                <h2>Permissions</h2>
+                <?php
+                $query = "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
+                            FROM `".AUTH_DATABASE."`.`user_access` ua
+                            JOIN `" . AUTH_DATABASE . "`.`organisations` o
+                            ON ua.`organisation_id` = o.`organisation_id`
+                            WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getID());
+                $results = $db->GetAll($query);
+                if ($results) {
+                    ?>
+                    <div class="row-fluid">
+                        <div class="span4">
+                            <label for="organisations">Organisation:</label><br />
+                            <select id="organisations" name="organisations">
+                                <?php
+                                foreach ($results as $result) {
+                                    echo build_option($result["organisation_id"], ucfirst($result["organisation_title"]), $selected);
+                                }
+                                ?>
+                            </select>
+                        </div>
+                        <div class="span4">
+                            <label for="groups">Groups:</label><br />
+                            <select id="groups" name="groups" >
+                                <option value="0">Select a Group</option>
+                            </select>
+                        </div>
+                        <div class="span3">
+                            <label for="roles">Role:</label><br />
+                            <select id="roles" name="roles" style="width:115px">
+                                <option value="0">Select a Role</option>
+                            </select>
+                        </div>
+                        <div class="span1">
+                            <input id="add_permissions" name="add_permissions" type="button" value="Add" class="btn" style="margin-top:20px"/>
+                        </div>
+                    </div>
+                    <?php
+                }
+                ?>
+                <hr/>
+                <div class="row-fluid">
+                    <?php
+                    foreach($results as $result) {
+                        ?>
+                        <table class="table tableList" style="display: none; width: 100%;" id="<?php echo "perm_organisation_" . $result["organisation_id"]; ?>" >
+                            <caption>
+                                <h2 style="text-align: left;"><?php echo $result["organisation_title"]; ?></h2>
+                            </caption>
+                            <colgroup>
+                                <col style="width: 15%" />
+                                <col style="width: 15%" />
+                                <col style="width: 60%" />
+                                <col style="width: 10%" />
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="4"><h3>Profiles</h3></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4"><h3>Options</h3></td>
+                                </tr>
+                                <tr>
+                                    <td>&nbsp;</td>
+                                    <td colspan="3">
+                                        <label for="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="display: block;">Departments</label><br />
+                                        <select id="<?php echo "in_departments_" . $result["organisation_id"]; ?>" name="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="">
+                                            <option value="0">-- Select Departments --</option>
+                                        <?php
+
+                                            foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
+                                                if ($result["organisation_id"] == $organisation_id){
+                                                    foreach($dlist as $d){
+                                                        echo build_option($d["department_id"], $d["department_title"], $selected);
+                                                    }
+                                                }
+                                            }
+                                        ?>
+                                        </select><br />
+                                        <div id="departments_notice_<?php echo $result["organisation_id"]; ?>" class="content-small"><div style="margin: 5px 0 5px 0"><strong>Note:</strong> Selected departments will appear here.</div></div>
+                                        <hr />
+                                        <ol id="departments_container_<?php echo $result["organisation_id"]; ?>" class="sortableList" style="display: none;">
+                                        </ol>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <?php
+                    }
+                    ?>
+                    <input id="my_departments" name="my_departments" type="hidden" value="0" />
+                </div>
+                <h2>Notification Options</h2>
+                <table>
+                    <tr>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((empty($_POST)) || ((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"]))) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle" onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" /></td>
+                            <td colspan="2"><label for="send_notification" class="form-nrequired">Send this new user a password reset e-mail after adding them.</label></td>
+                        </tr>
+                        <tr>
+                            <td>&nbsp;</td>
+                            <td colspan="2">
+                                <div id="send_notification_msg" style="display: block">
+                                    <label for="notification_message" class="form-required">Notification Message:</label><br />
+                                    <textarea id="notification_message" name="notification_message" rows="10" cols="65" style="width: 95%; height: 200px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_NEW_USER_NOTIFICATION); ?></textarea>
+                                    <div class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</div>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">&nbsp;</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <input id="permissions" name="permissions" type="hidden" value="" />
+                <div class="left" style="margin-left:20px">
+                    <input type="submit" class="btn btn-primary" value="Add User" />
+                </div>
+            </form>
+
 			<div style="display: none;" id="entry_grad_year_container">
-				<div id="grad_year_container" style="float: left; margin-right: 20px;">
-					<label for="grad_year" class="form-required" style="display: block;">Expected Graduation Year</label>&nbsp;
-					<select id="grad_year" name="grad_year" style="width: 140px;">
-					<?php
-					for($i = fetch_first_year(); $i >= 1995; $i--) {
-						$selected = (isset($PROCESSED["grad_year"]) && $PROCESSED["grad_year"] == $i);
-						echo build_option($i, $i, $selected);
-					}
-					?>
-					</select>
-				</div>
-				&nbsp;&nbsp;
-				<div id="entry_year_container" style="float: left;">
+				<div id="entry_year_container" style="float: left; margin-right: 20px;">
 					<label for="entry_year" class="form-required" style="display: block;">Year of Program Entry</label>&nbsp;
 					<select id="entry_year" name="entry_year" style="width: 140px">
 					<?php
 					$selected_year = (isset($PROCESSED["entry_year"])) ? $PROCESSED["entry_year"] : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
 					for($i = fetch_first_year(); $i >= 1995; $i--) {
 						$selected = $selected_year == $i;
+						echo build_option($i, $i, $selected);
+					}
+					?>
+					</select>
+				</div>
+   				&nbsp;&nbsp;
+				<div id="grad_year_container" style="float: left;">
+					<label for="grad_year" class="form-required" style="display: block;">Expected Graduation Year</label>&nbsp;
+					<select id="grad_year" name="grad_year" style="width: 140px;">
+					<?php
+					for($i = (fetch_first_year() + 1); $i >= 1995; $i--) {
+						$selected = (isset($PROCESSED["grad_year"]) && $PROCESSED["grad_year"] == $i);
 						echo build_option($i, $i, $selected);
 					}
 					?>
@@ -1590,6 +1449,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 							var temp_permissions = {"org_id" : org_id, "group_id" : group_id, "role_id" : role_id, "clinical" : clinical, "entry_year" : entry_year, "grad_year" : grad_year};
 							permissions.acl.push(temp_permissions);
+
 							$('input[name=permissions]').val(JSON.stringify(permissions));
 						}
 					});
@@ -1612,9 +1472,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 					$('select[id=entry_year]').live("change", function() {
 						var org_id = $(this).closest('table').attr("id").split("_")[2]
-						for (i = 0; i < permissions.length; i++) {
-							if (permissions[i].org_id == org_id) {
-								permissions[i].entry_year = $(this).val();
+						for (i = 0; i < permissions.acl.length; i++) {
+							if (permissions.acl[i].org_id == org_id) {
+								permissions.acl[i].entry_year = $(this).val();
 							}
 						}
 						$('input[name=permissions]').val(JSON.stringify(permissions));
@@ -1622,9 +1482,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 					$('select[id=grad_year]').live("change", function() {
 						var org_id = $(this).closest('table').attr("id").split("_")[2];
-						for (i = 0; i < permissions.length; i++) {
-							if (permissions[i].org_id == org_id) {
-								permissions[i].grad_year = $(this).val();
+						for (i = 0; i < permissions.acl.length; i++) {
+							if (permissions.acl[i].org_id == org_id) {
+								permissions.acl[i].grad_year = $(this).val();
 							}
 						}
 						$('input[name=permissions]').val(JSON.stringify(permissions));
@@ -1673,6 +1533,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							$('#departments_container_' + org_id).children().remove();
 						}
 					});
+
 					function filterGroups() {
 						if ($('#groups option').length > 0) {
 							var current_org = $('#organisations').val();
@@ -1691,8 +1552,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						}
 					}
 				});
-				</script>
+			</script>
 			<?php
 		break;
-	} //end display switch
-} //end else
+	}
+}

@@ -1257,17 +1257,17 @@ table.DataTable tbody tr th {
 }
 
 table.DataTable tfoot td.control {
-	padding-top:5ex;	
+	padding-top:5ex;
 	text-align:right;
 }
-	
+
 table.DataTable td a {
 	text-decoration:none;
 	}
 table.DataTable img {
 	vertical-align: middle;
 	border:0;
-} 
+}
 
 table.DataTable tbody tr.value_edit td.control,
 table.DataTable tbody tr.value_delete td.control {
@@ -1275,7 +1275,7 @@ table.DataTable tbody tr.value_delete td.control {
 }
 
 table.tableList tbody tr td a {
-font-size:11px;	
+font-size:11px;
 }
 
 table.tableList tbody tr.user,table.tableList tbody tr.poll,table.tableList tbody tr.notice,table.tableList tbody tr.course,table.tableList tbody tr.event {
@@ -1320,6 +1320,11 @@ text-align:center;
 border-left:none;
 }
 
+table.tableList tr td.type-title {
+width:180px;
+border-left:none;
+}
+
 table.tableList tr td.date {
 /*width:160px;*/
 border-left:none;
@@ -1335,8 +1340,13 @@ width:100px;
 border-left:none;
 }
 
-table.tableList tr td.notices,table.tableList tr td.accesses,table.tableList tr td.term {
-width:75px;
+table.tableList tr td.notices,table.tableList tr td.accesses,table.tableList tr td.term{
+width:50px;
+border-left:none;
+}
+
+table.tableList tr td.actions {
+width:60px;
 border-left:none;
 }
 
@@ -1404,10 +1414,10 @@ border-left:none;
 }
 
 div.person-result {
-	width: 100%; 
-	padding: 5px 0px 5px 5px; 
-	line-height: 16px; 
-	text-align: left; 
+	width: 100%;
+	padding: 5px 0px 5px 5px;
+	line-height: 16px;
+	text-align: left;
 	border-bottom: 1px solid rgb(204, 204, 204);
 }
 
@@ -1419,7 +1429,7 @@ div.person-result div.img-holder {
 div.person-result div.person-data {
 	float:left;
 	margin-right:10px;
-	
+
 }
 
 div.person-result div.person-data {
@@ -1444,9 +1454,9 @@ div.person-result div.person-data div.assistant {
 }
 
 div.person-data span.person-name {
-	font-weight: bold; 
+	font-weight: bold;
 	font-size: 1.1em;
-	color: #003366; 
+	color: #003366;
 }
 
 div.person-data .person-email {
@@ -1744,7 +1754,7 @@ ul.rss-list {
 	margin:0;
 	list-style-type:none;
 	height: auto;
-	margin-bottom: -2000px; 
+	margin-bottom: -2000px;
 	padding-bottom: 2000px;
 	min-height: 10px;
 }
@@ -1773,7 +1783,7 @@ div.rss-add {
 	overflow: hidden;
 }
 #dashboard-syndicated-content {
-	overflow: hidden;	
+	overflow: hidden;
 }
 #dashboard-syndicated-content.editing .feeds.rss {
 	color: #000;
@@ -2173,13 +2183,13 @@ cursor:pointer;
 clear:both;
 }
 
-div.quiz-questions ol.questions li, 
+div.quiz-questions ol.questions li,
 div.evaluation-questions ol.questions li {
 position:relative;
 margin-bottom:1px;
 }
 
-div.quiz-questions ol.questions li div.question, 
+div.quiz-questions ol.questions li div.question,
 div.evaluation-questions ol.questions li div.question {
 vertical-align:middle;
 cursor:move;
@@ -2187,7 +2197,7 @@ padding:8px;
 padding-left:0;
 }
 
-div.quiz-questions ol.questions li div.question img.question-controls, 
+div.quiz-questions ol.questions li div.question img.question-controls,
 div.evaluation-questions ol.questions li div.question img.question-controls {
 border:0;
 width:16px;
@@ -2196,28 +2206,28 @@ vertical-align:middle;
 cursor:pointer;
 }
 
-div.quiz-questions ol.questions li div.question span.question, 
+div.quiz-questions ol.questions li div.question span.question,
 div.evaluation-questions ol.questions li div.question span.question {
 vertical-align:middle;
 font-size:1.1em;
 }
 
-div.quiz-questions ol.questions li.question, 
+div.quiz-questions ol.questions li.question,
 div.evaluation-questions ol.questions li.question {
 padding-bottom:5px;
 }
 
-div.quiz-questions ul.responses, 
+div.quiz-questions ul.responses,
 div.evaluation-questions ul.responses {
 margin:0 0 8px 25px;
 }
 
-div.quiz-questions li, 
+div.quiz-questions li,
 div.evaluation-questions li {
 vertical-align: top;
 }
 
-div.quiz-questions ul.responses li, 
+div.quiz-questions ul.responses li,
 div.evaluation-questions ul.responses li {
 border:0;
 margin-bottom:5px;
@@ -2278,7 +2288,7 @@ margin-left:5px;
 vertical-align:middle;
 }
 
-#form-content-questions-holder {
+#form-content-questions-holder, #evaluations-questions-holder {
 border:2px #EEE solid;
 padding:2px;
 }
@@ -2287,7 +2297,7 @@ padding:2px;
 padding-left:25px;
 }
 
-#form-questions-list > li{
+#form-questions-list > li {
 display:list-item;
 vertical-align:top;
 background-color:#FFF;
@@ -2302,6 +2312,35 @@ padding:8px 8px 15px 8px;
 margin-right: 25px;
 }
 
+.evaluation-questions-list input {
+	transform-origin: left top;
+	-ms-transform-origin: left top; /* IE 9 */
+	-webkit-transform-origin: left top; /* Safari and Chrome */
+	-o-transform-origin: left top; /* Opera */
+	-moz-transform-origin: left top; /* Firefox */
+	transform: scale(0.5, 0.5);
+	-ms-transform: scale(0.5, 0.5); /* IE 9 */
+	-webkit-transform: scale(0.5, 0.5); /* Safari and Chrome */
+	-o-transform: scale(0.5, 0.5); /* Opera */
+	-moz-transform: scale(0.5, 0.5); /* Firefox */
+}
+
+.evaluation-questions-list,
+.evaluation-questions-list td,
+.evaluation-questions-list div {
+	font-size: 5px !important;
+	white-space: normal !important;
+}
+
+.evaluation-questions-list textarea {
+	height: 30px !important;
+	min-height: 30px !important;
+}
+
+.evaluation-questions-list > div {
+	width: 377.5px
+}
+
 #form-questions-list > li.odd,
 #form-questions-list > div.odd {
 background-color:#EEE;
@@ -2313,7 +2352,8 @@ float:right;
 }
 
 #form-questions-list > li > div.controls img,
-#form-questions-list > div > div.controls img {
+#form-questions-list > div > div.controls img,
+.evaluation-questions-list > div > div.controls img, {
 border:0;
 }
 
@@ -2341,16 +2381,41 @@ padding:0;
 text-align:center;
 }
 
-#form-questions-list > li > div.comments,
-#form-questions-list > div > div.comments {
-margin-top:5px;
+.evaluation-questions-list > div > h2 {
+font-size: 10px;
+border-bottom: 1px #CCC solid;
+margin: 3px 0px 0px 0px;
+}
+
+.evaluation-questions-list > div > h2 > span {
+font-size: 5px;
+}
+
+.evaluation-questions-list > div > div.question {
+position:relative;
+font-weight:700;
+}
+
+.evaluation-questions-list > div > div.responses {
+position:relative;
+height: 20px;
+}
+
+.evaluation-questions-list > div > div.responses > div {
+display:inline;
+float:left;
+width:20%;
+margin:0;
+padding:0;
+text-align:center;
+height: 20px;
 }
 
 #control_overlay {
 background-color:#000;
 }
 
-.modal {  
+.modal {
 background-color:#FFF;
 padding:20px;
 border:1px solid #333;
@@ -2759,7 +2824,7 @@ background:transparent url(../images/checkbox-on.gif) no-repeat;
 }
 
 ul.menu li.on,ul.menu li.off {
-  background-position:0 2px;  
+  background-position:0 2px;
 }
 
 table.quizResults,table.tableList {
@@ -3134,7 +3199,7 @@ a.objective-expand {
 }
 
 table.mspr_table {
-	width:100%;	
+	width:100%;
 }
 
 table.studentships td.title {
@@ -3148,7 +3213,7 @@ table.studentships td.year, table.studentships td.controls {
 table.manage_awards tr.disabled td {
 	color:#999999;
 }
-	
+
 table.manage_awards td.title {
 	vertical-align: top;
 }
@@ -3302,7 +3367,7 @@ background:transparent url(../images/list-objective.gif) no-repeat 0 3px;
 }
 
 .mspr-tree .collapsable.expanded:before {
-float: left !important; 
+float: left !important;
 content: url(../images/minus.gif);
 clear: both;
 margin: 0 1em 0 0;
@@ -3465,7 +3530,7 @@ form#meta_data_form {
 	width:auto;
 }
 
-.audience_dialog { 
+.audience_dialog {
 	z-index: 100000;
 	top: 80px;
 	left: 220px;
@@ -3491,10 +3556,10 @@ form#meta_data_form {
 }
 
 .session-pane-left .session-button {
-	float: left; 
-	height: 27px; 
-	width: 50px; 
-	text-align: center; 
+	float: left;
+	height: 27px;
+	width: 50px;
+	text-align: center;
 	padding: 8px 0 0 0;
 	cursor: pointer;
 }
@@ -3506,7 +3571,7 @@ form#meta_data_form {
 }
 
 .session-pane-left .remove-button {
-	border-left: 1px solid #CCCCCC; 
+	border-left: 1px solid #CCCCCC;
 	border-right: 1px solid #CCCCCC;
 }
 
@@ -3515,28 +3580,28 @@ form#meta_data_form {
 }
 
 .session-pane-left {
-	width: 18%; 
-	float: left; 
-	height: 625px; 
-	border: 1px solid #CCCCCC; 
-	border-right: none; 
+	width: 18%;
+	float: left;
+	height: 625px;
+	border: 1px solid #CCCCCC;
+	border-right: none;
 	position: relative;
 }
 
 .session-pane-right {
 	position: relative;
-	width: 78%; 
-	border: 1px solid #CCCCCC; 
-	float: left; 
-	height: 620px; 
-	overflow: auto; 
+	width: 78%;
+	border: 1px solid #CCCCCC;
+	float: left;
+	height: 620px;
+	overflow: auto;
 	padding: 5px 10px 0px 10px;
 }
 
 .event-session {
-	vertical-align: middle; 
-	text-align: center; 
-	height: 37px; 
+	vertical-align: middle;
+	text-align: center;
+	height: 37px;
 	border-bottom: 1px solid #CCCCCC;
 }
 
@@ -3643,7 +3708,7 @@ ul.community-themes {
 	margin:0;
 	padding:0;
 }
-ul.community-themes li { 
+ul.community-themes li {
 	border:3px solid #ccc;
 	float:left;
 	height:70px;
@@ -3652,7 +3717,7 @@ ul.community-themes li {
 	position:relative;
 	width:130px;
 }
-ul.community-themes li.edit { 
+ul.community-themes li.edit {
 	border:1px solid #ccc;
 	float:left;
 	height:70px;
@@ -3850,6 +3915,82 @@ a.paginate_button, a.paginate_active {
     padding: 2px 5px;
 }
 
+table.rubric {
+	width: 100%;
+}
+
+table.rubric td, table.rubric th {
+	padding: 10px 5px 10px 5px;
+	border-left: medium none;
+	border-right: 1px solid #EBEBEB;
+	border-bottom: 1px solid #EBEBEB;
+}
+
+div.rubric-controls {
+	text-align: right;
+	margin-top: -50px;
+	background: none !important;
+}
+
+ul#reviewer_list li, ul#tutor_list li, ul#evalfaculty_list li {
+	margin-top: 10px;
+	width: 350px;
+}
+
+a.criteria-tooltip {
+	cursor: pointer;
+	text-decoration: none;
+}
+
+div.criteria-tooltip-box {
+	border:1px solid #CCCCCC;
+	background-color:#FFFFFF;
+	width:250px;
+	font-family:'Lucida Grande',Verdana;
+	font-size:12px;
+	color:#333;
+	padding: 5px 10px 2px 10px;
+}
+
+
+#page-feedback {
+	position:relative;
+	z-index:10;
+}
+#feedback-widget {
+	background:#fff;
+	position:relative;
+}
+#feedback-widget ul.menu {
+	position:relative;
+	background:#fff;
+}
+#feedback-widget ul.menu li {
+	padding-left:35px;
+}
+#feedback-widget ul.menu li.system {
+	background-image:url("../images/icon-feedback.gif");
+}
+#feedback-form-container {
+	position:absolute;
+	left:0;
+	top:0;
+	padding:5px;
+	border:1px solid #999999;
+	background:#fff;
+	width: 489px;
+	height: 455px;
+	top:-27px;
+}
+.cornerarrow {
+	width:8px;
+	height:16px;
+	background-image:url("../images/corner-arrow.png");
+	position:absolute;
+	left:-8px;
+	top:8px;
+}
+
 /*!
  * Bootstrap v2.0.2
  *
@@ -3858,7 +3999,7 @@ a.paginate_button, a.paginate_active {
  * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Designed and built with all the love in the world @twitter by @mdo and @fat.
- 
+
 .nav{margin-left:0;margin-bottom:18px;list-style:none;}
 .nav>li>a{display:block;}
 .nav>li>a:hover{text-decoration:none;background-color:#eeeeee;}
@@ -3919,3 +4060,134 @@ a.paginate_button, a.paginate_active {
 .tabs-right .nav-tabs>li>a:hover{border-color:#eeeeee #eeeeee #eeeeee #dddddd;}
 .tabs-right .nav-tabs .active>a,.tabs-right .nav-tabs .active>a:hover{border-color:#ddd #ddd #ddd transparent;*border-left-color:#ffffff;}
 */
+
+/*
+Curriculum Browser CSS
+*/
+#objective-browser {
+	position:relative;
+	overflow:hidden;
+	padding-bottom: 35px;
+	max-height: 700px;
+}
+#objective-browser #objective-list {
+	float:left;
+	width:225px;
+	overflow-y:scroll;
+	overflow-x:hidden;
+	height:700px;
+}
+
+#objective-browser #objective-list ul {
+	list-style:none;
+	margin:0px;
+	padding:0px;
+}
+
+#objective-browser #objective-list ul li {
+	position: relative;
+}
+
+#objective-browser #objective-list ul li span {
+	color: #fff;
+	display:block;
+	height: 27px;
+	width:37px;
+	position: absolute;
+	top: 7px;
+	left:8px;
+	padding-left: 5px;
+	padding-top: 7px;
+	font-size: 9px;
+}
+
+#objective-browser #objective-list ul li span.green {
+	background: url('../images/marker-green.png') no-repeat;
+
+
+}
+
+#objective-browser #objective-list ul li span.yellow {
+	background: url('../images/marker-yellow.png') no-repeat;
+}
+
+#objective-browser #objective-list ul li span.red {
+	background: url('../images/marker-red.png') no-repeat;
+
+}
+
+#objective-browser #objective-list ul li a {
+	display:block;
+	padding:12px 10px 12px 49px;
+	white-space: nowrap;
+}
+#objective-browser #objective-list ul li a.active {
+	background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+PGxpbmVhckdyYWRpZW50IGlkPSJoYXQwIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjUwJSIgeTE9IjEwMCUiIHgyPSI1MCUiIHkyPSIwJSI+CjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM2OTY5NjkiIHN0b3Atb3BhY2l0eT0iMSIvPgo8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNiM2IzYjMiIHN0b3Atb3BhY2l0eT0iMSIvPgogICA8L2xpbmVhckdyYWRpZW50PgoKPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNoYXQwKSIgLz4KPC9zdmc+); /* gradient fill */
+	background-image: -moz-linear-gradient(90deg, #696969 0%, #b3b3b3 100%); /* gradient fill */
+	background-image: -o-linear-gradient(90deg, #696969 0%, #b3b3b3 100%); /* gradient fill */
+	background-image: -webkit-linear-gradient(90deg, #696969 0%, #b3b3b3 100%); /* gradient fill */
+	background-image: linear-gradient(top, #696969 0%, #b3b3b3 100%); /* gradient fill */
+	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#b3b3b3', endColorstr='#696969'); /* for IE */
+	border-bottom: none;
+	color: #fff;
+}
+
+#objective-browser #objective-list ul li a.active:hover {
+	color:#fff;
+}
+
+#objective-browser #objective-list ul li a:hover {
+	color: #036;
+}
+/*
+#objective-browser #objective-list .objective-link span {
+	background:#fff;
+	color: #036;
+	padding:3px;
+	border-radius:3px;
+	font-weight:bold;
+	margin-right:3px;
+}
+*/
+#objective-browser #objective-container {
+	border-left: 1px solid #f0f0f0;
+	height:700px;
+	overflow-y:scroll;
+	overflow-x:hidden;
+	position:relative;
+	z-index:1;
+}
+#objective-browser #objective-details {
+	float:left;
+	width:495px;
+	height:600px;
+	padding:10px;
+}
+#objective-browser #objective-details h3 {
+	color:#545454;
+}
+#objective-browser #objective-details h1 {
+	margin-top:0px;
+}
+#objective-browser #objective-breadcrumb {
+	z-index:2;
+	padding:10px;
+
+	border-bottom: 1px solid #f0f0f0;
+}
+#objective-browser .event-container {
+	margin-bottom:10px;
+}
+#objective-browser .event-container a {
+	font-size:.9em;
+}
+#objective-browser .course-container {
+	margin-bottom:20px;
+}
+#objective-browser .loading {
+	width:300px;
+	margin:auto;
+	color:#777;
+	text-align:center;
+	font-size:1.2em;
+}

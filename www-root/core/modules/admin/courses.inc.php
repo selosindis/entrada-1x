@@ -90,7 +90,6 @@ if(!defined("PARENT_INCLUDED")) {
 
 			new_sidebar_item("Display Style", $sidebar_html, "display-style", "open");
 		}
-
 		$module_file = $router->getRoute();
 		if ($module_file) {
 			require_once($module_file);

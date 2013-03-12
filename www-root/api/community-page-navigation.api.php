@@ -68,9 +68,9 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		exit;
     }
 	if (!isset($_POST["page_order"]) || !($page_order = ((int) $_POST["page_order"]))) {
-		$query = "SELECT MAX(`page_order`) FROM `community_pages`
+		$query = "SELECT (MAX(`page_order`) + 1) FROM `community_pages`
 					WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)."
-					`parent_id` = ".$db->qstr($parent_id);
+					AND `parent_id` = ".$db->qstr($parent_id);
         $page_order = $db->GetOne($query);
     }
 									

@@ -451,7 +451,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			}
 		break;
 		case 2 :
-			if (isset($PROCESSED["community_shortname"]) && $PROCESSED["community_shortname"]) {
+            if (isset($PROCESSED["community_shortname"]) && $PROCESSED["community_shortname"]) {
 				$ONLOAD[] = "validateShortname('".html_encode($PROCESSED["community_shortname"])."')";
 			}
 			if ((!isset($PROCESSED["community_registration"])) || (!(int) $PROCESSED["community_registration"])) {
@@ -704,6 +704,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                                  ?>
                              </div>
                         </div>
+                        <?php
                     }
                 }
                 ?>
@@ -995,7 +996,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
             <br /><br />
             <?php
 		break;
-		case 1 :
+        case 1 :
 		default :
 			?>
             <h2>Step 1: Choosing Your Category</h2>

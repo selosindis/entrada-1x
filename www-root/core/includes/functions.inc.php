@@ -15333,7 +15333,6 @@ function fetch_evaluation_target_title($evaluation_target = array(), $number_of_
 	return false;
 }
 
-
 /**
  * This function returns the total number of attempts the user
  * has made on the provided evaluation_id, completed, expired or otherwise.
@@ -15829,10 +15828,10 @@ function display_photo_placeholder() {
 
 function display_zoom_controls($user_id) {
 	ob_start();
-	$params = "$('official_photo_".$user_id."'), $('upload_photo_".$user_id."'), $('official_link_".$user_id."'), $('upload_link_".$user_id."'), $('zoomout_photo_".$user_id."'";
+	$params = '$("official_photo_'.$user_id.'"), $("upload_photo_'.$user_id.'"), $("official_link_'.$user_id.'"), $("upload_link_'.$user_id.'"), $("zoomout_photo_'.$user_id.'")';
 	?>
-	<a id="zoomin_photo_<?php echo $user_id; ?>" class="zoomin" onclick="growPic(<?php echo $params; ?>));">+</a>
-	<a id="zoomout_photo_<?php echo $user_id; ?>" class="zoomout" onclick="shrinkPic(<?php echo $params; ?>));"></a>
+	<a id="zoomin_photo_<?php echo $user_id; ?>" class="zoomin" onclick="growPic(<?php echo $params; ?>);">+</a>
+	<a id="zoomout_photo_<?php echo $user_id; ?>" class="zoomout" onclick="shrinkPic(<?php echo $params; ?>);"></a>
 	<?php
 	return ob_get_clean();
 }

@@ -1592,7 +1592,6 @@ CREATE TABLE `community_page_navigation` (
   `show_nav` INT(1) NOT NULL DEFAULT '1',
   `nav_title` VARCHAR(100) NOT NULL DEFAULT 'Next',
   `nav_type` ENUM('next','previous') NOT NULL DEFAULT 'next',
-  `nav_url` varchar(1000) DEFAULT NULL,
   `updated_date` BIGINT(64) NOT NULL DEFAULT '0',
   `updated_by` INT(12) NOT NULL DEFAULT '0',
   PRIMARY KEY (`cpnav_id`),

@@ -22,7 +22,6 @@
  * @copyright Copyright 2012 Queen's University. All Rights Reserved.
  *
 */
-
 /**
  * Evaluation class with basic information and access to evaluation related info
  * 
@@ -2427,7 +2426,7 @@ class Evaluation {
 		return $PROCESSED;
 	}
 	
-	public static function getTargetsArray ($evaluation_id, $evaluator_id = 0, $evaluator_proxy_id = 0, $simple = true, $available_only = false, $recent = false) {
+	public static function getTargetsArray ($evaluation_id, $evaluator_id = 0, $evaluator_proxy_id = 0, $simple = true, $available_only = false, $recent = false, $request_id = false) {
 		global $db, $ENTRADA_USER;
 		
 		if (!$evaluator_proxy_id && isset($ENTRADA_USER) && $ENTRADA_USER->getProxyId()) {
@@ -2576,13 +2575,15 @@ class Evaluation {
 								}
 							break;
 						}
-						$sort_lastname = array();
-						$sort_firstname = array();
-						foreach ($evaluation_targets as $temp_target) {
-							$sort_lastname[] = $temp_target["lastname"];
-							$sort_firstname[] = $temp_target["firstname"];
-						}
-						array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
+                        if (!$simple) {
+                            $sort_lastname = array();
+                            $sort_firstname = array();
+                            foreach ($evaluation_targets as $temp_target) {
+                                $sort_lastname[] = $temp_target["lastname"];
+                                $sort_firstname[] = $temp_target["firstname"];
+                            }
+                            array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
+                        }
 					}
 				break;
 				case "preceptor" :
@@ -2723,84 +2724,141 @@ class Evaluation {
 							}
 						}
 					}
-					$sort_lastname = array();
-					$sort_firstname = array();
-					foreach ($evaluation_targets as $temp_target) {
-						$sort_lastname[] = $temp_target["lastname"];
-						$sort_firstname[] = $temp_target["firstname"];
-					}
-					array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
+                    if (!$simple) {
+                        $sort_lastname = array();
+                        $sort_firstname = array();
+                        foreach ($evaluation_targets as $temp_target) {
+                            $sort_lastname[] = $temp_target["lastname"];
+                            $sort_firstname[] = $temp_target["firstname"];
+                        }
+                        array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
+                    }
 				break;
 				case "teacher" :
 				case "resident" :
-                                    if (isset($cgroup_id) && $cgroup_id) {
-					$query = "SELECT ".($simple ? "a.`target_value` as `proxy_id`" : "*, a.`target_value` as `proxy_id`")." FROM `evaluation_targets` AS a
-								JOIN `".AUTH_DATABASE."`.`user_data` AS b
-								ON a.`target_value` = b.`id`
-								AND a.`target_type` = 'proxy_id'
-                                                                JOIN `course_group_contacts` AS c
-                                                                ON c.`proxy_id` = b.`id`
-								WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
-								".($evaluator_proxy_id && $available_only ? "AND a.`etarget_id` NOT IN (
-									SELECT `etarget_id` FROM `evaluation_progress` 
-									WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
-									AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
-									AND `progress_value` = 'complete'
-								)" : "")."
-                                                                AND c.`cgroup_id` = ".$db->qstr($cgroup_id)."
-								AND a.`target_active` = 1";
-					$evaluation_target_users = $db->GetAll($query);
-					if ($evaluation_target_users) {
-                                            $target_found = true;
-                                            foreach ($evaluation_target_users as $evaluation_target_user) {
-                                                    if ($simple) {
-                                                            $evaluation_targets[] = $evaluation_target_user["proxy_id"];
-                                                    } else {
-                                                            $evaluation_targets[] = $evaluation_target_user;
-                                                    }
-                                            }
-                                            $sort_lastname = array();
-                                            $sort_firstname = array();
-                                            foreach ($evaluation_targets as $temp_target) {
-                                                    $sort_lastname[] = $temp_target["lastname"];
-                                                    $sort_firstname[] = $temp_target["firstname"];
-                                            }
-                                            array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
-					} else {
-                                            $target_found = false;
-                                        }
-                                    }
-                                    if (!isset($target_found) || !$target_found) {
-					$query = "SELECT ".($simple ? "a.`target_value` as `proxy_id`" : "*, a.`target_value` as `proxy_id`")." FROM `evaluation_targets` AS a
-								JOIN `".AUTH_DATABASE."`.`user_data` AS b
-								ON a.`target_value` = b.`id`
-								AND a.`target_type` = 'proxy_id'
-								WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
-								".($evaluator_proxy_id && $available_only ? "AND a.`etarget_id` NOT IN (
-									SELECT `etarget_id` FROM `evaluation_progress` 
-									WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
-									AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
-									AND `progress_value` = 'complete'
-								)" : "")."
-								AND a.`target_active` = 1";
-					$evaluation_target_users = $db->GetAll($query);
-					if ($evaluation_target_users) {
-						foreach ($evaluation_target_users as $evaluation_target_user) {
-							if ($simple) {
-								$evaluation_targets[] = $evaluation_target_user["proxy_id"];
-							} else {
-								$evaluation_targets[] = $evaluation_target_user;
-							}
-						}
-					}
-					$sort_lastname = array();
-					$sort_firstname = array();
-					foreach ($evaluation_targets as $temp_target) {
-						$sort_lastname[] = $temp_target["lastname"];
-						$sort_firstname[] = $temp_target["firstname"];
-					}
-					array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
-                                    }
+                    if (isset($cgroup_id) && $cgroup_id) {
+                        $query = "SELECT ".($simple ? "a.`target_value` as `proxy_id`" : "*, a.`target_value` as `proxy_id`")." FROM `evaluation_targets` AS a
+                                    JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                    ON a.`target_value` = b.`id`
+                                    AND a.`target_type` = 'proxy_id'
+                                                                    JOIN `course_group_contacts` AS c
+                                                                    ON c.`proxy_id` = b.`id`
+                                    WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                    ".($evaluator_proxy_id && $available_only ? "AND a.`etarget_id` NOT IN (
+                                        SELECT `etarget_id` FROM `evaluation_progress` 
+                                        WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+                                        AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                        AND `progress_value` = 'complete'
+                                    )" : "")."
+                                                                    AND c.`cgroup_id` = ".$db->qstr($cgroup_id)."
+                                    AND a.`target_active` = 1";
+                        $evaluation_target_users = $db->GetAll($query);
+                        if ($evaluation_target_users) {
+                                                $target_found = true;
+                                                foreach ($evaluation_target_users as $evaluation_target_user) {
+                                                        if ($simple) {
+                                                                $evaluation_targets[] = $evaluation_target_user["proxy_id"];
+                                                        } else {
+                                                                $evaluation_targets[] = $evaluation_target_user;
+                                                        }
+                                                }
+                                                $sort_lastname = array();
+                                                $sort_firstname = array();
+                                                foreach ($evaluation_targets as $temp_target) {
+                                                        $sort_lastname[] = $temp_target["lastname"];
+                                                        $sort_firstname[] = $temp_target["firstname"];
+                                                }
+                                                array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
+                        } else {
+                                                $target_found = false;
+                        }
+                    }
+                    if (!isset($target_found) || !$target_found) {
+                        $query = "SELECT ".($simple ? "a.`target_value` as `proxy_id`" : "*, a.`target_value` as `proxy_id`")." FROM `evaluation_targets` AS a
+                                    JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                    ON a.`target_value` = b.`id`
+                                    AND a.`target_type` = 'proxy_id'
+                                    WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                    ".($evaluator_proxy_id && $available_only ? "AND a.`etarget_id` NOT IN (
+                                        SELECT `etarget_id` FROM `evaluation_progress` 
+                                        WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+                                        AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                        AND `progress_value` = 'complete'
+                                    )" : "")."
+                                    AND a.`target_active` = 1";
+                        $evaluation_target_users = $db->GetAll($query);
+                        if ($evaluation_target_users) {
+                            foreach ($evaluation_target_users as $evaluation_target_user) {
+                                if ($simple) {
+                                    $evaluation_targets[] = $evaluation_target_user["proxy_id"];
+                                } else {
+                                    $evaluation_targets[] = $evaluation_target_user;
+                                }
+                            }
+                        }
+                        $sort_lastname = array();
+                        $sort_firstname = array();
+                        foreach ($evaluation_targets as $temp_target) {
+                            $sort_lastname[] = $temp_target["lastname"];
+                            $sort_firstname[] = $temp_target["firstname"];
+                        }
+                        array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
+                    }
+                            }
+                            if (!$simple) {
+                                $sort_lastname = array();
+                                $sort_firstname = array();
+                                foreach ($evaluation_targets as $temp_target) {
+                                        $sort_lastname[] = $temp_target["lastname"];
+                                        $sort_firstname[] = $temp_target["firstname"];
+                                }
+                                array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
+                            }
+                        } else {
+                            $target_found = false;
+                        }
+                    }
+                    if (!isset($target_found) || !$target_found) {
+                        if ($evaluator_proxy_id && $available_only) {
+                            $unavailable_proxy_ids_string = "";
+                            $query = "SELECT `etarget_id` FROM `evaluation_progress` 
+                                        WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+                                        AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                        AND `progress_value` = 'complete'";
+                            $unavailable_proxy_ids = $db->GetAll($query);
+                            if ($unavailable_proxy_ids) {
+                                foreach ($unavailable_proxy_ids as $unavailable_proxy_id) {
+                                    $unavailable_proxy_ids_string .= ($unavailable_proxy_ids_string ? ", " : "").$db->qstr($unavailable_proxy_id["etarget_id"]);
+                                }
+                            }
+                        }
+                        $query = "SELECT ".($simple ? "a.`target_value` as `proxy_id`" : "*, a.`target_value` as `proxy_id`")." FROM `evaluation_targets` AS a
+                                    JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                    ON a.`target_value` = b.`id`
+                                    AND a.`target_type` = 'proxy_id'
+                                    WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                    ".($evaluator_proxy_id && $available_only && $unavailable_proxy_ids_string ? "AND a.`etarget_id` NOT IN (".$unavailable_proxy_ids_string.")" : "")."
+                                    AND a.`target_active` = 1";
+                        $evaluation_target_users = $db->GetAll($query);
+                        if ($evaluation_target_users) {
+                            foreach ($evaluation_target_users as $evaluation_target_user) {
+                                if ($simple) {
+                                    $evaluation_targets[] = $evaluation_target_user["proxy_id"];
+                                } else {
+                                    $evaluation_targets[] = $evaluation_target_user;
+                                }
+                            }
+                        }
+                        if (!$simple) {
+                            $sort_lastname = array();
+                            $sort_firstname = array();
+                            foreach ($evaluation_targets as $temp_target) {
+                                $sort_lastname[] = $temp_target["lastname"];
+                                $sort_firstname[] = $temp_target["firstname"];
+                            }
+                            array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
+                        }
+                    }
 				break;
 				case "course" :
 				default :
@@ -2830,7 +2888,42 @@ class Evaluation {
 				break;
 			}
 		}
+        if ($request_id) {
+            $temp_evaluation_targets = $evaluation_targets;
+            $evaluation_targets = array();
+            foreach ($temp_evaluation_targets as $evaluation_target) {
+                if ($simple) {
+                    $temp_proxy_id = $evaluation_target;
+                } else {
+                    $temp_proxy_id = $evaluation_target["proxy_id"];
+                }
+                $requests = Evaluation::getTargetRequests($temp_proxy_id, $request_id);
+                if ($requests && count($requests)) {
+                    $evaluation_targets[] = $evaluation_target;
+                }
+            }
+        }
+        
 		return $evaluation_targets;
+	}
+	
+	public static function getTargetRequests ($proxy_id, $request_id = null, $codes_only = false) {
+		global $db;
+		
+		$query = "SELECT * FROM `evaluation_requests` AS a
+            JOIN `evaluations` AS b
+            ON a.`evaluation_id` = b.`evaluation_id`
+            WHERE `proxy_id` = ".$db->qstr($proxy_id)."
+            ".($request_id ? "AND `erequest_id` = ".$db->qstr($request_id) : "")."
+            ".($codes_only ? "AND `request_code` IS NOT NULL" : "")."
+            AND (
+                `request_expires` = 0
+                OR `request_expires` > ".$db->qstr(time())."
+            )
+            AND `request_fulfilled` = 0";
+        $evaluation_requests = $db->GetAll($query);
+        
+		return $evaluation_requests;
 	}
 	
 	public static function getEvaluationsPending ($evaluation, $recent = false) {
@@ -3663,69 +3756,95 @@ class Evaluation {
 		$temp_evaluations = $db->GetAll($query);
 		if ($temp_evaluations) {
 			foreach ($temp_evaluations as $evaluation) {
-				$evaluation_targets_list = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluation["eevaluator_id"], $ENTRADA_USER->getID());
-				if ($evaluation_targets_list) {
-					$evaluation_targets_count = count($evaluation_targets_list);
-					if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation["max_submittable"]) {
-						$evaluation["max_submittable"] = ($evaluation_targets_count * (int) $evaluation["max_submittable"]);
-					}
-					$evaluation_target_title = fetch_evaluation_target_title($evaluation_targets_list[0], $evaluation_targets_count, $evaluation["target_shortname"]);
-					if ($evaluation["target_shortname"] == "peer" && $evaluation["max_submittable"] == 0) {
-						$evaluation["max_submittable"] = $evaluation_targets_count;
-					}
-					
-					if ($evaluation_target_title) {
-						$evaluation["evaluation_target_title"] = $evaluation_target_title;
-					}
-					
-					if ($evaluation_targets_list) {
-						$evaluation["evaluation_targets"] = $evaluation_targets_list;
-					}
-				}
+                if (isset($evaluation["require_requests"]) && $evaluation["require_requests"]) {
+                    $requests = Evaluation::getEvaluationRequests($evaluation["evaluation_id"], $ENTRADA_USER->getID());
+                }
+                if (!(isset($evaluation["require_requests"]) && $evaluation["require_requests"]) || (is_array($requests) && count($requests))) {
+                    $evaluation_targets_list = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluation["eevaluator_id"], $ENTRADA_USER->getID());
+                    if ($evaluation_targets_list) {
+                        $evaluation_targets_count = count($evaluation_targets_list);
+                        if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation["max_submittable"]) {
+                            $evaluation["max_submittable"] = ($evaluation_targets_count * (int) $evaluation["max_submittable"]);
+                        }
+                        $evaluation_target_title = fetch_evaluation_target_title($evaluation_targets_list[0], $evaluation_targets_count, $evaluation["target_shortname"]);
+                        if ($evaluation["target_shortname"] == "peer" && $evaluation["max_submittable"] == 0) {
+                            $evaluation["max_submittable"] = $evaluation_targets_count;
+                        }
 
-				$query = "	SELECT COUNT(`efquestion_id`) FROM `evaluation_form_questions`
-							WHERE `eform_id` = ".$db->qstr($evaluation["eform_id"])."
-							GROUP BY `eform_id`";
-				$evaluation_questions = $db->GetOne($query);
-				if ($evaluation_questions) {
-					$evaluation["evaluation_questions"] = $evaluation_questions;
-				} else {
-					$evaluation["evaluation_questions"] = 0;
-				}
+                        if ($evaluation_target_title) {
+                            $evaluation["evaluation_target_title"] = $evaluation_target_title;
+                        }
 
-				$query = "	SELECT * FROM `evaluation_progress`
-							WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
-							AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-							AND `progress_value` = 'complete'";
-				$evaluation_progress = $db->GetAll($query);
-				if ($evaluation_progress) {
-					$evaluation["evaluation_progress"] = $evaluation_progress;
-				} else {
-					$evaluation["evaluation_progress"] = 0;
-				}
+                        if ($evaluation_targets_list) {
+                            $evaluation["evaluation_targets"] = $evaluation_targets_list;
+                        }
+                    }
 
-				$query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
-							WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
-							AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-							AND `progress_value` = 'complete'";
-				$completed_attempts = $db->GetOne($query);
-				if ($completed_attempts) {
-					$evaluation["completed_attempts"] = $completed_attempts;
-				} else {
-					$evaluation["completed_attempts"] = 0;
-				}
+                    $query = "	SELECT COUNT(`efquestion_id`) FROM `evaluation_form_questions`
+                                WHERE `eform_id` = ".$db->qstr($evaluation["eform_id"])."
+                                GROUP BY `eform_id`";
+                    $evaluation_questions = $db->GetOne($query);
+                    if ($evaluation_questions) {
+                        $evaluation["evaluation_questions"] = $evaluation_questions;
+                    } else {
+                        $evaluation["evaluation_questions"] = 0;
+                    }
 
-				if (($evaluation["release_date"] <= time() || !$evaluation["release_date"])) {
-					$evaluation["click_url"] = ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"];
-				} else {
-					$evaluation["click_url"] = "";
-				}
-				$evaluations[] = $evaluation;
+                    $query = "	SELECT * FROM `evaluation_progress`
+                                WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+                                AND `progress_value` = 'complete'";
+                    $evaluation_progress = $db->GetAll($query);
+                    if ($evaluation_progress) {
+                        $evaluation["evaluation_progress"] = $evaluation_progress;
+                    } else {
+                        $evaluation["evaluation_progress"] = 0;
+                    }
+
+                    $query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
+                                WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+                                AND `progress_value` = 'complete'";
+                    $completed_attempts = $db->GetOne($query);
+                    if ($completed_attempts) {
+                        $evaluation["completed_attempts"] = $completed_attempts;
+                    } else {
+                        $evaluation["completed_attempts"] = 0;
+                    }
+
+                    if (($evaluation["release_date"] <= time() || !$evaluation["release_date"])) {
+                        $evaluation["click_url"] = ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"];
+                    } else {
+                        $evaluation["click_url"] = "";
+                    }
+                    $evaluations[] = $evaluation;
+                }
 			}
 		}
 		return $evaluations;
 	}
 	
+    public function getEvaluationRequests($evaluation_id, $proxy_id) {
+        global $db;
+        
+        $query = "SELECT * FROM `evaluation_requests`
+                    WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
+                    AND `target_proxy_id` = ".$db->qstr($proxy_id)."
+                    AND `request_fulfilled` = 0
+                    AND (
+                        `request_expires` = 0
+                        OR `request_expires` > ".$db->qstr(time())."
+                    )
+                    AND `request_fulfilled` = 0
+                    AND `request_code` IS NULL";
+        $requests = $db->GetAll($query);
+        if ($requests) {
+            return $requests;
+        } else {
+            return false;
+        }
+    }
+    
 	public static function getAuthorEvaluations() {
 		global $db, $ENTRADA_USER, $ENTRADA_ACL;
 		

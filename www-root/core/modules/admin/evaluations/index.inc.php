@@ -134,6 +134,4 @@ if (!defined("IN_EVALUATIONS")) {
 		</div>
 		<?php
 	}
-
-	$ONLOAD[] = "initList()";
 }

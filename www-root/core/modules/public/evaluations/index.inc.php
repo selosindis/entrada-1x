@@ -48,69 +48,101 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jqu
 
 if (isset($_GET["request"]) && $_GET["request"]) {
 	if (isset($RECORD_ID) && $RECORD_ID) {
-		$query = "SELECT `evaluation_title` FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($RECORD_ID);
-		$evaluation_title = $db->GetOne($query);
-		$target_evaluations = Evaluation::getTargetEvaluations();
-		$found = false;
-		if ($target_evaluations) {
-			foreach ($target_evaluations as $target_evaluation) {
-				if ($target_evaluation["evaluation_id"] == $RECORD_ID) {
-					$found = true;
-				}
-			}
-		}
-		if ($evaluation_title && $found) {
-			if (isset($_POST["associated_evaluator"]) && $_POST["associated_evaluator"]) {
-				$associated_evaluators = explode(",", $_POST["associated_evaluator"]);
-				$notifications_sent = 0;
-				$proxy_id = 0;
-				foreach($associated_evaluators as $proxy_id) {
-					if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
-						$query = "SELECT *, COUNT(a.`evaluation_id`) AS `completed_evaluations` FROM `evaluation_progress` AS a
-									JOIN `evaluations` AS b
-									ON a.`evaluation_id` = b.`evaluation_id`
-									WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
-									AND a.`proxy_id` = ".$db->qstr($proxy_id)."
-									AND a.`progress_value` = 'complete'
-									GROUP BY a.`evaluation_id`";
-						$all_targets_progress = $db->GetRow($query);
-						if (!$all_targets_progress || $all_targets_progress["max_submittable"] == 0 || $all_targets_progress["completed_evaluations"] < $all_targets_progress["max_submittable"]) {
-							$query = "SELECT * FROM `evaluation_progress` AS a
-										JOIN `evaluations` AS b
-										ON a.`evaluation_id` = b.`evaluation_id`
-										WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
-										AND a.`proxy_id` = ".$db->qstr($proxy_id)."
-										AND a.`target_record_id` = ".$db->qstr($ENTRADA_USER->getId())."
-										AND a.`progress_value` = 'complete'
-										GROUP BY a.`evaluation_id`";
-							$evaluation_progress = $db->GetRow($query);
-							if (!$evaluation_progress || $evaluation_progress["allow_repeat_targets"] == 1) {
-								require_once("Models/notifications/Notification.class.php");
-								require_once("Models/notifications/NotificationUser.class.php");
-								$notification_user = NotificationUser::get($proxy_id, "evaluation_request", $RECORD_ID, $ENTRADA_USER->getId());
-								if (!$notification_user) {
-									$notification_user = NotificationUser::add($proxy_id, "evaluation_request", $RECORD_ID, $ENTRADA_USER->getId());
-								}
-								if (Notification::add($notification_user->getID(), $ENTRADA_USER->getId(), $RECORD_ID)) {
-									$notifications_sent++;
-								} else {
-									add_error("An issue was encountered while attempting to send a notification to a user [".get_account_data("wholename", $proxy_id)."] requesting that they complete an evaluation [".$evaluation_title."] for you. The system administrator has been notified of this error, please try again later.");
-									application_log("Unable to send notification requesting an evaluation be completed to evaluator [".$proxy_id."] for evaluation_id [".$RECORD_ID."].");
-								}
-							} else {
-								add_error("The selected evaluator [".get_account_data("wholename", $proxy_id)."] has already completed this evaluation [".$evaluation_title."] for you, and is unable to attempt it again.");
-							}
-						} else {
-							add_error("The selected evaluator [".get_account_data("wholename", $proxy_id)."] has already completed this evaluation [".$evaluation_title."] the maximum number of times, and is therefore unable to attempt it again.");
-						}
-					}
-				}
-			} else {
-				add_error("An evaluator must be selected to request an evaluation be completed for you.");
-			}
-		} else {
-			add_error("A valid evaluation must be selected from the drop-down list to request an evaluation be completed for you.");
-		}
+		$query = "SELECT * FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($RECORD_ID);
+		$evaluation = $db->GetRow($query);
+        if ($evaluation) {
+            $evaluation_title = $evaluation["evaluation_title"];
+            $target_evaluations = Evaluation::getTargetEvaluations();
+            $found = false;
+            if ($target_evaluations) {
+                foreach ($target_evaluations as $target_evaluation) {
+                    if ($target_evaluation["evaluation_id"] == $RECORD_ID) {
+                        $found = true;
+                    }
+                }
+            }
+            if ($evaluation_title && $found) {
+                if (isset($_POST["associated_evaluator"]) && $_POST["associated_evaluator"]) {
+                    $associated_evaluators = explode(",", $_POST["associated_evaluator"]);
+                    $notifications_sent = 0;
+                    $proxy_id = 0;
+                    foreach($associated_evaluators as $proxy_id) {
+                        if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+                            $query = "SELECT *, COUNT(a.`evaluation_id`) AS `completed_evaluations` FROM `evaluation_progress` AS a
+                                        JOIN `evaluations` AS b
+                                        ON a.`evaluation_id` = b.`evaluation_id`
+                                        WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
+                                        AND a.`proxy_id` = ".$db->qstr($proxy_id)."
+                                        AND a.`progress_value` = 'complete'
+                                        GROUP BY a.`evaluation_id`";
+                            $all_targets_progress = $db->GetRow($query);
+                            if (!$all_targets_progress || $all_targets_progress["max_submittable"] == 0 || $all_targets_progress["completed_evaluations"] < $all_targets_progress["max_submittable"]) {
+                                $query = "SELECT * FROM `evaluation_progress` AS a
+                                            JOIN `evaluations` AS b
+                                            ON a.`evaluation_id` = b.`evaluation_id`
+                                            WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
+                                            AND a.`proxy_id` = ".$db->qstr($proxy_id)."
+                                            AND a.`target_record_id` = ".$db->qstr($ENTRADA_USER->getId())."
+                                            AND a.`progress_value` = 'complete'
+                                            GROUP BY a.`evaluation_id`";
+                                $evaluation_progress = $db->GetRow($query);
+                                if (!$evaluation_progress || $evaluation_progress["allow_repeat_targets"] == 1) {
+
+                                    $PROCESSED_REQUEST = array();
+                                    if ($evaluation["require_request_code"]) {
+                                        $PROCESSED_REQUEST["request_code"] = strtoupper(substr(md5($ENTRADA_USER->getId()."-".time()), 0, 6));
+                                    } else {
+                                        $PROCESSED_REQUEST["request_code"] = NULL;
+                                    }
+                                    
+                                    if ($evaluation["request_timeout"]) {
+                                        $PROCESSED_REQUEST["request_expires"] = (time() + ($evaluation["request_timeout"] * 60));
+                                    } else {
+                                       $PROCESSED_REQUEST["request_expires"] = 0;
+                                    }
+                                    
+                                    $PROCESSED_REQUEST["evaluation_id"] = $RECORD_ID;
+                                    $PROCESSED_REQUEST["proxy_id"] = $ENTRADA_USER->getId();
+                                    $PROCESSED_REQUEST["target_proxy_id"] = $proxy_id;
+                                    $PROCESSED_REQUEST["request_created"] = time();
+                                    $PROCESSED_REQUEST["request_fulfilled"] = 0;
+                                    
+                                    if ($db->AutoExecute("evaluation_requests", $PROCESSED_REQUEST, "INSERT") && ($request_id = $db->Insert_Id())) {
+                                        if (!$PROCESSED_REQUEST["request_code"]) {
+                                            require_once("Models/notifications/Notification.class.php");
+                                            require_once("Models/notifications/NotificationUser.class.php");
+                                            $notification_user = NotificationUser::get($proxy_id, "evaluation_request", $RECORD_ID, $ENTRADA_USER->getId());
+                                            if (!$notification_user) {
+                                                $notification_user = NotificationUser::add($proxy_id, "evaluation_request", $RECORD_ID, $ENTRADA_USER->getId());
+                                            }
+                                            if (Notification::add($notification_user->getID(), $ENTRADA_USER->getId(), $RECORD_ID)) {
+                                                $notifications_sent++;
+                                            } else {
+                                                add_error("An issue was encountered while attempting to send a notification to a user [".get_account_data("wholename", $proxy_id)."] requesting that they complete an evaluation [".$evaluation_title."] for you. The system administrator has been notified of this error, please try again later.");
+                                                application_log("Unable to send notification requesting an evaluation be completed to evaluator [".$proxy_id."] for evaluation_id [".$RECORD_ID."].");
+                                            }
+                                        }
+                                    } else {
+                                        add_error("Unable to create a request entry for this evaluation. The system administrator was notified of this error; please try again later.");
+                                        application_log("Unable to create a request entry for this evaluator [".$proxy_id."] for evaluation_id [".$RECORD_ID."]. Database said: ".$db->ErrorMsg());
+                                    }
+                                } else {
+                                    add_error("The selected evaluator [".get_account_data("wholename", $proxy_id)."] has already completed this evaluation [".$evaluation_title."] for you, and is unable to attempt it again.");
+                                }
+                            } else {
+                                add_error("The selected evaluator [".get_account_data("wholename", $proxy_id)."] has already completed this evaluation [".$evaluation_title."] the maximum number of times, and is therefore unable to attempt it again.");
+                            }
+                        }
+                    }
+                } else {
+                    add_error("An evaluator must be selected to request an evaluation be completed for you.");
+                }
+            } else {
+                add_error("A valid evaluation must be selected from the drop-down list to request an evaluation be completed for you.");
+            }
+        } else {
+            add_error("A valid evaluation must be selected from the drop-down list to request an evaluation be completed for you.");
+        }
 	} else {
 		add_error("An evaluation must be selected from the drop-down list to request an evaluation be completed for you.");
 	}
@@ -121,6 +153,17 @@ if (isset($_GET["request"]) && $_GET["request"]) {
 		add_success("Successfully requested that ".($notifications_sent > 1 ? $notifications_sent." evaluators" : get_account_data("wholename", $proxy_id))." fill out this evaluation [".$evaluation_title."] for you.");
 		echo display_success();
 	}
+}
+
+$evaluation_requests = Evaluation::getTargetRequests($ENTRADA_USER->GetID(), null, true);
+if ($evaluation_requests) {
+    $notice_msg = "The following Evaluation Request Codes are still active but unused: <br />";
+    foreach ($evaluation_requests as $evaluation_request) {
+        $requestee = get_account_data("wholename", $evaluation_request["target_proxy_id"]);
+        $notice_msg .= "<br />".$evaluation_request["evaluation_title"]." [".$requestee."]: <strong>".$evaluation_request["request_code"]."</strong>";
+    }
+    add_notice($notice_msg);
+    echo display_notice();
 }
 
 if ($evaluations && $view != "review") {
@@ -207,7 +250,6 @@ if ($evaluations && $view != "review") {
 	</thead>
 	<tbody>
 	<?php
-	$request_evaluations = array();
 	foreach ($evaluations as $evaluation) {
 		if ($evaluation["click_url"]) {
 			echo "<tr>\n";
@@ -358,6 +400,29 @@ if ($target_evaluations) {
 		}
 	}
 }
+
+
+$query = "SELECT * FROM `evaluation_requests` AS a
+            JOIN `evaluations` AS b
+            ON a.`evaluation_id` = b.`evaluation_id`
+            WHERE `target_proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+            AND `request_code` IS NOT NULL
+            AND (
+                `request_expires` = 0
+                OR `request_expires` > ".$db->qstr(time())."
+            )";
+$requested_evaluations = $db->GetAll($query);
+
+if (isset($requested_evaluations) && count($requested_evaluations)) {
+	$sidebar_html  = "<form method=\"post\" action=\"".ENTRADA_RELATIVE."/evaluations?section=attempt\">\n";
+	$sidebar_html .= "	<label class=\"form-nrequired\" for=\"request_code\">Request Code: </label>";
+    $sidebar_html .= "  <input type=\"text\" id=\"request_code\" name=\"request_code\">";
+	$sidebar_html .= "	<br /><br /><input type=\"submit\" value=\"Submit\" />";
+	$sidebar_html .= "</form>";
+
+	new_sidebar_item("Fulfill an Evaluation Request", $sidebar_html, "evaluation-request-code", "open", "1.9");
+}
+
 if (isset($request_evaluations) && count($request_evaluations)) {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$ONLOAD[] = "evaluator_list = new AutoCompleteList({ type: 'evaluator', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=evaluators&id=".(isset($RECORD_ID) && $RECORD_ID ? $RECORD_ID : 0)."', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
@@ -383,7 +448,7 @@ if (isset($request_evaluations) && count($request_evaluations)) {
 	$sidebar_html .= "<ul id=\"evaluator_list\" class=\"menu\" style=\"margin-top: 15px\"></ul>\n";
 	$sidebar_html .= "<input type=\"hidden\" id=\"evaluator_ref\" name=\"evaluator_ref\" value=\"\" />";
 	$sidebar_html .= "<input type=\"hidden\" id=\"evaluator_id\" name=\"evaluator_id\" value=\"\" />";
-	$sidebar_html .= "	<br /><br /><input type=\"submit\" value=\"Request Evaluation\" />";
+	$sidebar_html .= "	<br /><br /><input type=\"submit\" value=\"Make Request\" />";
 	$sidebar_html .= "</form>";
 
 	new_sidebar_item("Request an Evaluation", $sidebar_html, "request-evaluation", "open", "1.9");

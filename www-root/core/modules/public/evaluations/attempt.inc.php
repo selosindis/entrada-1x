@@ -31,6 +31,23 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 	exit;
 }
 
+if (isset($_POST["request_code"]) && ($code = clean_input($_POST["request_code"], "alphanum"))) {
+    $query = "SELECT * FROM `evaluation_requests`
+                WHERE `request_code` = ".$db->qstr($code)."
+                AND `target_proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+                AND (
+                    `request_expires` = 0
+                    OR `request_expires` > ".$db->qstr(time())."
+                )
+                AND `request_fulfilled` = 0";
+    $evaluation_request = $db->GetRow($query);
+    if ($evaluation_request) {
+        $RECORD_ID = $evaluation_request["evaluation_id"];
+    }
+} else {
+    $code = false;
+}
+
 if ($RECORD_ID) {							
 	require_once("Models/evaluation/Evaluation.class.php");
 	$cohort = groups_get_cohort($ENTRADA_USER->getID());
@@ -93,11 +110,20 @@ if ($RECORD_ID) {
 						GROUP BY cr.`eprogress_id`";
 	$evaluation_record	= $db->GetRow($query);
 	if ($evaluation_record) {
-		
+		if ($evaluation_record["require_requests"] && (!isset($evaluation_request) || !$evaluation_request)) {
+            $evaluation_requests = Evaluation::getEvaluationRequests($RECORD_ID, $ENTRADA_USER->getID());
+            if ($evaluation_requests && count($evaluation_requests)) {
+                $evaluation_request = $evaluation_requests[0];
+            } else {
+                $evaluation_record = null;
+            }
+        }
+    }
+	if ($evaluation_record) {
 		$PROCESSED = $evaluation_record;
 
 		if (array_search($PROCESSED["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false) {
-			$full_evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), true, false);
+			$full_evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), true, false, false, $evaluation_request["erequest_id"]);
 			$evaluation_targets_count = count($full_evaluation_targets_list);
 			if (isset($full_evaluation_targets_list) && $evaluation_targets_count) {
 				$evaluation_record["max_submittable"] = ($evaluation_targets_count * (int) $evaluation_record["max_submittable"]);
@@ -128,7 +154,21 @@ if ($RECORD_ID) {
 				 */
 				$completed_attempts = evaluations_fetch_attempts($RECORD_ID);
 				
-				$evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID());
+				$evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID(), true, false, false, $evaluation_request["erequest_id"]);
+				$max_submittable = $evaluation_record["max_submittable"];
+				if ($evaluation_targets_list) {
+					$evaluation_targets_count = count($evaluation_targets_list);
+					if (array_search($evaluation_record["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation_record["max_submittable"]) {
+						$max_submittable = ($evaluation_targets_count * (int) $evaluation_record["max_submittable"]);
+					} elseif ($evaluation_record["target_shortname"] == "peer" && $evaluation_record["max_submittable"] == 0) {
+						$max_submittable = $evaluation_targets_count;
+					}
+					if (isset($max_submittable) && $max_submittable) {
+						$evaluation_record["max_submittable"] = $max_submittable;
+					}
+				}
+
+				$evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID(), true, false, false, $evaluation_request["erequest_id"]);
 				$max_submittable = $evaluation_record["max_submittable"];
 				if ($evaluation_targets_list) {
 					$evaluation_targets_count = count($evaluation_targets_list);
@@ -197,7 +237,7 @@ if ($RECORD_ID) {
 									break;
 								}
 								if ((isset($target_record_id) && $target_record_id) || ((isset($_POST["target_record_id"])) && ($target_record_id = clean_input($_POST["target_record_id"], array("trim", "int"))))) {
-									$evaluation_targets = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true);
+									$evaluation_targets = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, $evaluation_request["erequest_id"]);
 									foreach ($evaluation_targets as $evaluation_target) {
 										switch ($evaluation_target["target_type"]) {
 											case "cgroup_id" :
@@ -367,6 +407,9 @@ if ($RECORD_ID) {
 																);
 
 										if ($db->AutoExecute("evaluation_progress", $evaluation_progress_array, "UPDATE", "eprogress_id = ".$db->qstr($eprogress_id))) {
+                                            if ($evaluation_request && !$db->AutoExecute("evaluation_requests", array("request_fulfilled" => 1), "UPDATE", "`erequest_id` = ".$db->qstr($evaluation_request["erequest_id"]))) {
+                                                application_log("error", "Unable to mark evaluation request as completed [".$progress_record["evaluation_id"]."]. Database said: ".$db->ErrorMsg());
+                                            }
 											if ($evaluation_record["threshold_notifications_type"] != "disabled") {
 												$is_below_threshold = Evaluation::responsesBelowThreshold($evaluation_record["evaluation_id"], $eprogress_id);
 												if ($is_below_threshold) {
@@ -512,7 +555,7 @@ if ($RECORD_ID) {
 									<?php
 									add_statistic("evaluation", "evaluation_view", "evaluation_id", $RECORD_ID);
 									if (!isset($evaluation_targets) || !count($evaluation_targets)) {
-										$evaluation_targets = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true);
+										$evaluation_targets = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, $evaluation_request["erequest_id"]);
 									}
 									if ($evaluation_targets) {
 										if (count($evaluation_targets) == 1) {
@@ -628,7 +671,12 @@ if ($RECORD_ID) {
 									if ($NOTICE) {
 										echo display_notice();
 									}
-									?>
+                                    if ($code) {
+                                        ?>
+                                        <input type="hidden" name="request_code" value="<?php echo $code; ?>" />
+                                        <?php
+                                    }
+                                    ?>
 									<input type="hidden" name="step" value="2" />
 									<?php
 									$query				= "	SELECT a.*, b.*, c.`questiontype_shortname`
@@ -767,10 +815,19 @@ if ($RECORD_ID) {
 		application_log("error", "Failed to provide a valid evaluation_id identifer [".$RECORD_ID."] when attempting to take an evaluation.");
 	}
 } else {
-	$ERROR++;
-	$ERRORSTR[] = "In order to attempt an evaluation, you must provide a valid evaluation identifier.";
+    if (!$code) {
+        $ERROR++;
+        $ERRORSTR[] = "In order to attempt an evaluation, you must provide a valid evaluation identifier.";
 
-	echo display_error();
+        echo display_error();
 
-	application_log("error", "Failed to provide an evaluation_id identifier when attempting to take an evaluation.");
+        application_log("error", "Failed to provide an evaluation_id identifier when attempting to take an evaluation.");
+    } else {
+        $ERROR++;
+        $ERRORSTR[] = "In order to attempt this evaluation, you must provide a valid evaluation request code.";
+
+        echo display_error();
+
+        application_log("error", "Provided an unusable request_code identifier when attempting to take an evaluation.");
+    }
 }

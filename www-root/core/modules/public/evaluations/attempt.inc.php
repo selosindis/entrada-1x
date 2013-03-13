@@ -110,7 +110,7 @@ if ($RECORD_ID) {
 						GROUP BY cr.`eprogress_id`";
 	$evaluation_record	= $db->GetRow($query);
 	if ($evaluation_record) {
-		if ($evaluation_record["require_requests"] && (!isset($evaluation_request) || !$evaluation_request)) {
+		if ($evaluation_record["allow_target_request"] && (!isset($evaluation_request) || !$evaluation_request)) {
             $evaluation_requests = Evaluation::getEvaluationRequests($RECORD_ID, $ENTRADA_USER->getID());
             if ($evaluation_requests && count($evaluation_requests)) {
                 $evaluation_request = $evaluation_requests[0];
@@ -123,7 +123,7 @@ if ($RECORD_ID) {
 		$PROCESSED = $evaluation_record;
 
 		if (array_search($PROCESSED["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false) {
-			$full_evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), true, false, false, $evaluation_request["erequest_id"]);
+			$full_evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), true, false, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
 			$evaluation_targets_count = count($full_evaluation_targets_list);
 			if (isset($full_evaluation_targets_list) && $evaluation_targets_count) {
 				$evaluation_record["max_submittable"] = ($evaluation_targets_count * (int) $evaluation_record["max_submittable"]);
@@ -154,7 +154,7 @@ if ($RECORD_ID) {
 				 */
 				$completed_attempts = evaluations_fetch_attempts($RECORD_ID);
 				
-				$evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID(), true, false, false, $evaluation_request["erequest_id"]);
+				$evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID(), true, false, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
 				$max_submittable = $evaluation_record["max_submittable"];
 				if ($evaluation_targets_list) {
 					$evaluation_targets_count = count($evaluation_targets_list);
@@ -168,7 +168,7 @@ if ($RECORD_ID) {
 					}
 				}
 
-				$evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID(), true, false, false, $evaluation_request["erequest_id"]);
+				$evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID(), true, false, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
 				$max_submittable = $evaluation_record["max_submittable"];
 				if ($evaluation_targets_list) {
 					$evaluation_targets_count = count($evaluation_targets_list);
@@ -237,7 +237,7 @@ if ($RECORD_ID) {
 									break;
 								}
 								if ((isset($target_record_id) && $target_record_id) || ((isset($_POST["target_record_id"])) && ($target_record_id = clean_input($_POST["target_record_id"], array("trim", "int"))))) {
-									$evaluation_targets = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, $evaluation_request["erequest_id"]);
+									$evaluation_targets = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
 									foreach ($evaluation_targets as $evaluation_target) {
 										switch ($evaluation_target["target_type"]) {
 											case "cgroup_id" :
@@ -555,7 +555,7 @@ if ($RECORD_ID) {
 									<?php
 									add_statistic("evaluation", "evaluation_view", "evaluation_id", $RECORD_ID);
 									if (!isset($evaluation_targets) || !count($evaluation_targets)) {
-										$evaluation_targets = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, $evaluation_request["erequest_id"]);
+										$evaluation_targets = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
 									}
 									if ($evaluation_targets) {
 										if (count($evaluation_targets) == 1) {
@@ -594,7 +594,7 @@ if ($RECORD_ID) {
 											echo "<option value=\"0\">-- Select a teacher --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
-													echo "<option value=\"".$evaluation_target["etarget_id"]."\"".($PROCESSED["etarget_id"] == $evaluation_target["etarget_id"] ? " selected=\"selected\"" : "").">".$evaluation_target["firstname"]." ".$evaluation_target["lastname"]."</option>\n";
+													echo "<option value=\"".$evaluation_target["etarget_id"]."\"".(($PROCESSED["etarget_id"] == $evaluation_target["etarget_id"]) || ((!isset($PROCESSED["etarget_id"]) || !$PROCESSED["etarget_id"]) && isset($evaluation_target["requested"]) && $evaluation_target["requested"]) ? " selected=\"selected\"" : "").">".$evaluation_target["firstname"]." ".$evaluation_target["lastname"]."</option>\n";
 												}
 											}
 											echo "</select>";
@@ -605,7 +605,7 @@ if ($RECORD_ID) {
 											echo "<select id=\"event_id\" name=\"event_id\"".($PROCESSED["target_shortname"] == "preceptor" ? " onchange=\"loadPreceptors(this.options[this.selectedIndex].value)\"" : "").">";
 											echo "<option value=\"0\">-- Select an event --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
-												echo "<option value=\"".$evaluation_target["event_id"]."\"".($PROCESSED["event_id"] == $evaluation_target["event_id"] ? " selected=\"selected\"" : "").">".(strpos($evaluation_target["event_title"], $evaluation_target["rotation_title"]) === false ? $evaluation_target["rotation_title"]." - " : "").$evaluation_target["event_title"]."</option>\n";
+												echo "<option value=\"".$evaluation_target["event_id"]."\"".(($PROCESSED["event_id"] == $evaluation_target["event_id"]) || ((!isset($PROCESSED["event_id"]) || !$PROCESSED["event_id"]) && isset($evaluation_target["requested"]) && $evaluation_target["requested"]) ? " selected=\"selected\"" : "").">".(strpos($evaluation_target["event_title"], $evaluation_target["rotation_title"]) === false ? $evaluation_target["rotation_title"]." - " : "").$evaluation_target["event_title"]."</option>\n";
 											}
 											echo "</select>";
 											if ($PROCESSED["target_shortname"] == "preceptor") {
@@ -626,7 +626,7 @@ if ($RECORD_ID) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
 													$target_name = $db->GetOne("SELECT `course_name` FROM `courses` WHERE `course_id` = ".$db->qstr($evaluation_target["target_value"]));
 													if ($target_name) {
-														echo "<option value=\"".$evaluation_target["etarget_id"]."\"".($PROCESSED["etarget_id"] == $evaluation_target["etarget_id"] ? " selected=\"selected\"" : "").">".$target_name."</option>\n";
+														echo "<option value=\"".$evaluation_target["etarget_id"]."\"".(($PROCESSED["etarget_id"] == $evaluation_target["etarget_id"]) || ((!isset($PROCESSED["etarget_id"]) || !$PROCESSED["etarget_id"]) && isset($evaluation_target["requested"]) && $evaluation_target["requested"]) ? " selected=\"selected\"" : "").">".$target_name."</option>\n";
 													}
 												}
 											}
@@ -639,7 +639,7 @@ if ($RECORD_ID) {
 											echo "<option value=\"0\">-- Select a learner --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
-													echo "<option value=\"".$evaluation_target["proxy_id"]."\"".($PROCESSED["target_record_id"] == $evaluation_target["proxy_id"] ? " selected=\"selected\"" : "").">".$evaluation_target["firstname"]." ".$evaluation_target["lastname"]."</option>\n";
+													echo "<option value=\"".$evaluation_target["proxy_id"]."\"".(($PROCESSED["target_record_id"] == $evaluation_target["proxy_id"]) || ((!isset($PROCESSED["target_record_id"]) || !$PROCESSED["target_record_id"]) && isset($evaluation_target["requested"]) && $evaluation_target["requested"]) ? " selected=\"selected\"" : "").">".$evaluation_target["firstname"]." ".$evaluation_target["lastname"]."</option>\n";
 												}
 											}
 											echo "</select>";
@@ -650,7 +650,7 @@ if ($RECORD_ID) {
 											echo "<option value=\"0\">-- Select a resident --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
-													echo "<option value=\"".$evaluation_target["etarget_id"]."\"".($PROCESSED["etarget_id"] == $evaluation_target["etarget_id"] || $PROCESSED["target_record_id"] == $evaluation_target["proxy_id"] ? " selected=\"selected\"" : "").">".$evaluation_target["firstname"]." ".$evaluation_target["lastname"]."</option>\n";
+													echo "<option value=\"".$evaluation_target["etarget_id"]."\"".(($PROCESSED["etarget_id"] == $evaluation_target["etarget_id"] || $PROCESSED["target_record_id"] == $evaluation_target["proxy_id"]) || (((!isset($PROCESSED["etarget_id"]) || !$PROCESSED["etarget_id"]) || (!isset($PROCESSED["target_record_id"]) || !$PROCESSED["target_record_id"])) && isset($evaluation_target["requested"]) && $evaluation_target["requested"]) ? " selected=\"selected\"" : "").">".$evaluation_target["firstname"]." ".$evaluation_target["lastname"]."</option>\n";
 												}
 											}
 											echo "</select>";

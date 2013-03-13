@@ -2889,17 +2889,62 @@ class Evaluation {
 			}
 		}
         if ($request_id) {
-            $temp_evaluation_targets = $evaluation_targets;
-            $evaluation_targets = array();
-            foreach ($temp_evaluation_targets as $evaluation_target) {
-                if ($simple) {
-                    $temp_proxy_id = $evaluation_target;
-                } else {
-                    $temp_proxy_id = $evaluation_target["proxy_id"];
+            $query = "SELECT * FROM `evaluation_requests` 
+                        WHERE `erequest_id` = ".$db->qstr($request_id)."
+                        AND `evaluation_id` = ".$db->qstr($evaluation_id)."
+                        AND (
+                            `request_expires` = 0
+                            OR `request_expires` > ".$db->qstr(time())."
+                        )
+                        AND `target_proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+            $request = $db->GetRow($query);
+            if ($request) {
+                $temp_evaluation_targets = $evaluation_targets;
+                $evaluation_targets = array();
+                foreach ($temp_evaluation_targets as $evaluation_target) {
+                    if ($simple) {
+                        $temp_proxy_id = $evaluation_target;
+                    } else {
+                        $temp_proxy_id = $evaluation_target["proxy_id"];
+                    }
+                    $requests = Evaluation::getTargetRequests($temp_proxy_id, $evaluation_id, $request_id, ($request["request_code"] ? true : false));
+                    if ($requests && count($requests)) {
+                        if (!$simple && $requests[0]["erequest_id"] == $request_id) {
+                            $evaluation_target["requested"] = true;
+                        } elseif (!$simple) {
+                            $evaluation_target["requested"] = false;
+                        }
+                        if ($evaluation["require_requests"]) {
+                            $evaluation_targets[] = $evaluation_target;
+                        }
+                    }
+                    if (!$evaluation["require_requests"]) {
+                        $evaluation_targets[] = $evaluation_target;
+                    }
                 }
-                $requests = Evaluation::getTargetRequests($temp_proxy_id, $request_id);
-                if ($requests && count($requests)) {
-                    $evaluation_targets[] = $evaluation_target;
+            } else {
+                $temp_evaluation_targets = $evaluation_targets;
+                $evaluation_targets = array();
+                foreach ($temp_evaluation_targets as $evaluation_target) {
+                    if ($simple) {
+                        $temp_proxy_id = $evaluation_target;
+                    } else {
+                        $temp_proxy_id = $evaluation_target["proxy_id"];
+                    }
+                    $requests = Evaluation::getTargetRequests($temp_proxy_id, $evaluation_id);
+                    if ($requests && count($requests)) {
+                        if (!$simple && !count($evaluation_targets)) {
+                            $evaluation_target["requested"] = true;
+                        } elseif (!$simple) {
+                            $evaluation_target["requested"] = false;
+                        }
+                        if ($evaluation["require_requests"]) {
+                            $evaluation_targets[] = $evaluation_target;
+                        }
+                    }
+                    if (!$evaluation["require_requests"]) {
+                        $evaluation_targets[] = $evaluation_target;
+                    }
                 }
             }
         }
@@ -2907,23 +2952,51 @@ class Evaluation {
 		return $evaluation_targets;
 	}
 	
-	public static function getTargetRequests ($proxy_id, $request_id = null, $codes_only = false) {
+	public static function getTargetRequests ($proxy_id, $evaluation_id = false, $request_id = false, $codes_only = false) {
 		global $db;
-		
-		$query = "SELECT * FROM `evaluation_requests` AS a
-            JOIN `evaluations` AS b
-            ON a.`evaluation_id` = b.`evaluation_id`
-            WHERE `proxy_id` = ".$db->qstr($proxy_id)."
-            ".($request_id ? "AND `erequest_id` = ".$db->qstr($request_id) : "")."
-            ".($codes_only ? "AND `request_code` IS NOT NULL" : "")."
-            AND (
-                `request_expires` = 0
-                OR `request_expires` > ".$db->qstr(time())."
-            )
-            AND `request_fulfilled` = 0";
-        $evaluation_requests = $db->GetAll($query);
         
-		return $evaluation_requests;
+        $output_requests = array();
+        
+        if ($request_id) {
+           $query = "SELECT * FROM `evaluation_requests` AS a
+                JOIN `evaluations` AS b
+                ON a.`evaluation_id` = b.`evaluation_id`
+                WHERE `proxy_id` = ".$db->qstr($proxy_id)."
+                ".($evaluation_id ? "AND a.`evaluation_id` = ".$db->qstr($evaluation_id) : "")."
+                ".($request_id ? "AND a.`erequest_id` = ".$db->qstr($request_id) : "")."
+                ".($codes_only ? "AND a.`request_code` IS NOT NULL" : "")."
+                AND (
+                    a.`request_expires` = 0
+                    OR a.`request_expires` > ".$db->qstr(time())."
+                )
+                AND a.`request_fulfilled` = 0";
+            $evaluation_request = $db->GetRow($query);
+            if ($evaluation_request) {
+                $output_requests[] = $evaluation_request;
+            } 
+        }
+		if (!$codes_only) {
+            $query = "SELECT * FROM `evaluation_requests` AS a
+                JOIN `evaluations` AS b
+                ON a.`evaluation_id` = b.`evaluation_id`
+                WHERE `proxy_id` = ".$db->qstr($proxy_id)."
+                ".($evaluation_id ? "AND a.`evaluation_id` = ".$db->qstr($evaluation_id) : "")."
+                ".($request_id ? "AND a.`erequest_id` != ".$db->qstr($request_id) : "")."
+                ".($codes_only ? "AND a.`request_code` IS NOT NULL" : "")."
+                AND (
+                    a.`request_expires` = 0
+                    OR a.`request_expires` > ".$db->qstr(time())."
+                )
+                AND a.`request_fulfilled` = 0";
+            $evaluation_requests = $db->GetAll($query);
+            if ($evaluation_requests) {
+                foreach ($evaluation_requests as $temp_request) {
+                    $output_requests[] = $temp_request;
+                }
+            } 
+        }
+        
+		return $output_requests;
 	}
 	
 	public static function getEvaluationsPending ($evaluation, $recent = false) {
@@ -3824,13 +3897,12 @@ class Evaluation {
 		return $evaluations;
 	}
 	
-    public function getEvaluationRequests($evaluation_id, $proxy_id) {
+    public static function getEvaluationRequests($evaluation_id, $proxy_id) {
         global $db;
         
         $query = "SELECT * FROM `evaluation_requests`
                     WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
                     AND `target_proxy_id` = ".$db->qstr($proxy_id)."
-                    AND `request_fulfilled` = 0
                     AND (
                         `request_expires` = 0
                         OR `request_expires` > ".$db->qstr(time())."

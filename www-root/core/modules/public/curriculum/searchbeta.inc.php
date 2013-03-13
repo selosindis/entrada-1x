@@ -1,7 +1,7 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
- * 
+ *
  * Entrada is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -15,18 +15,17 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Module:	Curriculum Search
- * Area:		Public
- * @author Unit: Medical Education Technology Unit
- * @author Director: Dr. Benjamin Chen <bhc@post.queensu.ca>
- * @author Developer: Matt Simpson <simpson@post.queensu.ca>
- * @version 3.0
- * @copyright Copyright 2006 Queen's University, MEdTech Unit
+ * This file displays the list of objectives pulled
+ * from the entrada.global_lu_objectives table.
  *
- * $Id: search.inc.php 1171 2010-05-01 14:39:27Z ad29 $
- */
-error_reporting(E_ALL);
-if (!defined("PARENT_INCLUDED")) {
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Pavel Tytyuk <koshpavel@gmail.com>
+ * @copyright Copyright 2013 Queen's University. All Rights Reserved.
+ *
+*/
+
+if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
@@ -35,16 +34,17 @@ if (!defined("PARENT_INCLUDED")) {
 	add_error("Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
+
 	application_log("error", "Group [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["group"]."] and role [".$_SESSION["permissions"][$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["proxy_id"]]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-/**
- * Meta information for this page.
- */
-	$PAGE_META["title"]			= "Curriculum Search";
+    /**
+     * Meta information for this page.
+     */
+	$PAGE_META["title"]			= "Curriculum Search (Beta)";
 	$PAGE_META["description"]	= "Allowing you to search the curriculum for specific key words and events.";
 	$PAGE_META["keywords"]		= "";
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/search", "title" => "Curriculum Search");
+	$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE."/curriculum/searchbeta", "title" => "Search (Beta)");
 
 	$SEARCH_QUERY				= "";
 	$SEARCH_MODE				= "standard";
@@ -73,12 +73,13 @@ if (!defined("PARENT_INCLUDED")) {
 	}
 
 	if ($SEARCH_QUERY) {
-	/**
-	 * Check if c variable is set for Class of.
-	 */
+        /**
+         * Check if c variable is set for Class of.
+         */
 		if ((isset($_GET["c"])) && ($tmp_input = clean_input($_GET["c"], array("nows", "int")))) {
 			$SEARCH_CLASS = $tmp_input;
 		}
+
 		/**
 		 * Check if o variable is set for Organisation
 		 */
@@ -89,6 +90,7 @@ if (!defined("PARENT_INCLUDED")) {
 				$SEARCH_ORGANISATION = $tmp_input;
 			}
 		}
+
 		/**
 		 * Check if y variable is set for Academic year.
 		 */
@@ -105,7 +107,7 @@ if (!defined("PARENT_INCLUDED")) {
             $query = Zend_Search_Lucene_Search_QueryParser::parse($SEARCH_QUERY);
 
 
-//            $query->addSubquery(new Zend_Search_Lucene_Search_Query_Term(new Zend_Search_Lucene_Index_Term('cohort', 'audience_type')), true);
+//          $query->addSubquery(new Zend_Search_Lucene_Search_Query_Term(new Zend_Search_Lucene_Index_Term('cohort', 'audience_type')), true);
             if ($SEARCH_CLASS) {
                 $query->addSubquery(new Zend_Search_Lucene_Search_Query_Term(new Zend_Search_Lucene_Index_Term((int) $SEARCH_CLASS, 'audience_value')), true);
             }
@@ -205,8 +207,8 @@ if (!defined("PARENT_INCLUDED")) {
 		}
 	}
 	?>
-	<h1>Curriculum Search</h1>
-	<form action="<?php echo ENTRADA_URL; ?>/search" method="get">
+	<h1>Curriculum Search (Beta)</h1>
+	<form action="<?php echo ENTRADA_RELATIVE; ?>/curriculum/searchbeta" method="get">
 		<?php
 		if ($SEARCH_MODE == "timeline") {
 			echo "<input type=\"hidden\" name=\"m\" value=\"timeline\" />\n";
@@ -226,9 +228,9 @@ if (!defined("PARENT_INCLUDED")) {
 				<tr>
 					<td>&nbsp;</td>
 					<td colspan="2" class="content-small">
-						Example 1: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "asthma")); ?>" class="content-small">asthma</a><br />
-						Example 2: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "pain+AND+palliative")); ?>" class="content-small">pain AND palliative</a><br />
-						Example 3: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "%22heart+disease%22+NOT+pediatric")); ?>" class="content-small">"heart disease" NOT pediatric</a>
+						Example 1: <a href="<?php echo ENTRADA_RELATIVE."/curriculum/searchbeta?".replace_query(array("q" => "asthma")); ?>" class="content-small">asthma</a><br />
+						Example 2: <a href="<?php echo ENTRADA_RELATIVE."/curriculum/searchbeta?".replace_query(array("q" => "pain+AND+palliative")); ?>" class="content-small">pain AND palliative</a><br />
+						Example 3: <a href="<?php echo ENTRADA_RELATIVE."/curriculum/searchbeta?".replace_query(array("q" => "%22heart+disease%22+NOT+pediatric")); ?>" class="content-small">"heart disease" NOT pediatric</a>
 					</td>
 				</tr>
 				<tr>
@@ -269,7 +271,7 @@ if (!defined("PARENT_INCLUDED")) {
 						</select>
 					</td>
 					<td style="text-align: right">
-						<span style="width: 100px; height: 23px"><a href="<?php echo ENTRADA_URL; ?>/search?<?php echo replace_query(array("m" =>  "text")); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/search-mode-text-<?php echo (($SEARCH_MODE != "timeline") ? "on" : "off"); ?>.gif" width="100" height="23" alt="" title="" border="0" /></a></span><span style="width: 100px; height: 23px"><a href="<?php echo ENTRADA_URL; ?>/search?<?php echo replace_query(array("m" =>  "timeline")); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/search-mode-timeline-<?php echo (($SEARCH_MODE == "timeline") ? "on" : "off"); ?>.gif" widtgh="100" height="23" alt="" title="" border="0" /></a></span>
+						<span style="width: 100px; height: 23px"><a href="<?php echo ENTRADA_RELATIVE; ?>/curriculum/searchbeta?<?php echo replace_query(array("m" =>  "text")); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/search-mode-text-<?php echo (($SEARCH_MODE != "timeline") ? "on" : "off"); ?>.gif" width="100" height="23" alt="" title="" border="0" /></a></span><span style="width: 100px; height: 23px"><a href="<?php echo ENTRADA_RELATIVE; ?>/curriculum/searchbeta?<?php echo replace_query(array("m" =>  "timeline")); ?>"><img src="<?php echo ENTRADA_URL; ?>/images/search-mode-timeline-<?php echo (($SEARCH_MODE == "timeline") ? "on" : "off"); ?>.gif" widtgh="100" height="23" alt="" title="" border="0" /></a></span>
 					</td>
 				</tr>
 			</tbody>
@@ -435,17 +437,17 @@ if (!defined("PARENT_INCLUDED")) {
 			case "standard" :
 			default :
 				if (($SEARCH_MODE != "timeline") && ($TOTAL_PAGES > 1)) {
-					echo "<form action=\"".ENTRADA_URL."/search\" method=\"get\" id=\"pageSelector\">\n";
+					echo "<form action=\"".ENTRADA_RELATIVE."/curriculum/searchbeta\" method=\"get\" id=\"pageSelector\">\n";
 					echo "<div style=\"margin-top: 10px; margin-bottom: 5px; text-align: right; white-space: nowrap\">\n";
 					echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
 					if ($PAGE_PREVIOUS) {
-						echo "<a href=\"".ENTRADA_URL."/search?".replace_query(array("pv" => $PAGE_PREVIOUS))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$PAGE_PREVIOUS.".\" title=\"Back to page ".$PAGE_PREVIOUS.".\" style=\"vertical-align: middle\" /></a>\n";
+						echo "<a href=\"".ENTRADA_RELATIVE."/curriculum/searchbeta?".replace_query(array("pv" => $PAGE_PREVIOUS))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$PAGE_PREVIOUS.".\" title=\"Back to page ".$PAGE_PREVIOUS.".\" style=\"vertical-align: middle\" /></a>\n";
 					} else {
 						echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
 					}
 					echo "</span>";
 					echo "<span style=\"vertical-align: middle\">\n";
-					echo "<select name=\"pv\" onchange=\"window.location = '".ENTRADA_URL."/search?".replace_query(array("pv" => false))."&amp;pv='+this.options[this.selectedIndex].value;\"".(($TOTAL_PAGES <= 1) ? " disabled=\"disabled\"" : "").">\n";
+					echo "<select name=\"pv\" onchange=\"window.location = '".ENTRADA_RELATIVE."/curriculum/searchbeta?".replace_query(array("pv" => false))."&amp;pv='+this.options[this.selectedIndex].value;\"".(($TOTAL_PAGES <= 1) ? " disabled=\"disabled\"" : "").">\n";
 					for($i = 1; $i <= $TOTAL_PAGES; $i++) {
 						echo "<option value=\"".$i."\"".(($i == $PAGE_CURRENT) ? " selected=\"selected\"" : "").">".(($i == $PAGE_CURRENT) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
 					}
@@ -453,7 +455,7 @@ if (!defined("PARENT_INCLUDED")) {
 					echo "</span>\n";
 					echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
 					if ($PAGE_CURRENT < $TOTAL_PAGES) {
-						echo "<a href=\"".ENTRADA_URL."/search?".replace_query(array("pv" => $PAGE_NEXT))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$PAGE_NEXT.".\" title=\"Forward to page ".$PAGE_NEXT.".\" style=\"vertical-align: middle\" /></a>";
+						echo "<a href=\"".ENTRADA_RELATIVE."/curriculum/searchbeta?".replace_query(array("pv" => $PAGE_NEXT))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$PAGE_NEXT.".\" title=\"Forward to page ".$PAGE_NEXT.".\" style=\"vertical-align: middle\" /></a>";
 					} else {
 						echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
 					}
@@ -510,4 +512,3 @@ if (!defined("PARENT_INCLUDED")) {
 		}
 	}
 }
-?>

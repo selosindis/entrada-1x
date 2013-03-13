@@ -144,7 +144,7 @@ if ($ENTRADA_USER) {
 		$_SESSION["permissions"] = permissions_load();
 	}
 	
-	if (!isset($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) && !$_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"] && $ENTRADA_USER->getActiveId() == $ENTRADA_USER->getID()) {
+	if ((!isset($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) || !$_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) && $ENTRADA_USER->getActiveId() == $ENTRADA_USER->getID()) {
 		$_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"] = $ENTRADA_USER->getAccessId();
 	}
 		

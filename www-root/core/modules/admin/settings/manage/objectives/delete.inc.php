@@ -39,6 +39,87 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+	
+	if (isset($_GET["objective_id"]) && ($id = clean_input($_GET["objective_id"], array("notags", "trim")))) {
+		$OBJECTIVE_ID = $id;
+	}
+	
+	if (isset($_GET["mode"]) && $_GET["mode"] == "ajax") {
+		$MODE = "ajax";
+	}
+	
+	if ($MODE == "ajax" && $OBJECTIVE_ID) {
+		
+		ob_clear_open_buffers();
+		
+		switch($STEP) {
+			case "2" :
+				if ($_POST["confirm"] == "on") {
+					$query = "	SELECT a.*, GROUP_CONCAT(b.`organisation_id`) AS `organisations` FROM `global_lu_objectives` AS a
+								LEFT JOIN `objective_organisation` AS b
+								ON a.`objective_id` = b.`objective_id`
+								WHERE a.`objective_id` = ".$db->qstr($OBJECTIVE_ID)."
+								AND a.`objective_active` = '1'
+								GROUP BY `objective_id`";
+					$objectives = $db->GetAll($query);
+					if ($objectives) {
+						foreach ($objectives as $objective) {
+							$organisations = explode(",", $objective["organisations"]);
+							/*
+							* Remove the objective_organisation record.
+							*/
+							$query = "DELETE FROM `objective_organisation` WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID)." AND `objective_id` = ".$db->qstr($objective["objective_id"]);
+							if (!$db->Execute($query)) {
+								application_log("Failed to remove entry from [objective_organisation], DB said: ".$db->ErrorMsg());
+							}
+							/*
+							* If $organisations has more than 1 entry the objective is active across multiple, and should not be deactivated in `global_lu_objectives`
+							*/
+							if (count($organisations) <= 1) {
+								$query = "UPDATE `global_lu_objectives` SET `objective_active` = '0', `updated_date` = " . $db->qstr(time()) . ", `updated_by` = " . $db->qstr($ENTRADA_USER->getID()) . " WHERE `objective_id` = ".$db->qstr($objective["objective_id"]);
+								if (!$db->Execute($query)) {
+									application_log("Failed to update [global_lu_objectives], DB said: ".$db->ErrorMsg());
+								}
+							}
+						}
+						deactivate_objective_children($OBJECTIVE_ID, $ORGANISATION_ID);
+						echo json_encode(array("status" => "success"));
+					}
+				} else {
+					echo json_encode(array("status" => "error"));
+				}
+
+			break;
+			case 1 :
+			default :
+			
+				$query	= "	SELECT a.*, b.`organisation_id` FROM `global_lu_objectives` AS a
+							LEFT JOIN `objective_organisation` AS b
+							ON a.`objective_id` = b.`objective_id`
+							WHERE a.`objective_id` = ".$db->qstr($OBJECTIVE_ID)."
+							AND a.`objective_active` = '1'";
+				$objective	= $db->GetRow($query);
+				
+				if ($objective) {
+					?>
+					<div class="display-generic">
+						<p>You are about to delete the objective <strong><?php echo $objective["objective_name"]; ?></strong>. Please click the <strong>delete</strong> button below to remove it from the system.</p>
+						<p><strong>Please note:</strong> Any children of this objective will be removed as well.</p>
+					</div>
+					<form id="objective-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives"."?".replace_query(array("step" => "2")); ?>" method="post">
+						<input type="checkbox" name="confirm" /> Please check this box to confirm you wish to remove the objective and its children.
+					</form>
+					<?php
+				} else {
+					echo $db->ErrorMsg();
+				}
+				
+			break;
+		}
+		
+		exit;
+	}
+	
 	$objective_ids	= array();
 	
 	$BREADCRUMB[]	= array("url" => "", "title" => "Delete Objectives");

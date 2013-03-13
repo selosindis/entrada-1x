@@ -574,7 +574,7 @@ foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
 				$curriculum_objectives["objectives"][$objective_id]["tertiary"] = true;
 			}
 		}
-		}
+		}		
 		$show_curriculum_objectives = true;
 	}
 }

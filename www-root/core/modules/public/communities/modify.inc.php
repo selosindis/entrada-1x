@@ -974,7 +974,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 												<td colspan="3">&nbsp;</td>
 											</tr>
 											<?php
-											if ((is_array($community_parents)) && ($total_parents = count($community_parents))) {
+											if (isset($community_parents) && (is_array($community_parents)) && ($total_parents = count($community_parents))) {
 												?>
 												<tr>
 													<td></td>
@@ -1028,7 +1028,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 															$creator_group = $admin_group["group"];
 														}
 													}
-													$query = "SELECT * FROM `community_templates`"; 
+													$query = "SELECT a.* FROM `community_templates` AS a
+																JOIN `community_type_templates` AS b
+																ON a.`template_id` = b.`template_id`
+																WHERE b.`type_id` = ".$db->qstr($community_details["octype_id"])."
+																AND b.`type_scope` = 'organisation'"; 
 													$results = $db->GetAll($query);
 													if ($results) {
 													?>

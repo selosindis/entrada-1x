@@ -48,6 +48,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	</script>
 	<?php
 	if ($EVENT_ID) {
+		$HEAD[] = "<script type=\"text/javascript\">var SITE_URL = '".ENTRADA_URL."';</script>";
+		$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+		$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_event.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+
 		$query		= "	SELECT a.*, b.`organisation_id`
 						FROM `events` AS a
 						LEFT JOIN `courses` AS b
@@ -55,6 +59,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 		$event_info	= $db->GetRow($query);
 		if ($event_info) {
+			$COURSE_ID = $event_info["course_id"];
 			if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), "update")) {
 				application_log("error", "Someone attempted to modify content for an event [".$EVENT_ID."] that they were not the coordinator for.");
 
@@ -76,7 +81,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$history = $db->GetRow("SELECT * FROM `event_history` WHERE `event_id`  = ".$db->qstr($EVENT_ID));
 
 				if (!$history) { // Create the first history record of the event's creation when another user updates the event
-					if(count($_POST) && ($ENTRADA_USER->getID() != $event_info["updated_by"])) {	// Ignore starting history when it's the sole author initially adding content. 
+					if(count($_POST) && ($ENTRADA_USER->getID() != $event_info["updated_by"])) {	// Ignore starting history when it's the sole author initially adding content.
                                             history_log($EVENT_ID, 'created this learning event.', $event_info["updated_by"], $event_info["updated_date"]);
 					}
 				}
@@ -139,7 +144,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					}
 				}
 
-				if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
+				// if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
 					if (((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"])))) {
 						foreach ($_POST["clinical_presentations"] as $objective_id) {
 							if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
@@ -164,22 +169,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						$clinical_presentations = array();
 					}
 					history_log($EVENT_ID, "updated clinical presentations.");
-				} else {
-					$query = "	SELECT a.`objective_id`
-								FROM `event_objectives` AS a
-								JOIN `course_objectives` AS b
-								ON b.`course_id` = ".$event_info["course_id"]."
-								AND a.`objective_id` = b.`objective_id`
-								WHERE a.`objective_type` = 'event'
-								AND b.`objective_type` = 'event'
-								AND a.`event_id` = ".$db->qstr($EVENT_ID);
-					$results = $db->GetAll($query);
-					if ($results) {
-						foreach ($results as $result) {
-							$clinical_presentations[$result["objective_id"]] = $clinical_presentations_list[$result["objective_id"]];
-						}
-					}
-				}
+				// } else {
+				// 	$query = "	SELECT a.`objective_id`
+				// 				FROM `event_objectives` AS a
+				// 				JOIN `course_objectives` AS b
+				// 				ON b.`course_id` = ".$event_info["course_id"]."
+				// 				AND a.`objective_id` = b.`objective_id`
+				// 				WHERE a.`objective_type` = 'event'
+				// 				AND b.`objective_type` = 'event'
+				// 				AND a.`event_id` = ".$db->qstr($EVENT_ID);
+				// 	$results = $db->GetAll($query);
+				// 	if ($results) {
+				// 		foreach ($results as $result) {
+				// 			$clinical_presentations[$result["objective_id"]] = $clinical_presentations_list[$result["objective_id"]];
+				// 		}
+				// 	}
+				// }
 
 				/**
 				 * Fetch the Curriculum Objective details.
@@ -189,7 +194,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$curriculum_objectives = array();
 
 				if (isset($_POST["checked_objectives"]) && ($checked_objectives = $_POST["checked_objectives"]) && (is_array($checked_objectives))) {
-					foreach ($checked_objectives as $objective_id => $status) {
+					foreach ($checked_objectives as $objective_id) { // => $status
 						if ($objective_id = (int) $objective_id) {
 							if (isset($_POST["objective_text"][$objective_id]) && ($tmp_input = clean_input($_POST["objective_text"][$objective_id], array("notags")))) {
 								$objective_text = $tmp_input;
@@ -218,14 +223,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$event_eventtypes		= array();
 
 				$query		= "	SELECT a.* FROM `events_lu_eventtypes` AS a
-							LEFT JOIN `eventtype_organisation` AS c
-							ON a.`eventtype_id` = c.`eventtype_id`
-							LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
-							ON b.`organisation_id` = c.`organisation_id`
-							WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-							AND a.`eventtype_active` = '1'
-							ORDER BY a.`eventtype_order`";
-
+								LEFT JOIN `eventtype_organisation` AS c
+								ON a.`eventtype_id` = c.`eventtype_id`
+								LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
+								ON b.`organisation_id` = c.`organisation_id`
+								WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+								AND a.`eventtype_active` = '1'
+								ORDER BY a.`eventtype_order`";
 				$results	= $db->GetAll($query);
 				if ($results) {
 					foreach ($results as $result) {
@@ -387,7 +391,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								if ($db->Execute($query)) {
 									if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
 										foreach ($clinical_presentations as $objective_id => $presentation_name) {
-											if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
+											if (isset($_POST["objective_text"][$objective_id]) && ($tmp_input = clean_input($_POST["objective_text"][$objective_id], array("notags")))) {
+												$objective_text = $tmp_input;
+											} else {
+												$objective_text = false;
+											}
+											if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 												$ERROR++;
 												$ERRORSTR[] = "There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.";
 
@@ -769,7 +778,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					echo display_error();
 				}
 				?>
-				<form action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(); ?>" method="post"<?php echo (((is_array($clinical_presentations_list)) && (!empty($clinical_presentations_list))) ? " onsubmit=\"selIt()\"" : ""); ?>>
+				<form id="content_form" action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(); ?>" method="post"<?php echo (((is_array($clinical_presentations_list)) && (!empty($clinical_presentations_list))) ? " onsubmit=\"selIt()\"" : ""); ?>>
 				<input type="hidden" name="type" value="content" />
 
 				<a name="event-details-section"></a>
@@ -977,7 +986,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</tbody>
 					</table>
 				</div>
-
+				<?php
+				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
+				?>
 				<a name="event-objectives-section"></a>
 				<h2 title="Event Objectives Section">Event Objectives</h2>
 				<div id="event-objectives-section">
@@ -986,11 +997,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<col style="width: 20%" />
 							<col style="width: 80%" />
 						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
-							</tr>
-						</tfoot>
 						<tbody>
 							<tr>
 								<td style="vertical-align: top"><label for="event_objectives" class="form-nrequired">Free-Text Objectives</label></td>
@@ -998,97 +1004,387 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									<textarea id="event_objectives" name="event_objectives" style="width: 100%; height: 150px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_objectives"], array("font")))); ?></textarea>
 								</td>
 							</tr>
-							<tr>
-								<td colspan="2">&nbsp;</td>
-							</tr>
-							<?php
-							if ((is_array($clinical_presentations_list)) && (!empty($clinical_presentations_list))) {
-								?>
-								<tr>
-									<td style="vertical-align: top">
-										Clinical Presentations
-										<div class="content-small" style="margin-top: 5px">
-											<strong>Note:</strong> For more detailed information please refer to the <a href="http://www.mcc.ca/Objectives_online/objectives.pl?lang=english&loc=contents" target="_blank" style="font-size: 11px">MCC Presentations for the Qualifying Examination</a>.
-										</div>
-									</td>
-									<td>
-										<select class="multi-picklist" id="PickList" name="clinical_presentations[]" multiple="multiple" size="5" style="width: 100%; margin-bottom: 5px">
-										<?php
-										if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
-											foreach ($clinical_presentations as $objective_id => $presentation_name) {
-												echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
-											}
-										}
-										?>
-										</select>
-										<input type="hidden" value="1" name="clinical_presentations_submit" />
-										<div style="float: left; display: inline">
-											<input type="button" id="clinical_presentations_list_state_btn" class="button" value="Show List" onclick="toggle_list('clinical_presentations_list')" />
-										</div>
-										<div style="float: right; display: inline">
-											<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
-											<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
-										</div>
-										<div id="clinical_presentations_list" style="clear: both; padding-top: 3px; display: none">
-											<h2>Clinical Presentations List</h2>
-											<select class="multi-picklist" id="SelectList" name="other_event_objectives_list" multiple="multiple" size="15" style="width: 100%">
-											<?php
-											foreach ($clinical_presentations_list as $objective_id => $presentation_name) {
-												if (!array_key_exists($objective_id, $clinical_presentations)) {
-													echo "<option value=\"".(int) $objective_id."\">".html_encode($presentation_name)."</option>\n";
-												}
-											}
-											?>
-											</select>
-										</div>
-										<script type="text/javascript">
-										if ($('PickList')) {
-											$('PickList').observe('keypress', function(event) {
-												if (event.keyCode == Event.KEY_DELETE) {
-													delIt();
-												}
-											});
-										}
-
-										if ($('SelectList')) {
-											$('SelectList').observe('keypress', function(event) {
-												if (event.keyCode == Event.KEY_RETURN) {
-													addIt();
-												}
-											});
-										}
-										</script>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">&nbsp;</td>
-								</tr>
-								<?php
-							}
-
-							if ((is_array($curriculum_objectives_list["used_ids"])) && (count($curriculum_objectives_list["used_ids"]))) {
-								echo "<tr>\n";
-								echo "	<td style=\"vertical-align: top;\">\n";
-								echo "		<span class=\"form-nrequired\">Curriculum Objectives</span>\n";
-								echo "		<div class=\"content-small\" style=\"margin-top: 5px\">\n";
-								echo "			<strong>Note:</strong> Please check any curriculum objectives that are covered during this learning event.\n";
-								echo "		</div>\n";
-								echo "	</td>\n";
-								echo "	<td style=\"vertical-align: top\">\n";
-								echo "		<div id=\"course-objectives-section\">\n";
-								echo "			<strong>The learner will be able to:</strong>\n";
-								echo			event_objectives_in_list($curriculum_objectives_list, $top_level_id,$top_level_id, true, false, 1, false);
-								echo "		</div>\n";
-								echo "	</td>\n";
-								echo "</tr>\n";
-							}
-							?>
-							<tr>
-								<td colspan="2">&nbsp;</td>
-							</tr>
 						</tbody>
 					</table>
-    			</div>
+					<style>
+						ul.objective-list{
+							position: relative;
+							padding: 0px;
+							margin: 0px;
+							list-style: none;
+						}
+						ul.objective-list{
+							position:relative;
+						}
+						ul.objective-list ul{
+							list-style-type: none;
+							background:transparent url('<?php echo ENTRADA_URL;?>/images/vline.png') repeat-y;
+							margin: 0 0 0 10px;
+							padding:0;
+						}
+						#mapped_objectives ul.objective-list li, ul.tl-objective-list > li > .objective-children > ul.objective-list > li{
+							background:none!important;
+
+						}
+						#mapped_objectives ul.objective-list li{
+							border-left:2px solid #CCCCCC!important;
+						}
+						ul.objective-list li{
+							background:transparent url('<?php echo ENTRADA_URL;?>/images/node.png') no-repeat;
+							padding-left:5px;
+							display:block;
+							overflow:hidden;
+							line-height: 125%;
+							border-left:none!important;
+						}
+						.objective-title{
+							cursor:pointer;
+							margin-left:5px;
+							margin-top:-2px;
+						}
+						.objective-list{
+							padding-left:5px;
+						}
+						#mapped_objectives,#objective_list_0{
+							margin-left:0px;
+							padding-left: 0px;
+						}
+						.objectives{
+							width:48%;
+							float:left;
+						}
+						.mapped_objectives{
+							float:right;
+							height:100%;
+							width:100%;
+						}
+						.mapped-objective{
+							padding-left:35px!important;
+						}
+						.objective-remove{
+							cursor:pointer;
+							position:relative!important;
+							margin-left:15px;
+						}
+						.droppable.hover{
+							background-color:#ddd;
+						}
+						.objective-title{
+							font-weight:bold;
+						}
+						.objective-children{
+							margin-top:5px;
+						}
+						.objective-container{
+							position:relative;
+							padding-right:0px!important;
+							margin-right:0px!important;
+						}
+						.objective_text_container{
+							margin-top:5px;
+						}
+						.objective-description{
+							font-size: 11px;
+							font-style: normal;
+							color: #666;
+							margin-top:5px;
+							margin-left:5px;
+						}
+						#mapped_objectives .objective-description{
+							margin-left:0px;
+						}
+						.importance{
+							font-size:.8em;
+							margin-right:5px;
+						}
+						.mapped-objective{
+							position:relative;
+						}
+						.objective-controls{
+							position:absolute;
+							top:5px;
+							right:5px;
+						}
+						.objective-controls .loading{
+							margin-top:7px!important;
+						}
+						.event-objective-controls{
+							position:absolute;
+							top:5px;
+							left:5px;
+						}
+						li.display-notice{
+							border:1px #FC0 solid!important;
+							padding-top:10px!important;
+							text-align:center;
+						}
+						.hide{
+							display:none;
+						}
+						.tl-objective-list{
+							padding-left:0px;
+							padding-top:5px;
+							padding-bottom:5px;
+							list-style: none;
+						}
+						.tl-objective-list > li{
+							padding:5px;
+							margin-bottom:5px;
+						}
+						.tl-objective-list > .objective-set h3{
+							-webkit-border-radius:5px;
+							-moz-border-radius:5px;
+							border-radius:5px;
+							background-color:#036!important;
+							color:#fff!important;
+							padding:10px;
+						}
+					</style>
+					<?php
+					$query = "	SELECT a.* FROM `global_lu_objectives` a
+								JOIN `objective_audience` b
+								ON a.`objective_id` = b.`objective_id`
+								AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+								WHERE (
+										(b.`audience_value` = 'all')
+										OR
+										(b.`audience_type` = 'course' AND b.`audience_value` = ".$db->qstr($COURSE_ID).")
+										OR
+										(b.`audience_type` = 'event' AND b.`audience_value` = ".$db->qstr($EVENT_ID).")
+									)
+								AND a.`objective_parent` = '0'
+								AND a.`objective_active` = '1'";
+					$objectives = $db->GetAll($query);
+
+					if ($objectives) {
+						$objective_name = $translate->_("events_filter_controls");
+						$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
+						?>
+						<div class="objectives half left">
+							<h2>Objective Sets</h2>
+							<ul class="tl-objective-list" id="objective_list_0">
+					<?php		foreach($objectives as $objective){
+									?>
+
+									<li class = "objective-container objective-set"
+										id = "objective_<?php echo $objective["objective_id"]; ?>"
+										data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
+										data-id="<?php echo $objective["objective_id"]; ?>">
+										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+										<div 	class="objective-title"
+												id="objective_title_<?php echo $objective["objective_id"]; ?>"
+												data-title="<?php echo $title;?>"
+												data-id = "<?php echo $objective["objective_id"]; ?>"
+												data-code = "<?php echo $objective["objective_code"]; ?>"
+												data-name = "<?php echo $objective["objective_name"]; ?>"
+												data-description = "<?php echo $objective["objective_description"]; ?>">
+											<h3><?php echo $title; ?></h3>
+										</div>
+										<div class="objective-controls" id="objective_controls_<?php echo $objective["objective_id"];?>">
+										</div>
+										<div 	class="objective-children"
+												id="children_<?php echo $objective["objective_id"]; ?>">
+												<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>">
+												</ul>
+										</div>
+									</li>
+					<?php 		} ?>
+							</ul>
+						</div>
+
+
+			<?php   $query = "	SELECT a.*, COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description`, COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`,
+								b.`importance`,c.`objective_details`, COALESCE(c.`eobjective_id`,0) AS `mapped`,
+								COALESCE(b.`cobjective_id`,0) AS `mapped_to_course`
+								FROM `global_lu_objectives` a
+								LEFT JOIN `course_objectives` b
+								ON a.`objective_id` = b.`objective_id`
+								AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+								LEFT JOIN `event_objectives` c
+								ON c.`objective_id` = a.`objective_id`
+								AND c.`event_id` = ".$db->qstr($EVENT_ID)."
+								WHERE a.`objective_active` = '1'
+								AND (c.`event_id` = ".$db->qstr($EVENT_ID)." OR b.`course_id` = ".$db->qstr($COURSE_ID).")
+								GROUP BY a.`objective_id`
+								ORDER BY a.`objective_id` ASC";
+					$mapped_objectives = $db->GetAll($query);
+					$primary = false;
+					$secondary = false;
+					$tertiary = false;
+					$hierarchical_objectives = array();
+					$flat_objectives = array();
+					$explicit_event_objectives = false;//array();
+					$mapped_event_objectives = array();
+					if ($mapped_objectives) {
+						foreach ($mapped_objectives as $objective) {
+							//if its mapped to the event, but not the course, then it belongs in the event objective list
+							//echo $objective["objective_name"].' is '.$objective["mapped"].' and '.$objective["mapped_to_course"]."<br/>";
+							if ($objective["mapped"] && !$objective["mapped_to_course"]) {
+								if (!event_objective_parent_mapped_course($objective["objective_id"],$EVENT_ID)) {
+									$explicit_event_objectives[] = $objective;
+								} else {
+									if ($objective["objective_type"] == "course") {
+										//$objective_id = $objective["objective_id"];
+										$hierarchical_objectives[] = $objective;
+									} else {
+										$flat_objectives[] = $objective;
+									}
+								}
+							} else {
+								if ($objective["objective_type"] == "course") {
+									//$objective_id = $objective["objective_id"];
+									$hierarchical_objectives[] = $objective;
+								} else {
+									$flat_objectives[] = $objective;
+								}
+							}
+
+							if ($objective["mapped"]) {
+								$mapped_event_objectives[] = $objective;
+							}
+						}
+					}
+					?>
+
+					<div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="event" data-resource-id="<?php echo $EVENT_ID;?>">
+						<h2>Mapped Objectives
+						<div style="float: right">
+							<ul class="page-action">
+								<li class="last">
+									<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Map Additional Objectives</a>
+								</li>
+							</ul>
+						</div>
+						</h2>
+						<p class="content-small">
+							<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left and it will be mapped to the event.
+						</p>
+					<?php
+						if ($hierarchical_objectives) {
+							//function loads bottom leaves and displays them
+							event_objectives_display_leafs($hierarchical_objectives,$COURSE_ID,$EVENT_ID);
+				 		}
+				 		if($flat_objectives){
+				 		?>
+				 		<div id="clinical-list-wrapper">
+							<a name="clinical-objective-list"></a>
+							<h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed">Other Objectives</h2>
+							<div id="clinical-objective-list">
+								<ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
+								<?php
+									if ($flat_objectives) {
+										foreach($flat_objectives as $objective){
+												$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+											?>
+									<li class = "mapped-objective"
+										id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+										data-id = "<?php echo $objective["objective_id"]; ?>"
+										data-title="<?php echo $title;?>"
+										data-description="<?php echo htmlentities($objective["objective_description"]);?>">
+										<strong><?php echo $title; ?></strong>
+										<div class="objective-description">
+											<?php
+											$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+											if ($set) {
+												echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+											}
+											?>
+											<?php echo $objective["objective_description"];?>
+										</div>
+
+										<div class="event-objective-controls">
+											<input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>
+										</div>
+									</li>
+
+								<?php
+										}
+							 		} ?>
+								</ul>
+							</div>
+						</div>
+						<?php
+						}
+						?>
+
+						<div id="event-list-wrapper" <?php echo ($explicit_event_objectives)?'':' style="display:none;"';?>>
+							<a name="event-objective-list"></a>
+							<h2 id="event-toggle"  title="Event Objective List" class="collapsed">Event Specific Objectives</h2>
+							<div id="event-objective-list">
+								<ul class="objective-list mapped-list" id="mapped_event_objectives" data-importance="event">
+								<?php
+									if ($explicit_event_objectives) {
+										foreach($explicit_event_objectives as $objective){
+												$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+											?>
+									<li class = "mapped-objective"
+										id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+										data-id = "<?php echo $objective["objective_id"]; ?>"
+										data-title="<?php echo $title;?>"
+										data-description="<?php echo htmlentities($objective["objective_description"]);?>"
+										data-mapped="<?php echo $objective["mapped_to_course"]?1:0;?>">
+										<strong><?php echo $title; ?></strong>
+										<div class="objective-description">
+											<?php
+											$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+											if ($set) {
+												echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+											}
+											?>
+											<?php echo $objective["objective_description"];?>
+										</div>
+
+										<div class="event-objective-controls">
+											<img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
+													class="objective-remove list-cancel-image"
+													id="objective_remove_<?php echo $objective["objective_id"];?>"
+													data-id="<?php echo $objective["objective_id"];?>">
+										</div>
+									</li>
+
+								<?php
+										}
+							 		} ?>
+								</ul>
+							</div>
+						</div>
+						<select id="checked_objectives_select" name="checked_objectives[]" multiple="multiple" style="display:none;">
+						<?php
+							if ($mapped_event_objectives) {
+								foreach($mapped_event_objectives as $objective){
+									if($objective["objective_type"] == "course") {
+									?>
+									<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+									<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+								<?php
+									}
+								}
+							}
+						?>
+						</select>
+						<select id="clinical_objectives_select" name="clinical_presentations[]" multiple="multiple" style="display:none;">
+						<?php
+							if ($mapped_event_objectives) {
+								foreach($mapped_event_objectives as $objective){
+									if($objective["objective_type"] == "event") {
+									?>
+									<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+									<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+								<?php
+									}
+								}
+							}
+						?>
+						</select>
+
+					</div>
+					<div style="clear:both;"></div>
+					<div style="float:right;margin-top:10px;">
+						<input type="submit" value="Save"/>
+					</div>
+					<div style="clear:both;"></div>
+					<?php 	} 	?>
+				</div>
 
                 <?php
                 $query = "	SELECT a.`topic_id`,a.`topic_name`, e.`topic_coverage`,e.`topic_time`

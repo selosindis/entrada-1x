@@ -25,6 +25,7 @@
 	<script src="{$template_relative}/js/libs/modernizr-1.7.min.js"></script>
 	{$page_head}
 	<link rel="stylesheet" href="{$template_relative}/css/ie.css">
+	<link rel="stylesheet" href="{$template_relative}/css/stylesheet.css">
 	<link rel="stylesheet" href="{$template_relative}/css/screen.css">
 	</head>
 
@@ -67,6 +68,19 @@
 					{include file="sidebar-blocks/community_block.tpl"}
 				{/if}
 			</aside>
+			{if $is_sequential_nav}
+				<section style="text-align:right;" class="span-23">
+					{if $next_page_url != "#" && $previous_page_url != "#"}
+						<p><a href="{$previous_page_url}"><< Previous</a> | <a href="{$next_page_url}">Next >></a></p>
+					{elseif $next_page_url != "#" && $previous_page_url == "#"}
+						<p> <a href="{$next_page_url}"> Next >></a></p>
+					{elseif $next_page_url == "#" && $previous_page_url != "#"}
+						<p> <a href="{$previous_page_url}"><< Previous</a> </p>
+					{else $next_page_url == "#" && $previous_page_url == "#"}
+						<p> </p>
+					{/if}
+				</section>
+			{/if}
 		</div>
 		<footer class="span-24">
 			<p>{php}echo COPYRIGHT_STRING;{/php}</p>

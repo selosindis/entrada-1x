@@ -74,7 +74,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 			}
 
 			if (isset($_POST["target_audience"]) && $target_audience = clean_input($_POST["target_audience"], "trim")) {
-				if (strpos($target_audience,"all:") !== false) {
+				if (strpos($target_audience, "all:") !== false || $target_audience == "public") {
 					$PROCESSED["associated_audience"][] = array("audience_type" => $target_audience, "audience_value" => 0);
 				}
 			}
@@ -240,17 +240,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 			?>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/notices?section=add&amp;step=2" method="post" class="form-horizontal">
 				<input type="hidden" id="org_id" name="org_id" value="<?php echo (int) $ENTRADA_USER->getActiveOrganisation(); ?>" />
-				<h2>Notice Details</h2>
+
 				<?php
-						if ($PROCESSED["organisation_id"]) {
-							require_once(ENTRADA_ABSOLUTE."/core/modules/admin/notices/api-audience-options.inc.php");
-						}
-						?>
+				if ($PROCESSED["organisation_id"]) {
+					require_once(ENTRADA_ABSOLUTE."/core/modules/admin/notices/api-audience-options.inc.php");
+				}
+				?>
 				<div class="control-group">
 					<label for="notice_summary" class="form-required">Notice Summary:</label>
 					<textarea id="notice_summary" name="notice_summary" cols="60" rows="10" style="width:100%"><?php echo ((isset($PROCESSED["notice_summary"])) ? html_encode(trim($PROCESSED["notice_summary"])) : ""); ?></textarea>
 				</div>
+				
 				<h2>Time Release Options</h2>
+				
 				<div class="row-fluid">
 					<table>
 						<tr>
@@ -258,13 +260,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 						</tr>
 					</table>
 				</div>
+				
 				<div class="row-fluid" style="margin-top:10px">
 					<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>'" />
 					<div class="pull-right">
 						<input type="submit" class="btn btn-primary" value="Save" />
 					</div>
 				</div>
-
 			</form>
 
 			<script type="text/javascript">
@@ -275,7 +277,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 					$$('select_multiple_container').invoke('hide');
 					audience_type = $F('audience_type');
 					org_id = $F('org_id');
-					if (audience_type.match(/all.*/)) {
+					if (audience_type.match(/all.*/) || audience_type == 'public') {
 						$('audience_list').hide();
 					}else if (multiselect[audience_type]) {
 						$('audience_list').show();

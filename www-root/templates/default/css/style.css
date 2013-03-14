@@ -1,7 +1,7 @@
 body{
     background:url("../images/bg-pattern.png") right bottom repeat transparent;
 }
-a,a:link{
+a {
   color:#006699;
 }
 h3{
@@ -346,4 +346,11 @@ ul.quiz-questions-list {
 footer#main-footer .container{
   text-align:center;
   margin:18px auto;
+}
+
+ul.public-announcements {
+list-style-type:none;
+margin:0;
+padding:4px 10px 10px;
+padding:0;
 }

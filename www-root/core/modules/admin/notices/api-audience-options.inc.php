@@ -24,6 +24,7 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
  */
+
 if (!defined("IN_NOTICES")) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -56,286 +57,280 @@ if (!defined("IN_NOTICES")) {
 
 	if ($PROCESSED["organisation_id"]) {
 		?>
-		<tr>
-			<td>&nbsp;</td>
-			<td style="vertical-align: top; padding-top: 5px"><label for="faculty_name" class="form-required">Notice Recipients</label></td>
-			<td>
-				<div id="event_audience_type_custom_options" style="<?php echo ($course_list && !$custom_audience ? "display: none; " : ""); ?>position: relative">
-					<?php
-					if (!$use_ajax) {
-						/**
-							* Compiles the list of groups from groups table (known as Cohorts).
-							*/
-						$COHORT_LIST = array();
-						$query = "	SELECT a.*
-									FROM `groups` AS a
-									JOIN `group_organisations` AS b
-									ON a.`group_id` = b.`group_id`
-									WHERE a.`group_active` = '1'
-									AND a.`group_type` = 'cohort'
-									AND b.`organisation_id` = ".$db->qstr($PROCESSED["organisation_id"])."
-									ORDER BY LENGTH(a.`group_name`), a.`group_name` ASC";
-						$results = $db->GetAll($query);
-						if ($results) {
-							foreach($results as $result) {
-								$COHORT_LIST[$result["group_id"]] = $result;
-							}
-						}
+		<div class="control-group">
+			<label for="faculty_name" class="form-required">Notice Recipients:</label>
 
-						/**
-							* Compiles the list of course small groups.
-							*/
-						$GROUP_LIST = array();
-						$query = "	SELECT a.*
-									FROM `groups` AS a
-									JOIN `group_organisations` AS b
-									ON a.`group_id` = b.`group_id`
-									WHERE a.`group_active` = '1'
-									AND a.`group_type` = 'course_list'
-									AND b.`organisation_id` = ".$db->qstr($PROCESSED["organisation_id"])."
-									ORDER BY LENGTH(a.`group_name`), a.`group_name` ASC";
-						$results = $db->GetAll($query);
-						if ($results) {
-							foreach($results as $result) {
-								$GROUP_LIST[$result["group_id"]] = $result;
-							}
-						}
-
-						/**
-							* Compiles the list of students.
-							*/
-						$STUDENT_LIST = array();
-						$query = "	SELECT a.`id` AS `proxy_id`, b.`role`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`organisation_id`
-									FROM `".AUTH_DATABASE."`.`user_data` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-									ON a.`id` = b.`user_id`
-									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									AND b.`account_active` = 'true'
-									AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-									AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-									AND b.`group` = 'student'
-									AND a.`grad_year` >= '".(date("Y") - ((date("m") < 7) ?  2 : 1))."'
-									ORDER BY a.`grad_year` ASC, a.`lastname` ASC, a.`firstname` ASC";
-						$results = $db->GetAll($query);
-						if ($results) {
-							foreach($results as $result) {
-								$STUDENT_LIST[$result["proxy_id"]] = array("proxy_id" => $result["proxy_id"], "fullname" => $result["fullname"], "organisation_id" => $result["organisation_id"]);
-							}
-						}
-
-						/**
-							* Compiles the list of faculty.
-							*/
-						$FACULTY_LIST = array();
-						$query = "	SELECT a.`id` AS `proxy_id`, b.`role`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`organisation_id`
-									FROM `".AUTH_DATABASE."`.`user_data` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-									ON a.`id` = b.`user_id`
-									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									AND b.`account_active` = 'true'
-									AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-									AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-									AND b.`group` = 'faculty'
-									AND a.`grad_year` >= '".(date("Y") - ((date("m") < 7) ?  2 : 1))."'
-									ORDER BY a.`grad_year` ASC, a.`lastname` ASC, a.`firstname` ASC";
-						$results = $db->GetAll($query);
-						if ($results) {
-							foreach($results as $result) {
-								$FACULTY_LIST[$result["proxy_id"]] = array("proxy_id" => $result["proxy_id"], "fullname" => $result["fullname"], "organisation_id" => $result["organisation_id"]);
-							}
-						}
-
-						/**
-							* Compiles the list of staff.
-							*/
-						$STAFF_LIST = array();
-						$query = "	SELECT a.`id` AS `proxy_id`, b.`role`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`organisation_id`
-									FROM `".AUTH_DATABASE."`.`user_data` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-									ON a.`id` = b.`user_id`
-									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									AND b.`account_active` = 'true'
-									AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-									AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-									AND (b.`group` = 'medtech' || b.`group` = 'staff')
-									ORDER BY a.`grad_year` ASC, a.`lastname` ASC, a.`firstname` ASC";
-						$results = $db->GetAll($query);
-						if ($results) {
-							foreach($results as $result) {
-								$STAFF_LIST[$result["proxy_id"]] = array("proxy_id" => $result["proxy_id"], "fullname" => $result["fullname"], "organisation_id" => $result["organisation_id"]);
-							}
+			<div id="event_audience_type_custom_options" style="<?php echo ($course_list && !$custom_audience ? "display: none; " : ""); ?>position: relative">
+				<?php
+				if (!$use_ajax) {
+					/**
+					 * Compiles the list of groups from groups table (known as Cohorts).
+					 */
+					$COHORT_LIST = array();
+					$query = "	SELECT a.*
+								FROM `groups` AS a
+								JOIN `group_organisations` AS b
+								ON a.`group_id` = b.`group_id`
+								WHERE a.`group_active` = '1'
+								AND a.`group_type` = 'cohort'
+								AND b.`organisation_id` = ".$db->qstr($PROCESSED["organisation_id"])."
+								ORDER BY LENGTH(a.`group_name`), a.`group_name` ASC";
+					$results = $db->GetAll($query);
+					if ($results) {
+						foreach($results as $result) {
+							$COHORT_LIST[$result["group_id"]] = $result;
 						}
 					}
 
 					/**
-						* Process cohorts.
-						*/
-					if ((isset($_POST["associated_cohorts"]) && $use_ajax)) {
-						$associated_audience = explode(',', $_POST["event_audience_cohorts"]);
-						if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
-							foreach($associated_audience as $audience_id) {
-								if (strpos($audience_id, "group") !== false) {
-									if ($group_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
-										$query = "	SELECT a.*
-													FROM `groups` AS a
-													JOIN `group_organisations` AS b
-													ON a.`group_id` = b.`group_id`
-													WHERE a.`group_id` = ".$db->qstr($group_id)."
-													AND a.`group_type` = 'cohort'
-													AND a.`group_active` = 1
-													AND b.`organisation_id` = ".$db->qstr($PROCESSED["organisation_id"]);
-										$result	= $db->GetRow($query);
-										if ($result) {
-											$PROCESSED["associated_cohorts"][] = $group_id;
-										}
+					 * Compiles the list of course small groups.
+					 */
+					$GROUP_LIST = array();
+					$query = "	SELECT a.*
+								FROM `groups` AS a
+								JOIN `group_organisations` AS b
+								ON a.`group_id` = b.`group_id`
+								WHERE a.`group_active` = '1'
+								AND a.`group_type` = 'course_list'
+								AND b.`organisation_id` = ".$db->qstr($PROCESSED["organisation_id"])."
+								ORDER BY LENGTH(a.`group_name`), a.`group_name` ASC";
+					$results = $db->GetAll($query);
+					if ($results) {
+						foreach($results as $result) {
+							$GROUP_LIST[$result["group_id"]] = $result;
+						}
+					}
+
+					/**
+					 * Compiles the list of students.
+					 */
+					$STUDENT_LIST = array();
+					$query = "	SELECT a.`id` AS `proxy_id`, b.`role`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`organisation_id`
+								FROM `".AUTH_DATABASE."`.`user_data` AS a
+								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+								ON a.`id` = b.`user_id`
+								WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+								AND b.`account_active` = 'true'
+								AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+								AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+								AND b.`group` = 'student'
+								AND a.`grad_year` >= '".(date("Y") - ((date("m") < 7) ?  2 : 1))."'
+								ORDER BY a.`grad_year` ASC, a.`lastname` ASC, a.`firstname` ASC";
+					$results = $db->GetAll($query);
+					if ($results) {
+						foreach($results as $result) {
+							$STUDENT_LIST[$result["proxy_id"]] = array("proxy_id" => $result["proxy_id"], "fullname" => $result["fullname"], "organisation_id" => $result["organisation_id"]);
+						}
+					}
+
+					/**
+					 * Compiles the list of faculty.
+					 */
+					$FACULTY_LIST = array();
+					$query = "	SELECT a.`id` AS `proxy_id`, b.`role`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`organisation_id`
+								FROM `".AUTH_DATABASE."`.`user_data` AS a
+								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+								ON a.`id` = b.`user_id`
+								WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+								AND b.`account_active` = 'true'
+								AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+								AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+								AND b.`group` = 'faculty'
+								AND a.`grad_year` >= '".(date("Y") - ((date("m") < 7) ?  2 : 1))."'
+								ORDER BY a.`grad_year` ASC, a.`lastname` ASC, a.`firstname` ASC";
+					$results = $db->GetAll($query);
+					if ($results) {
+						foreach($results as $result) {
+							$FACULTY_LIST[$result["proxy_id"]] = array("proxy_id" => $result["proxy_id"], "fullname" => $result["fullname"], "organisation_id" => $result["organisation_id"]);
+						}
+					}
+
+					/**
+					 * Compiles the list of staff.
+					 */
+					$STAFF_LIST = array();
+					$query = "	SELECT a.`id` AS `proxy_id`, b.`role`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, a.`organisation_id`
+								FROM `".AUTH_DATABASE."`.`user_data` AS a
+								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+								ON a.`id` = b.`user_id`
+								WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+								AND b.`account_active` = 'true'
+								AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+								AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
+								AND (b.`group` = 'medtech' || b.`group` = 'staff')
+								ORDER BY a.`grad_year` ASC, a.`lastname` ASC, a.`firstname` ASC";
+					$results = $db->GetAll($query);
+					if ($results) {
+						foreach ($results as $result) {
+							$STAFF_LIST[$result["proxy_id"]] = array("proxy_id" => $result["proxy_id"], "fullname" => $result["fullname"], "organisation_id" => $result["organisation_id"]);
+						}
+					}
+				}
+
+				/**
+				 * Process cohorts.
+				 */
+				if ((isset($_POST["associated_cohorts"]) && $use_ajax)) {
+					$associated_audience = explode(',', $_POST["event_audience_cohorts"]);
+					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
+						foreach($associated_audience as $audience_id) {
+							if (strpos($audience_id, "group") !== false) {
+								if ($group_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
+									$query = "	SELECT a.*
+												FROM `groups` AS a
+												JOIN `group_organisations` AS b
+												ON a.`group_id` = b.`group_id`
+												WHERE a.`group_id` = ".$db->qstr($group_id)."
+												AND a.`group_type` = 'cohort'
+												AND a.`group_active` = 1
+												AND b.`organisation_id` = ".$db->qstr($PROCESSED["organisation_id"]);
+									$result	= $db->GetRow($query);
+									if ($result) {
+										$PROCESSED["associated_cohorts"][] = $group_id;
 									}
 								}
 							}
 						}
 					}
+				}
 
-					/**
-						* Process students.
-						*/
-					if ((isset($_POST["associated_students"]) && $use_ajax)) {
-						$associated_audience = explode(',', $_POST["event_audience_students"]);
-						if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
-							foreach($associated_audience as $audience_id) {
-								if (strpos($audience_id, "student") !== false) {
-									if ($proxy_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
-										$query = "	SELECT a.*
-													FROM `".AUTH_DATABASE."`.`user_data` AS a
-													LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
-													ON a.`id` = b.`user_id`
-													WHERE a.`id` = ".$db->qstr($proxy_id)."
-													AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-													AND b.`account_active` = 'true'
-													AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
-													AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
-										$result	= $db->GetRow($query);
-										if ($result) {
-											$PROCESSED["associated_students"][] = $proxy_id;
-										}
+				/**
+				 * Process students.
+				 */
+				if ((isset($_POST["associated_students"]) && $use_ajax)) {
+					$associated_audience = explode(',', $_POST["event_audience_students"]);
+					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
+						foreach($associated_audience as $audience_id) {
+							if (strpos($audience_id, "student") !== false) {
+								if ($proxy_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
+									$query = "	SELECT a.*
+												FROM `".AUTH_DATABASE."`.`user_data` AS a
+												LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+												ON a.`id` = b.`user_id`
+												WHERE a.`id` = ".$db->qstr($proxy_id)."
+												AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+												AND b.`account_active` = 'true'
+												AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
+												AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
+									$result	= $db->GetRow($query);
+									if ($result) {
+										$PROCESSED["associated_students"][] = $proxy_id;
 									}
 								}
 							}
 						}
 					}
+				}
 
-					$target_audience = false;
-					if (!isset($PROCESSED["associated_cohorts"]) && !isset($PROCESSED["associated_students"]) && !isset($_POST["associated_cohorts"]) && !isset($_POST["associated_students"]) && isset($PROCESSED["organisation_id"])) {
+				$target_audience = false;
+				if (!isset($PROCESSED["associated_cohorts"]) && !isset($PROCESSED["associated_students"]) && !isset($_POST["associated_cohorts"]) && !isset($_POST["associated_students"]) && isset($PROCESSED["organisation_id"])) {
 
-						$query = "SELECT * FROM `notice_audience` WHERE `notice_id` = ".$db->qstr($NOTICE_ID);
-						$audience = $db->GetAll($query);
-						if($audience){
-							foreach($audience as $amember){
-								if(strpos($amember["audience_type"],"all:") !== false){
-									$target_audience = $amember["audience_type"];
-								}
-								$PROCESSED["associated_".$amember["audience_type"]][] = (int)$amember["audience_value"];
+					$query = "SELECT * FROM `notice_audience` WHERE `notice_id` = ".$db->qstr($NOTICE_ID);
+					$audience = $db->GetAll($query);
+					if($audience){
+						foreach($audience as $amember){
+							if (strpos($amember["audience_type"], "all:") !== false || $amember["audience_type"] == "public") {
+								$target_audience = $amember["audience_type"];
 							}
+							$PROCESSED["associated_".$amember["audience_type"]][] = (int)$amember["audience_value"];
 						}
 					}
+				}
 
-					$cohort_ids_string = "";
-					$clist_ids_string = "";
-					$student_ids_string = "";
-					$faculty_ids_string = "";
-					$staff_ids_string = "";
+				$cohort_ids_string = "";
+				$clist_ids_string = "";
+				$student_ids_string = "";
+				$faculty_ids_string = "";
+				$staff_ids_string = "";
 
-					if (isset($PROCESSED["associated_course_ids"]) && $PROCESSED["associated_course_ids"]) {
-						$course_audience_included = true;
-					} else {
-						$course_audience_included = false;
+				if (isset($PROCESSED["associated_course_ids"]) && $PROCESSED["associated_course_ids"]) {
+					$course_audience_included = true;
+				} else {
+					$course_audience_included = false;
+				}
+
+				if (isset($PROCESSED["associated_cohorts"]) && is_array($PROCESSED["associated_cohorts"])) {
+					foreach ($PROCESSED["associated_cohorts"] as $group_id) {
+						if ($cohort_ids_string) {
+							$cohort_ids_string .= ",group_".$group_id;
+						} else {
+							$cohort_ids_string = "group_".$group_id;
+						}
 					}
+				}
 
-					if (isset($PROCESSED["associated_cohorts"]) && is_array($PROCESSED["associated_cohorts"])) {
-						foreach ($PROCESSED["associated_cohorts"] as $group_id) {
-							if ($cohort_ids_string) {
-								$cohort_ids_string .= ",group_".$group_id;
+				if (isset($PROCESSED["associated_course_list"]) && is_array($PROCESSED["associated_course_list"])) {
+					foreach ($PROCESSED["associated_course_list"] as $group_id) {
+						if ($clist_ids_string) {
+							$clist_ids_string .= ",cgroup_".$group_id;
+						} else {
+							$clist_ids_string = "cgroup_".$group_id;
+						}
+					}
+				}
+
+				if (isset($PROCESSED["associated_students"]) && is_array($PROCESSED["associated_students"])) {
+					foreach ($PROCESSED["associated_students"] as $proxy_id) {
+						if(array_key_exists($proxy_id, $STUDENT_LIST)){
+
+							if ($student_ids_string) {
+								$student_ids_string .= ",student_".$proxy_id;
 							} else {
-								$cohort_ids_string = "group_".$group_id;
+								$student_ids_string = "student_".$proxy_id;
 							}
 						}
 					}
+				}
 
-					if (isset($PROCESSED["associated_course_list"]) && is_array($PROCESSED["associated_course_list"])) {
-						foreach ($PROCESSED["associated_course_list"] as $group_id) {
-							if ($clist_ids_string) {
-								$clist_ids_string .= ",cgroup_".$group_id;
+				if (isset($PROCESSED["associated_faculty"]) && is_array($PROCESSED["associated_faculty"])) {
+					foreach ($PROCESSED["associated_faculty"] as $proxy_id) {
+						if(array_key_exists($proxy_id, $FACULTY_LIST)){
+							if ($faculty_ids_string) {
+								$faculty_ids_string .= ",faculty_".$proxy_id;
 							} else {
-								$clist_ids_string = "cgroup_".$group_id;
+								$faculty_ids_string = "faculty_".$proxy_id;
 							}
 						}
 					}
+				}
 
-					if (isset($PROCESSED["associated_students"]) && is_array($PROCESSED["associated_students"])) {
-						foreach ($PROCESSED["associated_students"] as $proxy_id) {
-							if(array_key_exists($proxy_id, $STUDENT_LIST)){
-
-								if ($student_ids_string) {
-									$student_ids_string .= ",student_".$proxy_id;
-								} else {
-									$student_ids_string = "student_".$proxy_id;
-								}
+				if (isset($PROCESSED["associated_staff"]) && is_array($PROCESSED["associated_staff"])) {
+					foreach ($PROCESSED["associated_staff"] as $proxy_id) {
+						if(array_key_exists($proxy_id, $STAFF_LIST)){
+							if ($staff_ids_string) {
+								$staff_ids_string .= ",staff_".$proxy_id;
+							} else {
+								$staff_ids_string = "staff_".$proxy_id;
 							}
 						}
 					}
+				}
+				?>
+				<select id="audience_type" name="target_audience" onchange="showMultiSelect();" style="width: 275px;">
+					<option value="">-- Select an audience type --</option>
+					<option value="public"<?php echo ($target_audience == "public" ? "selected=\"selected\"" : ""); ?>>Public announcement visible on login page.</option>
+					<option value="all:users"<?php echo ($target_audience=="all:users"?"selected=\"selected\"":"");?>>All users should receive this notice.</option>
+					<option value="all:students"<?php echo ($target_audience=="all:students"?"selected=\"selected\"":"");?>>All students should receive this notice.</option>
+					<option value="all:faculty"<?php echo ($target_audience=="all:faculty"?"selected=\"selected\"":"");?>>All faculty should receive this notice.</option>
+					<option value="all:staff"<?php echo ($target_audience=="all:staff"?"selected=\"selected\"":"");?>>All staff should receive this notice.</option>
+					<option value="cohorts">Selected cohorts of students should receive this notice.</option>
+					<option value="course_list">Students in selected course lists should receive this notice.</option>
+					<option value="students">Selected individual students should receive this notice.</option>
+					<option value="faculty">Selected individual faculty should receive this notice.</option>
+					<option value="staff">Selected individual staff should receive this notice.</option>
+				</select>
 
-					if (isset($PROCESSED["associated_faculty"]) && is_array($PROCESSED["associated_faculty"])) {
-						foreach ($PROCESSED["associated_faculty"] as $proxy_id) {
-							if(array_key_exists($proxy_id, $FACULTY_LIST)){
-								if ($faculty_ids_string) {
-									$faculty_ids_string .= ",faculty_".$proxy_id;
-								} else {
-									$faculty_ids_string = "faculty_".$proxy_id;
-								}
-							}
-						}
-					}
+				<span id="options_loading" style="display:none; vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Loading ... </span>
+				<span id="options_container"></span>
 
-					if (isset($PROCESSED["associated_staff"]) && is_array($PROCESSED["associated_staff"])) {
-						foreach ($PROCESSED["associated_staff"] as $proxy_id) {
-							if(array_key_exists($proxy_id, $STAFF_LIST)){
-								if ($staff_ids_string) {
-									$staff_ids_string .= ",staff_".$proxy_id;
-								} else {
-									$staff_ids_string = "staff_".$proxy_id;
-								}
-							}
-						}
-					}
-					?>
-					<select id="audience_type" name="target_audience" onchange="showMultiSelect();" style="width: 275px;">
-						<option value="">-- Select an audience type --</option>
-						<?php
+				<input type="hidden" id="associated_cohorts" name="associated_cohorts" value="<?php echo $cohort_ids_string; ?>" />
+				<input type="hidden" id="associated_course_list" name="associated_course_list" value="<?php echo $clist_ids_string; ?>" />
+				<input type="hidden" id="associated_students" name="associated_students" value="<?php echo $student_ids_string; ?>" />
+				<input type="hidden" id="associated_faculty" name="associated_faculty" value="<?php echo $faculty_ids_string; ?>" />
+				<input type="hidden" id="associated_staff" name="associated_staff" value="<?php echo $staff_ids_string; ?>" />
+				<input type="hidden" id="associated_course" name="associated_course" value="<?php echo $course_audience_included ? "1" : "0"; ?>" />
 
-							?>
-							<option value="all:users"<?php echo ($target_audience=="all:users"?"selected=\"selected\"":"");?>>All users should receive this notice.</option>
-							<option value="all:students"<?php echo ($target_audience=="all:students"?"selected=\"selected\"":"");?>>All students should receive this notice.</option>
-							<option value="all:faculty"<?php echo ($target_audience=="all:faculty"?"selected=\"selected\"":"");?>>All faculty should receive this notice.</option>
-							<option value="all:staff"<?php echo ($target_audience=="all:staff"?"selected=\"selected\"":"");?>>All staff should receive this notice.</option>
-							<option value="cohorts">Selected cohorts of students should receive this notice.</option>
-							<option value="course_list">Students in selected course lists should receive this notice.</option>
-							<option value="students">Selected individual students should receive this notice.</option>
-							<option value="faculty">Selected individual faculty should receive this notice.</option>
-							<option value="staff">Selected individual staff should receive this notice.</option>
-							<?php
-
-						?>
-					</select>
-
-					<span id="options_loading" style="display:none; vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Loading ... </span>
-					<span id="options_container"></span>
-
-					<input type="hidden" id="associated_cohorts" name="associated_cohorts" value="<?php echo $cohort_ids_string; ?>" />
-					<input type="hidden" id="associated_course_list" name="associated_course_list" value="<?php echo $clist_ids_string; ?>" />
-					<input type="hidden" id="associated_students" name="associated_students" value="<?php echo $student_ids_string; ?>" />
-					<input type="hidden" id="associated_faculty" name="associated_faculty" value="<?php echo $faculty_ids_string; ?>" />
-					<input type="hidden" id="associated_staff" name="associated_staff" value="<?php echo $staff_ids_string; ?>" />
-					<input type="hidden" id="associated_course" name="associated_course" value="<?php echo $course_audience_included ? "1" : "0"; ?>" />
-
-					<ul class="menu multiselect" id="audience_list" style="margin-top: 5px<?php echo ($target_audience ? "; display: none;" : "");?>">
+				<ul class="menu multiselect" id="audience_list" style="margin-top: 5px<?php echo ($target_audience ? "; display: none;" : "");?>">
 					<?php
 					if (is_array($PROCESSED["associated_cohorts"]) && count($PROCESSED["associated_cohorts"])) {
 						foreach ($PROCESSED["associated_cohorts"] as $group) {
@@ -346,7 +341,7 @@ if (!defined("IN_NOTICES")) {
 							}
 						}
 					}
-
+	
 					if (is_array($PROCESSED["associated_course_list"]) && count($PROCESSED["associated_course_list"])) {
 						foreach ($PROCESSED["associated_course_list"] as $group) {
 							if ((array_key_exists($group, $GROUP_LIST)) && is_array($GROUP_LIST[$group])) {
@@ -356,7 +351,7 @@ if (!defined("IN_NOTICES")) {
 							}
 						}
 					}
-
+	
 					if (is_array($PROCESSED["associated_students"]) && count($PROCESSED["associated_students"])) {
 						foreach ($PROCESSED["associated_students"] as $student) {
 							if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
@@ -366,7 +361,7 @@ if (!defined("IN_NOTICES")) {
 							}
 						}
 					}
-
+	
 					if (is_array($PROCESSED["associated_faculty"]) && count($PROCESSED["associated_faculty"])) {
 						foreach ($PROCESSED["associated_faculty"] as $faculty) {
 							if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
@@ -376,7 +371,7 @@ if (!defined("IN_NOTICES")) {
 							}
 						}
 					}
-
+	
 					if (is_array($PROCESSED["associated_staff"]) && count($PROCESSED["associated_staff"])) {
 						foreach ($PROCESSED["associated_staff"] as $staff) {
 							if ((array_key_exists($staff, $STAFF_LIST)) && is_array($STAFF_LIST[$staff])) {
@@ -387,10 +382,9 @@ if (!defined("IN_NOTICES")) {
 						}
 					}
 					?>
-					</ul>
-				</div>
-			</td>
-		</tr>
+				</ul>
+			</div>
+		</div>
 		<?php
 	}
 

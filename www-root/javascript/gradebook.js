@@ -41,6 +41,7 @@ jQuery(document).ready(function($) {
 			buttons : [
 				{name: "Close", bclass: "gradebook_edit_close"},
 				{name: "Add Assessment", bclass: "gradebook_edit_add"},
+				{name: "Export Shown Assessments", bclass: "gradebook_export"},
 				{separator: true},
 				{name: "Change Grad Year", bclass: "change_gradebook_year"}
 			]
@@ -179,5 +180,17 @@ jQuery(document).ready(function($) {
 	
 	$('.gradebook_edit_add').live('click', function(e) {
 		window.location = $("#gradebook_assessment_add").attr('href');
+	});
+	$('.gradebook_export').live('click', function(e) {
+        var ids = [];
+        $$('#assessment_ids').each(function(input) {
+            ids.push($F(input));
+        });
+        if(ids.length > 0) {
+            window.location = $("#gradebook_export_url").attr('value')+ids.join(',');
+        } else {
+            alert("There are no assessments to export for this cohort.");
+        }
+        return false;
 	});
 });

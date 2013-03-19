@@ -88,7 +88,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$students = $db->GetAll($student_query);
 							
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
+                $assessment_ids_string = "";
+                foreach($assessments as $assessment) {
+                    $assessment_ids_string .= ($assessment_ids_string ? ", " : "").$db->qstr($assessment["assessment_id"]);
+                    echo "<input type=\"hidden\" id=\"assessment_ids\" name=\"assessment_ids[]\" value=\"".$assessment["assessment_id"]."\" />\n";
+                }
 				?>
+                <input type="hidden" id="gradebook_export_url" value="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids=" />
 				<table class="gradebook <?php echo $editable; ?>">
 					<thead>
 						<tr>
@@ -96,9 +102,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<th style="width: 100px;">Student Number</th>
 							<th style="width: 100px;">Graduating Class</th>
 							<?php
-                            $assessment_ids_string = "";
 							foreach($assessments as $assessment) {
-                                $assessment_ids_string .= ($assessment_ids_string ? ", " : "").$db->qstr($assessment["assessment_id"]);
 								echo "<th>{$assessment["name"]}</th>\n";
 							}
 							?>

@@ -3199,6 +3199,9 @@ table.mspr_table tr.unapproved td {
 .gradebook_edit_add {
 	background: url(../images/add.png) no-repeat top left;
 }
+.gradebook_export {
+	background: url(../images/btn_save.gif) no-repeat top left;
+}
 
 .clearfix {
 	clear:both;

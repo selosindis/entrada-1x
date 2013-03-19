@@ -76,14 +76,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			$assessments = $db->GetAll($query);
 			if($assessments) {
 				
-				$student_query = "SELECT a.`proxy_id`, CONCAT_WS(b.`firstname`, b.`lastname`) AS `fullname`, b.`number`, c.`group_name` AS `cohort`
+				$student_query = "SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`number`, c.`group_name` AS `cohort`
                                     FROM `group_members` AS a 
                                     JOIN `".AUTH_DATABASE."`.`user_data` AS b
                                     ON a.`proxy_id` = b.`id`
                                     JOIN `groups` AS c
                                     ON a.`group_id` = c.`group_id`
                                     WHERE a.`group_id` = ".$db->qstr($COHORT)." 
-                                    AND a.`member_active` = 1";
+                                    AND a.`member_active` = 1
+                                    ORDER BY b.`lastname`, b.`firstname`";
 				$students = $db->GetAll($student_query);
 							
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";

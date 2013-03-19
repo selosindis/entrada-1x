@@ -332,66 +332,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									$url = ENTRADA_URL."/admin/".$MODULE;
 									$msg = "You will now be redirected to the course index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								break;
-							
-
-						/*
-						if (isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
-								$groups = explode(",", clean_input($_POST["group_order"],array("notags","trim")));
-								if ($_POST["period"] && $cperiod_id = clean_input($_POST["period"], array("trim", "int"))) {		
-									if ((is_array($groups)) && (count($groups))) {
-										
-										$new_groups = array();
-										
-										foreach ($groups as $group_id) {
-											$new_groups[] = $group_id;
-										}
-										
-										foreach($new_groups as $order => $group_id) {
-											if ($group_id = clean_input($group_id, array("trim", "int"))) {
-												$query = "SELECT `group_name` FROM `groups` WHERE `group_id` = ".$db->qstr($group_id);
-												$result	= $db->GetRow($query);
-												if ($result) {
-													$PROCESSED["groups"][] = array("id" => $group_id, "title" => $result["group_name"]);
-													
-													if(!$db->AutoExecute("course_audience", array("audience_type" => "group_id", "audience_value" => $group_id, "course_id" => $COURSE_ID, "cperiod_id" => $cperiod_id), "INSERT")){
-														add_error("Unable to insert the group [".$group_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
-													}
-
-												} else {
-													$ERROR++;
-													$ERRORSTR[] = "One of the <strong>groups</strong> you specified was invalid.";
-												}
-											} else {
-												$ERROR++;
-												$ERRORSTR[] = "One of the <strong>groups</strong> you specified is invalid.";
-											}
-										}
-									}		
-								}
-							}
-							if ($_POST["period"] && $cperiod_id = clean_input($_POST["period"], array("trim", "int"))) {	
-								if (isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) {
-									$PROCESSED["associated_students"] = explode(",",clean_input($_POST["associated_student"], array("notags", "trim")));
-									if (isset($PROCESSED["associated_students"]) && is_array($PROCESSED["associated_students"])) {
-										
-										$new_students = array();
-										
-										foreach ($PROCESSED["associated_students"] as $student_id) {
-											
-											$new_students[] = $student_id;
-										}
-																				
-										foreach($new_students as $student_id){
-											if(!$db->AutoExecute("course_audience", array("audience_type" => "proxy_id", "audience_value" => $student_id, "course_id" => $COURSE_ID, "cperiod_id" => $cperiod_id), "INSERT")){
-												add_error("Unable to insert the student [".$student_id."] as an audience member for course [".$COURSE_ID."]. Please try again later.");				
-											}
-										}
-									}
-								}
-							} elseif ((isset($_POST["associated_student"]) && strlen($_POST["associated_student"])) || isset($_POST["group_order"]) && strlen($_POST["group_order"])) {
-								$ERROR++;
-								$ERRORSTR[] = "Please ensure you select an <strong>Enrollment period</strong> for the selected course audience.";*/
-
 							}
 							
 							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
@@ -671,27 +611,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				</table>
 			</div>
 
-			<?php
-
-					//list($course_objectives,$top_level_id) = courses_fetch_objectives($course_details["organisation_id"], array($COURSE_ID), -1, 0, false, $posted_objectives);
-					//require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
-					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-						$query = "SELECT a.* FROM `global_lu_objectives` a
-									JOIN `objective_audience` b
-									ON a.`objective_id` = b.`objective_id`
-									AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-									WHERE (
-											(b.`audience_value` = 'all')
-											OR
-											(b.`audience_type` = 'course' AND b.`audience_value` = ".$db->qstr($COURSE_ID).")
-										)
-									AND a.`objective_parent` = '0'
-									AND a.`objective_active` = '1'";
-						$objectives = $db->GetAll($query);
-						if ($objectives) { 
-							$hierarchical_name = $translate->_("events_filter_controls");
-							$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];						
-						?>						
+				<?php
+				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
+				$query = "SELECT a.* FROM `global_lu_objectives` a
+							JOIN `objective_audience` b
+							ON a.`objective_id` = b.`objective_id`
+							AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+							WHERE (
+									(b.`audience_value` = 'all')
+									OR
+									(b.`audience_type` = 'course' AND b.`audience_value` = ".$db->qstr($COURSE_ID).")
+								)
+							AND a.`objective_parent` = '0'
+							AND a.`objective_active` = '1'";
+				$objectives = $db->GetAll($query);
+				if ($objectives) { 
+					$hierarchical_name = $translate->_("events_filter_controls");
+					$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];						
+				?>						
 				<a name="course-objectives-section"></a>
 				<h2 title="Course Objectives Section"><?php echo $module_singular_name; ?> Objectives</h2>
 				<div id="course-objectives-section">					

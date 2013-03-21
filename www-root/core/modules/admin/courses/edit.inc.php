@@ -858,7 +858,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										AND a.`objective_active` = '1'";
 							$objectives = $db->GetAll($query);
 							if ($objectives) { 
-								$hierarchical_name = $translate->_("events_filter_controls");
+								$objective_name = $translate->_("events_filter_controls");
 								$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];						
 								?>						
 					<a name="course-objectives-section"></a>

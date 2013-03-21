@@ -212,7 +212,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 								break;
 						}
 						$db->Execute($query);
-						add_success("Successfully ".$_POST["coa"]."d the course group.");
+						if ($_POST["coa"] != "delete") {
+							add_success("Successfully ".$_POST["coa"]."d the course group.");
+						}
 					}
 				}
 				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/courses/groups?id=".$COURSE_ID."\\'', 2000)";
@@ -228,8 +230,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						}
 						$SUCCESSSTR[$SUCCESS] .= "</div>\n";
 						$SUCCESSSTR[$SUCCESS] .= "You will be automatically redirected to the group index in 5 seconds, or you can <a href=\"".ENTRADA_URL."/admin/courses/groups?id=".$COURSE_ID."\">click here</a> if you do not wish to wait.";
-			
-						echo display_success();
+
 						application_log("success", "Successfully removed group ids: ".implode(", ", $GROUP_IDS));
 					} else {
 						$ERROR++;
@@ -373,83 +374,72 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			case 'delete':
 			default:
 						echo "<h1>De/Activate or Delete Groups</h1>";
-						$total_groups	= count($GROUP_IDS);
+						if($ENTRADA_ACL->amIAllowed('course', 'update', false)) {
+							$total_groups	= count($GROUP_IDS);
 
+							$query = "	SELECT * FROM `course_groups`
+										WHERE `cgroup_id` IN (".implode(", ", $GROUP_IDS).")
+										ORDER BY `group_name` ASC";
+							$results	= $db->GetAll($query);
+							if($results) {
+								echo display_notice(array("Please review the following group".(($total_groups != 1) ? "s" : "")." to ensure that you wish to activate, deactivate or <strong>permanently delete</strong> ".(($total_groups != 1) ? "them" : "it").".<br /><br />Deleting will also remove any group members and this action cannot be undone."));
+								?>
+								<form action="<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=edit&amp;action=delete&amp;step=2&amp;id=<?php echo $COURSE_ID; ?>&amp;gid=<?php echo $GROUP_ID;?>" method="post">
+									<input type="hidden" name="gid" value="<?php echo $GROUP_ID;?>" />
+									<input type="hidden" name="coa" id="coa" value="deactivate" />
+									<table class="tableList" cellspacing="0" summary="List of Groups">
+										<colgroup>
+											<col class="modified" />
+											<col class="community_title" />
+											<col class="community_shortname" />
+											<col class="attachment" />
+										</colgroup>
+										<thead>
+											<tr>
+												<td class="modified" style="font-size: 12px">&nbsp;</td>
+												<td class="community_title" style="font-size: 12px">Group Name</td>
+												<td class="community_shortname" style="font-size: 12px">Number of members</td>
+												<td class="attachment" style="font-size: 12px">&nbsp;</td>
+											</tr>
+										</thead>
+										<tfoot>
+											<tr>
+												<td style="padding-top: 10px" colspan="2">
+													<input type="submit" class="button" value="Deactivate" />
+												</td>
+												<td style="padding-top: 10px" align="right" colspan="2">
+													<input type="submit" class="button" value="Activate" onClick="$('coa').value='activate'" />
 
-						$query = "	SELECT * FROM `course_groups`
-									WHERE `cgroup_id` IN (".implode(", ", $GROUP_IDS).")
-									ORDER BY `group_name` ASC";
+													<input type="submit" class="button" value="Delete Confirm" onClick="$('coa').value='delete'" />
+												</td>
+											</tr>
+										</tfoot>
+										<tbody>
+										<?php
+											foreach($results as $result) {
+												$result["members"] = $db->GetOne("SELECT COUNT(*) AS members FROM  `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($result["cgroup_id"]));
 
+												$url 	= ENTRADA_URL."/admin/courses/groups?section=edit&amp;action=rename&amp;gid=".$result["cgroup_id"]."&amp;id=".$COURSE_ID;
 
-						$results	= $db->GetAll($query);
-						if($results) {
-							echo display_notice(array("Please review the following group".(($total_groups != 1) ? "s" : "")." to ensure that you wish to activate, deactivate or <strong>permanently delete</strong> ".(($total_groups != 1) ? "them" : "it").".<br /><br />Deleting will also remove any group members and this action cannot be undone."));
-							?>
-							<form action="<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=edit&amp;action=delete&amp;step=2&amp;id=<?php echo $COURSE_ID; ?>&amp;gid=<?php echo $GROUP_ID;?>" method="post">
-								<input type="hidden" name="gid" value="<?php echo $GROUP_ID;?>" />
-								<input type="hidden" name="coa" id="coa" value="deactivate" />
-								<table class="tableList" cellspacing="0" summary="List of Groups">
-									<colgroup>
-										<col class="modified" />
-										<col class="community_title" />
-										<col class="community_shortname" />
-										<col class="community_opened" />
-										<col class="attachment" />
-									</colgroup>
-									<thead>
-										<tr>
-											<td class="modified" style="font-size: 12px">&nbsp;</td>
-											<td class="community_title" style="font-size: 12px">Group Name</td>
-											<td class="community_shortname" style="font-size: 12px">Number of members</td>
-											<td class="community_opened" style="font-size: 12px">Updated Date</td>
-											<td class="attachment" style="font-size: 12px">&nbsp;</td>
-										</tr>
-									</thead>
-									<tfoot>
-										<tr>
-											<td />
-											<td style="padding-top: 10px">
-												<input type="submit" class="button" value="Deactivate" />
-											</td>
-											<td style="padding-top: 10px">
-												<input type="submit" class="button" value="Activate" onClick="$('coa').value='activate'" />
-											</td>
-											<td colspan="2" style="padding-top: 10px">
-												<input type="submit" class="button" value="Delete Confirm" onClick="$('coa').value='delete'" />
-											</td>
-										</tr>
-									</tfoot>
-									<tbody>
-									<?php
-										foreach($results as $result) {
-											$result["members"] = $db->GetOne("SELECT COUNT(*) AS members FROM  `course_group_audience` WHERE `cgroup_id` = ".$db->qstr($result["cgroup_id"]));
-
-
-												$url			= "";
-
-
-										if($ENTRADA_ACL->amIAllowed('course', 'update')) {
-											$url 	= ENTRADA_URL."/admin/courses/groups?section=edit&amp;action=rename&amp;gid=".$result["cgroup_id"]."&amp;id=".$COURSE_ID;
-
-
-													echo "<tr id=\"group-".$result["cgroup_id"]."\" class=\"event".((!$url) ? " np" : ((!$result["active"]) ? " na" : ""))."\">\n";
+												echo "<tr id=\"group-".$result["cgroup_id"]."\" class=\"event".((!$url) ? " np" : ((!$result["active"]) ? " na" : ""))."\">\n";
 												echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["cgroup_id"]."\" checked=\"checked\" /></td>\n";
 												echo "	<td class=\"community_title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Group Name: ".html_encode($result["group_name"])."\">" : "").html_encode($result["group_name"]).(($url) ? "</a>" : "")."</td>\n";
 												echo "	<td class=\"community_shortname".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Number of sembers: ".$result["members"]."\">" : "").$result["members"].(($url) ? "</a>" : "")."</td>\n";
-												echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Updated Date\">" : "").date("M jS Y", $result["updated_date"]).(($url) ? "</a>" : "")."</td>\n";
 												echo "	<td class=\"attachment\">".(($url) ? "<a href=\"".$url."\"><img src=\"".ENTRADA_URL."/images/action-edit.gif\" width=\"16\" height=\"16\" alt=\"Manage Group\" title=\"Manage Group\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
 												echo "</tr>\n";
 											}
-										}
-									?>
-									</tbody>
-								</table>
-							</form>
-							<?php
+										?>
+										</tbody>
+									</table>
+								</form>
+								<?php
+							} else {
+								application_log("error", "The confirmation of removal query returned no results... curious Database said: ".$db->ErrorMsg());
+								header("Location: ".ENTRADA_URL."/admin/courses/groups?id=".$COURSE_ID);
+								exit;
+							}
 						} else {
-							application_log("error", "The confirmation of removal query returned no results... curious Database said: ".$db->ErrorMsg());
-							header("Location: ".ENTRADA_URL."/admin/courses/groups?id=".$COURSE_ID);
-							exit;
+							echo display_error("Sorry, but your user account does not have permission to update this course. If this is in error please use the feedback system to contact the system administrator.");
 						}
 						break;
 			}

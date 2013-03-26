@@ -40,7 +40,7 @@ if (!defined("PARENT_INCLUDED")) {
 } else {
 	define("IN_USERS", true);
 ?>
-<link href="<?php echo ENTRADA_RELATIVE; ?>/css/jquery.multiselect.css" rel="stylesheet" type="text/css" media="all" />
+<link href="<?php echo ENTRADA_RELATIVE; ?>/css/jquery/jquery.multiselect.css" rel="stylesheet" type="text/css" media="all" />
 <script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery.multiselect.min.js"></script>
 <?php
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users", "title" => $MODULES[strtolower($MODULE)]["title"]);

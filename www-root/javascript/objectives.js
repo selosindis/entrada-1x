@@ -305,10 +305,10 @@ function buildDOM(children,id){
 						.attr('id','check_objective_'+children[i].objective_id)
 						.val(children[i].objective_id);
 			if(children[i].mapped && children[i].mapped != 0){
-				jQuery(check).attr('checked','checked');
+				jQuery(check).prop('checked',true);
 			}else if(children[i].child_mapped && children[i].child_mapped != 0){
-				jQuery(check).attr('checked','checked');
-				jQuery(check).attr('disabled',true);
+				jQuery(check).prop('checked',true);
+				jQuery(check).prop('disabled',true);
 			}	
 		}
 		description = 	jQuery(document.createElement('div'))

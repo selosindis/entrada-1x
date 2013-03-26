@@ -51,13 +51,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			$query_year = trim($_GET["year"]);
 		}
 		
-		$query	= "SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname` 
-		FROM `".AUTH_DATABASE."`.`user_data` 
-		LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `".AUTH_DATABASE."`.`user_access`.`user_id`=`".AUTH_DATABASE."`.`user_data`.`id` 
-		WHERE `".AUTH_DATABASE."`.`user_access`.`app_id`='".AUTH_APP_ID."' 
-		AND `role`=".$db->qstr(trim($query_year), get_magic_quotes_gpc())." 
-		AND `group`='student' 
-		ORDER BY `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname` ASC";
+		$query = "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`, d.`group_name`
+					FROM `".AUTH_DATABASE."`.`user_data` AS a
+					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+					ON b.`user_id` = a.`id`
+					AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+					JOIN `group_members` AS c
+					ON a.`id` = c.`proxy_id`
+					AND c.`member_active` = 1
+					JOIN `groups` AS d
+					ON c.`group_id` = d.`group_id`
+					AND d.`group_active` = 1
+					WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+					AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+					AND b.`group` = 'student'
+					AND d.`group_id` = ".$db->qstr($query_year)."
+					GROUP BY a.`id`
+					ORDER BY `fullname` ASC";
 		
 		$results	= $db->GetAll($query);
 		
@@ -66,7 +76,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			$total	= count($results);
 			$split	= (round($total / 2) + 1);
 			
-			echo "There are a total of <b>".$total."</b> student".(($total != "1") ? "s" : "")." in the class of <b>".checkslashes(trim($query_year))."</b>. Please choose a student you wish to work with by clicking on their name, or if you wish to add an event to multiple students simply check the checkbox beside their name and click the &quot;Add Mass Event&quot; button.";
+			echo "There are a total of <b>".$total."</b> student".(($total != "1") ? "s" : "")." in the <b>".checkslashes(trim($results[0]["group_name"]))."</b>. Please choose a student you wish to work with by clicking on their name, or if you wish to add an event to multiple students simply check the checkbox beside their name and click the &quot;Add Mass Event&quot; button.";
 	
 			echo "<form id=\"clerkship_form\" action=\"".ENTRADA_URL."/clerkship/electives?section=add_core\" method=\"post\">\n";
 			echo "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";

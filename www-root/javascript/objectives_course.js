@@ -59,14 +59,14 @@
 			if(key != -1){
 				mapped.splice(key,1);
 			}
-			jQuery('#check_objective_'+id).attr('checked','');
+			jQuery('#check_objective_'+id).prop('checked',false);
 			jQuery('#mapped_objective_'+id).remove();																		
 			jQuery("#"+importance+"_objectives_select option[value='"+id+"']").remove();
 			var children_exist = jQuery("#"+importance+"_objectives_select option").length;
 			var mapped_siblings = false;		
 			jQuery('#objective_'+id).siblings('li.objective-container').each(function(){
 				var oid = jQuery(this).attr('data-id');
-				if(jQuery('#check_objective_'+oid).attr('checked')){
+				if(jQuery('#check_objective_'+oid).prop('checked')){
 					mapped_siblings = true;
 				}
 			});
@@ -76,13 +76,13 @@
 				if(mapped_siblings == false){
 					jQuery('#objective_list_'+pid+' > li').each(function(){
 						var cid = jQuery(this).attr('data-id');
-						if(jQuery('#check_objective_'+cid).attr('checked')){
+						if(jQuery('#check_objective_'+cid).prop('checked')){
 							mapped_cousins = true;
 						}
 					});
 					if(mapped_cousins == false){
-						jQuery('#check_objective_'+pid).attr('checked','');				
-						jQuery('#check_objective_'+pid).attr('disabled',false);
+						jQuery('#check_objective_'+pid).prop('checked',false);				
+						jQuery('#check_objective_'+pid).prop('disabled',false);
 					}
 				}								
 			});	
@@ -100,7 +100,7 @@
 								.attr('class','display-notice')
 								.html('No <strong>'+importance+' objectives</strong> have been mapped to this course.');
 				jQuery('#mapped_'+importance+'_objectives').append(warning);				
-			}									
+			}							
 		});
 
 		jQuery('.checked-objective').live('change',function(){
@@ -271,24 +271,23 @@
 			jQuery('#'+list+'-toggle').removeClass('collapsed');
 			jQuery('#'+list+'-toggle').addClass('expanded');
 			var d = jQuery('#'+list+'-toggle').next();
-			console.log(d);
 			jQuery(d).slideDown();
 		}
 		jQuery('#mapped_'+list+'_objectives .display-notice').remove();
 		if(jQuery("#"+list_val+"_objectives_select option[value='"+id+"']").length == 0){
 		var option = jQuery(document.createElement('option'))
 						.val(id)
-						.attr('checked','checked')
+						.prop('checked',true)
 						.html(title);													
 			jQuery('#'+list_val+'_objectives_select').append(option);
 		}		
 		jQuery(option).attr('selected','selected');
-		jQuery('#check_objective_'+id).attr('checked','checked');
+		jQuery('#check_objective_'+id).prop('checked',true);
 
 		jQuery('#objective_'+id).parents('.objective-list').each(function(){
 			var id = jQuery(this).attr('data-id');
-			jQuery('#check_objective_'+id).attr('checked','checked');
-			jQuery('#check_objective_'+id).attr('disabled',true);
+			jQuery('#check_objective_'+id).prop('checked',true);
+			jQuery('#check_objective_'+id).prop('disabled',true);
 		});
 
 		mapped.push(id);								

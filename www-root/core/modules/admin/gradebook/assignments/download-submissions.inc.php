@@ -13,7 +13,7 @@
 if ((!defined("IN_GRADEBOOK"))) {
 	exit;
 } 
-if (!$RECORD_ID) {
+if (!isset($RECORD_ID) || !$RECORD_ID) {
 	if (isset($_GET["id"]) && $tmp = clean_input($_GET["id"], "int")) {
 		$RECORD_ID = $tmp;
 	}
@@ -44,7 +44,7 @@ if ($RECORD_ID) {
 			/**
 			 * Download the latest version.
 			 */
-			$query	= " SELECT a.*, CONCAT_WS('_',b.`firstname`,b.`lastname`) AS `username`, b.`number` FROM `assignment_file_versions` AS a
+			$query	= " SELECT a.*, CONCAT_WS('_',b.`firstname`,b.`lastname`) AS `username`, b.`number`, a.`afversion_id` FROM `assignment_file_versions` AS a
 						JOIN `".AUTH_DATABASE."`.`user_data` AS b 
 						ON a.`proxy_id` = b.`id` 
 						WHERE `afversion_id` IN(
@@ -55,36 +55,32 @@ if ($RECORD_ID) {
 							WHERE a.`assignment_id` = ".$db->qstr($RECORD_ID)." 
 							GROUP BY a.`afile_id`
 						)";
-			$result	= $db->GetAll($query);
+			$results = $db->GetAll($query);
 			$dir = FILE_STORAGE_PATH."/zips";
 			if ( !file_exists($dir) ) {
 			  mkdir ($dir, 0777);
 			}
-			$zip_file_name = str_replace('/','_',$assignment["course_code"])."_".str_replace(' ', '_', $assignment["assignment_title"]).'.zip';
+			$zip_file_name = str_replace('/','_',$assignment["course_code"])."_".str_replace(array(" ", "/"), '_', $assignment["assignment_title"]).'.zip';
 			$zipname = $dir."/".$zip_file_name;
-			if ($result) {
-
-				$zip = new ZipArchive();
-				$res = $zip->open($zipname,ZIPARCHIVE::OVERWRITE);
-				if ($res !== true) {
-					$ERROR++;
-					$ERRORSTR[] = "<strong>Unable to create the file archive.</strong><br /><br />The archive of files was not created. Please try again later.";
-				} else {
-						foreach ($result as $file){
-							$submission_file = FILE_STORAGE_PATH."/A".$file["afversion_id"];
-							if ( (@file_exists($submission_file)) && (@is_readable($submission_file))) {
-								$zip->addFile($submission_file,$file["number"]."_".$file["username"]."_".$file["file_filename"]);	
-							}							
-						}
-
-						$file_version = array();
-						$file_version["afversion_id"] = $result["afversion_id"];
-						$file_version["file_mimetype"] = "application/zip";
-						$file_version["file_filename"] = $zipname;
-						$zip->close();
-				}
+			if ($results) {
+                $zip = new ZipArchive();
+                $res = $zip->open($zipname,ZIPARCHIVE::OVERWRITE);
+                if ($res !== true) {
+                    $ERROR++;
+                    $ERRORSTR[] = "<strong>Unable to create the file archive.</strong><br /><br />The archive of files was not created. Please try again later.";
+                } else {
+                        foreach ($results as $file){
+                            $submission_file = FILE_STORAGE_PATH."/A".$file["afversion_id"];
+                            if ((@file_exists($submission_file)) && (@is_readable($submission_file))) {
+                                $zip->addFile($submission_file, $file["number"]."_".$file["username"]."_".$file["file_filename"]);	
+                            }							
+                        }
+                        $file_version = array();
+                        $file_version["file_mimetype"] = "application/zip";
+                        $file_version["file_filename"] = $zipname;
+                        $zip->close();
+                }
 			}
-
 			if (($file_version) && (is_array($file_version))) {
 				$download_file = $zipname;
 				if ((@file_exists($download_file)) && (@is_readable($download_file))) {
@@ -98,38 +94,22 @@ if ($RECORD_ID) {
 					 * Determine method that the file should be accessed (downloaded or viewed)
 					 * and send the proper headers to the client.
 					 */
-					switch($file_record["access_method"]) {
-						case 1 :
-							header("Pragma: public");
-							header("Expires: 0");
-							header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-							header("Content-Type: ".$file_version["file_mimetype"]);
-							header("Content-Disposition: inline; filename=\"".$zip_file_name."\"");
-							header("Content-Length: ".@filesize($download_file));
-							header("Content-Transfer-Encoding: binary\n");
-						break;
-						case 0 :
-						default :
-							header("Pragma: public");
-							header("Expires: 0");
-							header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-							header("Content-Type: application/force-download");
-							header("Content-Type: application/octet-stream");
-							header("Content-Type: ".$file_version["file_mimetype"]);
-							header("Content-Disposition: attachment; filename=\"".$zip_file_name."\"");
-							header("Content-Length: ".@filesize($download_file));
-							header("Content-Transfer-Encoding: binary\n");
-						break;
-					}
-					add_statistic("assignment:".$RECORD_ID, "file_zip_download", "assignment_id", $RECORD_ID);
+                    header("Pragma: public");
+                    header("Expires: 0");
+                    header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+                    header("Content-Type: ".$file_version["file_mimetype"]);
+                    header("Content-Disposition: inline; filename=\"".$zip_file_name."\"");
+                    header("Content-Length: ".@filesize($download_file));
+                    header("Content-Transfer-Encoding: binary\n");
 					echo @file_get_contents($download_file, FILE_BINARY);
+                    statistic("assignment:".$RECORD_ID, "file_zip_download", "assignment_id", $RECORD_ID);
 					exit;
 				}
 
 			}
 			if ((!$ERROR) && (!$NOTICE)) {
 				$ERROR++;
-				$ERRORSTR[] = "<strong>Unable to download the selected file.</strong><br /><br />The file you have selected cannot be downloaded at this time, ".(($LOGGED_IN) ? "please try again later." : "Please log in to continue.");
+				$ERRORSTR[] = "<strong>Unable to download the selected file.</strong><br /><br />The file you have selected cannot be downloaded at this time, ".((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"]) ? "please try again later." : "Please log in to continue.");
 			}
 
 			if ($NOTICE) {

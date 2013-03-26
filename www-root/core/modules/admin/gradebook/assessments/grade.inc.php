@@ -59,11 +59,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => "Grading Assessment");
 
-			$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`, `assessment_marking_schemes`.`description` as `marking_scheme_description`, `assessments_lu_meta`.`type` as `assessment_type`
-						FROM `assessments`
-						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-						LEFT JOIN `assessments_lu_meta` ON `assessments_lu_meta`.`id` = `assessments`.`characteristic_id`
-						WHERE `assessments`.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+			$query = "	SELECT a.*, b.`id` as `marking_scheme_id`, b.`handler`, b.`description` as `marking_scheme_description`, c.`type` as `assessment_type`
+						FROM `assessments` AS a
+						LEFT JOIN `assessment_marking_schemes` AS b
+                        ON b.`id` = a.`marking_scheme_id`
+						LEFT JOIN `assessments_lu_meta` AS c
+                        ON c.`id` = a.`characteristic_id`
+						WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
 			$assessment = $db->GetRow($query);
 			if ($assessment) {
 				$COHORT = $assessment["cohort"];
@@ -104,7 +106,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				</div>
 				<div style="clear: both;"></div>
 				<?php
-				$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, g.`grade_id` AS `grade_id`, g.`value` AS `grade_value`, h.`grade_weighting`
+				$query = "SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`
 							FROM `".AUTH_DATABASE."`.`user_data` AS b
 							JOIN `".AUTH_DATABASE."`.`user_access` AS c
 							ON c.`user_id` = b.`id` 
@@ -112,21 +114,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							AND c.`account_active` = 'true'
 							AND (c.`access_starts` = '0' OR c.`access_starts`<=".$db->qstr(time()).")
 							AND (c.`access_expires` = '0' OR c.`access_expires`>=".$db->qstr(time()).")
-							LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g 
-							ON b.`id` = g.`proxy_id` 
-							AND g.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."
-							LEFT JOIN `assessment_exceptions` AS h
-							ON b.`id` = h.`proxy_id`
-							AND g.`assessment_id` = h.`assessment_id`
-							JOIN `group_members` AS i
-							ON b.`id` = i.`proxy_id`
+							JOIN `group_members` AS c
+							ON b.`id` = c.`proxy_id`
 							WHERE c.`group` = 'student'
-							AND i.`group_id` = ".$db->qstr($COHORT)."
-							AND i.`member_active` = '1' 
+							AND c.`group_id` = ".$db->qstr($COHORT)."
+							AND c.`member_active` = '1' 
 							ORDER BY b.`lastname` ASC, b.`firstname` ASC";
 				$students = $db->GetAll($query);
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
-				if ($students && count($students) >= 1): ?>
+				if ($students && count($students) >= 1) { 
+                    ?>
 					<span id="assessment_name" style="display: none;"><?php echo $assessment["name"]; ?></span>
 					<div id="gradebook_grades">
 						<h2>Grades</h2>
@@ -136,7 +133,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<table style="width: 440px" class="gradebook single <?php echo $editable; ?>">
 							<tbody>
 								<?php
-								foreach ($students as $key => $student) {
+								foreach ($students as $key => &$student) {
+                                    $query = "SELECT a.`grade_id`, a.`value` AS `grade_value`, b.`grade_weighting` FROM `assessment_grades` AS a 
+                                                LEFT JOIN `assessment_exceptions` AS b
+                                                ON b.`proxy_id` = a.`proxy_id`
+                                                AND b.`assessment_id` = a.`assessment_id`
+                                                WHERE a.`proxy_id` = ".$db->qstr($student["proxy_id"])."
+                                                AND a.`assessment_id` = ".$db->qstr($assessment["assessment_id"]);
+                                    $grade = $db->GetRow($query);
+                                    if ($grade) {
+                                        $student["grade_id"] = $grade["grade_id"];
+                                        $student["grade_value"] = $grade["grade_value"];
+                                        $student["grade_weighting"] = $grade["grade_weighting"];
+                                    } else {
+                                        $student["grade_id"] = NULL;
+                                        $student["grade_value"] = NULL;
+                                        $student["grade_weighting"] = NULL;
+                                    }
+                                    
 									if (isset($student["grade_id"])) {
 										$grade_id = $student["grade_id"];
 									} else {
@@ -249,7 +263,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 								$grade_values = array();
 								foreach ($students as $key => $student) {
-									if ($student["grade_value"] == "") {
+									if (!isset($student["grade_value"]) || !$student["grade_value"]) {
 										//$grades[11]++;
 										$unentered++;
 									} else {
@@ -485,11 +499,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							</ol>
 						</div>
 					</div>
-				<?php
-				else:
-				?>
-				<div class="display-notice">There are no students in the system for this assessment's Cohort: <strong><?php echo groups_get_name($COHORT); ?></strong>.</div>
-				<?php endif;
+                    <?php
+                } else {
+                    ?>
+                    <div class="display-notice">There are no students in the system for this assessment's Cohort: <strong><?php echo groups_get_name($COHORT); ?></strong>.</div>
+                    <?php
+                }
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "In order to edit an assessment's grades you must provide a valid assessment identifier.";

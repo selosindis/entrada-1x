@@ -172,32 +172,86 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$page_current = 1;
 			}
 
+			/**
+			 * Check if cohort variable is set, otherwise a default is used.
+			 */
+			if (isset($_GET["cohort"]) && ((int)$_GET["cohort"])) {
+				$selected_cohort = (int) $_GET["cohort"];
+			} elseif ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"]) {
+                $selected_cohort = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"];
+            }
+
 			if ($total_pages > 1) {
-				$pagination = new Pagination($page_current, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $total_rows, ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), replace_query());
+				$pagination = new Pagination($page_current, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $total_rows, ENTRADA_URL."/admin/".$MODULE, replace_query());
 			}
 
 			$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $page_current) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 
             courses_subnavigation($course_details,"gradebook");
-
 			$curriculum_path = curriculum_hierarchy($COURSE_ID);
 			if ((is_array($curriculum_path)) && (count($curriculum_path))) {
-				echo "<h1>" . implode(": ", $curriculum_path) . " Gradebook </h1>";
+                echo "  <div class=\"row-fluid\">";
+                echo "      <div class=\"span12\">";
+				echo "          <h1>" . implode(": ", $curriculum_path) . " Gradebook </h1>";
+                echo "      </div>";
+                echo "  </div>";
 			}
 
-			if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) { ?>
-				<div class="pull-right">
-					<a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="btn btn-primary">Add New Assessment</a>
-				</div>
-				<h2>Assessments</h2>
-				<div style="clear: both"></div>
-                <?php
-			}
+            echo "  <br />\n";
 
-			$query =  "SELECT DISTINCT `assessments`.`course_id`, `assessments`.`cohort` FROM `assessments`
-					   WHERE `course_id` =". $db->qstr($COURSE_ID)."
-					   ORDER BY `cohort`";
+            echo "<div class=\"row-fluid\">\n";
+			$query =  "SELECT a.`course_id`, b.`group_name`, b.`group_id` 
+                        FROM `assessments` AS a
+                        JOIN `groups` AS b
+                        ON a.`cohort` = b.`group_id`
+                        JOIN `group_organisations` AS c
+                        ON b.`group_id` = c.`group_id`
+                        WHERE a.`course_id` =". $db->qstr($COURSE_ID)."
+                        AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+                        GROUP BY b.`group_id`
+                        ORDER BY b.`group_name`";
 			$cohorts = $db->GetAll($query);
+            
+            if ($cohorts) {
+                $output_cohort = false;
+                $cohort_found = false;
+                foreach ($cohorts as $key => $cohort) {
+                    if (!$cohort_found) {
+                        $output_cohort = $cohort;
+                        if (isset($selected_cohort) && $selected_cohort && $selected_cohort == $cohort["group_id"]) {
+                            $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"] = $selected_cohort;
+                            $cohort_found = true;
+                        }
+                        if ($key == (count($cohorts) - 1) && !$cohort_found) {
+                            $selected_cohort = $cohort["group_id"];
+                        }
+                    }
+                }
+                echo "  <div class=\"span7\">";
+				echo "      <h2>" . $output_cohort["group_name"] . "</h2>";
+                echo "  </div>";
+                echo "  <form class=\"span5 form-horizontal\" style=\"float:right;margin-bottom:0;\">";
+				echo "      <div class=\"control-group\">";
+                echo "          <label for=\"cohort-quick-select\" class=\"control-label content-small\">Cohort Quick Select:</label>\n";
+                echo "          <div class=\"controls\">";
+				echo "              <select id=\"cohort-quick-select\" name=\"cohort-quick-select\" style=\"width: 200px\" onchange=\"window.location='".ENTRADA_URL."/admin/gradebook?section=view&id=".$COURSE_ID."&cohort='+this.options[this.selectedIndex].value\">\n";
+                foreach ($cohorts as $key => $cohort) {
+                    echo "                  <option value=\"".$cohort["group_id"]."\"".(($cohort["group_id"] == $selected_cohort) ? " selected=\"selected\"" : "").">".$cohort["group_name"]."</option>\n";
+                }
+                echo "              </select>\n";
+                echo "          </div>\n";
+                echo "      </div>\n";
+                echo "  </form>\n";
+            }
+            echo "  </div>\n";
+            if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) { 
+                ?>
+                <div class="pull-right">
+                    <a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="btn btn-primary">Add New Assessment</a>
+                </div>
+                <div style="clear: both"></div>
+                <?php
+            }
 			if($cohorts) {
 				if ($total_pages > 1) {
 					echo "<div id=\"pagination-links\">\n";
@@ -208,109 +262,130 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					echo "<form action=\"".ENTRADA_URL . "/admin/gradebook/assessments?".replace_query(array("section" => "delete", "step"=>1))."\" method=\"post\">";
 				}
 				?>
+                <script type="text/javascript">
+                    jQuery(document).ready(function(){
+                        jQuery('.edit_grade').live('click',function(e){
+                            var id = e.target.id.substring(5);
+                            jQuery('#'+id).trigger('click');
+                        });
+
+                        var reordering = false;
+                        var orderChanged = false;
+
+                        jQuery('#reorder').click(function(){
+                            jQuery('.ordermsg').remove();
+                            if (reordering == false) {
+                                jQuery('#saveorder').show();
+                                jQuery('#delete, #export').hide();
+
+                                jQuery('#assessment_list tbody tr td.modified .delete').hide();
+                                jQuery('#assessment_list tbody tr td.modified').append('<span class="handle"></span>');
+                                jQuery('#assessment_list tbody').sortable({
+                                    items: '.assessment',
+                                    containment: 'parent',
+                                    handle: '.handle',
+                                    change: function(event,ui){
+                                        orderChanged = true;
+                                    }
+                                });
+                                reordering = true;
+                                jQuery('#reorder').attr('value', 'Cancel Reorder');
+                                jQuery('.display-success, .display-error').fadeOut(500,function(){
+                                    $(this).remove();
+                                });
+                            } else {
+                                jQuery('#saveorder').hide();
+                                jQuery('#assessment_list tbody tr td.modified .handle').remove();
+                                jQuery('#assessment_list tbody tr td.modified .delete').show();
+                                jQuery('#reorder').attr('value', 'Reorder');
+                                reordering = false;
+                                jQuery('#delete, #export').show();
+                                if (orderChanged == true) {
+                                    // if you try to cancel the sortable and the order hasn't changed javascript breaks.
+                                    jQuery('#assessment_list tbody').sortable('cancel').sortable('destroy');
+                                } else {
+                                    jQuery('#assessment_list tbody').sortable('destroy');
+                                }
+                            }
+                            return false;
+                        });
+
+                        jQuery('#saveorder').click(function(){
+                            jQuery('.ordermsg').remove();
+
+                            // assign order to assessment
+                            jQuery('#assessment_list tbody tr td.modified .order').each(function(){
+                                jQuery(this).attr('value',jQuery(this).parent().parent().index()-1);
+                            });
+
+                            // serialize the form data to pass to the ajax updater
+                            var formData = jQuery('#assessment_list').parent().serialize();
+
+                            var ajaxParams = 'mode=ajax&'+formData;
+                            var ajaxURL = '<?php echo ENTRADA_RELATIVE; ?>/admin/gradebook?section=view&id=<?php echo $COURSE_ID; ?>';
+
+                            jQuery.ajax({
+                                data: ajaxParams,
+                                url: ajaxURL,
+                                type: 'POST',
+                                success: function(data) {
+                                    if (data == 1) {
+                                        jQuery('#assessment_list').parent().append('<div class=\'display-success\'><ul><li>These assessment order have been reordered.</li></ul></div>');
+                                    } else {
+                                        jQuery('#assessment_list').parent().append('<div class=\'display-error\'><ul><li>An error occurred while reordering these assessments.</li></ul></div>');
+                                    }
+                                }
+                            });
+
+                            reordering = false;
+
+                            jQuery(this).hide();
+                            jQuery('#assessment_list tbody tr td .handle').remove();
+                            jQuery('#assessment_list tbody tr td.modified .delete').show();
+                            jQuery('#reorder').attr('value', 'Reorder');
+                            jQuery('#assessment_list tbody').sortable('destroy');
+                            jQuery('#delete, #export').show();
+                        });
+                    });
+
+                    function exportSelected() {
+                        var ids = [];
+                        $$('#assessment_list .modified input:checked').each(function(checkbox) {
+                            ids.push($F(checkbox));
+                        });
+                        if(ids.length > 0) {
+                            window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
+                        } else {
+                            alert("You must select some assessments to export.");
+                        }
+                        return false;
+                    }
+
+                    jQuery(document).ready(function(){
+                        jQuery('.edit_grade').live('click',function(e){
+                            var id = e.target.id.substring(5);
+                            jQuery('#'+id).trigger('click');
+                        });
+                    });
+
+                    function exportSelected() {
+                        var ids = [];
+                        $$('#assessment_list .modified input:checked').each(function(checkbox) {
+                            ids.push($F(checkbox));
+                        });
+                        if(ids.length > 0) {
+                            window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
+                        } else {
+                            alert("You must select some assessments to export.");
+                        }
+                        return false;
+                    }
+                </script>
+                <br />
 				<table class="tableList" cellspacing="0" summary="List of Assessments" id="assessment_list">
 					<tfoot>
 						<tr>
 							<td style="padding-top: 10px; border-bottom:0;"colspan="3">
-								<script type="text/javascript">
-									jQuery(document).ready(function(){
-										jQuery('.edit_grade').live('click',function(e){
-											var id = e.target.id.substring(5);
-											jQuery('#'+id).trigger('click');
-										});
-
-										var reordering = false;
-										var orderChanged = false;
-
-										jQuery('#reorder').click(function(){
-											jQuery('.ordermsg').remove();
-											if (reordering == false) {
-												jQuery('#saveorder').show();
-												jQuery('#delete, #export').hide();
-
-												jQuery('#assessment_list tbody tr td.modified .delete').hide();
-												jQuery('#assessment_list tbody tr td.modified').append('<span class="handle"></span>');
-												jQuery('#assessment_list tbody').sortable({
-													items: '.assessment',
-													containment: 'parent',
-													handle: '.handle',
-													change: function(event,ui){
-														orderChanged = true;
-													}
-												});
-												reordering = true;
-												jQuery('#reorder').attr('value', 'Cancel Reorder');
-												jQuery('.display-success, .display-error').fadeOut(500,function(){
-													$(this).remove();
-												});
-											} else {
-												jQuery('#saveorder').hide();
-												jQuery('#assessment_list tbody tr td.modified .handle').remove();
-												jQuery('#assessment_list tbody tr td.modified .delete').show();
-												jQuery('#reorder').attr('value', 'Reorder');
-												reordering = false;
-												jQuery('#delete, #export').show();
-												if (orderChanged == true) {
-													// if you try to cancel the sortable and the order hasn't changed javascript breaks.
-													jQuery('#assessment_list tbody').sortable('cancel').sortable('destroy');
-												} else {
-													jQuery('#assessment_list tbody').sortable('destroy');
-												}
-											}
-											return false;
-										});
-
-										jQuery('#saveorder').click(function(){
-											jQuery('.ordermsg').remove();
-
-											// assign order to assessment
-											jQuery('#assessment_list tbody tr td.modified .order').each(function(){
-												jQuery(this).attr('value',jQuery(this).parent().parent().index()-1);
-											});
-
-											// serialize the form data to pass to the ajax updater
-											var formData = jQuery('#assessment_list').parent().serialize();
-
-											var ajaxParams = 'mode=ajax&'+formData;
-											var ajaxURL = '<?php echo ENTRADA_RELATIVE; ?>/admin/gradebook?section=view&id=<?php echo $COURSE_ID; ?>';
-
-											jQuery.ajax({
-												data: ajaxParams,
-												url: ajaxURL,
-												type: 'POST',
-												success: function(data) {
-													if (data == 1) {
-														jQuery('#assessment_list').parent().append('<div class=\'display-success\'><ul><li>These assessment order have been reordered.</li></ul></div>');
-													} else {
-														jQuery('#assessment_list').parent().append('<div class=\'display-error\'><ul><li>An error occurred while reordering these assessments.</li></ul></div>');
-													}
-												}
-											});
-
-											reordering = false;
-
-											jQuery(this).hide();
-											jQuery('#assessment_list tbody tr td .handle').remove();
-											jQuery('#assessment_list tbody tr td.modified .delete').show();
-											jQuery('#reorder').attr('value', 'Reorder');
-											jQuery('#assessment_list tbody').sortable('destroy');
-											jQuery('#delete, #export').show();
-										});
-									});
-
-									function exportSelected() {
-										var ids = [];
-										$$('#assessment_list .modified input:checked').each(function(checkbox) {
-											ids.push($F(checkbox));
-										});
-										if(ids.length > 0) {
-											window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
-										} else {
-											alert("You must select some assessments to export.");
-										}
-										return false;
-									}
-								</script>
 								<input type="submit" class="button" id="delete" value="Delete Selected" />
 								<input type="submit" class="button" id="export" value="Export Selected" onclick="exportSelected(); return false;"/>
 								<input type="button" class="button" id="reorder" value="Reorder" />
@@ -323,20 +398,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						</tr>
 					</tfoot>
 					<tbody>
-
 					<?php
 					if ($cohorts) {
-						foreach ($cohorts as $cohort) {
+                        if ($output_cohort) {
 							echo "<tr>";
 							echo "<td style=\"width: 20px;\"></td>";
-							echo "<td style=\"width: 400px;\"><h2 style=\"border-bottom: 0;\">".groups_get_name($cohort["cohort"])."</h2></td>";
-							echo "<td colspan=\"2\"><h2 style=\"border-bottom: 0;\">Grade Weighting</h2></td>";
+							echo "<td style=\"width: 350px;\"><h3 style=\"border-bottom: 0;\">Assessment</h3></td>";
+							echo "<td><h3 style=\"border-bottom: 0;\">Grade Weighting</h3></td>";
+							echo "<td><h3 style=\"border-bottom: 0;\">Assignment</h3></td>";
 							echo "</tr>";
 
 							$query = "	SELECT `course_id`, `assessment_id`, `name`, `grade_weighting`, `order`
 										FROM `assessments`
-										WHERE `cohort` =" . $db->qstr($cohort["cohort"])."
-										AND `course_id` =". $db->qstr($COURSE_ID)."
+										WHERE `cohort` = " . $db->qstr($output_cohort["group_id"])."
+										AND `course_id` = ". $db->qstr($COURSE_ID)."
 										ORDER BY `order` ASC";
 
 							$results = $db->GetAll($query);
@@ -344,6 +419,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								$total_grade_weight = 0;
 
 								foreach ($results as $result) {
+                                    
 									$total_grade_weight += $result["grade_weighting"];
 
 									$url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&amp;id=".$COURSE_ID."&amp;assessment_id=".$result["assessment_id"];
@@ -354,7 +430,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										echo "	<td class=\"modified\" width=\"20\"><input type=\"hidden\" name=\"order[".$result["assessment_id"]."][]\" value=\"sortorder\" class=\"order\" /><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
 									}
 									echo "<td><a href=\"$url\" width=\"367\">".$result["name"]."</a></td>";
-									echo "<td colspan=\"2\"><a href=\"$url\">".$result["grade_weighting"]. "%</a></td>";
+									echo "<td><a href=\"$url\">".$result["grade_weighting"]. "%</a></td>";
+                                    $query =  "SELECT `course_id`, `assignment_id`, `assignment_title` FROM `assignments`
+                                                WHERE `assessment_id` = ".$db->qstr($result["assessment_id"])."
+                                                AND `assignment_active` = 1";
+
+                                    $assignment = $db->GetRow($query);
+                                    if ($assignment) {
+                                        $url = ENTRADA_URL."/admin/gradebook/assignments?section=grade&amp;id=".$COURSE_ID."&amp;assignment_id=".$assignment["assignment_id"];
+                                        echo "<td id=\"assignment-".$assignment["assignment_id"]."\">";
+                                        echo "<a href=\"".$url."\">".$assignment["assignment_title"]."</a>";
+                                        echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=download-submissions&id=".$assignment["assignment_id"]."\"><img src=\"".ENTRADA_URL."/images/btn_save.gif\" title=\"Download All Submissions\" alt=\"Download All Submissions\" width=\"15\"/></a>";
+                                        echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=delete&id=".$COURSE_ID."&delete=".$assignment["assignment_id"]."\"><img src=\"".ENTRADA_URL."/images/btn-delete.gif\" title=\"Delete Assignment\" alt=\"Delete Assignment\" width=\"15\"/></a>";
+                                        echo "</td>";
+                                    } else {
+                                        echo "<td>\n";
+                                        echo "<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=add&id=".$COURSE_ID."&assessment_id=".$result["assessment_id"]."\"><img src=\"".ENTRADA_URL."/images/add.png\" title=\"Add Assignment\" alt=\"Add Assignment\" width=\"15\"/> Add New Assignment</a>";
+                                        echo "</td>\n";
+                                    }
 									echo "</tr>";
 								}
 								echo "<tr>";
@@ -381,112 +474,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				</div>
 				<?php
 			}
-
-			//Assignment
-			if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) {
-				?>
-				<div class="pull-right">
-					<a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="btn btn-primary">Add New Assignment</a>
-				</div>
-				<h2>Assignment Drop Boxes</h2>
-				<div style="clear: both"></div>
-				<?php
-			}
-
-			$query =  "SELECT DISTINCT `assignments`.`course_id` FROM `assignments`
-					   WHERE `course_id` =". $db->qstr($COURSE_ID)."
-					   ORDER BY `course_id`";
-			$cohorts = $db->GetAll($query);
-			if($cohorts) {
-				if ($total_pages > 1) {
-					echo "<div id=\"pagination-links\">\n";
-					echo "Pages: ".$pagination->GetPageLinks();
-					echo "</div>\n";
-				}
-				if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
-					echo "<form action=\"".ENTRADA_URL . "/admin/gradebook/assignments?".replace_query(array("section" => "delete", "step"=>1))."\" method=\"post\">";
-				}
-				?>
-
-				<table class="tableList" cellspacing="0" summary="List of Assignments" id="assignment_list">
-					<tfoot>
-						<tr>
-							<td style="padding-top: 10px; border-bottom:0;"colspan="2">
-								<script type="text/javascript" charset="utf-8">
-
-									jQuery(document).ready(function(){
-										jQuery('.edit_grade').live('click',function(e){
-											var id = e.target.id.substring(5);
-											jQuery('#'+id).trigger('click');
-										});
-									});
-
-									function exportSelected() {
-										var ids = [];
-										$$('#assessment_list .modified input:checked').each(function(checkbox) {
-											ids.push($F(checkbox));
-										});
-										if(ids.length > 0) {
-											window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
-										} else {
-											alert("You must select some assessments to export.");
-										}
-										return false;
-									}
-								</script>
-								<input type="submit" class="button" value="Delete Selected" />
-								<input type="submit" class="button" value="Export Selected" onclick="exportSelected(); return false;"/>
-							</td>
-							<td colspan="2" style="padding-top: 10px; border-bottom: 0; "><a id="fullscreen-edit" class="button" style="float:right;" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Fullscreen</div></a></td>
-						</tr>
-						<tr>
-							<td style="border-bottom:0;"></td>
-						</tr>
-					</tfoot>
-					<tbody>
-
-					<?php
-					if ($cohorts) {
-						foreach ($cohorts as $cohort) {
-							$query =  "SELECT `assignments`.`course_id`, `assignments`.`assignment_id`, `assignments`.`assignment_title` FROM `assignments`
-									   WHERE `course_id` =". $db->qstr($COURSE_ID);
-
-							$results = $db->GetAll($query);
-							if ($results) {
-								foreach ($results as $result) {
-									$url = ENTRADA_URL."/admin/gradebook/assignments?section=grade&amp;id=".$COURSE_ID."&amp;assignment_id=".$result["assignment_id"];
-									echo "<tr id=\"assignment-".$result["assignment_id"]."\">";
-									if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
-										echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".$result["assignment_id"]."\" /></td>\n";
-									} else {
-										echo "	<td class=\"modified\" width=\"20\"><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
-									}
-									echo "<td colspan=\"3\"><a href=\"$url\">".$result["assignment_title"]."</a></td>";
-									//echo "<td colspan=\"2\"><a href=\"$url\">".$result["grade_weighting"]. "%</a></td>";
-									echo "</tr>";
-								}
-							}
-						}
-					}
-					?>
-					</tbody>
-				</table>
-				<div class="gradebook_edit" style="display: none;"></div>
-				<?php
-				if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
-					echo "</form>";
-				}
-			} else {
-				// No assignments in this course.
-				?>
-				<div class="display-generic">
-					<h3>No Assignments for <?php echo $course_details["course_name"]; ?></h3>
-					There are currently no assignment drop boxes for this course. You can create new ones by clicking the <strong>Add New Assignment Drop Box</strong> link above.
-				</div>
-				<?php
-			}
-
-			//end Assignment
 		} else {
 			$ERROR++;
 			$ERRORSTR[] = "In order to edit a course you must provide a valid course identifier. The provided ID does not exist in this system.";

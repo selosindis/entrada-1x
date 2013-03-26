@@ -38,7 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 
-	if(isset($_GET["assignment_id"]) && $tmp_id = clean_input($_GET["assignment_id"],"int")){
+	if(isset($_GET["assignment_id"]) && $tmp_id = clean_input($_GET["assignment_id"], array("trim", "int"))){
 		$ASSIGNMENT_ID = $tmp_id;
 		$query = "SELECT * FROM `assignment_contacts` WHERE `assignment_id` = ".$db->qstr($ASSIGNMENT_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 		$IS_CONTACT = $db->GetRow($query);
@@ -50,7 +50,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						WHERE b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID);
 			$course_details = $db->GetRow($query);
 			if($course_details){
-				if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]),"update",false)){
+				if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update",false)){
 					$IS_CONTACT = true;
 				}
 			}
@@ -85,227 +85,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						case 2 :
 							if(isset($_POST["assignment_title"]) && $tmp_title = clean_input($_POST["assignment_title"],array("trim","notags"))){
 								$PROCESSED["assignment_title"] = $tmp_title;
-							}else{
+							} else {
 								$ERROR++;
 								$ERRORSTR[] = "Assignment Title is a required Field.";
 							}
 
 							if(isset($_POST["assignment_description"]) && $tmp_desc = clean_input($_POST["assignment_description"],array("trim","notags"))){
 								$PROCESSED["assignment_description"] = $tmp_desc;
-							}else{
+							} else {
 								$PROCESSED["assignment_description"] = "";
 							}
 
 							if(isset($_POST["assignment_uploads"]) && $tmp_uploads = clean_input($_POST["assignment_uploads"],array("trim","notags"))){
 								$PROCESSED["assignment_uploads"] = $tmp_uploads == "allow"?0:1;
-							}else{
+							} else {
 								$PROCESSED["assignment_uploads"] = 1;
 							}
-
-							if(isset($_POST["assessment_id"]) && $tmp_ass = clean_input($_POST["assessment_id"],array("trim","notags"))){
-								$PROCESSED["assessment_id"] = $tmp_ass;
-							}else{
-								$PROCESSED["assessment_id"] = 0;
-							}
-
-							if($PROCESSED["assessment_id"] === "N"){
-								if (isset($_POST["associated_audience"]) && $_POST["associated_audience"] == "manual_select") {
-
-									if((isset($_POST["cohort"])) && ($cohort = clean_input($_POST["cohort"], "credentials"))) {
-										$PROCESSED["cohort"] = $cohort;
-									} else {
-										$ERROR++;
-										$ERRORSTR[] = "You must select an <strong>Audience</strong> for this assessment.";
-									}
-								} elseif($group_id = (int)$_POST["associated_audience"]) {
-									$PROCESSED["cohort"] = $group_id;
-								} else {
-										$ERROR++;
-										$ERRORSTR[] = "You must select an <strong>Audience</strong> for this assessment.";
-								}
-
-								if ((isset($_POST["name"])) && ($name = clean_input($_POST["name"], array("notags", "trim")))) {
-									$PROCESSED["name"] = $name;
-								} else {
-									$ERROR++;
-									$ERRORSTR[] = "You must supply a valid <strong>Name</strong> for this assessment.";
-								}
-
-								if ((isset($_POST["grade_weighting"])) && ($_POST["grade_weighting"] !== NULL)) {
-									$PROCESSED["grade_weighting"] = clean_input($_POST["grade_weighting"], "float");
-								} else {
-									$ERROR++;
-									$ERRORSTR[] = "You must supply a <strong>Grade Weighting</strong> for this assessment.";
-								}
-								if ((isset($_POST["description"])) && ($description = clean_input($_POST["description"], array("notags", "trim")))) {
-									$PROCESSED["description"] = $description;
-								} else {
-									$PROCESSED["description"] = "";
-								}
-								if ((isset($_POST["type"])) && ($type = clean_input($_POST["type"], array("trim")))) {
-									if ((@in_array($type, $ASSESSMENT_TYPES))) {
-										$PROCESSED["type"] = $type;
-									} else {
-										$ERROR++;
-										$ERRORSTR[] = "You must supply a valid <strong>Type</strong> for this assessment. The submitted type is invalid.";
-									}
-								} else {
-									$ERROR++;
-									$ERRORSTR[] = "You must pick a valid <strong>Type</strong> for this assessment.";
-								}
-
-								if ((isset($_POST["marking_scheme_id"])) && ($marking_scheme_id = clean_input($_POST["marking_scheme_id"], array("int")))) {
-									if (@in_array($marking_scheme_id, $MARKING_SCHEME_IDS)) {
-										$PROCESSED["marking_scheme_id"] = $marking_scheme_id;
-									} else {
-										$ERROR++;
-										$ERRORSTR[] = "The <strong>Marking Scheme</strong> you selected does not exist or is not enabled.";
-									}
-								} else {
-									$ERROR++;
-									$ERRORSTR[] = "The <strong>Marking Scheme</strong> field is a required field.";
-								}
-								//Show in learner gradebook check
-								if ((isset($_POST["show_learner_option"]))) {
-									switch ($show_learner_option = clean_input($_POST["show_learner_option"], array("trim", "int"))) {
-										case 0 :
-											$PROCESSED["show_learner"] = $show_learner_option;
-											$PROCESSED["release_date"] = 0;
-											$PROCESSED["release_until"] = 0;
-										break;
-										case 1 :
-											$PROCESSED["show_learner"] = $show_learner_option;
-											$release_dates = validate_calendars("show", false, false);
-											if ((isset($release_dates["start"])) && ((int) $release_dates["start"])) {
-												$PROCESSED["release_date"]	= (int) $release_dates["start"];
-											} else {
-												$PROCESSED["release_date"]	= 0;
-											}
-											if ((isset($release_dates["finish"])) && ((int) $release_dates["finish"])) {
-												$PROCESSED["release_until"]	= (int) $release_dates["finish"];
-											} else {
-												$PROCESSED["release_until"]	= 0;
-											}
-										break;
-										default :
-											$PROCESSED["show_learner"] = 0;
-										break;
-									}
-								}
-								//narrative check
-								if ((isset($_POST["narrative_assessment"])) && ($narrative = clean_input($_POST["narrative_assessment"], array("trim", "int")))) {
-									$PROCESSED["narrative"] = $narrative;
-								} else {
-									$PROCESSED["narrative"] = 0;
-								}
-								//optional/required check
-								if ((isset($_POST["assessment_required"]))) {
-									switch (clean_input($_POST["assessment_required"], array("trim", "int"))) {
-										case 0 :
-											$PROCESSED["required"] = 0;
-											break;
-										case 1 :
-											$PROCESSED["required"] = 1;
-											break;
-										default :
-											break;
-									}
-								}
-								//characteristic check
-								if ((isset($_POST["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_POST["assessment_characteristic"], array("trim", "int"))) == 0) {
-									$ERROR++;
-									$ERRORSTR[] = "The <strong>Assessment Characteristic</strong> field is a required field.";
-								} else if ((isset($_POST["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_POST["assessment_characteristic"], array("trim", "int")))) {
-									$PROCESSED["characteristic_id"] = $assessment_characteristic;
-								}
-								//extended options check
-								if ((is_array($_POST["option"])) && (count($_POST["option"]))) {
-									$assessment_options_selected = array();
-									foreach ($_POST["option"] as $option_id) {
-										if ($option_id = (int) $option_id) {
-											$query = "SELECT * FROM `assessments_lu_meta_options`
-													  WHERE id = " . $db->qstr($option_id) . "
-													  AND `active` = '1'";
-											$results = $db->GetAll($query);
-											if ($results) {
-												$assessment_options_selected[] = $option_id;
-											}
-										}
-									}
-								}
-								// Sometimes requried field "number grade points total". Specifies what a numeric marking scheme assessment is "out of".
-								// Only required when marking scheme is numeric, ID 3, hardcoded.
-								if ((isset($_POST["numeric_grade_points_total"])) && ($points_total = clean_input($_POST["numeric_grade_points_total"], array("notags", "trim")))) {
-									$PROCESSED["numeric_grade_points_total"] = $points_total;
-								} else {
-									$PROCESSED["numeric_grade_points_total"] = "";
-									if (isset($PROCESSED["marking_scheme_id"])) {
-										// Numberic marking scheme, hardcoded, lame
-										if ($PROCESSED["marking_scheme_id"] == 3) {
-											$ERROR++;
-											$ERRORSTR[] = "The <strong>Maximum Points</strong> field is a required field when using the <strong>Numeric</strong> marking scheme.";
-										}
-									}
-								}
-
-								if (!$ERROR) {
-									$PROCESSED["updated_date"] = time();
-									$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
-									$PROCESSED["course_id"] = $COURSE_ID;
-
-									if ($db->AutoExecute("assessments", $PROCESSED, "UPDATE", "`assessment_id` = " . $db->qstr($assessment_details["assessment_id"]))) {
-										if ($assessment_options) {
-											foreach ($assessment_options as $assessment_option) {
-												$query = "SELECT * FROM `assessments` WHERE assessment_id =" . $ASSESSMENT_ID;
-												$results = $db->GetRow($query);
-												if ($results) {
-													$PROCESSED["assessment_id"] = $results["assessment_id"];
-													$PROCESSED["option_id"] = $assessment_option["id"];
-													if (in_array($assessment_option["id"], $assessment_options_selected)) {
-														$PROCESSED["option_active"] = 1;
-													} else {
-														$PROCESSED["option_active"] = 0;
-													}
-													$db->AutoExecute("assessment_options", $PROCESSED, "UPDATE", "`assessment_id` = " . $db->qstr($assessment_details["assessment_id"]) . "AND `option_id` = " . $db->qstr($assessment_option["id"]));
-												}
-											}
-										}
-										switch ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
-											case "grade" :
-												$url = ENTRADA_URL . "/admin/gradebook/assessments?" . replace_query(array("step" => false, "section" => "grade", "assessment_id" => $ASSESSMENT_ID));
-												$msg = "You will now be redirected to the <strong>Grade Assessment</strong> page for \"<strong>" . $PROCESSED["name"] . "</strong>\"; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . $url . "\" style=\"font-weight: bold\">click here</a> to continue.";
-												break;
-											case "new" :
-												$url = ENTRADA_URL . "/admin/gradebook/assessments?" . replace_query(array("step" => false, "section" => "add"));
-												$msg = "You will now be redirected to another <strong>Add Assessment</strong> page for the " . $course_details["course_name"] . " gradebook; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . $url . "\" style=\"font-weight: bold\">click here</a> to continue.";
-												break;
-											case "parent" :
-												$url = ENTRADA_URL . "/admin/" . $MODULE;
-												$msg = "You will now be redirected to the <strong>Gradebook</strong> index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . $url . "\" style=\"font-weight: bold\">click here</a> to continue.";
-												break;
-											case "index" :
-											default :
-												$url = ENTRADA_URL . "/admin/gradebook?" . replace_query(array("step" => false, "section" => "view", "assessment_id" => false));
-												$msg = "You will now be redirected to the <strong>assessment index</strong> page for " . $course_details["course_name"] . "; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . $url . "\" style=\"font-weight: bold\">click here</a> to continue.";
-												break;
-										}
-
-										$SUCCESS++;
-										$SUCCESSSTR[] = $msg;
-										$ONLOAD[] = "setTimeout('window.location=\\'" . $url . "\\'', 5000)";
-									} else {
-										$ERROR++;
-										$ERRORSTR[] = "There was a problem updating this assessment in the system. The administrators have been informed of this error; please try again later.";
-
-										application_log("error", "There was an error inserting an assessment. Database said: " . $db->ErrorMsg());
-									}
-								}
-
-								if ($ERROR) {
-									$STEP = 1;
-								}
-							}
-
 
 							/**
 							 * Required field "event_start" / Event Date & Time Start (validated through validate_calendars function).
@@ -418,7 +213,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								$PROCESSED["assignment_title"] = $assignment_record["assignment_title"];
 								$PROCESSED["assignment_description"] = $assignment_record["assignment_description"];
 								$PROCESSED["assignment_uploads"] = $assignment_record["assignment_uploads"];
-								$PROCESSED["assessment_id"] = $assignment_record["assessment_id"];
 								$PROCESSED["release_date"] = $assignment_record["release_date"];
 								$PROCESSED["release_until"] = $assignment_record["release_until"];
 								$PROCESSED["due_date"] = $assignment_record["due_date"];
@@ -507,38 +301,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										<td><label class="form-nrequired">Drop Box Name</label></td>
 										<td>
 											<input type="text" name="assignment_title" style="width: 243px" value="<?php echo ($PROCESSED["assignment_title"]?$PROCESSED["assignment_title"]:"");?>"/>
-										</td>
-									</tr>
-									<tr>
-										<td></td>
-										<td style="vertical-align: top;"><label class="form-nrequired">Associated Assessment</label></td>
-										<td>
-											<select name="assessment_id" id="assessment-selector" style="width: 250px">
-												<option value="0"<?php echo isset($PROCESSED["assessment_id"]) && $PROCESSED["assessment_id"]==0?' selected="selected"':'';?>>No Assessment</option>
-												<option value="N" <?php echo !isset($PROCESSED["assessment_id"])?' selected="selected"':'';?>>New Assessment</option>
-												<?php
-													$query = "	SELECT a.`group_id`, a.`group_name` FROM `groups` a
-																JOIN `assessments` b
-																ON a.`group_id` = b.`cohort`
-																WHERE b.`course_id` = ".$db->qstr($COURSE_ID)."
-																GROUP BY a.`group_id`";
-													if($groups = $db->GetAll($query)){
-														foreach($groups as $group){
-															$query = "SELECT * FROM `assessments` WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `cohort` = ".$db->qstr($group["group_id"]);
-															$course_assessments = $db->GetAll($query);
-															if($course_assessments){
-																echo '<optgroup label="'.$group["group_name"].'">';
-																foreach($course_assessments as $course_assessment){
-																	?><option value="<?php echo $course_assessment["assessment_id"];?>"<?php echo ($PROCESSED["assessment_id"] && $PROCESSED["assessment_id"] == $course_assessment["assessment_id"]?" selected=\"selected\"":"");?>><?php echo $course_assessment["name"];?></option><?php
-																}
-																echo '</optgroup>';
-															}
-														}
-													}
-
-												?>
-											</select>
-											<div class="content-small">The assessment determines how the assignment should be marked. You can either select one if it already exists, or create a new one now.</div>
 										</td>
 									</tr>
 									<tr>
@@ -921,7 +683,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								jQuery(document).ready(function(){
 									if(jQuery('#assessment-selector').val() == 'N'){
 										jQuery('#assessment-section').slideDown('slow');
-									}else{
+									} else {
 										jQuery('#assessment-section').slideUp('slow');
 									}
 								});
@@ -929,7 +691,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								jQuery('#assessment-selector').bind('change',function(){
 									if(jQuery(this).val() == 'N'){
 										jQuery('#assessment-section').slideDown('slow');
-									}else{
+									} else {
 										jQuery('#assessment-section').slideUp('slow');
 									}
 								});

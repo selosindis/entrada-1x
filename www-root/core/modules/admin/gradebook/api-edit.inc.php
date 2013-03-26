@@ -48,17 +48,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						
 			if (isset($_GET["cohort"]) && ($tmp_input = clean_input($_GET["cohort"], "int"))) {
 				$COHORT = $tmp_input;
-			} else {
-				$cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
-				$COHORT = $cohorts[3]["group_id"];
 			}			
 				
 			?>
 			<div id="toolbar" style="display: none;">
 				<select id="filter_cohort" name="filter_cohort" style="width: 203px; float: left;">
 				<?php
-				$cohorts = groups_get_all_groups($ENTRADA_USER->getActiveOrganisation());
+                $query =  "SELECT a.`course_id`, b.`group_name`, b.`group_id` 
+                            FROM `assessments` AS a
+                            JOIN `groups` AS b
+                            ON a.`cohort` = b.`group_id`
+                            JOIN `group_organisations` AS c
+                            ON b.`group_id` = c.`group_id`
+                            WHERE a.`course_id` =". $db->qstr($COURSE_ID)."
+                            AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+                            GROUP BY b.`group_id`
+                            ORDER BY b.`group_name`";
+                $cohorts = $db->GetAll($query);
 				if (isset($cohorts) && !empty($cohorts)) {
+                    $cohort_found = false;
+                    foreach ($cohorts as $key => $cohort) {
+                        if (!$cohort_found) {
+                            if (isset($COHORT) && $COHORT && $COHORT == $cohort["group_id"]) {
+                                $cohort_found = true;
+                            }
+                            if ($key == (count($cohorts) - 1) && !$cohort_found) {
+                                $COHORT = $cohort["group_id"];
+                            }
+                        }
+                    }
 					foreach ($cohorts as $cohort) {
 						echo "<option value=\"".$cohort["group_id"]."\"".(($COHORT == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
 					}

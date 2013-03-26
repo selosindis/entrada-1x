@@ -3215,9 +3215,9 @@ function readable_size($bytes) {
 		return $bytes." b";
 	} else if($bytes < $mb) {
 			return round($bytes / $kb, 2)." KB";
-		} else if($size < $gb) {
+		} else if($bytes < $gb) {
 				return round($bytes / $mb, 2)." MB";
-			} else if($size < $tb) {
+			} else if($bytes < $tb) {
 					return round($bytes / $gb, 2)." GB";
 				} else {
 					return round($bytes / $tb, 2)." TB";
@@ -9308,10 +9308,10 @@ function courses_subnavigation($course_details, $tab="details") {
 		echo "<li".($tab=="enrolment"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" >" . $module_singular_name . " Enrolment</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-        echo "<li".($tab=="groups"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">" . $module_singular_name . " Groups</a></li>\n";
+        echo "<li".($tab=="groups"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\">" . $module_singular_name . " Groups</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-        echo "<li".($tab=="gradebook"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\" style=\"font-size: 10px;\">" . $module_singular_name . " Gradebook</a></li>";
+        echo "<li".($tab=="gradebook"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\">" . $module_singular_name . " Gradebook</a></li>";
 	}
 	echo "	</ul>\n";
 

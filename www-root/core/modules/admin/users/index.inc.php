@@ -110,7 +110,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 									AND b.`group` = ".$db->qstr($browse_group)."
-									AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveID())."
+									AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 									".(($browse_role) ? "AND b.`role` = ".$db->qstr($browse_role) : "");
 				$query_search	= "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`
 									FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -119,7 +119,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									AND b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 									AND b.`group` = ".$db->qstr($browse_group)."
-									AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveID())."
+									AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 									".(($browse_role) ? "AND b.`role` = ".$db->qstr($browse_role) : "")."
 									GROUP BY a.`id`
 									ORDER BY `fullname` ASC

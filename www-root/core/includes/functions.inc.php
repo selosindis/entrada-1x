@@ -9308,10 +9308,10 @@ function courses_subnavigation($course_details, $tab="details") {
 		echo "<li".($tab=="enrolment"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" >" . $module_singular_name . " Enrolment</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-        echo "<li".($tab=="groups"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" style=\"font-size: 10px; margin-right: 8px\">" . $module_singular_name . " Groups</a></li>\n";
+        echo "<li".($tab=="groups"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\">" . $module_singular_name . " Groups</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-        echo "<li".($tab=="gradebook"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\" style=\"font-size: 10px;\">" . $module_singular_name . " Gradebook</a></li>";
+        echo "<li".($tab=="gradebook"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\">" . $module_singular_name . " Gradebook</a></li>";
 	}
 	echo "	</ul>\n";
 
@@ -9938,7 +9938,7 @@ function events_subnavigation($event_info,$tab='content'){
 
 	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"],"step"=>false))."\" >Event Attendance</a></li>";
 
-	echo "		<li".($tab=='history'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "history", "id" => $event_info["event_id"],"step"=>false))."\" style=\"font-size: 10px; margin-right: 8px\">Event History</a></li>";
+	echo "		<li".($tab=='history'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "history", "id" => $event_info["event_id"],"step"=>false))."\">Event History</a></li>";
 	echo "	</ul>";
 	echo "</div>\n";
 
@@ -12381,7 +12381,7 @@ function event_objectives_display_leafs($objectives,$course_id,$event_id){
 		if($leafs && !empty($leafs)){
 	?>
 	<a name="#<?php echo $importance;?>-objective-list"></a>
-	<h2 id="<?php echo $importance;?>-toggle"  title="<?php echo ucwords($importance);?> Objectives List" class="<?php echo $importance == 'primary'?'':'collapsed';?>"><?php echo ucwords($importance);?> Objectives</h2>
+	<h2 id="<?php echo $importance;?>-toggle"  title="<?php echo ucwords($importance);?> Objectives List" class="list-heading <?php echo $importance == 'primary'?'':'collapsed';?>"><?php echo ucwords($importance);?> Objectives</h2>
 	<div id="<?php echo $importance;?>-objectives-list">
 	<ul class="objective-list mapped-list" id="mapped_<?php echo $importance;?>_objectives" data-importance="hierarchical">
 	<?php

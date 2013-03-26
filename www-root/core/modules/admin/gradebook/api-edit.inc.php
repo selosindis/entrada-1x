@@ -64,7 +64,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					}
 				}
 				?>
-				</select>		
+				</select>
 			</div>
 			<?php
 			$query = "	SELECT `assessments`.*, `assessment_marking_schemes`.`handler`
@@ -75,37 +75,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						AND `assessments`.`cohort` = ".$db->qstr($COHORT);
 			$assessments = $db->GetAll($query);
 			if($assessments) {
-				$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, c.`role`";
-				foreach($assessments as $key => $assessment) {
-					$query 	.= ", g$key.`grade_id` AS `grade_".$key."_id`, g$key.`value` AS `grade_".$key."_value`";
-				}
 				
-				$student_query = "SELECT `proxy_id` FROM `group_members` WHERE `group_id` = ".$db->qstr($COHORT)." AND `member_active` = 1";
+				$student_query = "SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`number`, c.`group_name` AS `cohort`
+                                    FROM `group_members` AS a 
+                                    JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                    ON a.`proxy_id` = b.`id`
+                                    JOIN `groups` AS c
+                                    ON a.`group_id` = c.`group_id`
+                                    WHERE a.`group_id` = ".$db->qstr($COHORT)." 
+                                    AND a.`member_active` = 1
+                                    ORDER BY b.`lastname`, b.`firstname`";
 				$students = $db->GetAll($student_query);
-				
-				$student_ids_string = "";
-				
-				foreach ($students as $student) {
-					$student_ids_string .= ($student_ids_string ? ", ".$db->qstr($student["proxy_id"]) : $db->qstr($student["proxy_id"]));
-				}
-				
-				$query 	.=" FROM `".AUTH_DATABASE."`.`user_data` AS b
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-							ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
-							AND c.`account_active`='true'
-							AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
-							AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).")";
-				foreach($assessments as $key => $assessment) {
-					$query .= "LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g$key ON b.`id` = g$key.`proxy_id` AND g$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
-				}
-				
-				$query .= 	" WHERE c.`group` = 'student' AND b.`id` IN (".$student_ids_string.")";
-				$query .=	" GROUP BY b.`id`";
-				$query .=	" ORDER BY b.`lastname`, b.`firstname`";
-				
-				$students = $db->GetAll($query); 
+							
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
+                $assessment_ids_string = "";
+                foreach($assessments as $assessment) {
+                    $assessment_ids_string .= ($assessment_ids_string ? ", " : "").$db->qstr($assessment["assessment_id"]);
+                    echo "<input type=\"hidden\" id=\"assessment_ids\" name=\"assessment_ids[]\" value=\"".$assessment["assessment_id"]."\" />\n";
+                }
 				?>
+                <input type="hidden" id="gradebook_export_url" value="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids=" />
 				<table class="gradebook <?php echo $editable; ?>">
 					<thead>
 						<tr>
@@ -120,21 +109,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						</tr>
 					</thead>
 					<tbody>
-					<?php foreach($students as $key => $student): ?>
+					<?php foreach($students as $key => $student) {
+                        $student_grades = array();
+                        $query	= "SELECT `grade_id`, `value` AS `grade_value`, `assessment_id`
+                                    FROM `".DATABASE_NAME."`.`assessment_grades`
+                                    WHERE `assessment_id` IN (".$assessment_ids_string.")
+                                    AND `proxy_id` = ".$db->qstr($student["proxy_id"]);
+                        $temp_grades = $db->GetAll($query);
+                        if ($temp_grades) {
+                            foreach ($temp_grades as $temp_grade) {
+                                $student_grades[$student["proxy_id"]."-".$temp_grade["assessment_id"]] = $temp_grade;
+                            }
+                        }
+                        ?>
 						<tr id="grades<?php echo $student["proxy_id"]; ?>">
 							<td><?php echo $student["fullname"]; ?></td>
 							<td><?php echo $student["number"]; ?></td>
-							<td><?php echo $student["role"]; ?></td>
+							<td><?php echo $student["cohort"]; ?></td>
 							<?php
 							foreach($assessments as $key2 => $assessment) {
-								if(isset($student["grade_".$key2."_id"])) {
-									$grade_id = $student["grade_".$key2."_id"];
+								if(isset($student_grades[$student["proxy_id"]."-".$assessment["assessment_id"]]["grade_id"])) {
+									$grade_id = $student_grades[$student["proxy_id"]."-".$assessment["assessment_id"]]["grade_id"];
 								} else {
 									$grade_id = "";
 								}
 
-								if(isset($student["grade_".$key2."_value"])) {
-									$grade_value = format_retrieved_grade($student["grade_".$key2."_value"], $assessment);
+								if(isset($student_grades[$student["proxy_id"]."-".$assessment["assessment_id"]]["grade_value"])) {
+									$grade_value = format_retrieved_grade($student_grades[$student["proxy_id"]."-".$assessment["assessment_id"]]["grade_value"], $assessment);
 								} else {
 									$grade_value = "-";
 								}
@@ -157,7 +158,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							}
 							?>
 						</tr>
-					<?php endforeach; ?>
+					<?php } ?>
 					</tbody>
 				</table>
 				<?php if(count($students) === 0):	?>

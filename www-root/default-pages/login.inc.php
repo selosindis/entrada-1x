@@ -31,76 +31,84 @@ if(!defined("PARENT_INCLUDED")) exit;
  */
 $ONLOAD[] = "document.getElementById('username').focus()";
 
+if(($ACTION == "login") && ($ERROR)) {
+	echo display_error();
+}
+
+/**
+ * If the user is trying to access a link and is not logged in, display a
+ * notice to inform the user that they need to log in first.
+ */
+if(($PROCEED_TO) && (stristr($PROCEED_TO, "link-course.php") || stristr($PROCEED_TO, "link-event.php"))) {
+	echo display_notice(array("You must log in to access this link; once you have logged in you will be automatically redirected to the requested location."));
+}
+
+/**
+ * If the user is trying to access a file and is not logged in, display a
+ * notice to inform the user that they need to log in first.
+ */
+if(($PROCEED_TO) && (stristr($PROCEED_TO, "file-course.php") || stristr($PROCEED_TO, "file-event.php"))) {
+	$ONLOAD[] = "setTimeout('window.location = \\'".ENTRADA_URL."\\'', 15000)";
+
+	echo display_notice(array("You must log in to download the requested file; once you have logged in the download will start automatically."));
+}
+
+/**
+ * Fetch public announcements that will be displayed below.
+ */
+$query = "SELECT a.*
+			FROM `notices` AS a
+			JOIN `notice_audience` AS b
+			ON a.`notice_id` = b.`notice_id`
+			WHERE b.`audience_type` = 'public'
+			AND (a.`display_from` = 0 OR a.`display_from` <= UNIX_TIMESTAMP())
+			AND (a.`display_until` = 0 OR a.`display_until` > UNIX_TIMESTAMP())
+			GROUP BY a.`notice_id`
+			ORDER BY a.`updated_date` DESC, a.`display_until` ASC
+			LIMIT 0, 5";
+$public_announcements = $db->GetAll($query);
 ?>
-<h2><?php echo APPLICATION_NAME; ?> Login</h2>
-<p>Please enter your <?php echo APPLICATION_NAME; ?> username and password to log in.</p>
-
+<div class="row-fluid">
+	<div class="span5">
+		<h2><?php echo APPLICATION_NAME; ?> Login</h2>
+		<p>Please enter your <?php echo APPLICATION_NAME; ?> username and password to log in.</p>
+	
+		<form class="form-horizontal login-form" action="<?php echo ENTRADA_URL; ?>/<?php echo (($PROCEED_TO) ? "?url=".rawurlencode($PROCEED_TO) : ""); ?>" method="post">
+			<input type="hidden" name="action" value="login" />
+			<div class="control-group">
+				<label class="control-label" for="username">Username</label>
+				<div class="controls">
+					<input type="text" id="username" name="username" value="<?php echo ((isset($_REQUEST["username"])) ? html_encode(trim($_REQUEST["username"])) : ""); ?>"/>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="password">Password</label>
+				<div class="controls">
+					<input type="password" id="password" name="password" value=""/>
+				</div>
+			</div>
+			<div class="form-actions">
+				<input type="submit" class="btn btn-primary" value="Login">
+			</div>
+		</form>
+	</div>
 	<?php
-	if(($ACTION == "login") && ($ERROR)) {
-		echo display_error();
-	}
-
-	/**
-	 * If the user is trying to access a link and is not logged in, display a
-	 * notice to inform the user that they need to log in first.
-	 */
-	if(($PROCEED_TO) && (stristr($PROCEED_TO, "link-course.php") || stristr($PROCEED_TO, "link-event.php"))) {
-		echo display_notice(array("You must log in to access this link; once you have logged in you will be automatically redirected to the requested location."));
-	}
-
-	/**
-	 * If the user is trying to access a file and is not logged in, display a
-	 * notice to inform the user that they need to log in first.
-	 */
-	if(($PROCEED_TO) && (stristr($PROCEED_TO, "file-course.php") || stristr($PROCEED_TO, "file-event.php"))) {
-		$ONLOAD[] = "setTimeout('window.location = \\'".ENTRADA_URL."\\'', 15000)";
-		echo display_notice(array("You must log in to download the requested file; once you have logged in the download will start automatically."));
-	}
-	?>
-	<form class="form-horizontal login-form" action="<?php echo ENTRADA_URL; ?>/<?php echo (($PROCEED_TO) ? "?url=".rawurlencode($PROCEED_TO) : ""); ?>" method="post">
-		<input type="hidden" name="action" value="login" />
-		 <div class="control-group">
-			<label class="control-label" for="username">Username</label>
-			<div class="controls">
-			<input type="text" id="username" name="username" value="<?php echo ((isset($_REQUEST["username"])) ? html_encode(trim($_REQUEST["username"])) : ""); ?>"/>
-			</div>
+	if ($public_announcements) {
+		?>
+		<div class="span5">
+			<h2>Public Announcements</h2>
+			<ul class="public-announcements">
+				<?php
+				foreach ($public_announcements as $announcement) {
+					echo "<li>";
+					echo "	<span class=\"label label-info\">".date(DEFAULT_DATE_FORMAT, $announcement["updated_date"])."</span>\n";
+					echo "	<p>".strip_selected_tags(clean_input($announcement["notice_summary"], "html"), "p")."</p>";
+					echo "</li>";
+				}
+				?>
+			</ul>
 		</div>
-		 <div class="control-group">
-			<label class="control-label" for="password">Password</label>
-			<div class="controls">
-			<input type="password" id="password" name="password" value=""/>
-			</div>
-		</div>
-		<div class="form-actions">
-			<input type="submit" class="btn btn-primary" value="Login">
-		</div>
-		<!--<table style="width: 275px" cellspacing="1" cellpadding="1" border="0">
-			<colgroup>
-				<col style="width: 30%" />
-				<col style="width: 70%" />
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="2" style="text-align: right"><input type="submit" class="button" value="Login" /></td>
-				</tr>
-				<tr>
-					<td colspan="2" style="padding-top: 15px">
-						<?php if ((defined("PASSWORD_RESET_URL")) && (PASSWORD_RESET_URL != "")) : ?>
-						<a href="<?php echo PASSWORD_RESET_URL; ?>" style="font-size: 10px">Forgot your password?</a> <span class="content-small">|</span>
-						<?php endif; ?>
-						<a href="<?php echo ENTRADA_URL; ?>/help" style="font-size: 10px">Need Help?</a>
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td><label for="username" style="font-weight: bold">Username:</label></td>
-					<td style="text-align: right"><input type="text" id="username" name="username" value="<?php echo ((isset($_REQUEST["username"])) ? html_encode(trim($_REQUEST["username"])) : ""); ?>" style="width: 150px" /></td>
-				</tr>
-				<tr>
-					<td><label for="password" style="font-weight: bold">Password:</label></td>
-					<td style="text-align: right"><input type="password" id="password" name="password" value="" style="width: 150px" /></td>
-				</tr>
-			</tbody>
-		</table>-->
-	</form>
+		<?php	
+	}
+	?>	
+</div>

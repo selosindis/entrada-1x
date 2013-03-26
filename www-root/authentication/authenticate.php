@@ -173,7 +173,7 @@ if (isset($_POST["auth_app_id"]) && isset($_POST["auth_username"]) && isset($_PO
 		$ERROR++;
 
 		echo "\t\t<status>".encrypt("failed", $auth_password)."</status>\n";
-		echo "\t\t<message>".encrypt("A problem occurred during the authentication process and we were unable to complete the request. A system administrator has been notified of the error, please try again later.".$query, $auth_password)."</message>\n";
+		echo "\t\t<message>".encrypt("A problem occurred during the authentication process and we were unable to complete the request. A system administrator has been notified of the error, please try again later.", $auth_password)."</message>\n";
 
 		application_log("auth_error", "There was a problem with the application login information (i.e. auth_app_id, auth_username or auth_password) that was provided.");
 	}

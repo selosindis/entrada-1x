@@ -1095,6 +1095,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							margin-top:5px;
 							margin-left:5px;
 						}
+						.list-heading{
+							font-size: 18px;
+						}
 						#mapped_objectives .objective-description{
 							margin-left:0px;
 						}
@@ -1166,7 +1169,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
 						?>
 						<div class="objectives half left">
-							<h2>Objective Sets</h2>
+							<h3>Objective Sets</h3>
 							<ul class="tl-objective-list" id="objective_list_0">
 					<?php		foreach($objectives as $objective){
 									?>
@@ -1250,16 +1253,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					?>
 
 					<div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="event" data-resource-id="<?php echo $EVENT_ID;?>">
-						<h2>Mapped Objectives
-						<div style="float: right">
-							<ul class="page-action">
+						<h3>Mapped Objectives</h3>
+						<div class="clearfix">
+							<ul class="page-action" style="float: right">
 								<li class="last">
 									<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Map Additional Objectives</a>
 								</li>
 							</ul>
-						</div>
-						</h2>
-						<p class="content-small">
+						</div>												
+						<p class="well well-small content-small">
 							<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left and it will be mapped to the event.
 						</p>
 					<?php
@@ -1271,7 +1273,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				 		?>
 				 		<div id="clinical-list-wrapper">
 							<a name="clinical-objective-list"></a>
-							<h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed">Other Objectives</h2>
+							<h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed list-heading">Other Objectives</h2>
 							<div id="clinical-objective-list">
 								<ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
 								<?php
@@ -1312,7 +1314,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 						<div id="event-list-wrapper" <?php echo ($explicit_event_objectives)?'':' style="display:none;"';?>>
 							<a name="event-objective-list"></a>
-							<h2 id="event-toggle"  title="Event Objective List" class="collapsed">Event Specific Objectives</h2>
+							<h2 id="event-toggle"  title="Event Objective List" class="collapsed list-heading">Event Specific Objectives</h2>
 							<div id="event-objective-list">
 								<ul class="objective-list mapped-list" id="mapped_event_objectives" data-importance="event">
 								<?php

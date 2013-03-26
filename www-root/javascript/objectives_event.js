@@ -32,7 +32,6 @@
 		// });
 
 		jQuery('.objective-remove').live('click',function(){
-			console.log($(this));
 			var id = jQuery(this).attr('data-id');
 			var list = jQuery('#mapped_objective_'+id).parent().attr('data-importance');
 			var importance = 'checked';
@@ -76,12 +75,10 @@
 			if (jQuery(this).is(':checked')) {
 				mapObjective(id,title,description,list,false);
 			} else {			
-				console.log('No Remove Element');
 				var importance = 'checked';
 				if(list == "flat"){
 					importance = 'clinical';
 				}					
-				console.log('id '+id+' list '+ list+' importance '+importance)
 				if(jQuery('#mapped_objective_'+id).is(':checked')){
 					mapObjective(id,title,description,list,false);
 				}else{
@@ -162,14 +159,13 @@
 			mapped.splice(key,1);
 		}
 		var lkey = jQuery.inArray(id,listed);
-		console.log('key '+key+' id '+id+' list '+list+' importance '+importance);
 		if(lkey === -1){
 			importance = 'checked';
 		}
 
 		jQuery("#"+importance+"_objectives_select option[value='"+id+"']").remove();				
-		jQuery('#check_objective_'+id).attr('checked','');
-		jQuery('#check_mapped_'+id).attr('checked','');
+		jQuery('#check_objective_'+id).prop('checked',false);
+		jQuery('#check_mapped_'+id).prop('checked',false);
 		jQuery('#text_container_'+id).remove();		
 		if(lkey === -1){
 			jQuery('#mapped_objective_'+id).remove();
@@ -186,7 +182,7 @@
 		var mapped_siblings = false;		
 		jQuery('#objective_'+id).siblings('li.objective-container').each(function(){
 			var oid = jQuery(this).attr('data-id');
-			if(jQuery('#check_objective_'+oid).attr('checked')){
+			if(jQuery('#check_objective_'+oid).prop('checked')){
 				mapped_siblings = true;
 			}
 		});
@@ -196,13 +192,13 @@
 			if(mapped_siblings == false){
 				jQuery('#objective_list_'+pid+' > li').each(function(){
 					var cid = jQuery(this).attr('data-id');
-					if(jQuery('#check_objective_'+cid).attr('checked')){
+					if(jQuery('#check_objective_'+cid).prop('checked')){
 						mapped_cousins = true;
 					}
 				});
 				if(mapped_cousins == false){
-					jQuery('#check_objective_'+pid).attr('checked','');				
-					jQuery('#check_objective_'+pid).attr('disabled',false);
+					jQuery('#check_objective_'+pid).prop('checked',false);				
+					jQuery('#check_objective_'+pid).prop('disabled',false);
 				}
 			}								
 		});		
@@ -212,9 +208,6 @@
 	function mapObjective(id,title,description,list,create){
 		var key = jQuery.inArray(id,mapped);	
 		var lkey = jQuery.inArray(id,listed);		
-		console.log(id);
-		console.log(key);
-		console.log(mapped);
 		if(key != -1) return;	
 		var importance = 'checked';	
 		if(list === undefined || !list){			
@@ -253,7 +246,7 @@
 							.attr('type','checkbox')
 							.attr('class','checked-mapped')
 							.attr('id','check_mapped_'+id)
-							.attr('checked','checked');	
+							.prop('checked',true);	
 			var rm = jQuery(document.createElement('img'))
 							.attr('src',SITE_URL+'/images/action-delete.gif')
 							.attr('data-id',id)
@@ -267,14 +260,13 @@
 			jQuery('#mapped_event_objectives .display-notice').remove();
 			jQuery('#objective_'+id).parents('.objective-list').each(function(){
 				var id = jQuery(this).attr('data-id');
-				jQuery('#check_objective_'+id).attr('checked','checked');
-				jQuery('#check_objective_'+id).attr('disabled',true);
+				jQuery('#check_objective_'+id).prop('checked',true);
+				jQuery('#check_objective_'+id).prop('disabled',true);
 			});		
 			if(jQuery('#event-toggle').hasClass('collapsed')){
 				jQuery('#event-toggle').removeClass('collapsed');
 				jQuery('#event-toggle').addClass('expanded');
 				var d = jQuery('#event-toggle').next();
-				console.log(d);
 				jQuery(d).slideDown();
 			}
 			if(!jQuery('#event-list-wrapper').is(':visible')){
@@ -302,14 +294,13 @@
 							.attr('data-id',id) 
 							.attr('class',"expandable")
 							.attr('style',"height: 28px; overflow: hidden;");
-							console.log(text);
 			jQuery(text_div).append(text_label).append(text);
 			jQuery('#mapped_objective_'+id).append(text_div);	
 		}
 
 		
-		jQuery('#check_objective_'+id).attr('checked','checked');
-		jQuery('#check_mapped_'+id).attr('checked','checked');
+		jQuery('#check_objective_'+id).prop('checked',true);
+		jQuery('#check_mapped_'+id).prop('checked',true);
 		if(jQuery("#"+importance+"_objectives_select option[value='"+id+"']").length == 0){
 			var option = jQuery(document.createElement('option'))				
 							.val(id)
@@ -320,8 +311,8 @@
 
 		jQuery('#objective_'+id).parents('.objective-list').each(function(){
 			var id = jQuery(this).attr('data-id');
-			jQuery('#check_objective_'+id).attr('checked','checked');
-			jQuery('#check_objective_'+id).attr('disabled',true);
+			jQuery('#check_objective_'+id).prop('checked',true);
+			jQuery('#check_objective_'+id).prop('disabled',true);
 		});			
 
 		mapped.push(id);								

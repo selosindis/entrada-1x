@@ -809,16 +809,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td></td>
 								<td style="vertical-align: top"><span class="form-nrequired">Reminder Notifications</span></td>
 								<td style="vertical-align: top">
-									<input type="radio" name="notifications" id="notification_on" value="1"<?php echo (((!isset($PROCESSED["notifications"])) || ((isset($PROCESSED["notifications"])) && ($PROCESSED["notifications"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="notification_on">Send e-mail notifications to faculty for events under this <?php echo strtolower($module_singular_name); ?>.</label><br />
-									<input type="radio" name="notifications" id="notification_off" value="0"<?php echo (((isset($PROCESSED["notifications"])) && (!(int) $PROCESSED["notifications"])) ? " checked=\"checked\"" : ""); ?> /> <label for="notification_off"><strong>Do not</strong> send e-mail notifications to faculty for events under this <?php echo strtolower($module_singular_name); ?>.</label>
+								<label for="notification_on" class="radio">
+									<input type="radio" name="notifications" id="notification_on" value="1"<?php echo (((!isset($PROCESSED["notifications"])) || ((isset($PROCESSED["notifications"])) && ($PROCESSED["notifications"]))) ? " checked=\"checked\"" : ""); ?> /> Send e-mail notifications to faculty for events under this <?php echo strtolower($module_singular_name); ?>.
+								</label><br />
+								<label for="notification_off" class="radio">
+									<input type="radio" name="notifications" id="notification_off" value="0"<?php echo (((isset($PROCESSED["notifications"])) && (!(int) $PROCESSED["notifications"])) ? " checked=\"checked\"" : ""); ?> /> <strong>Do not</strong> send e-mail notifications to faculty for events under this <?php echo strtolower($module_singular_name); ?>.
+								</label>
 								</td>
 							</tr>
 							<tr>
 								<td></td>
 								<td style="vertical-align: top"><span class="form-nrequired"><?php echo $module_singular_name; ?> Permissions</span></td>
 								<td style="vertical-align: top">
-									<input type="radio" name="permission" id="visibility_on" value="open"<?php echo (((!isset($PROCESSED["permission"])) || ((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "open"))) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_on">This <?php echo strtolower($module_singular_name); ?> is <strong>open</strong> and visible to all logged in users.</label><br />
-									<input type="radio" name="permission" id="visibility_off" value="closed"<?php echo (((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "closed")) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_off">This <?php echo strtolower($module_singular_name); ?> is <strong>private</strong> and only visible to logged in users enrolled in the <?php echo strtolower($module_singular_name); ?>.</label>
+								<label for="visibility_on" class="radio">	
+									<input type="radio" name="permission" id="visibility_on" value="open"<?php echo (((!isset($PROCESSED["permission"])) || ((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "open"))) ? " checked=\"checked\"" : ""); ?> />This <?php echo strtolower($module_singular_name); ?> is <strong>open</strong> and visible to all logged in users.
+								</label><br />
+								<label for="visibility_off" class="radio">
+									<input type="radio" name="permission" id="visibility_off" value="closed"<?php echo (((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "closed")) ? " checked=\"checked\"" : ""); ?> /> This <?php echo strtolower($module_singular_name); ?> is <strong>private</strong> and only visible to logged in users enrolled in the <?php echo strtolower($module_singular_name); ?>.
+								</label>
 								</td>
 							</tr>
 							<?php
@@ -828,11 +836,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td></td>
 								<td style="vertical-align: top"><span class="form-nrequired">Audience Sync</span></td>
 								<td style="vertical-align: top">
-									<input type="radio" name="sync_ldap" id="sync_off" value="0"<?php echo (((!isset($PROCESSED["sync_ldap"])) || (isset($PROCESSED["sync_ldap"])) && (!(int)$PROCESSED["sync_ldap"])) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_off">The audience will be managed manually and <strong>should not</strong> be synced with the LDAP server.</label><br />
-									<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_on">This course <strong>should</strong> have its audience synced with the LDAP server.</label><br />
-									 <br />
-									<br />
-									<div class="content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>
+									<label for="sync_off" class="radio">
+										<input type="radio" name="sync_ldap" id="sync_off" value="0"<?php echo (((!isset($PROCESSED["sync_ldap"])) || (isset($PROCESSED["sync_ldap"])) && (!(int)$PROCESSED["sync_ldap"])) ? " checked=\"checked\"" : ""); ?> />The audience will be managed manually and <strong>should not</strong> be synced with the LDAP server.
+									</label><br />
+									<label for="sync_on" class="radio">
+										<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> This course <strong>should</strong> have its audience synced with the LDAP server.
+									</label><br />
+									<div class="well well-small content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>
 								</td>
 							</tr>
 						<?php }?>
@@ -858,7 +868,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										AND a.`objective_active` = '1'";
 							$objectives = $db->GetAll($query);
 							if ($objectives) {
-								$hierarchical_name = $translate->_("events_filter_controls");
+								$objective_name = $translate->_("events_filter_controls");
 								$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
 								?>
 					<a name="course-objectives-section"></a>
@@ -905,7 +915,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								font-size: 11px;
 								font-style: normal;
 								color: #666;
-								margin-top:5px;
+								margin-top:20px;
 								margin-left:5px;
 							}
 							#mapped_objectives .objective-description{
@@ -948,7 +958,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								font-size: 11px;
 								font-style: normal;
 								color: #666;
-								margin-top:5px;
+								margin-top:12px;
+							}
+							.list-heading{
+								font-size:18px;
 							}
 							.mapped-objective{
 								position:relative;
@@ -999,7 +1012,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 						</style>
 							<div class="objectives half left">
-								<h2>Objective Sets</h2>
+								<h3>Objective Sets</h3>
 								<ul class="tl-objective-list" id="objective_list_0">
 						<?php		foreach($objectives as $objective){ ?>
 										<li class = "objective-container objective-set"
@@ -1029,16 +1042,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</div>
 
 						<div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="course" data-resource-id="<?php echo $COURSE_ID;?>">
-							<h2>Mapped Objectives
-							<div style="float: right">
-								<ul class="page-action">
+							<h3>Mapped Objectives</h3>
+							<div class="clearfix">
+								<ul class="page-action" style="float: right">
 									<li class="last">
 										<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Show Objective Sets</a>
 									</li>
 								</ul>
-							</div>
-							</h2>
-							<p class="content-small">
+							</div>							
+							<p class="well well-small content-small">
 								<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left to map it to the course.
 							</p>
 								<?php   $query = "	SELECT a.*,b.`objective_type`, b.`importance`
@@ -1069,7 +1081,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										}
 										?>
 							<a name="curriculum-objective-list"></a>
-							<h2 id="hierarchical-toggle" title="Curriculum Objective List">Curriculum Objectives</h2>
+							<h2 id="hierarchical-toggle" title="Curriculum Objective List" class="list-heading">Curriculum Objectives</h2>
 							<div id="curriculum-objective-list">
 								<ul class="objective-list mapped-list" id="mapped_hierarchical_objectives" data-importance="hierarchical">
 										<?php
@@ -1112,7 +1124,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</ul>
 							</div>
 							<a name="other-objective-list"></a>
-							<h2 id="flat-toggle" title="Other Objective List" class="collapsed">Other Objectives</h2>
+							<h2 id="flat-toggle" title="Other Objective List" class="collapsed list-heading">Other Objectives</h2>
 							<div id="other-objective-list">
 								<ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
 								<?php

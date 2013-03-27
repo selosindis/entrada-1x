@@ -945,9 +945,18 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 						<select name="year">
 							<option value="">-- Select Graduating Year --</option>
 							<?php
-							if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-								foreach ($SYSTEM_GROUPS["student"] as $class) {
-									echo "<option value=\"".$class."\">Class of ".html_encode($class)."</option>\n";
+							
+							$student_classes = array();
+							$active_cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
+							if (isset($active_cohorts) && !empty($active_cohorts)) {
+								foreach ($active_cohorts as $cohort) {
+									$student_classes[$cohort["group_id"]] = $cohort["group_name"];
+								}
+							}
+							
+							if (isset($student_classes) && !empty($student_classes)) {
+								foreach ($student_classes as $group_id => $class) {
+									echo "<option value=\"".$group_id."\">".html_encode($class)."</option>\n";
 								}
 							}
 							?>

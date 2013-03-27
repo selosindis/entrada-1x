@@ -178,16 +178,25 @@ if (!defined("IN_CLERKSHIP")) {
 								$query_year = trim($_GET["year"]);
 							}
 							
-							$query	= "SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname` 
-							FROM `".AUTH_DATABASE."`.`user_data` 
-							LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `".AUTH_DATABASE."`.`user_access`.`user_id`=`".AUTH_DATABASE."`.`user_data`.`id` 
-							WHERE `".AUTH_DATABASE."`.`user_access`.`app_id`='".AUTH_APP_ID."' 
-							AND `role`=".$db->qstr(trim($query_year), get_magic_quotes_gpc())." 
-							AND `group`='student' 
-							ORDER BY `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname` ASC";
-							
+							$query = "SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`, d.`group_name`
+											FROM `".AUTH_DATABASE."`.`user_data` AS a
+											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+											ON b.`user_id` = a.`id`
+											AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+											JOIN `group_members` AS c
+											ON a.`id` = c.`proxy_id`
+											AND c.`member_active` = 1
+											JOIN `groups` AS d
+											ON c.`group_id` = d.`group_id`
+											AND d.`group_active` = 1
+											WHERE b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+											AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+											AND b.`group` = 'student'
+											AND d.`group_id` = ".$db->qstr($query_year)."
+											GROUP BY a.`id`
+											ORDER BY `fullname` ASC";
 							$results	= $db->GetAll($query);
-							
+
 							if ($results) {
 								$counter	= 0;
 								$total	= count($results);
@@ -344,15 +353,24 @@ if (!defined("IN_CLERKSHIP")) {
 								</select>
 							</div>
 						</div>
+						<?php
+						$student_classes = array();
+						$active_cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
+						if (isset($active_cohorts) && !empty($active_cohorts)) {
+							foreach ($active_cohorts as $cohort) {
+								$student_classes[$cohort["group_id"]] = $cohort["group_name"];
+							}
+						}
+						?>
 						<div class="control-group">
 							<label class="control-label">Select the graduating year you wish to view students in:</label>
 							<div class="controls">
 								<select name="year" style="width: 205px">
 								<option value="">-- Select Graduating Year --</option>
 								<?php
-								if (isset($SYSTEM_GROUPS["student"]) && !empty($SYSTEM_GROUPS["student"])) {
-									foreach ($SYSTEM_GROUPS["student"] as $class) {
-										echo "<option value=\"".$class."\">Class of ".html_encode($class)."</option>\n";
+								if (isset($student_classes) && !empty($student_classes)) {
+									foreach ($student_classes as $group_id => $class) {
+										echo "<option value=\"".$group_id."\">Class of ".html_encode($class)."</option>\n";
 									}
 								}
 								?>

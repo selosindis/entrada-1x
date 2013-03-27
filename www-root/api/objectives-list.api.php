@@ -87,13 +87,11 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				$current_selected = false;
 				$selected = false;
 				$count = 0;
+				echo "<option id=\"leave_alone_-1\" value=\"-1\" selected=\"selected\">-- Do Not Change --</option>\n";
 				foreach ($objectives as $objective) {
 					if ($objective["objective_id"] != $objective_id) {
 						$count++;
-						echo "<option id=\"before_obj_".$objective["objective_id"]."\" value=\"".$count."\"".($selected ? " selected=\"selected\"" : "").">Before ".$objective["objective_name"]."</option>\n";
-						$selected = false;
-					} else {
-						$selected = true;
+						echo "<option id=\"before_obj_".$objective["objective_id"]."\" value=\"".$count."\">Before ".$objective["objective_name"]."</option>\n";
 					}
 				}
 				echo "<option id=\"after_obj_".$objective["objective_id"]."\" value=\"".($count+1)."\" >After ".$objective["objective_name"]."</option>\n";

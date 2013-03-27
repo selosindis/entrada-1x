@@ -12086,7 +12086,8 @@ function events_fetch_event_audience_attendance($event_id = 0) {
 									AND a.`audience_active` = 1
 									JOIN `curriculum_periods` AS c
 									ON b.`curriculum_type_id` = c.`curriculum_type_id`
-									AND UNIX_TIMESTAMP() BETWEEN c.`start_date` AND c.`finish_date`";
+									AND a.`cperiod_id` = c.`cperiod_id`
+									WHERE UNIX_TIMESTAMP() BETWEEN c.`start_date` AND c.`finish_date`";
 						$ca_result = $db->GetAll($query);
 						foreach($ca_result as $ca) {
 							if ($ca["audience_type"] == "group_id") {

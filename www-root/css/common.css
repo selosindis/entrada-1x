@@ -3282,14 +3282,12 @@ table.mspr_table tr.unapproved td {
 .gradebook_export {
 	background: url(../images/btn_save.gif) no-repeat top left;
 }
-/*
 .clearfix {
 	clear:both;
 	line-height:0;
 	height:0;
 	max-height:0;
 }
-*/
 .file-block {
 	background-color:white;
 	padding:1ex;

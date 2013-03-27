@@ -333,7 +333,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									$msg = "You will now be redirected to the course index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								break;
 							}
-
 							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 							add_success("You have successfully added <strong>".html_encode($PROCESSED["course_name"])."</strong> to this system.<br /><br />".$msg);
 
@@ -527,8 +526,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				echo display_error();
 			}
 			?>
-
-			<form class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="addCourseForm" onsubmit="selIt()">
+<form class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="addCourseForm" onsubmit="selIt()">
                 <h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
                 <div class="control-group">
                     <label for="curriculum_type_id" class="control-label form-nrequired">Curriculum Category:</label>
@@ -751,19 +749,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                         <div class="objectives half left">
                             <h2>Objective Sets</h2>
                             <ul class="tl-objective-list" id="objective_list_0">
-                                <?php
-                                foreach ($objectives as $objective){
-                                    ?>
-                                    <li class="objective-container objective-set" id="objective_<?php echo $objective["objective_id"]; ?>" data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>" data-id="<?php echo $objective["objective_id"];?>">
-                                        <?php
-                                        $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-                                        <div class="objective-title" id="objective_title_<?php echo $objective["objective_id"]; ?>" data-title="<?php echo $title;?>" data-id = "<?php echo $objective["objective_id"]; ?>" data-code = "<?php echo $objective["objective_code"]; ?>" data-name = "<?php echo $objective["objective_name"]; ?>" data-description = "<?php echo $objective["objective_description"]; ?>">
+					<?php		foreach($objectives as $objective){ ?>
+									<li class = "objective-container objective-set"
+										id = "objective_<?php echo $objective["objective_id"]; ?>"
+										data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
+										data-id="<?php echo $objective["objective_id"];?>">
+										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+										<div 	class="objective-title"
+												id="objective_title_<?php echo $objective["objective_id"]; ?>"
+												data-title="<?php echo $title;?>"
+												data-id = "<?php echo $objective["objective_id"]; ?>"
+												data-code = "<?php echo $objective["objective_code"]; ?>"
+												data-name = "<?php echo $objective["objective_name"]; ?>"
+												data-description = "<?php echo $objective["objective_description"]; ?>">
                                             <h3><?php echo $title; ?></h3>
                                         </div>
                                         <div class="objective-controls" id="objective_controls_<?php echo $objective["objective_id"];?>">
                                         </div>
-                                        <div class="objective-children" id="children_<?php echo $objective["objective_id"]; ?>">
-                                            <ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>"></ul>
+										<div 	class="objective-children"
+												id="children_<?php echo $objective["objective_id"]; ?>">
+												<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>">
+												</ul>
                                         </div>
                                     </li>
                                     <?php
@@ -863,7 +869,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                         foreach ($flat_objectives as $objective) {
                                             $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
                                             ?>
-                                            <li class="mapped-objective" id="mapped_objective_<?php echo $objective["objective_id"]; ?>" data-title="<?php echo $title;?>" data-description="<?php echo $objective["objective_description"];?>">
+								<li class = "mapped-objective"
+									id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+									data-title="<?php echo $title;?>"
+									data-description="<?php echo $objective["objective_description"];?>">
                                                 <strong><?php echo $title; ?></strong>
                                                 <div class="objective-description"></div>
                                                 <div class="control-group">
@@ -1298,7 +1307,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                     jQuery('#period_item_'+period_id).append('<input type="hidden" name="student_id[]" id="student_'+period_id+'_id"/>');
                     jQuery('#period_item_'+period_id).append('<input type="hidden" name="student_ref[]" id="student_'+period_id+'_ref"/>');
                     jQuery('#period_item_'+period_id).append('<input type="hidden" name="periods[]" value="'+period_id+'"/>');
-
 // @todo bt37 Lets talk about this.
                     eval("student_"+period_id+"_list = new AutoCompleteList({ type: 'student_"+period_id+"', url: '<?php echo ENTRADA_RELATIVE;?>/api/personnel.api.php?type=student', remove_image: '"+DELETE_IMAGE_URL+"'})");
                     eval("window.student_"+period_id+"_list = student_"+period_id+"_list");

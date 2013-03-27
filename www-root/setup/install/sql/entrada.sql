@@ -2121,6 +2121,18 @@ CREATE TABLE IF NOT EXISTS `curriculum_type_organisation` (
 
 INSERT INTO `curriculum_type_organisation` SELECT `curriculum_type_id`, 1 FROM `curriculum_lu_types`;
 
+CREATE TABLE IF NOT EXISTS `evaluation_requests` (
+  `erequest_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `request_expires` bigint(64) NOT NULL DEFAULT '0',
+  `request_code` varchar(255) DEFAULT NULL,
+  `evaluation_id` int(11) DEFAULT NULL,
+  `proxy_id` int(11) DEFAULT NULL,
+  `target_proxy_id` int(11) DEFAULT NULL,
+  `request_created` bigint(64) NOT NULL DEFAULT '0',
+  `request_fulfilled` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`erequest_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `evaluations` (
   `evaluation_id` int(12) NOT NULL AUTO_INCREMENT,
   `eform_id` int(12) NOT NULL,
@@ -2136,6 +2148,9 @@ CREATE TABLE IF NOT EXISTS `evaluations` (
   `allow_target_request` tinyint(1) NOT NULL DEFAULT '0',
   `allow_repeat_targets` tinyint(1) NOT NULL DEFAULT '0',
   `show_comments` tinyint(1) NOT NULL DEFAULT '0',
+  `require_requests` tinyint(1) NOT NULL DEFAULT '0',
+  `require_request_code` tinyint(1) NOT NULL DEFAULT '0',
+  `request_timeout` bigint(64) NOT NULL DEFAULT '0',
   `threshold_notifications_type` enum('reviewers','tutors','directors','pcoordinators','authors','disabled') NOT NULL DEFAULT 'disabled',
   `release_date` bigint(64) NOT NULL,
   `release_until` bigint(64) NOT NULL,

@@ -821,7 +821,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<td></td>
 								<td style="vertical-align: top"><span class="form-nrequired"><?php echo $module_singular_name; ?> Permissions</span></td>
 								<td style="vertical-align: top">
-								<label for="visibility_on" class="radio">	
+								<label for="visibility_on" class="radio">
 									<input type="radio" name="permission" id="visibility_on" value="open"<?php echo (((!isset($PROCESSED["permission"])) || ((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "open"))) ? " checked=\"checked\"" : ""); ?> />This <?php echo strtolower($module_singular_name); ?> is <strong>open</strong> and visible to all logged in users.
 								</label><br />
 								<label for="visibility_off" class="radio">
@@ -1049,7 +1049,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Show Objective Sets</a>
 									</li>
 								</ul>
-							</div>							
+							</div>
 							<p class="well well-small content-small">
 								<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left to map it to the course.
 							</p>

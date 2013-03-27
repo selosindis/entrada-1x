@@ -109,8 +109,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						/**
 						* Required field "objective_order" / Objective Order
 						*/
-						if (isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int")))) {
+						if (isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int"))) && $objective_order != "-1") {
 							$PROCESSED["objective_order"] = clean_input($_POST["objective_order"], array("int")) - 1;
+						} else if($objective_order == "-1") {
+							$PROCESSED["objective_order"] = $objective_details["objective_order"];
 						} else {
 							$PROCESSED["objective_order"] = 0;
 						}
@@ -282,8 +284,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						/**
 						* Required field "objective_order" / Objective Order
 						*/
-						if (isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int")))) {
+						if (isset($_POST["objective_order"]) && ($objective_order = clean_input($_POST["objective_order"], array("int"))) && $objective_order != "-1") {
 							$PROCESSED["objective_order"] = clean_input($_POST["objective_order"], array("int")) - 1;
+						} else if($objective_order == "-1") {
+							$PROCESSED["objective_order"] = $objective_details["objective_order"];
 						} else {
 							$PROCESSED["objective_order"] = 0;
 						}

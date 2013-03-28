@@ -367,13 +367,14 @@ class Evaluation {
 			$preceptors = $db->GetAll($query);
 		}
 		if ($preceptors) {
-			$output = "<select id=\"preceptor_proxy_id\" name=\"preceptor_proxy_id\">\n";
+			$output = "<select id=\"preceptor_proxy_id\" name=\"preceptor_proxy_id\" onchange=\"displayOtherTeacher(this.value)\">\n";
 			$output .= "<option value=\"0\">-- Select a preceptor --</option>\n";
 			foreach ($preceptors as $preceptor) {
 				if ($preceptor["proxy_id"]) {
 					$output .= "<option value=\"".$preceptor["proxy_id"]."\"".($preceptor_proxy_id && $preceptor_proxy_id == $preceptor["proxy_id"] ? " selected=\"selected\"" : "").">".$preceptor["fullname"]."</option>";
 				}
 			}
+            $output .= "<option value=\"other\"".((isset($preceptor_proxy_id)) && $preceptor_proxy_id === "other" ? " selected=\"selected\"" : "").">Other Teacher</option>\n";
 			$output .= "</select>\n";
 		}
 		return $output;
@@ -2637,6 +2638,7 @@ class Evaluation {
 										AND b.`etype_id` = ".$db->qstr($evaluator_proxy_id)."
 										".($evaluated_event_ids_string && $available_only ? "AND a.`event_id` NOT IN (".$evaluated_event_ids_string.")" : "")."
 										".($recent ? "AND a.`event_finish` > ".$db->qstr(strtotime("-36 hours"))."" : "")."
+										".(defined("CLERKSHIP_EVALUATION_LOCKOUT") && CLERKSHIP_EVALUATION_LOCKOUT ? "AND a.`event_finish` > ".$db->qstr(time() - CLERKSHIP_EVALUATION_LOCKOUT)."" : "")."
 										AND a.`event_finish` <= ".$db->qstr(time());
 							$events = $db->GetAll($query);
 							if ($events) {
@@ -3023,6 +3025,9 @@ class Evaluation {
 			foreach ($evaluator_users as $evaluator_user) {
 				$temp_evaluation = Evaluation::getUserPendingEvaluation($evaluation, $evaluator, $evaluator_user, $recent);
 				if ($temp_evaluation) {
+                    if ($evaluation["event_id"]) {
+                        $temp_evaluation["event_id"] = $evaluation["event_id"];
+                    }
 					$pending_evaluations[] = $temp_evaluation;
 				}
 			}
@@ -3914,7 +3919,10 @@ class Evaluation {
                     } else {
                         $evaluation["click_url"] = "";
                     }
-                    $evaluations[] = $evaluation;
+                    
+                    if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) === false || (isset($evaluation_targets_count) && $evaluation_targets_count)) {
+                        $evaluations[] = $evaluation;
+                    }
                 }
 			}
 		}

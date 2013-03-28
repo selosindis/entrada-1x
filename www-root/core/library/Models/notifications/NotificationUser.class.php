@@ -201,6 +201,7 @@ class NotificationUser {
 				if ($evaluation_title = $db->GetOne($query)) {
 					$content_title = $evaluation_title;
 				}
+            break;
 			case "event_discussion" :
 			default :
 				$query = "SELECT `event_title`, `event_start` FROM `events` WHERE `event_id` = ".$db->qstr($this->record_id);

@@ -122,7 +122,15 @@ if ($RECORD_ID) {
 		$completed_attempts = Evaluation::getProgressRecordsByPermissions($RECORD_ID, $permissions, true);
 		foreach ($completed_attempts as $completed_attempt) {
 			if (!isset($progress_id) || !$progress_id || $completed_attempt["eprogress_id"] == $progress_id) {
-				$target_id = (isset($completed_attempt["event_id"]) && $completed_attempt["event_id"] ? $completed_attempt["event_id"] : (isset($completed_attempt["target_record_id"]) && $completed_attempt["target_record_id"] ? $completed_attempt["target_record_id"] : $completed_attempt["target_value"]));
+                if (isset($completed_attempt["preceptor_proxy_id"]) && $completed_attempt["preceptor_proxy_id"]) {
+                    $target_id = $completed_attempt["preceptor_proxy_id"];
+                } elseif (isset($completed_attempt["event_id"]) && ((int)$completed_attempt["event_id"])) {
+                    $target_id = ((int)$completed_attempt["event_id"]);
+                } elseif (isset($completed_attempt["target_record_id"]) && ((int)$completed_attempt["target_record_id"])) {
+                    $target_id = ((int)$completed_attempt["target_record_id"]);
+                } else {
+                    $target_id = ((int)$completed_attempt["target_value"]);
+                }
 				if (!array_search($target_id, $available_target_ids)) {
 					$available_target_ids[] = $target_id;
 				}
@@ -178,9 +186,30 @@ if ($RECORD_ID) {
 										$clerkship_preceptor["responses"][$response["equestion_id"]]["responses"][$response["eqresponse_id"]] = 0;
 									}
 									$clerkship_preceptor["target_title"] = $clerkship_preceptor["firstname"]." ".$clerkship_preceptor["lastname"];
+                                    $clerkship_preceptor["event_title"] = $clerkship_preceptor["event_title"] . " (".date("d-m-Y", $clerkship_preceptor["event_start"])." to ".date("d-m-Y", $clerkship_preceptor["event_finish"]).")";
 									$clerkship_preceptor["sort_title"] = $clerkship_preceptor["lastname"].", ".$clerkship_preceptor["firstname"];
-									$available_targets[$target_id] = $clerkship_preceptor;
-								}
+									$available_targets[$completed_attempt["preceptor_proxy_id"]] = $clerkship_preceptor;
+								} else {
+                                    $query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
+                                                JOIN `courses` AS b
+                                                ON a.`course_id` = b.`course_id`
+                                                JOIN `".CLERKSHIP_DATABASE."`.`events` AS c
+                                                ON a.`rotation_id` = c.`rotation_id`
+                                                JOIN `".CLERKSHIP_DATABASE."`.`other_teachers` AS d
+                                                ON CONCAT('OT-', d.`oteacher_id`) = ".$db->qstr($completed_attempt["preceptor_proxy_id"])."
+                                                WHERE c.`event_id` = ".$db->qstr($completed_attempt["event_id"]);
+                                    $clerkship_preceptor = $db->GetRow($query);
+                                    if ($clerkship_preceptor) {
+                                        $clerkship_preceptor["responses"] = array();
+                                        foreach ($responses as $response) {
+                                            $clerkship_preceptor["responses"][$response["equestion_id"]]["responses"][$response["eqresponse_id"]] = 0;
+                                        }
+                                        $clerkship_preceptor["target_title"] = $clerkship_preceptor["firstname"]." ".$clerkship_preceptor["lastname"];
+                                        $clerkship_preceptor["event_title"] = $clerkship_preceptor["event_title"] . " (".date("d-m-Y", $clerkship_preceptor["event_start"])." to ".date("d-m-Y", $clerkship_preceptor["event_finish"]).")";
+                                        $clerkship_preceptor["sort_title"] = $clerkship_preceptor["lastname"].", ".$clerkship_preceptor["firstname"];
+                                        $available_targets[$completed_attempt["preceptor_proxy_id"]] = $clerkship_preceptor;
+                                    } 
+                                }
 							} else {
 								$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 											JOIN `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS b
@@ -194,7 +223,7 @@ if ($RECORD_ID) {
 									foreach ($responses as $response) {
 										$clerkship_event["responses"][$response["equestion_id"]]["responses"][$response["eqresponse_id"]] = 0;
 									}
-									$clerkship_event["target_title"] = $clerkship_event["event_title"]." [".$clerkship_event["rotation_title"]."]";
+									$clerkship_event["target_title"] = $clerkship_event["event_title"].($clerkship_event["event_title"] != $clerkship_event["rotation_title"] ? " [".$clerkship_event["rotation_title"]."]" : "");
 									$clerkship_event["sort_title"] = $clerkship_event["rotation_title"].", ".$clerkship_event["event_title"];
 									$available_targets[$target_id] = $clerkship_event;
 								}

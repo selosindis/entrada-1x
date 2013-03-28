@@ -207,8 +207,47 @@ if ($RECORD_ID) {
 								$PROCESSED["target_record_id"] = $event_id;
 							}
 							if ($PROCESSED["target_shortname"] == "preceptor") {
-								if (isset($_POST["preceptor_proxy_id"]) && ($preceptor_proxy_id = clean_input($_POST["preceptor_proxy_id"]))) {
-									$PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] = $preceptor_proxy_id;
+								if (isset($_POST["preceptor_proxy_id"]) && ($preceptor_proxy_id = clean_input($_POST["preceptor_proxy_id"], "trim", "alphanum")) && ((int)$preceptor_proxy_id || ($preceptor_proxy_id == "other"))) {
+                                    if ($preceptor_proxy_id !== "other") {
+                                        $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] = $preceptor_proxy_id;
+                                    } else {
+                                        $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] = "other";
+                                        $PROCESSED_TEACHER = array();
+
+                                        /**
+                                         * Required: other_teacher_fname / Firstname
+                                         */
+                                        if((isset($_POST["other_teacher_fname"])) && ($other_teacher_fname = clean_input($_POST["other_teacher_fname"], array("trim", "notags")))) {
+                                            $PROCESSED_TEACHER["firstname"] = $other_teacher_fname;
+                                        } else {
+                                            $ERROR++;
+                                            $ERRORSTR[]	= "You have selected &quot;Other Teacher&quot; from the teacher list but have not provided their firstname.";
+                                        }
+
+                                        /**
+                                         * Required: other_teacher_lname / Lastname
+                                         */
+                                        if((isset($_POST["other_teacher_lname"])) && ($other_teacher_lname = clean_input($_POST["other_teacher_lname"], array("trim", "notags")))) {
+                                            $PROCESSED_TEACHER["lastname"] = $other_teacher_lname;
+                                        } else {
+                                            $ERROR++;
+                                            $ERRORSTR[]	= "You have selected &quot;Other Teacher&quot; from the teacher list but have not provided their lastname.";
+                                        }
+
+                                        /**
+                                         * Not Required: other_teacher_email / E-Mail Address
+                                         */
+                                        if((isset($_POST["other_teacher_email"])) && ($other_teacher_email = clean_input($_POST["other_teacher_email"], array("trim", "notags")))) {
+                                            if(valid_address($other_teacher_email)) {
+                                                $PROCESSED_TEACHER["email"] = $other_teacher_email;
+                                            } else {
+                                                $ERROR++;
+                                                $ERRORSTR[]	= "You have selected &quot;Other Teacher&quot; from the teacher list but you have provided us with an invalid e-mail address.";
+                                            }
+                                        } else {
+                                            $PROCESSED_TEACHER["email"] = "";
+                                        }
+                                    }
 								} else {
 									$ERROR++;
 									$ERRORSTR[] = "Please ensure you have selected a valid preceptor to evaluate from the list.";
@@ -397,6 +436,26 @@ if ($RECORD_ID) {
 									 * and that we have stored those responses evaluation_responses table.
 									 */
 									if (!$ERROR) {
+                                        if ($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] === "other") {
+                                            if($PROCESSED_TEACHER["email"]) {
+                                                $query	= "SELECT `id` FROM `".AUTH_DATABASE."`.`user_data` WHERE `email` = ".$db->qstr($PROCESSED_TEACHER["email"]);
+                                                $result	= $db->GetRow($query);
+                                                if($result) {
+                                                    $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] = $result["id"];
+                                                }
+                                            }
+
+                                            if(!(int) $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) {
+                                                if(($db->AutoExecute(CLERKSHIP_DATABASE.".other_teachers", $PROCESSED_TEACHER, "INSERT")) && ($oteacher_id = $db->Insert_Id())) {
+                                                    $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]	= "OT-".$oteacher_id;	
+                                                } else {
+                                                    $ERROR++;
+                                                    $ERRORSTR[] = "We are unable to add your other teacher information at this time. This MEdTech Unit has been notified of this error, please try again later.";
+
+                                                    application_log("error", "Unable to add new teacher to other_teachers table: ".$db->ErrorMsg());
+                                                }
+                                            }
+                                        }
 										$evaluation_progress_array	= array (
 																	"progress_value" => "complete",
 																	"evaluation_id" => $evaluation_record["evaluation_id"],
@@ -557,6 +616,21 @@ if ($RECORD_ID) {
 									if (!isset($evaluation_targets) || !count($evaluation_targets)) {
 										$evaluation_targets = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
 									}
+                                    if ($PROCESSED["target_shortname"] == "preceptor") {
+                                        $HEAD[] = "
+                                                    <script type=\"text/javascript\">
+                                                        function displayOtherTeacher(instructor_id) {
+                                                            if(instructor_id == 'other') {
+                                                                $('other_teacher_layer').style.display = 'block';
+                                                                $('other_teacher_fname').focus();
+                                                            } else {
+                                                                $('other_teacher_layer').style.display = 'none';
+                                                            }
+
+                                                            return;
+                                                        }
+                                                    </script>";
+                                    }
 									if ($evaluation_targets) {
 										if (count($evaluation_targets) == 1) {
 											echo "<input type=\"hidden\" id=\"evaluation_target\" name=\"evaluation_target\" value=\"".$evaluation_targets[0]["etarget_id"]."\" />";
@@ -569,7 +643,7 @@ if ($RECORD_ID) {
 											} elseif ($PROCESSED["target_shortname"] == "course") {
 												echo "<input type=\"hidden\" id=\"target_record_id\" name=\"target_record_id\" value=\"".$evaluation_targets[0]["course_id"]."\" />";
 												$target_name = $db->GetOne("SELECT `course_name` FROM `courses` WHERE `course_id` = ".$db->qstr($evaluation_targets[0]["target_value"]));
-											} elseif ($PROCESSED["target_shortname"] == "rotation_core" || $PROCESSED["target_shortname"] == "rotation_elective") {
+											} elseif ($PROCESSED["target_shortname"] == "rotation_core" || $PROCESSED["target_shortname"] == "rotation_elective" || $PROCESSED["target_shortname"] == "preceptor" ) {
 												echo "<input type=\"hidden\" id=\"event_id\" name=\"event_id\" value=\"".$evaluation_targets[0]["event_id"]."\" />";
 												$target_name = $evaluation_targets[0]["event_title"];
 											} elseif ($PROCESSED["target_shortname"] == "self") {
@@ -587,6 +661,11 @@ if ($RECORD_ID) {
 											}
 											if ($target_name) {
 												echo "<div class=\"content-small\">Evaluating <strong>".$target_name."</strong>.</div>";
+                                                if ($PROCESSED["target_shortname"] == "preceptor") {
+                                                    echo "<div id=\"preceptor_select\">\n";
+                                                    echo Evaluation::getPreceptorSelect($RECORD_ID, $evaluation_targets[0]["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
+                                                    echo "</div>\n";
+                                                } 
 											}
 										} elseif ($PROCESSED["target_shortname"] == "teacher") {
 											echo "<div class=\"content-small\">Please choose a teacher to evaluate: \n";
@@ -611,7 +690,7 @@ if ($RECORD_ID) {
 											if ($PROCESSED["target_shortname"] == "preceptor") {
 												echo "<div id=\"preceptor_select\">\n";
 												if (isset($PROCESSED["event_id"]) && $PROCESSED["event_id"]) {
-													echo Evaluation::getPreceptorSelect($RECORD_ID, $PROCESSED["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED["preceptor_proxy_id"]) && $PROCESSED["preceptor_proxy_id"] ? $PROCESSED["preceptor_proxy_id"] : 0));
+													echo Evaluation::getPreceptorSelect($RECORD_ID, $PROCESSED["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
 												} else {
 													echo display_notice("Please select a <strong>Clerkship Service</strong> to evaluate a <strong>Preceptor</strong> for.");
 												}
@@ -657,7 +736,33 @@ if ($RECORD_ID) {
 											echo "</div>";
 										}
 									}
-
+                                    if ($PROCESSED["target_shortname"] == "preceptor") {
+                                        ?>
+                                            <div id="other_teacher_layer"<?php echo (!isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) || $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] !== "other" ? " style=\"display: none\"" : ""); ?>>
+                                                <table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Evaluating <?php echo html_encode($target_name); ?>">
+                                                <colgroup>
+                                                    <col style="width: 30%" />
+                                                    <col style="width: 70%" />
+                                                </colgroup>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><label for="other_teacher_fname" class="form-required">Firstname:</label></td>
+                                                        <td><input type="text" id="other_teacher_fname" name="other_teacher_fname" style="width: 200px" value="<?php echo html_encode(trim($_POST["other_teacher_fname"])) ?>" maxlength="45" /></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><label for="other_teacher_lname" class="form-required">Lastname:</label></td>
+                                                        <td><input type="text" id="other_teacher_lname" name="other_teacher_lname" style="width: 200px" value="<?php echo html_encode(trim($_POST["other_teacher_lname"])) ?>" maxlength="45" /></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><label for="other_teacher_email" class="form-nrequired">E-Mail Address:</label></td>
+                                                        <td><input type="text" id="other_teacher_email" name="other_teacher_email" style="width: 200px" value="<?php echo html_encode(trim($_POST["other_teacher_email"])) ?>" maxlength="125" /></td>
+                                                    </tr>
+                                                </tbody>
+                                                </table>
+                                            </div>
+                                            <br />
+                                        <?php
+                                    }
 									?>
 									<div id="display-unsaved-warning" class="display-notice" style="display: none">
 										<ul>
@@ -752,6 +857,7 @@ if ($RECORD_ID) {
 											parameters: { 'id' : '<?php echo $RECORD_ID; ?>', 'event_id' : event_id, 'preceptor_proxy_id' : preceptor_proxy_id},
 											onSuccess: function(transport) {
 												$('preceptor_select').removeClassName('notice');
+                                                $('other_teacher_layer').hide();
 											},
 											onError: function() {
 													$('preceptor_select').addClassName('notice');

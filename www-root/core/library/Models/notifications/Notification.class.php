@@ -171,7 +171,8 @@ class Notification {
 	 */
 	public static function add(	$nuser_id,
 								$proxy_id,
-								$record_id) {
+								$record_id,
+                                $subcontent_id = 0) {
 		global $db;
 		$notification_user = NotificationUser::getByID($nuser_id);
 		if ($notification_user) {
@@ -218,43 +219,82 @@ class Notification {
 					break;
 					case "evaluation" :
 					case "evaluation_overdue" :
-						$search = array("%UC_CONTENT_TYPE_NAME%",
-										"%CONTENT_TYPE_NAME%",
-										"%CONTENT_TYPE_SHORTNAME%",
-										"%UC_CONTENT_TYPE_SHORTNAME%",
-										"%EVALUATOR_FULLNAME%",
-										"%CONTENT_TITLE%",
-										"%CONTENT_BODY%",
-										"%CONTENT_START%",
-										"%CONTENT_FINISH%",
-										"%MANDATORY_STRING%",
-										"%URL%",
-										"%APPLICATION_NAME%",
-										"%ENTRADA_URL%");
-						if (strpos($notification_user->getContentTypeName(), "assessment") !== false) {
-							$content_type_shortname = "assessment";
-						} else {
-							$content_type_shortname = "evaluation";
-						}
-						$evaluation = $db->GetRow("SELECT * FROM `evaluations` WHERE `evaluation_id` = ".$db->qstr($record_id));
-						$mandatory = $evaluation["evaluation_mandatory"];
-						$evaluation_start = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_start"]);
-						$evaluation_finish = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_finish"]);
-						$replace = array(	html_encode(ucwords($notification_user->getContentTypeName())),
-											html_encode($notification_user->getContentTypeName()),
-											html_encode($content_type_shortname),
-											html_encode(ucfirst($content_type_shortname)),
-											html_encode(get_account_data("wholename", $notification_user->getProxyID())),
-											html_encode($notification_user->getContentTitle()),
-											html_encode($notification_user->getContentBody($record_id)),
-											html_encode($evaluation_start),
-											html_encode($evaluation_finish),
-											html_encode((isset($mandatory) && $mandatory ? "mandatory" : "non-mandatory")),
-											html_encode($notification_user->getContentURL()),
-											html_encode(APPLICATION_NAME),
-											html_encode(ENTRADA_URL));
-						$notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-evaluation-".($evaluation["evaluation_finish"] >= time() || $evaluation["evaluation_start"] >= strtotime("-1 day") ? "release" : "overdue").".xml");
-						$notification_body = str_replace($search, $replace, $notification_body);
+                        $query = "SELECT * FROM `evaluations` AS a
+                                    JOIN `evaluation_forms` AS b
+                                    ON a.`eform_id` = b.`eform_id`
+                                    JOIN `evaluations_lu_targets` AS c
+                                    ON b.`target_id` = c.`target_id`
+                                    WHERE a.`evaluation_id` = ".$db->qstr($record_id);
+						$evaluation = $db->GetRow($query);
+                        if ($evaluation) {
+                            $search = array("%UC_CONTENT_TYPE_NAME%",
+                                            "%CONTENT_TYPE_NAME%",
+                                            "%CONTENT_TYPE_SHORTNAME%",
+                                            "%UC_CONTENT_TYPE_SHORTNAME%",
+                                            "%EVALUATOR_FULLNAME%",
+                                            "%CONTENT_TITLE%",
+                                            "%EVENT_TITLE%",
+                                            "%CONTENT_BODY%",
+                                            "%CONTENT_START%",
+                                            "%CONTENT_FINISH%",
+                                            "%CONTENT_LOCKOUT%",
+                                            "%MANDATORY_STRING%",
+                                            "%URL%",
+                                            "%APPLICATION_NAME%",
+                                            "%ENTRADA_URL%");
+                            if (strpos($notification_user->getContentTypeName(), "assessment") !== false) {
+                                $content_type_shortname = "assessment";
+                            } else {
+                                $content_type_shortname = "evaluation";
+                            }
+                            if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $subcontent_id) {
+                                $query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`events` WHERE `event_id` = ".$db->qstr($subcontent_id);
+                                $clerkship_event = $db->GetRow($query);
+                                if ($clerkship_event) {
+                                    if ($evaluation["target_shortname"] != "rotation_elective") {
+                                        $evaluation["evaluation_start"] = $clerkship_event["event_finish"];
+                                        $evaluation["evaluation_finish"] = $clerkship_event["event_finish"] + CLERKSHIP_EVALUATION_TIMEOUT;
+                                    }
+                                    $evaluation["evaluation_lockout"] = $clerkship_event["event_finish"] + CLERKSHIP_EVALUATION_LOCKOUT;
+                                    $event_title = $clerkship_event["event_title"];
+                                } else {
+                                    $event_title = "";
+                                    $evaluation["evaluation_lockout"] = $evaluation["evaluation_finish"];
+                                }
+                            } else {
+                                $event_title = "";
+                                $evaluation["evaluation_lockout"] = $evaluation["evaluation_finish"];
+                            }
+                            $mandatory = $evaluation["evaluation_mandatory"];
+                            $evaluation_start = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_start"]);
+                            $evaluation_finish = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_finish"]);
+                            $evaluation_lockout = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_lockout"]);
+                            $organisation_id = get_account_data("organisation_id", $proxy_id);
+                            $content_url = $notification_user->getContentURL();
+                            $replace = array(	html_encode(ucwords($notification_user->getContentTypeName())),
+                                                html_encode($notification_user->getContentTypeName()),
+                                                html_encode($content_type_shortname),
+                                                html_encode(ucfirst($content_type_shortname)),
+                                                html_encode(get_account_data("wholename", $notification_user->getProxyID())),
+                                                html_encode($notification_user->getContentTitle()),
+                                                html_encode($event_title),
+                                                html_encode($notification_user->getContentBody($record_id)),
+                                                html_encode($evaluation_start),
+                                                html_encode($evaluation_finish),
+                                                html_encode($evaluation_lockout),
+                                                html_encode((isset($mandatory) && $mandatory ? "mandatory" : "non-mandatory")),
+                                                html_encode($content_url),
+                                                html_encode(APPLICATION_NAME),
+                                                html_encode(ENTRADA_URL));
+                            if ($evaluation["target_shortname"] == "rotation_core") {
+                                $notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-rotation-core-evaluation-".($evaluation["evaluation_finish"] >= time() || $evaluation["evaluation_start"] >= strtotime("-1 day") ? "release" : "overdue").".xml");
+                            } elseif ($evaluation["target_shortname"] == "preceptor") {
+                                $notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-preceptor-evaluation-".($evaluation["evaluation_finish"] >= time() || $evaluation["evaluation_start"] >= strtotime("-1 day") ? "release" : "overdue").".xml");
+                            } else {
+                                $notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-evaluation-".($evaluation["evaluation_finish"] >= time() || $evaluation["evaluation_start"] >= strtotime("-1 day") ? "release" : "overdue").".xml");
+                            }
+                            $notification_body = str_replace($search, $replace, $notification_body);
+                        }
 					break;
 					case "evaluation_threshold" :
 						$search = array("%UC_CONTENT_TYPE_NAME%",

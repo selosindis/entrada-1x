@@ -133,10 +133,37 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			 */
 			if (isset($_POST["allow_target_request"]) && ($_POST["allow_target_request"])) {
 				$PROCESSED["allow_target_request"] = true;
+
+                /**
+                 * Non-required field "require_requests" / Require Target Requests
+                 */
+                if (isset($_POST["require_requests"]) && ($_POST["require_requests"])) {
+                    $PROCESSED["require_requests"] = true;
+                } else {
+                    $PROCESSED["require_requests"] = false;
+                }
+
+                /**
+                 * Non-required field "require_request_code" / Require Request Code
+                 */
+                if (isset($_POST["require_request_code"]) && ($_POST["require_request_code"])) {
+                    $PROCESSED["require_request_code"] = true;
+                } else {
+                    $PROCESSED["require_request_code"] = false;
+                }
+
+                /**
+                 * Required field "request_timeout" / Request Timeout in Minutes
+                 */
+                if (isset($_POST["request_timeout"]) && ($request_timeout = clean_input($_POST["request_timeout"], "int")) && ($request_timeout >= 1)) {
+                    $PROCESSED["request_timeout"] = $request_timeout;
+                } else {
+                    $PROCESSED["request_timeout"] = 0;
+                }
 			} else {
 				$PROCESSED["allow_target_request"] = false;
 			}
-			
+
 			/**
 			 * Non-required field "allow_repeat_targets" / Allow Multiple Attempts on Each Target
 			 */
@@ -145,7 +172,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			} else {
 				$PROCESSED["allow_repeat_targets"] = false;
 			}
-			
+
 			/**
 			 * Non-required field "show_comments" / Show Comments
 			 */
@@ -975,11 +1002,54 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				<label for="allow_target_request" class="form-required control-label">Allow Target Request:</label>
 				<div class="controls">
 					<label class="checkbox">
-						<input type="checkbox" id="allow_target_request" name="allow_target_request"<?php echo (!isset($PROCESSED["allow_target_request"]) || $PROCESSED["allow_target_request"] ? " checked=\"checked\"" : ""); ?> />
+                        <input type="checkbox" onclick="$('evaluation_requests').toggle(this.checked);" id="allow_target_request" name="allow_target_request"<?php echo (isset($PROCESSED["allow_target_request"]) && $PROCESSED["allow_target_request"] ? " checked=\"checked\"" : ""); ?> />
 						Allow targets to trigger a request to be sent to a valid evaluator to fill out an evaluation for them.
 					</label>
 				</div>
 			</div>
+            <div class="control-group" id="evaluation_requests"<?php echo (isset($PROCESSED["allow_target_request"]) && $PROCESSED["allow_target_request"] ? "" : "style=\"display: none;\""); ?>>
+                <table style="width: 100%;" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Requests">
+                    <colgroup>
+                        <col style="width: 3%" />
+                        <col style="width: 30%" />
+                        <col style="width: 67%" />
+                    </colgroup>
+                    <tr>
+                        <td></td>
+                        <td>
+                            <label for="require_requests" class="form-nrequired">Require Requests</label>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="require_requests" name="require_requests"<?php echo (isset($PROCESSED["require_requests"]) && $PROCESSED["require_requests"] ? " checked=\"checked\"" : ""); ?> />
+                            <div style="float: right; width: 91%" class="content-small">Require an open request before allowing an evaluator to attempt this evaluation.</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>
+                            <label for="require_request_code" class="form-nrequired">Require a Request Code</label>
+                        </td>
+                        <td>
+                            <input type="checkbox" id="require_request_code" name="require_request_code"<?php echo (isset($PROCESSED["require_request_code"]) && $PROCESSED["require_request_code"] ? " checked=\"checked\"" : ""); ?> />
+                            <div style="float: right; width: 91%" class="content-small">Generate a <strong>Request Code</strong> upon each request being made, to be inputted before allowing an evaluator to attempt this evaluation.</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td>
+                            <label for="request_timeout" class="form-nrequired">Request Timeout</label>
+                        </td>
+                        <td>
+                            <input type="text" id="request_timeout" name="request_timeout" value="<?php echo (isset($PROCESSED["request_timeout"]) && $PROCESSED["request_timeout"] ? $PROCESSED["request_timeout"] : 0); ?>" />
+                            <div class="content-small">How long (in minutes) before requests time out. To disable timeouts, set to 0.</div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
 			<div class="control-group">
 				<label for="allow_repeat_targets" class="form-required control-label">Allow Multiple Attempts on Each Target:</label>
 				<div class="controls">
@@ -989,7 +1059,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					</label>
 				</div>
 			</div>
-			
+
 			<div class="control-group">
 				<label for="show_comments" class="form-required control-label">Show Comments in Review:</label>
 				<div class="controls">

@@ -149,6 +149,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					 */
 					if (isset($_POST["allow_target_request"]) && ($_POST["allow_target_request"])) {
 						$PROCESSED["allow_target_request"] = true;
+                
+                        /**
+                         * Non-required field "require_requests" / Require Target Requests
+                         */
+                        if (isset($_POST["require_requests"]) && ($_POST["require_requests"])) {
+                            $PROCESSED["require_requests"] = true;
+                        } else {
+                            $PROCESSED["require_requests"] = false;
+                        }
+
+                        /**
+                         * Non-required field "require_request_code" / Require Request Code
+                         */
+                        if (isset($_POST["require_request_code"]) && ($_POST["require_request_code"])) {
+                            $PROCESSED["require_request_code"] = true;
+                        } else {
+                            $PROCESSED["require_request_code"] = false;
+                        }
+
+                        /**
+                         * Required field "request_timeout" / Request Timeout in Minutes
+                         */
+                        if (isset($_POST["request_timeout"]) && ($request_timeout = clean_input($_POST["request_timeout"], "int")) && ($request_timeout >= 1)) {
+                            $PROCESSED["request_timeout"] = $request_timeout;
+                        } else {
+                            $PROCESSED["request_timeout"] = 0;
+                        }
 					} else {
 						$PROCESSED["allow_target_request"] = false;
 					}
@@ -1116,7 +1143,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								<tr>
 									<td></td>
 									<td style="vertical-align: top">
-										<label for="allow_comments" class="form-required">Evaluation Mandatory</label>
+										<label for="allow_comments" class="form-nrequired">Evaluation Mandatory</label>
 									</td>
 									<td>
 										<input type="checkbox" id="evaluation_mandatory" name="evaluation_mandatory"<?php echo (isset($PROCESSED["evaluation_mandatory"]) && $PROCESSED["evaluation_mandatory"] ? " checked=\"checked\"" : ""); ?> />
@@ -1126,7 +1153,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								<tr>
 									<td></td>
 									<td style="vertical-align: top">
-										<label for="allow_target_review" class="form-required">Allow Target Review</label>
+										<label for="allow_target_review" class="form-nrequired">Allow Target Review</label>
 									</td>
 									<td>
 										<input type="checkbox" id="allow_target_review" name="allow_target_review"<?php echo (!isset($PROCESSED["allow_target_review"]) || $PROCESSED["allow_target_review"] ? " checked=\"checked\"" : ""); ?> />
@@ -1136,17 +1163,62 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								<tr>
 									<td></td>
 									<td style="vertical-align: top">
-										<label for="allow_target_request" class="form-required">Allow Target Request</label>
+										<label for="allow_target_request" class="form-nrequired">Allow Target Request</label>
 									</td>
 									<td>
-										<input type="checkbox" id="allow_target_request" name="allow_target_request"<?php echo (!isset($PROCESSED["allow_target_request"]) || $PROCESSED["allow_target_request"] ? " checked=\"checked\"" : ""); ?> />
+										<input type="checkbox" onclick="$('evaluation_requests').toggle(this.checked);" id="allow_target_request" name="allow_target_request"<?php echo (!isset($PROCESSED["allow_target_request"]) || $PROCESSED["allow_target_request"] ? " checked=\"checked\"" : ""); ?> />
 										<div style="float: right; width: 91%" class="content-small">Allow targets to trigger a request to be sent to a valid evaluator to fill out an evaluation for them.</div>
 									</td>
 								</tr>
+                                <tr>
+                                    <td colspan="2">&nbsp;</td>
+                                    <td>
+                                        <table id="evaluation_requests" style="width: 100%;<?php echo (isset($PROCESSED["allow_target_request"]) && $PROCESSED["allow_target_request"] ? "" : " display: none;"); ?>" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Requests">
+                                            <colgroup>
+                                                <col style="width: 3%" />
+                                                <col style="width: 30%" />
+                                                <col style="width: 67%" />
+                                            </colgroup>
+                                            <tr>
+                                                <td></td>
+                                                <td>
+                                                    <label for="require_requests" class="form-nrequired">Require Requests</label>
+                                                </td>
+                                                <td>
+                                                    <input type="checkbox" id="require_requests" name="require_requests"<?php echo (isset($PROCESSED["require_requests"]) && $PROCESSED["require_requests"] ? " checked=\"checked\"" : ""); ?> />
+                                                    <div style="float: right; width: 91%" class="content-small">Require an open request before allowing an evaluator to attempt this evaluation.</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td></td>
+                                                <td>
+                                                    <label for="require_request_code" class="form-nrequired">Require a Request Code</label>
+                                                </td>
+                                                <td>
+                                                    <input type="checkbox" id="require_request_code" name="require_request_code"<?php echo (isset($PROCESSED["require_request_code"]) && $PROCESSED["require_request_code"] ? " checked=\"checked\"" : ""); ?> />
+                                                    <div style="float: right; width: 91%" class="content-small">Generate a <strong>Request Code</strong> upon each request being made, to be inputted before allowing an evaluator to attempt this evaluation.</div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="3">&nbsp;</td>
+                                            </tr>
+                                            <tr>
+                                                <td></td>
+                                                <td>
+                                                    <label for="request_timeout" class="form-nrequired">Request Timeout</label>
+                                                </td>
+                                                <td>
+                                                    <input type="text" id="request_timeout" name="request_timeout" value="<?php echo (isset($PROCESSED["request_timeout"]) && $PROCESSED["request_timeout"] ? $PROCESSED["request_timeout"] : 0); ?>" />
+                                                    <div class="content-small">How long (in minutes) before requests time out. To disable timeouts, set to 0.</div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
 								<tr>
 									<td></td>
 									<td style="vertical-align: top">
-										<label for="allow_repeat_targets" class="form-required">Allow Multiple Attempts on Each Target</label>
+										<label for="allow_repeat_targets" class="form-nrequired">Allow Multiple Attempts on Each Target</label>
 									</td>
 									<td>
 										<input type="checkbox" id="allow_repeat_targets" name="allow_repeat_targets"<?php echo (!isset($PROCESSED["allow_repeat_targets"]) || $PROCESSED["allow_repeat_targets"] ? " checked=\"checked\"" : ""); ?> />
@@ -1156,7 +1228,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								<tr>
 									<td></td>
 									<td style="vertical-align: top">
-										<label for="show_comments" class="form-required">Show Comments in Review</label>
+										<label for="show_comments" class="form-nrequired">Show Comments in Review</label>
 									</td>
 									<td>
 										<input type="checkbox" id="show_comments" name="show_comments"<?php echo (!isset($PROCESSED["show_comments"]) || $PROCESSED["show_comments"] ? " checked=\"checked\"" : ""); ?> />

@@ -25,7 +25,7 @@ require_once("init.inc.php");
 require_once("Models/evaluation/Evaluation.class.php");
 
 //queue notifications for each user with the evaluations which have opened for them in the last 24 hours.
-$query = "SELECT * FROM `evaluations` AS a
+$query = "SELECT *, '0' AS `event_id` FROM `evaluations` AS a
 			JOIN `evaluation_forms` AS b
 			ON a.`eform_id` = b.`eform_id`
 			JOIN `evaluations_lu_targets` AS c
@@ -37,7 +37,7 @@ $query = "SELECT * FROM `evaluations` AS a
 			
 			UNION
 			
-			SELECT a.*, b.*, c.* FROM `evaluations` AS a
+			SELECT a.*, b.*, c.*, e.`event_id` FROM `evaluations` AS a
 			JOIN `evaluation_forms` AS b
 			ON a.`eform_id` = b.`eform_id`
 			JOIN `evaluations_lu_targets` AS c
@@ -65,7 +65,7 @@ $query = "SELECT * FROM `evaluations` AS a
 			
 			UNION
 			
-			SELECT a.*, b.*, c.* FROM `evaluations` AS a
+			SELECT a.*, b.*, c.*, e.`event_id` FROM `evaluations` AS a
 			JOIN `evaluation_forms` AS b
 			ON a.`eform_id` = b.`eform_id`
 			JOIN `evaluations_lu_targets` AS c
@@ -93,7 +93,7 @@ $query = "SELECT * FROM `evaluations` AS a
 			
 			UNION
 			
-			SELECT a.*, b.*, c.* FROM `evaluations` AS a
+			SELECT a.*, b.*, c.*, e.`event_id` FROM `evaluations` AS a
 			JOIN `evaluation_forms` AS b
 			ON a.`eform_id` = b.`eform_id`
 			JOIN `evaluations_lu_targets` AS c
@@ -138,13 +138,13 @@ foreach ($pending_evaluations as $evaluation_id => $pending_evaluation_users) {
 					AND (`sent_date` = 0 OR `sent_date` >= ".$db->qstr(strtotime("-7 days")).")";
 		$recent_notifications = $db->GetAll($query);
 		if (!isset($recent_notifications) || !$recent_notifications) {
-			Notification::add($notification_user->getID(), $proxy_id, $evaluation_id);
+			Notification::add($notification_user->getID(), $proxy_id, $evaluation_id, (isset($pending_evaluation["event_id"]) && $pending_evaluation["event_id"] ? $pending_evaluation["event_id"] : $pending_evaluation["event_id"]));
 		}
 	}
 }
 
-//queue notifications for each user with the evaluations which have opened for them in the last 24 hours.
-$query = "SELECT * FROM `evaluations` AS a
+//queue notifications for each user with the evaluations which have closed for them in the last 24 hours.
+$query = "SELECT *, '0' AS `event_id` FROM `evaluations` AS a
 			JOIN `evaluation_forms` AS b
 			ON a.`eform_id` = b.`eform_id`
 			JOIN `evaluations_lu_targets` AS c
@@ -156,7 +156,7 @@ $query = "SELECT * FROM `evaluations` AS a
 			
 			UNION
 			
-			SELECT a.*, b.*, c.* FROM `evaluations` AS a
+			SELECT a.*, b.*, c.*, e.`event_id` FROM `evaluations` AS a
 			JOIN `evaluation_forms` AS b
 			ON a.`eform_id` = b.`eform_id`
 			JOIN `evaluations_lu_targets` AS c
@@ -179,13 +179,13 @@ $query = "SELECT * FROM `evaluations` AS a
 			AND h.`proxy_id` = f.`etype_id`
 			AND h.`member_active`
 			WHERE a.`evaluation_start` <= ".$db->qstr(strtotime("-1 day"))."
-			AND a.`evaluation_finish` >= ".$db->qstr(strtotime("-10 weeks"))."
-			AND a.`evaluation_finish` <= ".$db->qstr(time())."
+			AND e.`event_finish` >= ".$db->qstr(time() - CLERKSHIP_EVALUATION_LOCKOUT)."
+			AND e.`event_finish` <= ".$db->qstr(time() - CLERKSHIP_EVALUATION_TIMEOUT)."
 			
 			
 			UNION
 			
-			SELECT a.*, b.*, c.* FROM `evaluations` AS a
+			SELECT a.*, b.*, c.*, e.`event_id` FROM `evaluations` AS a
 			JOIN `evaluation_forms` AS b
 			ON a.`eform_id` = b.`eform_id`
 			JOIN `evaluations_lu_targets` AS c
@@ -208,13 +208,13 @@ $query = "SELECT * FROM `evaluations` AS a
 			AND h.`proxy_id` = f.`etype_id`
 			AND h.`active` = 1
 			WHERE a.`evaluation_start` <= ".$db->qstr(strtotime("-1 day"))."
-			AND a.`evaluation_finish` >= ".$db->qstr(strtotime("-10 weeks"))."
-			AND a.`evaluation_finish` <= ".$db->qstr(time())."
+			AND e.`event_finish` >= ".$db->qstr(time() - CLERKSHIP_EVALUATION_LOCKOUT)."
+			AND e.`event_finish` <= ".$db->qstr(time() - CLERKSHIP_EVALUATION_TIMEOUT)."
 			
 			
 			UNION
 			
-			SELECT a.*, b.*, c.* FROM `evaluations` AS a
+			SELECT a.*, b.*, c.*, e.`event_id` FROM `evaluations` AS a
 			JOIN `evaluation_forms` AS b
 			ON a.`eform_id` = b.`eform_id`
 			JOIN `evaluations_lu_targets` AS c
@@ -234,10 +234,9 @@ $query = "SELECT * FROM `evaluations` AS a
 			AND g.`evaluator_type` = 'proxy_id'
 			AND g.`evaluator_value` = f.`etype_id`
 			WHERE a.`evaluation_start` <= ".$db->qstr(strtotime("-1 day"))."
-			AND a.`evaluation_finish` >= ".$db->qstr(strtotime("-10 weeks"))."
-			AND a.`evaluation_finish` <= ".$db->qstr(time());
+			AND e.`event_finish` >= ".$db->qstr(time() - CLERKSHIP_EVALUATION_LOCKOUT)."
+			AND e.`event_finish` <= ".$db->qstr(time() - CLERKSHIP_EVALUATION_TIMEOUT);
 $ended_evaluations = $db->GetAll($query);
-
 if ($ended_evaluations) {
 	foreach ($ended_evaluations as $evaluation) {
 		$overdue_evaluations[$evaluation["evaluation_id"]] = Evaluation::getOverdueEvaluations($evaluation);
@@ -258,7 +257,7 @@ foreach ($overdue_evaluations as $evaluation_id => $overdue_evaluation_users) {
 					AND (`sent_date` = 0 OR `sent_date` >= ".$db->qstr(strtotime("-7 days")).")";
 		$recent_notifications = $db->GetAll($query);
 		if (!isset($recent_notifications) || !$recent_notifications) {
-			Notification::add($notification_user->getID(), $proxy_id, $evaluation_id);
+			Notification::add($notification_user->getID(), $proxy_id, $evaluation_id, (isset($overdue_evaluation["event_id"]) && $overdue_evaluation["event_id"] ? $overdue_evaluation["event_id"] : $overdue_evaluation["event_id"]));
 		}
 	}
 }

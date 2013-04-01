@@ -1002,7 +1002,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								padding:5px;
 								margin-bottom:5px;
 							}
-							.tl-objective-list > .objective-set h3{
+							.tl-objective-list > .objective-set h4{
 								-webkit-border-radius:5px;
 								-moz-border-radius:5px;
 								border-radius:5px;
@@ -1027,7 +1027,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 													data-code = "<?php echo $objective["objective_code"]; ?>"
 													data-name = "<?php echo $objective["objective_name"]; ?>"
 													data-description = "<?php echo $objective["objective_description"]; ?>">
-												<h3><?php echo $title; ?></h3>
+												<h4><?php echo $title; ?></h4>
 											</div>
 											<div class="objective-controls" id="objective_controls_<?php echo $objective["objective_id"];?>">
 											</div>

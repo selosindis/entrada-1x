@@ -12444,10 +12444,7 @@ function assessment_objectives_bottom_leaves($objectives,$course_id,$assessment_
 				$objective["mapped"] = 1;
 			}
 			array_push($list[$importance],$objective);
-			error_log("Added objective");
 		}else{
-			error_log("Children exist");
-
 			$response = assessment_objectives_bottom_leaves($children,$course_id,$assessment_id,$map,$imp);
 			if ($response) {
 				if ($parent_mapped) {
@@ -12462,7 +12459,6 @@ function assessment_objectives_bottom_leaves($objectives,$course_id,$assessment_
 				}
 			}
 		}
-		//error_log("After objective: ".$objective["objective_id"]." List is: ".print_r($list,true));
 	}
 
 	return $list;
@@ -12561,7 +12557,6 @@ function assessment_objective_parent_mapped_recursive($objectives,$objective_id,
 function event_objectives_display_leafs($objectives,$course_id,$event_id){
 	$leaves = event_objectives_bottom_leaves($objectives,$course_id,$event_id, false);
 	$displayed = array();
-	error_log(print_r($leaves,true));
 	foreach ($leaves as $importance=>$leafs) {
 		//if no leaves, don't show category
 		if($leafs && !empty($leafs)){
@@ -12623,7 +12618,6 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 					GROUP BY a.`objective_id`
 					ORDER BY a.`objective_order` ASC
 					";
-		error_log($query);
 		$children = $db->GetAll($query);
 		$map = ($parent_mapped?true:($objective["mapped"]?true:false));
 		if (!$children) {
@@ -12631,9 +12625,7 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 				$objective["mapped"] = 1;
 			}
 			array_push($list[$importance],$objective);
-			error_log("Added objective");
 		}else{
-			error_log("Children exist");
 
 			$response = event_objectives_bottom_leaves($children,$course_id,$event_id,$map,$imp);
 			if ($response) {
@@ -12649,7 +12641,6 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 				}
 			}
 		}
-		//error_log("After objective: ".$objective["objective_id"]." List is: ".print_r($list,true));
 	}
 
 	return $list;

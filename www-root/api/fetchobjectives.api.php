@@ -37,13 +37,17 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	$id = (int)$_GET["objective_id"];
 	$course_id = (int)(isset($_GET["course_id"])?$_GET["course_id"]:false);
 	$event_id = (int)(isset($_GET["event_id"])?$_GET["event_id"]:false);
+	$assessment_id = (int)(isset($_GET["assessment_id"])?$_GET["assessment_id"]:false);
 	$select = "a.*";
 
 	if ($course_id){
 		$select .=", COALESCE(b.`cobjective_id`,0) AS `mapped`";
 	}elseif ($event_id) {
 		$select .=", COALESCE(b.`eobjective_id`,0) AS `mapped`";
+	}elseif ($assessment_id) {
+		$select .=", COALESCE(b.`aobjective_id`,0) AS `mapped`";
 	}
+
 
 	$qu_arr = array("SELECT ".$select." FROM `global_lu_objectives` a");
 	
@@ -55,13 +59,16 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		$qu_arr[1] = "LEFT JOIN `event_objectives` b
 					ON a.`objective_id` = b.`objective_id`";
 		$qu_arr[3] = "AND b.`event_id` = ".$db->qstr($event_id);									
+	} elseif ($assessment_id) {
+		$qu_arr[1] = "LEFT JOIN `assessment_objectives` b
+					ON a.`objective_id` = b.`objective_id`";
+		$qu_arr[3] = "AND b.`assessment_id` = ".$db->qstr($assessment_id);									
 	}	
 	
 	$qu_arr[2] = "WHERE a.`objective_parent` = ".$db->qstr($id)." 
 				AND a.`objective_active` = '1'";
 	$qu_arr[4] = "ORDER BY a.`objective_order`";
 	$query = implode(" ",$qu_arr);
-	error_log($query);
 	$objectives = $db->GetAll($query);
 	if ($objectives) {
 		$obj_array = array();
@@ -71,18 +78,19 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									'objective_name'=>$objective["objective_name"],
 									'objective_description'=>$objective["objective_description"]
 								);
-			if ($course_id || $event_id){
+			if ($course_id || $event_id || $assessment_id){
 				$fields["mapped"] = $objective["mapped"];
 				if ($course_id) {
-					$fields["decendant_mapped"] = course_objective_has_child_mapped($objective["objective_id"],$course_id);
-				}
-				if ($event_id) {
-					$fields["decendant_mapped"] = event_objective_parent_mapped_course($objective["objective_id"],$event_id);
-					$query = "	SELECT * FROM `global_lu_objectives` 
-								WHERE `objective_parent` = ".$db->qstr($objective["objective_id"]);
-					$fields["has_child"] = $db->GetAll($query)?true:false;
-				}				
+					$fields["decendant_mapped"] = course_objective_has_child_mapped($objective["objective_id"],$course_id,true);
+				} else if ($event_id) {
+					$fields["decendant_mapped"] = event_objective_parent_mapped_course($objective["objective_id"],$event_id,true);
+				} else if ($assessment_id) {
+					$fields["decendant_mapped"] = assessment_objective_parent_mapped_course($objective["objective_id"],$assessment_id,true);
+				}												
 			}			
+			$query = "	SELECT * FROM `global_lu_objectives` 
+						WHERE `objective_parent` = ".$db->qstr($objective["objective_id"]);
+			$fields["has_child"] = $db->GetAll($query)?true:false;			
 			$obj_array[] = $fields;
 		}
 		echo json_encode($obj_array);

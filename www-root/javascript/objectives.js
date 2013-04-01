@@ -324,7 +324,7 @@ function buildDOM(children,id){
 							.attr('data-id',children[i].objective_id);																				
 		jQuery(child_container).append(child_list);			
 		var type = jQuery('#mapped_objectives').attr('data-resource-type');								
-		if(type != 'event' || !children[i].has_child){
+		if((type != 'event' && type != 'assessment' ) || !children[i].has_child){
 			jQuery(controls).append(check);
 		}		
 		if(EDITABLE == true){

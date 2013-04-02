@@ -304,11 +304,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							<td colspan="3">
 								<?php
 								if ($ALLOW_QUESTION_MODIFICATIONS) {
+									$query = "SELECT questiontype_id, questiontype_title FROM `quizzes_lu_questiontypes` WHERE `questiontype_active` = '1'";
+									$question_types = $db->GetAssoc($query);
+									if ($question_types) {
 									?>
 									<div class="row-fluid" style="margin-bottom:10px;">
-										<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>" class="btn">Add New Question</a>
+										<div class="btn-group">
+											<a class="btn dropdown-toggle" data-toggle="dropdown" href="#">Add New Question<span class="caret"></span></a>
+											<ul class="dropdown-menu">
+												<?php foreach ($question_types as $questiontype_id => $question_type) { ?>
+												<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&amp;type=<?php echo $questiontype_id; ?>"><?php echo $question_type; ?></a></li>
+												<?php } ?>
+											</ul>
+										</div>	   
 									</div>
 									<?php
+									}
 								}
 
 								$query		= "	SELECT a.*
@@ -332,8 +343,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 														echo "		<a id=\"question_delete_".$question["qquestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["qquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
 														echo "	</div>\n";
 													}
-
-													echo "		<span id=\"question_text_".$question["qquestion_id"]."\" class=\"question\">".clean_input($question["question_text"], "trim")."</span>";
+													echo "		<span id=\"question_text_".$question["qquestion_id"]."\" class=\"question\">".($question["questiontype_id"] == "2" ? "<strong>Descriptive Text:</strong> " : ($question["questiontype_id"] == "3" ? "<strong>Page Break:</strong> " : "")).clean_input($question["question_text"], "trim")."</span>";
 													echo "	</div>\n";
 													echo "	<ul class=\"responses\">\n";
 													$query		= "	SELECT a.*

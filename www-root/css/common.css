@@ -1643,6 +1643,10 @@ padding-right:3px;
 padding-left:3px;
 }
 
+table.gradebook tr.highlight td {
+background-color:#FFC !important;
+}
+
 .searchTitle {
 background-color:#F3f3f3;
 border-top:1px #DDD solid;

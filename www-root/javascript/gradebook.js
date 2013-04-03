@@ -105,7 +105,10 @@ jQuery(document).ready(function($) {
 				if (suffix[1]) {
 					var id_suffix = $(this).attr('id').substring(5);
 					$('#percentage'+id_suffix).html('<div style="width: 45px; ">'+percent+'%</div>');
-				}				
+                }
+                if ($('#grades'+$(this).attr('data-proxy-id')).hasClass('highlight')) {
+                    $('#grades'+$(this).attr('data-proxy-id')).removeClass('highlight');
+                }
 			}
 		}).keyup(function(e){
 			var dest;

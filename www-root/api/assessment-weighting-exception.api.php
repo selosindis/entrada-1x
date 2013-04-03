@@ -58,7 +58,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	}
 	
 	if (isset($_POST["grade_weighting"])) {
-		$grade_weighting = clean_input($_POST["grade_weighting"], "int");
+		$grade_weighting = clean_input($_POST["grade_weighting"], "float");
 	}
 	
 	if (isset($_POST["remove"]) && $_POST["remove"] == "1") {

@@ -21,7 +21,6 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
  */
-
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -37,6 +36,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+    ini_set("auto_detect_line_endings", 1);
 	if (isset($_GET["assessment_id"]) && $tmp_input = (int)$_GET["assessment_id"]) {
 		$ASSESSMENT_ID = $tmp_input;
 	}
@@ -49,70 +49,104 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			} elseif(!in_array($_FILES["file"]["type"], array("text/csv", "application/vnd.ms-excel","text/comma-separated-values","application/csv", "application/excel", "application/vnd.ms-excel", "application/vnd.msexcel","application/octet-stream"))) {
 				add_error("Invalid <strong>file type</strong> uploaded. Must be a CSV file in the proper format.");
 			} else {
-
 				$lines = file($_FILES["file"]["tmp_name"]);
 				$PROCESSED["assessment_id"] = $ASSESSMENT_ID;
-
-				$assessment = $db->GetRow("SELECT `cohort`,`name` FROM `assessments` WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID));
+                $query = "SELECT *, a.`name` as `assessment_name` FROM `assessments` AS a
+                            JOIN `assessment_marking_schemes` AS b
+                            ON a.`marking_scheme_id` = b.`id`
+                            WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+				$assessment = $db->GetRow($query);
 				$GROUP = $assessment["cohort"];
-				$ASSESSMENT_NAME = $assessment["name"];
+				$ASSESSMENT_NAME = $assessment["assessment_name"];
+                $clean_parameters = array("trim");
+                switch ($assessment["handler"]) {
+                    case "Boolean" :
+                    case "IncompleteComplete" :
+                        $clean_parameters[] = "alphanum";
+                    break;
+                    case "Numeric" :
+                    case "Percentage" :
+                    default :
+                        $clean_parameters[] = "float";
+                    break;
+                }
 				if ($GROUP) {
-					foreach($lines as $key=>$line){
+                    echo "<form id=\"errorForm\" action=\"".ENTRADA_URL."/admin/".$MODULE."/assessments?".replace_query(array("section" => "grade", "assessment_id" => $ASSESSMENT_ID))."\" method=\"POST\">";
+					foreach ($lines as $key => $line) {
 						$member_found = false;
-						$line_data = explode(",",$line);			
-						if (is_int($stud_num = (int)$line_data[0]) && $PROCESSED["value"] = clean_input($line_data[1],array("trim","notags"))) {
-							if(is_numeric($PROCESSED["value"])){
+						$line_data = explode(",",$line);
+                        $stud_num = ((int) $line_data[0]);
+                        $temp_value = preg_replace("/\|(.*)/s", "", $line_data[1]);
+                        $preserved_input = $temp_value;
+                        $temp_value = clean_input($temp_value, $clean_parameters);
+                        $valid_value = false;
+                        if (array_search($assessment["handler"], array("Boolean", "CompleteIncomplete"))) {
+                            if (array_search(strtolower($temp_value), array("p", "pass", "c", "complete", "true", "t")) !== false || ((int)$temp_value)) {
+                                $temp_value = 100;
+                                $valid_value = true;
+                            }
+                            $assessment["numeric_grade_points_total"] = 100;
+                        } elseif ($assessment["handler"] == "Percentage") {
+                            $assessment["numeric_grade_points_total"] = 100;
+                        }
+                        if ($temp_value <= $assessment["numeric_grade_points_total"] && (((string)trim($preserved_input)) == ((string)$temp_value) || $temp_value)) {
+                            $PROCESSED["value"] = get_storage_grade($temp_value, $assessment);
+                            $valid_value = true;
+                        }
+						if ($stud_num && isset($temp_value) && ($temp_value || $temp_value === false || $temp_value === 0. || $temp_value === 0)) {
+                            $query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `number` = ".$db->qstr($stud_num);
 
+                            $user = $db->GetRow($query);
+                            if ($user) {
+                                $query = "SELECT * FROM `group_members` WHERE `group_id` = ".$db->qstr($GROUP)." AND `proxy_id` = ".$db->qstr($user["id"])." AND `member_active` = '1'";
+                                $member = $db->GetRow($query);
+                                if ($member) {
+                                    $PROCESSED["proxy_id"] = $member["proxy_id"];
+                                    $member_found = true;
+                                }
+                                if ($member_found) {
+                                    if ($valid_value) {
+                                        $query = "SELECT * FROM `assessment_grades` WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)." AND `proxy_id` = ".$db->qstr($member["proxy_id"]);
+                                        $grade = $db->GetRow($query);
 
-								$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `number` = ".$db->qstr($stud_num);
+                                        if (isset($assessment["grade_threshold"]) && $PROCESSED["value"] < $assessment["grade_threshold"]) {
+                                            $PROCESSED["threshold_notified"] = 0;
+                                        }
 
-								$users = $db->GetAll($query);
-								if ($users) {
-									foreach ($users as $user) {
-										$query = "SELECT * FROM `group_members` WHERE `group_id` = ".$db->qstr($GROUP)." AND `proxy_id` = ".$db->qstr($user["id"])." AND `member_active` = '1'";
-										$member = $db->GetRow($query);
-										if ($member) {
-											$PROCESSED["proxy_id"] = $member["proxy_id"];
-											$member_found = true;
-											break;
-										}
-									}
-									if ($member_found) {
-										//$db->AutoExecute("assessment_grades",$PROCESSED,"INSERT");
-										$query = "SELECT * FROM `assessment_grades` WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)." AND `proxy_id` = ".$db->qstr($member["proxy_id"]);
-										$grade = $db->GetRow($query);
-										
-										if ($PROCESSED["value"] < $assessment["grade_threshold"]) {
-											$PROCESSED["threshold_notified"] = 0;
-										}
-										
-										if ($grade) {
-											$db->AutoExecute("assessment_grades",$PROCESSED,"UPDATE","`grade_id`=".$db->qstr($grade["grade_id"]));
-										} else {
-											$db->AutoExecute("assessment_grades",$PROCESSED,"INSERT");
-										}
-
-									} else {
-										add_error("Student on line ".$key." is not registered in the class.");
-									}
-								} else {
-									add_error("Student on line ".$key." is not registered in the system.");
-								}
-							} else {
-								add_error("Invalid data on line ".$key.":".$line.".");
-							}
+                                        if ($grade) {
+                                            $db->AutoExecute("assessment_grades",$PROCESSED, "UPDATE", "`grade_id`=".$db->qstr($grade["grade_id"]));
+                                        } else {
+                                            $db->AutoExecute("assessment_grades",$PROCESSED,"INSERT");
+                                        }
+                                    } else {
+                                        echo "<input type=\"hidden\" value=\"".html_encode($preserved_input)."\" name=\"error_grades[".$PROCESSED["proxy_id"]."]\" />\n";
+                                        if (!has_error()) {
+                                            add_error("Not all of the provided grade values match the requirements for this assessment.");
+                                        }
+                                    }
+                                } else {
+                                    add_error("Student on line ".$key." is not registered in the class.");
+                                }
+                            } else {
+                                add_error("Student on line ".$key." is not registered in the system.");
+                            }
 						} else {
 							add_error("Invalid data on line ".$key.":".$line.".");
 						}
 					}
-
-					add_success("Successfully updated <strong>Gradebook</strong>. You will now be redirected to the <strong>Grade Assessment</strong> page for <strong>".$ASSESSMENT_NAME. "</strong>. This will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue now.");
+                    echo "</form>";
+					add_success("Successfully updated <strong>Gradebook</strong>. You will now be redirected to the <strong>Grade Assessment</strong> page for <strong>".$ASSESSMENT_NAME. "</strong>. This will happen <strong>automatically</strong> in 5 seconds or <a href=\"#\" onclick=\"$('errorForm').submit()\" style=\"font-weight: bold\">click here</a> to continue now.");
 					$COURSE_ID = (int)$_GET["id"];
-					if (isset($_GET["assignment_id"]) && $ASSIGNMENT_ID = (int)$_GET["assignment_id"]) {
-						$url = ENTRADA_URL."/admin/gradebook/assignments?section=grade&id=".$COURSE_ID."&assignment_id=".$ASSIGNMENT_ID;
-					} else {
-						$url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&id=".$COURSE_ID."&assessment_id=".$ASSESSMENT_ID;
-					}
+                    if (!has_error()) {
+                        if (isset($_GET["assignment_id"]) && $ASSIGNMENT_ID = (int)$_GET["assignment_id"]) {
+                            $url = ENTRADA_URL."/admin/gradebook/assignments?section=grade&id=".$COURSE_ID."&assignment_id=".$ASSIGNMENT_ID;
+                        } else {
+                            $url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&id=".$COURSE_ID."&assessment_id=".$ASSESSMENT_ID;
+                        }
+                        $ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
+                    } else {
+                        $ONLOAD[] = "setTimeout(\"$('errorForm').submit()\", 5000)";
+                    }
 				} else {
 					add_error("Invalid <strong>Assessment ID</strong> provided. You will now be redirected to the <strong>Gradebook Index</strong>. This will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue now.");
 				}
@@ -128,5 +162,4 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	if($SUCCESS){
 		echo display_success();
 	}
-	$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 }

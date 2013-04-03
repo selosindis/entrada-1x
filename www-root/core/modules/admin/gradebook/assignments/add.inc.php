@@ -487,7 +487,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     <td></td>
                                     <td><label for="grade_weighting" class="form-nrequired">Assessment Weighting</label></td>
                                     <td>
-                                        <input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (int) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="5" style="width: 40px" autocomplete="off" />
+                                        <input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (float) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="5" style="width: 40px" autocomplete="off" />
                                         <span class="content-small"><strong>Tip:</strong> The percentage or numeric value of the final grade this assessment is worth.</span>
                                     </td>
                                 </tr>
@@ -641,7 +641,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             }).trigger('change');
 
                             jQuery('#grade_weighting').keyup(function() {
-                                if (parseInt(jQuery('#grade_weighting').val())) {
+                                if (parseFloat(jQuery('#grade_weighting').val())) {
                                     jQuery('#assessment_required_1').attr('checked', 'checked');
                                     jQuery('#assessment_required_options').hide();
 
@@ -653,7 +653,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             });
 
                             jQuery('#grade_weighting').ready(function() {
-                                if (parseInt(jQuery('#grade_weighting').val())) {
+                                if (parseFloat(jQuery('#grade_weighting').val())) {
                                     jQuery('#assessment_required_1').attr('checked', 'checked');
                                     jQuery('#assessment_required_options').hide();
 

@@ -21,7 +21,6 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
  */
-
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -106,6 +105,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				</div>
 				<div style="clear: both;"></div>
 				<?php
+                
+                if (isset($_POST["error_grades"]) && @count($_POST["error_grades"])) {
+                    $error_grades = $_POST["error_grades"];
+                    add_notice((count($_POST["error_grades"]) > 1 ? "Errors were encountered while importing the CSV.<br /><br /> Please manually update the grades of each of the <strong>".count($_POST["error_grades"])." highlighted students</strong>, otherwise those students' grades will be left as what they were prior to the CSV import process." : "An error was encountered while importing the CSV.<br /><br /> Please manually update the grade of the <strong>highlighted student</strong>, otherwise the grade for that student will be left as it was prior to the CSV import process."));
+                    echo display_notice();
+                }
+                
 				$query = "SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`
 							FROM `".AUTH_DATABASE."`.`user_data` AS b
 							JOIN `".AUTH_DATABASE."`.`user_access` AS c
@@ -168,7 +174,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										$grade_weighting = $assessment["grade_weighting"];
 									}
 									?>
-									<tr id="grades<?php echo $student["proxy_id"]; ?>">
+									<tr id="grades<?php echo $student["proxy_id"]; ?>"<?php echo (isset($error_grades[$student["proxy_id"]]) ? " class=\"highlight\"" : "") ?>>
 										<td><?php echo $student["fullname"]; ?></td>
 										<td><?php echo $student["number"]; ?></td>
 										<td>
@@ -177,7 +183,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 												data-assessment-id="<?php echo $assessment["assessment_id"]; ?>"
 												data-proxy-id="<?php echo $student["proxy_id"] ?>"
 												style="float:left;"
-											><?php echo $grade_value; ?></span>
+											><?php echo (!isset($error_grades[$student["proxy_id"]]) ? $grade_value : $error_grades[$student["proxy_id"]]); ?></span>
 											<span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?> style="float:left;">
 												<?php echo assessment_suffix($assessment); ?>
 											</span>

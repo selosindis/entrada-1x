@@ -39,6 +39,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 } else {
 
 	$ASSESSMENT_IDS = array();
+
 	if (isset($_GET["assessment_ids"]) && ($tmp_input = explode(",", $_GET["assessment_ids"]))) {
 		foreach ($tmp_input as $assessment_id) {
 			$assessment_id = clean_input($assessment_id, array("trim", "int"));
@@ -51,6 +52,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	if ((isset($_GET["cohort"])) && ($cohort = clean_input($_GET["cohort"], array("trim", "int")))) {
 		$COHORT = $cohort;
+	} elseif (isset($_GET["cohort-quick-select"]) && ($tmp_input = (int)$_GET["cohort-quick-select"])) {
+		$COHORT = $tmp_input;
 	}
 	
 	if ($COURSE_ID) {
@@ -64,25 +67,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`
 							FROM `assessments`
 							LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-							WHERE `assessments`.`assessment_id` IN (".implode(",", $ASSESSMENT_IDS).")";
+							WHERE `assessments`.`assessment_id` IN (".implode(",", $ASSESSMENT_IDS).") AND `assessments`.`course_id` = ".$db->qstr($COURSE_ID);
 			} else {
 				$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`
 							FROM `assessments`
 							LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-							WHERE `assessments`.`cohort` = ".$db->qstr($COHORT);
+							WHERE `assessments`.`cohort` = ".$db->qstr($COHORT)." AND `assessments`.`course_id` = ".$db->qstr($COURSE_ID);
 			}
 			$assessments = $db->GetAll($query);
 			if ($assessments) {
 				// CSV Download
-				$groups = array();
-				$query = "SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, c.`group`, c.`role`";
-
-				foreach ($assessments as $key => $assessment) {
-					$groups[] = $assessment["cohort"];
-					$query .= ", assessment_$key.`grade_id` AS `".$key."_grade_id`, assessment_$key.`value` AS `".$key."_grade_value` ";
-				}
-				
-				$query .= "	FROM `".AUTH_DATABASE."`.`user_data` AS b
+				$groups = array();				
+				$query = "SELECT b.`id` AS `proxy_id`, 
+							CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, 
+							b.`number`, 
+							c.`group`, 
+							c.`role`	
+							FROM `".AUTH_DATABASE."`.`user_data` AS b
 							JOIN `".AUTH_DATABASE."`.`user_access` AS c
 							ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
 							JOIN `group_members` AS d
@@ -90,25 +91,46 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							AND c.`account_active`='true'
 							AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
 							AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
-				foreach ($assessments as $key => $assessment) {
-					$query .= " LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS assessment_$key ON b.`id` = assessment_$key.`proxy_id` AND assessment_$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
-				}
+
 				
 				if (isset($COHORT)) {
 					$query .= " WHERE c.`group` = 'student' AND d.`group_id` = ".$db->qstr($COHORT);
 				} else {					
+					$cquery = "SELECT DISTINCT(`cohort`) FROM `assessments` WHERE `assessment_id` IN (".implode(",", $ASSESSMENT_IDS).")";
+					$cohorts = $db->GetAll($cquery);
+					if ($cohorts) {
+						foreach($cohorts as $cohort){
+							$groups[] = (int)$cohort["cohort"];
+						}
+					}
 					$query .= " WHERE c.`group` = 'student' AND d.`group_id` IN (".implode(",", $groups).")";
 				}
 				$students = $db->GetAll($query);
 				
 				ob_start();
 				echo "\"Number\",\"Fullname\"";
+				$assessment_ids = array();
+				$indexed_assessments = array();
 				foreach ($assessments as $key => $assessment) {
-					echo ",\"".trim($assessment["name"])." (".trim($assessment["type"]).")\"";
-				}
+					$assessment_ids[] = $assessment["assessment_id"];
+					$indexed_assessments[$assessment["assessment_id"]] = $assessment;
+					$weight_heading = "";
+					if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
+						$weight_heading  = " [Weighting: ".$assessment["grade_weighting"]."%]";
+					}					
+					echo ",\"".trim($assessment["name"]).$weight_heading." (".trim($assessment["type"]).")\"";					
+				}	
+				$assessment_string = implode(",",$assessment_ids);
+				// foreach ($assessments as $key => $assessment) {
+				// 	$query .= " LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS assessment_$key ON b.`id` = assessment_$key.`proxy_id` AND assessment_$key.`assessment_id` IN (".$db->qstr($assessment["assessment_id"]).")";
+				// }
 				if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
 				echo ",\"Weighted Total\"";
 				}
+				// foreach ($assessments as $key => $assessment) {
+				// 	$groups[] = $assessment["cohort"];
+				// 	$query .= ", assessment_$key.`grade_id` AS `".$key."_grade_id`, assessment_$key.`value` AS `".$key."_grade_value` ";
+				// }				
 				echo "\n";
 				if (count($students) >= 1) {
 					foreach ($students as $student) {
@@ -121,17 +143,56 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							$weighted_total = 0;
 							$weighted_total_max = 0;
 						}
-						foreach ($assessments as $key => $assessment) {
-							$cols[] = trim(format_retrieved_grade($student[$key."_grade_value"], $assessment) . assessment_suffix($assessment));
-							if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
-								$weighted_total_max += $assessment["grade_weighting"];
-								$weighted_total += (($assessment["handler"] == "Numeric" ? ($student[$key."_grade_value"] / $assessment["numeric_grade_points_total"]) : (($assessment["handler"] == "Percentage" ? ((float)$student[$key."_grade_value"] / 100.0) : $student[$key."_grade_value"])))) * $assessment["grade_weighting"];
+						$query = "SELECT *, a.`assessment_id` as `assessment_id` FROM `assessment_grades` a
+									LEFT JOIN `assessment_exceptions` b
+									ON a.`assessment_id` = b.`assessment_id`
+									AND a.`proxy_id` = b.`proxy_id`
+									WHERE a.`assessment_id` IN (".$assessment_string.")
+									AND a.`proxy_id` = ".$db->qstr($student["proxy_id"]);
+						$student_assessments = $db->GetAll($query);
+						$s_assessments = array();
+						foreach($student_assessments as $assessment){
+							$s_assessments[$assessment["assessment_id"]] = $indexed_assessments[$assessment["assessment_id"]];
+							$s_assessments[$assessment["assessment_id"]]["grade"] = $assessment["value"];
+							if($assessment["grade_weighting"]){
+								$s_assessments[$assessment["assessment_id"]]["grade_weighting"] = $assessment["grade_weighting"];
 							}
 						}
-						if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
-							$cols[] = number_format($weighted_total, 2)." / ".$weighted_total_max;
+						foreach($assessment_ids as $assessment_id){					 
+							if(!isset($s_assessments[$assessment_id])){
+								$cols[] = trim(format_retrieved_grade(0, $indexed_assessments[$assessment_id]) . assessment_suffix($indexed_assessments[$assessment_id]));
+								continue;
+							}
+							$cols[] = trim(format_retrieved_grade($s_assessments[$assessment_id]["grade"], $s_assessments[$assessment_id]) . assessment_suffix($s_assessments[$assessment_id]));
+							if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
+								$weighted_total_max += $s_assessments[$assessment_id]["grade_weighting"];
+								$weighted_total += (
+														($s_assessments[$assessment_id]["handler"] == "Numeric" ? 
+															(float)$s_assessments[$assessment_id]["grade"] : 
+															(
+																(
+																	$s_assessments[$assessment_id]["handler"] == "Percentage" ? 
+																	((float)$s_assessments[$assessment_id]["grade"]) : 
+																	$s_assessments[$assessment_id]["grade"] 
+																)
+															)
+														) 
+														* ($s_assessments[$assessment_id]["grade_weighting"]/100)
+													);
+							}							
+						}
+						if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL && isset($COHORT)) {
+							$total = $weighted_total * ($weighted_total_max/100);
+							$cols[] = number_format($total, 2);
+							if($weighted_total_max != 100){							
+								$cols[] = "[WARNING]: Your weighting totals do not equal 100% or this student is missing a weighted assessment. Current weighted total worth ".$weighted_total_max."% of total course mark.";
+							}
 						}
 						echo "\"".implode("\",\"", $cols)."\"", "\n";
+					}
+					if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL && isset($COHORT)) {
+						echo "\n\n\n";
+						echo "\"[NOTE]: Weighted Total grades account for student specific weighting exceptions\"\n";
 					}
 				}
 				$contents = ob_get_contents();

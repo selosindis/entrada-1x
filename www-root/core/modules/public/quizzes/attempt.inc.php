@@ -131,6 +131,7 @@ if ($RECORD_ID) {
 															FROM `quiz_questions` AS a
 															WHERE a.`quiz_id` = ".$db->qstr($progress_record["quiz_id"])."
 															AND a.`question_active` = '1'
+															AND (a.`questiontype_id` != '2' AND a.`questiontype_id` != '3')
 															ORDER BY a.`question_order` ASC";
 											$questions	= $db->GetAll($query);
 											if ($questions) {
@@ -454,7 +455,7 @@ if ($RECORD_ID) {
 											echo clean_input($quiz_record["quiz_notes"], "allowedtags");
 										}
 										?>
-										<form action="<?php echo ENTRADA_URL."/".$MODULE; ?>?section=attempt<?php echo (isset($QUIZ_TYPE) && $QUIZ_TYPE == "community_page" ? "&amp;community=true" : ""); ?>&amp;id=<?php echo $RECORD_ID; ?>" method="post">
+										<form class="question-responses" action="<?php echo ENTRADA_URL."/".$MODULE; ?>?section=attempt<?php echo (isset($QUIZ_TYPE) && $QUIZ_TYPE == "community_page" ? "&amp;community=true" : ""); ?>&amp;id=<?php echo $RECORD_ID; ?>" method="post">
 										<input type="hidden" name="step" value="2" />
 										<?php
 										$query				= "	SELECT a.*
@@ -467,34 +468,76 @@ if ($RECORD_ID) {
 										if ($questions) {
 											$total_questions = count($questions);
 											?>
-											<div class="quiz-questions" id="quiz-content-questions-holder">
-												<ol class="questions" id="quiz-questions-list">
-												<?php
+										<style type="text/css">
+											.question-responses {position:relative;}
+											.pagination {float:right;}
+											.page.active {display:block;}
+											.page.inactive {display:none;}
+										</style>
+											<?php
+												$page_counter = 1;
+												$counter = 1;
+												$quiz_markup = "";
 												foreach ($questions as $question) {
-													echo "<li id=\"question_".$question["qquestion_id"]."\"".((in_array($question["qquestion_id"], $problem_questions)) ? " class=\"notice\"" : "").">";
-													echo "	<div class=\"question noneditable\">\n";
-													echo "		<span id=\"question_text_".$question["qquestion_id"]."\" class=\"question\">".clean_input($question["question_text"], "trim")."</span>";
-													echo "	</div>\n";
-													echo "	<ul class=\"responses\">\n";
-													$query		= "	SELECT a.*
-																	FROM `quiz_question_responses` AS a
-																	WHERE a.`qquestion_id` = ".$db->qstr($question["qquestion_id"])."
-																	AND a.`response_active` = '1'
-																	ORDER BY ".(($question["randomize_responses"] == 1) ? "RAND()" : "a.`response_order` ASC");
-													$responses	= $db->GetAll($query);
-													if ($responses) {
-														foreach ($responses as $response) {
-															echo "<li>";
-															echo "	<input type=\"radio\" id=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\" name=\"responses[".$question["qquestion_id"]."]\" value=\"".$response["qqresponse_id"]."\"".(($ajax_load_progress[$question["qquestion_id"]] == $response["qqresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question["qquestion_id"]."', '".$response["qqresponse_id"]."') : false)\" />";
-															echo "	<label for=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</label>";
-															echo "</li>\n";
+													if ($question["questiontype_id"] == 3) {
+														$page_counter++;
+														$break_id = $question["qquestion_id"];
+														$quiz_markup .= "</ol></div><div class=\"page inactive\" data-id=\"".$page_counter."\">";
+														$quiz_markup .= "<h2>Quiz Page ".$page_counter."</h2>";
+														$quiz_markup .= "<ol class=\"questions\" start=\"".$counter."\">";
+													} else if ($question["questiontype_id"] == 2) {
+														$quiz_markup .= "</ol>";
+														$quiz_markup .= "<div class=\"display-generic\">".$question["question_text"]."</div>";
+														$quiz_markup .= "<ol class=\"questions\" start=\"".$counter."\">";
+													} else {
+														$quiz_markup .= "<li id=\"question_".$question["qquestion_id"]."\"".((in_array($question["qquestion_id"], $problem_questions)) ? " class=\"notice\"" : "").">";
+														$quiz_markup .= "	<div class=\"question noneditable\">\n";
+														$quiz_markup .= "		<span id=\"question_text_".$question["qquestion_id"]."\" class=\"question\">".clean_input($question["question_text"], "trim")."</span>";
+														$quiz_markup .= "	</div>\n";
+														if ($question["questiontype_id"] == 1) {
+															$quiz_markup .= "	<ul class=\"responses\">\n";
+															$query		= "	SELECT a.*
+																			FROM `quiz_question_responses` AS a
+																			WHERE a.`qquestion_id` = ".$db->qstr($question["qquestion_id"])."
+																			AND a.`response_active` = '1'
+																			ORDER BY ".(($question["randomize_responses"] == 1) ? "RAND()" : "a.`response_order` ASC");
+															$responses	= $db->GetAll($query);
+															if ($responses) {
+																foreach ($responses as $response) {
+																	$quiz_markup .= "<li>";
+																	$quiz_markup .= "	<input type=\"radio\" id=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\" name=\"responses[".$question["qquestion_id"]."]\" value=\"".$response["qqresponse_id"]."\"".(($ajax_load_progress[$question["qquestion_id"]] == $response["qqresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question["qquestion_id"]."', '".$response["qqresponse_id"]."') : false)\" />";
+																	$quiz_markup .= "	<label for=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</label>";
+																	$quiz_markup .= "</li>\n";
+																}
+															}
+															$quiz_markup .= "	</ul>\n";
+														} else if ($question["questiontype_id"] == 2) {
+															$quiz_markup .= "<textarea id=\"response_".$question["qquestion_id"]."\" name=\"responses[".$question["qquestion_id"]."]\" maxlength=\"".$question["char_limit"]."\" style=\"width:95%;\"></textarea>";
 														}
+														$quiz_markup .= "</li>\n";
+														$counter ++;
 													}
-													echo "	</ul>\n";
-													echo "</li>\n";
-												}
+												} ?>
+										<?php if ($page_counter > 1) { ?>
+										<div class="pagination pagination-right">
+											<ul>
+												<li><a href="#" class="prev">&laquo;</a></li>
+												<?php 
+												for ($i = 1; $i <= $page_counter; $i++) {
+													echo "<li".($i == 1 ? " class=\"active\"" : "")."><a href=\"#".$i."\" data-id=\"".$i."\">".$i."</a></li>";
+												} 
 												?>
+												<li><a href="#" class="next">&raquo;</a></li>
+											</ul>
+										</div>
+										<?php } ?>
+											<div class="quiz-questions" id="quiz-content-questions-holder">
+												<div class="page active" data-id="1">
+												<?php echo ($page_counter > 1 ? "<h2>Quiz Page 1</h2>" : ""); ?>
+												<ol class="questions" id="quiz-questions-list">
+													<?php echo $quiz_markup; ?>
 												</ol>
+												</div>
 											</div>
 											<?php
 										} else {
@@ -506,10 +549,45 @@ if ($RECORD_ID) {
 										?>
 										<div style="border-top: 2px #CCCCCC solid; margin-top: 10px; padding-top: 10px">
 											<input type="button" style="float: left; margin-right: 10px" onclick="window.location = '<?php echo ENTRADA_URL; ?>/events?id=<?php echo $quiz_record["content_id"]; ?>'" value="Exit Quiz" />
-											<input type="submit" style="float: right" value="Submit Quiz" />
+											<input type="submit" style="float: right" value="Submit Quiz" class="submit" />
 										</div>
 										<div class="clear"></div>
 										</form>
+										<script type="text/javascript">
+											var total_pages = jQuery(".pagination").length >= 1 ? jQuery(".pagination ul li").length - 2 : 1;
+											var active_page = 1;
+											jQuery(function(){
+												jQuery(".pagination ul li a").live("click", function() {
+													if (jQuery(this).hasClass("prev") || jQuery(this).hasClass("next")) {
+														old_page = active_page;
+														if (jQuery(this).hasClass("prev") && active_page > 1) {
+															active_page--;
+														} else if (jQuery(this).hasClass("next") && active_page != total_pages) {
+															active_page++;
+														}
+														if (old_page != active_page) {
+															jQuery(".pagination ul li").removeClass("active");
+															jQuery(".pagination ul li").eq(active_page).addClass("active");
+															jQuery(".page.active").fadeOut("fast", function() {
+																jQuery(".page.active").removeClass("active").addClass("inactive");
+																jQuery(".page[data-id="+ (active_page) + "]").fadeIn().removeClass("inactive").addClass("active");
+															});
+														}
+													} else {
+														if (active_page != jQuery(this).attr("data-id")) {
+															jQuery(".pagination ul li").removeClass("active");
+															jQuery(this).parent().addClass("active");
+															active_page = jQuery(this).attr("data-id");
+															jQuery(".page.active").fadeOut("fast", function() {
+																jQuery(this).removeClass("active").addClass("inactive");
+																jQuery(".page.inactive[data-id="+ (active_page) + "]").fadeIn().removeClass("inactive").addClass("active");
+															});
+														}
+													}
+													return false;
+												});
+											});
+										</script>
 										<script type="text/javascript">
 										function storeResponse(qid, rid) {
 											new Ajax.Request('<?php echo ENTRADA_URL."/".$MODULE; ?>', {

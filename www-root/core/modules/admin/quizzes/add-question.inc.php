@@ -39,6 +39,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+
+	$query = "SELECT GROUP_CONCAT(`questiontype_id`) AS `questiontypes` FROM `quizzes_lu_questiontypes` WHERE `questiontype_active` = '1'";
+	$question_types = explode(",", $db->GetOne($query));
+	
+	if (in_array($_GET["type"], $question_types)) {
+		$type = clean_input($_GET["type"], "numeric");
+	} else {
+		$type = 1;
+	}
+	
 	if ($RECORD_ID) {
 		$query			= "	SELECT a.*
 							FROM `quizzes` AS a
@@ -69,7 +79,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						 * this is something we will be expanding on shortly.
 						 */
 						if ((isset($_POST["questiontype_id"])) && ($tmp_input = clean_input($_POST["questiontype_id"], array("trim", "int")))) {
-							$PROCESSED["questiontype_id"] = 1;
+							$PROCESSED["questiontype_id"] = $tmp_input;
 						} else {
 							$PROCESSED["questiontype_id"] = 1;
 						}
@@ -84,85 +94,97 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							$ERRORSTR[] = "The <strong>Quiz Question</strong> field is required.";
 						}
 
-						/**
-						 * Required field "response_text" / Available Responses.
-						 *
-						 */
-						$correct_response_found = false;
-						$PROCESSED["quiz_question_responses"] = array();
-						if ((isset($_POST["response_text"])) && (is_array($_POST["response_text"]))) {
-							$i = 1;
-							foreach ($_POST["response_text"] as $response_key => $response_text) {
-								$response_key		= clean_input($response_key, "int");
-								$response_is_html	= 0;
+						
+						switch ($type) {
+							case 3 :
+							case 2 :
+								$PROCESSED["question_points"] = 0;
+							break;
+							case 1 :
+							default :
+								$correct_response_found = false;
+								$PROCESSED["quiz_question_responses"] = array();
 
 								/**
-								 * Check if this is response is in HTML or just plain text.
+								 * Required field "response_text" / Available Responses.
+								 *
 								 */
-								if ((isset($_POST["response_is_html"])) && (is_array($_POST["response_is_html"])) && (isset($_POST["response_is_html"][$response_key])) && ($_POST["response_is_html"][$response_key] == 1)) {
-									$response_is_html = 1;
+								if ((isset($_POST["response_text"])) && (is_array($_POST["response_text"]))) {
+									$i = 1;
+									foreach ($_POST["response_text"] as $response_key => $response_text) {
+										$response_key		= clean_input($response_key, "int");
+										$response_is_html	= 0;
+
+										/**
+										 * Check if this is response is in HTML or just plain text.
+										 */
+										if ((isset($_POST["response_is_html"])) && (is_array($_POST["response_is_html"])) && (isset($_POST["response_is_html"][$response_key])) && ($_POST["response_is_html"][$response_key] == 1)) {
+											$response_is_html = 1;
+										}
+
+										if ($response_is_html) {
+											$response_text	= clean_input($response_text, array("trim", "allowedtags"));
+										} else {
+											$response_text	= clean_input($response_text, array("trim"));
+										}
+
+										if (($response_key) && ($response_text != "")) {
+											$PROCESSED["quiz_question_responses"][$i]["response_text"]	= $response_text;
+											$PROCESSED["quiz_question_responses"][$i]["response_order"]	= $i;
+
+											/**
+											 * Check if this is the selected correct response or not.
+											 */
+											if ((isset($_POST["response_correct"])) && ($response_correct = clean_input($_POST["response_correct"], array("trim", "int"))) && ($response_key == $response_correct)) {
+												$correct_response_found = true;
+												$PROCESSED["quiz_question_responses"][$i]["response_correct"] = 1;
+											} else {
+												$PROCESSED["quiz_question_responses"][$i]["response_correct"] = 0;
+											}
+
+											$PROCESSED["quiz_question_responses"][$i]["response_is_html"] = $response_is_html;
+
+											/**
+											 * Check if there is feedback for this response.
+											 */
+											if ((isset($_POST["response_feedback"])) && (is_array($_POST["response_feedback"])) && (isset($_POST["response_feedback"][$response_key])) && ($tmp_input = clean_input($_POST["response_feedback"][$response_key], "notags"))) {
+												$PROCESSED["quiz_question_responses"][$i]["response_feedback"] = $tmp_input;
+											} else {
+												$PROCESSED["quiz_question_responses"][$i]["response_feedback"] = "";
+											}
+
+											$i++;
+										}
+									}
 								}
 
-								if ($response_is_html) {
-									$response_text	= clean_input($response_text, array("trim", "allowedtags"));
+								/**
+								 * There must be at least 2 possible responses to proceed.
+								 */
+								if (count($PROCESSED["quiz_question_responses"]) < 2) {
+									$ERROR++;
+									$ERRORSTR[] = "You must provide at least <strong>two possible responses</strong> to this question.";
+								}
+
+								/**
+								 * You must specify the correct response
+								 */
+								if (!$correct_response_found) {
+									$ERROR++;
+									$ERRORSTR[] = "You must specify which of the responses is the <strong>correct response</strong>.";
+								}
+								
+								/**
+								 * Required field "question_points" / points for the correct response.
+								 */
+								if ((isset($_POST["question_points"])) && ($tmp_input = clean_input($_POST["question_points"], array("trim", "int")))) {
+									$PROCESSED["question_points"] = $tmp_input;
 								} else {
-									$response_text	= clean_input($response_text, array("trim"));
+									$ERROR++;
+									$ERRORSTR[] = "You must provide the <strong>number of points</strong> given for the correct response to this question.";
 								}
-
-								if (($response_key) && ($response_text != "")) {
-									$PROCESSED["quiz_question_responses"][$i]["response_text"]	= $response_text;
-									$PROCESSED["quiz_question_responses"][$i]["response_order"]	= $i;
-
-									/**
-									 * Check if this is the selected correct response or not.
-									 */
-									if ((isset($_POST["response_correct"])) && ($response_correct = clean_input($_POST["response_correct"], array("trim", "int"))) && ($response_key == $response_correct)) {
-										$correct_response_found = true;
-										$PROCESSED["quiz_question_responses"][$i]["response_correct"] = 1;
-									} else {
-										$PROCESSED["quiz_question_responses"][$i]["response_correct"] = 0;
-									}
-
-									$PROCESSED["quiz_question_responses"][$i]["response_is_html"] = $response_is_html;
-
-									/**
-									 * Check if there is feedback for this response.
-									 */
-									if ((isset($_POST["response_feedback"])) && (is_array($_POST["response_feedback"])) && (isset($_POST["response_feedback"][$response_key])) && ($tmp_input = clean_input($_POST["response_feedback"][$response_key], "notags"))) {
-										$PROCESSED["quiz_question_responses"][$i]["response_feedback"] = $tmp_input;
-									} else {
-										$PROCESSED["quiz_question_responses"][$i]["response_feedback"] = "";
-									}
-
-									$i++;
-								}
-							}
-						}
-
-						/**
-						 * There must be at least 2 possible responses to proceed.
-						 */
-						if (count($PROCESSED["quiz_question_responses"]) < 2) {
-							$ERROR++;
-							$ERRORSTR[] = "You must provide at least <strong>two possible responses</strong> to this question.";
-						}
-
-						/**
-						 * You must specify the correct response
-						 */
-						if (!$correct_response_found) {
-							$ERROR++;
-							$ERRORSTR[] = "You must specify which of the responses is the <strong>correct response</strong>.";
-						}
-
-						/**
-						 * Required field "question_points" / points for the correct response.
-						 */
-						if ((isset($_POST["question_points"])) && ($tmp_input = clean_input($_POST["question_points"], array("trim", "int")))) {
-							$PROCESSED["question_points"] = $tmp_input;
-						} else {
-							$ERROR++;
-							$ERRORSTR[] = "You must provide the <strong>number of points</strong> given for the correct response to this question.";
+								
+							break;
 						}
 
 						/**
@@ -359,9 +381,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							</tr>
 						</tbody>
 						</table>
-
-						<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post" id="addQuizQuestionForm" class="form-horizontal">
-						<input type="hidden" name="questiontype_id" value="1" />
+						<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&amp;type=<?php echo $type; ?>&amp;step=2" method="post" id="addQuizQuestionForm" class="form-horizontal">
+						<input type="hidden" name="questiontype_id" value="<?php echo $type; ?>" />
 						<table style="width: 100%; margin-bottom: 25px" cellspacing="0" cellpadding="2" border="0" summary="Add Quiz Question">
 						<colgroup>
 							<col style="width: 3%" />
@@ -372,6 +393,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							<tr>
 								<td colspan="3">
 									<h2 title="Quiz Content Add Question">Add Quiz Question</h2>
+									<?php if ($type == 2) { ?>
+										<div class="display-generic"><strong>Note:</strong> The Descriptive Text will appear to users taking the quiz.</div>
+										<input type="hidden" id="question_points" name="question_points" value="0" />
+									<?php } else if ($type == 3) { ?>
+										<div class="display-generic"><strong>Note:</strong> The Descriptive Text will not appear to users taking the quiz, but will appear on the quiz management page.</div>
+										<input type="hidden" id="question_points" name="question_points" value="0" />
+									<?php } ?>
 									<?php
 									if ($ERROR) {
 										echo display_error();
@@ -411,12 +439,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							<tr>
 								<td>&nbsp;</td>
 								<td style="vertical-align: top">
-									<label for="question_text" class="form-required">Quiz Question</label>
+									<label for="question_text" class="form-required"><?php echo ($type != 1 ? "Descriptive Text" : "Quiz Question"); ?></label>
 								</td>
 								<td>
 									<textarea id="question_text" name="question_text" style="width: 98%; height: 100px"><?php echo ((isset($PROCESSED["question_text"])) ? clean_input($PROCESSED["question_text"], "encode") : ""); ?></textarea>
 								</td>
 							</tr>
+							<?php if ($type == 1) { ?>
 							<tr>
 								<td>&nbsp;</td>
 								<td style="padding-top: 5px; vertical-align: top">
@@ -519,6 +548,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									<input type="text" id="question_points" name="question_points" style="width: 25px; vertical-align: middle" maxlength="3" value="<?php echo (((isset($PROCESSED["question_points"])) && ($PROCESSED["question_points"] > 0) && ($PROCESSED["question_points"] < 1000)) ? $PROCESSED["question_points"] : 1); ?>" /><label for="question_points" class="form-nrequired" style="margin-left: 5px; vertical-align: middle">point(s) for the correct response.</label>
 								</td>
 							</tr>
+							<?php } ?>
 						</tbody>
 						</table>
 						</form>

@@ -12506,6 +12506,7 @@ function assessment_objective_parent_mapped_course($objective_id,$assessment_id,
 				LEFT JOIN `assessments` c
 				ON b.`assessment_id` = c.`assessment_id`
 				WHERE b.`assessment_id` = ".$db->qstr($assessment_id)."
+				AND a.`objective_id` = ".$db->qstr($objective_id)."
 				AND a.`objective_active` = '1'
 				GROUP BY a.`objective_id`
 				ORDER BY a.`objective_id` ASC";
@@ -12515,6 +12516,28 @@ function assessment_objective_parent_mapped_course($objective_id,$assessment_id,
 	return assessment_objective_parent_mapped_recursive($objectives,$objective_id,$course_id,$assessment_id,$include_bottom);
 }
 
+/**
+* Recursively loops up tree from mapped assessment objectives checking each parent to see if its the passed objective id.
+* Parents are collected and passed to the next iteration as a group to save function calls
+*/
+function assessment_objective_decendant_mapped_course($objective_id,$assessment_id,$include_bottom = false){
+	global $db;
+	$query = "	SELECT a.*, c.course_id
+				FROM `global_lu_objectives` a
+				LEFT JOIN `assessment_objectives` b
+				ON b.`objective_id` = a.`objective_id`
+				AND b.`assessment_id` = ".$db->qstr($assessment_id)."
+				LEFT JOIN `assessments` c
+				ON b.`assessment_id` = c.`assessment_id`
+				WHERE b.`assessment_id` = ".$db->qstr($assessment_id)."
+				AND a.`objective_active` = '1'
+				GROUP BY a.`objective_id`
+				ORDER BY a.`objective_id` ASC";
+	$objectives = $db->GetAll($query);
+	if (!$objectives) return false;
+	$course_id = $objectives[0]["course_id"];
+	return assessment_objective_parent_mapped_recursive($objectives,$objective_id,$course_id,$assessment_id,$include_bottom);
+}
 function assessment_objective_parent_mapped_recursive($objectives,$objective_id,$course_id,$assessment_id,$include_bottom = false){
 	global $db;
 	$parents = array();
@@ -12523,7 +12546,7 @@ function assessment_objective_parent_mapped_recursive($objectives,$objective_id,
 			return true;
 		}
 		if ($objective["objective_parent"]) {
-			$query = "	SELECT a.*
+			$query = "	SELECT a.*, COALESCE(b.`cobjective`, 0) AS `mapped`
 						FROM `global_lu_objectives` a
 						LEFT JOIN `course_objectives` b
 						ON a.`objective_id` = b.`objective_id`
@@ -12538,7 +12561,10 @@ function assessment_objective_parent_mapped_recursive($objectives,$objective_id,
 			$parent = $db->GetRow($query);
 			if ($parent) {
 				//if this parent is the objective id we're looking for, return true
-				if ($parent["objective_id"] == $objective_id) {
+				if ($include_bottom && $objective["objective_id"] == $objective_id) {
+					return true;
+				}				
+				if ($parent["mapped"]) {
 					return true;
 				}
 				$parents[] = $parent;
@@ -12702,6 +12728,30 @@ function event_objective_parent_mapped_course($objective_id,$event_id,$include_b
 				LEFT JOIN `events` c
 				ON b.`event_id` = c.`event_id`
 				WHERE b.`event_id` = ".$db->qstr($event_id)."
+				AND a.`objective_id` = ".$db->qstr($objective_id)."
+				AND a.`objective_active` = '1'
+				GROUP BY a.`objective_id`
+				ORDER BY a.`objective_id` ASC";
+	$objectives = $db->GetAll($query);
+	if (!$objectives) return false;
+	$course_id = $objectives[0]["course_id"];
+	return event_objective_parent_mapped_recursive($objectives,$objective_id,$course_id,$event_id, $include_bottom);
+}
+
+/**
+* Recursively loops up tree from mapped event objectives checking each parent to see if its the passed objective id.
+* Parents are collected and passed to the next iteration as a group to save function calls
+*/
+function event_objective_decendant_mapped_course($objective_id,$event_id,$include_bottom = false){
+	global $db;
+	$query = "	SELECT a.*, c.course_id
+				FROM `global_lu_objectives` a
+				LEFT JOIN `event_objectives` b
+				ON b.`objective_id` = a.`objective_id`
+				AND b.`event_id` = ".$db->qstr($event_id)."
+				LEFT JOIN `events` c
+				ON b.`event_id` = c.`event_id`
+				WHERE b.`event_id` = ".$db->qstr($event_id)."
 				AND a.`objective_active` = '1'
 				GROUP BY a.`objective_id`
 				ORDER BY a.`objective_id` ASC";
@@ -12719,7 +12769,7 @@ function event_objective_parent_mapped_recursive($objectives,$objective_id,$cour
 			return true;
 		}
 		if ($objective["objective_parent"]) {
-			$query = "	SELECT a.*
+			$query = "	SELECT a.*, COALESCE(b.`cobjective`, 0) AS `mapped`
 						FROM `global_lu_objectives` a
 						LEFT JOIN `course_objectives` b
 						ON a.`objective_id` = b.`objective_id`
@@ -12735,7 +12785,10 @@ function event_objective_parent_mapped_recursive($objectives,$objective_id,$cour
 			$parent = $db->GetRow($query);
 			if ($parent) {
 				//if this parent is the objective id we're looking for, return true
-				if ($parent["objective_id"] == $objective_id) {
+				if ($include_bottom && $objective["objective_id"] == $objective_id) {
+					return true;
+				}				
+				if ($parent["mapped"]) {
 					return true;
 				}
 				$parents[] = $parent;

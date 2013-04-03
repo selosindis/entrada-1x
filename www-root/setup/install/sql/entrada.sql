@@ -2881,6 +2881,12 @@ CREATE TABLE IF NOT EXISTS `draft_eventtypes` (
   KEY `eventtype_id` (`eventtype_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE `draft_options` (
+  `draft_id` int(11) NOT NULL,
+  `option` varchar(255) NOT NULL DEFAULT '',
+  `value` varchar(30) NOT NULL DEFAULT ''
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `drafts` (
   `draft_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `status` text,
@@ -4061,6 +4067,8 @@ CREATE TABLE IF NOT EXISTS `quizzes_lu_questiontypes` (
 
 INSERT INTO `quizzes_lu_questiontypes` (`questiontype_id`, `questiontype_title`, `questiontype_description`, `questiontype_active`, `questiontype_order`) VALUES
 (1, 'Multiple Choice Question', '', 1, 0);
+(2, 'Descriptive Text', '', 1, 0);
+(3, 'Page Break', '', 1, 0);
 
 CREATE TABLE IF NOT EXISTS `quizzes_lu_quiztypes` (
   `quiztype_id` int(12) NOT NULL AUTO_INCREMENT,

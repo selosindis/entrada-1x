@@ -50,7 +50,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					FROM `quiz_question_responses` AS `a`
 					JOIN `quiz_questions` AS `b`
 					ON `a`.`qquestion_id` = `b`.`qquestion_id`
-					WHERE `a`.`qqresponse_id` = ".$db->qstr($response_id);
+					WHERE `a`.`qqresponse_id` = ".$db->qstr($response_id)."
+					AND b.`questiontype_id` = '1'";
 		$quiz_details = $db->GetRow($query);
 		
 		$query = "	SELECT `a`.`proxy_id`, `a`.`qprogress_id`, `b`.`number`, CONCAT(`b`.`lastname`, ', ', `b`.`firstname`) AS `name`
@@ -253,6 +254,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									FROM `quiz_questions` AS a
 									WHERE a.`quiz_id` = ".$db->qstr($quiz_record["quiz_id"])."
 									AND a.`question_active` = '1'
+									AND a.`questiontype_id` = '1'
 									ORDER BY a.`question_order` ASC";
 					$results	= $db->GetAll($query);
 					if ($results) {

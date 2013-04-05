@@ -82,6 +82,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$MARKING_SCHEME_IDS = array_map("return_id", $MARKING_SCHEMES);
 				$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/" . $MODULE . "?" . replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing Assessment");
 				
+                //characteristic check
+                if ((isset($_POST["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_POST["assessment_characteristic"], array("trim", "int")))) {
+                    $PROCESSED["characteristic_id"] = $assessment_characteristic;
+                } elseif ((isset($_GET["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_GET["assessment_characteristic"], array("trim", "int")))) {
+                    $PROCESSED["characteristic_id"] = $assessment_characteristic;
+                }
 				// Error Checking
 				switch ($STEP) {
 					case 2 :
@@ -218,13 +224,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									break;
 							}
 						}
-						//characteristic check
-						if ((isset($_POST["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_POST["assessment_characteristic"], array("trim", "int"))) == 0) {
-							$ERROR++;
-							$ERRORSTR[] = "The <strong>Assessment Characteristic</strong> field is a required field.";
-						} else if ((isset($_POST["assessment_characteristic"])) && ($assessment_characteristic = clean_input($_POST["assessment_characteristic"], array("trim", "int")))) {
-							$PROCESSED["characteristic_id"] = $assessment_characteristic;
-						}
+                        if (!isset($PROCESSED["characteristic_id"]) || !$PROCESSED["characteristic_id"]) {
+                            $ERROR++;
+                            $ERRORSTR[] = "The <strong>Assessment Characteristic</strong> field is a required field.";
+                        }
+                        
 						//extended options check
 						if ((is_array($_POST["option"])) && (count($_POST["option"]))) {
 							$assessment_options_selected = array();
@@ -348,6 +352,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						break;
 					case 1 :
 					default :
+                        if (isset($PROCESSED["characteristic_id"]) && $PROCESSED["characteristic_id"]) {
+                            if (!$db->Execute("UPDATE `assessments` SET `characteristic_id` = ".$db->qstr($PROCESSED["characteristic_id"])." WHERE `assessment_id` = " . $db->qstr($assessment_details["assessment_id"]))) {
+                                add_error("The <strong>Characteristic</strong> for this assessment could not be updated.");
+                            } else {
+                                $assessment_details["characteristic_id"] = $PROCESSED["characteristic_id"];
+                            }
+                        }
 						$PROCESSED = $assessment_details;
 						$query = "SELECT * FROM `assessment_options` WHERE `assessment_id` =" . $db->qstr($ASSESSMENT_ID);
 						$extended_options = $db->GetAll($query);
@@ -376,6 +387,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						break;
 					case 1 :
 					default :
+                        if(isset($_GET["quiz_id"]) && ($tmp_input = clean_input($_GET["quiz_id"], array("trim", "int")))) {
+                            $PROCESSED["quiz_id"] = $tmp_input;
+                        } elseif (isset($_GET["delete"]) && $_GET["delete"]) {
+                            $ERROR++;
+                            $ERRORSTR[] = "You must select at an attached quiz to remove.";
+
+                            application_log("notice", "Remove attached quiz action accessed without providing a quiz id to delete.");
+                        }
+                        if (isset($PROCESSED["quiz_id"]) && $PROCESSED["quiz_id"] && isset($_GET["delete"]) && $_GET["delete"]) {
+                            $query = "DELETE FROM `attached_quizzes` 
+                                        WHERE `content_id` = ".$db->qstr($ASSESSMENT_ID)."
+                                        AND `content_type` = 'assessment'
+                                        AND `quiz_id` = ".$db->qstr($PROCESSED["quiz_id"]);
+                            if($db->Execute($query)) {
+                                $SUCCESS++;
+                                $SUCCESSSTR[]  = "You have successfully removed an attached quiz.";
+
+                                echo display_success();
+
+                            } else {
+                                $ERROR++;
+                                $ERRORSTR[] = "We were unable to remove the requested quizzes from the assessment. The MEdTech Unit has been informed of this issue and will address it shortly; please try again later.";
+
+                                echo display_error();
+
+                                application_log("error", "Failed to execute remove query for quiz id (".$PROCESSED["quiz_id"]."), assessment id (".$ASSESSMENT_ID."). Database said: ".$db->ErrorMsg());
+                            }
+                        }
 						
 						/** 
 						* Fetch the Clinical Presentation details.
@@ -587,7 +626,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										<td></td>
 										<td><label for="assessment_characteristic" class="form-required">Characteristic</label></td>
 										<td>
-											<select id="assessment_characteristic" name="assessment_characteristic">
+											<select id="assessment_characteristic" name="assessment_characteristic" onchange="window.location = '<?php echo ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("assessment_characteristic" => NULL)); ?>&assessment_characteristic='+this.value">
 												<option value="">-- Select Assessment Characteristic --</option>
 												<?php
 												$query = "	SELECT *
@@ -603,7 +642,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 															if ($key) {
 																echo "</optgroup>";
 															}
-															echo "<optgroup label=\"" . ucwords(strtolower($characteristic["type"])) . "s\">";
+															echo "<optgroup label=\"" . (strtolower($characteristic["type"]) != "quiz" ? ucwords(strtolower($characteristic["type"]))."s" : "Quizzes") . "\">";
 
 															$type = $characteristic["type"];
 														}
@@ -633,11 +672,76 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											?>
 										</td>
 									</tr>
+								</tbody>
+								<tbody>
+                                    <?php
+                                    $query = "SELECT *, COUNT(c.`quiz_id`) AS `question_total`, COUNT(d.`qquestion_id`) AS `attached_question_count`, IF(b.`quiz_active` = '1', 'Active', 'Disabled') AS `quiz_status`
+                                                 FROM `attached_quizzes` AS a
+                                                 JOIN `quizzes` AS b
+                                                 ON a.`quiz_id` = b.`quiz_id`
+                                                 LEFT JOIN `quiz_questions` AS c
+                                                 ON b.`quiz_id` = c.`quiz_id`
+                                                 AND c.`question_active` = 1
+                                                 LEFT JOIN `assessment_quiz_questions` AS d
+                                                 ON a.`content_id` = d.`assessment_id`
+                                                 AND c.`qquestion_id` = d.`qquestion_id`
+                                                 WHERE a.`content_type` = 'assessment' 
+                                                 AND a.`content_id` = ".$db->qstr($ASSESSMENT_ID)."
+                                                 GROUP BY b.`quiz_id`";
+                                    $attached_quiz = $db->GetRow($query);
+                                    ?>
+									<tr>
+										<td colspan="3">
+											<label class="form-nrequired radio" for="show_learner_option_0">
+												<input type="radio" name="show_learner_option" value="0" onclick="jQuery('#quiz_options').toggle(false)" id="show_learner_option_0" <?php echo (!$attached_quiz ? " checked=\"checked\"" : ""); ?> style="margin-right: 5px;" />Do not link an online quiz to this assessment
+											</label>
+										</td>
+									</tr>
+									<tr>
+										<td colspan="3">
+											<label class="form-nrequired radio" for="show_learner_option_1">
+												<input type="radio" name="show_learner_option" value="1" onclick="jQuery('#quiz_options').toggle(true)" id="show_learner_option_1" <?php echo ($attached_quiz ? " checked=\"checked\"" : ""); ?> style="margin-right: 5px;" />Link an online quiz to this assessment
+											</label>
+										</td>
+									</tr>
 									<tr>
 										<td colspan="3">&nbsp;</td>
 									</tr>
 								</tbody>
+								<tbody id="quiz_options" style="display: none;">
+                                    <tr>
+                                        <td colspan="2"></td>
+                                        <td>
+                                            <a id="false-link" href="#placeholder"></a>
+                                            <div id="placeholder" style="display: none; width: 800px;"></div>
+                                            <?php
+                                            if (isset($attached_quiz) && $attached_quiz) {
+                                                $PROCESSED["quiz_id"] = $attached_quiz["quiz_id"];
+                                                echo "<div class=\"row-fluid\">\n";
+                                                echo "<h3 class=\"span8\"><a href=\"".ENTRADA_URL."/admin/quizzes?section=edit&amp;id=".$attached_quiz["quiz_id"]."\">".html_encode($attached_quiz["quiz_title"])."</a></h3>\n";
+                                                echo "<a class=\"span3 btn\" style=\"float: right;\" href=\"".ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("assessment_id" => $ASSESSMENT_ID, "quiz_id" => $attached_quiz["quiz_id"], "delete" => true))."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" /> Remove Quiz</a>\n";
+                                                echo "</div>";
+                                                echo "<div class=\"row-fluid\" id=\"quiz-questions-notice\"></div>\n";
+                                                require_once(ENTRADA_ABSOLUTE."/core/modules/admin/gradebook/assessments/api-assessment-quiz-questions.inc.php");
+                                            } else {
+                                                ?>
+                                                <div class="row-fluid">
+                                                    <div class="pull-right">
+                                                        <a href="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("section" => "attach-quiz", "assessment_id" => $ASSESSMENT_ID)); ?>" class="btn btn-primary">Attach a Quiz</a>
+                                                    </div>
+                                                </div>
+                                                <?php
+                                                add_notice("There are currently no quizzes associated with this assessment. To add one, please click the <strong>Attach a Quiz</strong> button above.");
+                                                echo display_notice();
+                                            }
+                                            ?>
+                                        </td>
+									</tr>
+                                </tbody>
 								<tbody>
+									<tr>
+										<td colspan="3">&nbsp;</td>
+									</tr>
 									<tr>
 										<td></td>
 										<td><label for="marking_scheme_id" class="form-required">Marking Scheme</label></td>
@@ -715,6 +819,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</tbody>
 							</table>
 							<script type="text/javascript" charset="utf-8">
+                                var modalDialog;
+                                var ajax_url = '';
+                                document.observe('dom:loaded', function() {
+                                    modalDialog = new Control.Modal($('false-link'), {
+                                        position:		'center',
+                                        overlayOpacity:	0.75,
+                                        closeOnClick:	'overlay',
+                                        className:		'modal',
+                                        fade:			true,
+                                        fadeDuration:	0.30,
+                                        afterClose: function() {
+                                            if ($('quiz_id') != null && $('quiz_id') != undefined) {
+                                                var quiz_id = $('quiz_id').value;
+                                                if ($('new_questions_count') != null && $('new_questions_count') != undefined) {
+                                                    var question_count_id = 'question_count_'+quiz_id;
+                                                    var new_question_count = $('new_questions_count').value;
+                                                    if ($(question_count_id) != null && $(question_count_id) != undefined && new_question_count != $(question_count_id).innerHTML) {
+                                                        $(question_count_id).update(new_question_count);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    });
+                                });
 								jQuery(function($) {
 									jQuery('#marking_scheme_id').change(function() {
 										if(jQuery(':selected', this).val() == 3 || jQuery(':selected', this).text() == "Numeric") {
@@ -763,7 +891,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											jQuery('#assessment_options').show();
 										} else {
 											jQuery('#assessment_options').hide();
+											jQuery('#quiz_options').hide();
 										}
+									});	
+                                    
+									jQuery('#electronic_quiz').ready(function (){
+                                        if (jQuery('#electronic_quiz').is(":visible") && jQuery('#electronic_quiz').is(":checked")) {
+                                            jQuery('#quiz_options').show();
+                                        }
 									});
 									
 									jQuery("input[name='show_learner_option']").change(function(){
@@ -783,431 +918,456 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											jQuery('#gradebook_release_options').hide();
 										}
 									});
-										
 								});
+
+                                function openDialog (url) {
+                                    if (url) {
+                                        ajax_url = url;
+                                        new Ajax.Request(ajax_url, {
+                                            method: 'get',
+                                            onComplete: function(transport) {
+                                                modalDialog.container.update(transport.responseText);
+                                                modalDialog.open();
+                                            }
+                                        });
+                                    }
+                                }
+                                
+                                function submitQuizQuestions (quiz_id) {
+                                    var question_ids = new Array();
+                                    jQuery('input[name="question_ids[]"]').each(function()    
+                                    {    
+                                        if (this.checked) {
+                                            question_ids.push(this.value);
+                                        }    
+                                    });
+                                    if (question_ids.length) {
+                                        new Ajax.Updater('quiz-questions-notice', '<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2, "section" => "api-assessment-quiz-questions", "quiz_id" => NULL, "ajax" => true)); ?>&quiz_id='+quiz_id, {
+                                            method: 'post',
+                                            parameters: {
+                                                'question_ids[]': question_ids
+                                            },
+                                            OnSuccess: function() {
+                                                window.setTimeout("Effect.Fade('display-success-box', {duration: 3.0})", 3000);
+                                            }
+                                        });
+                                    } else {
+                                        alert("You must select at least one question from the quiz to associate with this assessment.");
+                                    }
+                                }
 							</script>
-				<div id="event-audience-section">
-					<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Event Information">
-						<colgroup>
-							<col style="width: 20%" />
-							<col style="width: 80%" />
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" class="btn" value="Save" /></td>
-							</tr>
-						</tfoot>
-						</tbody>
-					</table>
-				</div>
-				<?php
-				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-				?>
-					<a name="assessment-objectives-section"></a>
-					<h2 title="Assessment Objectives Section">Assessment Objectives</h2>
-					<div id="assessment-objectives-section">
-						<style>
-							ul.objective-list{
-								position: relative;
-								padding: 0px;
-								margin: 0px;
-								list-style: none;
-							}
-							ul.objective-list{
-								position:relative;
-							}
-							ul.objective-list ul{
-								list-style-type: none;
-								background:transparent url('<?php echo ENTRADA_URL;?>/images/vline.png') repeat-y;
-								margin: 0 0 0 10px;
-								padding:0;
-							}
-							#mapped_objectives ul.objective-list li, ul.tl-objective-list > li > .objective-children > ul.objective-list > li{
-								background:none!important;
+                            <br />
+                            <?php
+                            $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
+                            $query = "	SELECT a.* FROM `global_lu_objectives` a
+                                        JOIN `objective_audience` b
+                                        ON a.`objective_id` = b.`objective_id`
+                                        AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+                                        WHERE (
+                                                (b.`audience_value` = 'all')
+                                                OR
+                                                (b.`audience_type` = 'course' AND b.`audience_value` = ".$db->qstr($COURSE_ID).")
+                                            )
+                                        AND a.`objective_parent` = '0'
+                                        AND a.`objective_active` = '1'";									
+                            $objectives = $db->GetAll($query);
 
-							}
-							#mapped_objectives ul.objective-list li{
-								border-left:2px solid #CCCCCC!important;
-							}
-							ul.objective-list li{
-								background:transparent url('<?php echo ENTRADA_URL;?>/images/node.png') no-repeat;
-								padding-left:5px;
-								display:block;
-								overflow:hidden;
-								line-height: 125%;
-								border-left:none!important;
-							}
-							.objective-title{
-								cursor:pointer;
-								margin-left:5px;
-								margin-top:-2px;
-							}
-							.objective-list{
-								padding-left:5px;
-							}
-							#mapped_objectives,#objective_list_0{
-								margin-left:0px;
-								padding-left: 0px;
-							}
-							.objectives{
-								width:48%;
-								float:left;
-							}
-							.mapped_objectives{
-								float:right;
-								height:100%;
-								width:100%;
-							}
-							.mapped-objective{
-								padding-left:35px!important;
-							}
-							.objective-remove{
-								cursor:pointer;
-								position:relative!important;
-								margin-left:15px;
-							}
-							.droppable.hover{
-								background-color:#ddd;
-							}
-							.objective-title{
-								font-weight:bold;
-							}
-							.objective-children{
-								margin-top:5px;
-							}
-							.objective-container{
-								position:relative;
-								padding-right:0px!important;
-								margin-right:0px!important;
-							}
-							.objective_text_container{
-								margin-top:5px;
-							}
-							.objective-description{
-								font-size: 11px;
-								font-style: normal;
-								color: #666;
-								margin-top:5px;
-								margin-left:5px;
-							}
-							.list-heading{
-								font-size: 18px;
-							}
-							#mapped_objectives .objective-description{
-								margin-left:0px;
-							}
-							.importance{
-								font-size:.8em;
-								margin-right:5px;
-							}
-							.mapped-objective{
-								position:relative;
-							}
-							.objective-controls{
-								position:absolute;
-								top:5px;
-								right:5px;
-							}
-							.objective-controls .loading{
-								margin-top:7px!important;
-							}
-							.assessment-objective-controls{
-								position:absolute;
-								top:5px;
-								left:5px;
-							}
-							li.display-notice{
-								border:1px #FC0 solid!important;
-								padding-top:10px!important;
-								text-align:center;
-							}
-							.hide{
-								display:none;
-							}
-							.tl-objective-list{
-								padding-left:0px;
-								padding-top:5px;
-								padding-bottom:5px;
-								list-style: none;
-							}
-							.tl-objective-list > li{
-								padding:5px;
-								margin-bottom:5px;
-							}
-							.tl-objective-list > .objective-set h4{
-								-webkit-border-radius:5px;
-								-moz-border-radius:5px;
-								border-radius:5px;
-								background-color:#036!important;
-								color:#fff!important;
-								padding:10px;
-							}
-						</style>
-						<?php
-						$query = "	SELECT a.* FROM `global_lu_objectives` a
-									JOIN `objective_audience` b
-									ON a.`objective_id` = b.`objective_id`
-									AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-									WHERE (
-											(b.`audience_value` = 'all')
-											OR
-											(b.`audience_type` = 'course' AND b.`audience_value` = ".$db->qstr($COURSE_ID).")
-											OR
-											(b.`audience_type` = 'event' AND b.`audience_value` = ".$db->qstr($EVENT_ID).")
-										)
-									AND a.`objective_parent` = '0'
-									AND a.`objective_active` = '1'";									
-						$objectives = $db->GetAll($query);
+                            if ($objectives) {
+                                ?>
+                                <a name="assessment-objectives-section"></a>
+                                <h2 title="Assessment Objectives Section">Assessment Objectives</h2>
+                                <div id="assessment-objectives-section">
+                                    <style>
+                                        ul.objective-list{
+                                            position: relative;
+                                            padding: 0px;
+                                            margin: 0px;
+                                            list-style: none;
+                                        }
+                                        ul.objective-list{
+                                            position:relative;
+                                        }
+                                        ul.objective-list ul{
+                                            list-style-type: none;
+                                            background:transparent url('<?php echo ENTRADA_URL;?>/images/vline.png') repeat-y;
+                                            margin: 0 0 0 10px;
+                                            padding:0;
+                                        }
+                                        #mapped_objectives ul.objective-list li, ul.tl-objective-list > li > .objective-children > ul.objective-list > li{
+                                            background:none!important;
 
-						if ($objectives) {
-							$objective_name = $translate->_("events_filter_controls");
-							$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
-							?>
-							<div class="objectives half left">
-								<h3>Objective Sets</h3>
-								<ul class="tl-objective-list" id="objective_list_0">
-						<?php		foreach($objectives as $objective){
-										?>
-
-										<li class = "objective-container objective-set"
-											id = "objective_<?php echo $objective["objective_id"]; ?>"
-											data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
-											data-id="<?php echo $objective["objective_id"]; ?>">
-											<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-											<div 	class="objective-title"
-													id="objective_title_<?php echo $objective["objective_id"]; ?>"
-													data-title="<?php echo $title;?>"
-													data-id = "<?php echo $objective["objective_id"]; ?>"
-													data-code = "<?php echo $objective["objective_code"]; ?>"
-													data-name = "<?php echo $objective["objective_name"]; ?>"
-													data-description = "<?php echo $objective["objective_description"]; ?>">
-												<h4><?php echo $title; ?></h4>
-											</div>
-											<div class="objective-controls" id="objective_controls_<?php echo $objective["objective_id"];?>">
-											</div>
-											<div class="objective-children" id="children_<?php echo $objective["objective_id"]; ?>">
-												<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>"></ul>
-											</div>
-										</li>
-						<?php 		} ?>
-								</ul>
-							</div>
+                                        }
+                                        #mapped_objectives ul.objective-list li{
+                                            border-left:2px solid #CCCCCC!important;
+                                        }
+                                        ul.objective-list li{
+                                            background:transparent url('<?php echo ENTRADA_URL;?>/images/node.png') no-repeat;
+                                            padding-left:5px;
+                                            display:block;
+                                            overflow:hidden;
+                                            line-height: 125%;
+                                            border-left:none!important;
+                                        }
+                                        .objective-title{
+                                            cursor:pointer;
+                                            margin-left:5px;
+                                            margin-top:-2px;
+                                        }
+                                        .objective-list{
+                                            padding-left:5px;
+                                        }
+                                        #mapped_objectives,#objective_list_0{
+                                            margin-left:0px;
+                                            padding-left: 0px;
+                                        }
+                                        .objectives{
+                                            width:48%;
+                                            float:left;
+                                        }
+                                        .mapped_objectives{
+                                            float:right;
+                                            height:100%;
+                                            width:100%;
+                                        }
+                                        .mapped-objective{
+                                            padding-left:35px!important;
+                                        }
+                                        .objective-remove{
+                                            cursor:pointer;
+                                            position:relative!important;
+                                            margin-left:15px;
+                                        }
+                                        .droppable.hover{
+                                            background-color:#ddd;
+                                        }
+                                        .objective-title{
+                                            font-weight:bold;
+                                        }
+                                        .objective-children{
+                                            margin-top:5px;
+                                        }
+                                        .objective-container{
+                                            position:relative;
+                                            padding-right:0px!important;
+                                            margin-right:0px!important;
+                                        }
+                                        .objective_text_container{
+                                            margin-top:5px;
+                                        }
+                                        .objective-description{
+                                            font-size: 11px;
+                                            font-style: normal;
+                                            color: #666;
+                                            margin-top:5px;
+                                            margin-left:5px;
+                                        }
+                                        .list-heading{
+                                            font-size: 18px;
+                                        }
+                                        #mapped_objectives .objective-description{
+                                            margin-left:0px;
+                                        }
+                                        .importance{
+                                            font-size:.8em;
+                                            margin-right:5px;
+                                        }
+                                        .mapped-objective{
+                                            position:relative;
+                                        }
+                                        .objective-controls{
+                                            position:absolute;
+                                            top:5px;
+                                            right:5px;
+                                        }
+                                        .objective-controls .loading{
+                                            margin-top:7px!important;
+                                        }
+                                        .assessment-objective-controls{
+                                            position:absolute;
+                                            top:5px;
+                                            left:5px;
+                                        }
+                                        li.display-notice{
+                                            border:1px #FC0 solid!important;
+                                            padding-top:10px!important;
+                                            text-align:center;
+                                        }
+                                        .hide{
+                                            display:none;
+                                        }
+                                        .tl-objective-list{
+                                            padding-left:0px;
+                                            padding-top:5px;
+                                            padding-bottom:5px;
+                                            list-style: none;
+                                        }
+                                        .tl-objective-list > li{
+                                            padding:5px;
+                                            margin-bottom:5px;
+                                        }
+                                        .tl-objective-list > .objective-set h4{
+                                            -webkit-border-radius:5px;
+                                            -moz-border-radius:5px;
+                                            border-radius:5px;
+                                            background-color:#036!important;
+                                            color:#fff!important;
+                                            padding:10px;
+                                        }
+                                    </style>
+                                    <?php
+                                    $objective_name = $translate->_("events_filter_controls");
+                                    $hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
+                                    ?>
+                                    <div class="objectives half left">
+                                        <h3>Objective Sets</h3>
+                                        <ul class="tl-objective-list" id="objective_list_0">
+                                            <?php		
+                                            foreach($objectives as $objective){
+                                                ?>
+                                                <li class = "objective-container objective-set"
+                                                    id = "objective_<?php echo $objective["objective_id"]; ?>"
+                                                    data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
+                                                    data-id="<?php echo $objective["objective_id"]; ?>">
+                                                    <?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+                                                    <div 	class="objective-title"
+                                                            id="objective_title_<?php echo $objective["objective_id"]; ?>"
+                                                            data-title="<?php echo $title;?>"
+                                                            data-id = "<?php echo $objective["objective_id"]; ?>"
+                                                            data-code = "<?php echo $objective["objective_code"]; ?>"
+                                                            data-name = "<?php echo $objective["objective_name"]; ?>"
+                                                            data-description = "<?php echo $objective["objective_description"]; ?>">
+                                                        <h4><?php echo $title; ?></h4>
+                                                    </div>
+                                                    <div class="objective-controls" id="objective_controls_<?php echo $objective["objective_id"];?>">
+                                                    </div>
+                                                    <div class="objective-children" id="children_<?php echo $objective["objective_id"]; ?>">
+                                                        <ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>"></ul>
+                                                    </div>
+                                                </li>
+                                                <?php 		
+                                            } 
+                                            ?>
+                                        </ul>
+                                    </div>
 
 
-				<?php   $query = "	SELECT a.*, COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description`, COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`,
-									b.`importance`,c.`objective_details`, COALESCE(c.`aobjective_id`,0) AS `mapped`,
-									COALESCE(b.`cobjective_id`,0) AS `mapped_to_course`
-									FROM `global_lu_objectives` a
-									LEFT JOIN `course_objectives` b
-									ON a.`objective_id` = b.`objective_id`
-									AND b.`course_id` = ".$db->qstr($COURSE_ID)."
-									LEFT JOIN `assessment_objectives` c
-									ON c.`objective_id` = a.`objective_id`
-									AND c.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
-									WHERE a.`objective_active` = '1'
-									AND (c.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)." OR b.`course_id` = ".$db->qstr($COURSE_ID).")
-									GROUP BY a.`objective_id`
-									ORDER BY a.`objective_id` ASC";
-						$mapped_objectives = $db->GetAll($query);
-						$primary = false;
-						$secondary = false;
-						$tertiary = false;
-						$hierarchical_objectives = array();
-						$flat_objectives = array();
-						$explicit_assessment_objectives = false;//array();
-						$mapped_assessment_objectives = array();
-						if ($mapped_objectives) {
-							foreach ($mapped_objectives as $objective) {
-								//if its mapped to the assessment, but not the course, then it belongs in the assessment objective list
-								//echo $objective["objective_name"].' is '.$objective["mapped"].' and '.$objective["mapped_to_course"]."<br/>";
-								if ($objective["mapped"] && !$objective["mapped_to_course"]) {
-									//may not belong in assessment specific objective list if parent objective is mapped to course
-									$response = assessment_objective_parent_mapped_course($objective["objective_id"],$ASSESSMENT_ID);
-									if (!$response) {
-										$explicit_assessment_objectives[] = $objective;
-									} else {
-										if (in_array($objective["objective_type"], array("curricular_objective","course"))) {
-											//$objective_id = $objective["objective_id"];
-											$hierarchical_objectives[] = $objective;
-										} else {
-											$flat_objectives[] = $objective;
-										}
-									}
-								} else {
-									if (in_array($objective["objective_type"], array("curricular_objective","course"))) {
-										//$objective_id = $objective["objective_id"];
-										$hierarchical_objectives[] = $objective;
-									} else {
-										$flat_objectives[] = $objective;
-									}
-								}
+                                    <?php   
+                                    $query = "	SELECT a.*, COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description`, COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`,
+                                                b.`importance`,c.`objective_details`, COALESCE(c.`aobjective_id`,0) AS `mapped`,
+                                                COALESCE(b.`cobjective_id`,0) AS `mapped_to_course`
+                                                FROM `global_lu_objectives` a
+                                                LEFT JOIN `course_objectives` b
+                                                ON a.`objective_id` = b.`objective_id`
+                                                AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+                                                LEFT JOIN `assessment_objectives` c
+                                                ON c.`objective_id` = a.`objective_id`
+                                                AND c.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+                                                WHERE a.`objective_active` = '1'
+                                                AND (c.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)." OR b.`course_id` = ".$db->qstr($COURSE_ID).")
+                                                GROUP BY a.`objective_id`
+                                                ORDER BY a.`objective_id` ASC";
+                                    $mapped_objectives = $db->GetAll($query);
+                                    $primary = false;
+                                    $secondary = false;
+                                    $tertiary = false;
+                                    $hierarchical_objectives = array();
+                                    $flat_objectives = array();
+                                    $explicit_assessment_objectives = false;//array();
+                                    $mapped_assessment_objectives = array();
+                                    if ($mapped_objectives) {
+                                        foreach ($mapped_objectives as $objective) {
+                                            //if its mapped to the assessment, but not the course, then it belongs in the assessment objective list
+                                            //echo $objective["objective_name"].' is '.$objective["mapped"].' and '.$objective["mapped_to_course"]."<br/>";
+                                            if ($objective["mapped"] && !$objective["mapped_to_course"]) {
+                                                //may not belong in assessment specific objective list if parent objective is mapped to course
+                                                $response = assessment_objective_parent_mapped_course($objective["objective_id"],$ASSESSMENT_ID);
+                                                if (!$response) {
+                                                    $explicit_assessment_objectives[] = $objective;
+                                                } else {
+                                                    if (in_array($objective["objective_type"], array("curricular_objective","course"))) {
+                                                        //$objective_id = $objective["objective_id"];
+                                                        $hierarchical_objectives[] = $objective;
+                                                    } else {
+                                                        $flat_objectives[] = $objective;
+                                                    }
+                                                }
+                                            } else {
+                                                if (in_array($objective["objective_type"], array("curricular_objective","course"))) {
+                                                    //$objective_id = $objective["objective_id"];
+                                                    $hierarchical_objectives[] = $objective;
+                                                } else {
+                                                    $flat_objectives[] = $objective;
+                                                }
+                                            }
 
-								if ($objective["mapped"]) {
-									$mapped_assessment_objectives[] = $objective;
-								}
-							}
-						}
-						?>
+                                            if ($objective["mapped"]) {
+                                                $mapped_assessment_objectives[] = $objective;
+                                            }
+                                        }
+                                    }
+                                    ?>
 
-						<div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="assessment" data-resource-id="<?php echo $ASSESSMENT_ID;?>">
-							<h3>Mapped Objectives</h3>
-							<div class="clearfix">
-								<ul class="page-action" style="float: right">
-									<li class="last">
-										<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Map Additional Objectives</a>
-									</li>
-								</ul>
-							</div>												
-							<p class="well well-small content-small">
-								<strong>Helpful Tip:</strong> Click <strong>Map Aditional Objectives</strong> to view the list of available objective sets. Select an objective from the list on the left and it will be mapped to the assessment.
-							</p>
-						<?php
-							if ($hierarchical_objectives) {
-								//function loads bottom leaves and displays them	
-								assessment_objectives_display_leafs($hierarchical_objectives,$COURSE_ID,$ASSESSMENT_ID);
-					 		}
-					 		if($flat_objectives){
-					 		?>
-					 		<div id="clinical-list-wrapper">
-								<a name="clinical-objective-list"></a>
-								<h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed list-heading">Other Objectives</h2>
-								<div id="clinical-objective-list">
-									<ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
-									<?php
-										if ($flat_objectives) {
-											foreach($flat_objectives as $objective){
-													$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
-												?>
-										<li class = "mapped-objective"
-											id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-											data-id = "<?php echo $objective["objective_id"]; ?>"
-											data-title="<?php echo $title;?>"
-											data-description="<?php echo htmlentities($objective["objective_description"]);?>">
-											<strong><?php echo $title; ?></strong>
-											<div class="objective-description">
-												<?php
-												$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
-												if ($set) {
-													echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
-												}
-												?>
-												<?php echo $objective["objective_description"];?>
-											</div>
+                                    <div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="assessment" data-resource-id="<?php echo $ASSESSMENT_ID;?>">
+                                        <h3>Mapped Objectives</h3>
+                                        <div class="clearfix">
+                                            <ul class="page-action" style="float: right">
+                                                <li class="last">
+                                                    <a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Map Additional Objectives</a>
+                                                </li>
+                                            </ul>
+                                        </div>												
+                                        <p class="well well-small content-small">
+                                            <strong>Helpful Tip:</strong> Click <strong>Map Aditional Objectives</strong> to view the list of available objective sets. Select an objective from the list on the left and it will be mapped to the assessment.
+                                        </p>
+                                    <?php
+                                        if ($hierarchical_objectives) {
+                                            //function loads bottom leaves and displays them	
+                                            assessment_objectives_display_leafs($hierarchical_objectives,$COURSE_ID,$ASSESSMENT_ID);
+                                        }
+                                        if($flat_objectives){
+                                        ?>
+                                        <div id="clinical-list-wrapper">
+                                            <a name="clinical-objective-list"></a>
+                                            <h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed list-heading">Other Objectives</h2>
+                                            <div id="clinical-objective-list">
+                                                <ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
+                                                <?php
+                                                    if ($flat_objectives) {
+                                                        foreach($flat_objectives as $objective){
+                                                                $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+                                                            ?>
+                                                    <li class = "mapped-objective"
+                                                        id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+                                                        data-id = "<?php echo $objective["objective_id"]; ?>"
+                                                        data-title="<?php echo $title;?>"
+                                                        data-description="<?php echo htmlentities($objective["objective_description"]);?>">
+                                                        <strong><?php echo $title; ?></strong>
+                                                        <div class="objective-description">
+                                                            <?php
+                                                            $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+                                                            if ($set) {
+                                                                echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                                                            }
+                                                            ?>
+                                                            <?php echo $objective["objective_description"];?>
+                                                        </div>
 
-											<div class="assessment-objective-controls">
-												<input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>
-											</div>
-										</li>
+                                                        <div class="assessment-objective-controls">
+                                                            <input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>
+                                                        </div>
+                                                    </li>
 
-									<?php
-											}
-								 		} ?>
-									</ul>
-								</div>
-							</div>
-							<?php
-							}
-							?>
+                                                <?php
+                                                        }
+                                                    } ?>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <?php
+                                        }
+                                        ?>
 
-							<div id="assessment-list-wrapper" <?php echo ($explicit_assessment_objectives)?'':' style="display:none;"';?>>
-								<a name="assessment-objective-list"></a>
-								<h2 id="assessment-toggle"  title="Assessment Objective List" class="collapsed list-heading">Assessment Specific Objectives</h2>
-								<div id="assessment-objective-list">
-									<ul class="objective-list mapped-list" id="mapped_assessment_objectives" data-importance="assessment">
-									<?php
-										if ($explicit_assessment_objectives) {
-											foreach($explicit_assessment_objectives as $objective){
-													$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
-												?>
-										<li class = "mapped-objective"
-											id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-											data-id = "<?php echo $objective["objective_id"]; ?>"
-											data-title="<?php echo $title;?>"
-											data-description="<?php echo htmlentities($objective["objective_description"]);?>"
-											data-mapped="<?php echo $objective["mapped_to_course"]?1:0;?>">
-											<strong><?php echo $title; ?></strong>
-											<div class="objective-description">
-												<?php
-												$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
-												if ($set) {
-													echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
-												}
-												?>
-												<?php echo $objective["objective_description"];?>
-											</div>
+                                        <div id="assessment-list-wrapper" <?php echo ($explicit_assessment_objectives)?'':' style="display:none;"';?>>
+                                            <a name="assessment-objective-list"></a>
+                                            <h2 id="assessment-toggle"  title="Assessment Objective List" class="collapsed list-heading">Assessment Specific Objectives</h2>
+                                            <div id="assessment-objective-list">
+                                                <ul class="objective-list mapped-list" id="mapped_assessment_objectives" data-importance="assessment">
+                                                <?php
+                                                    if ($explicit_assessment_objectives) {
+                                                        foreach($explicit_assessment_objectives as $objective){
+                                                                $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+                                                            ?>
+                                                            <li class = "mapped-objective"
+                                                                id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+                                                                data-id = "<?php echo $objective["objective_id"]; ?>"
+                                                                data-title="<?php echo $title;?>"
+                                                                data-description="<?php echo htmlentities($objective["objective_description"]);?>"
+                                                                data-mapped="<?php echo $objective["mapped_to_course"]?1:0;?>">
+                                                                <strong><?php echo $title; ?></strong>
+                                                                <div class="objective-description">
+                                                                    <?php
+                                                                    $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+                                                                    if ($set) {
+                                                                        echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                                                                    }
+                                                                    ?>
+                                                                    <?php echo $objective["objective_description"];?>
+                                                                </div>
 
-											<div class="assessment-objective-controls">
-												<img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
-														class="objective-remove list-cancel-image"
-														id="objective_remove_<?php echo $objective["objective_id"];?>"
-														data-id="<?php echo $objective["objective_id"];?>">
-											</div>
-										</li>
+                                                                <div class="assessment-objective-controls">
+                                                                    <img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
+                                                                            class="objective-remove list-cancel-image"
+                                                                            id="objective_remove_<?php echo $objective["objective_id"];?>"
+                                                                            data-id="<?php echo $objective["objective_id"];?>">
+                                                                </div>
+                                                            </li>
+                                                            <?php
+                                                        }
+                                                    } ?>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <select id="checked_objectives_select" name="checked_objectives[]" multiple="multiple" style="display:none;">
+                                        <?php
+                                            if ($mapped_assessment_objectives) {
+                                                foreach($mapped_assessment_objectives as $objective){
+                                                    if(in_array($objective["objective_type"], array("curricular_objective","course"))) {
+                                                    ?>
+                                                    <?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+                                                    <option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+                                                <?php
+                                                    }
+                                                }
+                                            }
+                                        ?>
+                                        </select>
+                                        <select id="clinical_objectives_select" name="clinical_presentations[]" multiple="multiple" style="display:none;">
+                                        <?php
+                                            if ($mapped_assessment_objectives) {
+                                                foreach($mapped_assessment_objectives as $objective){
+                                                    if(in_array($objective["objective_type"], array("clinical_presentation","event"))) {
+                                                    ?>
+                                                    <?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+                                                    <option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+                                                <?php
+                                                    }
+                                                }
+                                            }
+                                        ?>
+                                        </select>
 
-									<?php
-											}
-								 		} ?>
-									</ul>
-								</div>
-							</div>
-							<select id="checked_objectives_select" name="checked_objectives[]" multiple="multiple" style="display:none;">
-							<?php
-								if ($mapped_assessment_objectives) {
-									foreach($mapped_assessment_objectives as $objective){
-										if(in_array($objective["objective_type"], array("curricular_objective","course"))) {
-										?>
-										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-										<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
-									<?php
-										}
-									}
-								}
-							?>
-							</select>
-							<select id="clinical_objectives_select" name="clinical_presentations[]" multiple="multiple" style="display:none;">
-							<?php
-								if ($mapped_assessment_objectives) {
-									foreach($mapped_assessment_objectives as $objective){
-										if(in_array($objective["objective_type"], array("clinical_presentation","event"))) {
-										?>
-										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-										<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
-									<?php
-										}
-									}
-								}
-							?>
-							</select>
-
-						</div>
-						<div style="clear:both;"></div>
-						<div style="float:right;margin-top:10px;">
-							<input type="submit" value="Save"/>
-						</div>
-						<div style="clear:both;"></div>
-						<?php 	} 	?>
-					</div>													
-						<div style="padding-top: 25px">
-							<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-								<tr>
-									<td style="width: 25%; text-align: left">
-										<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view", "assessment_id" => false)); ?>'" />
-									</td>
-									<td style="width: 75%; text-align: right; vertical-align: middle">
-										<span class="content-small">After saving:</span>
-										<select id="post_action" name="post_action">
-											<option value="grade"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "grade") ? " selected=\"selected\"" : ""); ?>>Grade assessment</option>
-											<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another assessment</option>
-											<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to assessment list</option>
-											<option value="parent"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "parent") ? " selected=\"selected\"" : ""); ?>>Return to all gradebooks list</option>
-										</select>
-										<input type="submit" class="button" value="Save" />
-									</td>
-								</tr>
-							</table>
-						</div>
-					</form>
-					<?php
+                                    </div>
+                                    <div style="clear:both;"></div>
+                                    <div style="float:right;margin-top:10px;">
+                                        <input type="submit" value="Save"/>
+                                    </div>
+                                    <div style="clear:both;"></div>
+                                </div>		
+                                <?php 	
+                            }	
+                            ?>											
+                            <div style="padding-top: 25px">
+                                <table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+                                    <tr>
+                                        <td style="width: 25%; text-align: left">
+                                            <input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view", "assessment_id" => false)); ?>'" />
+                                        </td>
+                                        <td style="width: 75%; text-align: right; vertical-align: middle">
+                                            <span class="content-small">After saving:</span>
+                                            <select id="post_action" name="post_action">
+                                                <option value="grade"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "grade") ? " selected=\"selected\"" : ""); ?>>Grade assessment</option>
+                                                <option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another assessment</option>
+                                                <option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to assessment list</option>
+                                                <option value="parent"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "parent") ? " selected=\"selected\"" : ""); ?>>Return to all gradebooks list</option>
+                                            </select>
+                                            <input type="submit" class="button" value="Save" />
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </form>
+                        <?php
+                    break;
 				}
 			} else {
 				$ERROR++;

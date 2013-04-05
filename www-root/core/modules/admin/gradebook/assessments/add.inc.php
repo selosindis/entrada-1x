@@ -755,148 +755,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						// list($course_objectives, $top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(), array($ASSESSMENT_ID), -1, 0, false, $posted_objectives, 0, false);
 						// require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 						// $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-						?>
-			<a name="assessment-objectives-section"></a>
-					<h2 title="Assessment Objectives Section">Assessment Objectives</h2>
-					<div id="assessment-objectives-section">
-						<style>
-							ul.objective-list{
-								position: relative;
-								padding: 0px;
-								margin: 0px;
-								list-style: none;
-							}
-							ul.objective-list{
-								position:relative;
-							}
-							ul.objective-list ul{
-								list-style-type: none;
-								background:transparent url('<?php echo ENTRADA_URL;?>/images/vline.png') repeat-y;
-								margin: 0 0 0 10px;
-								padding:0;
-							}
-							#mapped_objectives ul.objective-list li, ul.tl-objective-list > li > .objective-children > ul.objective-list > li{
-								background:none!important;
-
-							}
-							#mapped_objectives ul.objective-list li{
-								border-left:2px solid #CCCCCC!important;
-							}
-							ul.objective-list li{
-								background:transparent url('<?php echo ENTRADA_URL;?>/images/node.png') no-repeat;
-								padding-left:5px;
-								display:block;
-								overflow:hidden;
-								line-height: 125%;
-								border-left:none!important;
-							}
-							.objective-title{
-								cursor:pointer;
-								margin-left:5px;
-								margin-top:-2px;
-							}
-							.objective-list{
-								padding-left:5px;
-							}
-							#mapped_objectives,#objective_list_0{
-								margin-left:0px;
-								padding-left: 0px;
-							}
-							.objectives{
-								width:48%;
-								float:left;
-							}
-							.mapped_objectives{
-								float:right;
-								height:100%;
-								width:100%;
-							}
-							.mapped-objective{
-								padding-left:35px!important;
-							}
-							.objective-remove{
-								cursor:pointer;
-								position:relative!important;
-								margin-left:15px;
-							}
-							.droppable.hover{
-								background-color:#ddd;
-							}
-							.objective-title{
-								font-weight:bold;
-							}
-							.objective-children{
-								margin-top:5px;
-							}
-							.objective-container{
-								position:relative;
-								padding-right:0px!important;
-								margin-right:0px!important;
-							}
-							.objective_text_container{
-								margin-top:5px;
-							}
-							.objective-description{
-								font-size: 11px;
-								font-style: normal;
-								color: #666;
-								margin-top:5px;
-								margin-left:5px;
-							}
-							.list-heading{
-								font-size: 18px;
-							}
-							#mapped_objectives .objective-description{
-								margin-left:0px;
-							}
-							.importance{
-								font-size:.8em;
-								margin-right:5px;
-							}
-							.mapped-objective{
-								position:relative;
-							}
-							.objective-controls{
-								position:absolute;
-								top:5px;
-								right:5px;
-							}
-							.objective-controls .loading{
-								margin-top:7px!important;
-							}
-							.assessment-objective-controls{
-								position:absolute;
-								top:5px;
-								left:5px;
-							}
-							li.display-notice{
-								border:1px #FC0 solid!important;
-								padding-top:10px!important;
-								text-align:center;
-							}
-							.hide{
-								display:none;
-							}
-							.tl-objective-list{
-								padding-left:0px;
-								padding-top:5px;
-								padding-bottom:5px;
-								list-style: none;
-							}
-							.tl-objective-list > li{
-								padding:5px;
-								margin-bottom:5px;
-							}
-							.tl-objective-list > .objective-set h4{
-								-webkit-border-radius:5px;
-								-moz-border-radius:5px;
-								border-radius:5px;
-								background-color:#036!important;
-								color:#fff!important;
-								padding:10px;
-							}
-						</style>
-						<?php
+					
 						$query = "	SELECT a.* FROM `global_lu_objectives` a
 									JOIN `objective_audience` b
 									ON a.`objective_id` = b.`objective_id`
@@ -912,215 +771,356 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									AND a.`objective_active` = '1'";									
 						$objectives = $db->GetAll($query);
 
-						if ($objectives) {
-							$objective_name = $translate->_("events_filter_controls");
-							$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
-							?>
-							<div class="objectives half left">
-								<h3>Objective Sets</h3>
-								<ul class="tl-objective-list" id="objective_list_0">
-						<?php		foreach($objectives as $objective){
-										?>
+						if ($objectives) {	?>
+                            <a name="assessment-objectives-section"></a>
+                            <h2 title="Assessment Objectives Section">Assessment Objectives</h2>
+                            <div id="assessment-objectives-section">
+                                <style>
+                                    ul.objective-list{
+                                        position: relative;
+                                        padding: 0px;
+                                        margin: 0px;
+                                        list-style: none;
+                                    }
+                                    ul.objective-list{
+                                        position:relative;
+                                    }
+                                    ul.objective-list ul{
+                                        list-style-type: none;
+                                        background:transparent url('<?php echo ENTRADA_URL;?>/images/vline.png') repeat-y;
+                                        margin: 0 0 0 10px;
+                                        padding:0;
+                                    }
+                                    #mapped_objectives ul.objective-list li, ul.tl-objective-list > li > .objective-children > ul.objective-list > li{
+                                        background:none!important;
 
-										<li class = "objective-container objective-set"
-											id = "objective_<?php echo $objective["objective_id"]; ?>"
-											data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
-											data-id="<?php echo $objective["objective_id"]; ?>">
-											<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-											<div 	class="objective-title"
-													id="objective_title_<?php echo $objective["objective_id"]; ?>"
-													data-title="<?php echo $title;?>"
-													data-id = "<?php echo $objective["objective_id"]; ?>"
-													data-code = "<?php echo $objective["objective_code"]; ?>"
-													data-name = "<?php echo $objective["objective_name"]; ?>"
-													data-description = "<?php echo $objective["objective_description"]; ?>">
-												<h4><?php echo $title; ?></h4>
-											</div>
-											<div class="objective-controls" id="objective_controls_<?php echo $objective["objective_id"];?>">
-											</div>
-											<div class="objective-children" id="children_<?php echo $objective["objective_id"]; ?>">
-												<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>"></ul>
-											</div>
-										</li>
-						<?php 		} ?>
-								</ul>
-							</div>
+                                    }
+                                    #mapped_objectives ul.objective-list li{
+                                        border-left:2px solid #CCCCCC!important;
+                                    }
+                                    ul.objective-list li{
+                                        background:transparent url('<?php echo ENTRADA_URL;?>/images/node.png') no-repeat;
+                                        padding-left:5px;
+                                        display:block;
+                                        overflow:hidden;
+                                        line-height: 125%;
+                                        border-left:none!important;
+                                    }
+                                    .objective-title{
+                                        cursor:pointer;
+                                        margin-left:5px;
+                                        margin-top:-2px;
+                                    }
+                                    .objective-list{
+                                        padding-left:5px;
+                                    }
+                                    #mapped_objectives,#objective_list_0{
+                                        margin-left:0px;
+                                        padding-left: 0px;
+                                    }
+                                    .objectives{
+                                        width:48%;
+                                        float:left;
+                                    }
+                                    .mapped_objectives{
+                                        float:right;
+                                        height:100%;
+                                        width:100%;
+                                    }
+                                    .mapped-objective{
+                                        padding-left:35px!important;
+                                    }
+                                    .objective-remove{
+                                        cursor:pointer;
+                                        position:relative!important;
+                                        margin-left:15px;
+                                    }
+                                    .droppable.hover{
+                                        background-color:#ddd;
+                                    }
+                                    .objective-title{
+                                        font-weight:bold;
+                                    }
+                                    .objective-children{
+                                        margin-top:5px;
+                                    }
+                                    .objective-container{
+                                        position:relative;
+                                        padding-right:0px!important;
+                                        margin-right:0px!important;
+                                    }
+                                    .objective_text_container{
+                                        margin-top:5px;
+                                    }
+                                    .objective-description{
+                                        font-size: 11px;
+                                        font-style: normal;
+                                        color: #666;
+                                        margin-top:5px;
+                                        margin-left:5px;
+                                    }
+                                    .list-heading{
+                                        font-size: 18px;
+                                    }
+                                    #mapped_objectives .objective-description{
+                                        margin-left:0px;
+                                    }
+                                    .importance{
+                                        font-size:.8em;
+                                        margin-right:5px;
+                                    }
+                                    .mapped-objective{
+                                        position:relative;
+                                    }
+                                    .objective-controls{
+                                        position:absolute;
+                                        top:5px;
+                                        right:5px;
+                                    }
+                                    .objective-controls .loading{
+                                        margin-top:7px!important;
+                                    }
+                                    .assessment-objective-controls{
+                                        position:absolute;
+                                        top:5px;
+                                        left:5px;
+                                    }
+                                    li.display-notice{
+                                        border:1px #FC0 solid!important;
+                                        padding-top:10px!important;
+                                        text-align:center;
+                                    }
+                                    .hide{
+                                        display:none;
+                                    }
+                                    .tl-objective-list{
+                                        padding-left:0px;
+                                        padding-top:5px;
+                                        padding-bottom:5px;
+                                        list-style: none;
+                                    }
+                                    .tl-objective-list > li{
+                                        padding:5px;
+                                        margin-bottom:5px;
+                                    }
+                                    .tl-objective-list > .objective-set h4{
+                                        -webkit-border-radius:5px;
+                                        -moz-border-radius:5px;
+                                        border-radius:5px;
+                                        background-color:#036!important;
+                                        color:#fff!important;
+                                        padding:10px;
+                                    }
+                                </style>
+                                <?php
+                                $objective_name = $translate->_("events_filter_controls");
+                                $hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
+                                ?>
+                                <div class="objectives half left">
+                                    <h3>Objective Sets</h3>
+                                    <ul class="tl-objective-list" id="objective_list_0">
+                            <?php		foreach($objectives as $objective){
+                                            ?>
+
+                                            <li class = "objective-container objective-set"
+                                                id = "objective_<?php echo $objective["objective_id"]; ?>"
+                                                data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
+                                                data-id="<?php echo $objective["objective_id"]; ?>">
+                                                <?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+                                                <div 	class="objective-title"
+                                                        id="objective_title_<?php echo $objective["objective_id"]; ?>"
+                                                        data-title="<?php echo $title;?>"
+                                                        data-id = "<?php echo $objective["objective_id"]; ?>"
+                                                        data-code = "<?php echo $objective["objective_code"]; ?>"
+                                                        data-name = "<?php echo $objective["objective_name"]; ?>"
+                                                        data-description = "<?php echo $objective["objective_description"]; ?>">
+                                                    <h4><?php echo $title; ?></h4>
+                                                </div>
+                                                <div class="objective-controls" id="objective_controls_<?php echo $objective["objective_id"];?>">
+                                                </div>
+                                                <div class="objective-children" id="children_<?php echo $objective["objective_id"]; ?>">
+                                                    <ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>"></ul>
+                                                </div>
+                                            </li>
+                            <?php 		} ?>
+                                    </ul>
+                                </div>
 
 
-				<?php   $query = "	SELECT a.*, COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description`, b.`objective_type` AS `objective_type`,
-									b.`importance`,
-									COALESCE(b.`cobjective_id`,0) AS `mapped_to_course`
-									FROM `global_lu_objectives` a
-									LEFT JOIN `course_objectives` b
-									ON a.`objective_id` = b.`objective_id`
-									AND b.`course_id` = ".$db->qstr($COURSE_ID)."
-									WHERE a.`objective_active` = '1'
-									AND b.`course_id` = ".$db->qstr($COURSE_ID)."
-									GROUP BY a.`objective_id`
-									ORDER BY a.`objective_id` ASC";
-						$mapped_objectives = $db->GetAll($query);
-						$primary = false;
-						$secondary = false;
-						$tertiary = false;
-						$hierarchical_objectives = array();
-						$flat_objectives = array();
-						$explicit_assessment_objectives = false;//array();
-						$mapped_assessment_objectives = array();
-						if ($mapped_objectives) {
-							foreach ($mapped_objectives as $objective) {
-								//if its mapped to the assessment, but not the course, then it belongs in the assessment objective list
-								//echo $objective["objective_name"].' is '.$objective["mapped"].' and '.$objective["mapped_to_course"]."<br/>";
-								if (in_array($objective["objective_type"], array("curricular_objective","course"))) {
-									//$objective_id = $objective["objective_id"];
-									$hierarchical_objectives[] = $objective;
-								} else {
-									$flat_objectives[] = $objective;
-								}
+                        <?php   $query = "	SELECT a.*, COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description`, b.`objective_type` AS `objective_type`,
+                                            b.`importance`,
+                                            COALESCE(b.`cobjective_id`,0) AS `mapped_to_course`
+                                            FROM `global_lu_objectives` a
+                                            LEFT JOIN `course_objectives` b
+                                            ON a.`objective_id` = b.`objective_id`
+                                            AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+                                            WHERE a.`objective_active` = '1'
+                                            AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+                                            GROUP BY a.`objective_id`
+                                            ORDER BY a.`objective_id` ASC";
+                                $mapped_objectives = $db->GetAll($query);
+                                $primary = false;
+                                $secondary = false;
+                                $tertiary = false;
+                                $hierarchical_objectives = array();
+                                $flat_objectives = array();
+                                $explicit_assessment_objectives = false;//array();
+                                $mapped_assessment_objectives = array();
+                                if ($mapped_objectives) {
+                                    foreach ($mapped_objectives as $objective) {
+                                        //if its mapped to the assessment, but not the course, then it belongs in the assessment objective list
+                                        //echo $objective["objective_name"].' is '.$objective["mapped"].' and '.$objective["mapped_to_course"]."<br/>";
+                                        if (in_array($objective["objective_type"], array("curricular_objective","course"))) {
+                                            //$objective_id = $objective["objective_id"];
+                                            $hierarchical_objectives[] = $objective;
+                                        } else {
+                                            $flat_objectives[] = $objective;
+                                        }
 
-								if ($objective["mapped"]) {
-									$mapped_assessment_objectives[] = $objective;
-								}
-							}
-						}
-						?>
+                                        if ($objective["mapped"]) {
+                                            $mapped_assessment_objectives[] = $objective;
+                                        }
+                                    }
+                                }
+                                ?>
 
-						<div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="assessment" data-resource-id="<?php echo $ASSESSMENT_ID;?>">
-							<h3>Mapped Objectives</h3>
-							<div class="clearfix">
-								<ul class="page-action" style="float: right">
-									<li class="last">
-										<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Map Additional Objectives</a>
-									</li>
-								</ul>
-							</div>												
-							<p class="well well-small content-small">
-								<strong>Helpful Tip:</strong> Click <strong>Map Aditional Objectives</strong> to view the list of available objective sets. Select an objective from the list on the left and it will be mapped to the assessment.
-							</p>
-						<?php
-							if ($hierarchical_objectives) {
-								//function loads bottom leaves and displays them	
-								assessment_objectives_display_leafs($hierarchical_objectives,$COURSE_ID,0);
-					 		}
-					 		if($flat_objectives){
-					 		?>
-					 		<div id="clinical-list-wrapper">
-								<a name="clinical-objective-list"></a>
-								<h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed list-heading">Other Objectives</h2>
-								<div id="clinical-objective-list">
-									<ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
-									<?php
-										if ($flat_objectives) {
-											foreach($flat_objectives as $objective){
-													$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
-												?>
-										<li class = "mapped-objective"
-											id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-											data-id = "<?php echo $objective["objective_id"]; ?>"
-											data-title="<?php echo $title;?>"
-											data-description="<?php echo htmlentities($objective["objective_description"]);?>">
-											<strong><?php echo $title; ?></strong>
-											<div class="objective-description">
-												<?php
-												$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
-												if ($set) {
-													echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
-												}
-												?>
-												<?php echo $objective["objective_description"];?>
-											</div>
+                                <div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="assessment" data-resource-id="<?php echo $ASSESSMENT_ID;?>">
+                                    <h3>Mapped Objectives</h3>
+                                    <div class="clearfix">
+                                        <ul class="page-action" style="float: right">
+                                            <li class="last">
+                                                <a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Map Additional Objectives</a>
+                                            </li>
+                                        </ul>
+                                    </div>												
+                                    <p class="well well-small content-small">
+                                        <strong>Helpful Tip:</strong> Click <strong>Map Aditional Objectives</strong> to view the list of available objective sets. Select an objective from the list on the left and it will be mapped to the assessment.
+                                    </p>
+                                <?php
+                                    if ($hierarchical_objectives) {
+                                        //function loads bottom leaves and displays them	
+                                        assessment_objectives_display_leafs($hierarchical_objectives,$COURSE_ID,0);
+                                    }
+                                    if($flat_objectives){
+                                    ?>
+                                    <div id="clinical-list-wrapper">
+                                        <a name="clinical-objective-list"></a>
+                                        <h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed list-heading">Other Objectives</h2>
+                                        <div id="clinical-objective-list">
+                                            <ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
+                                            <?php
+                                                if ($flat_objectives) {
+                                                    foreach($flat_objectives as $objective){
+                                                            $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+                                                        ?>
+                                                <li class = "mapped-objective"
+                                                    id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+                                                    data-id = "<?php echo $objective["objective_id"]; ?>"
+                                                    data-title="<?php echo $title;?>"
+                                                    data-description="<?php echo htmlentities($objective["objective_description"]);?>">
+                                                    <strong><?php echo $title; ?></strong>
+                                                    <div class="objective-description">
+                                                        <?php
+                                                        $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+                                                        if ($set) {
+                                                            echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                                                        }
+                                                        ?>
+                                                        <?php echo $objective["objective_description"];?>
+                                                    </div>
 
-											<div class="assessment-objective-controls">
-												<input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>
-											</div>
-										</li>
+                                                    <div class="assessment-objective-controls">
+                                                        <input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>
+                                                    </div>
+                                                </li>
 
-									<?php
-											}
-								 		} ?>
-									</ul>
-								</div>
-							</div>
-							<?php
-							}
-							?>
+                                            <?php
+                                                    }
+                                                } ?>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <?php
+                                    }
+                                    ?>
 
-							<div id="assessment-list-wrapper" <?php echo ($explicit_assessment_objectives)?'':' style="display:none;"';?>>
-								<a name="assessment-objective-list"></a>
-								<h2 id="assessment-toggle"  title="Assessment Objective List" class="collapsed list-heading">Assessment Specific Objectives</h2>
-								<div id="assessment-objective-list">
-									<ul class="objective-list mapped-list" id="mapped_assessment_objectives" data-importance="assessment">
-									<?php
-										if ($explicit_assessment_objectives) {
-											foreach($explicit_assessment_objectives as $objective){
-													$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
-												?>
-										<li class = "mapped-objective"
-											id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-											data-id = "<?php echo $objective["objective_id"]; ?>"
-											data-title="<?php echo $title;?>"
-											data-description="<?php echo htmlentities($objective["objective_description"]);?>"
-											data-mapped="<?php echo $objective["mapped_to_course"]?1:0;?>">
-											<strong><?php echo $title; ?></strong>
-											<div class="objective-description">
-												<?php
-												$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
-												if ($set) {
-													echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
-												}
-												?>
-												<?php echo $objective["objective_description"];?>
-											</div>
+                                    <div id="assessment-list-wrapper" <?php echo ($explicit_assessment_objectives)?'':' style="display:none;"';?>>
+                                        <a name="assessment-objective-list"></a>
+                                        <h2 id="assessment-toggle"  title="Assessment Objective List" class="collapsed list-heading">Assessment Specific Objectives</h2>
+                                        <div id="assessment-objective-list">
+                                            <ul class="objective-list mapped-list" id="mapped_assessment_objectives" data-importance="assessment">
+                                            <?php
+                                                if ($explicit_assessment_objectives) {
+                                                    foreach($explicit_assessment_objectives as $objective){
+                                                            $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+                                                        ?>
+                                                <li class = "mapped-objective"
+                                                    id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+                                                    data-id = "<?php echo $objective["objective_id"]; ?>"
+                                                    data-title="<?php echo $title;?>"
+                                                    data-description="<?php echo htmlentities($objective["objective_description"]);?>"
+                                                    data-mapped="<?php echo $objective["mapped_to_course"]?1:0;?>">
+                                                    <strong><?php echo $title; ?></strong>
+                                                    <div class="objective-description">
+                                                        <?php
+                                                        $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+                                                        if ($set) {
+                                                            echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                                                        }
+                                                        ?>
+                                                        <?php echo $objective["objective_description"];?>
+                                                    </div>
 
-											<div class="assessment-objective-controls">
-												<img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
-														class="objective-remove list-cancel-image"
-														id="objective_remove_<?php echo $objective["objective_id"];?>"
-														data-id="<?php echo $objective["objective_id"];?>">
-											</div>
-										</li>
+                                                    <div class="assessment-objective-controls">
+                                                        <img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
+                                                                class="objective-remove list-cancel-image"
+                                                                id="objective_remove_<?php echo $objective["objective_id"];?>"
+                                                                data-id="<?php echo $objective["objective_id"];?>">
+                                                    </div>
+                                                </li>
 
-									<?php
-											}
-								 		} ?>
-									</ul>
-								</div>
-							</div>
-							<select id="checked_objectives_select" name="checked_objectives[]" multiple="multiple" style="display:none;">
-							<?php
-								if ($mapped_assessment_objectives) {
-									foreach($mapped_assessment_objectives as $objective){
-										if(in_array($objective["objective_type"], array("curricular_objective","course"))) {
-										?>
-										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-										<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
-									<?php
-										}
-									}
-								}
-							?>
-							</select>
-							<select id="clinical_objectives_select" name="clinical_presentations[]" multiple="multiple" style="display:none;">
-							<?php
-								if ($mapped_assessment_objectives) {
-									foreach($mapped_assessment_objectives as $objective){
-										if(in_array($objective["objective_type"], array("clinical_presentation","event"))) {
-										?>
-										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-										<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
-									<?php
-										}
-									}
-								}
-							?>
-							</select>
+                                            <?php
+                                                    }
+                                                } ?>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <select id="checked_objectives_select" name="checked_objectives[]" multiple="multiple" style="display:none;">
+                                    <?php
+                                        if ($mapped_assessment_objectives) {
+                                            foreach($mapped_assessment_objectives as $objective){
+                                                if(in_array($objective["objective_type"], array("curricular_objective","course"))) {
+                                                ?>
+                                                <?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+                                                <option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+                                            <?php
+                                                }
+                                            }
+                                        }
+                                    ?>
+                                    </select>
+                                    <select id="clinical_objectives_select" name="clinical_presentations[]" multiple="multiple" style="display:none;">
+                                    <?php
+                                        if ($mapped_assessment_objectives) {
+                                            foreach($mapped_assessment_objectives as $objective){
+                                                if(in_array($objective["objective_type"], array("clinical_presentation","event"))) {
+                                                ?>
+                                                <?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+                                                <option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+                                            <?php
+                                                }
+                                            }
+                                        }
+                                    ?>
+                                    </select>
 
-						</div>
-						<div style="clear:both;"></div>
-						<div style="float:right;margin-top:10px;">
-							<input type="submit" value="Save"/>
-						</div>
-						<div style="clear:both;"></div>
-						<?php 	} 	?>
+                                </div>
+                                <div style="clear:both;"></div>
+                                <div style="float:right;margin-top:10px;">
+                                    <input type="submit" value="Save"/>
+                                </div>
+                                <div style="clear:both;"></div>
+						<?php }	?>
 					</div>
 						<div style="padding-top: 25px">
 							<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">

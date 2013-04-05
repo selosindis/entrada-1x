@@ -861,7 +861,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 		/*
 		 * Fetch all quiz assessments that do not have the quiz attached
 		 */
-		$query = "	SELECT a.*, b.`type` AS `characteristic_type`, c.`course_name`, c.`course_code`, d.`group_name`, e.`aquiz_id`
+		$query = "SELECT a.*, b.`type` AS `characteristic_type`, c.`course_name`, c.`course_code`, d.`group_name`, e.`aquiz_id`
 					FROM `assessments` AS a
 					LEFT JOIN `assessments_lu_meta` AS b
 					ON a.`characteristic_id` = b.`id`
@@ -873,8 +873,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					ON a.`assessment_id` = e.`content_id`
 					WHERE b.`type` = 'quiz'
 					AND (e.`content_type` = 'assessment' OR e.`content_type` IS NULL)
-					AND e.`aquiz_id` IS NULL";
-		$assessments = $db->GetAssoc($query);
+					HAVING e.`aquiz_id` IS NULL";
+		$assessments = $db->GetAll($query);
 
 		if ($quiz_record && $ENTRADA_ACL->amIAllowed(new QuizResource($quiz_record["quiz_id"]), 'update')) {
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID, "title" => limit_chars($quiz_record["quiz_title"], 32));
@@ -964,6 +964,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						<tbody>
 							<?php
 							foreach ($assessments as $assessment_id => $result) {
+                                $url			= ENTRADA_URL."/admin/gradebook/assessments?section=edit&id=".$assessment_id;
 								echo "<tr id=\"assessment-".$assessment_id."\">\n";
 								echo "	<td><input type=\"radio\" name=\"assessment_id\" value=\"".$assessment_id."\" /></td>\n";
 								echo "	<td><a href=\"".$url."\">".$result["course_name"]." - ".$result["course_code"]."</a></td>\n";

@@ -12546,7 +12546,7 @@ function assessment_objective_parent_mapped_recursive($objectives,$objective_id,
 			return true;
 		}
 		if ($objective["objective_parent"]) {
-			$query = "	SELECT a.*, COALESCE(b.`cobjective`, 0) AS `mapped`
+			$query = "	SELECT a.*, COALESCE(b.`cobjective_id`, 0) AS `mapped`
 						FROM `global_lu_objectives` a
 						LEFT JOIN `course_objectives` b
 						ON a.`objective_id` = b.`objective_id`
@@ -12769,7 +12769,7 @@ function event_objective_parent_mapped_recursive($objectives,$objective_id,$cour
 			return true;
 		}
 		if ($objective["objective_parent"]) {
-			$query = "	SELECT a.*, COALESCE(b.`cobjective`, 0) AS `mapped`
+			$query = "	SELECT a.*, COALESCE(b.`cobjective_id`, 0) AS `mapped`
 						FROM `global_lu_objectives` a
 						LEFT JOIN `course_objectives` b
 						ON a.`objective_id` = b.`objective_id`

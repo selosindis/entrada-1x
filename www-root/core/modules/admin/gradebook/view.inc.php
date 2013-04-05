@@ -268,6 +268,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             var id = e.target.id.substring(5);
                             jQuery('#'+id).trigger('click');
                         });
+                        
+						jQuery('#export-grades').live('click',function(){
+	                        var ids = [];
+	                        jQuery('#assessment_list .modified input:checked').each(function() {
+	                            ids.push(jQuery(this).val());
+	                        });
+	                        if(ids.length > 0) {
+	                            window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
+	                        } else {
+	                            var cohort = jQuery('#cohort-quick-select').val();
+	                            window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&cohort='+cohort;
+	                        }
+	                        return false;
+	                    });                          
 
                         var reordering = false;
                         var orderChanged = false;
@@ -346,52 +360,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             jQuery('#assessment_list tbody').sortable('destroy');
                             jQuery('#delete, #export').show();
                         });
-                    });
-
-                    function exportSelected() {
-                        var ids = [];
-                        $$('#assessment_list .modified input:checked').each(function(checkbox) {
-                            ids.push($F(checkbox));
-                        });
-                        if(ids.length > 0) {
-                            window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
-                        } else {
-                            alert("You must select some assessments to export.");
-                        }
-                        return false;
-                    }
-
-                    jQuery(document).ready(function(){
-                        jQuery('.edit_grade').live('click',function(e){
-                            var id = e.target.id.substring(5);
-                            jQuery('#'+id).trigger('click');
-                        });
-                    });
-
-                    function exportSelected() {
-                        var ids = [];
-                        $$('#assessment_list .modified input:checked').each(function(checkbox) {
-                            ids.push($F(checkbox));
-                        });
-                        if(ids.length > 0) {
-                            window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
-                        } else {
-                            alert("You must select some assessments to export.");
-                        }
-                        return false;
-                    }
+                    });                   
                 </script>
                 <br />
 				<table class="tableList" cellspacing="0" summary="List of Assessments" id="assessment_list">
 					<tfoot>
 						<tr>
-							<td style="padding-top: 10px; border-bottom:0;"colspan="3">
-								<input type="submit" class="button" id="delete" value="Delete Selected" />
-								<input type="submit" class="button" id="export" value="Export Selected" onclick="exportSelected(); return false;"/>
+							<td style="padding-top: 10px; border-bottom:0;" colspan="2">
+								<input type="submit" class="button" id="delete" value="Delete Selected" />								
 								<input type="button" class="button" id="reorder" value="Reorder" />
 								<input type="button" class="button" id="saveorder" value="Save Order" />
 							</td>
-							<td style="padding-top: 10px; border-bottom: 0; "><a id="fullscreen-edit" class="button" style="float:right;" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Fullscreen</div></a></td>
+							<td style="padding-top: 10px; border-bottom: 0; text-align:right;" colspan="2">
+								<a id="fullscreen-edit" class="button" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Grade Spreadsheet</div></a>								
+								<input type="button" id="export-grades" class="button" value="Export Grades"/>
+							</td>
 						</tr>
 						<tr>
 							<td style="border-bottom:0;"></td>

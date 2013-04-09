@@ -83,3 +83,10 @@ color:#036;
 .vertical_accordion_toggle_active {
 background-color:#036;
 }
+
+
+.container,
+.navbar-fixed-top .container,
+.navbar-fixed-bottom .container {
+  width: 1170px !important;
+}

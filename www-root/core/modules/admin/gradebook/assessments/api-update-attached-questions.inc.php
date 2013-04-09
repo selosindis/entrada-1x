@@ -35,30 +35,26 @@ if (!defined("IN_GRADEBOOK")) {
 	echo display_error();
 
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] do not have access to this module [".$MODULE."]");
-} else {
+} else {    
+    /**
+     * Clears all open buffers so we can return a plain response for the Javascript.
+     */
+    ob_clear_open_buffers();
+    $PROCESSED = array();
     
-    if (isset($_GET["ajax"]) && $_GET["ajax"]) {
-        $ajax = true;
-    } else {
-        $ajax = false;
-    }
-    
-    if ($ajax) {
-        /**
-         * Clears all open buffers so we can return a plain response for the Javascript.
-         */
-        ob_clear_open_buffers();
-        $PROCESSED = array();
-    }
     if ($ASSESSMENT_ID) {
         $query = "SELECT * FROM `assessments` WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID);
         $assessment = $db->GetRow($query);
         if ($assessment) {
-            if (isset($_GET["quiz_id"]) && ($tmp_input = clean_input($_GET["quiz_id"], "int"))) {
-                $PROCESSED["quiz_id"] = $tmp_input;
+            if (isset($_GET["aquiz_id"]) && ($tmp_input = clean_input($_GET["aquiz_id"], "int"))) {
+                $PROCESSED["aquiz_id"] = $tmp_input;
+                $query = "SELECT a.* FROM `quizzes` AS a
+                            JOIN `attached_quizzes` AS b
+                            ON a.`quiz_id` = b.`quiz_id`
+                            WHERE b.`aquiz_id` = ".$db->qstr($PROCESSED["aquiz_id"]);
+                $quiz = $db->GetRow($query);
             }
-            if (isset($PROCESSED["quiz_id"]) && $PROCESSED["quiz_id"]) {
-                echo "<input type=\"hidden\" id=\"quiz_id\" value=\"".$PROCESSED["quiz_id"]."\" />";
+            if ($quiz) {
                 $temp_ids = array();
                 $QUESTIONS = array();
                 $QUESTIONS_LIST = array();
@@ -72,7 +68,7 @@ if (!defined("IN_GRADEBOOK")) {
                             }
                         }
                         $query = "SELECT * FROM `quiz_questions`
-                                    WHERE `quiz_id` = ".$db->qstr($PROCESSED["quiz_id"])."
+                                    WHERE `quiz_id` = ".$db->qstr($quiz["quiz_id"])."
                                     AND `questiontype_id` = 1";
                         $quiz_questions = $db->GetAll($query);
                         if ($quiz_questions) {
@@ -88,16 +84,18 @@ if (!defined("IN_GRADEBOOK")) {
 
                                 $query = "SELECT * FROM `assessment_quiz_questions` 
                                             WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+                                            AND `aquiz_id` = ".$db->qstr($PROCESSED["aquiz_id"])."
                                             AND `qquestion_id` IN (".$question_ids_string.")";
                                 $existing_questions = $db->GetAll($query);
 
                                 $query = "DELETE FROM `assessment_quiz_questions` 
                                             WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+                                            AND `aquiz_id` = ".$db->qstr($PROCESSED["aquiz_id"])."
                                             AND `qquestion_id` IN (".$question_ids_string.")";
                                 $db->Execute($query);
 
                                 foreach ($QUESTIONS as $question) {
-                                    if (!$db->AutoExecute("assessment_quiz_questions", array("assessment_id" => $ASSESSMENT_ID, "qquestion_id" => $question["qquestion_id"]), "INSERT")) {
+                                    if (!$db->AutoExecute("assessment_quiz_questions", array("aquiz_id" => $PROCESSED["aquiz_id"], "assessment_id" => $ASSESSMENT_ID, "qquestion_id" => $question["qquestion_id"]), "INSERT")) {
                                         application_log("error", "Unable to insert a new assessment_quiz_question record while updating an assessment. Database said: ".$db->ErrorMsg());
                                     } else {
                                         $added_questions++;
@@ -107,12 +105,12 @@ if (!defined("IN_GRADEBOOK")) {
                                 if ($added_questions) {
                                     echo "<input type=\"hidden\" id=\"new_questions_count\" value=\"".$added_questions."\" />";
                                     $SUCCESS++;
-                                    $SUCCESSSTR[] = "You have successfully updated the attached <strong>Quiz Questions</strong> for <strong>".$assessment["name"]."</strong>. There are now <strong>".html_encode($added_questions)."</strong> attached questions.";
+                                    $SUCCESSSTR[] = "You have successfully updated which <strong>Quiz Questions</strong> from <strong>".$quiz["quiz_title"]."</strong> are attached to this assessment. There are now <strong id=\"questions-count\">".html_encode($added_questions)."</strong> attached questions from this quiz.";
                                     echo display_success();
                                     exit;
                                 } else {
                                     foreach ($existing_questions as $existing_question) {
-                                        if (!$db->AutoExecute("assessment_quiz_questions", array("assessment_id" => $ASSESSMENT_ID, "qquestion_id" => $existing_question["qquestion_id"]), "INSERT")) {
+                                        if (!$db->AutoExecute("assessment_quiz_questions", array("aquiz_id" => $PROCESSED["aquiz_id"], "assessment_id" => $ASSESSMENT_ID, "qquestion_id" => $existing_question["qquestion_id"]), "INSERT")) {
                                             application_log("error", "Unable to re-insert an assessment_quiz_question record while rolling back updates to an assessment. Database said: ".$db->ErrorMsg());
                                         }
                                     }
@@ -133,54 +131,8 @@ if (!defined("IN_GRADEBOOK")) {
                         application_log("notice", "Assessment quiz question api page accessed without providing any question id's to attach while on 'step' 2.");
                     }
                 }
-
-                //Display Questions List
-                if (!count($QUESTIONS)) {
-                    $query = "SELECT a.*, b.`assessment_id` FROM `quiz_questions` AS a
-                                LEFT JOIN `assessment_quiz_questions` AS b
-                                ON a.`qquestion_id` = b.`qquestion_id`
-                                AND b.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
-                                WHERE a.`quiz_id` = ".$db->qstr($PROCESSED["quiz_id"])."
-                                AND a.`questiontype_id` = 1";
-                    $quiz_questions = $db->GetAll($query);
-                    if ($quiz_questions) {
-                        foreach ($quiz_questions as $quiz_question) {
-                            if (isset($quiz_question["assessment_id"]) && $quiz_question["assessment_id"]) {
-                                $QUESTIONS[$quiz_question["qquestion_id"]] = $quiz_question;
-                            }
-                            $QUESTIONS_LIST[$quiz_question["qquestion_id"]] = $quiz_question;
-                        }
-                        if (!count($QUESTIONS)) {
-                            $QUESTIONS = $QUESTIONS_LIST;
-                        }
-                    }
-                }
-                
-                if ($QUESTIONS_LIST) {
-                    ?>
-                    <h4 class="row-fluid">Quiz Questions</h2>
-                    <br />
-                    <div class="quiz-questions row-fluid" id="quiz-content-questions-holder">
-                        <ol class="questions" id="quiz-questions-list" style="padding-left: 20px;">
-                            <?php
-                            foreach ($QUESTIONS_LIST as $question) {
-                                echo "<li id=\"question_".$question["qquestion_id"]."\" class=\"question\">";
-                                echo "<input onclick=\"submitQuizQuestions(".$PROCESSED["quiz_id"].")\" type=\"checkbox\" value=\"".$question["qquestion_id"]."\" name=\"question_ids[]\"".(array_key_exists($question["qquestion_id"], $QUESTIONS) || !count($QUESTIONS) ? " checked=\"checked\"" : "")." style=\"position: absolute; margin-left: -40px;\" />";
-                                echo "		".clean_input($question["question_text"], "trim");
-                                echo "</li>\n";
-                            }
-                            ?>
-                        </ol>
-                    </div>
-                    <?php
-                } else {
-                    add_error("No valid questions were found associated with this quiz.");
-                    echo display_error();
-                }
             }
         }
     }
-    if ($ajax) {
-        exit;
-    }
+    exit;
 }

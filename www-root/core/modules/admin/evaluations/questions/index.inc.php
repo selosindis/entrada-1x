@@ -84,7 +84,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				position:		'center',
 				overlayOpacity:	0.75,
 				closeOnClick:	'overlay',
-				className:		'tooltip',
+				className:		'default-tooltip',
 				fade:			true,
 				fadeDuration:	0.30,
 				width: 755

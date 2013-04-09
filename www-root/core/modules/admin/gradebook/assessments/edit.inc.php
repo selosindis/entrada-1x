@@ -387,28 +387,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						break;
 					case 1 :
 					default :
-                        if(isset($_GET["quiz_id"]) && ($tmp_input = clean_input($_GET["quiz_id"], array("trim", "int")))) {
-                            $PROCESSED["quiz_id"] = $tmp_input;
+                        if(isset($_GET["aquiz_id"]) && ($tmp_input = clean_input($_GET["aquiz_id"], array("trim", "int")))) {
+                            $PROCESSED["aquiz_id"] = $tmp_input;
                         } elseif (isset($_GET["delete"]) && $_GET["delete"]) {
                             $ERROR++;
                             $ERRORSTR[] = "You must select at an attached quiz to remove.";
 
                             application_log("notice", "Remove attached quiz action accessed without providing a quiz id to delete.");
                         }
-                        if (isset($PROCESSED["quiz_id"]) && $PROCESSED["quiz_id"] && isset($_GET["delete"]) && $_GET["delete"]) {
-                            $query = "DELETE FROM `attached_quizzes` 
-                                        WHERE `content_id` = ".$db->qstr($ASSESSMENT_ID)."
-                                        AND `content_type` = 'assessment'
-                                        AND `quiz_id` = ".$db->qstr($PROCESSED["quiz_id"]);
+                        if (isset($PROCESSED["aquiz_id"]) && $PROCESSED["aquiz_id"] && isset($_GET["delete"]) && $_GET["delete"]) {
+                            $query = "DELETE FROM `assessment_attached_quizzes` 
+                                        WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+                                        AND `aquiz_id` = ".$db->qstr($PROCESSED["aquiz_id"]);
                             if($db->Execute($query)) {
                                 $SUCCESS++;
-                                $SUCCESSSTR[]  = "You have successfully removed an attached quiz.";
+                                $SUCCESSSTR[]  = "You have successfully removed an attached quiz from this assessment.";
 
                                 echo display_success();
 
                             } else {
                                 $ERROR++;
-                                $ERRORSTR[] = "We were unable to remove the requested quizzes from the assessment. The MEdTech Unit has been informed of this issue and will address it shortly; please try again later.";
+                                $ERRORSTR[] = "We were unable to remove the requested quiz from the assessment. The MEdTech Unit has been informed of this issue and will address it shortly; please try again later.";
 
                                 echo display_error();
 
@@ -675,62 +674,141 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</tbody>
 								<tbody>
                                     <?php
-                                    $query = "SELECT *, COUNT(c.`quiz_id`) AS `question_total`, COUNT(d.`qquestion_id`) AS `attached_question_count`, IF(b.`quiz_active` = '1', 'Active', 'Disabled') AS `quiz_status`
-                                                 FROM `attached_quizzes` AS a
+                                    $query = "SELECT aq.*, COUNT(c.`quiz_id`) AS `question_total`, COUNT(d.`qquestion_id`) AS `attached_question_count`
+                                                 FROM `assessment_attached_quizzes` AS a
+                                                 JOIN `attached_quizzes` AS aq
+                                                 ON a.`aquiz_id` = aq.`aquiz_id`
                                                  JOIN `quizzes` AS b
-                                                 ON a.`quiz_id` = b.`quiz_id`
+                                                 ON aq.`quiz_id` = b.`quiz_id`
                                                  LEFT JOIN `quiz_questions` AS c
                                                  ON b.`quiz_id` = c.`quiz_id`
                                                  AND c.`question_active` = 1
                                                  LEFT JOIN `assessment_quiz_questions` AS d
-                                                 ON a.`content_id` = d.`assessment_id`
+                                                 ON a.`assessment_id` = d.`assessment_id`
                                                  AND c.`qquestion_id` = d.`qquestion_id`
-                                                 WHERE a.`content_type` = 'assessment' 
-                                                 AND a.`content_id` = ".$db->qstr($ASSESSMENT_ID)."
-                                                 GROUP BY b.`quiz_id`";
-                                    $attached_quiz = $db->GetRow($query);
+                                                 AND aq.`aquiz_id` = d.`aquiz_id`
+                                                 WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+                                                 GROUP BY aq.`aquiz_id`";
+                                    $attached_quizzes = $db->GetAll($query);
                                     ?>
 									<tr>
 										<td colspan="3">
-											<label class="form-nrequired radio" for="show_learner_option_0">
-												<input type="radio" name="show_learner_option" value="0" onclick="jQuery('#quiz_options').toggle(false)" id="show_learner_option_0" <?php echo (!$attached_quiz ? " checked=\"checked\"" : ""); ?> style="margin-right: 5px;" />Do not link an online quiz to this assessment
+											<label class="form-nrequired radio" for="show_quiz_option_0">
+												<input type="radio" name="show_quiz_option" value="0" onclick="jQuery('#quiz_options').toggle(false)" id="show_quiz_option_0" <?php echo (!$attached_quizzes ? " checked=\"checked\"" : ""); ?> style="margin-right: 5px;" />Do not link online quizzes to this assessment
 											</label>
 										</td>
 									</tr>
 									<tr>
 										<td colspan="3">
-											<label class="form-nrequired radio" for="show_learner_option_1">
-												<input type="radio" name="show_learner_option" value="1" onclick="jQuery('#quiz_options').toggle(true)" id="show_learner_option_1" <?php echo ($attached_quiz ? " checked=\"checked\"" : ""); ?> style="margin-right: 5px;" />Link an online quiz to this assessment
+											<label class="form-nrequired radio" for="show_quiz_option_0">
+												<input type="radio" name="show_quiz_option" value="1" onclick="jQuery('#quiz_options').toggle(true)" id="show_quiz_option_1" <?php echo ($attached_quizzes ? " checked=\"checked\"" : ""); ?> style="margin-right: 5px;" />Link existing online quizzes to this assessment
 											</label>
 										</td>
-									</tr>
-									<tr>
-										<td colspan="3">&nbsp;</td>
 									</tr>
 								</tbody>
 								<tbody id="quiz_options" style="display: none;">
                                     <tr>
-                                        <td colspan="2"></td>
-                                        <td>
+                                        <td></td>
+                                        <td colspan="2">
                                             <a id="false-link" href="#placeholder"></a>
                                             <div id="placeholder" style="display: none; width: 800px;"></div>
-                                            <?php
-                                            if (isset($attached_quiz) && $attached_quiz) {
-                                                $PROCESSED["quiz_id"] = $attached_quiz["quiz_id"];
-                                                echo "<div class=\"row-fluid\">\n";
-                                                echo "<h3 class=\"span8\"><a href=\"".ENTRADA_URL."/admin/quizzes?section=edit&amp;id=".$attached_quiz["quiz_id"]."\">".html_encode($attached_quiz["quiz_title"])."</a></h3>\n";
-                                                echo "<a class=\"span3 btn\" style=\"float: right;\" href=\"".ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("assessment_id" => $ASSESSMENT_ID, "quiz_id" => $attached_quiz["quiz_id"], "delete" => true))."\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\" /> Remove Quiz</a>\n";
-                                                echo "</div>";
-                                                echo "<div class=\"row-fluid\" id=\"quiz-questions-notice\"></div>\n";
-                                                require_once(ENTRADA_ABSOLUTE."/core/modules/admin/gradebook/assessments/api-assessment-quiz-questions.inc.php");
-                                            } else {
-                                                ?>
-                                                <div class="row-fluid">
-                                                    <div class="pull-right">
-                                                        <a href="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("section" => "attach-quiz", "assessment_id" => $ASSESSMENT_ID)); ?>" class="btn btn-primary">Attach a Quiz</a>
-                                                    </div>
+                                            <div class="row-fluid">
+                                                <h2 class="span8">Attached Quizzes</h2>
+                                                <div class="span4">
+                                                    <a href="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("section" => "attach-quiz", "assessment_id" => $ASSESSMENT_ID)); ?>" class="btn btn-primary pull-right">Attach a Quiz</a>
                                                 </div>
+                                            </div>
+                                            <div id="quiz-questions-notice">&nbsp;</div>
+                                            <?php
+                                            if (isset($attached_quizzes) && $attached_quizzes) {
+                                                ?>
+                                                <table class="tableList accordion" cellspacing="0" summary="List of Attached Quizzes" id="quiz_list">
+                                                    <colgroup>
+                                                        <col class="modified" />
+                                                        <col class="title" />
+                                                        <col class="general" />
+                                                        <col class="modified" />
+                                                    </colgroup>
+                                                    <thead>
+                                                        <tr>
+                                                            <td class="modified">&nbsp;</td>
+                                                            <td class="title"><span>Quiz Title</span></td>
+                                                            <td class="general"><span>Quiz Questions</span></td>
+                                                            <td class="modified">&nbsp;</td>
+                                                        </tr>
+                                                    </thead>
+                                                    <?php
+                                                    foreach ($attached_quizzes as $attached_quiz) {
+                                                        echo "<tbody class=\"accordion-toggle\" data-toggle=\"collapse\" data-target=\"#quiz-".$attached_quiz["aquiz_id"]."-container\" data-parent=\"#quiz_list\">\n";
+                                                        echo "  <tr id=\"quiz-".$attached_quiz["aquiz_id"]."\">\n";
+                                                        echo "      <td>&nbsp;</td>\n";
+                                                        echo "      <td>".html_encode($attached_quiz["quiz_title"])."</td>\n";
+                                                        echo "      <td><i class=\"icon-pencil\"></i>&nbsp;&nbsp;<span id=\"question_count_".$attached_quiz["aquiz_id"]."\">".($attached_quiz["attached_question_count"] ? (int)$attached_quiz["attached_question_count"] : (int)$attached_quiz["question_total"]) . "</span> of " . (int)$attached_quiz["question_total"]."</td>\n";
+                                                        echo "      <td><a href=\"".ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("assessment_id" => $ASSESSMENT_ID, "aquiz_id" => $attached_quiz["aquiz_id"], "delete" => true))."\"><i class=\"icon-trash\"></i></a></td>\n";
+                                                        echo "  </tr>\n";
+                                                        echo "</tbody>\n";
+                                                        echo "<tbody id=\"quiz-".$attached_quiz["aquiz_id"]."-container\" class=\"quiz-question-container accordion-body collapse\">\n";
+                                                        echo "  <tr>\n";
+                                                        echo "      <td>&nbsp;</td>\n";
+                                                        echo "      <td colspan=\"3\">\n";
+                                                        echo "          <div class=\"row-fluid wrap\" id=\"quiz-".$attached_quiz["aquiz_id"]."-questions\">\n";
+                                                        $questions_list = array();
+                                                        $questions_array = array();
+                                                        $query = "SELECT * FROM `quiz_questions`
+                                                                    WHERE `quiz_id` = ".$db->qstr($attached_quiz["quiz_id"])."
+                                                                    AND `questiontype_id` = 1";
+                                                        $quiz_questions = $db->GetAll($query);
+                                                        if ($quiz_questions) {
+                                                            foreach ($quiz_questions as $quiz_question) {
+                                                                $questions_list[$quiz_question["qquestion_id"]] = $quiz_question;
+                                                            }
+                                                            $query = "SELECT a.*, b.`assessment_id` FROM `quiz_questions` AS a
+                                                                        LEFT JOIN `assessment_quiz_questions` AS b
+                                                                        ON a.`qquestion_id` = b.`qquestion_id`
+                                                                        AND b.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+                                                                        WHERE b.`aquiz_id` = ".$db->qstr($attached_quiz["aquiz_id"])."
+                                                                        AND a.`questiontype_id` = 1";
+                                                            $quiz_questions = $db->GetAll($query);
+                                                            if ($quiz_questions) {
+                                                                foreach ($quiz_questions as $quiz_question) {
+                                                                    if (isset($quiz_question["assessment_id"]) && $quiz_question["assessment_id"]) {
+                                                                        $questions_array[$quiz_question["qquestion_id"]] = $quiz_question;
+                                                                    }
+                                                                }
+                                                                if (!count($questions_array)) {
+                                                                    $questions_array = $questions_list;
+                                                                }
+                                                            }
+                                                        }
+
+                                                        if ($questions_list) {
+                                                            ?>
+                                                            <br />
+                                                            <div class="quiz-questions row-fluid" id="quiz-content-questions-holder">
+                                                                <ol class="questions" id="quiz-questions-list" style="padding-left: 20px;">
+                                                                    <?php
+                                                                    foreach ($questions_list as $question) {
+                                                                        echo "<li id=\"question_".$question["qquestion_id"]."\" class=\"question\">";
+                                                                        echo "<input onclick=\"submitQuizQuestions(".$attached_quiz["aquiz_id"].")\" type=\"checkbox\" value=\"".$question["qquestion_id"]."\" name=\"question_ids[]\"".(array_key_exists($question["qquestion_id"], $questions_array) || !count($questions_array) ? " checked=\"checked\"" : "")." style=\"position: absolute; margin-left: -40px;\" />";
+                                                                        echo "		".clean_input($question["question_text"], array("trim", "notags"));
+                                                                        echo "</li>\n";
+                                                                    }
+                                                                    ?>
+                                                                </ol>
+                                                            </div>
+                                                            <?php
+                                                        } else {
+                                                            add_error($query."No valid questions were found associated with this quiz.");
+                                                            echo display_error();
+                                                        }
+                                                        echo "          </div>\n";
+                                                        echo "      </td>\n";
+                                                        echo "</tbody>\n";
+                                                    }
+                                                    ?>
+                                                </table>
                                                 <?php
+                                            } else {
                                                 add_notice("There are currently no quizzes associated with this assessment. To add one, please click the <strong>Attach a Quiz</strong> button above.");
                                                 echo display_notice();
                                             }
@@ -895,8 +973,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										}
 									});	
                                     
-									jQuery('#electronic_quiz').ready(function (){
-                                        if (jQuery('#electronic_quiz').is(":visible") && jQuery('#electronic_quiz').is(":checked")) {
+									jQuery('#show_quiz_option_1').ready(function (){
+                                        if (jQuery('#show_quiz_option_1').is(":visible") && jQuery('#show_quiz_option_1').is(":checked")) {
                                             jQuery('#quiz_options').show();
                                         }
 									});
@@ -919,36 +997,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										}
 									});
 								});
-
-                                function openDialog (url) {
-                                    if (url) {
-                                        ajax_url = url;
-                                        new Ajax.Request(ajax_url, {
-                                            method: 'get',
-                                            onComplete: function(transport) {
-                                                modalDialog.container.update(transport.responseText);
-                                                modalDialog.open();
-                                            }
-                                        });
-                                    }
-                                }
                                 
-                                function submitQuizQuestions (quiz_id) {
+                                function submitQuizQuestions (aquiz_id) {
                                     var question_ids = new Array();
-                                    jQuery('input[name="question_ids[]"]').each(function()    
+                                    jQuery('#quiz-'+aquiz_id+'-questions input[name="question_ids[]"]').each(function()    
                                     {    
                                         if (this.checked) {
                                             question_ids.push(this.value);
                                         }    
                                     });
                                     if (question_ids.length) {
-                                        new Ajax.Updater('quiz-questions-notice', '<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2, "section" => "api-assessment-quiz-questions", "quiz_id" => NULL, "ajax" => true)); ?>&quiz_id='+quiz_id, {
+                                        new Ajax.Updater('quiz-questions-notice', '<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2, "section" => "api-update-attached-questions", "aquiz_id" => NULL, "ajax" => true)); ?>&aquiz_id='+aquiz_id, {
                                             method: 'post',
                                             parameters: {
                                                 'question_ids[]': question_ids
                                             },
-                                            OnSuccess: function() {
-                                                window.setTimeout("Effect.Fade('display-success-box', {duration: 3.0})", 3000);
+                                            onComplete: function () {
+                                                setTimeout("Effect.Fade('display-success-box', {duration: 3})", 3000);
+                                                if ($('questions-count') != undefined && $('questions-count') != null) {
+                                                    $('question_count_'+aquiz_id).update($('questions-count').innerHTML); 
+                                                }
                                             }
                                         });
                                     } else {

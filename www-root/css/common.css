@@ -2500,7 +2500,7 @@ top: 8px;
 right: 10px;
 }
 
-.tooltip {
+.default-tooltip {
 border:1px solid #CCCCCC;
 background-color:#FFFFFF;
 width:653px;
@@ -4189,4 +4189,30 @@ Curriculum Browser CSS
 	color:#777;
 	text-align:center;
 	font-size:1.2em;
+}
+
+a.clean {
+    color:inherit;
+    text-decoration:none;
+}
+
+a.help {
+    cursor: help;
+}
+
+.wrap {
+    white-space: normal !important;
+}
+
+.collapse {
+  position:relative;
+  height:0;
+  overflow:hidden;
+  -webkit-transition:height 0.35s ease;
+  -moz-transition:height 0.35s ease;
+  -o-transition:height 0.35s ease;
+  transition:height 0.35s ease;
+}
+.collapse.in {
+  height:auto;
 }

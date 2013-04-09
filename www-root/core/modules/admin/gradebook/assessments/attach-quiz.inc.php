@@ -48,23 +48,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
             switch ($STEP) {
                 case 2 :
-                    if ((isset($_GET["quiz_id"])) && ($quiz_id = clean_input($_GET["quiz_id"], array("int")))) {
-                        $query = "SELECT a.*
+                    if ((isset($_GET["aquiz_id"])) && ($aquiz_id = clean_input($_GET["aquiz_id"], array("int")))) {
+                       $query = "SELECT a.*
                                     FROM `quizzes` AS a
                                     LEFT JOIN `quiz_contacts` AS b
                                     ON a.`quiz_id` = b.`quiz_id`
-                                    LEFT JOIN `attached_quizzes` AS c
+                                    JOIN `attached_quizzes` AS c
                                     ON a.`quiz_id` = c.`quiz_id`
-                                    AND c.`content_type` = 'assessment'
-                                    AND c.`content_id` = ".$db->qstr($ASSESSMENT_ID)."
+                                    LEFT JOIN `assessment_attached_quizzes` AS d
+                                    ON d.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+                                    AND d.`aquiz_id` = c.`aquiz_id`
                                     WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-                                    AND a.`quiz_id` = ".$db->qstr($quiz_id)."
-                                    AND c.`aquiz_id` IS NULL
+                                    AND c.`aquiz_id` = ".$db->qstr($aquiz_id)."
+                                    AND d.`aquiz_id` IS NULL
                                     GROUP BY a.`quiz_id`";
                         $quiz = $db->GetRow($query);
                         if ($quiz) {
                             $PROCESSED["quiz_title"]    = $quiz["quiz_title"];
-                            $PROCESSED["quiz_id"]       = $quiz_id;
+                            $PROCESSED["aquiz_id"]       = $aquiz_id;
                         } else {
                             $ERROR++;
                             $ERRORSTR[] = "The <strong>Quiz</strong> you selected does not exist or is not enabled.";
@@ -75,26 +76,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                     }
 
 					if (!$ERROR) {
-                        $PROCESSED["content_id"]	= (int) $ASSESSMENT_ID;
+                        $PROCESSED["assessment_id"]	= (int) $ASSESSMENT_ID;
                         $PROCESSED["content_type"]  = "assessment";
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();                        
 						/**
 						* Adding this quiz to the selected assessment.
 						*/
-						if ($db->AutoExecute("attached_quizzes", $PROCESSED, "INSERT")) {
+						if ($db->AutoExecute("assessment_attached_quizzes", $PROCESSED, "INSERT")) {
 							$url = ENTRADA_URL."/admin/gradebook/assessments?section=edit&id=".$assessment["course_id"]."&assessment_id=".$ASSESSMENT_ID;
 							$SUCCESS++;
 							$SUCCESSSTR[]	= "You have successfully attached <strong>".html_encode($quiz["quiz_title"])."</strong> to <strong>".$assessment["name"]."</strong>.";
 
-							application_log("success", "Quiz [".$PROCESSED["quiz_id"]."] was successfully attached to assessment [".$ASSESSMENT_ID."].");
+							application_log("success", "Quiz [".$PROCESSED["aquiz_id"]."] was successfully attached to assessment [".$ASSESSMENT_ID."].");
 
 						} else {
 							$url = ENTRADA_URL."/admin/gradebook/assessments?section=edit&id=".$assessment["course_id"]."&assessment_id=".$ASSESSMENT_ID;
 							$ERROR++;
 							$ERRORSTR[] = "There was a problem attaching this quiz to <strong>".html_encode($assessment["name"])."</strong>. The system administrator was informed of this error; please try again later.";
 
-							application_log("error", "There was an error attaching quiz [".$PROCESSED["quiz_id"]."] to assessment [".$ASSESSMENT_ID."]. Database said: ".$db->ErrorMsg());
+							application_log("error", "There was an error attaching quiz [".$PROCESSED["aquiz_id"]."] to assessment [".$ASSESSMENT_ID."]. Database said: ".$db->ErrorMsg());
 						}
                         if ($SUCCESS) {
 							$url = ENTRADA_URL."/admin/gradebook/assessments?section=edit&id=".$assessment["course_id"]."&assessment_id=".$ASSESSMENT_ID;
@@ -115,14 +116,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                     * Valid: date, teacher, title, phase
                     */
                    if (isset($_GET["sb"])) {
-                       if (in_array(trim($_GET["sb"]), array("title", "questions", "status"))) {
+                       if (in_array(trim($_GET["sb"]), array("title", "questions", "content_title"))) {
                            $_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["sb"] = trim($_GET["sb"]);
                        }
 
                        $_SERVER["QUERY_STRING"] = replace_query(array("sb" => false));
                    } else {
                        if (!isset($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["sb"])) {
-                           $_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["sb"] = "status";
+                           $_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["sb"] = "content_title";
                        }
                    }
 
@@ -171,11 +172,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                        default :
                            $sort_by = "`question_total` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["so"]);
                        break;
+                       case "content_title" :
+                           $sort_by = "`content_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["so"]);
+                       break;
                        case "title" :
                            $sort_by = "a.`quiz_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["so"]);
                        break;
-                       case "status" :
-                           $sort_by = "`quiz_status` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["so"]);
                        break;
                    }
 
@@ -188,12 +190,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                FROM `quizzes` AS a
                                LEFT JOIN `quiz_contacts` AS b
                                ON a.`quiz_id` = b.`quiz_id`
-                               LEFT JOIN `attached_quizzes` AS c
+                               JOIN `attached_quizzes` AS c
                                ON a.`quiz_id` = c.`quiz_id`
-                               AND c.`content_type` = 'assessment'
-                               AND c.`content_id` = ".$db->qstr($ASSESSMENT_ID)."
+                               LEFT JOIN `assessment_attached_quizzes` AS d
+                               ON d.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+                               AND c.`aquiz_id` = d.`aquiz_id`
                                WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-                               AND c.`aquiz_id` IS NULL";
+                               AND d.`aquiz_id` IS NULL";
                    $result = $db->GetRow($query);
                    if ($result) {
                        $total_rows	= $result["total_rows"];
@@ -301,20 +304,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                     </div>
                     <div class="clear"></div>
                     <?php
-                    $query	= "	SELECT a.*, COUNT(c.`quiz_id`) AS `question_total`, IF(a.`quiz_active` = '1', 'Active', 'Disabled') AS `quiz_status`
+                    $query	= "	SELECT a.*, d.*, COUNT(c.`quiz_id`) AS `question_total`, 
+                                    CASE
+                                        WHEN f.`event_title` IS NOT NULL 
+                                            THEN CONCAT('Event [', f.`event_title`, ' - ', DATE(FROM_UNIXTIME(f.`event_start`)), ']')
+                                        WHEN g.`page_url` IS NOT NULL 
+                                            THEN CONCAT('Community Page: ', h.`community_title`, ' [', g.`page_url`, ']')
+                                    END AS `content_title`
                                 FROM `quizzes` AS a
                                 LEFT JOIN `quiz_contacts` AS b
                                 ON a.`quiz_id` = b.`quiz_id`
-                                LEFT JOIN `quiz_questions` AS c
+                                JOIN `quiz_questions` AS c
                                 ON a.`quiz_id` = c.`quiz_id`
                                 AND c.`question_active` = 1
-                                LEFT JOIN `attached_quizzes` AS d
+                                JOIN `attached_quizzes` AS d
                                 ON a.`quiz_id` = d.`quiz_id`
-                                AND d.`content_type` = 'assessment'
-                                AND d.`content_id` = ".$db->qstr($ASSESSMENT_ID)."
+                                LEFT JOIN `assessment_attached_quizzes` AS e
+                                ON e.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+                                AND e.`aquiz_id` = d.`aquiz_id`
+                                LEFT JOIN `events` AS f
+                                ON d.`content_type` = 'event'
+                                AND d.`content_id` = f.`event_id`
+                                LEFT JOIN `community_pages` AS g
+                                ON d.`content_type` = 'community_page'
+                                AND d.`content_id` = g.`cpage_id`
+                                LEFT JOIN `communities` AS h
+                                ON g.`community_id` = h.`community_id`
                                 WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-                                AND d.`aquiz_id` IS NULL
-                                GROUP BY a.`quiz_id`
+                                AND e.`aquiz_id` IS NULL
+                                GROUP BY d.`aquiz_id`
                                 ORDER BY %s LIMIT %s, %s";
 
                     /**
@@ -325,6 +343,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                     $query		= sprintf($query, $sort_by, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["pp"]);
                     $results	= $db->GetAll($query);
                     if ($results) {
+                        $HEAD[] = "
+                                    <script type='text/javascript'>
+                                    jQuery(document).ready(function () {
+                                        if (jQuery('[data-toggle=tooltip]').length) {
+                                            jQuery('[data-toggle=tooltip]').tooltip();
+                                        }
+                                    });
+                                    </script>";
                         ?>
                         <form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2)); ?>" method="post">
                         <table class="tableList" cellspacing="0" summary="List of Quizzes">
@@ -332,20 +358,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             <col class="modified" />
                             <col class="title" />
                             <col class="general" />
+                            <col class="date-small" />
                         </colgroup>
                         <thead>
                             <tr>
                                 <td class="modified">&nbsp;</td>
-                                <td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["so"]) : ""); ?>"><?php echo admin_order_link("title", "Quiz Title"); ?></td>
-                                <td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["sb"] == "questions") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["so"]) : ""); ?>"><?php echo admin_order_link("questions", "Quiz Questions"); ?></td>
+                                <td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["so"]) : ""); ?>"><?php echo admin_order_link("title", "Quiz Title", "assessments", "assessment-quiz"); ?></td>
+                                <td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["sb"] == "content_title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["so"]) : ""); ?>"><?php echo admin_order_link("content_title", "Quiz Location", "assessments", "assessment-quiz"); ?></td>
+                                <td class="date-small<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["sb"] == "questions") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["so"]) : ""); ?>"><?php echo admin_order_link("questions", "Quiz Questions", "assessments", "assessment-quiz"); ?></td>
                             </tr>
                         </thead>
                         <tbody>
                             <?php
                             foreach ($results as $result) {
-                                echo "<tr id=\"quiz-".$result["quiz_id"]."\">\n";
+                                echo "<tr id=\"quiz-".$result["aquiz_id"]."\">\n";
                                 echo "	<td>&nbsp;</td>\n";
-                                echo "	<td><a href=\"".ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("quiz_id" => $result["quiz_id"], "step" => 2))."\">".html_encode($result["quiz_title"])."</a></td>\n";
+                                echo "	<td><a href=\"".ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("aquiz_id" => $result["aquiz_id"], "step" => 2))."\">".html_encode($result["quiz_title"])."</a></td>\n";
+                                echo "	<td>".(strlen(trim($result["content_title"])) > 64 ? "<a href=\"#\" data-toggle=\"tooltip\" title=\"".html_encode($result["content_title"])."\" class=\"clean help\">" : "").html_encode($result["content_title"]).(strlen(trim($result["content_title"])) > 64 ? "</a>" : "")."</td>\n";
                                 echo "	<td>".html_encode($result["question_total"])."</td>\n";
                                 echo "</tr>\n";
                             }
@@ -360,7 +389,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         $sidebar_html  = "Sort columns:\n";
                         $sidebar_html .= "<ul class=\"menu\">\n";
                         $sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["sb"]) == "title") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("sb" => "title"))."\" title=\"Sort by Title\">by title</a></li>\n";
-                        $sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["sb"]) == "status") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("sb" => "status"))."\" title=\"Sort by Phase\">by status</a></li>\n";
+                        $sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["sb"]) == "content_title") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("sb" => "content_title"))."\" title=\"Sort by Phase\">by Quiz Location</a></li>\n";
                         $sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["assessment-quiz"]["sb"]) == "questions") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("sb" => "questions"))."\" title=\"Sort by Teacher\">by questions</a></li>\n";
                         $sidebar_html .= "</ul>\n";
                         $sidebar_html .= "Order columns:\n";

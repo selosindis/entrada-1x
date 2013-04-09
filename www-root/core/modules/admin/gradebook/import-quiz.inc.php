@@ -51,121 +51,122 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	/*
 	 *  fetch the quiz attached to the assessment
 	 */
-	$query = "SELECT * 
-				FROM `attached_quizzes` 
-				WHERE `content_type` = 'assessment' 
-				AND `content_id` = ".$db->qstr($assessment_id);
+	$query = "SELECT * FROM `assessment_attached_quizzes`  AS a
+                JOIN `attached_quizzes` AS b
+                ON a.`aquiz_id` = b.`aquiz_id`
+				WHERE a.`assessment_id` = ".$db->qstr($assessment_id);
 	
 	if ($attached_quizzes = $db->GetAll($query)) {
         if ($attached_quizzes) {
+            $quiz_list = array();
+            $quiz_ids_string = "";
+            $questions_list = array();
+            $question_ids_strings = array();
             foreach ($attached_quizzes as $aquiz) {
-                $questions_list = array();
-                $question_ids_string = "";
+                $question_ids_strings[$aquiz["aquiz_id"]] = "";
+                $quiz_ids_string .= ($quiz_ids_string ? ", " : "").$db->qstr($aquiz["aquiz_id"]);
+                $quiz_list[$aquiz["aquiz_id"]] = $aquiz;
+                
                 $query = "SELECT b.* FROM `assessment_quiz_questions` AS a
                             JOIN `quiz_questions` AS b
                             ON a.`qquestion_id` = b.`qquestion_id`
+                            JOIN `attached_quizzes` AS c
+                            ON a.`aquiz_id` = c.`aquiz_id`
                             WHERE a.`assessment_id` = ".$db->qstr($assessment_id)."
-                            AND b.`quiz_id` = ".$db->qstr($aquiz["quiz_id"]);
+                            AND c.`aquiz_id` = ".$db->qstr($aquiz["aquiz_id"]);
                 $questions = $db->GetAll($query);
                 if ($questions) {
                     foreach ($questions as $question) {
-                        $question_ids_string .= ($question_ids_string ? ", " : "").$db->qstr($question["qquestion_id"]);
-                        $questions_list[$question["qquestion_id"]] = $question;
-                    }
-                }
-
-                /*
-                 *  fetch the proxy_ids for the assessment
-                 */
-                $query = "	SELECT a.`assessment_id`, a.`name`, GROUP_CONCAT(b.`proxy_id` SEPARATOR ',') AS `group_members`, a.`grade_threshold`
-                            FROM `assessments` AS a
-                            LEFT JOIN `group_members` AS b
-                            ON a.`cohort` = b.`group_id`
-                            WHERE `assessment_id` = ".$db->qstr($assessment_id);	
-
-                if ($assessment = $db->GetRow($query)) {
-
-                    $audience_members = explode(",", $assessment["group_members"]);
-
-                    /*
-                     *  fetch the existing assessment grades
-                     */
-                    $query = "	SELECT `proxy_id`, `grade_id`, `value` 
-                                FROM `assessment_grades` 
-                                WHERE `assessment_id` = ".$db->qstr($assessment_id)." 
-                                AND `proxy_id` IN (".$assessment["group_members"].")";
-                    $grades = $db->GetAssoc($query);
-
-                    /*
-                     *  fetch the attached quiz responses
-                     */
-                    $query = "	SELECT a.`proxy_id`, a.* 
-                                FROM `quiz_progress` AS a
-                                WHERE a.`quiz_id` = ".$db->qstr($aquiz["quiz_id"])."
-                                AND a.`progress_value` = 'complete'
-                                AND a.`proxy_id` IN (".$assessment["group_members"].")
-                                ORDER BY a.`updated_date` DESC";
-                    $responses = $db->GetAssoc($query);
-
-                    if ($responses) {
-
-                        foreach ($audience_members as $member) {
-
-                            if (isset($responses[$member]) && $responses[$member]) {
-
-                                $PROCESSED["assessment_id"] = (int) $assessment_id;
-                                $PROCESSED["proxy_id"]		= (int) $member;
-
-                                if (!@count($questions_list)) {
-                                    $PROCESSED["value"]		= ($responses[$member]["quiz_score"] / $responses[$member]["quiz_value"]) * 100;
-                                } else {
-                                    $total_value = 0;
-                                    $scored_value = 0;
-                                    $query = "SELECT b.`qquestion_id`, b.`response_correct` FROM `quiz_progress_responses` AS a
-                                                JOIN `quiz_question_responses` AS b
-                                                ON a.`qqresponse_id` = b.`qqresponse_id`
-                                                WHERE a.`qprogress_id` = ".$db->qstr($responses[$member]["qprogress_id"])."
-                                                AND b.`qquestion_id` IN (".$question_ids_string.")";
-                                    $question_responses = $db->GetAll($query);
-                                    if ($question_responses) {
-                                        foreach ($question_responses as $question_response) {
-                                            $total_value += $questions_list[$question_response["qquestion_id"]]["question_points"];
-                                            if ($question_response["response_correct"]) {
-                                                $scored_value += $questions_list[$question_response["qquestion_id"]]["question_points"];
-                                            }
-                                        }
-                                    }
-                                    $PROCESSED["value"]     = ($scored_value / $total_value) * 100;
-                                }
-                                if (!@count($questions_list) || $total_value) {
-                                    if ($PROCESSED["value"] < $assessment["grade_threshold"]) {
-                                        $PROCESSED["threshold_notified"] = 0;
-                                    }
-
-                                    if ($grades[$member]) {
-                                        $PROCESSED["grade_id"] = $grades[$member]["grade_id"];
-                                        $db->AutoExecute("assessment_grades",$PROCESSED,"UPDATE","`grade_id`=".$db->qstr($PROCESSED["grade_id"]));
-                                    } else {
-                                        $db->AutoExecute("assessment_grades",$PROCESSED,"INSERT");
-                                    }
-                                }
-
-                                unset($PROCESSED);
-
-                            }
-
-                        }
-
-                        if (!$ERROR) {
-                            add_success("Successfully imported results from <strong>".$aquiz["quiz_title"]."</strong> into <strong>".$assessment["name"]."</strong>.");
-                        }
-
-                    } else {
-                        add_error("No students have completed the quiz <strong>".$aquiz["quiz_title"]."</strong>.");
+                        $question_ids_strings[$aquiz["aquiz_id"]] .= ($question_ids_strings[$aquiz["aquiz_id"]] ? ", " : "").$db->qstr($question["qquestion_id"]);
+                        $questions_list[$question["qquestion_id"]."-".$aquiz["aquiz_id"]] = $question;
                     }
                 } else {
-                    add_error("No students have been found in the cohort assigned to this assessment [<strong>".$assessment["name"]."</strong>].");
+                    $query = "SELECT a.* FROM `quiz_questions` AS a
+                                JOIN `attached_quizzes` AS b
+                                ON a.`quiz_id` = b.`quiz_id`
+                                WHERE b.`aquiz_id` = ".$db->qstr($aquiz["aquiz_id"]);
+                    $questions = $db->GetAll($query);
+                    if ($questions) {
+                        foreach ($questions as $question) {
+                            $question_ids_strings[$aquiz["aquiz_id"]] .= ($question_ids_strings[$aquiz["aquiz_id"]] ? ", " : "").$db->qstr($question["qquestion_id"]);
+                            $questions_list[$question["qquestion_id"]."-".$aquiz["aquiz_id"]] = $question;
+                        }
+                    }
                 }
+            }
+
+            /*
+             *  fetch the proxy_ids for the assessment
+             */
+            $query = "	SELECT a.`assessment_id`, a.`name`, GROUP_CONCAT(b.`proxy_id` SEPARATOR ',') AS `group_members`, a.`grade_threshold`
+                        FROM `assessments` AS a
+                        LEFT JOIN `group_members` AS b
+                        ON a.`cohort` = b.`group_id`
+                        WHERE `assessment_id` = ".$db->qstr($assessment_id);	
+
+            if ($assessment = $db->GetRow($query)) {
+                /*
+                 *  fetch the existing assessment grades
+                 */
+               $query = "	SELECT `proxy_id`, `grade_id`, `value` 
+                            FROM `assessment_grades` 
+                            WHERE `assessment_id` = ".$db->qstr($assessment_id)." 
+                            AND `proxy_id` IN (".$assessment["group_members"].")";
+                $grades = $db->GetAssoc($query);
+                
+                $audience_members = explode(",", $assessment["group_members"]);
+                foreach ($audience_members as $proxy_id) {
+                    $query = "SELECT b.`qquestion_id`, a.`aquiz_id`, c.`response_correct` 
+                                FROM `quiz_progress` AS a
+                                JOIN `quiz_progress_responses` AS b
+                                ON a.`qprogress_id` = b.`qprogress_id`
+                                JOIN `quiz_question_responses` AS c
+                                ON b.`qqresponse_id` = c.`qqresponse_id`
+                                WHERE a.`proxy_id` = ".$db->qstr($proxy_id)."
+                                AND (\n";
+                    $first = true;
+                    foreach ($question_ids_strings as $aquiz_id => $question_ids_string) {
+                        $query .= (!$first ? "OR " : "")."(a.`aquiz_id` = ".$db->qstr($aquiz_id)." AND b.`qquestion_id` IN (".$question_ids_string."))\n";
+                        $first = false;
+                    }
+                    $query .= ")";
+                    $responses = $db->GetAll($query);
+                    if ($responses) {
+                        $total_value = 0;
+                        $scored_value = 0;
+                        foreach ($responses as $response) {
+                            $total_value += $questions_list[$response["qquestion_id"]."-".$response["aquiz_id"]]["question_points"];
+                            if ($response["response_correct"]) {
+                                $scored_value += $questions_list[$response["qquestion_id"]."-".$response["aquiz_id"]]["question_points"];
+                            }
+                        }
+                        $PROCESSED["value"]     = ($scored_value / $total_value) * 100;
+                        $PROCESSED["assessment_id"] = (int) $assessment_id;
+                        $PROCESSED["proxy_id"]		= (int) $proxy_id;
+                        
+                        echo $proxy_id.":".$PROCESSED["value"]."%\n<br/>";
+                        
+                        if (!@count($questions_list) || $total_value) {
+                            if ($PROCESSED["value"] < $assessment["grade_threshold"]) {
+                                $PROCESSED["threshold_notified"] = 0;
+                            }
+
+                            if (isset($grades[$proxy_id]) && $grades[$proxy_id]) {
+                                $PROCESSED["grade_id"] = $grades[$proxy_id]["grade_id"];
+                                $db->AutoExecute("assessment_grades",$PROCESSED,"UPDATE","`grade_id`=".$db->qstr($PROCESSED["grade_id"]));
+                            } else {
+                                $db->AutoExecute("assessment_grades",$PROCESSED,"INSERT");
+                            }
+                        }
+
+                        unset($PROCESSED);
+                    }
+                }
+                if (!$ERROR) {
+                    add_success("Successfully imported results from the attached quiz questions into <strong>".$assessment["name"]."</strong>.");
+                }
+            } else {
+                add_error("No students have been found in the cohort assigned to this assessment [<strong>".$assessment["name"]."</strong>].");
             }
         } else {
             add_error("No quizzes were found to be associated with this assessment [<strong>".$assessment["name"]."</strong>].");

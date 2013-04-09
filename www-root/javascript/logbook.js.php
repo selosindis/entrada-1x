@@ -18,7 +18,7 @@
 				hover: true,  
 				offsetLeft: 25,  
 				width: 653,  
-				className: 'tooltip'  
+				className: 'default-tooltip'  
 			});
     }); 
 	function addObjective (objective_id, level) {

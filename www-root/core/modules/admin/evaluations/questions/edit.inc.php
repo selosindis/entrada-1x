@@ -850,14 +850,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						jQuery(document).ready(function() {
 							modalDialog = new Control.Window($('false-link'), {
 								position:		'center',
-								className:		'tooltip',
+								className:		'default-tooltip',
 								width: 735
 							});
 							modalQuestionDialog = new Control.Modal($('question-revision-link'), {
 								position:		'center',
 								overlayOpacity:	0.75,
 								closeOnClick:	'overlay',
-								className:		'tooltip',
+								className:		'default-tooltip',
 								fade:			true,
 								fadeDuration:	0.30,
 								width: 755

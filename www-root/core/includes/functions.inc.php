@@ -1428,7 +1428,7 @@ function community_public_order_link($field_id, $field_name, $url) {
  * @param string $field_name
  * @return string
  */
-function admin_order_link($field_id, $field_name, $submodule = null) {
+function admin_order_link($field_id, $field_name, $submodule = null, $custom_selector = null) {
 	global $MODULE;
 
 	if (isset($submodule)) {
@@ -1436,9 +1436,15 @@ function admin_order_link($field_id, $field_name, $submodule = null) {
 	} else {
 		$module_url = $MODULE;
 	}
+    
+    if (isset($custom_selector) && $custom_selector) {
+        $module_selector = $custom_selector;
+    } else {
+        $module_selector = $MODULE;
+    }
 
-	if (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) == strtolower($field_id)) {
-		if (strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) == "desc") {
+	if (isset($_SESSION[APPLICATION_IDENTIFIER][$module_selector]["sb"]) && strtolower($_SESSION[APPLICATION_IDENTIFIER][$module_selector]["sb"]) == strtolower($field_id)) {
+		if (strtolower($_SESSION[APPLICATION_IDENTIFIER][$module_selector]["so"]) == "desc") {
 			return "<a href=\"".ENTRADA_URL."/admin/".$module_url."?".replace_query(array("so" => "asc"))."\" title=\"Order by ".$field_name.", Sort Ascending\">".$field_name."</a>";
 		} else {
 			return "<a href=\"".ENTRADA_URL."/admin/".$module_url."?".replace_query(array("so" => "desc"))."\" title=\"Order by ".$field_name.", Sort Decending\">".$field_name."</a>";

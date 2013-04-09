@@ -178,9 +178,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 		</div>
 		<div class="control-group">
 			<div class="controls content-small">
-				Example 1: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "asthma")); ?>" class="content-small">asthma</a><br />
-				Example 2: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "pain+AND+palliative")); ?>" class="content-small">pain AND palliative</a><br />
-				Example 3: <a href="<?php echo ENTRADA_URL."/search?".replace_query(array("q" => "%22heart+disease%22+NOT+pediatric")); ?>" class="content-small">"heart disease" NOT pediatric</a>
+				Example 1: <a href="<?php echo ENTRADA_RELATIVE."/curriculum/search?".replace_query(array("q" => "asthma")); ?>" class="content-small">asthma</a><br />
+				Example 2: <a href="<?php echo ENTRADA_RELATIVE."/curriculum/search?".replace_query(array("q" => "pain+AND+palliative")); ?>" class="content-small">pain AND palliative</a><br />
+				Example 3: <a href="<?php echo ENTRADA_RELATIVE."/curriculum/search?".replace_query(array("q" => "%22heart+disease%22+NOT+pediatric")); ?>" class="content-small">"heart disease" NOT pediatric</a>
 			</div>
 		</div>
 		<div class="control-group">

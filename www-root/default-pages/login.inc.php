@@ -29,7 +29,7 @@ if(!defined("PARENT_INCLUDED")) exit;
 /**
  * Focus on the username textbox when this module is loaded.
  */
-$ONLOAD[] = "document.getElementById('username').focus()";
+$ONLOAD[] = "jQuery('#username').focus()";
 
 if(($ACTION == "login") && ($ERROR)) {
 	echo display_error();
@@ -72,7 +72,7 @@ $public_announcements = $db->GetAll($query);
 	<div class="span5">
 		<h2><?php echo APPLICATION_NAME; ?> Login</h2>
 		<p>Please enter your <?php echo APPLICATION_NAME; ?> username and password to log in.</p>
-	
+
 		<form class="form-horizontal login-form" action="<?php echo ENTRADA_URL; ?>/<?php echo (($PROCEED_TO) ? "?url=".rawurlencode($PROCEED_TO) : ""); ?>" method="post">
 			<input type="hidden" name="action" value="login" />
 			<div class="control-group">
@@ -108,7 +108,7 @@ $public_announcements = $db->GetAll($query);
 				?>
 			</ul>
 		</div>
-		<?php	
+		<?php
 	}
-	?>	
+	?>
 </div>

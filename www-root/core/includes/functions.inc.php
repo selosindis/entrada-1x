@@ -9283,8 +9283,8 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 function search_subnavigation($tab = "details") {
 	echo "<div class=\"no-printing\">\n";
     echo "  <ul class=\"nav nav-tabs\">\n";
-    echo "      <li".($tab == "search" ? " class=\"active\"" : "")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/curriculum/search\" style=\"font-size: 10px; margin-right: 8px\">Curriculum Search</a></li>\n";
-    echo "      <li".($tab == "explorer" ? " class=\"active\"" : "")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/curriculum/explorer\" style=\"font-size: 10px; margin-right: 8px\">Curriculum Explorer</a></li>\n";
+    echo "      <li".($tab == "search" ? " class=\"active\"" : "")."><a href=\"".ENTRADA_RELATIVE."/curriculum/search\">Curriculum Search</a></li>\n";
+    echo "      <li".($tab == "explorer" ? " class=\"active\"" : "")."><a href=\"".ENTRADA_RELATIVE."/curriculum/explorer\">Curriculum Explorer</a></li>\n";
 	echo "  </ul>\n";
 	echo "</div>\n";
 }
@@ -12563,7 +12563,7 @@ function assessment_objective_parent_mapped_recursive($objectives,$objective_id,
 				//if this parent is the objective id we're looking for, return true
 				if ($include_bottom && $objective["objective_id"] == $objective_id) {
 					return true;
-				}				
+				}
 				if ($parent["mapped"]) {
 					return true;
 				}
@@ -12787,7 +12787,7 @@ function event_objective_parent_mapped_recursive($objectives,$objective_id,$cour
 				//if this parent is the objective id we're looking for, return true
 				if ($include_bottom && $objective["objective_id"] == $objective_id) {
 					return true;
-				}				
+				}
 				if ($parent["mapped"]) {
 					return true;
 				}

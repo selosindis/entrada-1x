@@ -981,6 +981,13 @@ CREATE TABLE IF NOT EXISTS `assessment_options` (
   KEY `assessment_id` (`assessment_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE `assessment_quiz_questions` (
+  `aqquestion_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `assessment_id` int(11) NOT NULL,
+  `qquestion_id` int(11) NOT NULL,
+  PRIMARY KEY (`aqquestion_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `assessments_lu_meta` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `organisation_id` int(12) unsigned NOT NULL DEFAULT '0',
@@ -4066,8 +4073,8 @@ CREATE TABLE IF NOT EXISTS `quizzes_lu_questiontypes` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `quizzes_lu_questiontypes` (`questiontype_id`, `questiontype_title`, `questiontype_description`, `questiontype_active`, `questiontype_order`) VALUES
-(1, 'Multiple Choice Question', '', 1, 0);
-(2, 'Descriptive Text', '', 1, 0);
+(1, 'Multiple Choice Question', '', 1, 0),
+(2, 'Descriptive Text', '', 1, 0),
 (3, 'Page Break', '', 1, 0);
 
 CREATE TABLE IF NOT EXISTS `quizzes_lu_quiztypes` (

@@ -17,7 +17,6 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
         <link href="<?php echo TEMPLATE_RELATIVE; ?>/css/bootstrap.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
-        <link href="<?php echo TEMPLATE_RELATIVE; ?>/css/bootstrap-responsive.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
         <link href="<?php echo ENTRADA_RELATIVE; ?>/css/common.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
         <link href="<?php echo ENTRADA_RELATIVE; ?>/css/print.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="print" />
         <link href="<?php echo TEMPLATE_RELATIVE; ?>/css/common.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
@@ -86,7 +85,6 @@
             }
             ?>
         </header>
-
         <div class="container" id="page">
             <div class="row-fluid">
                 <?php

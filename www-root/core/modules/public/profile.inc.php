@@ -101,7 +101,6 @@ function add_profile_sidebar () {
 	global $ENTRADA_ACL;
 	$sidebar_html  = "<ul class=\"menu\">";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile\">Personal Information</a></li>\n";
-	//$sidebar_html .= "	<li class=\"link\"><a href=\"".$this_module."?section=photo\">Profile Photo</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=privacy\">Privacy Settings</a></li>\n";
 	if (((defined("COMMUNITY_NOTIFICATIONS_ACTIVE")) && ((bool) COMMUNITY_NOTIFICATIONS_ACTIVE)) || ((defined("NOTIFICATIONS_ACTIVE")) && ((bool) NOTIFICATIONS_ACTIVE))) {
 		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=notifications\">Manage My Notifications</a></li>\n";
@@ -231,94 +230,6 @@ function profile_update_personal_info() {
 		$PROCESSED["prov_state"] = ($PROCESSED["province_id"] ? $PROCESSED["province_id"] : ($PROCESSED["province"] ? $PROCESSED["province"] : ""));
 	}
 	
-	if ((!$ERROR) && (isset($_FILES["photo_file"])) && ($_FILES["photo_file"]["error"] != 4)) {
-		switch($_FILES["photo_file"]["error"]) {
-			case 0 :
-				$photo_mimetype = clean_input($_FILES["photo_file"]["type"], array("trim", "lowercase"));
-				if (in_array($photo_mimetype, array_keys($VALID_MIME_TYPES))) {
-					if (($photo_filesize = (int) trim($_FILES["photo_file"]["size"])) <= $VALID_MAX_FILESIZE) {
-						$PROCESSED_PHOTO["photo_mimetype"]	= $photo_mimetype;
-						$PROCESSED_PHOTO["photo_filesize"]	= $photo_filesize;
-
-						$photo_file_extension = strtoupper($VALID_MIME_TYPES[strtolower(trim($_FILES["photo_file"]["type"]))]);
-
-						if ((!defined("STORAGE_USER_PHOTOS")) || (!@is_dir(STORAGE_USER_PHOTOS)) || (!@is_writable(STORAGE_USER_PHOTOS))) {
-							$ERROR++;
-							$ERRORSTR[] = "There is a problem with the gallery storage directory on the server; the system administrator has been informed of this error, please try again later.";
-
-							application_log("error", "The community gallery storage path [".STORAGE_USER_PHOTOS."] does not exist or is not writable.");
-						}
-					}
-				} else {
-					$ERROR++;
-					$ERRORSTR[] = "The file that you have uploaded does not appear to be a valid image. Please ensure that you upload a JPEG, GIF or PNG file.";
-				}
-				break;
-			case 1 :
-			case 2 :
-				$ERROR++;
-				$ERRORSTR[] = "The photo that was uploaded is larger than ".readable_size($VALID_MAX_FILESIZE).". Please make the photo smaller and try again.";
-				break;
-			case 3 :
-				$ERROR++;
-				$ERRORSTR[]	= "The photo that was uploaded did not complete the upload process or was interrupted; please try again.";
-				break;
-			case 6 :
-			case 7 :
-				$ERROR++;
-				$ERRORSTR[]	= "Unable to store the new photo file on the server; the system administrator has been informed of this error, please try again later.";
-
-				application_log("error", "Community photo file upload error: ".(($_FILES["filename"]["error"] == 6) ? "Missing a temporary folder." : "Failed to write file to disk."));
-				break;
-			default :
-				application_log("error", "Unrecognized photo file upload error number [".$_FILES["filename"]["error"]."].");
-				break;
-		}
-
-		if (!$ERROR) {
-			$PROCESSED_PHOTO["proxy_id"]			= $ENTRADA_USER->getID();
-			$PROCESSED_PHOTO["photo_active"]		= 1;
-			$PROCESSED_PHOTO["photo_type"]			= 1;
-			$PROCESSED_PHOTO["updated_date"]		= time();
-
-			if ($photo_id = $db->GetOne("SELECT `photo_id` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `photo_type` = 1")) {
-				if ($db->AutoExecute(AUTH_DATABASE.".user_photos", $PROCESSED_PHOTO, "UPDATE", "photo_id = ".$photo_id)) {
-					if ($photo_id) {
-						if (process_user_photo($_FILES["photo_file"]["tmp_name"], $photo_id)) {
-							$SUCCESS++;
-							$SUCCESSSTR[]	= "You have successfully uploaded a new profile photo.";
-						}
-					}
-				}
-			} else {
-				if ($db->AutoExecute(AUTH_DATABASE.".user_photos", $PROCESSED_PHOTO, "INSERT")) {
-					if ($photo_id = $db->Insert_Id()) {
-						if (process_user_photo($_FILES["photo_file"]["tmp_name"], $photo_id)) {
-							$SUCCESS++;
-							$SUCCESSSTR[]	= "You have successfully uploaded a new profile photo.";
-						}
-					}
-				}
-			}
-		}
-	}
-	
-	if ($_FILES["photo_file"]["error"] == 4 && isset($_POST["deactivate_photo"])) {
-		$PROCESSED_PHOTO_STATUS = array();
-		$PROCESSED_PHOTO_STATUS["photo_active"] = 0;
-	} elseif ($_FILES["photo_file"]["error"] == 4 && !isset($_POST["deactivate_photo"])) {
-		$PROCESSED_PHOTO_STATUS = array();
-		$PROCESSED_PHOTO_STATUS["photo_active"] = 1;
-	} elseif ($_FILES["photo_file"]["error"] != 4 && isset($_POST["deactivate_photo"]) && $_POST["deactivate_photo"]) {
-		$NOTICE++;
-		$NOTICESTR[] = "You cannot deactivate a newly uploaded photo, please try again without uploading a new photo.";
-	}
-
-	if (isset($PROCESSED_PHOTO_STATUS) && !$db->AutoExecute(AUTH_DATABASE.".user_photos", $PROCESSED_PHOTO_STATUS, "UPDATE", "proxy_id=".$db->qstr($ENTRADA_USER->getID())." AND photo_type = 1")) {
-		$ERROR++;
-		$ERRORSTR[] = "There was an issue trying to deactivate your current photo.";
-	}
-
 	//if (isset($_POST["tab"]) && $_POST["tab"] != "profile-photo" && $_POST["tab"] != "notifications") {
 		if (!$ERROR) {			
 			if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {

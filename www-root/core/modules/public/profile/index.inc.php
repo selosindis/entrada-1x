@@ -25,7 +25,45 @@ if (!defined("IN_PROFILE")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-
+	
+	$action = clean_input($_POST["action"], "alpha");
+	
+	switch ($action) {
+		case "uploadimage" :
+			
+			ob_clear_open_buffers();
+			$filesize = moveImage($_FILES["image"]["tmp_name"], $ENTRADA_USER->getID(), $_POST["coordinates"], $_POST["dimensions"]);
+			
+			if ($filesize) {
+				$PROCESSED_PHOTO["proxy_id"]			= $ENTRADA_USER->getID();
+				$PROCESSED_PHOTO["photo_active"]		= 1;
+				$PROCESSED_PHOTO["photo_type"]			= 1;
+				$PROCESSED_PHOTO["updated_date"]		= time();
+				$PROCESSED_PHOTO["photo_filesize"]		= $filesize;
+				
+				$query = "SELECT `photo_id` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+				$photo_id = $db->GetOne($query);
+				
+				if ($photo_id) {
+					if ($db->AutoExecute(AUTH_DATABASE.".user_photos", $PROCESSED_PHOTO, "UPDATE", "`photo_id` = ".$db->qstr($photo_id))) {
+						echo json_encode(array("status" => "success", "data" => webservice_url("photo", array($ENTRADA_USER->getID(), "upload"))."/".time()));
+					}
+				} else {
+					if ($db->AutoExecute(AUTH_DATABASE.".user_photos", $PROCESSED_PHOTO, "INSERT")) {
+						echo json_encode(array("status" => "success", "data" => webservice_url("photo", array($ENTRADA_USER->getID(), "upload"))."/".time()));
+					} else {
+						echo json_encode(array("status" => "error"));
+					}
+				}
+			}
+			
+			exit;
+			
+		break;
+		default:
+		break;
+	}
+ 
 	$PAGE_META["title"]			= "My Profile";
 	$PAGE_META["description"]	= "";
 	$PAGE_META["keywords"]		= "";
@@ -135,327 +173,245 @@ if (!defined("IN_PROFILE")) {
 		This section allows you to update your <?php echo APPLICATION_NAME; ?> user profile information. Please note that this information does not necessarily reflect any information stored at the main University. <span style="background-color: #FFFFCC; padding-left: 5px; padding-right: 5px">This is not your official university contact information.</span>
 		<br /><br />
 
-		<form name="profile-update" id="profile-update" action="<?php echo ENTRADA_URL; ?>/profile" method="post" enctype="multipart/form-data" accept="<?php echo ((@is_array($VALID_MIME_TYPES)) ? implode(",", array_keys($VALID_MIME_TYPES)) : ""); ?>">
+		<form class="form-horizontal" name="profile-update" id="profile-update" action="<?php echo ENTRADA_URL; ?>/profile" method="post" enctype="multipart/form-data" accept="<?php echo ((@is_array($VALID_MIME_TYPES)) ? implode(",", array_keys($VALID_MIME_TYPES)) : ""); ?>">
 			<input type="hidden" name="action" value="profile-update" />
-			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="My <?php echo APPLICATION_NAME;?> Profile Information">
-				<colgroup>
-					<col style="width: 25%" />
-					<col style="width: 75%" />
-				</colgroup>
-				<tfoot>
-					<tr>
-						<td colspan="2" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-							<input type="submit" class="button" value="Update Profile" />
-						</td>
-					</tr>
-				</tfoot>
-				<tbody>
-					<tr>
-						<td><strong>Last Login:</strong></td>
-						<td><?php echo ((!$_SESSION["details"]["lastlogin"]) ? "Your first login" : date(DEFAULT_DATE_FORMAT, $_SESSION["details"]["lastlogin"])); ?></td>
-					</tr>
-					<tr>
-						<td colspan="2">&nbsp;</td>
-					</tr>
-					<tr>
-						<td><strong>Username:</strong></td>
-						<td><?php echo html_encode($_SESSION["details"]["username"]); ?></td>
-					</tr>
-					<tr>
-						<td><strong>Password:</strong></td>
-						<td><a href="<?php echo PASSWORD_CHANGE_URL; ?>">Click here to change password</a></td>
-					</tr>
-					<tr>
-						<td><strong>Account Type:</strong></td>
-						<td><?php echo ucwords($_SESSION["details"]["group"])." &rarr; ".ucwords($_SESSION["details"]["role"]); ?></td>
-					</tr>
-					<tr>
-						<td colspan="2">&nbsp;</td>
-					</tr>
-					<tr>
-						<td><strong>Organisation:</strong></td>
-						<td>
-							<?php
+			<div class="control-group">
+				<label class="control-label">Last Login:</label>
+				<div class="controls">
+					<span class="input-xlarge uneditable-input"><?php echo ((!$_SESSION["details"]["lastlogin"]) ? "Your first login" : date(DEFAULT_DATE_FORMAT, $_SESSION["details"]["lastlogin"])); ?></span>
+				</div>
+			</div>
+			<div class="control-group"></div>
+			<div class="control-group">
+				<label class="control-label">Username:</label>
+				<div class="controls">
+					<span class="input-xlarge uneditable-input"><?php echo html_encode($_SESSION["details"]["username"]); ?></span>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">Password:</label>
+				<div class="controls">
+					<a class="btn btn-link" href="<?php echo PASSWORD_CHANGE_URL; ?>">Click here to change password</a>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">Account Type:</label>
+				<div class="controls">
+					<span class="input-xlarge uneditable-input"><?php echo ucwords($_SESSION["details"]["group"])." <i class=\"icon-arrow-right\"></i> ".ucwords($_SESSION["details"]["role"]); ?></span>
+				</div>
+			</div>
+			<div class="control-group"></div>
+			<div class="control-group">
+				<label class="control-label">Organisation:</label>
+				<div class="controls">
+					<span class="input-xlarge uneditable-input">
+						<?php
 							$query		= "SELECT `organisation_title` FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = ".$_SESSION['details']['organisation_id'];
 							$oresult	= $db->GetRow($query);
 							if($oresult) {
 								echo $oresult['organisation_title'];
 							}
-							?>
-						</td>
-					</tr>
-					<?php if (isset($_SESSION["details"]["grad_year"])) : ?>
-					<tr>
-						<td><strong>Graduating Year:</strong></td>
-						<td>Class of <?php echo html_encode($_SESSION["details"]["grad_year"]); ?></td>
-					</tr>
-					<tr>
-						<td colspan="2">&nbsp;</td>
-					</tr>
-					<?php endif; ?>
-					<tr>
-						<td><label for="prefix"><strong>Full Name:</strong></label></td>
-						<td>
-							<select id="prefix" name="prefix" style="width: 55px; vertical-align: middle; margin-right: 5px">
-								<option value=""<?php echo ((!$result["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
-								<?php
-								if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
-									foreach ($PROFILE_NAME_PREFIX as $key => $prefix) {
-										echo "<option value=\"".html_encode($prefix)."\"".(($result["prefix"] == $prefix) ? " selected=\"selected\"" : "").">".html_encode($prefix)."</option>\n";
-									}
-								}
-								?>
-							</select>
-							<?php echo html_encode($result["firstname"]." ".$result["lastname"]); ?>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2">&nbsp;</td>
-					</tr>
+						?>
+					</span>
+				</div>
+			</div>
+			<?php if (isset($_SESSION["details"]["grad_year"])) { ?>
+			<div class="control-group">
+				<label class="control-label">Graduating Year:</label>
+				<div class="controls">
+					<span class="input-xlarge uneditable-input">Class of <?php echo html_encode($_SESSION["details"]["grad_year"]); ?></span>
+				</div>
+			</div>
+			<?php } ?>
+			<div class="control-group"></div>
+			<div class="control-group">
+				<label class="control-label" for="prefix">Full Name:</label>
+				<div class="controls">
+					<select class="inline" id="prefix" name="prefix" style="width: 55px; vertical-align: middle; margin-right: 5px">
+						<option value=""<?php echo ((!$result["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
+						<?php
+						if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
+							foreach ($PROFILE_NAME_PREFIX as $key => $prefix) {
+								echo "<option value=\"".html_encode($prefix)."\"".(($result["prefix"] == $prefix) ? " selected=\"selected\"" : "").">".html_encode($prefix)."</option>\n";
+							}
+						}
+						?>
+					</select>
+					<span class="help-inline"><?php echo html_encode($result["firstname"]." ".$result["lastname"]); ?></span>
+				</div>
+			</div>
+			<div class="control-group"></div>
+			<div class="control-group">
+				<label class="control-label" for="email">Primary E-mail:</label>
+				<div class="controls">
 					<?php if($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] == "faculty") { ?>
-					<tr>
-						<td><label for="email" class="form-required"><strong>Primary E-Mail:</strong></label></td>
-						<td>	
-							<input type="text" id="email" name="email" value="<?php echo html_encode($result["email"]); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
-						</td>
-					</tr>
+					<input type="text" class="input-xlarge" id="email" name="email" value="<?php echo html_encode($result["email"]); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
 					<?php } else { ?>
-					<tr>
-						<td><strong>Primary E-Mail:</strong></td>
-						<td><a href="mailto:<?php echo html_encode($result["email"]); ?>"><?php echo html_encode($result["email"]); ?></a></td>
-					</tr>
+					<span class="input-xlarge uneditable-input"><?php echo html_encode($result["email"]); ?></span>
 					<?php } ?>
-					<tr>
-						<td><label for="email_alt"><strong>Secondary E-Mail:</strong></label></td>
-						<td>
-							<input type="text" id="email_alt" name="email_alt" value="<?php echo html_encode($result["email_alt"]); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2">&nbsp;</td>
-					</tr>
-					<?php
-					if (((bool) $GOOGLE_APPS["active"]) && $result["google_id"]) {
-						?>
-						<tr>
-							<td style="vertical-align: top"><label for="email_alt" style="font-weight: bold">Google Account:</label></td>
-							<td style="vertical-align: top">
-								<div id="google-account-details">
-									<?php
-									if (($result["google_id"] == "") || ($result["google_id"] == "opt-out") || ($result["google_id"] == "opt-in") || ($_SESSION["details"]["google_id"] == "opt-in")) {
-										?>
-										Your <?php echo $GOOGLE_APPS["domain"]; ?> account is <strong>not active</strong>. ( <a href="javascript: create_google_account()" class="action">create my account</a> )
-										<script type="text/javascript">
-										function create_google_account() {
-											$('google-account-details').update('<img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif\" width=\"16\" height=\"16\" alt=\"Please wait\" border=\"0\" style=\"margin-right: 2px; vertical-align: middle\" /> <span class=\"content-small\">Please wait while your account is created ...</span>');
-											new Ajax.Updater('google-account-details', '<?php echo ENTRADA_URL; ?>/profile', { method: 'post', parameters: { 'action' : 'google-update', 'google_account' : 1, 'ajax' : 1 }});
-										}
-										</script>
-										<?php
-									} else {
-										$google_address = html_encode($result["google_id"]."@".$GOOGLE_APPS["domain"]);
-										?>
-										<a href="mailto:"<?php echo $google_address; ?>"><?php echo $google_address; ?></a> ( <a href="#reset-google-password-box" id="reset-google-password" class="action">reset my <strong><?php echo $GOOGLE_APPS["domain"]; ?></strong> password</a> | <a href="http://webmail.<?php echo $GOOGLE_APPS["domain"]; ?>" class="action" target="_blank">visit <?php echo html_encode($GOOGLE_APPS["domain"]); ?> webmail</a> )
-										<?php
-									}
-									?>
-								</div>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="email_alt">Secondary E-mail:</label>
+				<div class="controls">
+					<input class="input-xlarge" name="email_alt" id="email_alt" type="text" placeholder="example@email.com" value="<?php echo html_encode($result["email_alt"]); ?>" />
+				</div>
+			</div>
+			<div class="control-group"></div>
+			<?php if (((bool) $GOOGLE_APPS["active"]) && $result["google_id"]) { ?>
+			<div class="control-group">
+				<label class="control-label">Google Account:</label>
+				<div class="controls">
+					
 						<?php
-					}
-					?>
-					<tr>
-						<td><label for="telephone"><strong>Telephone Number:</strong></label></td>
-						<td>
-							<input type="text" id="telephone" name="telephone" value="<?php echo html_encode($result["telephone"]); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
-							<span class="content-small">(<strong>Example:</strong> 613-533-6000 x74918)</span>
-						</td>
-					</tr>
-					<tr>
-						<td><label for="fax"><strong>Fax Number:</strong></label></td>
-						<td>
-							<input type="text" id="fax" name="fax" value="<?php echo html_encode($result["fax"]); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
-							<span class="content-small">(<strong>Example:</strong> 613-533-3204)</span>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2">&nbsp;</td>
-					</tr>
-
-					<tr>
-						<td><label for="country_id" class="form-required"><strong>Country</strong></label></td>
-						<td>
-							<?php
-							$countries = fetch_countries();
-							if ((is_array($countries)) && (count($countries))) {
-
-								$country_id = ($PROCESSED["country_id"])?$PROCESSED["country_id"]:$result["country_id"];
-
-								echo "<select id=\"country_id\" name=\"country_id\" style=\"width: 256px\" onchange=\"provStateFunction(this.value);\">\n";
-								echo "<option value=\"0\"".((!country_id) ? " selected=\"selected\"" : "").">-- Select Country --</option>\n";
-								foreach ($countries as $country) {
-									echo "<option value=\"".(int) $country["countries_id"]."\"".(($country_id == $country["countries_id"]) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
-								}
-								echo "</select>\n";
-							} else {
-								echo "<input type=\"hidden\" id=\"country_id\" name=\"country_id\" value=\"0\" />\n";
-								echo "Country information not currently available.\n";
-							}
+						if (($result["google_id"] == "") || ($result["google_id"] == "opt-out") || ($result["google_id"] == "opt-in") || ($_SESSION["details"]["google_id"] == "opt-in")) {
 							?>
-						</td>
-					</tr>
-					<tr>
-						<td><label id="prov_state_label" for="prov_state_div" class="form-nrequired"><strong>Province / State</strong></label></td>
-						<td>
-							<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
-						</td>
-					</tr>
-					<tr>
-						<td><label for="city"><strong>City:</strong></label></td>
-						<td>
-							<input type="text" id="city" name="city" value="<?php echo html_encode($result["city"]); ?>" style="width: 250px; vertical-align: middle" maxlength="35" />
-						</td>
-					</tr>
-					<tr>
-						<td><label for="address"><strong>Address:</strong></label></td>
-						<td>
-							<input type="text" id="address" name="address" value="<?php echo html_encode($result["address"]); ?>" style="width: 250px; vertical-align: middle" maxlength="255" />
-						</td>
-					</tr>
-					<tr>
-						<td><label for="postcode"><strong>Postal Code:</strong></label></td>
-						<td>
-							<input type="text" id="postcode" name="postcode" value="<?php echo html_encode($result["postcode"]); ?>" style="width: 250px; vertical-align: middle" maxlength="35" />
-							<span class="content-small">(<strong>Example:</strong> K7L 3N6)</span>
-						</td>
-					</tr>
-					<?php
-					if ($_SESSION["details"]["group"] != "student") {
-						$ONLOAD[] = "setMaxLength()";
+							Your <?php echo $GOOGLE_APPS["domain"]; ?> account is <strong>not active</strong>. ( <a href="javascript: create_google_account()" class="action">create my account</a> )
+							<script type="text/javascript">
+							function create_google_account() {
+								$('google-account-details').update('<img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif\" width=\"16\" height=\"16\" alt=\"Please wait\" border=\"0\" style=\"margin-right: 2px; vertical-align: middle\" /> <span class=\"content-small\">Please wait while your account is created ...</span>');
+								new Ajax.Updater('google-account-details', '<?php echo ENTRADA_URL; ?>/profile', { method: 'post', parameters: { 'action' : 'google-update', 'google_account' : 1, 'ajax' : 1 }});
+							}
+							</script>
+							<?php
+						} else {
+							$google_address = html_encode($result["google_id"]."@".$GOOGLE_APPS["domain"]);
+							?>
+							<span class="input-xlarge uneditable-input"><?php echo $google_address; ?></span>
+							<?php
+						}
 						?>
-						<tr>
-							<td colspan="2">&nbsp;</td>
-						</tr>
-						<tr>
-							<td style="vertical-align: top"><label for="hours"><strong>Office Hours:</strong></label></td>
-							<td>
-								<textarea id="office_hours" name="office_hours" style="width: 254px; height: 40px;" maxlength="100"><?php echo html_encode($result["office_hours"]); ?></textarea>
-							</td>
-						</tr>
-						<?php
-					}
-					?>
-					<tr>
-						<td colspan="2">&nbsp;</td>
-					</tr>
-					<tr>
-						<td colspan="2"><h2 style="margin-top: 0px;">Profile Photo</h2></td>
-					</tr>
-					<tr>
-						<td style="vertical-align: top; text-align: center">
-							<table>
-								<tr>
-									<td>
-										<div style="position: relative; width: 74px; height: 103px;">
-											<img src="<?php echo webservice_url("photo", array($ENTRADA_USER->getID(), "official"))."/".time(); ?>" width="72" height="100" class="cursor" id="profile_pic_<?php echo $result["id"] ?>" name="profile_pic" style="border: 1px #666666 solid; position: relative;"/>
-										</div>
-									</td>
-									<td>
-										<div style="position: relative; width: 74px; height: 103px;">
-											<img src="<?php echo webservice_url("photo", array($ENTRADA_USER->getID(), "upload"))."/".time(); ?>" width="72" height="100" class="cursor" id="alt_profile_pic_<?php echo $result["id"]; ?>" name="profile_pic" style="border: 1px #666666 solid; position: relative;"/>
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<span class="content-small">Official</span>
-									</td>
-									<td>
-										<span class="content-small">Uploaded</span>
-									</td>
-								</tr>
-							</table>
-						</td>
-						<td style="vertical-align: top">
-							<label for="photo_file" class="form-nrequired" style="margin-right: 5px">Upload New Photo:</label>
-							<input type="file" id="photo_file" name="photo_file" />
+					
+				</div>
+			</div>
+			<?php if ($google_address) { ?>
+			<div class="control-group">
+				<label class="control-label"></label>
+				<div class="controls">
+					<a href="#reset-google-password-box" id="reset-google-password" class="btn" data-toggle="modal">Reset my <strong><?php echo $GOOGLE_APPS["domain"]; ?></strong> password</a> <a href="http://webmail.<?php echo $GOOGLE_APPS["domain"]; ?>" class="btn" target="_blank">visit <?php echo html_encode($GOOGLE_APPS["domain"]); ?> webmail</a>
+				</div>
+			</div>
+			<?php } ?>
+			<div class="control-group"></div>
+			<?php } ?>
+			<div class="control-group">
+				<label class="control-label" for="telephone">Telephone Number:</label>
+				<div class="controls">
+					<input class="input-xlarge" name="telephone" id="telephone" type="text" placeholder="Example: 613-533-6000 x74918" value="<?php echo html_encode($result["telephone"]); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="fax">Fax Number:</label>
+				<div class="controls">
+					<input class="input-xlarge" name="fax" id="fax" type="text" placeholder="Example: 613-533-3204" value="<?php echo html_encode($result["fax"]); ?>" />
+				</div>
+			</div>
+			<div class="control-group"></div>
+			<div class="control-group">
+				<label class="control-label" for="country_id">Country:</label>
+				<div class="controls">
+					<?php
+						$countries = fetch_countries();
+						if ((is_array($countries)) && (count($countries))) {
 
-							<div class="content-small" style="margin-top: 10px; width: 435px">
-								<strong>Notice:</strong> You may upload JPEG, GIF or PNG images under <?php echo readable_size($VALID_MAX_FILESIZE); ?> only and any image larger than <?php echo $VALID_MAX_DIMENSIONS["photo-width"]."px by ".$VALID_MAX_DIMENSIONS["photo-height"]; ?>px (width by height) will be automatically resized.
-							</div>
+							$country_id = ($PROCESSED["country_id"])?$PROCESSED["country_id"]:$result["country_id"];
 
-							<?php
-							$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($result["id"])." AND `photo_active` = '1'";
-							$uploaded_photo = $db->GetRow($query);
-							if ($uploaded_photo) {
-								?>
-								<div style="margin-top: 20px">
-									<input type="checkbox" id="deactivate_photo" name="deactivate_photo" value="1" style="vertical-align: middle" />
-									<label for="deactivate_photo" class="form-nrequired" style="vertical-align: middle">Deactivate your uploaded photo.</label>
-								</div>
-								<?php
+							echo "<select id=\"country_id\" name=\"country_id\" style=\"width: 256px\" onchange=\"provStateFunction(this.value);\">\n";
+							echo "<option value=\"0\"".((!country_id) ? " selected=\"selected\"" : "").">-- Select Country --</option>\n";
+							foreach ($countries as $country) {
+								echo "<option value=\"".(int) $country["countries_id"]."\"".(($country_id == $country["countries_id"]) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
 							}
-							?>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2">&nbsp;</td>
-					</tr>
-				</tbody>
-			</table>
+							echo "</select>\n";
+						} else {
+							echo "<input type=\"hidden\" id=\"country_id\" name=\"country_id\" value=\"0\" />\n";
+							echo "Country information not currently available.\n";
+						}
+					?>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="prov_state">Province:</label>
+				<div class="controls">
+					<div id="prov_state_div" class="padding5v">Please select a <strong>Country</strong> from above first.</div>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="city">City:</label>
+				<div class="controls">
+					<input class="input-xlarge" name="city" id="city" type="text" value="<?php echo html_encode($result["city"]); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="address">Address:</label>
+				<div class="controls">
+					<input class="input-xlarge" name="address" id="address" type="text" value="<?php echo html_encode($result["address"]); ?>" />
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label" for="postcode">Postal Code:</label>
+				<div class="controls">
+					<input class="input-xlarge" name="postcode" id="postcode" type="text" placeholder="Example: K7L 3N6" value="<?php echo html_encode($result["postcode"]); ?>" />
+				</div>
+			</div>
+			<?php if ($_SESSION["details"]["group"] != "student") { ?>
+			<div class="control-group">
+				<label class="control-label" for="hours">Office Hours:</label>
+				<div class="controls">
+					<textarea id="office_hours" name="office_hours" maxlength="100"><?php echo html_encode($result["office_hours"]); ?></textarea>
+				</div>
+			</div>
+			<?php } ?>
+			<div class="control-group">
+				
+				<span class="controls">
+					<input type="submit" class="btn btn-primary right" value="Save" />
+				</div>
+			</div>
+			
 		</form>
 		
 		<?php
 		if (((bool) $GOOGLE_APPS["active"]) && $result["google_id"] && !in_array($result["google_id"], array("opt-out", "opt-in"))) {
 			?>
-			<div id="reset-google-password-box" class="modal-confirmation">
-				<h1>Reset <strong><?php echo ucwords($GOOGLE_APPS["domain"]); ?></strong> Password</h1>
-				<div id="reset-google-password-form">
-					<div id="reset-google-password-form-status">To reset your <?php echo ucwords($GOOGLE_APPS["domain"]); ?> account password at Google, please enter your new password below and click the <strong>Submit</strong> button.</div>
-					<form action="#" method="post">
-						<table style="width: 100%; margin-top: 15px" cellspacing="2" cellpadding="0">
-							<colgroup>
-								<col style="width: 35%" />
-								<col style="width: 65%" />
-							</colgroup>
-							<tbody>
-								<tr>
-									<td><label for="google_password_1" class="form-required">New Password</label></td>
-									<td><input type="password" id="google_password_1" name="password1" value="" style="width: 175px" maxlength="24" /></td>
-								</tr>
-								<tr>
-									<td><label for="google_password_2" class="form-required">Re-Enter Password</label></td>
-									<td><input type="password" id="google_password_2" name="password2" value="" style="width: 175px" maxlength="24" /></td>
-								</tr>
-							</tbody>
-						</table>
-					</form>
+			<div id="reset-google-password-box" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+				<div class="modal-header">
+					<h1>Reset <strong><?php echo ucwords($GOOGLE_APPS["domain"]); ?></strong> Password</h1>
 				</div>
-				<div id="reset-google-password-waiting" class="display-generic" style="display: none">
-					<img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please wait" border="0" style="margin-right: 2px; vertical-align: middle" /> <span class="content-small">Please wait while your password is being changed ...</span>
+				<div class="modal-body">
+					<div id="reset-google-password-form">
+						<div id="reset-google-password-form-status">To reset your <?php echo ucwords($GOOGLE_APPS["domain"]); ?> account password at Google, please enter your new password below and click the <strong>Submit</strong> button.</div>
+						<form action="#" method="post">
+							<table style="width: 100%; margin-top: 15px" cellspacing="2" cellpadding="0">
+								<colgroup>
+									<col style="width: 35%" />
+									<col style="width: 65%" />
+								</colgroup>
+								<tbody>
+									<tr>
+										<td><label for="google_password_1" class="form-required">New Password</label></td>
+										<td><input type="password" id="google_password_1" name="password1" value="" style="width: 175px" maxlength="24" /></td>
+									</tr>
+									<tr>
+										<td><label for="google_password_2" class="form-required">Re-Enter Password</label></td>
+										<td><input type="password" id="google_password_2" name="password2" value="" style="width: 175px" maxlength="24" /></td>
+									</tr>
+								</tbody>
+							</table>
+						</form>
+					</div>
+					<div id="reset-google-password-waiting" class="display-generic" style="display: none">
+						<img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please wait" border="0" style="margin-right: 2px; vertical-align: middle" /> <span class="content-small">Please wait while your password is being changed ...</span>
+					</div>
+					<div id="reset-google-password-success" class="display-success" style="display: none">
+						We have successfully reset your <?php echo $GOOGLE_APPS["domain"]; ?> account password at Google.<br /><br />If you would like to log into your webmail account, please do so via <a href="http://webmail.qmed.ca" target="_blank">http://webmail.qmed.ca</a>.
+					</div>
 				</div>
-				<div id="reset-google-password-success" class="display-success" style="display: none">
-					We have successfully reset your <?php echo $GOOGLE_APPS["domain"]; ?> account password at Google.<br /><br />If you would like to log into your webmail account, please do so via <a href="http://webmail.qmed.ca" target="_blank">http://webmail.qmed.ca</a>.
-				</div>
-				<div class="footer">
-					<button id="reset-google-password-close" style="float: left; margin: 8px 0px 4px 10px">Close</button>
-					<button id="reset-google-password-submit" style="float: right; margin: 8px 10px 4px 0px">Submit</button>
+				<div class="modal-footer">
+					<button id="reset-google-password-close" class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+					<button id="reset-google-password-submit" class="btn btn-primary">Submit</button>
 				</div>
 			</div>
 			<script type="text/javascript" defer="defer">
-			Event.observe(window, 'load', function() {
-				new Control.Modal('reset-google-password', {
-					overlayOpacity:	0.75,
-					closeOnClick: 'overlay',
-					className: 'modal-confirmation',
-					fade: true,
-					fadeDuration: 0.30
-				});
-			});
 			$('reset-google-password-close').observe('click', function() {
 				$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
 				$('reset-google-password-success', 'reset-google-password-waiting').invoke('hide');
@@ -509,8 +465,232 @@ if (!defined("IN_PROFILE")) {
 					$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
 				}
 			});
-			</script>		
+
+			</script>
+			
+			<script src="<?php echo ENTRADA_URL; ?>/javascript/jquery/jquery.imgareaselect.min.js" type="text/javascript"></script>
+			<link href='<?php echo ENTRADA_URL; ?>/css/imgareaselect-default.css' rel='stylesheet' type='text/css' />
+			<style type="text/css">
+				#upload_profile_image_form {margin:0px;float:left;}
+				#profile-image-container {position:relative;}
+				#upload-image-modal-btn {position:absolute;right:7px;top:7px;display:none;outline:none;}
+				#btn-toggle {position:absolute;right:7px;bottom:7px;display:none;outline:none;}
+				.profile-image-preview {text-align:center;max-width:250px;margin:auto;}
+				.modal-body{max-height:none;}
+			</style>
+			<?php $profile_image = ENTRADA_ABSOLUTE . '/../public/images/' . $ENTRADA_USER->getID() . '/' . $ENTRADA_USER->getID() . '-large.png'; ?>
+			<script type="text/javascript">
+			function dataURItoBlob(dataURI, type) {
+				type = typeof a !== 'undefined' ? type : 'image/jpeg';
+				var binary = atob(dataURI.split(',')[1]);
+				var array = [];
+				for (var i = 0; i < binary.length; i++) {
+					array.push(binary.charCodeAt(i));
+				}
+				return new Blob([new Uint8Array(array)], {type: type});
+			}
+				
+			jQuery(function(){
+
+				<?php if (!file_exists($profile_image)) {
+					echo "var imagePath = '".ENTRADA_URL."/images/" . $ENTRADA_USER->getID() . "/" . $ENTRADA_USER->getID() . "';";
+				} ?>
+
+				function selectImage(image){
+					jQuery(".description").hide();
+					var image_width;
+					var image_height;
+					var w_offset;
+					var h_offset
+
+					image_width = image.width();
+					image_height = image.height();
+					w_offset = parseInt((image_width - 153) / 2);
+					h_offset = parseInt((image_height - 200) / 2);
+
+					jQuery("#coordinates").attr("value", w_offset + "," + h_offset + "," + (w_offset + 153) + "," + (h_offset + 200));
+					jQuery("#dimensions").attr("value", image_width + "," + image_height)
+
+					image.imgAreaSelect({ 
+						aspectRatio: '75:98', 
+						handles: true, 
+						x1: w_offset, y1: h_offset, x2: w_offset + 153, y2: h_offset + 200,
+						instance: true,
+						persistent: true,
+						onSelectEnd: function (img, selection) {
+							jQuery("#coordinates").attr("value", selection.x1 + "," + selection.y1 + "," + selection.x2 + "," + selection.y2);
+						}
+					});
+				};
+
+				jQuery(".org-profile-image").hover(function(){
+					jQuery(this).find("#edit-button").animate({"opacity" : 100}, {queue: false}, 150).css("display", "block");
+				}, function() {
+					jQuery(this).find("#edit-button").animate({"opacity" : 0}, {queue: false}, 150);
+				});
+
+				/* file upload stuff starts here */
+
+				var reader = new FileReader();
+
+				reader.onload = function (e) {
+					jQuery(".preview-image").attr('src', e.target.result)
+					jQuery(".preview-image").load(function(){
+						selectImage(jQuery(".preview-image"));
+					});
+				};
+
+				// Required for drag and drop file access
+				jQuery.event.props.push('dataTransfer');
+
+				jQuery("#upload-image").on('drop', function(event) {
+
+					jQuery(".modal-body").css("background-color", "#FFF");
+
+					event.preventDefault();
+
+					var file = event.dataTransfer.files[0];
+
+					if (file.type.match('image.*')) {
+						jQuery("#image").html(file);
+						reader.readAsDataURL(file);
+					} else {
+						// However you want to handle error that dropped file wasn't an image
+					}
+				});
+
+				jQuery("#upload-image").on("dragover", function(event) {
+					jQuery(".modal-body").css("background-color", "#f3f3f3");
+					return false;
+				});
+
+				jQuery("#upload-image").on("dragleave", function(event) {
+					jQuery(".modal-body").css("background-color", "#FFF");
+				});
+
+				jQuery('#upload-image').on('hidden', function () {
+					if (jQuery(".profile-image-preview").length > 0) {
+						jQuery(".profile-image-preview").remove();
+						jQuery(".imgareaselect-selection").parent().remove();
+						jQuery(".imgareaselect-outer").remove();
+						jQuery("#image").val("");
+						jQuery(".description").show();
+					}
+				});
+
+				jQuery('#upload-image').on('shown', function() {
+					if (jQuery(".profile-image-preview").length <= 0) {
+						var preview = jQuery("<div />").addClass("profile-image-preview");
+						preview.append("<img />");
+						preview.children("img").addClass("preview-image");
+						jQuery(".preview-img").append(preview);
+					}
+				});
+
+				jQuery("#upload-image-button").live("click", function(){
+					if (typeof jQuery(".preview-image").attr("src") != "undefined") {
+						jQuery("#upload_profile_image_form").submit();
+						jQuery('#upload-image').modal("hide");
+					} else {
+						jQuery('#upload-image').modal("hide");
+					}
+				});
+
+				jQuery("#upload_profile_image_form").submit(function(){
+					var imageFile = dataURItoBlob(jQuery(".preview-image").attr("src"));
+					console.log(imageFile);
+
+					var xhr = new XMLHttpRequest();
+					var fd = new FormData();
+					fd.append('action', 'uploadimage');
+					fd.append('image', imageFile);
+					fd.append('coordinates', jQuery("#coordinates").val());
+					fd.append('dimensions', jQuery("#dimensions").val());
+
+					xhr.open('POST', "<?php echo ENTRADA_URL; ?>/profile", true);
+					xhr.send(fd);
+
+					xhr.onreadystatechange = function() {
+						if (xhr.readyState == 4 && xhr.status == 200) {                
+							var jsonResponse = JSON.parse(xhr.responseText);
+							if (jsonResponse.status == "success") {
+								jQuery("#profile-image-container .thumbnail img.img-polaroid").attr("src", jsonResponse.data);
+							} else {
+								// Some kind of failure notification.
+							};
+						} else {
+							// another failure notification.
+						}
+					}
+
+					if (jQuery(".profile-image-preview").length > 0) {
+						jQuery(".profile-image-preview").remove();
+						jQuery(".imgareaselect-selection").parent().remove();
+						jQuery(".imgareaselect-outer").remove();
+						jQuery("#image").val("");
+						jQuery(".description").show();
+					}
+
+					return false;
+				});
+
+				jQuery("#image").live("change", function(){
+					var files = jQuery(this).prop("files");
+
+					if (files && files[0]) {
+						reader.readAsDataURL(files[0]);
+					}
+				});
+				
+				jQuery("#profile-image-container").hover(function(){
+					jQuery("#profile-image-container .btn, #btn-toggle").fadeIn("fast");
+				}, 
+				function() {
+					jQuery("#profile-image-container .btn").fadeOut("fast");
+				});
+			});
+			</script>
+			<div id="upload-image" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="label" aria-hidden="true">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+					<h3 id="label">Edit Profile Photo</h3>
+				</div>
+				<div class="modal-body">
+					<div class="preview-img"></div>
+					<div class="description alert" style="height:264px;width:483px;padding:20px;">
+						To upload a new profile image you can drag and drop it on this area, or use the Browse button to select an image from your computer.
+					</div>
+				</div>
+				<div class="modal-footer">
+					<form name="upload_profile_image_form" id="upload_profile_image_form" action="<?php echo ENTRADA_URL; ?>/profile" method="post" enctype="multipart/form-data">
+						<input type="hidden" name="coordinates" id="coordinates" value="" />
+						<input type="hidden" name="dimensions" id="dimensions" value="" />
+						<input type="file" name="image" id="image" />
+					</form>
+					<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+					<button id="upload-image-button" class="btn btn-primary">Upload</button>
+				</div>
+			</div>
+
 			<?php
+			
+			$sidebar_html  = "<div id=\"profile-image-container\">";
+			$sidebar_html .= "<a href=\"#upload-image\" id=\"upload-image-modal-btn\" data-toggle=\"modal\" class=\"btn btn-primary\" id=\"upload-profile-image\" />Edit Profile Photo</a>";
+			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($result["id"])." AND `photo_active` = '1'";
+			$uploaded_photo = $db->GetRow($query);
+			if ($uploaded_photo) {
+				$sidebar_html .= "<span class=\"thumbnail\"><img src=".webservice_url("photo", array($ENTRADA_USER->getID(), "upload"))."/".time()." width=\"192\" height=\"250\" class=\"img-polaroid\" /></span>";
+				$sidebar_html .= "<div class=\"btn-group\" id=\"btn-toggle\"><a href=\"#\" class=\"btn\" id=\"image-nav-left\">Official</a>";
+				$sidebar_html .= "<a href=\"#\" class=\"btn active\" id=\"image-nav-right\">Uploaded</a></div>";
+			} else {
+				$sidebar_html .= "<span class=\"thumbnail\"><img src=".webservice_url("photo", array($ENTRADA_USER->getID(), "official"))."/".time()." width=\"192\" height=\"250\" class=\"img-polaroid\" /></span>";
+				$sidebar_html .= "<div class=\"btn-group\" id=\"btn-toggle\"><a href=\"#\" class=\"btn active\" id=\"image-nav-left\">Official</a>";
+				$sidebar_html .= "<a href=\"#\" class=\"btn\" id=\"image-nav-right\">Uploaded</a></div>";
+			}		
+			$sidebar_html .= "</div>";
+
+			new_sidebar_item("Profile Photo", $sidebar_html, "profile-nav", "open");
+
 		}
 	} else {
 		$NOTICE++;

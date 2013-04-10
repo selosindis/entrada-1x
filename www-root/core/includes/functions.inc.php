@@ -16814,3 +16814,63 @@ function flatten_array($array) {
 
 	return $result;
 }
+
+/*
+ * Function to resize and move profile images.
+ *
+ */
+function moveImage($source, $id, $coords, $dimensions, $type = "user", $sizes = array("upload" => array("width" => 192, "height" => 250), "upload-thumbnail" => array("width" => 75, "height" => 98))) {
+	$coords = explode(",", $coords);		
+	$dimensions = explode(",", $dimensions);
+
+	if ($id) {
+
+		$image_details = getimagesize($source);
+
+		switch($image_details["mime"]) {
+			case "image/jpeg" :
+				$image = imagecreatefromjpeg($source);
+			break;
+			case "image/gif" :
+				$image = imagecreatefromgif($source);
+			break;
+			case "image/png" :
+				$image = imagecreatefrompng($source);
+			break;
+			default:
+				$return = false;
+			break;
+		}
+
+		if ($image) {
+			
+			copy($source, STORAGE_USER_PHOTOS . "/" . $id . "-upload-original");
+
+			$image_scale = round($image_details[0] / $dimensions[0], 2);
+
+			foreach ($coords as $coord) {
+				$scaled_coords[] = (int) round($coord * $image_scale, 2);
+			}
+
+			$path = STORAGE_USER_PHOTOS . '/../public/images/' . ($type == "team" ? "teams/" : "") . $id .'/' . $id;
+
+			foreach ($sizes as $size_name => $size) {
+				$resized_image = imagecreatetruecolor($size["width"], $size["height"]);
+				imagecopyresampled($resized_image, $image, 0, 0, $scaled_coords[0], $scaled_coords[1], $size["width"], $size["height"], $scaled_coords[2] - $scaled_coords[0], $scaled_coords[3] - $scaled_coords[1]);
+				$scaled_image =  CACHE_DIRECTORY . "/profile-img-" . $id . "-".$size["width"]."x".$size["height"].".png";
+				imagepng($resized_image, $scaled_image);
+				if (!copy($scaled_image, STORAGE_USER_PHOTOS . "/" . $id . "-" . $size_name)) {
+					$return = false;
+				} else {
+					unlink($scaled_image);
+				}
+			}
+
+		}
+	}
+	
+	
+		return filesize(STORAGE_USER_PHOTOS . "/" . $id . "-upload");
+	
+	
+}

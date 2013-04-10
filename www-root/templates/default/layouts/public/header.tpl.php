@@ -58,7 +58,10 @@
                             ?>
                             <div class="span5">
                                 <div class="welcome-area">
-                                    <a href="#"><span class="userAvatar"><?php echo "<img src=\"".webservice_url("photo", array($ENTRADA_USER->getID(), (isset($uploaded_file_active) && $uploaded_file_active ? "upload" : (!file_exists(STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-official") && file_exists(STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-upload") ? "upload" : "official"))))."\" width=\"32\" height=\"32\" alt=\"".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."\" class=\"img-polaroid\" />"; ?></span></a> Welcome <span class="userName"><?php echo $ENTRADA_USER->getFirstname() . " " . $ENTRADA_USER->getLastname(); ?></span>
+                                    <div class="userAvatar">
+                                        <a href="#"><img src="http://lorempixel.com/35/35/"></a>
+                                    </div>
+                                    <div class="welcome-block"> Welcome <span class="userName"><?php echo $ENTRADA_USER->getFirstname() . " " . $ENTRADA_USER->getLastname(); ?></span><br><span class="profileLink"><a href="<?php echo ENTRADA_URL; ?>/profile">My Profile</a></span></div>
                                 </div>
                             </div>
                             <div class="span2">

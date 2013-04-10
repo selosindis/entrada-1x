@@ -248,6 +248,9 @@ a.log-out:hover{
   color:#7dbedc;
   font-size:11px;
 }
+.welcome-area .userAvatar {
+    float: left;
+}
 .welcome-area .userAvatar img{
   padding:2px;
   background:#FFF;
@@ -263,6 +266,16 @@ a.log-out:hover{
 .welcome-area .userName{
   color:#D3E9F0;
   font-weight:bold;
+}
+.welcome-area .welcome-block {
+    float: right;
+}
+.welcome-area .profileLink a {
+    color: #EEEEEE;
+}
+.welcome-area .profileLink a:hover {
+    color: #CCCCCC;
+    text-decoration: none;
 }
 ul.legend-list{
   list-style:none;

@@ -507,21 +507,8 @@ if (!defined("PARENT_INCLUDED")) {
 			<li><a href="#browse_group_tab" data-toggle="tab">Browse People</a></li>
 			<li><a href="#browse_dept_tab" data-toggle="tab">Browse Departments</a></li>
 		</ul>
-		<div class="tab-content" style="border-bottom: 1px solid rgb(204, 204, 204);">
+		<div class="tab-content ps-tab-style">
 		<div class="tab-pane active" id="people_search_tab">
-			<style type="text/css">
-			#advanced_mode, #basic_mode {
-				margin-left: 20px;
-				font-size: 11px;
-				text-decoration: none;
-				width: 110px;
-				cursor: pointer;
-			}
-
-			#advanced_mode > span, #basic_mode > span {
-				color: #003366;
-			}
-			</style>
 			<?php
 			if ((isset($_REQUEST["search_groups"]) && $_REQUEST["search_groups"] != "faculty,resident,staff") || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] != "2010,2011,2012,2013") || (isset($_REQUEST["search_alumni"]) && $_REQUEST["search_alumni"])) {
 				$ONLOAD[] = "toggle_search('advanced')";
@@ -531,16 +518,16 @@ if (!defined("PARENT_INCLUDED")) {
 			?>
 			<script type="text/javascript">
 			function toggle_search(searchType) {
-				$('basic_mode').hide();
-				$('advanced_mode').hide();
+				$('ps-basic-mode').hide();
+				$('ps-advanced-mode').hide();
 				$('advanced_search').hide();
 
 				if (searchType == 'advanced') {
-					$('advanced_mode').show();
+					$('ps-advanced-mode').show();
 					$('advanced_search').show();
 
 				} else {
-					$('basic_mode').show();
+					$('ps-basic-mode').show();
 				}
 			}
 			</script>
@@ -553,21 +540,21 @@ if (!defined("PARENT_INCLUDED")) {
 						<label for="q" class="form-required">People Search:</label>
 					</div>
 					<div class="span6">
-						<input type="text" id="q" name="q" value="<?php echo html_encode($plaintext_query); ?>" style="width: 300px" />
+						<input type="text" id="q" name="q" class="ps-box" value="<?php echo html_encode($plaintext_query); ?>" />
 					</div>
 					<div class="span4">
 						<span class="pull-right">
-							<span id="advanced_mode" onclick="toggle_search('basic')" style="display: none">
+							<span id="ps-advanced-mode" onclick="toggle_search('basic')" style="display: none">
 								<i class="icon-arrow-up"></i> <span>Advanced Search</span>
 							</span>
-							<span id="basic_mode" onclick="toggle_search('advanced')">
+							<span id="ps-basic-mode" onclick="toggle_search('advanced')">
 								<i class="icon-arrow-down"></i> <span>Advanced Search</span>
 							</span>
 						</span>
 					</div>
 				</div>
 				<div class="row-fluid">
-					<div class="span11 content-small" style="margin-top: 10px">
+					<div class="span11 content-small ps-row-margin-top">
 						<strong>Note:</strong> You can search for name, username, e-mail address or staff / student number.
 					</div>
 				</div>
@@ -577,7 +564,7 @@ if (!defined("PARENT_INCLUDED")) {
 					<input type="hidden" name="search_organisations" id="search_organisations" value="<?php echo (isset($_GET["search_organisations"]) ? $_GET["search_organisations"] : $ORGANISATION_ID); ?>" />
 					<input type="hidden" name="search_classes" id="search_classes" value="<?php echo (isset($_GET["search_classes"]) ? $_GET["search_classes"] : (date("Y", time()) + $year_offset).",".(date("Y", time()) + $year_offset + 1).",".(date("Y", time()) + $year_offset + 2).",".(date("Y", time()) + $year_offset + 3)); ?>" />				
 						
-					<div class="row-fluid" style="margin-top: 10px">
+					<div class="row-fluid ps-row-margin-top">
 						<div class="span3">
 							<label class="form-required">Groups to search:</label>
 							<script type="text/javascript">
@@ -635,7 +622,7 @@ if (!defined("PARENT_INCLUDED")) {
 					</div>
 				</div>
 				
-				<div class="row-fluid" style="margin-top: 10px">	
+				<div class="row-fluid ps-row-margin-top">	
 					<div class="span12">
 						<i class="pull-right"><input type="submit" class="btn btn-primary" value="Search" /></i>
 					</div>
@@ -653,20 +640,20 @@ if (!defined("PARENT_INCLUDED")) {
 
 				</div>
 				<div class="span6">
-					<select id="group" name="g" style="width: 209px"></select>
+					<select id="group" name="g" class="ps-group-select"></select>
 				</div>
 			</div>
 					
-			<div class="row-fluid" style="margin-top: 10px;">
+			<div class="row-fluid ps-row-margin-top">
 				<div class="span2">
 					<label for="role" class="form-nrequired">Browse Role:</label>
 				</div>
 				<div class="span6">
-					<select id="role" name="r" style="width: 209px"></select>
+					<select id="role" name="r" class="ps-role-select"></select>
 				</div>
 			</div>
 				
-			<div class="row-fluid" style="margin-top: 10px">	
+			<div class="row-fluid ps-row-margin-top">	
 				<div class="span12">
 					<i class="pull-right"><input type="submit" class="btn btn-primary" value="Browse" /></i>
 				</div>
@@ -685,7 +672,7 @@ if (!defined("PARENT_INCLUDED")) {
 				</div>
 				
 				<div class="span9">
-					<select id="department" name="d" style="width: 100%">
+					<select id="department" name="d" class="ps-department-select">
 
 					<?php
 					$query = "	SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
@@ -719,7 +706,7 @@ if (!defined("PARENT_INCLUDED")) {
 				</div>
 			</div>
 			
-			<div class="row-fluid" style="margin-top: 10px">	
+			<div class="row-fluid ps-vertical-margins">	
 				<div class="span12">
 					<i class="pull-right"><input type="submit" class="btn btn-primary" value="Browse" /></i>
 				</div>
@@ -732,31 +719,32 @@ if (!defined("PARENT_INCLUDED")) {
 	if (($search_query) || (isset($load_profile) && $load_profile)) {
 		if ($search_query) {
 			if ($total_pages > 1) {
-				echo "<br />\n";
-				echo "<div style=\"text-align: right\">\n";
-				echo "<form action=\"".ENTRADA_URL."/".$MODULE."\" method=\"get\" id=\"pageSelector\" style=\"display: inline\">\n";
-				echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
+				echo "<div class=\"row-fluid\">\n";
+				echo "<div class=\"pull-right ps-vertical-margins\">\n";
+				echo "<form action=\"".ENTRADA_URL."/".$MODULE."\" method=\"get\" id=\"pageSelector\" class=\"ps-pagination-form\">\n";
+				echo "<span class=\"ps-pagination-link\">\n";
 				if ($page_previous) {
-					echo "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $page_previous))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$page_previous.".\" title=\"Back to page ".$page_previous.".\" style=\"vertical-align: middle\" /></a>\n";
+					echo "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $page_previous))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$page_previous.".\" title=\"Back to page ".$page_previous.".\" class=\"ps-pagination-image\" /></a>\n";
 				} else {
-					echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+					echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" class=\"ps-pagination-image\" title=\"\" />";
 				}
 				echo "</span>";
-				echo "<span style=\"vertical-align: middle\">\n";
+				echo "<span class=\"ps-pagination-select\">\n";
 				echo "<select name=\"pv\" onchange=\"window.location = '".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => false))."&amp;pv='+this.options[this.selectedIndex].value;\"".(($total_pages <= 1) ? " disabled=\"disabled\"" : "").">\n";
 				for ($i = 1; $i <= $total_pages; $i++) {
 					echo "<option value=\"".$i."\"".(($i == $page_current) ? " selected=\"selected\"" : "").">".(($i == $page_current) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
 				}
 				echo "</select>\n";
 				echo "</span>\n";
-				echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
+				echo "<span class=\"ps-pagination-link\">\n";
 				if ($page_current < $total_pages) {
-					echo "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $page_next))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$page_next.".\" title=\"Forward to page ".$page_next.".\" style=\"vertical-align: middle\" /></a>";
+					echo "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $page_next))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$page_next.".\" title=\"Forward to page ".$page_next.".\" class=\"ps-pagination-image\" /></a>";
 				} else {
-					echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+					echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" class=\"ps-pagination-image\" />";
 				}
 				echo "</span>\n";
 				echo "</form>\n";
+				echo "</div>\n";
 				echo "</div>\n";
 			}
 			/**
@@ -789,14 +777,13 @@ if (!defined("PARENT_INCLUDED")) {
 		}
 		
 		if ($results) {
-			echo "<br />\n";
-			echo "<div class=\"row-fluid searchTitle\" style=\"margin: auto;\">\n";
-			echo "	<div class=\"span3\" style=\"font-size: 12px; font-weight: bold; padding-left:10px\">People Search Results:</div>\n";
-			echo "	<div class=\"span9 pull-right\" style=\"text-align: right; font-size: 10px; color: #666666; overflow: hidden; white-space: nowrap\">".$total_rows." Result".(($total_rows != 1) ? "s" : "")." Found. Results ".($limit_parameter + 1)." - ".((($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] + $limit_parameter) <= $total_rows) ? ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] + $limit_parameter) : $total_rows)." for &quot;<strong>".$search_query."</strong>&quot; shown below.</div>\n";
+			echo "<div class=\"row-fluid ps-search-summary-bar\">\n";
+			echo "	<div class=\"span3 ps-search-result-title ps-vertical-margins\">People Search Results:</div>\n";
+			echo "	<div class=\"span9 ps-search-result-summary ps-vertical-margins\"><span class=\"pull-right\">".$total_rows." Result".(($total_rows != 1) ? "s" : "")." Found. Results ".($limit_parameter + 1)." - ".((($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] + $limit_parameter) <= $total_rows) ? ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] + $limit_parameter) : $total_rows)." for &quot;<strong>".$search_query."</strong>&quot; shown below.</span></div>\n";
 			echo "</div>";
 			
 			foreach ($results as $key => $result) {
-				echo "<div id=\"result-".$result["id"]."\" class=\"media\" style=\"width: 100%; height 102px; padding: 5px 0px 5px 5px; border-bottom: 1px solid rgb(204, 204, 204);".($key % 2 == 1 ? " background-color: rgb(238, 238, 238);" : "")."\">\n";
+				echo "<div id=\"result-".$result["id"]."\" class=\"media ps-media-padding\"".($key % 2 == 1 ? " background-color: rgb(238, 238, 238);" : "")."\">\n";
 			
 				$offical_file_active	= false;
 				$uploaded_file_active	= false;
@@ -843,8 +830,8 @@ if (!defined("PARENT_INCLUDED")) {
 				}
 				echo "</div>";
 				echo "<div class=\"media-body\">";
-				echo "<div class=\"pull-left\" style=\"margin-left: 10px\">";
-				echo "<h5 class\"media-heading\" style=\"color: #003366;\">" . html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"]) . "</h5>";
+				echo "<div class=\"pull-left ps-media-body-margin\">";
+				echo "<h5 class\"media-heading ps-media-heading\">" . html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"]) . "</h5>";
 				echo "<span class=\"content-small\">";
 				if($departmentResults = get_user_departments($result["id"])) {
 					$deptCtr = 0;
@@ -864,16 +851,16 @@ if (!defined("PARENT_INCLUDED")) {
 					echo ucwords($result["group"])." > ".($result["group"] == "student" ? $cohort["group_name"] : ucwords($result["role"]));
 				}
 				echo (isset($ORGANISATIONS_BY_ID[$result["organisation_id"]]) ? "<br />".$ORGANISATIONS_BY_ID[$result["organisation_id"]]["organisation_title"] : "")."\n";
-				echo "<br />";
+					echo "<br />";
 				if ($result["privacy_level"] > 1 || $is_administrator) {
-					echo "			<a href=\"mailto:".html_encode($result["email"])."\" style=\"font-size: 10px;\">".html_encode($result["email"])."</a><br />\n";
+					echo "			<a href=\"mailto:".html_encode($result["email"])."\" class=\"ps-email\">".html_encode($result["email"])."</a><br />\n";
 					
 					if ($result["email_alt"]) {
-						echo "		<a href=\"mailto:".html_encode($result["email_alt"])."\" style=\"font-size: 10px;\">".html_encode($result["email_alt"])."</a>\n";
+						echo "		<a href=\"mailto:".html_encode($result["email_alt"])."\" class=\"ps-email\">".html_encode($result["email_alt"])."</a>\n";
 					}
 				}
 				echo "</span></div>";
-				echo "<div class=\"content-small pull-left\" style=\"margin-top: 16px; margin-left: 10px;\">";
+				echo "<div class=\"content-small ps-address-margin pull-left\"\">";
 				if (($result["privacy_level"] > 2 || $is_administrator)) {
 					if ($result["telephone"]) {
 						echo "Telephone: \n";
@@ -925,31 +912,32 @@ if (!defined("PARENT_INCLUDED")) {
 			echo "</div>\n";
 		}
 		if ($total_pages > 1) {
-			echo "<br />\n";
-			echo "<div style=\"text-align: right\">\n";
-			echo "<form action=\"".ENTRADA_URL."/".$MODULE."\" method=\"get\" id=\"pageSelector\" style=\"display: inline\">\n";
-			echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
+			echo "<div class=\"row-fluid\">\n";
+			echo "<div class=\"pull-right ps-vertical-margins\">\n";
+			echo "<form action=\"".ENTRADA_URL."/".$MODULE."\" method=\"get\" id=\"pageSelector\" class=\"ps-pagination-form\">\n";
+			echo "<span class=\"ps-pagination-link\">\n";
 			if ($page_previous) {
-				echo "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $page_previous))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$page_previous.".\" title=\"Back to page ".$page_previous.".\" style=\"vertical-align: middle\" /></a>\n";
+				echo "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $page_previous))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$page_previous.".\" title=\"Back to page ".$page_previous.".\" class=\"ps-pagination-image\" /></a>\n";
 			} else {
-				echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+				echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" class=\"ps-pagination-image\" title=\"\" />";
 			}
 			echo "</span>";
-			echo "<span style=\"vertical-align: middle\">\n";
+			echo "<span class=\"ps-pagination-select\">\n";
 			echo "<select name=\"pv\" onchange=\"window.location = '".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => false))."&amp;pv='+this.options[this.selectedIndex].value;\"".(($total_pages <= 1) ? " disabled=\"disabled\"" : "").">\n";
 			for ($i = 1; $i <= $total_pages; $i++) {
 				echo "<option value=\"".$i."\"".(($i == $page_current) ? " selected=\"selected\"" : "").">".(($i == $page_current) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
 			}
 			echo "</select>\n";
 			echo "</span>\n";
-			echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
+			echo "<span class=\"ps-pagination-link\">\n";
 			if ($page_current < $total_pages) {
-				echo "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $page_next))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$page_next.".\" title=\"Forward to page ".$page_next.".\" style=\"vertical-align: middle\" /></a>";
+				echo "<a href=\"".ENTRADA_URL."/".$MODULE."?".replace_query(array("pv" => $page_next))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$page_next.".\" title=\"Forward to page ".$page_next.".\" class=\"ps-pagination-image\" /></a>";
 			} else {
-				echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+				echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" class=\"ps-pagination-image\" />";
 			}
 			echo "</span>\n";
 			echo "</form>\n";
+			echo "</div>\n";
 			echo "</div>\n";
 		}
 	}

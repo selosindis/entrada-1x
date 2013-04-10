@@ -367,3 +367,81 @@ margin:0;
 padding:4px 10px 10px;
 padding:0;
 }
+
+/*** People Search (ps) ***/
+div.ps-vertical-margins {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+div.ps-media-body-margin {
+	margin-left: 15px;
+}
+div.ps-row-margin-top {
+	margin-top: 10px;
+}
+div.ps-tab-style {
+	border-bottom: 1px solid rgb(204, 204, 204);
+}
+#ps-advanced-mode, #ps-basic-mode {
+	margin-left: 20px;
+	font-size: 11px;
+	text-decoration: none;
+	width: 110px;
+	cursor: pointer;
+}
+#ps-advanced-mode > span, #ps-basic-mode > span {
+	color: #003366;
+}
+.ps-box {
+	width: 300px;
+}
+.ps-group-select, .ps-role-select {
+	width: 209px;
+}
+.ps-department-select {
+	width: 100%;
+}
+.ps-pagination-form {
+	display: inline;
+}
+.ps-pagination-link{
+	width: 20px; 
+	vertical-align: middle; 
+	margin-right: 3px;
+}
+.ps-pagination-image {
+	vertical-align: middle;
+}
+.ps-pagination-select {
+	vertical-align: middle;
+}
+.ps-search-result-title {
+	font-size: 12px; 
+	font-weight: bold; 
+	padding-left:10px;
+}
+.ps-search-result-summary {
+	font-size: 10px; 
+	color: #666666; 
+	overflow: hidden; 
+	white-space: nowrap;
+}
+.ps-search-summary-bar {
+	background-color:#F3f3f3;
+	border-top:1px #DDD solid;
+	width:100%;
+	padding:3px;
+}
+.ps-address-margin {
+	margin-left: 50px;
+	margin-top: 16px;
+}
+.ps-media-padding {
+	padding: 10px;
+}
+.ps-media-heading {
+	color: #003366;
+}
+.ps-email {
+	font-size: 10px;
+}

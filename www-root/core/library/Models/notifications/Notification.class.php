@@ -492,14 +492,16 @@ class Notification {
 			
 			$from = array("email"=>$AGENT_CONTACTS["agent-notifications"]["email"], "firstname"=> APPLICATION_NAME." Notification System","lastname"=>"");
 			$to = array("email"=>$user["email"], "firstname"=> $user["firstname"],"lastname"=> $user["lastname"]);
-			if ($mail->send($template,$to,$from,DEFAULT_LANGUAGE)) {
-				if ($this->setSentStatus(true)) {
-					application_log("success", "A [".$user["content_type"]."] notification has been sent to a user [".$user["proxy_id"]."] successfully.");
-					return true;
-				}
-			} else {
-				system_log_data("error", "Unable to send [".$user["content_type"]."] notification to user [".$user["proxy_id"]."]. PHPMailer said: ".$mail->ErrorInfo);
-			}
+			
+                        try{
+                            $mail->send($template,$to,$from,DEFAULT_LANGUAGE);
+                            if ($this->setSentStatus(true)) {
+				application_log("success", "A [".$user["content_type"]."] notification has been sent to a user [".$user["proxy_id"]."] successfully.");
+				return true;
+                            }
+                        } catch (Zend_Mail_Transport_Exception $e) {
+                            system_log_data("error", "Unable to send [".$user["content_type"]."] notification to user [".$user["proxy_id"]."]. Template Mailer said: ".$e->getMessage());
+                        }
 		}
 		
 		return false;

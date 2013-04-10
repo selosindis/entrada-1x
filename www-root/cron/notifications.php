@@ -22,7 +22,6 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-require_once("Entrada/phpmailer/class.phpmailer.php");
 
 /**
  * NOTIFICATION CONFIGURATION OPTIONS
@@ -56,23 +55,14 @@ $NOTIFICATION_REMINDERS[3]["strtotime_string"]	= "+3 days";
 
 $START_OF_TODAY		= strtotime("00:00:00");
 
-// Setup PHPMailer to do the work.
-$mail				= new PHPMailer();
-$mail->PluginDir	= ENTRADA_ABSOLUTE."/includes/classes/phpmailer/";
-$mail->SetLanguage("en", ENTRADA_ABSOLUTE."/includes/classes/phpmailer/language/");
+// Setup Zend_mail to do the work.
+$mail = new Zend_Mail("iso-8859-1");
+$mail->addHeader("X-Priority", "3");
+$mail->addHeader('Content-Transfer-Encoding', '8bit');
+$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
 
-$mail->IsSendmail();
-$mail->Sendmail		= SENDMAIL_PATH;
-
-$mail->Priority		= 3;
-$mail->CharSet		= DEFAULT_CHARSET;
-$mail->Encoding		= "8bit";
-$mail->WordWrap		= "76";
-
-$mail->From     	= $AGENT_CONTACTS["agent-notifications"]["email"];
-$mail->FromName		= $AGENT_CONTACTS["agent-notifications"]["name"];
-
-$mail->Sender		= $AGENT_CONTACTS["agent-notifications"]["email"];
+$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], $AGENT_CONTACTS["agent-notifications"]["name"]);
+$mail->setReplyTo($AGENT_CONTACTS["agent-notifications"]["email"], $AGENT_CONTACTS["agent-notifications"]["name"]);
 
 function fetch_event_resources_text($event_id = 0) {
 	global $db;
@@ -158,15 +148,11 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 			 * then they are set here if available.
 			 */
 			if (($event["event_phase"]) && (isset($AGENT_CONTACTS["phase-".strtolower($event["event_phase"])])) && (is_array($AGENT_CONTACTS["phase-".strtolower($event["event_phase"])])) && ($AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["name"]) && ($AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["email"])) {
-				$mail->From     	= $AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["email"];
-				$mail->FromName		= $AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["name"];
-				
-				$mail->Sender		= $AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["email"];
+				$mail->setFrom($AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["email"], $AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["name"]);
+				$mail->setReplyTo($AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["email"], $AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["name"]);
 			} else {
-				$mail->From     	= $AGENT_CONTACTS["agent-notifications"]["email"];
-				$mail->FromName		= $AGENT_CONTACTS["agent-notifications"]["name"];
-				
-				$mail->Sender		= $AGENT_CONTACTS["agent-notifications"]["email"];
+				$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], $AGENT_CONTACTS["agent-notifications"]["name"]);
+				$mail->setReplyTo($AGENT_CONTACTS["agent-notifications"]["email"], $AGENT_CONTACTS["agent-notifications"]["name"]);
 			}
 			
 			$query			= "	SELECT a.`proxy_id`, b.`firstname`, b.`lastname`, b.`email`
@@ -250,18 +236,18 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 								ENTRADA_URL."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/images"
 							);
 				
-				$mail->Subject	= str_replace(array("%EVENT_DATE%", "%SUBJECT_SUFFIX%"), array(date("Y-m-d", $event["event_start"]), (($notice["subject_suffix"] != "") ? " ".$notice["subject_suffix"] : "")), $NOTIFICATION_MESSAGE["subject"]);
-
-				$mail->AltBody	= str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]);
-				$mail->Body		= str_replace($search, $replace, $NOTIFICATION_MESSAGE["htmlbody"]);
+				
+                                $mail->setSubject(str_replace(array("%EVENT_DATE%", "%SUBJECT_SUFFIX%"), array(date("Y-m-d", $event["event_start"]), (($notice["subject_suffix"] != "") ? " ".$notice["subject_suffix"] : "")), $NOTIFICATION_MESSAGE["subject"]));
+                                $mail->setBodyText(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]));
+                                $mail->setBodyHtml(str_replace($search, $replace, $NOTIFICATION_MESSAGE["htmlbody"]));
 
 // FOR TESTING:	$primary_contact["email"] = "simpson@qmed.ca";
 //$primary_contact["email"] = "simpson@qmed.ca";
 				if (in_array($primary_contact["email"], $NOTIFICATION_BLACKLIST)) {
 					$to_address_is_set	= false;
 				} else {
-					$mail->AddAddress($primary_contact["email"], $primary_contact["firstname"]." ".$primary_contact["lastname"]);
-					
+                                        $mail->addTo($primary_contact["email"], $primary_contact["firstname"]." ".$primary_contact["lastname"]);
+                                        				
 					$to_address_is_set	= true;
 				}
 	
@@ -271,28 +257,28 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 //$cc_contact["email"] = "simpson@qmed.ca";
 						if (!in_array($cc_contact["email"], $NOTIFICATION_BLACKLIST)) {
 							if (!$to_address_is_set) {
-								$mail->AddAddress($cc_contact["email"], $cc_contact["firstname"]." ".$cc_contact["lastname"]);
+								$mail->addTo($cc_contact["email"], $cc_contact["firstname"]." ".$cc_contact["lastname"]);
 								
 								$to_address_is_set = true;
 							} else {
-								$mail->AddCC($cc_contact["email"], $cc_contact["firstname"]." ".$cc_contact["lastname"]);
+								$mail->addCc($cc_contact["email"], $cc_contact["firstname"]." ".$cc_contact["lastname"]);
 							}
 						}
 					}
 				}
 				
 				if ($to_address_is_set) {
-					if ($mail->Send()) {
-						application_log("reminder", "SUCCESS: Sent [".$notice["subject_suffix"]."] reminder to event_id [".$event["event_id"]."] contacts [".$primary_contact["firstname"]." ".$primary_contact["lastname"].((count($cc_contacts_names)) ? ", ".implode(", ", $cc_contacts_names) : "")."].");
-					} else {
-						application_log("reminder", "FAILURE: Unable to send [".$notice["subject_suffix"]."] reminder to event_id [".$event["event_id"]."] contacts.");
-					}
+                                    try{
+                                        $mail->send();
+                                        application_log("reminder", "SUCCESS: Sent [".$notice["subject_suffix"]."] reminder to event_id [".$event["event_id"]."] contacts [".$primary_contact["firstname"]." ".$primary_contact["lastname"].((count($cc_contacts_names)) ? ", ".implode(", ", $cc_contacts_names) : "")."].");
+                                    } catch (Zend_Mail_Transport_Exception $e) {
+                                        application_log("reminder", "FAILURE: Unable to send [".$notice["subject_suffix"]."] reminder to event_id [".$event["event_id"]."] contacts.");
+                                    }
 				} else {
 					application_log("reminder", "SKIPPED: Did not send [".$notice["subject_suffix"]."] reminder to event_id [".$event["event_id"]."] contacts.");
 				}
 	
-				$mail->ClearAllRecipients();
-				$mail->ClearAttachments(); 
+				$mail->clearRecipients();
 			}
 		}
 	}

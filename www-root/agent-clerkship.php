@@ -93,7 +93,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			padding:	0px;
 		}
 		</style>
-
+                <script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
 		<script type="text/javascript">
 		function submitCorrection() {
 			var formData = jQuery("#correction-form").serialize();
@@ -149,39 +149,28 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			$message .= "-------------------------------------------------------\n";
 			$message .= clean_input($_SERVER["HTTP_USER_AGENT"], array("trim", "emailcontent"))."\n\n";
 			$message .= "=======================================================";
+                        
+			$mail = new Zend_Mail("iso-8859-1");
+                        
+			$mail->addHeader("X-Priority", "3");
+			$mail->addHeader('Content-Transfer-Encoding', '8bit');
+			$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+			$mail->addHeader("X-Section", "Electives Approval");
 
-			$mail = new phpmailer();
-			$mail->PluginDir		= ENTRADA_ABSOLUTE."/includes/classes/phpmailer/";
-			$mail->SetLanguage("en", ENTRADA_ABSOLUTE."/includes/classes/phpmailer/language/");
+			$mail->addTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
+			$mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@post.queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+			$mail->setSubject("Clerkship Schedule Correction - ".APPLICATION_NAME);
+			$mail->setReplyTo(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+			$mail->setBodyText($message);
 
-			$mail->IsSendmail();
-			$mail->Sendmail		= SENDMAIL_PATH;
-
-			$mail->Priority		= 3;
-			$mail->CharSet		= "iso-8859-1";
-			$mail->Encoding		= "8bit";
-			$mail->WordWrap		= 76;
-
-			$mail->From     	= (($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@post.queensu.ca");
-			$mail->FromName		= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"];
-			$mail->Sender		= $mail->From;
-			$mail->AddReplyTo($mail->From, $mail->FromName);
-
-			$mail->AddCustomHeader("X-Originating-IP: ".$_SERVER["REMOTE_ADDR"]);
-			$mail->AddCustomHeader("X-Section: Clerkship Schedule Agent");
-
-			$mail->Subject	= "Clerkship Schedule Correction - ".APPLICATION_NAME;
-			$mail->Body		= $message;
-			$mail->ClearAddresses();
-			$mail->AddAddress($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
-			if($mail->Send()) {
+			try{
+                                $mail->send();
 				$SUCCESS++;
 				$SUCCESSSTR[]	= "Thank-you for contacting us. If we have questions regarding your schedule correction we will contact you and let you know.";
-			} else {
+			} catch (Zend_Mail_Transport_Exception $e) {
 				$ERROR++;
 				$ERRORSTR[]	= "We apologize however, we are unable to submit your clerkship schedule update request at this time.<br /><br />The MEdTech Unit has been informed of this, please try again later.";
-
-				application_log("error", "Unable to send clerkship schedule update with the correction agent. PHPMailer said: ".$mail->ErrorInfo);
+				application_log("error", "Unable to send clerkship schedule update with the correction agent. Zend_mail said: ".$e->getMessage());
 			}
 			?>
 			<div id="wizard-body" style="position: absolute; top: 35px; left: 0px; width: 452px; height: 440px; padding-left: 15px; overflow: auto">

@@ -146,8 +146,21 @@ switch($STEP) {
 											$message .= "Requested By:\t".$_SERVER["REMOTE_ADDR"]."\n";
 											$message .= "Requested At:\t".date("r", time())."\n";
 
-											@mail($EMAIL_ADDRESS, "Password Reset Outcome - ".APPLICATION_NAME." Authentication System", $message, "From: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">\nReply-To: \"".$AGENT_CONTACTS["administrator"]["name"]."\" <".$AGENT_CONTACTS["administrator"]["email"].">");
+											$mail = new Zend_Mail("iso-8859-1");
+                        
+											$mail->addHeader("X-Priority", "3");
+											$mail->addHeader('Content-Transfer-Encoding', '8bit');
+											$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+											$mail->addHeader("X-Section", "Password Reset Outcome");
 
+											$mail->addTo($EMAIL_ADDRESS, $FIRSTNAME." ".$LASTNAME);
+											$mail->setFrom($AGENT_CONTACTS["administrator"]["email"], $AGENT_CONTACTS["administrator"]["name"]);
+											$mail->setSubject("Password Reset Outcome - ".APPLICATION_NAME." Authentication System");
+											$mail->setReplyTo($AGENT_CONTACTS["administrator"]["email"], $AGENT_CONTACTS["administrator"]["name"]);
+											$mail->setBodyText($message);
+
+											$mail->send();
+                                                                                        
 											$_SESSION = array();
 											@session_destroy();
 

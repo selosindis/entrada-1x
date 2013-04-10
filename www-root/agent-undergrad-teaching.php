@@ -35,7 +35,6 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-require_once("Entrada/phpmailer/class.phpmailer.php");
 
 ob_start("on_checkout");
 
@@ -175,39 +174,28 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			$message .= ((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input($extracted_information["url"], array("trim", "emailcontent"))."\n\n";
 			$message .= "=======================================================";
 
-			$mail = new phpmailer();
-			$mail->PluginDir		= ENTRADA_ABSOLUTE."/includes/classes/phpmailer/";
-			$mail->SetLanguage("en", ENTRADA_ABSOLUTE."/includes/classes/phpmailer/language/");
+                        $mail = new Zend_Mail("iso-8859-1");
 
-			$mail->IsSendmail();
-			$mail->Sendmail		= SENDMAIL_PATH;
+                        $mail->addHeader("X-Priority", "3");
+                        $mail->addHeader('Content-Transfer-Encoding', '8bit');
+                        $mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+                        $mail->addHeader("X-Section", "Feedback System");
 
-			$mail->Priority		= 3;
-			$mail->CharSet		= "iso-8859-1";
-			$mail->Encoding		= "8bit";
-			$mail->WordWrap		= 76;
+                        $mail->addTo($AGENT_CONTACTS["annualreport-support"]["email"], $AGENT_CONTACTS["annualreport-support"]["name"]);
+                        $mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : $AGENT_CONTACTS["administrator"]["email"], $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+                        $mail->setSubject("Report Missing /Incorrect Teaching Submission - ".APPLICATION_NAME);
+                        $mail->setReplyTo($mail->getFrom(), $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+                        $mail->setBodyText($message);
 
-			$mail->From     	= (($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : $AGENT_CONTACTS["administrator"]["email"]);
-			$mail->FromName		= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"];
-			$mail->Sender		= $mail->From;
-			$mail->AddReplyTo($mail->From, $mail->FromName);
-
-			$mail->AddCustomHeader("X-Originating-IP: ".$_SERVER["REMOTE_ADDR"]);
-			$mail->AddCustomHeader("X-Section: Feedback System");
-
-			$mail->Subject	= "Report Missing /Incorrect Teaching Submission - ".APPLICATION_NAME;
-			$mail->Body		= $message;
-			$mail->ClearAddresses();
-			$mail->AddAddress($AGENT_CONTACTS["annualreport-support"]["email"], $AGENT_CONTACTS["annualreport-support"]["name"]);
-			if($mail->Send()) {
-				$SUCCESS++;
-				$SUCCESSSTR[]	= "Thank-you for informing us of the missing / incorrect undergraduate teaching. If we have questions regarding any of the information you provided, we will get in touch with you via e-mail, otherwise the teaching will be adjusted within two business days.";
-			} else {
-				$ERROR++;
-				$ERRORSTR[]	= "We apologize however, we are unable to submit your feedback at this time due to a problem with the mail server.<br /><br />The system administrator has been informed of this error, please try again later.";
-
-				application_log("error", "Unable to report missing / incorrect undergraduate teaching with the feedback agent. PHPMailer said: ".$mail->ErrorInfo);
-			}
+                        try{
+                                $mail->send();
+                                $SUCCESS++;
+                                $SUCCESSSTR[] = "Thank-you for informing us of the missing / incorrect undergraduate teaching. If we have questions regarding any of the information you provided, we will get in touch with you via e-mail, otherwise the teaching will be adjusted within two business days.";
+                        } catch (Zend_Mail_Transport_Exception $e) {
+                                $ERROR++;
+                                $ERRORSTR[] = "We apologize however, we are unable to submit your feedback at this time due to a problem with the mail server.<br /><br />The system administrator has been informed of this error, please try again later.";
+                                application_log("error", "Unable to report missing / incorrect undergraduate teaching with the feedback agent. Zend_mail said: ".$e->getMessage());
+                        }
 			?>
 			<div id="wizard-body" style="position: absolute; top: 35px; left: 0px; width: 452px; height: 440px; padding-left: 15px; overflow: auto">
 				<?php

@@ -22,8 +22,6 @@
  *
 */
 
-require_once("Entrada/phpmailer/class.phpmailer.php");
-
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN_ELECTIVES"))) {
 	exit;
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {

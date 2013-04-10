@@ -13525,15 +13525,11 @@ function notify_regional_education($action, $event_id) {
 					$sent = true;
 					try {
 						$mail->send();
+                                                application_log("success", "An event change notification has been sent to regional education to notify them of the changes to the event [".$event_info["event_id"]."] which will affect the apartment schedule.");
+						return true;
 					}
 					catch (Exception $e) {
-						$sent = false;
-					}
-					if($sent) {
-						application_log("success", "An event change notification has been sent to regional education to notify them of the changes to the event [".$event_info["event_id"]."] which will affect the apartment schedule.");
-						return true;
-					} else {
-						system_log_data("error", "Unable to send ".$action." notification to regional education. PHPMailer said: ".$mail->ErrorInfo);
+                                                system_log_data("error", "Unable to send ".$action." notification to regional education. Zend_mail said: ".$e->getMessage());
 
 						return false;
 					}

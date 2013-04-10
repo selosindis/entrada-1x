@@ -69,8 +69,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 		$previous_grad_year	= $grad_year;
 	}
 	
-	require_once("Entrada/phpmailer/class.phpmailer.php");
-	
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/clerkship?".replace_query(array("section" => "add")), "title" => "Adding Elective");
 
 	echo "<h1>Adding Elective</h1>\n";
@@ -411,8 +409,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								$CONTACTS["etype_id"]				= $value;
 								
 								if ($db->AutoExecute(CLERKSHIP_DATABASE.".event_contacts", $CONTACTS, "INSERT")) {
-									$mail 				= new phpmailer();
+									$mail = new Zend_Mail("iso-8859-1");
 									$international_msg	= "";
+                                                                        
 									if ($PROCESSED["event_status"] == "published") {
 										
 										$student_email 		= get_account_data("email", $value);
@@ -434,39 +433,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 											$message .= "The clerk's name is: " . $student_name ." and they will begin this elective on " . date("Y-m-d", $PROCESSED["start_date"])." and will finish on " . date("Y-m-d", $PROCESSED["end_date"])."\n\n";
 											$message .= "Contact:\t\t".$AGENT_CONTACTS["agent-clerkship"]["email"]." if you have any questions.\n\n";
 											$message .= "=======================================================";
+
+											$mail->addHeader("X-Priority", "3");
+											$mail->addHeader('Content-Transfer-Encoding', '8bit');
+											$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+											$mail->addHeader("X-Section", "Electives Approval");
+                                                                                        
+											$mail->addTo($AGENT_CONTACTS["agent-clerkship-international"]["email"], $AGENT_CONTACTS["agent-clerkship-international"]["name"]);
+											$mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+											$mail->setSubject("International Electives Approval - ".APPLICATION_NAME);
+											$mail->setReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
+											$mail->setBodyText($message);
 											
-											$mail->PluginDir		= ENTRADA_ABSOLUTE."/includes/classes/phpmailer/";
-											$mail->SetLanguage("en", ENTRADA_ABSOLUTE."/includes/classes/phpmailer/language/");
-								
-											$mail->IsSendmail();
-											$mail->Sendmail		= SENDMAIL_PATH;
-								
-											$mail->Priority		= 3;
-											$mail->CharSet		= "iso-8859-1";
-											$mail->Encoding		= "8bit";
-											$mail->WordWrap		= 76;
-								
-											$mail->From     	= (($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca");
-											$mail->FromName		= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"];
-											$mail->Sender		= $mail->From;
-											$mail->AddReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
-								
-											$mail->AddCustomHeader("X-Originating-IP: ".$_SERVER["REMOTE_ADDR"]);
-											$mail->AddCustomHeader("X-Section: Electives Approval");
-								
-											$mail->Subject	= "International Electives Approval - ".APPLICATION_NAME;
-											$mail->Body		= $message;
-											
-											$mail->AddAddress($AGENT_CONTACTS["agent-clerkship-international"]["email"], $AGENT_CONTACTS["agent-clerkship-international"]["name"]);
-											
-											if (!$mail->Send()) {
-												$BIGERROR++;
-												$ERRORSTR[] = "There was a problem sending the approval email to the international rep for this elective. The MEdTech Unit was informed of this error; please try again later.";
+											try {
+                                                                                                $mail->send();
+											} catch (Zend_Mail_Transport_Exception $e){
+                                                                                                $BIGERROR++;
+                                                                                                $ERRORSTR[] = "There was a problem sending the approval email to the international rep for this elective. The MEdTech Unit was informed of this error; please try again later.";
 							
-												application_log("error", "There was an error sending an approval email to the international clerkship admin for clerkship elective ID[".$EVENT_ID."]. Mail said: ".$mail->ErrorInfo);
+                                                                                                application_log("error", "There was an error sending an approval email to the international clerkship admin for clerkship elective ID[".$EVENT_ID."]. Mail said: ".$e->getMessage());
 											}
-											$mail->ClearAddresses();
-											$mail->ClearReplyTos();
+											
+											$mail->clearRecipients();
+											$mail->clearReplyTo();
 										}
 										
 										$message  = "Attention ".$student_name.",\n\n";
@@ -481,38 +470,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$message .= $international_msg;
 										$message .= "=======================================================";
 										
-										$mail->PluginDir		= ENTRADA_ABSOLUTE."/includes/classes/phpmailer/";
-										$mail->SetLanguage("en", ENTRADA_ABSOLUTE."/includes/classes/phpmailer/language/");
-							
-										$mail->IsSendmail();
-										$mail->Sendmail		= SENDMAIL_PATH;
-							
-										$mail->Priority		= 3;
-										$mail->CharSet		= "iso-8859-1";
-										$mail->Encoding		= "8bit";
-										$mail->WordWrap		= 76;
-							
-										$mail->From     	= (($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca");
-										$mail->FromName		= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"];
-										$mail->Sender		= $mail->From;
-										$mail->AddReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
-							
-										$mail->AddCustomHeader("X-Originating-IP: ".$_SERVER["REMOTE_ADDR"]);
-										$mail->AddCustomHeader("X-Section: Electives Approval");
-							
-										$mail->Subject	= "Electives Approval - ".APPLICATION_NAME;
-										$mail->Body		= $message;
-										
-										$mail->AddAddress($student_email, $student_name);
-										
-										if (!$mail->Send()) {
+										$mail->addHeader("X-Priority", "3");
+										$mail->addHeader('Content-Transfer-Encoding', '8bit');
+										$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+										$mail->addHeader("X-Section", "Electives Approval");
+                                                                                        
+										$mail->addTo($student_email, $student_name);
+										$mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+										$mail->setSubject("Electives Approval - ".APPLICATION_NAME);
+										$mail->setReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
+										$mail->setBodyText($message);
+											
+										try {
+                                                                                        $mail->send();
+                                                                                } catch (Zend_Mail_Transport_Exception $e){
 											$BIGERROR++;
 											$ERRORSTR[] = "There was a problem sending the approval email to the student for this elective. The MEdTech Unit was informed of this error; please try again later.";
 						
-											application_log("error", "There was an error sending an approval email to the student for clerkship elective ID[".$EVENT_ID."]. Mail said: ".$mail->ErrorInfo);
+											application_log("error", "There was an error sending an approval email to the student for clerkship elective ID[".$EVENT_ID."]. Mail said: ".$e->getMessage());
 										}
-										$mail->ClearAddresses();
-										$mail->ClearReplyTos();
+                                                                                
+										$mail->clearRecipients();
+										$mail->clearReplyTo();
 										
 										$message  = "Attention ".(isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "")." ".(isset($PROCESSED["preceptor_first_name"]) && $PROCESSED["preceptor_first_name"] != "" ? $PROCESSED["preceptor_first_name"] . " " : "") . $PROCESSED["preceptor_last_name"].",\n\n";
 										$message .= "A Clerkship elective has been approved by Queen's University please review this:\n";
@@ -528,38 +507,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$message .= "Please fill out this evaluation form upon the clerk's completion of the elective:\n\n".$CLERKSHIP_EVALUATION_FORM."\n\n";
 										$message .= "=======================================================";
 										
-										$mail->PluginDir		= ENTRADA_ABSOLUTE."/includes/classes/phpmailer/";
-										$mail->SetLanguage("en", ENTRADA_ABSOLUTE."/includes/classes/phpmailer/language/");
-							
-										$mail->IsSendmail();
-										$mail->Sendmail		= SENDMAIL_PATH;
-							
-										$mail->Priority		= 3;
-										$mail->CharSet		= "iso-8859-1";
-										$mail->Encoding		= "8bit";
-										$mail->WordWrap		= 76;
-							
-										$mail->From     	= (($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca");
-										$mail->FromName		= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"];
-										$mail->Sender		= $mail->From;
-										$mail->AddReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
-							
-										$mail->AddCustomHeader("X-Originating-IP: ".$_SERVER["REMOTE_ADDR"]);
-										$mail->AddCustomHeader("X-Section: Electives Approval");
-							
-										$mail->Subject	= "Electives Approval - ".APPLICATION_NAME;
-										$mail->Body		= $message;
-										
-										$mail->AddAddress($PROCESSED["email"], (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").$PROCESSED["preceptor_first_name"] . " " . $PROCESSED["preceptor_last_name"]);
-										
-										if (!$mail->Send()) {
+										$mail->addHeader("X-Priority", "3");
+										$mail->addHeader('Content-Transfer-Encoding', '8bit');
+										$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
+										$mail->addHeader("X-Section", "Electives Approval");
+                                                                                        
+										$mail->addTo($PROCESSED["email"], (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").$PROCESSED["preceptor_first_name"] . " " . $PROCESSED["preceptor_last_name"]);
+										$mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+										$mail->setSubject("Electives Approval - ".APPLICATION_NAME);
+										$mail->setReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
+										$mail->setBodyText($message);
+                                                                                
+										try {
+                                                                                        $mail->send();
+                                                                                } catch (Zend_Mail_Transport_Exception $e){
 											$BIGERROR++;
 											$ERRORSTR[] = "There was a problem sending the approval email to the preceptor for this elective. The MEdTech Unit was informed of this error; please try again later.";
 						
-											application_log("error", "There was an error sending an approval email to the preceptor of clerkship elective ID[".$EVENT_ID."]. Mail said: ".$mail->ErrorInfo);
+											application_log("error", "There was an error sending an approval email to the preceptor of clerkship elective ID[".$EVENT_ID."]. Mail said: ".$e->getMessage());
 										}
-										$mail->ClearAddresses();
-										$mail->ClearReplyTos();
+                                                                                
+										$mail->clearRecipients();
+										$mail->clearReplyTo();
 										
 										if (count($NOTICESTR) == 1 && $msg == "") {
 											$msg	= "You have approved this elective for ".$NOTICESTR[0].".  An email will be sent to this student informing them of this.<br /><br /> You will now be redirected to the clerkship index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";

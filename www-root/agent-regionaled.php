@@ -36,8 +36,6 @@
  */
 require_once("init.inc.php");
 
-require_once("Entrada/phpmailer/class.phpmailer.php");
-
 ob_start("on_checkout");
 
 if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -152,40 +150,28 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			$message .= clean_input($_SERVER["HTTP_USER_AGENT"], array("trim", "emailcontent"))."\n\n";
 			$message .= "=======================================================";
 
-			$mail = new phpmailer();
-			$mail->PluginDir		= ENTRADA_ABSOLUTE."/includes/classes/phpmailer/";
-			$mail->SetLanguage("en", ENTRADA_ABSOLUTE."/includes/classes/phpmailer/language/");
+                        $mail = new Zend_Mail("iso-8859-1");
+                       
+                        $mail->addHeader("X-Priority", "3");
+                        $mail->addHeader('Content-Transfer-Encoding', '8bit');
+                        $mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
 
-			$mail->IsSendmail();
-			$mail->Sendmail		= SENDMAIL_PATH;
+                        $mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@post.queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+                        $mail->setReplyTo(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@post.queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+                        $mail->setSubject("Accommodation Issue Report - ".APPLICATION_NAME);
+                        $mail->setBodyText($message);
+                        $mail->clearRecipients();
+                        $mail->addTo('ryan.warner@queensu.ca');
 
-			$mail->Priority		= 3;
-			$mail->CharSet		= "iso-8859-1";
-			$mail->Encoding		= "8bit";
-			$mail->WordWrap		= 76;
-
-			$mail->From     	= (($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@post.queensu.ca");
-			$mail->FromName		= $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"];
-			$mail->Sender		= $mail->From;
-			$mail->AddReplyTo($mail->From, $mail->FromName);
-
-			$mail->AddCustomHeader("X-Originating-IP: ".$_SERVER["REMOTE_ADDR"]);
-			$mail->AddCustomHeader("X-Section: Accommodation Agent");
-
-			$mail->Subject	= "Accommodation Issue Report - ".APPLICATION_NAME;
-			$mail->Body		= $message;
-			$mail->ClearAddresses();
-			//$mail->AddAddress($AGENT_CONTACTS["agent-regionaled"]["email"], $AGENT_CONTACTS["agent-regionaled"]["name"]);
-			$mail->AddAddress('ryan.warner@queensu.ca');
-			if($mail->Send()) {
-				$SUCCESS++;
-				$SUCCESSSTR[]	= "Thank-you for contacting us. If we have questions regarding your issue we will contact you and let you know.";
-			} else {
-				$ERROR++;
-				$ERRORSTR[]	= "We apologize however, we are unable to submit your accommodation issue report at this time.<br /><br />The system administrator has been informed of this issue, please try again later.";
-
-				application_log("error", "Unable to send accommodation issue report with the agent. PHPMailer said: ".$mail->ErrorInfo);
-			}
+                        try{
+                            $mail->send();
+                            $SUCCESS++;
+                            $SUCCESSSTR[] = "Thank-you for contacting us. If we have questions regarding your issue we will contact you and let you know.";
+                        } catch (Zend_Mail_Transport_Exception $e) {
+                            $ERROR++;
+                            $ERRORSTR[] = "We apologize however, we are unable to submit your accommodation issue report at this time.<br /><br />The system administrator has been informed of this issue, please try again later.";
+                            application_log("error", "Unable to send accommodation issue report with the agent. Zend_mail said: ".$e->getMessage());
+                        }                        
 			?>
 			<div id="wizard-body" style="position: absolute; top: 35px; left: 0px; width: 452px; height: 440px; padding-left: 15px; overflow: auto">
 				<?php

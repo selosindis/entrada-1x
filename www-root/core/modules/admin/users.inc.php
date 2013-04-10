@@ -39,10 +39,10 @@ if (!defined("PARENT_INCLUDED")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	define("IN_USERS", true);
-?>
-<link href="<?php echo ENTRADA_RELATIVE; ?>/css/jquery/jquery.multiselect.css" rel="stylesheet" type="text/css" media="all" />
-<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery.multiselect.min.js"></script>
-<?php
+
+	$HEAD[] = "<link href=\"".ENTRADA_RELATIVE."/css/jquery/jquery.multiselect.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.multiselect.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users", "title" => $MODULES[strtolower($MODULE)]["title"]);
 
 	if (($router) && ($router->initRoute())) {
@@ -73,6 +73,6 @@ function add_manage_user_sidebar(){
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/users/metadata\">Manage User Meta Data</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/mspr\">Manage MSPRs</a></li>\n";
 	$sidebar_html .= "</ul>";
-	
+
 	new_sidebar_item("User Management", $sidebar_html, "user-management-nav", "open");
 }

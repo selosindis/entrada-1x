@@ -437,11 +437,6 @@ if (!defined("PARENT_INCLUDED")) {
 		$page_previous	= (($page_current > 1) ? ($page_current - 1) : false);
 		$page_next		= (($page_current < $total_pages) ? ($page_current + 1) : false);
 	}
-
-	$HEAD[] = "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-	$HEAD[] = "<style type=\"text/css\">.dynamic-tab-pane-control .tab-page { height:auto; }</style>\n";
-
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/selectchained.js\"></script>\n";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
 
@@ -506,9 +501,14 @@ if (!defined("PARENT_INCLUDED")) {
 		echo display_notice();	
 	}
 	?>
-	<div class="tab-pane" id="people-search-tabs">
-		<div class="tab-page">
-			<h3 class="tab">People Search</h3>
+	<div class="tabbable" id="people-search-tabs">
+		<ul class="nav nav-tabs">
+			<li class="active"><a href="#people_search_tab" data-toggle="tab">People Search</a></li>
+			<li><a href="#browse_group_tab" data-toggle="tab">Browse People</a></li>
+			<li><a href="#browse_dept_tab" data-toggle="tab">Browse Departments</a></li>
+		</ul>
+		<div class="tab-content" style="border-bottom: 1px solid rgb(204, 204, 204);">
+		<div class="tab-pane active" id="people_search_tab">
 			<style type="text/css">
 			#advanced_mode, #basic_mode {
 				margin-left: 20px;
@@ -545,208 +545,189 @@ if (!defined("PARENT_INCLUDED")) {
 			}
 			</script>
 			<form id="search_form" action="<?php echo ENTRADA_URL; ?>/people" method="get">
-			<input type="hidden" name="pv" id="search_pv" value="<?php echo ($page_current ? $page_current : 1);?>" />
-			<input type="hidden" name="pp" id="search_pp" value="<?php echo $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]; ?>" />
-			<input type="hidden" name="type" value="search" />
-			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Search For User">
-			<colgroup>
-				<col style="width: 3%" />
-				<col style="width: 20%" />
-				<col style="width: 77%" />
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Search" />
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td>&nbsp;</td>
-					<td style="vertical-align: top"><label for="q" class="form-required">People Search:</label></td>
-					<td>
+				<input type="hidden" name="pv" id="search_pv" value="<?php echo ($page_current ? $page_current : 1);?>" />
+				<input type="hidden" name="pp" id="search_pp" value="<?php echo $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]; ?>" />
+				<input type="hidden" name="type" value="search" />
+				<div class="row-fluid">
+					<div class="span2">
+						<label for="q" class="form-required">People Search:</label>
+					</div>
+					<div class="span6">
 						<input type="text" id="q" name="q" value="<?php echo html_encode($plaintext_query); ?>" style="width: 300px" />
+					</div>
+					<div class="span4">
+						<span class="pull-right">
+							<span id="advanced_mode" onclick="toggle_search('basic')" style="display: none">
+								<i class="icon-arrow-up"></i> <span>Advanced Search</span>
+							</span>
+							<span id="basic_mode" onclick="toggle_search('advanced')">
+								<i class="icon-arrow-down"></i> <span>Advanced Search</span>
+							</span>
+						</span>
+					</div>
+				</div>
+				<div class="row-fluid">
+					<div class="span11 content-small" style="margin-top: 10px">
+						<strong>Note:</strong> You can search for name, username, e-mail address or staff / student number.
+					</div>
+				</div>
+				
+				<div id="advanced_search" style="display: none;">
+					<input type="hidden" name="search_groups" id="search_groups" value="<?php echo (isset($_GET["search_groups"]) ? $_GET["search_groups"] : "faculty,resident,staff"); ?>" />
+					<input type="hidden" name="search_organisations" id="search_organisations" value="<?php echo (isset($_GET["search_organisations"]) ? $_GET["search_organisations"] : $ORGANISATION_ID); ?>" />
+					<input type="hidden" name="search_classes" id="search_classes" value="<?php echo (isset($_GET["search_classes"]) ? $_GET["search_classes"] : (date("Y", time()) + $year_offset).",".(date("Y", time()) + $year_offset + 1).",".(date("Y", time()) + $year_offset + 2).",".(date("Y", time()) + $year_offset + 3)); ?>" />				
 						
-						<span id="advanced_mode" onclick="toggle_search('basic')" style="display: none">
-							<img src="<?php echo ENTRADA_URL; ?>/images/arrow-asc.gif" width="9" height="7" alt="Advanced Search" /> <span>Advanced Search</span>
-						</span>
-						<span id="basic_mode" onclick="toggle_search('advanced')">
-							<img style="margin-top: 5px" src="<?php echo ENTRADA_URL; ?>/images/arrow-desc.gif" width="9" height="7" alt="Basic Search" /> <span>Advanced Search</span>
-						</span>
-						<div class="content-small" style="margin-top: 10px">
-							<strong>Note:</strong> You can search for name, username, e-mail address or staff / student number.
-						</div>
-					</td>
-				</tr>
-			</tbody>
-			<tbody id="advanced_search" style="display: none">
-				<tr>
-					<td>&nbsp;</td>
-					<td style="padding-top: 15px; vertical-align: top;"><label class="form-required">Groups to search:</label></td>
-					<td style="padding-top: 15px;">
-						<script type="text/javascript">
-							function addSomething(which) {
-								$('search_'+which).value = "0";
-								$$('.search_'+which).each( function (e) {
-									if (e.checked) {
-										if ($('search_'+which).value != '0') {
-											$('search_'+which).value += ","+e.value;
-										} else {
-											$('search_'+which).value = e.value;
+					<div class="row-fluid" style="margin-top: 10px">
+						<div class="span3">
+							<label class="form-required">Groups to search:</label>
+							<script type="text/javascript">
+								function addSomething(which) {
+									$('search_'+which).value = "0";
+									$$('.search_'+which).each( function (e) {
+										if (e.checked) {
+											if ($('search_'+which).value != '0') {
+												$('search_'+which).value += ","+e.value;
+											} else {
+												$('search_'+which).value = e.value;
+											}
 										}
-									}
-								});
-							}
-							function addClass() {
-								addSomething('classes');
-							}
-							function addGroup() {
-								addSomething('groups');
-							}
-							function addOrganisation() {
-								addSomething('organisations');
-							}
-						</script>
-						<div>
-							<input type="hidden" name="search_groups" id="search_groups" value="<?php echo (isset($_GET["search_groups"]) ? $_GET["search_groups"] : "faculty,resident,staff"); ?>" />
-							<input type="hidden" name="search_organisations" id="search_organisations" value="<?php echo (isset($_GET["search_organisations"]) ? $_GET["search_organisations"] : $ORGANISATION_ID); ?>" />
-							<input type="hidden" name="search_classes" id="search_classes" value="<?php echo (isset($_GET["search_classes"]) ? $_GET["search_classes"] : (date("Y", time()) + $year_offset).",".(date("Y", time()) + $year_offset + 1).",".(date("Y", time()) + $year_offset + 2).",".(date("Y", time()) + $year_offset + 3)); ?>" />
-
-							<table style="width: 350px; padding-left: 50px;">
-								<tr>
-									<td><input id="alumni" type="checkbox" <?php echo (isset($_REQUEST["search_alumni"]) && $_REQUEST["search_alumni"] ? "checked=\"checked\" " : ""); ?>value="1" name="search_alumni" /><label class="content-small" for="alumni"> Alumni</label></td>
-									<td><input class="search_groups" id="faculty" type="checkbox" <?php echo ((isset($_REQUEST["search_groups"]) && is_array(explode(',', $_REQUEST["search_groups"])) && array_search("faculty", (explode(',', $_REQUEST["search_groups"]))) !== false) || (isset($_REQUEST["search_groups"]) && $_REQUEST["search_groups"] == "faculty") || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="faculty" onclick="addGroup()" /><label class="content-small" for="faculty"> Faculty</label></td>
-								</tr>
-								<tr>
-									<td><input class="search_groups" id="resident" type="checkbox" <?php echo ((isset($_REQUEST["search_groups"]) && is_array(explode(',', $_REQUEST["search_groups"])) && array_search("resident", (explode(',', $_REQUEST["search_groups"]))) !== false) || (isset($_REQUEST["search_groups"]) && $_REQUEST["search_groups"] == "resident") || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="resident" onclick="addGroup()" /><label class="content-small" for="resident"> Residents</label></td>
-									<td><input class="search_groups" id="staff" type="checkbox" <?php echo ((isset($_REQUEST["search_groups"]) && is_array(explode(',', $_REQUEST["search_groups"])) && array_search("staff", (explode(',', $_REQUEST["search_groups"]))) !== false) || (isset($_REQUEST["search_groups"]) && $_REQUEST["search_groups"] == "staff") || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="staff" onclick="addGroup()" /><label class="content-small" for="staff"> Staff</label></td>
-								</tr>
-								<tr>
-									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset); ?>"> Class of <?php echo (date("Y", time()) + $year_offset); ?></label></td>
-									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 1); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 1), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 1)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 1); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset + 1); ?>"> Class of <?php echo (date("Y", time()) + $year_offset + 1); ?></label></td>
-								</tr>
-								<tr>
-									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 2); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 2), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 2)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 2); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset + 2); ?>"> Class of <?php echo (date("Y", time()) + $year_offset + 2); ?></label></td>
-									<td><input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 3); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 3), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 3)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 3); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset + 3); ?>"> Class of <?php echo (date("Y", time()) + $year_offset + 3); ?></label></td>
-								</tr>
-							</table>
+									});
+								}
+								function addClass() {
+									addSomething('classes');
+								}
+								function addGroup() {
+									addSomething('groups');
+								}
+								function addOrganisation() {
+									addSomething('organisations');
+								}
+							</script>
+						</div>						
+						<div class="span2">
+							<div class="row-fluid">
+								<input id="alumni" type="checkbox" <?php echo (isset($_REQUEST["search_alumni"]) && $_REQUEST["search_alumni"] ? "checked=\"checked\" " : ""); ?>value="1" name="search_alumni" /><label class="content-small" for="alumni"> Alumni</label>
+							</div>
+							<div class="row-fluid">
+								<input class="search_groups" id="faculty" type="checkbox" <?php echo ((isset($_REQUEST["search_groups"]) && is_array(explode(',', $_REQUEST["search_groups"])) && array_search("faculty", (explode(',', $_REQUEST["search_groups"]))) !== false) || (isset($_REQUEST["search_groups"]) && $_REQUEST["search_groups"] == "faculty") || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="faculty" onclick="addGroup()" /><label class="content-small" for="faculty"> Faculty</label>
+							</div>
+							<div class="row-fluid">
+								<input class="search_groups" id="resident" type="checkbox" <?php echo ((isset($_REQUEST["search_groups"]) && is_array(explode(',', $_REQUEST["search_groups"])) && array_search("resident", (explode(',', $_REQUEST["search_groups"]))) !== false) || (isset($_REQUEST["search_groups"]) && $_REQUEST["search_groups"] == "resident") || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="resident" onclick="addGroup()" /><label class="content-small" for="resident"> Residents</label>
+							</div>
+							<div class="row-fluid">
+								<input class="search_groups" id="staff" type="checkbox" <?php echo ((isset($_REQUEST["search_groups"]) && is_array(explode(',', $_REQUEST["search_groups"])) && array_search("staff", (explode(',', $_REQUEST["search_groups"]))) !== false) || (isset($_REQUEST["search_groups"]) && $_REQUEST["search_groups"] == "staff") || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="staff" onclick="addGroup()" /><label class="content-small" for="staff"> Staff</label>
+							</div>
 						</div>
-					</td>
-				</tr>
-			</tbody>
-			</table>
+						<div class="span2">	
+							<div class="row-fluid">
+								<input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset); ?>"> Class of <?php echo (date("Y", time()) + $year_offset); ?></label>
+							</div>
+							<div class="row-fluid">
+								<input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 1); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 1), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 1)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 1); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset + 1); ?>"> Class of <?php echo (date("Y", time()) + $year_offset + 1); ?></label>
+							</div>
+							<div class="row-fluid">
+								<input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 2); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 2), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 2)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 2); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset + 2); ?>"> Class of <?php echo (date("Y", time()) + $year_offset + 2); ?></label>
+							</div>
+							<div class="row-fluid">
+								<input class="search_classes" id="class_<?php echo (date("Y", time()) + $year_offset + 3); ?>" type="checkbox" <?php echo ((isset($_REQUEST["search_classes"]) && is_array(explode(',', $_REQUEST["search_classes"])) && array_search((date("Y", time()) + $year_offset + 3), (explode(',', $_REQUEST["search_classes"]))) !== false) || (isset($_REQUEST["search_classes"]) && $_REQUEST["search_classes"] == (date("Y", time()) + $year_offset + 3)) || (!isset($_REQUEST["search_groups"]) && !isset($_REQUEST["search_classes"]) && !isset($_REQUEST["search_alumni"])) ? "checked=\"checked\" " : ""); ?>value="<?php echo (date("Y", time()) + $year_offset + 3); ?>" onclick="addClass()" /><label class="content-small" for="class_<?php echo (date("Y", time()) + $year_offset + 3); ?>"> Class of <?php echo (date("Y", time()) + $year_offset + 3); ?></label>
+							</div>
+						</div>
+					</div>
+				</div>
+				
+				<div class="row-fluid" style="margin-top: 10px">	
+					<div class="span12">
+						<i class="pull-right"><input type="submit" class="btn btn-primary" value="Search" /></i>
+					</div>
+				</div>
 			</form>
 		</div>
-		<div class="tab-page">
-			<h3 class="tab">Browse People</h3>
+		<div class="tab-pane" id="browse_group_tab">
 			<form id="browse-group_form" action="<?php echo ENTRADA_URL; ?>/people" method="get">
 			<input type="hidden" name="type" value="browse-group" />
 			<input type="hidden" name="pv" id="browse-group_pv" value="<?php echo ($page_current ? $page_current : 1);?>" />
 			<input type="hidden" name="pp" id="browse-group_pp" value="<?php echo $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]; ?>" />
-			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Browse By Groups">
-			<colgroup>
-				<col style="width: 3%" />
-				<col style="width: 25%" />
-				<col style="width: 72%" />
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Browse" />
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td>&nbsp;</td>
-					<td><label for="group" class="form-required">Browse Group:</label></td>
-					<td>
-						<select id="group" name="g" style="width: 209px"></select>
-					</td>
-				</tr>
-				<tr>
-					<td>&nbsp;</td>
-					<td><label for="role" class="form-nrequired">Browse Role:</label></td>
-					<td>
-						<select id="role" name="r" style="width: 209px"></select>
-					</td>
-				</tr>
-			</tbody>
-			</table>
+			<div class="row-fluid">
+				<div class="span2">
+					<label for="group" class="form-required">Browse Group:</label>
+
+				</div>
+				<div class="span6">
+					<select id="group" name="g" style="width: 209px"></select>
+				</div>
+			</div>
+					
+			<div class="row-fluid" style="margin-top: 10px;">
+				<div class="span2">
+					<label for="role" class="form-nrequired">Browse Role:</label>
+				</div>
+				<div class="span6">
+					<select id="role" name="r" style="width: 209px"></select>
+				</div>
+			</div>
+				
+			<div class="row-fluid" style="margin-top: 10px">	
+				<div class="span12">
+					<i class="pull-right"><input type="submit" class="btn btn-primary" value="Browse" /></i>
+				</div>
+			</div>
 			</form>
 		</div>
-		<div class="tab-page">
-			<h3 class="tab">Browse Departments</h3>
+		<div class="tab-pane" id="browse_dept_tab">
 			<form id="browse-dept_form" action="<?php echo ENTRADA_URL; ?>/people" method="get">
 			<input type="hidden" name="type" value="browse-dept" />
 			<input type="hidden" name="pv" id="browse-dept_pv" value="<?php echo ($page_current ? $page_current : 1);?>" />
 			<input type="hidden" name="pp" id="browse-dept_pp" value="<?php echo $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]; ?>" />
-			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Browse By Department">
-			<colgroup>
-				<col style="width: 3%" />
-				<col style="width: 25%" />
-				<col style="width: 72%" />
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Browse" />
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td>&nbsp;</td>
-					<td><label for="department" class="form-required">Browse Department:</label></td>
-					<td>
-						<select id="department" name="d" style="width: 95%">
-						<?php
-						$query = "	SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
-									FROM `".AUTH_DATABASE."`.`departments` AS a
-									LEFT JOIN `".AUTH_DATABASE."`.`entity_type` AS b
-									ON a.`entity_id` = b.`entity_id`
-									LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
-									ON a.`organisation_id` = c.`organisation_id`
-									WHERE a.`department_active` = '1'
-									ORDER BY c.`organisation_title` ASC, a.`department_title`";
-						$results	= $db->GetAll($query);
-						if ($results) {
-							$organisation_title = "";
+			
+			<div class="row-fluid">
+				<div class="span3">
+					<label for="department" class="form-required">Browse Department:</label>
+				</div>
+				
+				<div class="span9">
+					<select id="department" name="d" style="width: 100%">
 
-							foreach ($results as $key => $result) {
-								if ($organisation_title != $result["organisation_title"]) {
-									if ($key) {
-										echo "</optgroup>";
-									}
-									echo "<optgroup label=\"".html_encode($result["organisation_title"])."\">";
+					<?php
+					$query = "	SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`
+								FROM `".AUTH_DATABASE."`.`departments` AS a
+								LEFT JOIN `".AUTH_DATABASE."`.`entity_type` AS b
+								ON a.`entity_id` = b.`entity_id`
+								LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
+								ON a.`organisation_id` = c.`organisation_id`
+								WHERE a.`department_active` = '1'
+								ORDER BY c.`organisation_title` ASC, a.`department_title`";
+					$results	= $db->GetAll($query);
+					if ($results) {
+						$organisation_title = "";
 
-									$organisation_title = $result["organisation_title"];
+						foreach ($results as $key => $result) {
+							if ($organisation_title != $result["organisation_title"]) {
+								if ($key) {
+									echo "</optgroup>";
 								}
+								echo "<optgroup label=\"".html_encode($result["organisation_title"])."\">";
 
-								echo "<option value=\"".(int) $result["department_id"]."\"".(((isset($browse_department)) && ((int) $browse_department) && ($browse_department == $result["department_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["department_title"])."</option>\n";
+								$organisation_title = $result["organisation_title"];
 							}
-							echo "</optgroup>";
+
+							echo "<option value=\"".(int) $result["department_id"]."\"".(((isset($browse_department)) && ((int) $browse_department) && ($browse_department == $result["department_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["department_title"])."</option>\n";
 						}
-						?>
-						</select>
-					</td>
-				</tr>
-			</tbody>
-			</table>
+						echo "</optgroup>";
+					}
+					?>
+					</select>
+				</div>
+			</div>
+			
+			<div class="row-fluid" style="margin-top: 10px">	
+				<div class="span12">
+					<i class="pull-right"><input type="submit" class="btn btn-primary" value="Browse" /></i>
+				</div>
+			</div>
 			</form>
 		</div>
 	</div>
-	<script type="text/javascript">setupAllTabs(true);</script>
+	</div>
 	<?php
 	if (($search_query) || (isset($load_profile) && $load_profile)) {
 		if ($search_query) {
@@ -809,30 +790,14 @@ if (!defined("PARENT_INCLUDED")) {
 		
 		if ($results) {
 			echo "<br />\n";
-			echo "<div class=\"searchTitle\" style=\"margin: auto;\">\n";
-			echo "	<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
-			echo "	<tbody>\n";
-			echo "		<tr>\n";
-			echo "			<td style=\"font-size: 12px; font-weight: bold; padding-left:10px\">People Search Results:</td>\n";
-			echo "			<td style=\"text-align: right; font-size: 10px; color: #666666; overflow: hidden; white-space: nowrap\">".$total_rows." Result".(($total_rows != 1) ? "s" : "")." Found. Results ".($limit_parameter + 1)." - ".((($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] + $limit_parameter) <= $total_rows) ? ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] + $limit_parameter) : $total_rows)." for &quot;<strong>".$search_query."</strong>&quot; shown below.</td>\n";
-			echo "		</tr>\n";
-			echo "		</tbody>\n";
-			echo "	</table>\n";
+			echo "<div class=\"row-fluid searchTitle\" style=\"margin: auto;\">\n";
+			echo "	<div class=\"span3\" style=\"font-size: 12px; font-weight: bold; padding-left:10px\">People Search Results:</div>\n";
+			echo "	<div class=\"span9 pull-right\" style=\"text-align: right; font-size: 10px; color: #666666; overflow: hidden; white-space: nowrap\">".$total_rows." Result".(($total_rows != 1) ? "s" : "")." Found. Results ".($limit_parameter + 1)." - ".((($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] + $limit_parameter) <= $total_rows) ? ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] + $limit_parameter) : $total_rows)." for &quot;<strong>".$search_query."</strong>&quot; shown below.</div>\n";
 			echo "</div>";
 			
 			foreach ($results as $key => $result) {
-				echo "<div id=\"result-".$result["id"]."\" style=\"width: 100%; padding: 5px 0px 5px 5px; line-height: 16px; text-align: left; border-bottom: 1px solid rgb(204, 204, 204);".($key % 2 == 1 ? "background-color: rgb(238, 238, 238);" : "")."\">\n";
-				echo "	<table style=\"width: 100%;\" class=\"profile-card\">\n";
-				echo "	<colgroup>\n";
-				echo "		<col style=\"width: 10%\" />\n";
-				echo "		<col style=\"width: 25%\" />\n";
-				echo "		<col style=\"width: 38%\" />\n";
-				echo "		<col style=\"width: 22%\" />\n";
-				echo "	<colgroup>";
-				echo "	<tr>";
-				echo "		<td>";
-				echo "			<div id=\"img-holder-".$result["id"]."\" class=\"img-holder\">\n";
-				
+				echo "<div id=\"result-".$result["id"]."\" class=\"media\" style=\"width: 100%; height 102px; padding: 5px 0px 5px 5px; border-bottom: 1px solid rgb(204, 204, 204);".($key % 2 == 1 ? " background-color: rgb(238, 238, 238);" : "")."\">\n";
+			
 				$offical_file_active	= false;
 				$uploaded_file_active	= false;
 
@@ -856,7 +821,7 @@ if (!defined("PARENT_INCLUDED")) {
 				if ((@file_exists(STORAGE_USER_PHOTOS."/".$result["id"]."-upload")) && ($photo_active) && ($ENTRADA_ACL->amIAllowed(new PhotoResource($result["id"], (int) $result["privacy_level"], "upload"), "read"))) {
 					$uploaded_file_active = true;
 				}
-
+				echo "<div id=\"img-holder-".$result["id"]."\" class=\"img-holder pull-left\">";
 				if ($offical_file_active) {
 					echo "		<img id=\"official_photo_".$result["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($result["id"], "official"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" title=\"".html_encode($result["prefix"]." ".$result["firstname"]." ".$result["lastname"])."\" />\n";
 				}
@@ -869,20 +834,19 @@ if (!defined("PARENT_INCLUDED")) {
 					echo "		<a id=\"zoomin_photo_".$result["id"]."\" class=\"zoomin\" onclick=\"growPic($('official_photo_".$result["id"]."'), $('uploaded_photo_".$result["id"]."'), $('official_link_".$result["id"]."'), $('uploaded_link_".$result["id"]."'), $('zoomout_photo_".$result["id"]."'));\">+</a>";	
 					echo "		<a id=\"zoomout_photo_".$result["id"]."\" class=\"zoomout\" onclick=\"shrinkPic($('official_photo_".$result["id"]."'), $('uploaded_photo_".$result["id"]."'), $('official_link_".$result["id"]."'), $('uploaded_link_".$result["id"]."'), $('zoomout_photo_".$result["id"]."'));\"></a>";
 				} else {
-					echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
+					echo "		<img class=\"media-object\" src=\"".ENTRADA_URL."/images/headshot-male.gif\" data-src=\"holder.js/72x100\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
 				}
 				
 				if (($offical_file_active) && ($uploaded_file_active)) {
 					echo "		<a id=\"official_link_".$result["id"]."\" class=\"img-selector one\" onclick=\"showOfficial($('official_photo_".$result["id"]."'), $('official_link_".$result["id"]."'), $('uploaded_link_".$result["id"]."'));\" href=\"javascript: void(0);\">1</a>";
 					echo "		<a id=\"uploaded_link_".$result["id"]."\" class=\"img-selector two\" onclick=\"hideOfficial($('official_photo_".$result["id"]."'), $('official_link_".$result["id"]."'), $('uploaded_link_".$result["id"]."'));\" href=\"javascript: void(0);\">2</a>";
 				}
-
-				echo "			</div>\n";
-				echo "		</td>\n";
-				echo "		<td style=\"font-size: 12px; color: #003366; vertical-align: top\">";
-				echo "			<div style=\"font-weight: bold; font-size: 13px;\">".html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"])."</div>";
+				echo "</div>";
+				echo "<div class=\"media-body\">";
+				echo "<div class=\"pull-left\" style=\"margin-left: 10px\">";
+				echo "<h5 class\"media-heading\" style=\"color: #003366;\">" . html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"]) . "</h5>";
+				echo "<span class=\"content-small\">";
 				if($departmentResults = get_user_departments($result["id"])) {
-					echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">";
 					$deptCtr = 0;
 					foreach($departmentResults as $key => $departmentValue) {
 						if ($deptCtr == 0) {
@@ -897,9 +861,10 @@ if (!defined("PARENT_INCLUDED")) {
 					if ($result["group"] == "student") {
 						$cohort = groups_get_cohort($result["id"]);
 					}
-					echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? $cohort["group_name"] : ucwords($result["role"]));
+					echo ucwords($result["group"])." > ".($result["group"] == "student" ? $cohort["group_name"] : ucwords($result["role"]));
 				}
-				echo (isset($ORGANISATIONS_BY_ID[$result["organisation_id"]]) ? "<br />".$ORGANISATIONS_BY_ID[$result["organisation_id"]]["organisation_title"] : "")."</div>\n";
+				echo (isset($ORGANISATIONS_BY_ID[$result["organisation_id"]]) ? "<br />".$ORGANISATIONS_BY_ID[$result["organisation_id"]]["organisation_title"] : "")."\n";
+				echo "<br />";
 				if ($result["privacy_level"] > 1 || $is_administrator) {
 					echo "			<a href=\"mailto:".html_encode($result["email"])."\" style=\"font-size: 10px;\">".html_encode($result["email"])."</a><br />\n";
 					
@@ -907,49 +872,28 @@ if (!defined("PARENT_INCLUDED")) {
 						echo "		<a href=\"mailto:".html_encode($result["email_alt"])."\" style=\"font-size: 10px;\">".html_encode($result["email_alt"])."</a>\n";
 					}
 				}
-				echo "		</td>\n";
-				echo "		<td style=\"padding-top: 1.3em;\">\n";
-				echo "			<div>\n";
-				echo "				<table class=\"address-info\" style=\"width: 100%;\">\n";
+				echo "</span></div>";
+				echo "<div class=\"content-small pull-left\" style=\"margin-top: 16px; margin-left: 10px;\">";
 				if (($result["privacy_level"] > 2 || $is_administrator)) {
 					if ($result["telephone"]) {
-						echo "			<tr>\n";
-						echo "				<td style=\"width: 30%;\">Telephone: </td>\n";
-						echo "				<td>".html_encode($result["telephone"])."</td>\n";
-						echo "			</tr>\n";
+						echo "Telephone: \n";
+						echo html_encode($result["telephone"]). "\n";
 					}
 					if ($result["fax"]) {
-						echo "			<tr>\n";
-						echo "				<td>Fax: </td>\n";
-						echo "				<td>".html_encode($result["fax"])."</td>\n";
-						echo "			</tr>\n\n";
+						echo "Fax:\n";
+						echo html_encode($result["fax"])."\n";
 					}
 					if ($result["address"] && $result["city"]) {
-						echo "			<tr>\n";
-						echo "				<td><br />Address: </td>\n";
-						echo "				<td><br />".html_encode($result["address"])."</td>\n";
-						echo "			</tr>\n";
-						echo "			<tr>\n";
-						echo "				<td>&nbsp;</td>\n";
-						echo "				<td>".html_encode($result["city"].($result["city"] && $result["province"] ? ", ".$result["province"] : ""))."</td>\n";
-						echo "			</tr>\n";
-						echo "			<tr>\n";
-						echo "				<td>&nbsp;</td>\n";
-						echo "				<td>".html_encode($result["country"].($result["country"] && $result["postcode"] ? ", ".$result["postcode"] : ""))."</td>\n";
-						echo "			</tr>\n";
+						echo "<br />Address:\n";
+						echo "<br />".html_encode($result["address"])."\n";
+						echo "".html_encode($result["city"].($result["city"] && $result["province"] ? ", ".$result["province"] : ""))."\n";
+						echo html_encode($result["country"].($result["country"] && $result["postcode"] ? ", ".$result["postcode"] : ""))."\n";
 					}
 					if ($result["office_hours"]) {
-						echo "			<tr><td colspan=\"2\">&nbsp;</td></tr>";
-						echo "			<tr>\n";
-						echo "				<td>Office Hours: </td>\n";
-						echo "				<td>".nl2br(html_encode($result["office_hours"]))."</td>\n";
-						echo "			</tr>\n\n";
+						echo "Office Hours:\n";
+						echo nl2br(html_encode($result["office_hours"]))."\n";
 					}
 				}
-				echo "				</table>\n";
-				echo "			</div>\n";
-				echo "		</td>\n";
-				echo "		<td style=\"padding-top: 1.3em; vertical-align: top\">\n";
 				
 				$query		= "	SELECT CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
 								FROM `permissions` AS a
@@ -967,9 +911,10 @@ if (!defined("PARENT_INCLUDED")) {
 					}
 					echo "		</ul>";
 				}
-				echo "		</td>\n";
-				echo "	</tr>\n";
-				echo "	</table>\n";
+				echo "</div>\n"; 
+				echo "</div>\n"; ?>
+				<div class="clearfix"> </div>
+			<?php
 				echo "</div>\n";
 			}
 			

@@ -1486,14 +1486,15 @@ div.person-data span.address-label {
 
 div.img-holder {
 position:relative;
-width:74px;
-height:102px;
+width:72px;
+height:100px;
 }
 
 div.img-holder img {
 position:absolute;
 background-color:#FFF;
 border:1px solid #999;
+max-width: none;
 }
 
 div.img-holder img.official {

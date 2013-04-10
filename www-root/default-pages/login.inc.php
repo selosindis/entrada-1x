@@ -24,14 +24,14 @@
  *
  */
 
-if(!defined("PARENT_INCLUDED")) exit;
+if (!defined("PARENT_INCLUDED")) exit;
 
 /**
  * Focus on the username textbox when this module is loaded.
  */
 $ONLOAD[] = "jQuery('#username').focus()";
 
-if(($ACTION == "login") && ($ERROR)) {
+if (($ACTION == "login") && $ERROR) {
 	echo display_error();
 }
 
@@ -39,18 +39,16 @@ if(($ACTION == "login") && ($ERROR)) {
  * If the user is trying to access a link and is not logged in, display a
  * notice to inform the user that they need to log in first.
  */
-if(($PROCEED_TO) && (stristr($PROCEED_TO, "link-course.php") || stristr($PROCEED_TO, "link-event.php"))) {
-	echo display_notice(array("You must log in to access this link; once you have logged in you will be automatically redirected to the requested location."));
+if ($PROCEED_TO && (stristr($PROCEED_TO, "link-course.php") || stristr($PROCEED_TO, "link-event.php"))) {
+	echo display_notice("You must log in to access this link; once you have logged in you will be automatically redirected to the requested location.");
 }
 
 /**
  * If the user is trying to access a file and is not logged in, display a
  * notice to inform the user that they need to log in first.
  */
-if(($PROCEED_TO) && (stristr($PROCEED_TO, "file-course.php") || stristr($PROCEED_TO, "file-event.php"))) {
-	$ONLOAD[] = "setTimeout('window.location = \\'".ENTRADA_URL."\\'', 15000)";
-
-	echo display_notice(array("You must log in to download the requested file; once you have logged in the download will start automatically."));
+if ($PROCEED_TO && (stristr($PROCEED_TO, "file-course.php") || stristr($PROCEED_TO, "file-event.php"))) {
+	echo display_notice("You must log in to download the requested file; once you have logged in the download will start automatically.");
 }
 
 /**
@@ -66,10 +64,10 @@ $query = "SELECT a.*
 			GROUP BY a.`notice_id`
 			ORDER BY a.`updated_date` DESC, a.`display_until` ASC
 			LIMIT 0, 5";
-$public_announcements = $db->GetAll($query);
+$public_announcements = $db->CacheGetAll(CACHE_TIMEOUT, $query);
 ?>
 <div class="row-fluid">
-	<div class="span5">
+	<div class="span6">
 		<h2><?php echo APPLICATION_NAME; ?> Login</h2>
 		<p>Please enter your <?php echo APPLICATION_NAME; ?> username and password to log in.</p>
 
@@ -95,7 +93,7 @@ $public_announcements = $db->GetAll($query);
 	<?php
 	if ($public_announcements) {
 		?>
-		<div class="span5">
+		<div class="span6">
 			<h2>Public Announcements</h2>
 			<ul class="public-announcements">
 				<?php

@@ -1,17 +1,3 @@
-/*html,body {
-background-color:#FFF;
-color:#000;
-font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
-font-size:12px;
-margin:0 0 10px;
-}*/
-/*
-td {
-color:#333;
-font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
-font-size:12px;
-}
-*/
 td.filtered {
 color:#000;
 font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
@@ -1744,14 +1730,6 @@ padding:2px;
 div.rss-no-item {
 padding:2px;
 }
-
-div.rss-item-title {
-width:350px;
-overflow:hidden;
-white-space:nowrap;
-padding:2px;
-}
-
 ul.rss-list {
 	float: left;
 	width: 50%;

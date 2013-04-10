@@ -51,12 +51,8 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_inpage.js\"></script>";
 	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_timestamp.js\"></script>";
 
-	//$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-	//$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery-ui.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.weekcalendar.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.qtip.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-	//$JQUERY[] = "<script type=\"text/javascript\">jQuery.noConflict();</script>";
-	//$JQUERY[] = "<link href=\"".ENTRADA_RELATIVE."/css/jquery/jquery-ui.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 	$JQUERY[] = "<link href=\"".ENTRADA_RELATIVE."/css/jquery/jquery.weekcalendar.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 
 	/**
@@ -633,7 +629,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			echo "<form action=\"\" method=\"get\">\n";
 			echo "<input type=\"hidden\" id=\"dstamp\" name=\"dstamp\" value=\"".html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])."\" />\n";
 			echo "</form>\n";
-			
+
 			$sidebar_html = "<ul class=\"legend-list\">\n";
 			$sidebar_html  .= "<li><img src=\"".ENTRADA_URL."/images/legend-class-event.gif\"  alt=\"\" title=\"\" style=\"vertical-align: middle\" /> entire class event</li>\n";
 			$sidebar_html .= "<li><img src=\"".ENTRADA_URL."/images/legend-individual.gif\"  alt=\"\" title=\"\" style=\"vertical-align: middle\" /> individual learning event</li>\n";
@@ -904,7 +900,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		var SUCCESS_IMAGE_URL = "<?php echo ENTRADA_URL."/images/question-correct.gif"; ?>";
 		var ERROR_IMAGE_URL = "<?php echo ENTRADA_URL."/images/question-correct.gif"; ?>";
 	</script>
-	<div id="dashboard-syndicated-content" style="width: 750px">
+	<div id="dashboard-syndicated-content">
 		<ul id="rss-list-1" class="rss-list first">
 
 			<?php

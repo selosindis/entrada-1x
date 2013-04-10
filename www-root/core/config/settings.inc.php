@@ -279,7 +279,7 @@ define("DEBUG_MODE", true);														// Some places have extra debug code to
 define("SHOW_LOAD_STATS", false);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.4.1DEV");											// The current filesystem version of Entrada.
+define("APPLICATION_VERSION", "1.5.0");											// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada: An eLearning Ecosystem";
@@ -577,38 +577,33 @@ $AR_NEXT_YEAR = (int) $AR_CUR_YEAR + 1;
 $AR_PAST_YEARS = 1985;
 $AR_FUTURE_YEARS = $AR_CUR_YEAR + 10;
 
-
 /**
  * Defines for MSPR
  */
-
-define("INTERNAL_AWARD_AWARDING_BODY","Queen's University");
+define("INTERNAL_AWARD_AWARDING_BODY","My University");
 define("CLERKSHIP_COMPLETED_CUTOFF", "October 26");
 
-define("MSPR_REJECTION_REASON_REQUIRED",true);	//defines whether a reason is required when rejecting a submission
-define("MSPR_REJECTION_SEND_EMAIL",true);	//defines whether an email should be send on rejection of a student submission to their mspr
+define("MSPR_REJECTION_REASON_REQUIRED", true);         // defines whether a reason is required when rejecting a submission
+define("MSPR_REJECTION_SEND_EMAIL", true);              // defines whether an email should be send on rejection of a student submission to their mspr
 
-define("MSPR_CLERKSHIP_MERGE_NEAR", true); //defines whether or not clerkship rotation with the same title should be merged if they are near in time.
-define("MSPR_CLERKSHIP_MERGE_DISTANCE", "+1 week"); //defines how close together clerkship rotations with the SAME title need to be in order to be merged on the mspr display
+define("MSPR_CLERKSHIP_MERGE_NEAR", true);              // defines whether or not clerkship rotation with the same title should be merged if they are near in time.
+define("MSPR_CLERKSHIP_MERGE_DISTANCE", "+1 week");     // defines how close together clerkship rotations with the SAME title need to be in order to be merged on the mspr display
 
-define("AUTO_APPROVE_ADMIN_MSPR_EDITS",true); //if true, the comment will be cleared, and the entry approved.
-define("AUTO_APPROVE_ADMIN_MSPR_SUBMISSIONS", true); //when adding to student submissions, admin contributions in these areas are automatically approved, if true.
+define("AUTO_APPROVE_ADMIN_MSPR_EDITS", true);          // if true, the comment will be cleared, and the entry approved.
+define("AUTO_APPROVE_ADMIN_MSPR_SUBMISSIONS", true);    // when adding to student submissions, admin contributions in these areas are automatically approved, if true.
 
 /**
  * Defines for Tasks Module
  *
  */
-
-//Owners
 define("TASK_OWNER_USER", "user");
 define("TASK_OWNER_COURSE", "course");
 define("TASK_OWNER_EVENT", "event");
 
-//Audience
+// Audience
 define("TASK_RECIPIENT_USER", "user");
 define("TASK_RECIPIENT_CLASS", "cohort");
 define("TASK_RECIPIENT_ORGANISATION", "organisation");
-
 
 define("TASK_VERIFICATION_NONE", "none");
 define("TASK_VERIFICATION_FACULTY","faculty");
@@ -622,19 +617,21 @@ define("TASK_COMMENT_NONE", "no_comments");
 define("TASK_COMMENT_ALLOW", "allow_comments");
 define("TASK_COMMENT_REQUIRE", "require_comments");
 
-
 define("TASK_FACULTY_SELECTION_ALLOW","allow");
 define("TASK_FACULTY_SELECTION_REQUIRE", "require");
 define("TASK_FACULTY_SELECTION_OFF", "off");
 
-
-//Defaults
-define("TASK_DEFAULT_RECIPIENT_TYPE",TASK_RECIPIENT_USER); //options are: user, cohort, organisation
+// Defaults
+define("TASK_DEFAULT_RECIPIENT_TYPE", TASK_RECIPIENT_USER);
 define("TASK_DEFAULT_VERIFICATION_TYPE", TASK_VERIFICATION_NONE);
 define("TASK_DEFAULT_VERIFICATION_NOTIFICATION", TASK_VERIFICATION_NOTIFICATION_OFF);
 define("TASK_DEFAULT_COMPLETE_COMMENT", TASK_COMMENT_ALLOW);
 define("TASK_DEFAULT_REJECT_COMMENT", TASK_COMMENT_ALLOW);
-define("TASK_DEFAULT_FACULTY_SELECTION",TASK_FACULTY_SELECTION_ALLOW);
+define("TASK_DEFAULT_FACULTY_SELECTION", TASK_FACULTY_SELECTION_ALLOW);
 
-define("PDF_PASSWORD","Mm7aeY");
-define("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL", 0);
+define("PDF_PASSWORD", "MyPassword");                   // Used to set the owner password of the some PDF files.
+
+/**
+ * Gradebook Settings
+ */
+define("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL", 0);          // Used to determine whether or not to include final grade calculations in Grade Export.

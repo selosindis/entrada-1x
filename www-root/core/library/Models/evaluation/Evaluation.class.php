@@ -3867,11 +3867,15 @@ class Evaluation {
                         $evaluation_targets_count = count($evaluation_targets_list);
                         if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation["max_submittable"]) {
                             $evaluation["max_submittable"] = ($evaluation_targets_count * (int) $evaluation["max_submittable"]);
-                        }
-                        $evaluation_target_title = fetch_evaluation_target_title($evaluation_targets_list[0], $evaluation_targets_count, $evaluation["target_shortname"]);
-                        if ($evaluation["target_shortname"] == "peer" && $evaluation["max_submittable"] == 0) {
+                        } elseif ($evaluation["target_shortname"] == "peer" && $evaluation["max_submittable"] == 0) {
                             $evaluation["max_submittable"] = $evaluation_targets_count;
                         }
+                        if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation["min_submittable"]) {
+                            $evaluation["min_submittable"] = ($evaluation_targets_count * (int) $evaluation["min_submittable"]);
+                        } elseif ($evaluation["target_shortname"] == "peer" && $evaluation["min_submittable"] == 0) {
+                            $evaluation["min_submittable"] = $evaluation_targets_count;
+                        }
+                        $evaluation_target_title = fetch_evaluation_target_title($evaluation_targets_list[0], $evaluation_targets_count, $evaluation["target_shortname"]);
 
                         if ($evaluation_target_title) {
                             $evaluation["evaluation_target_title"] = $evaluation_target_title;
@@ -3922,6 +3926,144 @@ class Evaluation {
                     
                     if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) === false || (isset($evaluation_targets_count) && $evaluation_targets_count)) {
                         $evaluations[] = $evaluation;
+                    }
+                }
+			}
+		}
+		return $evaluations;
+	}
+    
+	public static function getOutstandingEvaluations($proxy_id) {
+		global $db;
+		
+		$evaluations = array();
+		
+		$cohort = groups_get_cohort($proxy_id, true);
+
+		$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
+					JOIN `course_groups` AS b
+					ON a.`cgroup_id` = b.`cgroup_id`
+					WHERE a.`proxy_id` = ".$db->qstr($proxy_id)."
+					AND a.`active` = 1
+					AND b.`active` = 1";
+		$course_groups = $db->GetAll($query);
+
+		$cgroup_ids_string = "";
+		if (isset($course_groups) && is_array($course_groups)) {
+			foreach ($course_groups as $course_group) {
+				if ($cgroup_ids_string) {
+					$cgroup_ids_string .= ", ".$db->qstr($course_group["cgroup_id"]);
+				} else {
+					$cgroup_ids_string = $db->qstr($course_group["cgroup_id"]);
+				}
+			}
+		}
+
+		$query = "	SELECT * FROM `evaluations` AS a
+					JOIN `evaluation_evaluators` AS b
+					ON a.`evaluation_id` = b.`evaluation_id`
+					JOIN `evaluation_forms` AS c
+					ON a.`eform_id` = c.`eform_id`
+					JOIN `evaluations_lu_targets` AS d
+					ON c.`target_id` = d.`target_id`
+					WHERE
+					(
+						(
+							b.`evaluator_type` = 'proxy_id'
+							AND b.`evaluator_value` = ".$db->qstr($proxy_id)."
+						)
+						OR
+						(
+							b.`evaluator_type` = 'organisation_id'
+							AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+						)".($cohort ? " OR (
+							b.`evaluator_type` = 'cohort'
+							AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
+						)" : "").($cgroup_ids_string ? " OR (
+							b.`evaluator_type` = 'cgroup_id'
+							AND b.`evaluator_value` IN (".$cgroup_ids_string.")
+						)" : "")."
+					)
+					AND a.`evaluation_start` < ".$db->qstr(time())."
+					AND a.`evaluation_active` = 1
+					GROUP BY a.`evaluation_id`
+					ORDER BY a.`evaluation_finish` DESC";
+		$temp_evaluations = $db->GetAll($query);
+		if ($temp_evaluations) {
+			foreach ($temp_evaluations as $evaluation) {
+                if (isset($evaluation["require_requests"]) && $evaluation["require_requests"]) {
+                    $requests = Evaluation::getEvaluationRequests($evaluation["evaluation_id"], $proxy_id);
+                }
+                if (!(isset($evaluation["require_requests"]) && $evaluation["require_requests"]) || (is_array($requests) && count($requests))) {
+                    $evaluation_targets_list = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluation["eevaluator_id"], $proxy_id);
+                    if ($evaluation_targets_list) {
+                        $evaluation_targets_count = count($evaluation_targets_list);
+                        if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation["max_submittable"]) {
+                            $evaluation["max_submittable"] = ($evaluation_targets_count * (int) $evaluation["max_submittable"]);
+                        } elseif ($evaluation["target_shortname"] == "peer" && $evaluation["max_submittable"] == 0) {
+                            $evaluation["max_submittable"] = $evaluation_targets_count;
+                        }
+                        if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation["min_submittable"]) {
+                            $evaluation["min_submittable"] = ($evaluation_targets_count * (int) $evaluation["min_submittable"]);
+                        } elseif ($evaluation["target_shortname"] == "peer" && $evaluation["min_submittable"] == 0) {
+                            $evaluation["min_submittable"] = $evaluation_targets_count;
+                        }
+                        $evaluation_target_title = fetch_evaluation_target_title($evaluation_targets_list[0], $evaluation_targets_count, $evaluation["target_shortname"]);
+                        
+
+                        if ($evaluation_target_title) {
+                            $evaluation["evaluation_target_title"] = $evaluation_target_title;
+                        }
+
+                        if ($evaluation_targets_list) {
+                            $evaluation["evaluation_targets"] = $evaluation_targets_list;
+                        }
+                    }
+
+                    $query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
+                                WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                AND `proxy_id` = ".$db->qstr($proxy_id)."
+                                AND `progress_value` = 'complete'";
+                    $completed_attempts = $db->GetOne($query);
+                    if ($completed_attempts) {
+                        $evaluation["completed_attempts"] = $completed_attempts;
+                    } else {
+                        $evaluation["completed_attempts"] = 0;
+                    }
+                    
+                    if ($completed_attempts >= $evaluation["max_submittable"]) {
+                        break;
+                    } else {
+                        $query = "	SELECT COUNT(`efquestion_id`) FROM `evaluation_form_questions`
+                                    WHERE `eform_id` = ".$db->qstr($evaluation["eform_id"])."
+                                    GROUP BY `eform_id`";
+                        $evaluation_questions = $db->GetOne($query);
+                        if ($evaluation_questions) {
+                            $evaluation["evaluation_questions"] = $evaluation_questions;
+                        } else {
+                            $evaluation["evaluation_questions"] = 0;
+                        }
+
+                        $query = "	SELECT * FROM `evaluation_progress`
+                                    WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                    AND `proxy_id` = ".$db->qstr($proxy_id)."
+                                    AND `progress_value` = 'complete'";
+                        $evaluation_progress = $db->GetAll($query);
+                        if ($evaluation_progress) {
+                            $evaluation["evaluation_progress"] = $evaluation_progress;
+                        } else {
+                            $evaluation["evaluation_progress"] = 0;
+                        }
+
+                        if (($evaluation["release_date"] <= time() || !$evaluation["release_date"])) {
+                            $evaluation["click_url"] = ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"];
+                        } else {
+                            $evaluation["click_url"] = "";
+                        }
+
+                        if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) === false || (isset($evaluation_targets_count) && $evaluation_targets_count)) {
+                            $evaluations[] = $evaluation;
+                        }
                     }
                 }
 			}

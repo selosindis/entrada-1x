@@ -556,8 +556,7 @@ function navigator_tabs() {
 	if (!defined("MAX_NAV_TABS")) {
 		$max_public = 9;
 	} else {
-		// Account for logout tab
-		$max_public = MAX_NAV_TABS - 1;
+		$max_public = MAX_NAV_TABS;
 	}
 
 	$tabs_admin = "";
@@ -1436,7 +1435,7 @@ function admin_order_link($field_id, $field_name, $submodule = null, $custom_sel
 	} else {
 		$module_url = $MODULE;
 	}
-    
+
     if (isset($custom_selector) && $custom_selector) {
         $module_selector = $custom_selector;
     } else {
@@ -16816,7 +16815,7 @@ function flatten_array($array) {
  *
  */
 function moveImage($source, $id, $coords, $dimensions, $type = "user", $sizes = array("upload" => array("width" => 192, "height" => 250), "upload-thumbnail" => array("width" => 75, "height" => 98))) {
-	$coords = explode(",", $coords);		
+	$coords = explode(",", $coords);
 	$dimensions = explode(",", $dimensions);
 
 	if ($id) {
@@ -16839,7 +16838,7 @@ function moveImage($source, $id, $coords, $dimensions, $type = "user", $sizes = 
 		}
 
 		if ($image) {
-			
+
 			copy($source, STORAGE_USER_PHOTOS . "/" . $id . "-upload-original");
 
 			$image_scale = round($image_details[0] / $dimensions[0], 2);
@@ -16864,9 +16863,9 @@ function moveImage($source, $id, $coords, $dimensions, $type = "user", $sizes = 
 
 		}
 	}
-	
-	
+
+
 		return filesize(STORAGE_USER_PHOTOS . "/" . $id . "-upload");
-	
-	
+
+
 }

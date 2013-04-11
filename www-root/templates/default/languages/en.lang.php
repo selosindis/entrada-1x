@@ -35,11 +35,8 @@ return array (
 			"events" => array ("title" => "Learning Events"),
 			"clerkship" => array ("title" => "Clerkship", "resource" => "clerkship", "permission" => "read"),
 			"people" => array ("title" => "People Search"),
-			"evaluations" => array ("title" => "My Evaluations"),
 			"tasks" => array ("title" => "My Tasks", "resource" => "tasktab", "permission" => "read"),
 			"annualreport" => array ("title" => "My Annual Report", "resource" => "annualreport", "permission" => "read"),
-			"profile" => array ("title" => "My Profile"),
-			"library" => array ("title" => "Library", "target" => "_blank"),
 			"help" => array ("title" => "Help")
 		),
 /*		@todo This is not currently used, unfortunately this exists in core/includes/settings.php in the $MODULES array.

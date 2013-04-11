@@ -258,7 +258,7 @@ define("RSS_CACHE_TIMEOUT", 300);												// Number of seconds that an RSS fi
 
 define("COOKIE_TIMEOUT", ((time()) + (3600 * 24 * 365)));						// Number of seconds the cookie will be valid for. (default: ((time())+(3600*24*365)) = 1 year)
 
-define("MAX_NAV_TABS", 9);														//The maxium number of navigation tabs shown to users on every page. Extras will go into a "More" dropdown tab.
+define("MAX_NAV_TABS", 8);														//The maxium number of navigation tabs shown to users on every page. Extras will go into a "More" dropdown tab.
 define("MAX_PRIVACY_LEVEL", 3);													// Select the max privacy level you accept.
 define("MAX_UPLOAD_FILESIZE", 52428800);										// Maximum allowable filesize (in bytes) of a file that can be uploaded (52428800 = 50MB).
 

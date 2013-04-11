@@ -59,153 +59,127 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 		$PAGE_META["title"]			= "Award Details: " . $award->getTitle();
 		$PAGE_META["description"]	= "";
 		$PAGE_META["keywords"]		= "";
-
-
-		$HEAD[] = "<script language='javascript' src='".ENTRADA_URL."/javascript/ActiveDataEntryProcessor.js'></script>";
-		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-		$HEAD[] = "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-		$HEAD[] = "<style type=\"text/css\"> .dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
 		?>
+<script type="text/javascript">
+	jQuery(document).ready(function($) {
+		if (location.hash !== '') $('a[href="' + location.hash + '"]').tab('show');
+
+		return $('a[data-toggle="tab"]').on('shown', function(e) {
+			return location.hash = $(e.target).attr('href').substr(1);
+		});
+	});
+</script>
 <h1>Award: <?php  echo $award->getTitle(); ?></h1>
-<div class="tab-pane" id="award-details-tabs">
-<div class="tab-page" style="padding-bottom: 80px">
-<h3 class="tab">Award Details</h3>
-<h2>Award Details</h2>
-<?php echo award_details_edit($award); ?></div>
-<div class="tab-page" style="padding-bottom: 80px">
-<h3 class="tab">Award Recipients</h3>
-		<?php
-		$show_add_recipient_form =  ($_GET['show'] != "add_recipient");
-		?>
-	<form id="add_award_recipient_form" name="add_award_recipient_form" action="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award_id; ?>&tab=recipients"
-	method="post"
-	<?php if ($show_add_recipient_form) { echo "style=\"display:none;\""; }   ?>>
-	<input type="hidden" name="action" value="add_award_recipient"></input>
-	<input type="hidden" name="award_id" value="<?php echo $award_id; ?>"></input>
-
-	
-<table class="award_recipients" style="width:100%;">
-	<colgroup>
-		<col width="3%"></col>
-		<col width="25%"></col>
-		<col width="72%"></col>
-	</colgroup>
-	<tfoot>
-		<tr>
-			<td colspan="3">&nbsp;</td>
-		</tr>
-		<tr>
-			<td colspan="2">
-				<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award_id; ?>'" />
-			</td>
-			<td style="padding-top: 5px; text-align: right;">	
-				<input type="submit" class="button" value="Add Recipient" />
-			</td>
-		</tr>
-	</tfoot>
-	<tbody>
-		<tr>
-			<td>&nbsp;</td>
-			<td><label for="internal_award_user_name" class="form-required">Student:</label>
-			</td>
-			<td>
+<div class="tabbable" id="award-details-tabs">
+	<ul class="nav nav-tabs">
+		<li class="active"><a href="#award-details-tab" data-toggle="tab">Award Details</a></li>
+		<li><a href="#award-recipients-tab" data-toggle="tab">Award Recipients</a></li>
+	</ul>
+	<div class="tab-content">
+		<div class="tab-pane active" id="award-details-tab">
+			<h2>Award Details</h2>
+			<?php echo award_details_edit($award); ?>
+		</div>
+		<div class="tab-pane" id="award-recipients-tab">
+			<?php
+			$show_add_recipient_form =  ($_GET['show'] != "add_recipient");
+			?>
+			<form id="add_award_recipient_form" class="form-horizontal" name="add_award_recipient_form" action="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award_id; ?>#award-recipients-tab"
+			method="post" <?php if ($show_add_recipient_form) { echo "style=\"display:none;\""; }   ?>>
+				<input type="hidden" name="action" value="add_award_recipient"></input>
+				<input type="hidden" name="award_id" value="<?php echo $award_id; ?>"></input>
 				<input type="hidden" id="internal_award_user_id" name="internal_award_user_id" value="" />
 				<input type="hidden" id="internal_award_user_ref" name="internal_award_user_ref" value="" />
-						
-				<input type="text" id="internal_award_user_name" name="fullname" size="30" value="" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkStudent()" />
-				<div class="autocomplete" id="internal_award_user_name_auto_complete"></div>
-			
-				<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
-			</td>
-		</tr>
 
-		<tr>
-			<td>&nbsp;</td>
-			<td style="vertical-align: top;"><label for="internal_award_year"
-				class="form-required">Year</label></td>
-			<td><select name="internal_award_year">
-			<?php
+				<div class="control-group">
+					<label for="internal_award_user_name" class="control-label form-required">Student:</label>
+					<div class="controls">
+						<input type="text" id="internal_award_user_name" name="fullname" size="30" value="" autocomplete="off" onkeyup="checkStudent()" />				
+						<div class="autocomplete" id="internal_award_user_name_auto_complete"></div>						
+						<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+					</div>
+				</div>
 
-			$cur_year = (int) date("Y");
-			$start_year = $cur_year - 4;
-			$end_year = $cur_year + 4;
+				<div class="control-group">
+					<label for="internal_award_year" class="control-label form-required">Year</label>
+					<div class="controls">
+						<select name="internal_award_year">
+						<?php
+							$cur_year = (int) date("Y");
+							$start_year = $cur_year - 4;
+							$end_year = $cur_year + 4;
 
-			for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
-				echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
-			}
+							for ($opt_year = $start_year; $opt_year <= $end_year; ++$opt_year) {
+								echo build_option($opt_year, $opt_year, $opt_year == $cur_year);
+							}
+						?>
+						</select>
+					</div>
+				</div>
+				<div class="control-group">
+					<div class="controls">
+						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award_id; ?>#award-recipients-tab'" />
+						<input type="submit" class="btn btn-primary" value="Add Recipient" />
+					</div>
+				</div>
+			</form>
+		<div id="add_award_recipient_link" style="<?php if (!$show_add_recipient_form) { echo "display:none;"; }   ?>">
+			<a id="add_award_recipient" href="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&show=add_recipient&id=<?php echo $award_id; ?>#award-recipients-tab" class="btn btn-primary pull-right">Add Award Recipient</a>
+		</div>
+		<div class="clear">&nbsp;</div>
+		<h2>Award Recipients</h2>
+		<div id="award_recipients">
+			<?php echo award_recipients_list($award);?>
+		</div>
+		<script language="javascript">
 
-			?>
-			</select></td>
-		</tr>
-	</tbody>
-</table>
-<div class="clear">&nbsp;</div>
-</form>
-<div id="add_award_recipient_link" style="float: right;<?php if (!$show_add_recipient_form) { echo "display:none;"; }   ?>">
-	<a id="add_award_recipient" ref="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&show=add_recipient&id=<?php echo $award_id; ?>" class="btn btn-primary">Add Award Recipient</a>
-</div>
-<div class="clear">&nbsp;</div>
-<h2>Award Recipients</h2>
-<div id="award_recipients"><?php echo award_recipients_list($award);?></div>
-<script language="javascript">
-	
-	function addRecipient(event) {
-		if (!((document.getElementById('internal_award_user_id') != null) && (document.getElementById('internal_award_user_id').value != ''))) {
-				alert('You can only add studets as award recipients if they exist in this system.\n\nIf you are typing in their name properly (Lastname, Firstname) and their name does not show up in the list, then chances are that they do not exist in our system.\n\nPlease contact Denise Jones in the Undergrad office (613-533-6000 x77804) to get an account for the requested individual.\n\nImportant: When you see the correct name pop-up in the list as you type, make sure you select the name with your mouse, do not press the Enter button.');
-			Event.stop(event);
-			return false;
-			
-		}
-	}
-	
-	function selectStudent(id) {
-		if ((id != null) && (document.getElementById('internal_award_user_id') != null)) {
-			document.getElementById('internal_award_user_id').value = id;
-		}
-	}
-	function copyStudent() {
-		if ((document.getElementById('internal_award_user_name') != null) && (document.getElementById('internal_award_user_ref') != null)) {
-			document.getElementById('internal_award_user_ref').value = document.getElementById('internal_award_user_name').value;
-		}
-	
-		return true;
-	}
-	
-	function checkStudent() {
-		if ((document.getElementById('internal_award_user_name') != null) && (document.getElementById('internal_award_user_ref') != null) && (document.getElementById('internal_award_user_id') != null)) {
-			if (document.getElementById('internal_award_user_name').value != document.getElementById('internal_award_user_ref').value) {
-				document.getElementById('internal_award_user_id').value = '';
-			}
-		}
-	
-		return true;
-	}
+			function addRecipient(event) {
+				if (!((document.getElementById('internal_award_user_id') != null) && (document.getElementById('internal_award_user_id').value != ''))) {
+						alert('You can only add students as award recipients if they exist in this system.\n\nIf you are typing in their name properly (Lastname, Firstname) and their name does not show up in the list, then chances are that they do not exist in our system.\n\nImportant: When you see the correct name pop-up in the list as you type, make sure you select the name with your mouse, do not press the Enter button.');
+					Event.stop(event);
+					return false;
 
-	new Ajax.Autocompleter(	'internal_award_user_name', 
-			'internal_award_user_name_auto_complete', 
-			'<?php echo webservice_url("personnel"); ?>', 
-			{	frequency: 0.2, 
-				parameters: "type=learners",
-				minChars: 2, 
-				afterUpdateElement: function (text, li) {
-					selectStudent(li.id); copyStudent();
 				}
-			});
+			}
 
-	var award_recipient_comments = new ActiveDataEntryProcessor({
-		url : '<?php echo webservice_url("awards"); ?>',
-		data_destination: $('#award_recipients'),
-		new_form: $('#add_award_recipient_form'),
-		remove_forms_selector: '.remove_award_recipient_form',
-		new_button: $('#add_award_recipient_link'),
-		hide_button: $('#hide_award_recipient'),
-		messages: $('#award_messages')
-		
-	});
+			function selectStudent(id) {
+				if ((id != null) && (document.getElementById('internal_award_user_id') != null)) {
+					document.getElementById('internal_award_user_id').value = id;
+				}
+			}
+			function copyStudent() {
+				if ((document.getElementById('internal_award_user_name') != null) && (document.getElementById('internal_award_user_ref') != null)) {
+					document.getElementById('internal_award_user_ref').value = document.getElementById('internal_award_user_name').value;
+				}
 
-	$('add_award_recipient_form').observe('submit',addRecipient);
-	</script>
-</div>
+				return true;
+			}
+
+			function checkStudent() {
+				if ((document.getElementById('internal_award_user_name') != null) && (document.getElementById('internal_award_user_ref') != null) && (document.getElementById('internal_award_user_id') != null)) {
+					if (document.getElementById('internal_award_user_name').value != document.getElementById('internal_award_user_ref').value) {
+						document.getElementById('internal_award_user_id').value = '';
+					}
+				}
+
+				return true;
+			}
+
+			new Ajax.Autocompleter(	'internal_award_user_name', 
+					'internal_award_user_name_auto_complete', 
+					'<?php echo webservice_url("personnel"); ?>', 
+					{	frequency: 0.2, 
+						parameters: "type=learners",
+						minChars: 2, 
+						afterUpdateElement: function (text, li) {
+							selectStudent(li.id); copyStudent();
+						}
+					});
+
+			$('add_award_recipient_form').observe('submit',addRecipient);
+			</script>
+		</div>
+	</div>
 </div>
 
 			<?php

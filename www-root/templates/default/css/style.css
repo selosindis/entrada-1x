@@ -445,3 +445,32 @@ div.ps-tab-style {
 .ps-email {
 	font-size: 10px;
 }
+
+/*** Manage Awards Module ***/
+.award_new_link {
+	margin-bottom:18px;
+}
+.award_text_input {
+	width: 95%;
+}
+.award_text_area {
+	width: 95%;
+}
+.award_table_font {
+	font-size: 12px;
+}
+.award_list_form {
+	margin-bottom: 0;
+}
+.award_details_table {
+	width: 100%;
+}
+.award_details_footer {
+	padding-top: 5px;
+}
+.award_recipient_list_first_column {
+	border-left: 1px solid #999;
+}
+.award_recipient_list_delete_button_column {
+	padding-top: 23px !important;
+}

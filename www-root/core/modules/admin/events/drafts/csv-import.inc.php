@@ -69,7 +69,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
             if (!has_error()) {
                 $csv_importer = new CsvImporter($draft_id, $ENTRADA_USER->getActiveId());
-                $csv_importer->importCsv($_FILES["csv_file"]);
+                /*if(!DEMO_MODE) {*/
+                /*echo "<pre>";
+                print_r($_FILES["csv_file"]);
+                exit;*/
+                	$csv_importer->importCsv($_FILES["csv_file"]);
+                //} else {
+                	//$csv_importer->importCsv(basename(DEMO_SCHEDULE));
+                //}
 
                 $csv_errors = $csv_importer->getErrors();
                 if ($csv_errors) {
@@ -87,14 +94,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     add_error($err_msg);
                     echo display_error();
                 } else {
-                    $csv_success = $csv_importer->getSuccess();
-
-                    add_success("Successfully imported <strong>".count($csv_success)."</strong> events from <strong>".html_encode($_FILES["csv_file"]["name"])."</strong><br /><br />You will now be redirected to the edit draft page; this will happen automatically in 5 seconds or <a href=\"".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\">click here</a> to continue.");
-                    echo display_success();
-
-                    $ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\\'', 5000)";
-
-                    application_log("success", "Proxy_id [".$ENTRADA_USER->getActiveId()."] successfully imported ".count($csv_success)." events into draft_id [".$draft_id."].");
+                	if(!DEMO_MODE) {
+	                    $csv_success = $csv_importer->getSuccess();
+	
+	                    add_success("Successfully imported <strong>".count($csv_success)."</strong> events from <strong>".html_encode($_FILES["csv_file"]["name"])."</strong><br /><br />You will now be redirected to the edit draft page; this will happen automatically in 5 seconds or <a href=\"".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\">click here</a> to continue.");
+	                    echo display_success();
+	
+	                    $ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\\'', 5000)";
+	
+	                    application_log("success", "Proxy_id [".$ENTRADA_USER->getActiveId()."] successfully imported ".count($csv_success)." events into draft_id [".$draft_id."].");
+                	} else {
+                		$csv_success = $csv_importer->getSuccess();
+	
+	                    add_success("Entrada is in demo mode therefore the Entrada demo csv file was used for this import instead of <strong>".html_encode($_FILES["csv_file"]["name"])."</strong>.<br /><br />You will now be redirected to the edit draft page; this will happen automatically in 5 seconds or <a href=\"".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\">click here</a> to continue.");
+	                    echo display_success();
+	
+	                    $ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\\'', 5000)";
+	
+	                    application_log("success", "Proxy_id [".$ENTRADA_USER->getActiveId()."] successfully imported ".count($csv_success)." events into draft_id [".$draft_id."].");
+                	}
                 }
             } else {
                 echo display_error();

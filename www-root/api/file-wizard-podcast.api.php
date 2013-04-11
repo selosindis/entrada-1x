@@ -199,37 +199,102 @@ if((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
 								$ERROR++;
 								$ERRORSTR[]		= "q2";
 							} else {
-								if(($db->AutoExecute("event_files", $PROCESSED, "INSERT")) && ($EFILE_ID = $db->Insert_Id())) {
-									if((@is_dir(FILE_STORAGE_PATH)) && (@is_writable(FILE_STORAGE_PATH))) {
-										if(@file_exists(FILE_STORAGE_PATH."/".$EFILE_ID)) {
-											application_log("notice", "File ID [".$EFILE_ID."] already existed and was overwritten with newer file.");
+								if(!DEMO_MODE) {
+									if(($db->AutoExecute("event_files", $PROCESSED, "INSERT")) && ($EFILE_ID = $db->Insert_Id())) {
+										if((@is_dir(FILE_STORAGE_PATH)) && (@is_writable(FILE_STORAGE_PATH))) {
+											if(@file_exists(FILE_STORAGE_PATH."/".$EFILE_ID)) {
+												application_log("notice", "File ID [".$EFILE_ID."] already existed and was overwritten with newer file.");
+											}
+	
+											if(@move_uploaded_file($_FILES["filename"]["tmp_name"], FILE_STORAGE_PATH."/".$EFILE_ID)) {
+												application_log("success", "File ID [".$EFILE_ID."] was successfully added to the database and filesystem for event [".$EVENT_ID."].");
+											} else {
+												$modal_onload[]		= "alert('The new file was not successfully saved. The MEdTech Unit has been informed of this error, please try again later.')";
+	
+												$ERROR++;
+												$ERRORSTR[]		= "q1";
+	
+												application_log("error", "The move_uploaded_file function failed to move temporary file over to final location.");
+											}
+										} else {
+											$modal_onload[]		= "alert('The new file was not successfully saved. The MEdTech Unit has been informed of this error, please try again later.')";
+	
+											$ERROR++;
+											$ERRORSTR[]		= "q1";
+	
+											application_log("error", "Either the FILE_STORAGE_PATH doesn't exist on the server or is not writable by PHP.");
 										}
+									} else {
+										$modal_onload[]		= "alert('The new file was not successfully saved. The MEdTech Unit has been informed of this error, please try again later.')";
+	
+										$ERROR++;
+										$ERRORSTR[]		= "q1";
+	
+										application_log("error", "Unable to insert the file into the database for event ID [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
+									}
+								} else {
+									switch($PROCESSED["file_category"]) {
+										case "lecture_notes":
+											$PROCESSED["file_type"] = filetype(DEMO_NOTES);
+											$PROCESSED["file_size"] = filesize(DEMO_NOTES);
+											$PROCESSED["file_name"] = basename(DEMO_NOTES);
+											$DEMO_FILE = DEMO_NOTES;
+											break;
+										case "lecture_slides":
+											$PROCESSED["file_type"] = filetype(DEMO_SLIDES);
+											$PROCESSED["file_size"] = filesize(DEMO_SLIDES);
+											$PROCESSED["file_name"] = basename(DEMO_SLIDES);
+											$DEMO_FILE = DEMO_SLIDES;
+											break;
+										case "podcast":
+											$PROCESSED["file_type"] = filetype(DEMO_PODCAST);
+											$PROCESSED["file_size"] = filesize(DEMO_PODCAST);
+											$PROCESSED["file_name"] = basename(DEMO_PODCAST);
+											$DEMO_FILE = DEMO_PODCAST;
+											break;
+										case "other":
+										default:
+											$PROCESSED["file_type"] = filetype(DEMO_FILE);
+											$PROCESSED["file_size"] = filesize(DEMO_FILE);
+											$PROCESSED["file_name"] = basename(DEMO_FILE);
+											$DEMO_FILE = DEMO_FILE;
+											break;
+									}
+									if(($db->AutoExecute("event_files", $PROCESSED, "INSERT")) && ($EFILE_ID = $db->Insert_Id())) {
+										if((@is_dir(FILE_STORAGE_PATH)) && (@is_writable(FILE_STORAGE_PATH))) {
+											if(@file_exists(FILE_STORAGE_PATH."/".$EFILE_ID)) {
+												application_log("notice", "File ID [".$EFILE_ID."] already existed and was overwritten with newer file.");
+											}
+											
+											if(@copy($DEMO_FILE, FILE_STORAGE_PATH."/".$EFILE_ID)) {
+												application_log("success", "Success, however, since this is the Entrada demo site we do not allow uploading of files. Instead we've linked the information you just entered to a file that already exists on the demo server for demonstration purposes.");
+											} else {
+												$modal_onload[]		= "alert('The new file was not successfully saved. The MEdTech Unit has been informed of this error, please try again later.')";
 
-										if(@move_uploaded_file($_FILES["filename"]["tmp_name"], FILE_STORAGE_PATH."/".$EFILE_ID)) {
-											application_log("success", "File ID [".$EFILE_ID."] was successfully added to the database and filesystem for event [".$EVENT_ID."].");
+												$ERROR++;
+												$ERRORSTR[]		= "q5";
+												$JS_INITSTEP	= 3;
+
+												application_log("error", "The move_uploaded_file function failed to move temporary file over to final location.");
+											}
 										} else {
 											$modal_onload[]		= "alert('The new file was not successfully saved. The MEdTech Unit has been informed of this error, please try again later.')";
 
 											$ERROR++;
-											$ERRORSTR[]		= "q1";
+											$ERRORSTR[]		= "q5";
+											$JS_INITSTEP	= 3;
 
-											application_log("error", "The move_uploaded_file function failed to move temporary file over to final location.");
+											application_log("error", "Either the FILE_STORAGE_PATH doesn't exist on the server or is not writable by PHP.");
 										}
 									} else {
 										$modal_onload[]		= "alert('The new file was not successfully saved. The MEdTech Unit has been informed of this error, please try again later.')";
 
 										$ERROR++;
-										$ERRORSTR[]		= "q1";
+										$ERRORSTR[]		= "q5";
+										$JS_INITSTEP	= 3;
 
-										application_log("error", "Either the FILE_STORAGE_PATH doesn't exist on the server or is not writable by PHP.");
+										application_log("error", "Unable to insert the file into the database for event ID [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
 									}
-								} else {
-									$modal_onload[]		= "alert('The new file was not successfully saved. The MEdTech Unit has been informed of this error, please try again later.')";
-
-									$ERROR++;
-									$ERRORSTR[]		= "q1";
-
-									application_log("error", "Unable to insert the file into the database for event ID [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
 								}
 							}
 						}
@@ -258,7 +323,12 @@ if((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
 									<h2>Podcast Added Successfully</h2>
 		
 									<div class="display-success">
-										You have successfully added <strong><?php echo html_encode($PROCESSED["file_title"]); ?></strong> to this event.
+										<?php if(!DEMO_MODE) { ?>
+											You have successfully added <strong><?php echo html_encode($PROCESSED["file_title"]); ?></strong> to this event.
+										<?php
+										} else { ?>
+											You are in demo mode therefore <strong><?php echo html_encode($PROCESSED["file_title"]); ?></strong> as been replaced with our default demo file and has been linked to this event.
+										<?php } ?>
 									</div>
 								</div>
 								<div id="footer">

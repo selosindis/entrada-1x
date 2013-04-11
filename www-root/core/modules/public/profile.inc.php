@@ -230,22 +230,20 @@ function profile_update_personal_info() {
 		$PROCESSED["prov_state"] = ($PROCESSED["province_id"] ? $PROCESSED["province_id"] : ($PROCESSED["province"] ? $PROCESSED["province"] : ""));
 	}
 	
-	//if (isset($_POST["tab"]) && $_POST["tab"] != "profile-photo" && $_POST["tab"] != "notifications") {
-		if (!$ERROR) {			
-			if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
-				$SUCCESS++;
-				$SUCCESSSTR[] = "Your account profile has been successfully updated.";
+	if (!$ERROR) {			
+		if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+			$SUCCESS++;
+			$SUCCESSSTR[] = "Your account profile has been successfully updated.";
 
-				application_log("success", "User successfully updated their profile.");
+			application_log("success", "User successfully updated their profile.");
 
-			} else {
-				$ERROR++;
-				$ERRORSTR[] = "We were unfortunately unable to update your profile at this time. The system administrator has been informed of the problem, please try again later.";
+		} else {
+			$ERROR++;
+			$ERRORSTR[] = "We were unfortunately unable to update your profile at this time. The system administrator has been informed of the problem, please try again later.";
 
-				application_log("error", "Unable to update user profile. Database said: ".$db->ErrorMsg());
-			}
+			application_log("error", "Unable to update user profile. Database said: ".$db->ErrorMsg());
 		}
-	//}
+	}
 }
 
 function profile_update_privacy() {

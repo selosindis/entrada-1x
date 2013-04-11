@@ -5776,7 +5776,7 @@ function communities_galleries_process_photo($original_file, $photo_id = 0) {
 		/**
 		 * Check if the original_file needs to be resized or not.
 		 */
-		if(($original_file_width > $VALID_MAX_DIMENSIONS["photo"]) || ($original_file_height > $VALID_MAX_DIMENSIONS["photo"])) {
+		if(!DEMO_MODE && (($original_file_width > $VALID_MAX_DIMENSIONS["photo"]) || ($original_file_height > $VALID_MAX_DIMENSIONS["photo"]))) {
 			switch($original_file_details["mime"]) {
 				case "image/pjpeg":
 				case "image/jpeg":
@@ -5854,17 +5854,32 @@ function communities_galleries_process_photo($original_file, $photo_id = 0) {
 				return false;
 			}
 		} else {
-			if(@move_uploaded_file($original_file, $new_file)) {
-				@chmod($new_file, 0644);
-
-				/**
-				 * Create the new width / height so we can use the same variables
-				 * below for thumbnail generation.
-				 */
-				$new_file_width		= $original_file_width;
-				$new_file_height	= $original_file_height;
+			if (!DEMO_MODE) {
+				if(@move_uploaded_file($original_file, $new_file)) {
+					@chmod($new_file, 0644);
+	
+					/**
+					 * Create the new width / height so we can use the same variables
+					 * below for thumbnail generation.
+					 */
+					$new_file_width		= $original_file_width;
+					$new_file_height	= $original_file_height;
+				} else {
+					return false;
+				}
 			} else {
-				return false;
+				if(@copy(DEMO_PHOTO, $new_file)) {
+					@chmod($new_file, 0644);
+	
+					/**
+					 * Create the new width / height so we can use the same variables
+					 * below for thumbnail generation.
+					 */
+					$new_file_width		= $original_file_width;
+					$new_file_height	= $original_file_height;
+				} else {
+					return false;
+				}
 			}
 		}
 
@@ -5985,9 +6000,20 @@ function assignments_process_file($original_file, $afversion_id = 0) {
 	}
 
 	if(!@file_exists($new_file = FILE_STORAGE_PATH."/A".$afversion_id)) {
-		if(@move_uploaded_file($original_file, $new_file)) {
-			@chmod($new_file, 0644);
-			return true;
+		if (!DEMO_MODE) {
+			if(@move_uploaded_file($original_file, $new_file)) {
+				@chmod($new_file, 0644);
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			if (copy(DEMO_ASSIGNMENT, $new_file)) {
+				@chmod($new_file, 0644);
+				return true;
+			} else {
+				return false;
+			}
 		}
 	}
 
@@ -6017,9 +6043,16 @@ function communities_shares_process_file($original_file, $csfversion_id = 0) {
 	}
 
 	if(!@file_exists($new_file = COMMUNITY_STORAGE_DOCUMENTS."/".$csfversion_id)) {
-		if(@move_uploaded_file($original_file, $new_file)) {
-			@chmod($new_file, 0644);
-			return true;
+		if (!DEMO_MODE) {
+			if(@move_uploaded_file($original_file, $new_file)) {
+				@chmod($new_file, 0644);
+				return true;
+			}
+		} else {
+			if(@copy(DEMO_FILE, $new_file)) {
+				@chmod($new_file, 0644);
+				return true;
+			}
 		}
 	}
 
@@ -7059,7 +7092,7 @@ function fetch_mime_type($filename) {
  */
 function process_user_photo($original_file, $photo_id = 0) {
 	global $VALID_MAX_DIMENSIONS, $_SESSION, $ENTRADA_USER;
-
+	
 	if(!@function_exists("gd_info")) {
 		return false;
 	}
@@ -7082,7 +7115,7 @@ function process_user_photo($original_file, $photo_id = 0) {
 		/**
 		 * Check if the original_file needs to be resized or not.
 		 */
-		if(($original_file_width > $VALID_MAX_DIMENSIONS["photo-width"]) || ($original_file_height > $VALID_MAX_DIMENSIONS["photo-height"])) {
+		if(!DEMO_MODE && (($original_file_width > $VALID_MAX_DIMENSIONS["photo-width"]) || ($original_file_height > $VALID_MAX_DIMENSIONS["photo-height"]))) {
 			switch($original_file_details["mime"]) {
 				case "image/pjpeg":
 				case "image/jpeg":
@@ -7159,17 +7192,32 @@ function process_user_photo($original_file, $photo_id = 0) {
 				return false;
 			}
 		} else {
-			if(@move_uploaded_file($original_file, $new_file)) {
-				@chmod($new_file, 0644);
-
-				/**
-				 * Create the new width / height so we can use the same variables
-				 * below for thumbnail generation.
-				 */
-				$new_file_width		= $original_file_width;
-				$new_file_height	= $original_file_height;
+			if (!DEMO_MODE) {
+				if(@move_uploaded_file($original_file, $new_file)) {
+					@chmod($new_file, 0644);
+	
+					/**
+					 * Create the new width / height so we can use the same variables
+					 * below for thumbnail generation.
+					 */
+					$new_file_width		= $original_file_width;
+					$new_file_height	= $original_file_height;
+				} else {
+					return false;
+				}
 			} else {
-				return false;
+				if(@copy(DEMO_PHOTO, $new_file)) {
+					@chmod($new_file, 0644);
+	
+					/**
+					 * Create the new width / height so we can use the same variables
+					 * below for thumbnail generation.
+					 */
+					$new_file_width		= $original_file_width;
+					$new_file_height	= $original_file_height;
+				} else {
+					return false;
+				}
 			}
 		}
 
@@ -16820,7 +16868,10 @@ function moveImage($source, $id, $coords, $dimensions, $type = "user", $sizes = 
 	$dimensions = explode(",", $dimensions);
 
 	if ($id) {
-
+		if (DEMO_MODE) {
+			$source = DEMO_PHOTO;	
+		}
+		
 		$image_details = getimagesize($source);
 
 		switch($image_details["mime"]) {
@@ -16837,36 +16888,35 @@ function moveImage($source, $id, $coords, $dimensions, $type = "user", $sizes = 
 				$return = false;
 			break;
 		}
-
-		if ($image) {
-			
-			copy($source, STORAGE_USER_PHOTOS . "/" . $id . "-upload-original");
-
-			$image_scale = round($image_details[0] / $dimensions[0], 2);
-
-			foreach ($coords as $coord) {
-				$scaled_coords[] = (int) round($coord * $image_scale, 2);
-			}
-
-			$path = STORAGE_USER_PHOTOS . '/../public/images/' . ($type == "team" ? "teams/" : "") . $id .'/' . $id;
-
-			foreach ($sizes as $size_name => $size) {
-				$resized_image = imagecreatetruecolor($size["width"], $size["height"]);
-				imagecopyresampled($resized_image, $image, 0, 0, $scaled_coords[0], $scaled_coords[1], $size["width"], $size["height"], $scaled_coords[2] - $scaled_coords[0], $scaled_coords[3] - $scaled_coords[1]);
-				$scaled_image =  CACHE_DIRECTORY . "/profile-img-" . $id . "-".$size["width"]."x".$size["height"].".png";
-				imagepng($resized_image, $scaled_image);
-				if (!copy($scaled_image, STORAGE_USER_PHOTOS . "/" . $id . "-" . $size_name)) {
-					$return = false;
-				} else {
-					unlink($scaled_image);
+		
+		if (!DEMO_MODE) {
+			if ($image) {
+				
+				copy($source, STORAGE_USER_PHOTOS . "/" . $id . "-upload-original");
+	
+				$image_scale = round($image_details[0] / $dimensions[0], 2);
+	
+				foreach ($coords as $coord) {
+					$scaled_coords[] = (int) round($coord * $image_scale, 2);
+				}
+	
+				$path = STORAGE_USER_PHOTOS . '/../public/images/' . ($type == "team" ? "teams/" : "") . $id .'/' . $id;
+	
+				foreach ($sizes as $size_name => $size) {
+					$resized_image = imagecreatetruecolor($size["width"], $size["height"]);
+					imagecopyresampled($resized_image, $image, 0, 0, $scaled_coords[0], $scaled_coords[1], $size["width"], $size["height"], $scaled_coords[2] - $scaled_coords[0], $scaled_coords[3] - $scaled_coords[1]);
+					$scaled_image =  CACHE_DIRECTORY . "/profile-img-" . $id . "-".$size["width"]."x".$size["height"].".png";
+					imagepng($resized_image, $scaled_image);
+					if (!copy($scaled_image, STORAGE_USER_PHOTOS . "/" . $id . "-" . $size_name)) {
+						$return = false;
+					} else {
+						unlink($scaled_image);
+					}
 				}
 			}
-
+		} else {
+			copy(DEMO_PHOTO, STORAGE_USER_PHOTOS . "/" . $id . "-upload");
 		}
 	}
-	
-	
-		return filesize(STORAGE_USER_PHOTOS . "/" . $id . "-upload");
-	
-	
+	return filesize(STORAGE_USER_PHOTOS . "/" . $id . "-upload");
 }

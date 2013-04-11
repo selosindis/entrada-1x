@@ -16161,7 +16161,7 @@ function groups_get_name($group_id = 0) {
  * @param int $proxy_id
  * @return array $group
  */
-function groups_get_cohort($proxy_id = 0) {
+function groups_get_cohort($proxy_id = 0, $strict = false) {
 	global $db, $ENTRADA_USER;
 
 	$proxy_id = (int) $proxy_id;
@@ -16180,7 +16180,7 @@ function groups_get_cohort($proxy_id = 0) {
 		$cohort = $db->CacheGetRow(CACHE_TIMEOUT, $query);
 		if ($cohort) {
 			return $cohort;
-		} else {
+		} elseif (!$strict) {
 			$query = "	SELECT a.*
 						FROM `groups` AS a
 						JOIN `group_organisations` AS b

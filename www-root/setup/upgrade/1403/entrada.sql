@@ -15,4 +15,3 @@ CREATE TABLE IF NOT EXISTS `evaluation_requests` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 UPDATE `settings` SET `value` = '1403' WHERE `shortname` = 'version_db';
-UPDATE `settings` SET `value` = '1.4.0.3' WHERE `shortname` = 'version_entrada';

@@ -10,4 +10,3 @@ CREATE TABLE IF NOT EXISTS `objective_audience` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 UPDATE `settings` SET `value` = '1401' WHERE `shortname` = 'version_db';
-UPDATE `settings` SET `value` = '1.4.0.1' WHERE `shortname` = 'version_entrada';

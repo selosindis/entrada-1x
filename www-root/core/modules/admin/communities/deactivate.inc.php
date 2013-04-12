@@ -103,7 +103,7 @@ if (!defined("IN_COMMUNITIES")) {
 					<strong>Please note</strong> that once you deactivate these communities all of the content (photos, calendar, etc) within the communities will no longer be accessible to you or any other members of the communities. Deactivating these communities will also deactivate any Sub-Communities / Groups that have been created under these communities.
 				</div>
 				<form action="<?php echo ENTRADA_URL; ?>/admin/communities?<?php echo replace_query(array("section" => "deactivate", "step" => 2)); ?>" method="post">
-					<table class="tableList" cellspacing="0" cellpadding="1" summary="List of communities">
+					<table class="table" summary="List of communities">
 						<colgroup>
 							<col class="modified" />
 							<col class="title" />
@@ -112,23 +112,12 @@ if (!defined("IN_COMMUNITIES")) {
 						</colgroup>
 						<thead>
 							<tr>
-								<td class="modified" style="width: 20px;">&nbsp;</td>
-								<td class="title">Community Title</td>
-								<td class="title">Category</td>
-								<td class="date">Creation Date</td>
+								<th class="modified" style="width: 20px;">&nbsp;</th>
+								<th class="title">Community Title</th>
+								<th class="title">Category</th>
+								<th class="date">Creation Date</th>
 							</tr>
 						</thead>
-						<tfoot>
-							<tr>
-								<td colspan="4">&nbsp;</td>
-							</tr>
-							<tr>
-								<td><input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/communities'" /></td>
-								<td>&nbsp;</td>
-								<td>&nbsp;</td>
-								<td style="padding-top: 10px; text-align: right;"><input type="submit" class="button" value="Deactivate Now" /></td>
-							</tr>
-						</tfoot>
 						<tbody>
 						<?php 
 						foreach ($selected_communities as $selected_community) {
@@ -154,6 +143,10 @@ if (!defined("IN_COMMUNITIES")) {
 						?>
 						</tbody>
 					</table>
+					<div class="row-fluid mc-deactivate-footer">
+						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/communities'" />		
+						<input type="submit" class="btn btn-primary pull-right" value="Deactivate Now" />
+					</div>
 				</form>
 			<?php
 			} else {

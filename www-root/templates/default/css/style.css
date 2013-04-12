@@ -484,3 +484,29 @@ div.ps-tab-style {
 .award_recipient_list_delete_button_column {
 	padding-top: 23px !important;
 }
+
+/*** Manage Communities Module ***/
+.mc-pager-top {
+	margin-bottom: 10px;
+}
+.mc-pager-prev {
+	width: 20px; 
+	vertical-align: middle; 
+	margin-right: 3px; 
+	text-align: left;
+}
+.mc-pager-next {
+	width: 20px; 
+	vertical-align: middle; 
+	margin-left: 3px; 
+	text-align: right;
+}
+.mc-pager-link-align, .mc-pager-image-align {
+	vertical-align: middle;
+}
+.mc-pager-dropdown {
+	vertical-align: middle;
+}
+.mc-deactivate-footer {
+	margin-top: 40px;
+}

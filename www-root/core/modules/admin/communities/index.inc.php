@@ -261,53 +261,55 @@ if (!defined("IN_COMMUNITIES")) {
 	<h2>Community Search</h2>
 	<div class="well">
 		<form action="<?php echo ENTRADA_URL; ?>/admin/communities" method="get" class="form-horizontal">
-		<input type="hidden" name="type" value="search" />
-		<div class="control-group">
-			<label for="q" class="form-required control-label">Community Search:</label>
-			<div class="controls">
-				<input type="text" id="q" name="q" value="<?php echo html_encode($search_query); ?>" />
-				<input type="submit" class="button" value="Search" />
+			<input type="hidden" name="type" value="search" />
+			<div class="control-group">
+				<label for="q" class="form-required control-label">Community Search:</label>
+				<div class="controls">
+					<input type="text" id="q" name="q" value="<?php echo html_encode($search_query); ?>" />
+					<input type="submit" class="btn btn-primary" value="Search" />
 					<?php
 					if ($search_query != "") {
-						?>
-						<input type="button" class="button" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/communities'"/>
-						<?php
+					?>
+						<input type="button" class="btn" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/communities'"/>
+					<?php
 					}
 					?>
 					<div class="content-small" style="margin-top: 10px">
 						<strong>Note:</strong> You can search for community title, or Category title.
 					</div>
+				</div>
 			</div>
-		</div>
 		</form>
 	</div>
 	<?php
 	if ($scheduler_communities["total_pages"] > 1) {
-		echo "<div class=\"fright\" style=\"margin-bottom: 10px\">\n";
+		echo "<div class=\"row-fluid\">";
+		echo "<div class=\"mc-pager-top pull-right\">\n";
 		echo "<form action=\"".ENTRADA_URL."/admin/communities\" method=\"get\" id=\"pageSelector\">\n";
-		echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
+		echo "<span class=\"mc-pager-prev\">\n";
 		if ($scheduler_communities["page_previous"]) {
-			echo "<a href=\"".ENTRADA_URL."/admin/communities?".replace_query(array("pv" => $scheduler_communities["page_previous"]))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$scheduler_communities["page_previous"].".\" title=\"Back to page ".$scheduler_communities["page_previous"].".\" style=\"vertical-align: middle\" /></a>\n";
+			echo "<a href=\"".ENTRADA_URL."/admin/communities?".replace_query(array("pv" => $scheduler_communities["page_previous"]))."\"><img src=\"".ENTRADA_URL."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$scheduler_communities["page_previous"].".\" title=\"Back to page ".$scheduler_communities["page_previous"].".\" class=\"mc-pager-link-align\" /></a>\n";
 		} else {
-			echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+			echo "<img src=\"".ENTRADA_URL."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" class=\"mc-pager-image-align\" />";
 		}
 		echo "</span>";
-		echo "<span style=\"vertical-align: middle\">\n";
+		echo "<span class=\"mc-pager-dropdown\">\n";
 		echo "<select name=\"pv\" onchange=\"$('pageSelector').submit();\"".(($scheduler_communities["total_pages"] <= 1) ? " disabled=\"disabled\"" : "").">\n";
 		for($i = 1; $i <= $scheduler_communities["total_pages"]; $i++) {
 			echo "<option value=\"".$i."\"".(($i == $scheduler_communities["page_current"]) ? " selected=\"selected\"" : "").">".(($i == $scheduler_communities["page_current"]) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
 		}
 		echo "</select>\n";
 		echo "</span>\n";
-		echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
+		echo "<span class=\"mc-pager-next\">\n";
 		if ($scheduler_communities["page_current"] < $scheduler_communities["total_pages"]) {
-			echo "<a href=\"".ENTRADA_URL."/admin/communities?".replace_query(array("pv" => $scheduler_communities["page_next"]))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$scheduler_communities["page_next"].".\" title=\"Forward to page ".$scheduler_communities["page_next"].".\" style=\"vertical-align: middle\" /></a>";
+			echo "<a href=\"".ENTRADA_URL."/admin/communities?".replace_query(array("pv" => $scheduler_communities["page_next"]))."\"><img src=\"".ENTRADA_URL."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$scheduler_communities["page_next"].".\" title=\"Forward to page ".$scheduler_communities["page_next"].".\" class=\"mc-pager-link-align\" /></a>";
 		} else {
-			echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
+			echo "<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" class=\"mc-pager-image-align\" />";
 		}
 		echo "</span>\n";
 		echo "</form>\n";
 		echo "</div>\n";
+		echo "</div>";
 		echo "<div class=\"clear\"></div>\n";
 	}
 
@@ -315,7 +317,7 @@ if (!defined("IN_COMMUNITIES")) {
 		if ($ENTRADA_ACL->amIAllowed("communityadmin", "delete", false)) : ?>
 		<form action="<?php echo ENTRADA_URL; ?>/admin/communities?section=deactivate" method="post">
 		<?php endif; ?>
-		<table class="tableList" cellspacing="0" cellpadding="1" summary="List of communities">
+		<table class="table" summary="List of communities">
 			<colgroup>
 				<col class="modified" />
 				<col class="title" />
@@ -326,12 +328,12 @@ if (!defined("IN_COMMUNITIES")) {
 			</colgroup>
 			<thead>
 				<tr>
-					<td class="modified">&nbsp;</td>
-					<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "community_title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("community_title", "Community Title"); ?></td>
-					<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "category_title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("category_title", "Category"); ?></td>
-					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "community_opened") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("community_opened", "Creation Date"); ?></td>
-					<td class="attachment">&nbsp;</td>
-					<td class="attachment">&nbsp;</td>
+					<th class="modified">&nbsp;</th>
+					<th class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "community_title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("community_title", "Community Title"); ?></th>
+					<th class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "category_title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("category_title", "Category"); ?></th>
+					<th class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "community_opened") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("community_opened", "Creation Date"); ?></th>
+					<th class="attachment">&nbsp;</th>
+					<th class="attachment">&nbsp;</th>
 				</tr>
 			</thead>
 			<?php if ($ENTRADA_ACL->amIAllowed("communityadmin", "delete", false)) : ?>
@@ -339,7 +341,7 @@ if (!defined("IN_COMMUNITIES")) {
 				<tr>
 					<td></td>
 					<td colspan="5" style="padding-top: 10px">
-						<input type="submit" class="button" value="Deactivate" />
+						<input type="submit" class="btn" value="Deactivate" />
 					</td>
 				</tr>
 			</tfoot>

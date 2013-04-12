@@ -31,12 +31,8 @@ function award_details_edit($award) {
 		</div>
 	</div>
 	
-	<div class="control-group">
-		<div class="controls">
-			<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/awards'" />
-			<input type="submit" class="btn btn-primary" value="Submit Changes" />
-		</div>
-	</div>
+	<input type="button" class="btn pull-left" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/awards'" />
+	<input type="submit" class="btn btn-primary pull-right" value="Submit Changes" />
 </form>
 <?php
 	return ob_get_clean();

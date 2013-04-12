@@ -118,8 +118,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 				</div>
 				<div class="control-group">
 					<div class="controls">
-						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award_id; ?>#award-recipients-tab'" />
-						<input type="submit" class="btn btn-primary" value="Add Recipient" />
+						<input type="submit" class="btn btn-primary pull-right" value="Add Recipient" />
 					</div>
 				</div>
 			</form>

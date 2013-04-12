@@ -270,10 +270,10 @@ a.log-out:hover{
 .welcome-area .welcome-block {
     float: right;
 }
-.welcome-area .profileLink a {
+.welcome-area a {
     color: #EEEEEE;
 }
-.welcome-area .profileLink a:hover {
+.welcome-area a:hover {
     color: #CCCCCC;
     text-decoration: none;
 }
@@ -405,8 +405,8 @@ div.ps-tab-style {
 	display: inline;
 }
 .ps-pagination-link{
-	width: 20px; 
-	vertical-align: middle; 
+	width: 20px;
+	vertical-align: middle;
 	margin-right: 3px;
 }
 .ps-pagination-image {
@@ -416,14 +416,14 @@ div.ps-tab-style {
 	vertical-align: middle;
 }
 .ps-search-result-title {
-	font-size: 12px; 
-	font-weight: bold; 
+	font-size: 12px;
+	font-weight: bold;
 	padding-left:10px;
 }
 .ps-search-result-summary {
-	font-size: 10px; 
-	color: #666666; 
-	overflow: hidden; 
+	font-size: 10px;
+	color: #666666;
+	overflow: hidden;
 	white-space: nowrap;
 }
 .ps-search-summary-bar {
@@ -444,4 +444,13 @@ div.ps-tab-style {
 }
 .ps-email {
 	font-size: 10px;
+}
+
+div#dashboardCalendar {
+margin-bottom: 10px;
+}
+
+div.rss-item-title {
+padding: 3px 0 3px 3px;
+border-bottom: 1px #EEE solid;
 }

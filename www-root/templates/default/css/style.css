@@ -291,6 +291,7 @@ span.bread-separator{
   color:#999;
   margin:0 3px;
 }
+
 /*** Departamental Clerkship Schedule ***/
 .select-dep form{
   padding:15px;
@@ -313,7 +314,16 @@ form legend.content-subheading{
   line-height:1.5;
   border:none;
 }
-/*** End dep clerkship schedule ***/
+
+/*** Dashboard ***/
+div#dashboardCalendar {
+margin-bottom: 10px;
+}
+
+div.rss-item-title {
+padding: 3px 0 3px 3px;
+border-bottom: 1px #EEE solid;
+}
 
 /*** Courses ***/
 ul.course-list {
@@ -446,11 +456,31 @@ div.ps-tab-style {
 	font-size: 10px;
 }
 
-div#dashboardCalendar {
-margin-bottom: 10px;
+/*** Manage Awards Module ***/
+.award_new_link {
+	margin-bottom:18px;
 }
-
-div.rss-item-title {
-padding: 3px 0 3px 3px;
-border-bottom: 1px #EEE solid;
+.award_text_input {
+	width: 95%;
+}
+.award_text_area {
+	width: 95%;
+}
+.award_table_font {
+	font-size: 12px;
+}
+.award_list_form {
+	margin-bottom: 0;
+}
+.award_details_table {
+	width: 100%;
+}
+.award_details_footer {
+	padding-top: 5px;
+}
+.award_recipient_list_first_column {
+	border-left: 1px solid #999;
+}
+.award_recipient_list_delete_button_column {
+	padding-top: 23px !important;
 }

@@ -46,63 +46,47 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AWARDS"))) {
 	$PAGE_META["title"]			= "Awards Listing";
 	$PAGE_META["description"]	= "";
 	$PAGE_META["keywords"]		= "";
-
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/ActiveDataEntryProcessor.js\"></script>";
 	?>
 	<div id="award_messages">
-	<?php 
-	display_status_messages();
-	?>
+		<?php 
+		display_status_messages();
+		?>
 	</div>
 	<h1>Awards Listing</h1>
 	
-		<?php
-			$show_new_award_form = (isset($_GET["show"]) && ($_GET["show"] == "add_new_award") ? true : false);
-		?>	
+	<?php
+		$show_new_award_form = (isset($_GET["show"]) && ($_GET["show"] == "add_new_award") ? true : false);
+	?>	
 
-	<div id="add_new_award_link" style="margin-bottom:18px; float: right;<?php if ($show_new_award_form) { echo " display: none;"; } ?>">
+	<div id="add_new_award_link" class="award_new_link pull-right" style="<?php if ($show_new_award_form) { echo " display: none;"; } ?>">
 			<a id="add_new_award" href="<?php echo ENTRADA_URL; ?>/admin/awards?show=add_new_award" class="btn btn-primary">Add Award</a>
 	</div>
-	<form class="form-horizontal" id="new_award_form" action="<?php echo ENTRADA_URL; ?>/admin/awards" method="post"<?php echo ((!$show_new_award_form) ? " style=\"display: none;\"" : ""); ?>>
-		
-		
+	<form class="form-horizontal" id="new_award_form" action="<?php echo ENTRADA_URL; ?>/admin/awards" method="post" <?php echo ((!$show_new_award_form) ? " style=\"display: none;\"" : ""); ?>>
 		<input type="hidden" name="action" value="new_award" />
 		<div class="control-group">
 			<label for="award_title" class="control-label form-required">Title:</label>
 			<div class="controls">
-				<input id="award_title" name="award_title" type="text" maxlength="4096"></input>	
+				<input id="award_title" name="award_title" class="award_text_input" type="text" maxlength="4096"></input>	
 			</div>
 		</div>
 		<div class="control-group">
 			<label for="award_title" class="control-label form-required">Terms of Award:</label>
 			<div class="controls">
-				<textarea id="award_terms" name="award_terms" cols="65" rows="5"></textarea>	
+				<textarea id="award_terms" name="award_terms" class="award_text_area" rows="5"></textarea>	
 			</div>
 		</div>
-		<div class="form-actions">
+		<div class="form-actions pull-right">
 			<input type="submit" class="btn btn-primary" value="Add Award" />	
 		</div>
 		
 	</form>
 	<div class="clear"></div>
 	
-
 	<div class="clear"></div>
 	
 	<div id="awards_listing">
-	<?php echo awards_list($awards); ?>
+		<?php echo awards_list($awards); ?>
 	</div>
-		<script language="javascript">
-		var new_award = new ActiveDataEntryProcessor({
-			url : '<?php echo webservice_url("awards"); ?>',
-			data_destination: $('#awards_listing'),
-			new_form: $('#new_award_form'),
-			remove_forms_selector: '.remove_award_form',
-			new_button: $('#add_new_award_link'),
-			hide_button: $('#hide_new_award'),
-			messages: $('#award_messages')
-		});
-	</script>
 	<?php
 }
 ?>

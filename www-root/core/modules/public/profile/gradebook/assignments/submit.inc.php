@@ -56,10 +56,17 @@ if ($RECORD_ID) {
 							switch($_FILES["uploaded_file"]["error"]) {
 								case 0 :
 									if (($file_filesize = (int) trim($_FILES["uploaded_file"]["size"])) <= $VALID_MAX_FILESIZE) {
-										$PROCESSED["file_version"]		= 1;
-										$PROCESSED["file_mimetype"]		= strtolower(trim($_FILES["uploaded_file"]["type"]));
-										$PROCESSED["file_filesize"]		= $file_filesize;
-										$PROCESSED["file_filename"]		= useable_filename(trim($_FILES["uploaded_file"]["name"]));
+										if (!DEMO_MODE) {
+											$PROCESSED["file_version"]		= 1;
+											$PROCESSED["file_mimetype"]		= strtolower(trim($_FILES["uploaded_file"]["type"]));
+											$PROCESSED["file_filesize"]		= $file_filesize;
+											$PROCESSED["file_filename"]		= useable_filename(trim($_FILES["uploaded_file"]["name"]));
+										} else {
+											$PROCESSED["file_version"]		= 1;
+											$PROCESSED["file_mimetype"]		= filetype(DEMO_ASSIGNMENT);
+											$PROCESSED["file_filesize"]		= filesize(DEMO_ASSIGNMENT);
+											$PROCESSED["file_filename"]		= basename(DEMO_ASSIGNMENT);
+										}
 
 										if ((!defined("COMMUNITY_STORAGE_DOCUMENTS")) || (!@is_dir(COMMUNITY_STORAGE_DOCUMENTS)) || (!@is_writable(COMMUNITY_STORAGE_DOCUMENTS))) {
 											add_error("There is a problem with the document storage directory on the server; the MEdTech Unit has been informed of this error, please try again later.");
@@ -120,7 +127,6 @@ if ($RECORD_ID) {
 							$PROCESSED["updated_date"]	= time();
 							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
-
 							if ($db->AutoExecute("assignment_files", $PROCESSED, "INSERT")) {
 								if ($FILE_ID = $db->Insert_Id()) {
 									$PROCESSED["afile_id"]	= $FILE_ID;
@@ -133,7 +139,11 @@ if ($RECORD_ID) {
 												$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 												$SUCCESS++;
-												$SUCCESSSTR[]	= "You have successfully uploaded ".html_encode($PROCESSED["file_filename"])." (version 1).<br /><br />You will now be redirected to this files page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+												if (!DEMO_MODE) {
+													$SUCCESSSTR[]	= "You have successfully uploaded ".html_encode($PROCESSED["file_filename"])." (version 1).<br /><br />You will now be redirected to this files page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+												} else {
+													$SUCCESSSTR[]	= "Entrada is in demo mode therefore the Entrada demo assignment file was used for this import instead of the file you attempted to upload.<br /><br />You will now be redirected to this files page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+												}
 												add_statistic("assignment:".$RECORD_ID, "file_add", "afile_id", $FILE_ID);
 											}											
 										}

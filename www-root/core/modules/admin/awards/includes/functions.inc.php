@@ -5,60 +5,38 @@ function award_details_edit($award) {
 	
 	ob_start();
 ?>
-<form class="edit_award_form" action="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award->getID(); ?>" method="post" >
+<form class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award->getID(); ?>" method="post" >
 	<input type="hidden" name="action" value="edit_award_details"></input>
 	<input type="hidden" name="award_id" value="<?php echo $award->getID(); ?>"></input>
-	<table class="award_details" style="width: 100%">
-		<colgroup>
-			<col width="3%"></col>
-			<col width="25%"></col>
-			<col width="72%"></col>
-		</colgroup>
-		<tfoot>
-			<tr>
-				<td colspan="3">&nbsp;</td>
-			</tr>
-			<tr>
-				<td>
-					<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/awards'" />
-				</td>
-				<td colspan="2" style="padding-top: 5px; text-align: right">
-					<input type="submit" class="button" value="Submit Changes" />
-				</td>
-			</tr>
-		</tfoot>
-		<tbody>
-		<?php 
+	<?php 
 		$disabled = $award->isDisabled();
-		?>
-			<tr>
-				<td>&nbsp;</td>
-				<td>
-					<label for="award_title" class="form-required">Title:</label>
-				</td>
-				<td>
-					<input id="award_title" name="award_title" type="text" maxlength="4096" style="width: 250px; vertical-align: middle;" value="<?php echo clean_input($award->getTitle(), array("notags", "specialchars")) ?>"></input>	
-				</td>
-			</tr>
-			<tr>
-				<td>&nbsp;</td>
-				<td style="vertical-align:top;">
-					<label for="award_terms" class="form-required">Terms of Award:</label>
-				</td>
-				<td>
-					<textarea id="award_terms" name="award_terms" style="width: 100%; height: 100px;" cols="65" rows="20"><?php echo clean_input($award->getTerms(), array("notags", "specialchars")) ?></textarea>	
-				</td>
-			</tr>
-			<tr>
-			<td>&nbsp;</td>
-			<td style="vertical-align:top;">
-				<label for="award_disabled" class="form-nrequired">Disabled:</label>
-			</td>
-			<td><input type="radio" name="award_disabled" id="award_disabled_0" value="0"<?php if(!$disabled) echo " checked=\"checked\"";?>></input><label for="award_disabled_0">No</label><br />
-			<input type="radio" name="award_disabled" id="award_disabled_1" value="1"<?php if($disabled) echo " checked=\"checked\"";?>></input><label for="award_disabled_1">Yes</label></td>
-			</tr>
-		</tbody>
-	</table>
+	?>
+	<div class="control-group">
+		<label for="award_title" class="control-label form-required">Title:</label>
+		<div class="controls">
+			<input id="award_title" name="award_title" class="award_text_input" type="text" maxlength="4096" value="<?php echo clean_input($award->getTitle(), array("notags", "specialchars")) ?>"></input>	
+		</div>
+	</div>
+	<div class="control-group">
+		<label for="award_terms" class="control-label form-required">Terms of Award:</label>
+		<div class="controls">
+			<textarea id="award_terms" name="award_terms" class="award_text_area" rows="20"><?php echo clean_input($award->getTerms(), array("notags", "specialchars")) ?></textarea>		
+		</div>
+	</div>
+	<div class="control-group">
+		<label for="award_disabled" class="control-label form-nrequired">Disabled:</label>
+		<div class="controls">
+			<input type="radio" name="award_disabled" id="award_disabled_0" value="0"<?php if(!$disabled) echo " checked=\"checked\"";?>></input><label for="award_disabled_0">No</label>
+			<input type="radio" name="award_disabled" id="award_disabled_1" value="1"<?php if($disabled) echo " checked=\"checked\"";?>></input><label for="award_disabled_1">Yes</label>
+		</div>
+	</div>
+	
+	<div class="control-group">
+		<div class="controls">
+			<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/awards'" />
+			<input type="submit" class="btn btn-primary" value="Submit Changes" />
+		</div>
+	</div>
 </form>
 <?php
 	return ob_get_clean();
@@ -69,13 +47,13 @@ function award_recipients_list(InternalAward $award) {
 		?>
 		<table class="award_history tableList" cellspacing="0">
 			<colgroup>
-				<col width="75%"></col>
-				<col width="15%"></col>
+				<col width="70%"></col>
+				<col width="20%"></col>
 				<col width="10%"></col>
 			</colgroup>
 			<thead>
 				<tr>
-					<td class="general" style="border-left: 1px solid #999;">
+					<td class="general award_recipient_list_first_column">
 						Full Name
 					</td>
 					<td class="sortedDESC">
@@ -97,14 +75,15 @@ function award_recipients_list(InternalAward $award) {
 					<td class="general">
 						<?php echo clean_input($receipt->getAwardYear(), array("notags", "specialchars")) ?>
 					</td>
-					<td><form class="remove_award_recipient_form" action="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award->getID(); ?>" method="post" >
+					<td class="award_recipient_list_delete_button_column">
+						<form class="remove_award_recipient_form" action="<?php echo ENTRADA_URL; ?>/admin/awards?section=award_details&id=<?php echo $award->getID(); ?>#award-recipients-tab" method="post" >
 							<input type="hidden" name="internal_award_id" value="<?php echo clean_input($receipt->getID(), array("notags", "specialchars")); ?>"></input>
 							<input type="hidden" name="action" value="remove_award_recipient"></input>
 							<input type="hidden" name="award_id" value="<?php echo $award->getID(); ?>"></input>
-							
-							<input type="image" src="<?php echo ENTRADA_URL ?>/images/action-delete.gif"></input> 
+
+							<button type="submit" class="btn btn-danger btn-mini"><i class="icon-remove-circle icon-white"></i></button> 
 						</form>
-						</td>
+					</td>
 				</tr>
 				<?php 
 			}
@@ -125,8 +104,8 @@ function awards_list($awards = array()) {
 		</colgroup>
 		<thead>
 			<tr>
-				<td class="title sortedASC borderl" style="font-size: 12px"><div class="noLink">Title</div></td>
-				<td class="award_terms" style="font-size: 12px">Terms of Award</td>
+				<td class="title sortedASC borderl award_table_font"><div class="noLink">Title</div></td>
+				<td class="award_terms award_table_font">Terms of Award</td>
 				<td class="controls">&nbsp;</td>
 			</tr>
 		</thead>
@@ -147,11 +126,11 @@ function awards_list($awards = array()) {
 					echo $award_terms; ?>	
 				</td>
 				<td class="controls">
-					<form style="margin-bottom:0" class="remove_award_form" action="<?php echo ENTRADA_URL; ?>/admin/awards?id=<?php echo $award_id; ?>" method="post" >
+					<form class="remove_award_form award_list_form" action="<?php echo ENTRADA_URL; ?>/admin/awards?id=<?php echo $award_id; ?>" method="post" >
 						<input type="hidden" name="award_id" value="<?php echo clean_input($award->getID(), array("notags", "specialchars")); ?>"></input>
 						<input type="hidden" name="action" value="remove_award"></input>
 						
-						<input style="width:16px" type="image" src="<?php echo ENTRADA_URL ?>/images/action-delete.gif"></input> 
+						<button type="submit" class="btn btn-danger btn-mini"><i class="icon-remove-circle icon-white"></i></button>  
 					</form>
 				</td>
 			</tr>

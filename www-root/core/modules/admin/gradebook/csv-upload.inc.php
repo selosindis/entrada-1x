@@ -45,11 +45,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		   	$url = ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("step" => false, "section" => "grade", "assessment_id" => $ASSESSMENT_ID));			
 		   	if ($_FILES["file"]["error"] > 0) {
 				add_error("Error occurred while uploading file.");
-				//$_FILES["file"]["error"]
 			} elseif(!in_array($_FILES["file"]["type"], array("text/csv", "application/vnd.ms-excel","text/comma-separated-values","application/csv", "application/excel", "application/vnd.ms-excel", "application/vnd.msexcel","application/octet-stream"))) {
 				add_error("Invalid <strong>file type</strong> uploaded. Must be a CSV file in the proper format.");
 			} else {
-				$lines = file($_FILES["file"]["tmp_name"]);
+				if (!DEMO_MODE) {
+					$lines = file($_FILES["file"]["tmp_name"]);
+				} else {
+					$lines = file(DEMO_GRADEBOOK);
+				}
 				$PROCESSED["assessment_id"] = $ASSESSMENT_ID;
                 $query = "SELECT *, a.`name` as `assessment_name` FROM `assessments` AS a
                             JOIN `assessment_marking_schemes` AS b
@@ -135,7 +138,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						}
 					}
                     echo "</form>";
-					add_success("Successfully updated <strong>Gradebook</strong>. You will now be redirected to the <strong>Grade Assessment</strong> page for <strong>".$ASSESSMENT_NAME. "</strong>. This will happen <strong>automatically</strong> in 5 seconds or <a href=\"#\" onclick=\"$('errorForm').submit()\" style=\"font-weight: bold\">click here</a> to continue now.");
+                    if (!DEMO_MODE) {
+						add_success("Successfully updated <strong>Gradebook</strong>. You will now be redirected to the <strong>Grade Assessment</strong> page for <strong>".$ASSESSMENT_NAME. "</strong>. This will happen <strong>automatically</strong> in 5 seconds or <a href=\"#\" onclick=\"$('errorForm').submit()\" style=\"font-weight: bold\">click here</a> to continue now.");
+                    } else {
+                    	add_success("Entrada is in demo mode therefore the Entrada demo grade file was used for this import instead of the file you attempted to import. You will now be redirected to the <strong>Grade Assessment</strong> page for <strong>".$ASSESSMENT_NAME. "</strong>. This will happen <strong>automatically</strong> in 5 seconds or <a href=\"#\" onclick=\"$('errorForm').submit()\" style=\"font-weight: bold\">click here</a> to continue now.");
+                    }
 					$COURSE_ID = (int)$_GET["id"];
                     if (!has_error()) {
                         if (isset($_GET["assignment_id"]) && $ASSIGNMENT_ID = (int)$_GET["assignment_id"]) {
@@ -143,7 +150,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         } else {
                             $url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&id=".$COURSE_ID."&assessment_id=".$ASSESSMENT_ID;
                         }
-                        $ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
+                        if (!DEMO_MODE) {
+                        	$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
+                        } else {
+                        	// Longer success message explaining demo mode so allow the user the time to read it before redirecting
+                        	$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 10000)";
+                        }
                     } else {
                         $ONLOAD[] = "setTimeout(\"$('errorForm').submit()\", 5000)";
                     }

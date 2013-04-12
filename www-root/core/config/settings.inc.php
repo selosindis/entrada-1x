@@ -57,6 +57,23 @@ define("ENTRADA_RELATIVE", $config->entrada_relative);							// Absolute Path fr
 define("ENTRADA_ABSOLUTE", $config->entrada_absolute);							// Full Directory Path to application's index file without a trailing slash.
 define("ENTRADA_CORE", ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."core");			// Full Directory Path to the Entrada core directory.
 
+/**
+ * DEMO_MODE - Whether or not you want to run in demo mode.
+ * When in demo mode upload functionality is limited or replaced 
+ * with place holder files (DEMO_FILENAME) to reduce the posibility of any malicious
+ * actions taking place through the Entrada demo site.
+ * 
+ */
+define("DEMO_MODE", false);
+define("DEMO_FILE", ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."templates".DIRECTORY_SEPARATOR."default".DIRECTORY_SEPARATOR."demo".DIRECTORY_SEPARATOR."demo_file.jpg");
+define("DEMO_PODCAST", ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."templates".DIRECTORY_SEPARATOR."default".DIRECTORY_SEPARATOR."demo".DIRECTORY_SEPARATOR."demo_podcast.aif");
+define("DEMO_NOTES", ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."templates".DIRECTORY_SEPARATOR."default".DIRECTORY_SEPARATOR."demo".DIRECTORY_SEPARATOR."demo_notes.rtf");
+define("DEMO_SLIDES", ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."templates".DIRECTORY_SEPARATOR."default".DIRECTORY_SEPARATOR."demo".DIRECTORY_SEPARATOR."demo_slides.pptx");
+define("DEMO_PHOTO", ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."templates".DIRECTORY_SEPARATOR."default".DIRECTORY_SEPARATOR."demo".DIRECTORY_SEPARATOR."demo_photo.gif");
+define("DEMO_ASSIGNMENT", ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."templates".DIRECTORY_SEPARATOR."default".DIRECTORY_SEPARATOR."demo".DIRECTORY_SEPARATOR."demo_assignment.rtf");
+define("DEMO_SCHEDULE", ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."templates".DIRECTORY_SEPARATOR."default".DIRECTORY_SEPARATOR."demo".DIRECTORY_SEPARATOR."demo_schedule.csv");
+define("DEMO_GRADEBOOK", ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."templates".DIRECTORY_SEPARATOR."default".DIRECTORY_SEPARATOR."demo".DIRECTORY_SEPARATOR."demo_grades.csv");
+
 define("COMMUNITY_URL", ENTRADA_URL."/community");								// Full URL to the community directory without a trailing slash.
 define("COMMUNITY_ABSOLUTE", ENTRADA_ABSOLUTE."/community");					// Full Directory Path to the community directory without a trailing slash.
 define("COMMUNITY_RELATIVE", ENTRADA_RELATIVE."/community");					// Absolute Path from the document_root to the community without a trailing slash.

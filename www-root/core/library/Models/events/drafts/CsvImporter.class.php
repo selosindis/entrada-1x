@@ -368,29 +368,53 @@ class CsvImporter {
 	}
 
 	public function importCsv($file) {
-
-		$handle = fopen($file["tmp_name"], "r");
-		if ($handle) {
-			$row_count = 0;
-			while (($row = fgetcsv($handle)) !== false) {
-				if ($row_count >= 1) {
-					$results = $this->validateRow($row);
-					if (isset($results["errors"])) {
-						$this->errors[$row_count + 1] = $results["errors"];
-					} else {
-						$this->valid_rows[] = $results;
+		if(!DEMO_MODE) {
+			$handle = fopen($file["tmp_name"], "r");
+			if ($handle) {
+				$row_count = 0;
+				while (($row = fgetcsv($handle)) !== false) {
+					if ($row_count >= 1) {
+						$results = $this->validateRow($row);
+						if (isset($results["errors"])) {
+							$this->errors[$row_count + 1] = $results["errors"];
+						} else {
+							$this->valid_rows[] = $results;
+						}
+					}
+					$row_count++;
+				}
+				if (count($this->errors) <= 0) {
+					foreach ($this->valid_rows as $valid_row) {
+						$this->importRow($valid_row);
+						$this->success[] = $row_count + 1;
 					}
 				}
-				$row_count++;
 			}
-			if (count($this->errors) <= 0) {
-				foreach ($this->valid_rows as $valid_row) {
-					$this->importRow($valid_row);
-					$this->success[] = $row_count + 1;
+			fclose($handle);
+		} else {
+			$handle = fopen(DEMO_SCHEDULE, "r");
+			if ($handle) {
+				$row_count = 0;
+				while (($row = fgetcsv($handle)) !== false) {
+					if ($row_count >= 1) {
+						$results = $this->validateRow($row);
+						if (isset($results["errors"])) {
+							$this->errors[$row_count + 1] = $results["errors"];
+						} else {
+							$this->valid_rows[] = $results;
+						}
+					}
+					$row_count++;
+				}
+				if (count($this->errors) <= 0) {
+					foreach ($this->valid_rows as $valid_row) {
+						$this->importRow($valid_row);
+						$this->success[] = $row_count + 1;
+					}
 				}
 			}
+			fclose($handle);
 		}
-		fclose($handle);
 
 		return $row_count;
 	}

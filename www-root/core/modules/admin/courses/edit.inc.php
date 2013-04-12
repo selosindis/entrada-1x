@@ -759,100 +759,306 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="editCourseForm" onsubmit="selIt()" class="form-horizontal">
 					<h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
 					<div id="course-details-section">
-						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Course Details">
-						<colgroup>
-							<col style="width: 3%" />
-							<col style="width: 22%" />
-							<col style="width: 75%" />
-						</colgroup>
-						<tbody>
-							<tr>
-								<td></td>
-								<td style="vertical-align: top"><label for="curriculum_type_id" class="form-nrequired">Curriculum Category</label></td>
-								<td>
-									<select id="curriculum_type_id" name="curriculum_type_id" style="width: 250px" onchange="loadCurriculumPeriods(this.options[this.selectedIndex].value)">
-										<option value="0"<?php echo (((!isset($PROCESSED["curriculum_type_id"])) || (!(int) $PROCESSED["curriculum_type_id"])) ? " selected=\"selected\"" : ""); ?>>- Select Curriculum Category -</option>
-										<?php
-										$query = "	SELECT a.* FROM `curriculum_lu_types` AS a
-													JOIN `curriculum_type_organisation` AS b
-													ON a.`curriculum_type_id` = b.`curriculum_type_id`
-													WHERE a.`curriculum_type_active` = 1
-													AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-													ORDER BY `curriculum_type_order` ASC";
-										$results = $db->GetAll($query);
-										if ($results) {
-											foreach($results as $result) {
-												echo "<option value=\"".(int) $result["curriculum_type_id"]."\"".(((isset($PROCESSED["curriculum_type_id"])) && ($PROCESSED["curriculum_type_id"] == $result["curriculum_type_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["curriculum_type_name"])."</option>\n";
-											}
+
+						<div class="control-group">
+							<label for="curriculum_type_id" class="control-label form-nrequired">Curriculum Category</label>
+							<div class="controls">
+								<select id="curriculum_type_id" name="curriculum_type_id" style="width: 250px" onchange="loadCurriculumPeriods(this.options[this.selectedIndex].value)">
+									<option value="0"<?php echo (((!isset($PROCESSED["curriculum_type_id"])) || (!(int) $PROCESSED["curriculum_type_id"])) ? " selected=\"selected\"" : ""); ?>>- Select Curriculum Category -</option>
+									<?php
+									$query = "	SELECT a.* FROM `curriculum_lu_types` AS a
+												JOIN `curriculum_type_organisation` AS b
+												ON a.`curriculum_type_id` = b.`curriculum_type_id`
+												WHERE a.`curriculum_type_active` = 1
+												AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+												ORDER BY `curriculum_type_order` ASC";
+									$results = $db->GetAll($query);
+									if ($results) {
+										foreach($results as $result) {
+											echo "<option value=\"".(int) $result["curriculum_type_id"]."\"".(((isset($PROCESSED["curriculum_type_id"])) && ($PROCESSED["curriculum_type_id"] == $result["curriculum_type_id"])) ? " selected=\"selected\"" : "").">".html_encode($result["curriculum_type_name"])."</option>\n";
 										}
-										?>
-									</select>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<tr>
-								<td></td>
-								<td><label for="course_name" class="form-required"><?php echo $module_singular_name; ?> Name</label></td>
-								<td><input type="text" id="course_name" name="course_name" value="<?php echo html_encode($PROCESSED["course_name"]); ?>" maxlength="85" style="width: 243px" /></td>
-							</tr>
-							<tr>
-								<td></td>
-								<td><label for="course_code" class="form-required"><?php echo $module_singular_name; ?> Code</label></td>
-								<td><input type="text" id="course_code" name="course_code" value="<?php echo html_encode($PROCESSED["course_code"]); ?>" maxlength="16" style="width: 243px" /></td>
-							</tr>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<tr>
-								<td></td>
-								<td style="vertical-align: top"><span class="form-nrequired">Reminder Notifications</span></td>
-								<td style="vertical-align: top">
+									}
+									?>
+								</select>								
+							</div>
+						</div>
+
+						<div class="control-group">
+							<label for="course_name" class="form-nrequired control-label"><?php echo $module_singular_name; ?> Name</label>
+							<div class="controls">
+								<input type="text" id="course_name" name="course_name" value="<?php echo html_encode($PROCESSED["course_name"]); ?>" maxlength="85"/>
+							</div>
+						</div>
+
+						<div class="control-group">
+							<label for="course_code" class="form-nrequired control-label"><?php echo $module_singular_name; ?> Code</label>
+							<div class="controls">
+								<input type="text" id="course_code" name="course_code" value="<?php echo html_encode($PROCESSED["course_code"]); ?>" maxlength="16"/>
+							</div>
+						</div>
+
+						<div class="control-group">
+							<label class="form-nrequired control-label">Reminder Notifications</label>
+							<div class="controls">
 								<label for="notification_on" class="radio">
-									<input type="radio" name="notifications" id="notification_on" value="1"<?php echo (((!isset($PROCESSED["notifications"])) || ((isset($PROCESSED["notifications"])) && ($PROCESSED["notifications"]))) ? " checked=\"checked\"" : ""); ?> /> Send e-mail notifications to faculty for events under this <?php echo strtolower($module_singular_name); ?>.
-								</label><br />
-								<label for="notification_off" class="radio">
-									<input type="radio" name="notifications" id="notification_off" value="0"<?php echo (((isset($PROCESSED["notifications"])) && (!(int) $PROCESSED["notifications"])) ? " checked=\"checked\"" : ""); ?> /> <strong>Do not</strong> send e-mail notifications to faculty for events under this <?php echo strtolower($module_singular_name); ?>.
+								  <input type="radio" name="notifications" id="notification_on" value="1"<?php echo (((!isset($PROCESSED["notifications"])) || ((isset($PROCESSED["notifications"])) && ($PROCESSED["notifications"]))) ? " checked=\"checked\"" : ""); ?> />
+								   Send e-mail notifications to faculty for events under this <?php echo strtolower($module_singular_name); ?>.
 								</label>
-								</td>
-							</tr>
-							<tr>
-								<td></td>
-								<td style="vertical-align: top"><span class="form-nrequired"><?php echo $module_singular_name; ?> Permissions</span></td>
-								<td style="vertical-align: top">
+								<label for="notification_off" class="radio">
+								  <input type="radio" name="notifications" id="notification_off" value="0"<?php echo (((isset($PROCESSED["notifications"])) && (!(int) $PROCESSED["notifications"])) ? " checked=\"checked\"" : ""); ?> /> 
+								  <strong>Do not</strong> send e-mail notifications to faculty for events under this <?php echo strtolower($module_singular_name); ?>.
+								</label>								
+							</div>
+						</div>	
+
+						<div class="control-group">
+							<label class="form-nrequired control-label"><?php echo $module_singular_name; ?> Permissions</label>
+							<div class="controls">
 								<label for="visibility_on" class="radio">
-									<input type="radio" name="permission" id="visibility_on" value="open"<?php echo (((!isset($PROCESSED["permission"])) || ((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "open"))) ? " checked=\"checked\"" : ""); ?> />This <?php echo strtolower($module_singular_name); ?> is <strong>open</strong> and visible to all logged in users.
+									<input type="radio" name="permission" id="visibility_on" value="open"<?php echo (((!isset($PROCESSED["permission"])) || ((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "open"))) ? " checked=\"checked\"" : ""); ?> />
+									This <?php echo strtolower($module_singular_name); ?> is <strong>open</strong> and visible to all logged in users.
 								</label><br />
 								<label for="visibility_off" class="radio">
-									<input type="radio" name="permission" id="visibility_off" value="closed"<?php echo (((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "closed")) ? " checked=\"checked\"" : ""); ?> /> This <?php echo strtolower($module_singular_name); ?> is <strong>private</strong> and only visible to logged in users enrolled in the <?php echo strtolower($module_singular_name); ?>.
-								</label>
-								</td>
-							</tr>
-							<?php
-							if (true) {
-								?>
-							<tr>
-								<td></td>
-								<td style="vertical-align: top"><span class="form-nrequired">Audience Sync</span></td>
-								<td style="vertical-align: top">
-									<label for="sync_off" class="radio">
-										<input type="radio" name="sync_ldap" id="sync_off" value="0"<?php echo (((!isset($PROCESSED["sync_ldap"])) || (isset($PROCESSED["sync_ldap"])) && (!(int)$PROCESSED["sync_ldap"])) ? " checked=\"checked\"" : ""); ?> />The audience will be managed manually and <strong>should not</strong> be synced with the LDAP server.
-									</label><br />
-									<label for="sync_on" class="radio">
-										<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> This course <strong>should</strong> have its audience synced with the LDAP server.
-									</label><br />
-									<div class="well well-small content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>
-								</td>
-							</tr>
-						<?php }?>
-						</tbody>
-						</table>
+									<input type="radio" name="permission" id="visibility_off" value="closed"<?php echo (((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "closed")) ? " checked=\"checked\"" : ""); ?> /> 
+									This <?php echo strtolower($module_singular_name); ?> is <strong>private</strong> and only visible to logged in users enrolled in the <?php echo strtolower($module_singular_name); ?>.
+								</label>							
+							</div>
+						</div>	
+
+						<div class="control-group">
+							<label class="form-nrequired control-label">Audience Sync</label>
+							<div class="controls">
+								<label for="sync_off" class="radio">
+									<input type="radio" name="sync_ldap" id="sync_off" value="0"<?php echo (((!isset($PROCESSED["sync_ldap"])) || (isset($PROCESSED["sync_ldap"])) && (!(int)$PROCESSED["sync_ldap"])) ? " checked=\"checked\"" : ""); ?> />The audience will be managed manually and <strong>should not</strong> be synced with the LDAP server.
+								</label><br />
+								<label for="sync_on" class="radio">
+									<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> This course <strong>should</strong> have its audience synced with the LDAP server.
+								</label>		
+								<div class="well well-small content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>				
+							</div>
+						</div>
+					</div>							
+
+					<script type="text/javascript">
+					var sortables = new Array();
+					function updateOrder(type) {
+						$('associated_'+type).value = Sortable.sequence(type+'_list');
+					}
+
+					function addItem(type) {
+						if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
+							var li = new Element('li', {'class':'community', 'id':type+'_'+$(type+'_id').value, 'style':'cursor: move;'}).update($(type+'_name').value);
+							$(type+'_name').value = '';
+							li.insert({bottom: '<img src=\"<?php echo ENTRADA_URL; ?>/images/action-delete.gif\" class=\"list-cancel-image\" onclick=\"removeItem(\''+$(type+'_id').value+'\', \''+type+'\')\" />'});
+							$(type+'_id').value	= '';
+							$(type+'_list').appendChild(li);
+							sortables[type] = Sortable.destroy($(type+'_list'));
+							Sortable.create(type+'_list', {onUpdate : function(){updateOrder(type);}});
+							updateOrder(type);
+						} else if ($(type+'_'+$(type+'_id').value) != null) {
+							alert('Important: Each user may only be added once.');
+							$(type+'_id').value = '';
+							$(type+'_name').value = '';
+							return false;
+						} else if ($(type+'_name').value != '' && $(type+'_name').value != null) {
+							alert('Important: When you see the correct name pop-up in the list as you type, make sure you select the name with your mouse, do not press the Enter button.');
+							return false;
+						} else {
+							return false;
+						}
+					}
+
+					function addItemNoError(type) {
+						if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
+							addItem(type);
+						}
+					}
+
+					function copyItem(type) {
+						if (($(type+'_name') != null) && ($(type+'_ref') != null)) {
+							$(type+'_ref').value = $(type+'_name').value;
+						}
+
+						return true;
+					}
+
+					function checkItem(type) {
+						if (($(type+'_name') != null) && ($(type+'_ref') != null) && ($(type+'_id') != null)) {
+							if ($(type+'_name').value != $(type+'_ref').value) {
+								$(type+'_id').value = '';
+							}
+						}
+
+						return true;
+					}
+
+					function removeItem(id, type) {
+						if ($(type+'_'+id)) {
+							$(type+'_'+id).remove();
+							Sortable.destroy($(type+'_list'));
+							Sortable.create(type+'_list', {onUpdate : function (type) {updateOrder(type)}});
+							updateOrder(type);
+						}
+					}
+
+					function selectItem(id, type) {
+						if ((id != null) && ($(type+'_id') != null)) {
+							$(type+'_id').value = id;
+						}
+					}
+
+					function loadCurriculumPeriods(ctype_id) {
+						var updater = new Ajax.Updater('curriculum_type_periods', '<?php echo ENTRADA_URL."/api/curriculum_type_periods.api.php"; ?>',{
+							method:'post',
+							parameters: {
+								'ctype_id': ctype_id
+							},
+							onFailure: function(transport){
+								$('curriculum_type_periods').update(new Element('div', {'class':'display-error'}).update('No Periods were found for this Curriculum Category.'));
+							}
+						});
+					}
+					</script>								
+
+					<h2 title="Course Contacts Section"><?php echo $module_singular_name; ?> Contacts</h2>
+					<div id="course-contacts-section">
+						<div class="control-group">
+							<label for="director_name" class="form-nrequired control-label"><?php echo $module_singular_name; ?> Directors</label>
+							<div class="controls">
+								<input type="text" id="director_name" name="fullname" size="30" autocomplete="off" onkeyup="checkItem('director')" onblur="addItemNoError('director')" />
+								<div class="autocomplete" id="director_name_auto_complete"></div>
+								<input type="hidden" id="associated_director" name="associated_director" />
+								<input type="button" class="button-sm" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
+								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+								<ul id="director_list" class="menu" style="margin-top: 15px">
+									<?php
+									if (is_array($chosen_course_directors) && count($chosen_course_directors)) {
+										foreach ($chosen_course_directors as $director) {
+											if ((array_key_exists($director, $DIRECTOR_LIST)) && is_array($DIRECTOR_LIST[$director])) {
+												?>
+													<li class="community" id="director_<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>" style="cursor: move;"><?php echo $DIRECTOR_LIST[$director]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>', 'director');"/></li>
+												<?php
+											}
+										}
+									}
+									?>
+								</ul>
+								<input type="hidden" id="director_ref" name="director_ref" value="" />
+								<input type="hidden" id="director_id" name="director_id" value="" />								
+							</div>
+						</div>
+
+						<div class="control-group">
+							<label for="coordinator_name" class="form-nrequired control-label">Curriculum Coordinators</label>
+							<div class="controls">
+								<input type="text" id="coordinator_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('coordinator')" onblur="addItemNoError('coordinator')" />
+								<div class="autocomplete" id="coordinator_name_auto_complete"></div>
+								<input type="hidden" id="associated_coordinator" name="associated_coordinator" />
+								<input type="button" class="button-sm" onclick="addItem('coordinator');" value="Add" style="vertical-align: middle" />
+								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+								<ul id="coordinator_list" class="menu" style="margin-top: 15px">
+									<?php
+									if (is_array($chosen_ccoordinators) && count($chosen_ccoordinators)) {
+										foreach ($chosen_ccoordinators as $coordinator) {
+											if ((array_key_exists($coordinator, $COORDINATOR_LIST)) && is_array($COORDINATOR_LIST[$coordinator])) {
+												?>
+													<li class="community" id="coordinator_<?php echo $COORDINATOR_LIST[$coordinator]["proxy_id"]; ?>" style="cursor: move;"><?php echo $COORDINATOR_LIST[$coordinator]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $COORDINATOR_LIST[$coordinator]["proxy_id"]; ?>', 'coordinator');"/></li>
+												<?php
+											}
+										}
+									}
+									?>
+								</ul>
+								<input type="hidden" id="coordinator_ref" name="coordinator_ref" value="" />
+								<input type="hidden" id="coordinator_id" name="coordinator_id" value="" />								
+							</div>
+						</div>		
+
+						<div class="control-group">
+							<label for="programcoodinator_id" class="form-nrequired control-label">Program Coordinator</label>
+							<div class="controls">
+								<?php
+								if ((is_array($programcoodinators)) && (count($programcoodinators))) {
+									echo "<select id=\"pcoord_id\" name=\"pcoord_id\" style=\"width: 95%\">\n";
+									echo "<option value=\"\"".((!isset($PROCESSED["pcoord_id"])) ? " selected=\"selected\"" : "").">-- To Be Announced --</option>\n";
+									foreach($programcoodinators as $proxy_id => $fullname) {
+										echo "<option value=\"".(int) $proxy_id."\"".(($PROCESSED["pcoord_id"] == $proxy_id) ? " selected=\"selected\"" : "").">".html_encode($fullname)."</option>\n";
+									}
+									echo "</select>\n";
+								} else {
+									echo "<input type=\"hidden\" id=\"pcoord_id\" name=\"pcoord_id\" value=\"0\" />\n";
+									echo "Program Coordinator Information Not Available\n";
+								}
+								?>	
+								<div class="well well-small content-small space-above">
+									<strong>Important:</strong> Program Coordinators will be able to add, edit or remove learning events in this <?php echo strtolower($module_singular_name); ?>.
+								</div>							
+							</div>
+						</div>				
+						<div class="control-group">
+							<label for="evaluationrep_id" class="form-nrequired control-label">Evaluation Rep.</label>
+							<div class="controls">
+								<?php
+								if ((is_array($evaluationreps)) && (count($evaluationreps))) {
+									echo "<select id=\"evalrep_id\" name=\"evalrep_id\" style=\"width: 95%\">\n";
+									echo "<option value=\"\"".((!isset($PROCESSED["evalrep_id"])) ? " selected=\"selected\"" : "").">-- To Be Announced --</option>\n";
+									foreach($evaluationreps as $proxy_id => $fullname) {
+										echo "<option value=\"".(int) $proxy_id."\"".(($PROCESSED["evalrep_id"] == $proxy_id) ? " selected=\"selected\"" : "").">".html_encode($fullname)."</option>\n";
+									}
+									echo "</select>\n";
+								} else {
+									echo "<input type=\"hidden\" id=\"evalrep_id\" name=\"evalrep_id\" value=\"0\" />\n";
+									echo "Evaluation Representative Information Not Available\n";
+								}
+								?>								
+							</div>
+						</div>
+
+						<div class="control-group">
+							<label for="studentrep_id" class="form-nrequired control-label">Student Rep.</label>
+							<div class="controls">
+								<?php
+								if ((is_array($studentreps)) && (count($studentreps))) {
+									echo "<select id=\"studrep_id\" name=\"studrep_id\" style=\"width: 95%\">\n";
+									echo "<option value=\"\"".((!isset($PROCESSED["studrep_id"])) ? " selected=\"selected\"" : "").">-- To Be Announced --</option>\n";
+									foreach($studentreps as $proxy_id => $fullname) {
+										echo "<option value=\"".(int) $proxy_id."\"".(($PROCESSED["studrep_id"] == $proxy_id) ? " selected=\"selected\"" : "").">".html_encode($fullname)."</option>\n";
+									}
+									echo "</select>\n";
+								} else {
+									echo "<input type=\"hidden\" id=\"studrep_id\" name=\"studrep_id\" value=\"0\" />\n";
+									echo "Student Representative Information Not Available\n";
+								}
+								?>								
+							</div>
+						</div>						
 					</div>
 
-					<?php
+					<script type="text/javascript">
 
-						list($course_objectives,$top_level_id) = courses_fetch_objectives($course_details["organisation_id"], array($COURSE_ID), -1, 0, false, $posted_objectives);
+						new Ajax.Autocompleter('director_name', 'director_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=director', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'director'); copyItem('director');}});
+						new Ajax.Autocompleter('coordinator_name', 'coordinator_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=coordinator', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'coordinator'); copyItem('coordinator');}});
+						
+						$('director_name').observe('keypress', function(event){
+						    if (event.keyCode == Event.KEY_RETURN) {
+						        addItem('director');
+						        Event.stop(event);
+						    }
+						});					
+						$('coordinator_name').observe('keypress', function(event){
+						    if (event.keyCode == Event.KEY_RETURN) {
+						        addItem('coordinator');
+						        Event.stop(event);
+						    }
+						});
+					</script>
+					<?php
+						$ONLOAD[] = "Sortable.create('director_list', {onUpdate : function() {updateOrder('director')}})";
+						$ONLOAD[] = "$('associated_director').value = Sortable.sequence('director_list')";					
+						$ONLOAD[] = "Sortable.create('coordinator_list', {onUpdate : function() {updateOrder('coordinator')}})";
+						$ONLOAD[] = "$('associated_coordinator').value = Sortable.sequence('coordinator_list')";					
+
+					
 						require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 							$query = "	SELECT a.* FROM `global_lu_objectives` a
@@ -874,172 +1080,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<a name="course-objectives-section"></a>
 					<h2 title="Course Objectives Section"><?php echo $module_singular_name; ?> Objectives</h2>
 					<div id="course-objectives-section">
-						<style>
-							ul.objective-list{
-								position: relative;
-								padding: 0px;
-								margin: 0px;
-								list-style: none;
-							}
-							ul.objective-list{
-								position:relative;
-							}
-							ul.objective-list ul{
-								list-style-type: none;
-								background:transparent url('<?php echo ENTRADA_URL;?>/images/vline.png') repeat-y;
-								margin: 0 0 0 10px;
-								padding:0;
-							}
-
-							#mapped_objectives ul.objective-list li, ul.tl-objective-list > li > .objective-children > ul.objective-list > li{
-								background:none!important;
-
-							}
-							#mapped_objectives ul.objective-list li{
-								border-left:2px solid #CCCCCC!important;
-							}
-							ul.objective-list li{
-								background:transparent url('<?php echo ENTRADA_URL;?>/images/node.png') no-repeat;
-								padding-left:5px;
-								display:block;
-								overflow:hidden;
-								line-height: 125%;
-								border-left:none!important;
-							}
-							.objective-title{
-								cursor:pointer;
-								margin-left:5px;
-								margin-top:-2px;
-							}
-							.objective-description{
-								font-size: 11px;
-								font-style: normal;
-								color: #666;
-								margin-top:20px;
-								margin-left:5px;
-							}
-							#mapped_objectives .objective-description{
-								margin-left:0px;
-							}
-							.objective-list{
-								padding-left:5px;
-							}
-							#mapped_objectives,#objective_list_0{
-								margin-left:0px;
-								padding-left: 0px;
-							}
-							.objectives{
-								width:48%;
-								float:left;
-							}
-							.mapped_objectives{
-								float:right;
-								height:100%;
-								width:100%;
-							}
-							.remove{
-								cursor:pointer;
-							}
-							.droppable.hover{
-								background-color:#ddd;
-							}
-							.objective-title{
-								font-weight:bold;
-							}
-							.objective-children{
-								margin-top:5px;
-							}
-							.objective-container{
-								position:relative;
-								padding-right:0px!important;
-								margin-right:0px!important;
-							}
-							.objective-description{
-								font-size: 11px;
-								font-style: normal;
-								color: #666;
-								margin-top:12px;
-							}
-							.list-heading{
-								font-size:18px;
-							}
-							.mapped-objective{
-								position:relative;
-							}
-							.objective-controls{
-								position:absolute;
-								top:5px;
-								right:5px;
-							}
-							.objective-controls .loading{
-								margin-top:7px!important;
-							}
-							.objective-remove{
-								display:block;
-								float:right;
-							}
-							.importance{
-								font-size:.8em;
-								margin-right:30px;
-								float:left;
-							}
-							li.display-notice{
-								border:1px #FC0 solid!important;
-								padding-top:10px!important;
-								text-align:center;
-							}
-
-							.hide{
-								display:none;
-							}
-							.tl-objective-list{
-								padding-left:0px;
-								padding-top:5px;
-								padding-bottom:5px;
-								list-style: none;
-							}
-							.tl-objective-list > li{
-								padding:5px;
-								margin-bottom:5px;
-							}
-							.tl-objective-list > .objective-set h4{
-								-webkit-border-radius:5px;
-								-moz-border-radius:5px;
-								border-radius:5px;
-								background-color:#036!important;
-								color:#fff!important;
-								padding:10px;
-							}
-						</style>
-							<div class="objectives half left">
-								<h3>Objective Sets</h3>
-								<ul class="tl-objective-list" id="objective_list_0">
-						<?php		foreach($objectives as $objective){ ?>
-										<li class = "objective-container objective-set"
-											id = "objective_<?php echo $objective["objective_id"]; ?>"
-											data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
-											data-id="<?php echo $objective["objective_id"];?>">
-											<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-											<div 	class="objective-title"
-													id="objective_title_<?php echo $objective["objective_id"]; ?>"
-													data-title="<?php echo $title;?>"
-													data-id = "<?php echo $objective["objective_id"]; ?>"
-													data-code = "<?php echo $objective["objective_code"]; ?>"
-													data-name = "<?php echo $objective["objective_name"]; ?>"
-													data-description = "<?php echo $objective["objective_description"]; ?>">
-												<h4><?php echo $title; ?></h4>
-											</div>
-											<div class="objective-controls" id="objective_controls_<?php echo $objective["objective_id"];?>">
-											</div>
-											<div 	class="objective-children"
-													id="children_<?php echo $objective["objective_id"]; ?>">
-													<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>">
-													</ul>
-											</div>
-										</li>
-						<?php 		} ?>
-								</ul>
-							</div>
+						<div class="objectives half left">
+							<h3>Objective Sets</h3>
+							<ul class="tl-objective-list" id="objective_list_0">
+					<?php		foreach($objectives as $objective){ ?>
+									<li class = "objective-container objective-set"
+										id = "objective_<?php echo $objective["objective_id"]; ?>"
+										data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
+										data-id="<?php echo $objective["objective_id"];?>">
+										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+										<div 	class="objective-title"
+												id="objective_title_<?php echo $objective["objective_id"]; ?>"
+												data-title="<?php echo $title;?>"
+												data-id = "<?php echo $objective["objective_id"]; ?>"
+												data-code = "<?php echo $objective["objective_code"]; ?>"
+												data-name = "<?php echo $objective["objective_name"]; ?>"
+												data-description = "<?php echo $objective["objective_description"]; ?>">
+											<h4><?php echo $title; ?></h4>
+										</div>
+										<div class="objective-controls" id="objective_controls_<?php echo $objective["objective_id"];?>">
+										</div>
+										<div 	class="objective-children"
+												id="children_<?php echo $objective["objective_id"]; ?>">
+												<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>">
+												</ul>
+										</div>
+									</li>
+					<?php 		} ?>
+							</ul>
+						</div>
 
 						<div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="course" data-resource-id="<?php echo $COURSE_ID;?>">
 							<h3>Mapped Objectives</h3>
@@ -1104,7 +1173,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 															<?php echo $objective["objective_description"];?>
 														</div>
 														<div class="objective-controls">
-															<select 	class="importance"
+															<select 	class="importance mini input-small"
 																		data-id="<?php echo $objective["objective_id"];?>"
 																		data-value="<?php echo $objective["importance"];?>">
 																<option value="1"<?php echo $objective["importance"] == 1?' selected="selected"':'';?>>Primary</option>
@@ -1217,259 +1286,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</div>
 						<div style="clear:both;"></div>
 					</div>
-					<?php 	} 	?>
+					<?php 	} 	?>					
 
-					<h2 title="Course Contacts Section"><?php echo $module_singular_name; ?> Contacts</h2>
-					<div id="course-contacts-section">
-						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing <?php echo $module_singular_name; ?> Contacts">
-						<colgroup>
-							<col style="width: 3%" />
-							<col style="width: 22%" />
-							<col style="width: 75%" />
-						</colgroup>
-						<tbody>
-							<tr>
-								<td></td>
-								<td style="vertical-align: top"><label for="director_name" class="form-nrequired"><?php echo $module_singular_name; ?> Directors</label></td>
-								<td>
-									<script type="text/javascript">
-									var sortables = new Array();
-									function updateOrder(type) {
-										$('associated_'+type).value = Sortable.sequence(type+'_list');
-									}
-
-									function addItem(type) {
-										if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
-											var li = new Element('li', {'class':'community', 'id':type+'_'+$(type+'_id').value, 'style':'cursor: move;'}).update($(type+'_name').value);
-											$(type+'_name').value = '';
-											li.insert({bottom: '<img src=\"<?php echo ENTRADA_URL; ?>/images/action-delete.gif\" class=\"list-cancel-image\" onclick=\"removeItem(\''+$(type+'_id').value+'\', \''+type+'\')\" />'});
-											$(type+'_id').value	= '';
-											$(type+'_list').appendChild(li);
-											sortables[type] = Sortable.destroy($(type+'_list'));
-											Sortable.create(type+'_list', {onUpdate : function(){updateOrder(type);}});
-											updateOrder(type);
-										} else if ($(type+'_'+$(type+'_id').value) != null) {
-											alert('Important: Each user may only be added once.');
-											$(type+'_id').value = '';
-											$(type+'_name').value = '';
-											return false;
-										} else if ($(type+'_name').value != '' && $(type+'_name').value != null) {
-											alert('Important: When you see the correct name pop-up in the list as you type, make sure you select the name with your mouse, do not press the Enter button.');
-											return false;
-										} else {
-											return false;
-										}
-									}
-
-									function addItemNoError(type) {
-										if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
-											addItem(type);
-										}
-									}
-
-									function copyItem(type) {
-										if (($(type+'_name') != null) && ($(type+'_ref') != null)) {
-											$(type+'_ref').value = $(type+'_name').value;
-										}
-
-										return true;
-									}
-
-									function checkItem(type) {
-										if (($(type+'_name') != null) && ($(type+'_ref') != null) && ($(type+'_id') != null)) {
-											if ($(type+'_name').value != $(type+'_ref').value) {
-												$(type+'_id').value = '';
-											}
-										}
-
-										return true;
-									}
-
-									function removeItem(id, type) {
-										if ($(type+'_'+id)) {
-											$(type+'_'+id).remove();
-											Sortable.destroy($(type+'_list'));
-											Sortable.create(type+'_list', {onUpdate : function (type) {updateOrder(type)}});
-											updateOrder(type);
-										}
-									}
-
-									function selectItem(id, type) {
-										if ((id != null) && ($(type+'_id') != null)) {
-											$(type+'_id').value = id;
-										}
-									}
-
-									function loadCurriculumPeriods(ctype_id) {
-										var updater = new Ajax.Updater('curriculum_type_periods', '<?php echo ENTRADA_URL."/api/curriculum_type_periods.api.php"; ?>',{
-											method:'post',
-											parameters: {
-												'ctype_id': ctype_id
-											},
-											onFailure: function(transport){
-												$('curriculum_type_periods').update(new Element('div', {'class':'display-error'}).update('No Periods were found for this Curriculum Category.'));
-											}
-										});
-									}
-									</script>
-									<input type="text" id="director_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('director')" onblur="addItemNoError('director')" />
-									<script type="text/javascript">
-										$('director_name').observe('keypress', function(event){
-										    if (event.keyCode == Event.KEY_RETURN) {
-										        addItem('director');
-										        Event.stop(event);
-										    }
-										});
-									</script>
-									<?php
-									$ONLOAD[] = "Sortable.create('director_list', {onUpdate : function() {updateOrder('director')}})";
-									$ONLOAD[] = "$('associated_director').value = Sortable.sequence('director_list')";
-									?>
-									<div class="autocomplete" id="director_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('director_name', 'director_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=director', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'director'); copyItem('director');}});</script>
-									<input type="hidden" id="associated_director" name="associated_director" />
-									<input type="button" class="button-sm" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
-									<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
-									<ul id="director_list" class="menu" style="margin-top: 15px">
-										<?php
-										if (is_array($chosen_course_directors) && count($chosen_course_directors)) {
-											foreach ($chosen_course_directors as $director) {
-												if ((array_key_exists($director, $DIRECTOR_LIST)) && is_array($DIRECTOR_LIST[$director])) {
-													?>
-														<li class="community" id="director_<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>" style="cursor: move;"><?php echo $DIRECTOR_LIST[$director]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>', 'director');"/></li>
-													<?php
-												}
-											}
-										}
-										?>
-									</ul>
-									<input type="hidden" id="director_ref" name="director_ref" value="" />
-									<input type="hidden" id="director_id" name="director_id" value="" />
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-							<tr>
-								<td></td>
-								<td style="vertical-align: top"><label for="coordinator_name" class="form-nrequired">Curriculum Coordinators</label></td>
-								<td>
-									<input type="text" id="coordinator_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('coordinator')" onblur="addItemNoError('coordinator')" />
-									<script type="text/javascript">
-										$('coordinator_name').observe('keypress', function(event){
-										    if (event.keyCode == Event.KEY_RETURN) {
-										        addItem('coordinator');
-										        Event.stop(event);
-										    }
-										});
-									</script>
-									<?php
-									$ONLOAD[] = "Sortable.create('coordinator_list', {onUpdate : function() {updateOrder('coordinator')}})";
-									$ONLOAD[] = "$('associated_coordinator').value = Sortable.sequence('coordinator_list')";
-									?>
-									<div class="autocomplete" id="coordinator_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('coordinator_name', 'coordinator_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=coordinator', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'coordinator'); copyItem('coordinator');}});</script>
-									<input type="hidden" id="associated_coordinator" name="associated_coordinator" />
-									<input type="button" class="button-sm" onclick="addItem('coordinator');" value="Add" style="vertical-align: middle" />
-									<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
-									<ul id="coordinator_list" class="menu" style="margin-top: 15px">
-										<?php
-										if (is_array($chosen_ccoordinators) && count($chosen_ccoordinators)) {
-											foreach ($chosen_ccoordinators as $coordinator) {
-												if ((array_key_exists($coordinator, $COORDINATOR_LIST)) && is_array($COORDINATOR_LIST[$coordinator])) {
-													?>
-														<li class="community" id="coordinator_<?php echo $COORDINATOR_LIST[$coordinator]["proxy_id"]; ?>" style="cursor: move;"><?php echo $COORDINATOR_LIST[$coordinator]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $COORDINATOR_LIST[$coordinator]["proxy_id"]; ?>', 'coordinator');"/></li>
-													<?php
-												}
-											}
-										}
-										?>
-									</ul>
-									<input type="hidden" id="coordinator_ref" name="coordinator_ref" value="" />
-									<input type="hidden" id="coordinator_id" name="coordinator_id" value="" />
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-
-							<!-- Listing the Program Coordinator for the selected course -->
-							<tr>
-								<td></td>
-								<td><label for="programcoodinator_id" class="form-nrequired">Program Coordinator</label></td>
-								<td>
-								<?php
-									if ((is_array($programcoodinators)) && (count($programcoodinators))) {
-										echo "<select id=\"pcoord_id\" name=\"pcoord_id\" style=\"width: 95%\">\n";
-										echo "<option value=\"\"".((!isset($PROCESSED["pcoord_id"])) ? " selected=\"selected\"" : "").">-- To Be Announced --</option>\n";
-										foreach($programcoodinators as $proxy_id => $fullname) {
-											echo "<option value=\"".(int) $proxy_id."\"".(($PROCESSED["pcoord_id"] == $proxy_id) ? " selected=\"selected\"" : "").">".html_encode($fullname)."</option>\n";
-										}
-										echo "</select>\n";
-									} else {
-										echo "<input type=\"hidden\" id=\"pcoord_id\" name=\"pcoord_id\" value=\"0\" />\n";
-										echo "Program Coordinator Information Not Available\n";
-									}
-									?>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="2">&nbsp;</td>
-								<td>
-									<span class="content-small"><strong>Important:</strong> Program Coordinators will be able to add, edit or remove learning events in this <?php echo strtolower($module_singular_name); ?>.</span>
-								</td>
-							</tr>
-
-							<tr>
-								<td colspan="3">&nbsp;</td>
-							</tr>
-
-							<!-- Listing the Evaluation Rep for the selected course -->
-							<tr>
-								<td></td>
-								<td><label for="evaluationrep_id" class="form-nrequired">Evaluation Rep.</label></td>
-								<td>
-									<?php
-									if ((is_array($evaluationreps)) && (count($evaluationreps))) {
-										echo "<select id=\"evalrep_id\" name=\"evalrep_id\" style=\"width: 95%\">\n";
-										echo "<option value=\"\"".((!isset($PROCESSED["evalrep_id"])) ? " selected=\"selected\"" : "").">-- To Be Announced --</option>\n";
-										foreach($evaluationreps as $proxy_id => $fullname) {
-											echo "<option value=\"".(int) $proxy_id."\"".(($PROCESSED["evalrep_id"] == $proxy_id) ? " selected=\"selected\"" : "").">".html_encode($fullname)."</option>\n";
-										}
-										echo "</select>\n";
-									} else {
-										echo "<input type=\"hidden\" id=\"evalrep_id\" name=\"evalrep_id\" value=\"0\" />\n";
-										echo "Evaluation Representative Information Not Available\n";
-									}
-									?>
-								</td>
-							</tr>
-
-							<!-- Listing the Student Rep for the selected course -->
-							<tr>
-								<td></td>
-								<td><label for="studentrep_id" class="form-nrequired">Student Rep.</label></td>
-								<td>
-									<?php
-									if ((is_array($studentreps)) && (count($studentreps))) {
-										echo "<select id=\"studrep_id\" name=\"studrep_id\" style=\"width: 95%\">\n";
-										echo "<option value=\"\"".((!isset($PROCESSED["studrep_id"])) ? " selected=\"selected\"" : "").">-- To Be Announced --</option>\n";
-										foreach($studentreps as $proxy_id => $fullname) {
-											echo "<option value=\"".(int) $proxy_id."\"".(($PROCESSED["studrep_id"] == $proxy_id) ? " selected=\"selected\"" : "").">".html_encode($fullname)."</option>\n";
-										}
-										echo "</select>\n";
-									} else {
-										echo "<input type=\"hidden\" id=\"studrep_id\" name=\"studrep_id\" value=\"0\" />\n";
-										echo "Student Representative Information Not Available\n";
-									}
-								?>
-								</td>
-							</tr>
-						</tbody>
-						</table>
-					</div>
-
-					<!-- Course Audience-->
-					<h2><?php echo $module_singular_name; ?> Enrolment</h2>
-					<div>
+					<!-- Course Audience-->	
+					<h2 title="Course Enrolment Section"><?php echo $module_singular_name; ?> Enrolment</h2>
+					<div id="course-enrolment-section">
 						<table>
 							<colgroup>
 								<col style="width: 3%" />
@@ -1481,7 +1302,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<td>&nbsp;</td>
 									<td><label for="period" class="form-nrequired">Enrolment Periods</label></td>
 									<td>
-										<div id="curriculum_type_periods" style="margin-left:53px;width:558px;">
+										<div id="curriculum_type_periods">
 											<?php
 											if ($PROCESSED["curriculum_type_id"]) {
 													$query = "SELECT * FROM `curriculum_periods` WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"])." AND `active` = 1 AND `finish_date` >= ".$db->qstr(time());

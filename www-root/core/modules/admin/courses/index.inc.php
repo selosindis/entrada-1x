@@ -171,10 +171,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 	if ($ENTRADA_ACL->amIAllowed('course', 'create', false)) {
 		?>
-		<div style="float: right">
+		<div class="pull-right clearfix space-below">
 				<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Add New <?php echo $module_singular_name; ?></a>
 		</div>
-		<div style="clear: both"></div>
 		<?php
 	}
 	?>

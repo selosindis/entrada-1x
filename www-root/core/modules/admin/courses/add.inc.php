@@ -526,7 +526,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				echo display_error();
 			}
 			?>
-<form class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="addCourseForm" onsubmit="selIt()">
+			<form class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="addCourseForm" onsubmit="selIt()">
                 <h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
                 <div class="control-group">
                     <label for="curriculum_type_id" class="control-label form-nrequired">Curriculum Category:</label>
@@ -588,377 +588,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                         <br />
                         <div class="content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>
                     </div>
-                </div>
-
-                <?php
-                $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-                $query = "SELECT a.* FROM `global_lu_objectives` a
-                            JOIN `objective_audience` b
-                            ON a.`objective_id` = b.`objective_id`
-                            AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-                            WHERE (
-                                    (b.`audience_value` = 'all')
-                                    OR
-                                    (b.`audience_type` = 'course' AND b.`audience_value` = ".$db->qstr($COURSE_ID).")
-                                )
-                            AND a.`objective_parent` = '0'
-                            AND a.`objective_active` = '1'";
-                $objectives = $db->GetAll($query);
-                if ($objectives) {
-                    $hierarchical_name = $translate->_("events_filter_controls");
-                    $hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
-                    ?>
-                    <a name="course-objectives-section"></a>
-                    <h2 title="Course Objectives Section"><?php echo $module_singular_name; ?> Objectives</h2>
-                    <div id="course-objectives-section">
-                        <style type="text/css">
-                        ul.objective-list{
-                            position: relative;
-                            padding: 0px;
-                            margin: 0px;
-                            list-style: none;
-                        }
-                        ul.objective-list{
-                            position:relative;
-                        }
-                        ul.objective-list ul{
-                            list-style-type: none;
-                            background:transparent url('<?php echo ENTRADA_URL;?>/images/vline.png') repeat-y;
-                            margin: 0 0 0 10px;
-                            padding:0;
-                        }
-                        #mapped_objectives ul.objective-list li, ul.tl-objective-list > li > .objective-children > ul.objective-list > li{
-                            background:none!important;
-
-                        }
-                        #mapped_objectives ul.objective-list li{
-                            border-left:2px solid #CCCCCC!important;
-                        }
-                        ul.objective-list li{
-                            background:transparent url('<?php echo ENTRADA_URL;?>/images/node.png') no-repeat;
-                            padding-left:5px;
-                            display:block;
-                            overflow:hidden;
-                            line-height: 125%;
-                            border-left:none!important;
-                        }
-                        .objective-title{
-                            cursor:pointer;
-                            margin-left:5px;
-                            margin-top:-2px;
-                        }
-                        .objective-description{
-                            font-size: 11px;
-                            font-style: normal;
-                            color: #666;
-                            margin-top:5px;
-                            margin-left:5px;
-                        }
-                        #mapped_objectives .objective-description{
-                            margin-left:0px;
-                        }
-                        .objective-list{
-                            padding-left:5px;
-                        }
-                        #mapped_objectives,#objective_list_0{
-                            margin-left:0px;
-                            padding-left: 0px;
-                        }
-                        .objectives{
-                            width:48%;
-                            float:left;
-                        }
-                        .mapped_objectives{
-                            float:right;
-                            height:100%;
-                            width:100%;
-                        }
-                        .objective-remove{
-                            cursor:pointer;
-                        }
-                        .droppable.hover{
-                            background-color:#ddd;
-                        }
-                        .objective-title{
-                            font-weight:bold;
-                        }
-                        .objective-children{
-                            margin-top:5px;
-                        }
-                        .objective-container{
-                            position:relative;
-                            padding-right:0px!important;
-                            margin-right:0px!important;
-                        }
-                        .objective-description{
-                            font-size: 11px;
-                            font-style: normal;
-                            color: #666;
-                            margin-top:5px;
-                            margin-left:5px;
-                        }
-                        .objective-remove{
-                            display:block;
-                            float:right;
-                        }
-                        .importance{
-                            font-size:.8em;
-                            margin-right:30px;
-                            float:left;
-                        }
-                        .mapped-objective{
-                            position:relative;
-                        }
-                        .objective-controls{
-                            position:absolute;
-                            top:5px;
-                            right:5px;
-                        }
-                        .objective-controls .loading{
-                            margin-top:7px!important;
-                        }
-                        li.display-notice{
-                            border:1px #FC0 solid!important;
-                            padding-top:10px!important;
-                            text-align:center;
-                        }
-
-                        .hide{
-                            display:none;
-                        }
-                        .tl-objective-list{
-                            padding-left:0px;
-                            padding-top:5px;
-                            padding-bottom:5px;
-                            list-style: none;
-                        }
-                        .tl-objective-list > li{
-                            padding:5px;
-                            margin-bottom:5px;
-                        }
-                        .tl-objective-list > .objective-set h3{
-                            -webkit-border-radius:5px;
-                            -moz-border-radius:5px;
-                            border-radius:5px;
-                            background-color:#036!important;
-                            color:#fff!important;
-                            padding:10px;
-                        }
-                        </style>
-
-                        <div class="objectives half left">
-                            <h2>Objective Sets</h2>
-                            <ul class="tl-objective-list" id="objective_list_0">
-					<?php		foreach($objectives as $objective){ ?>
-									<li class = "objective-container objective-set"
-										id = "objective_<?php echo $objective["objective_id"]; ?>"
-										data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
-										data-id="<?php echo $objective["objective_id"];?>">
-										<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-										<div 	class="objective-title"
-												id="objective_title_<?php echo $objective["objective_id"]; ?>"
-												data-title="<?php echo $title;?>"
-												data-id = "<?php echo $objective["objective_id"]; ?>"
-												data-code = "<?php echo $objective["objective_code"]; ?>"
-												data-name = "<?php echo $objective["objective_name"]; ?>"
-												data-description = "<?php echo $objective["objective_description"]; ?>">
-                                            <h3><?php echo $title; ?></h3>
-                                        </div>
-                                        <div class="objective-controls" id="objective_controls_<?php echo $objective["objective_id"];?>">
-                                        </div>
-										<div 	class="objective-children"
-												id="children_<?php echo $objective["objective_id"]; ?>">
-												<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>">
-												</ul>
-                                        </div>
-                                    </li>
-                                    <?php
-                                }
-                                ?>
-                            </ul>
-                        </div>
-
-                        <div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="course" data-resource-id="<?php echo $COURSE_ID;?>">
-                            <h2>Objective Sets
-                            <div style="float: right">
-                                <ul class="page-action">
-                                    <li class="last">
-                                        <a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Show Objective Sets</a>
-                                    </li>
-                                </ul>
-                            </div>
-                            </h2>
-                            <p class="content-small">
-                                <strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left to map it to the course.
-                            </p>
-                            <?php
-                            $query = "SELECT a.*,b.`objective_type`, b.`importance` FROM `global_lu_objectives` a
-                                        JOIN `course_objectives` b
-                                        ON a.`objective_id` = b.`objective_id`
-                                        AND b.`course_id` = ".$db->qstr($COURSE_ID)."
-                                        WHERE a.`objective_active` = '1'
-                                        ORDER BY b.`importance` ASC";
-                            $mapped_objectives = $db->GetAll($query);
-                            $primary = false;
-                            $secondary = false;
-                            $tertiary = false;
-                            $hierarchical_objectives = array();
-                            $flat_objectives = array();
-                            $objective_importance = array();
-                            if ($mapped_objectives) {
-                                foreach ($mapped_objectives as $objective){
-                                    //this should be using id from language file, not hardcoded to 1
-                                    if ($objective["objective_type"] == "course"){
-                                        $hierarchical_objectives[] = $objective;
-                                        $objective_importance[$objective["importance"]][] = $objective;
-                                    }else{
-                                        $flat_objectives[] = $objective;
-                                    }
-                                }
-                            }
-                            ?>
-                            <a name="curriculum-objective-list"></a>
-                            <h2 id="hierarchical-toggle" title="Curriculum Objective List">Curriculum Objectives</h2>
-                            <div id="curriculum-objective-list">
-                                <ul class="objective-list mapped-list" id="mapped_hierarchical_objectives" data-importance="hierarchical">
-                                    <?php
-                                    if ($hierarchical_objectives) {
-                                        foreach ($hierarchical_objectives as $objective){
-                                            $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
-                                            ?>
-                                            <li class = "mapped-objective"
-                                                id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-                                                data-title="<?php echo $title;?>"
-                                                data-description="<?php echo $objective["objective_description"];?>">
-                                                <strong><?php echo $title; ?></strong>
-                                                <div class="objective-description">
-                                                    <?php
-                                                    $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
-                                                    if ($set) {
-                                                        echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
-                                                    }
-                                                    ?>
-                                                    <?php echo $objective["objective_description"];?>
-                                                </div>
-                                                <div class="objective-controls">
-                                                    <select 	class="importance"
-                                                                data-id="<?php echo $objective["objective_id"];?>"
-                                                                data-value="<?php echo $objective["importance"];?>">
-                                                        <option value="1"<?php echo $objective["importance"] == 1?' selected="selected"':'';?>>Primary</option>
-                                                        <option value="2"<?php echo $objective["importance"] == 2?' selected="selected"':'';?>>Secondary</option>
-                                                        <option value="3"<?php echo $objective["importance"] == 3?' selected="selected"':'';?>>Tertiary</option>
-                                                    </select>
-                                                    <img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
-                                                            class="objective-remove list-cancel-image"
-                                                            id="objective_remove_<?php echo $objective["objective_id"];?>"
-                                                            data-id="<?php echo $objective["objective_id"];?>">
-                                                </div>
-                                            </li>
-                                            <?php
-                                        }
-                                    }
-                                    ?>
-                                </ul>
-                            </div>
-                            <a name="other-objective-list"></a>
-                            <h2 id="flat-toggle" title="Other Objective List" class="collapsed">Other Objectives</h2>
-                            <div id="other-objective-list">
-                                <ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
-                                    <?php
-                                    if ($flat_objectives) {
-                                        foreach ($flat_objectives as $objective) {
-                                            $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
-                                            ?>
-								<li class = "mapped-objective"
-									id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-									data-title="<?php echo $title;?>"
-									data-description="<?php echo $objective["objective_description"];?>">
-                                                <strong><?php echo $title; ?></strong>
-                                                <div class="objective-description"></div>
-                                                <div class="control-group">
-                                                    <div class="controls">
-                                                        <?php
-                                                        $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
-                                                        if ($set) {
-                                                            echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
-                                                        }
-                                                        ?>
-                                                        <?php echo $objective["objective_description"]; ?>
-                                                    </div>
-                                                    <div class="objective-controls">
-                                                        <img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
-                                                                class="objective-remove list-cancel-image"
-                                                                id="objective_remove_<?php echo $objective["objective_id"];?>"
-                                                                data-id="<?php echo $objective["objective_id"];?>">
-                                                    </div>
-                                                </div>
-                                            </li>
-                                            <?php
-                                        }
-                                    }
-                                    ?>
-                                </ul>
-                            </div>
-                            <select id="primary_objectives_select" name="primary_objectives[]" multiple="multiple" style="display:none;">
-                                <?php
-                                if (isset($objective_importance[1]) && $objective_importance[1]) {
-                                    foreach ($objective_importance[1] as $objective){
-                                        if ($objective["importance"] == 1) {
-                                            $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
-                                            ?>
-                                            <option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
-                                            <?php
-                                        }
-                                    }
-                                }
-                                ?>
-                            </select>
-                            <select id="secondary_objectives_select" name="secondary_objectives[]" multiple="multiple" style="display:none;">
-                                <?php
-                                if (isset($objective_importance[2]) && $objective_importance[2]) {
-                                    foreach ($objective_importance[2] as $objective){
-                                        if ($objective["importance"] == 2) {
-                                            $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
-                                            ?>
-                                            <option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
-                                            <?php
-                                        }
-                                    }
-                                }
-                                ?>
-                            </select>
-                            <select id="tertiary_objectives_select" name="tertiary_objectives[]" multiple="multiple" style="display:none;">
-                                <?php
-                                if (isset($objective_importance[3]) && $objective_importance[3]) {
-                                    foreach ($objective_importance[3] as $objective){
-                                        if ($objective["importance"] == 3) {
-                                            $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
-                                            ?>
-                                            <option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
-                                            <?php
-                                        }
-                                    }
-                                }
-                                ?>
-                            </select>
-                            <select id="clinical_objectives_select" name="clinical_presentations[]" multiple="multiple" style="display:none;">
-                                <?php
-                                if ($flat_objectives) {
-                                    foreach ($flat_objectives as $objective){
-                                        $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
-                                        ?>
-                                        <option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
-                                        <?php
-                                    }
-                                }
-                                ?>
-                            </select>
-                        </div>
-                        <div style="clear:both;"></div>
-                    </div>
-                    <?php
-                }
-                ?>
+                </div>               
 
                 <h2 title="Course Contacts Section"><?php echo $module_singular_name; ?> Contacts</h2>
                 <div class="control-group">
@@ -1171,12 +801,242 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                         ?>
                     </div>
                 </div>
+		<?php
+					require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
+					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
+						$query = "	SELECT a.* FROM `global_lu_objectives` a
+									JOIN `objective_audience` b
+									ON a.`objective_id` = b.`objective_id`
+									AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+									WHERE (
+											(b.`audience_value` = 'all')
+											OR
+											(b.`audience_type` = 'course' AND b.`audience_value` = ".$db->qstr($COURSE_ID).")
+										)
+									AND a.`objective_parent` = '0'
+									AND a.`objective_active` = '1'";
+						$objectives = $db->GetAll($query);
+						if ($objectives) {
+							$objective_name = $translate->_("events_filter_controls");
+							$hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
+							?>
+				<h2><?php echo $module_singular_name; ?> Objectives</h2>
+				<div>
+					<div class="objectives half left">
+						<h3>Objective Sets</h3>
+						<ul class="tl-objective-list" id="objective_list_0">
+				<?php		foreach($objectives as $objective){ ?>
+								<li class = "objective-container objective-set"
+									id = "objective_<?php echo $objective["objective_id"]; ?>"
+									data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
+									data-id="<?php echo $objective["objective_id"];?>">
+									<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+									<div 	class="objective-title"
+											id="objective_title_<?php echo $objective["objective_id"]; ?>"
+											data-title="<?php echo $title;?>"
+											data-id = "<?php echo $objective["objective_id"]; ?>"
+											data-code = "<?php echo $objective["objective_code"]; ?>"
+											data-name = "<?php echo $objective["objective_name"]; ?>"
+											data-description = "<?php echo $objective["objective_description"]; ?>">
+										<h4><?php echo $title; ?></h4>
+									</div>
+									<div class="objective-controls" id="objective_controls_<?php echo $objective["objective_id"];?>">
+									</div>
+									<div 	class="objective-children"
+											id="children_<?php echo $objective["objective_id"]; ?>">
+											<ul class="objective-list" id="objective_list_<?php echo $objective["objective_id"]; ?>">
+											</ul>
+									</div>
+								</li>
+				<?php 		} ?>
+						</ul>
+					</div>
+
+					<div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="course" data-resource-id="<?php echo $COURSE_ID;?>">
+						<h3>Mapped Objectives</h3>
+						<div class="clearfix">
+							<ul class="page-action" style="float: right">
+								<li class="last">
+									<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Show Objective Sets</a>
+								</li>
+							</ul>
+						</div>
+						<p class="well well-small content-small">
+							<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left to map it to the course.
+						</p>
+							<?php   $query = "	SELECT a.*,b.`objective_type`, b.`importance`
+												FROM `global_lu_objectives` a
+												JOIN `course_objectives` b
+												ON a.`objective_id` = b.`objective_id`
+												AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+												WHERE a.`objective_active` = '1'
+												GROUP BY a.`objective_id`
+												ORDER BY b.`importance` ASC";
+									$mapped_objectives = $db->GetAll($query);
+									$primary = false;
+									$secondary = false;
+									$tertiary = false;
+									$hierarchical_objectives = array();
+									$flat_objectives = array();
+									$objective_importance = array();
+									if ($mapped_objectives) {
+										foreach($mapped_objectives as $objective){
+											//this should be using id from language file, not hardcoded to 1
+											if($objective["objective_type"] == "course"){
+												$hierarchical_objectives[] = $objective;
+												$objective_importance[$objective["importance"]][] = $objective;
+											}else{
+												$flat_objectives[] = $objective;
+											}
+										}
+									}
+									?>
+						<a name="curriculum-objective-list"></a>
+						<h2 id="hierarchical-toggle" title="Curriculum Objective List" class="list-heading">Curriculum Objectives</h2>
+						<div id="curriculum-objective-list">
+							<ul class="objective-list mapped-list" id="mapped_hierarchical_objectives" data-importance="hierarchical">
+									<?php
+										if ($hierarchical_objectives) {
+											foreach($hierarchical_objectives as $objective){
+													$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+												?>
+												<li class = "mapped-objective"
+													id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+													data-title="<?php echo $title;?>"
+													data-description="<?php echo $objective["objective_description"];?>">
+													<strong><?php echo $title; ?></strong>
+													<div class="objective-description">
+														<?php
+														$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+														if ($set) {
+															echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+														}
+														?>
+														<?php echo $objective["objective_description"];?>
+													</div>
+													<div class="objective-controls">
+														<select 	class="importance mini input-small"
+																	data-id="<?php echo $objective["objective_id"];?>"
+																	data-value="<?php echo $objective["importance"];?>">
+															<option value="1"<?php echo $objective["importance"] == 1?' selected="selected"':'';?>>Primary</option>
+															<option value="2"<?php echo $objective["importance"] == 2?' selected="selected"':'';?>>Secondary</option>
+															<option value="3"<?php echo $objective["importance"] == 3?' selected="selected"':'';?>>Tertiary</option>
+														</select>
+														<img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
+																class="objective-remove list-cancel-image"
+																id="objective_remove_<?php echo $objective["objective_id"];?>"
+																data-id="<?php echo $objective["objective_id"];?>">
+													</div>
+												</li>
+
+								<?php
+											}
+								 		} 	?>
+							</ul>
+						</div>
+						<a name="other-objective-list"></a>
+						<h2 id="flat-toggle" title="Other Objective List" class="collapsed list-heading">Other Objectives</h2>
+						<div id="other-objective-list">
+							<ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
+							<?php
+								if ($flat_objectives) {
+									foreach($flat_objectives as $objective){
+											$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+										?>
+								<li class = "mapped-objective"
+									id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+									data-title="<?php echo $title;?>"
+									data-description="<?php echo $objective["objective_description"];?>">
+									<strong><?php echo $title; ?></strong>
+									<div class="objective-description">
+										<?php
+										$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+										if ($set) {
+											echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+										}
+										?>
+										<?php echo $objective["objective_description"];?>
+									</div>
+									<div class="objective-controls">
+										<img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
+												class="objective-remove list-cancel-image"
+												id="objective_remove_<?php echo $objective["objective_id"];?>"
+												data-id="<?php echo $objective["objective_id"];?>">
+									</div>
+								</li>
+
+							<?php
+									}
+						 		} ?>
+							</ul>
+						</div>
+						<select id="primary_objectives_select" name="primary_objectives[]" multiple="multiple" style="display:none;">
+						<?php
+							if (isset($objective_importance[1]) && $objective_importance[1]) {
+								foreach($objective_importance[1] as $objective){
+									if($objective["importance"] == 1) {
+									?>
+									<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+									<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+								<?php
+									}
+								}
+							}
+						?>
+						</select>
+						<select id="secondary_objectives_select" name="secondary_objectives[]" multiple="multiple" style="display:none;">
+						<?php
+							if (isset($objective_importance[2]) && $objective_importance[2]) {
+								foreach($objective_importance[2] as $objective){
+									if($objective["importance"] == 2) {
+									?>
+									<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+									<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+								<?php
+									}
+								}
+							}
+						?>
+						</select>
+						<select id="tertiary_objectives_select" name="tertiary_objectives[]" multiple="multiple" style="display:none;">
+						<?php
+							if (isset($objective_importance[3]) && $objective_importance[3]) {
+								foreach($objective_importance[3] as $objective){
+									if($objective["importance"] == 3) {
+									?>
+									<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+									<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+								<?php
+									}
+								}
+							}
+						?>
+						</select>
+						<select id="clinical_objectives_select" name="clinical_presentations[]" multiple="multiple" style="display:none;">
+						<?php
+							if ($flat_objectives) {
+								foreach($flat_objectives as $objective){
+									?>
+									<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
+									<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+								<?php
+								}
+							}
+						?>
+						</select>
+
+					</div>
+					<div style="clear:both;"></div>
+				</div>
+					<?php 	} 	?>	
+
+
                 <!-- Course Audience-->
                 <h2><?php echo $module_singular_name; ?> Enrollment</h2>
                 <div class="control-group">
                     <label for="period" class="control-label form-nrequired">Enrollment Periods:</label>
                     <div class="controls">
-                        <div id="curriculum_type_periods" style="margin-left:53px;width:558px;">
+                        <div id="curriculum_type_periods">
                             <?php
                             if ($PROCESSED["curriculum_type_id"]) {
                                 $query = "SELECT * FROM `curriculum_periods` WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"]." AND `active` = 1 AND `finish_date` >= ".$db->qstr(time()));
@@ -1200,7 +1060,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                             ?>
                         </div>
                     </div>
-                </div>
+                </div>			
 
                 <!-- Course Audience-->
                 <div>
@@ -1217,7 +1077,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                     <h3><img src="<?php echo ENTRADA_RELATIVE;?>/images/action-delete.gif" style="vertical-align:top;margin-right:20px;cursor:pointer;" class="remove_period" id="remove_period_<?php echo $key;?>"/><?php echo date("F jS,Y",$period_data["start_date"])." to ".date("F jS,Y",$period_data["finish_date"]);?></h3>
                                     <div class="audience_list" id="audience_list_<?php echo $key;?>" style="margin-bottom:10px;">
                                         <h4>Associated Groups</h4>
-                                        <ol id="audience_container_<?php echo $key;?>" class="sortableList"">
+                                        <ol id="audience_container_<?php echo $key;?>" class="sortableList">
                                             <?php
                                             foreach ($period as $audience) {
                                                 switch ($audience["audience_type"]){

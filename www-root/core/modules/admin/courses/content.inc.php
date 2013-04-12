@@ -390,41 +390,33 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				?>
 				<a name="course-details-section"></a>
 				<h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
-				<div id="course-details-section">
-					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
-					<input type="hidden" name="type" value="text" />
-					<table class="table" cellspacing="0" cellpadding="2" border="0">
-						<colgroup>
-							<col width="40%" />
-							<col width="60%" />
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" class="btn"/></td>
-							</tr>
-						</tfoot>
-						<tbody>
-						<?php
-						echo "<tr>\n";
-						echo "	<td><label for=\"course_url\" class=\"form-nrequired\">External Website URL</label></td>\n";
-						if (!$course_community) {
-							echo "	<td><input type=\"text\" id=\"course_url\" name=\"course_url\" value=\"".((isset($PROCESSED["course_url"]) && ($PROCESSED["course_url"] != "")) ? html_encode($PROCESSED["course_url"]) : "http://")."\" style=\"width: 450px\" />
-									<br /><span class=\"content-small\"><strong>Example:</strong> http://meds.queensu.ca</span></td>\n";
-							echo "</tr>\n";
-							echo "<tr>\n";
-							echo "	<td>&nbsp;</td>\n";
-							echo "	<td><span class=\"content-small\"><strong>Please Note:</strong> If you have an external " . strtolower($module_singular_name) . " website or have created a Community for your course, please enter the URL here and a link will be automatically created on the public side.</span></td>\n";
-							echo "</tr>\n";
-						} else {
-							echo "	<td><a href=\"" . ENTRADA_URL."/community" . $course_community["community_url"] . "\">" . ENTRADA_URL."/community" . $course_community["community_url"] . "</a></td>\n";
-							echo "</tr>\n";
-						}
-						echo "<tr>\n";
-						echo "	<td colspan=\"2\">&nbsp;</td>\n";
-						echo "</tr>\n";
-						echo "<tr>\n";
-						echo "	<td style=\"vertical-align: top\">" . $module_singular_name . " Directors</td>\n";
-						echo "	<td>\n";
+				<div id="course-details-section" class="clearfix">					
+					<form class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">											
+						<input type="hidden" name="type" value="text" />
+						<div class="control-group">
+							<label for="course_url" class="form-nrequired control-label">External Website URL</label>
+							<div class="controls">
+								<?php
+								if (!$course_community) { ?>
+									<input type="text" id="course_url" name="course_url" value="<?php echo ((isset($PROCESSED["course_url"]) && ($PROCESSED["course_url"] != "")) ? html_encode($PROCESSED["course_url"]) : "http://");?>"/>
+									<p class="well well-small space-above content-small">
+										<strong>Example:</strong> http://meds.queensu.ca<br/>
+										<strong>Please Note:</strong> If you have an external <?php echo  strtolower($module_singular_name);?> website or have created a Community for your course, please enter the URL here and a link will be automatically created on the public side.
+									</p>
+									<?php
+								} else { ?>
+									<a href="<?php echo ENTRADA_URL."/community" . $course_community["community_url"];?>"> 
+										<?php echo ENTRADA_URL."/community" . $course_community["community_url"];?>
+									</a>
+								<?php
+								} ?>
+							</div>
+						</div>			
+
+						<div class="control-group">
+							<label for="course_directors" class="form-nrequired control-label"><?php echo $module_singular_name . " Directors";?></label>
+							<div class="controls">
+								<?php
 									$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
 													FROM `course_contacts` AS a
 													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -440,13 +432,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										}
 									} else {
 										echo "To Be Announced";
-									}
-						echo "		</td>\n";
-						echo "	</tr>\n";
+									} 
+								?>							
+							</div>
+						</div>		
 
-						echo "	<tr>\n";
-						echo "		<td style=\"vertical-align: top\">Curriculum Coordinators</td>\n";
-						echo "		<td>\n";
+						<div class="control-group">
+							<label for="curriculum_coordinators" class="form-nrequired control-label">Curriculum Coordinators</label>
+							<div class="controls">
+								<?php
 									$squery		= "	SELECT a.`proxy_id`, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `fullname`, b.`email`
 													FROM `course_contacts` AS a
 													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -462,53 +456,67 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										}
 									} else {
 										echo "To Be Announced";
-									}
-						echo "		</td>\n";
-						echo "	</tr>\n";
+									}			
+								?>				
+							</div>
+						</div>		
 
-						if((int) $course_details["pcoord_id"]) {
-							echo "<tr>\n";
-							echo "    <td>Program Coordinator</td>\n";
-							echo "    <td><a href=\"mailto:".get_account_data("email", $course_details["pcoord_id"])."\">".get_account_data("fullname", $course_details["pcoord_id"])."</a></td>\n";
-							echo "</tr>\n";
+						<?php
+						if (isset($course_details["pcoord_id"]) && (int)$course_details["pcoord_id"]) { ?>
+						<div class="control-group">
+							<label for="program_coordinator" class="form-nrequired control-label">Program Coordinator</label>
+							<div class="controls">
+								<a href="mailto: <?php echo get_account_data("email", $course_details["pcoord_id"]);?>">
+									<?php echo get_account_data("fullname", $course_details["pcoord_id"]);?>
+								</a>
+							</div>
+						</div>
+						<?php 
+						} 
+
+						if (isset($course_details["evalrep_id"]) && (int)$course_details["evalrep_id"]) { ?>
+						<div class="control-group">
+							<label for="evaluation_rep" class="form-nrequired control-label">Evaluation Rep</label>
+							<div class="controls">
+								<a href="mailto: <?php echo get_account_data("email", $course_details["evalrep_id"]);?>">
+									<?php echo get_account_data("fullname", $course_details["evalrep_id"]);?>
+								</a>
+							</div>
+						</div>
+						<?php 
 						}
 
-						if((int) $course_details["evalrep_id"]) {
-							echo "<tr>\n";
-							echo "    <td>Evaluation Rep</td>\n";
-							echo "    <td><a href=\"mailto:".get_account_data("email", $course_details["evalrep_id"])."\">".get_account_data("fullname", $course_details["evalrep_id"])."</a></td>\n";
-							echo "</tr>\n";
-						}
+						if (isset($course_details["studrep_id"]) && (int)$course_details["studrep_id"]) { ?>
+						<div class="control-group">
+							<label for="evaluation_rep" class="form-nrequired control-label">Student Rep</label>
+							<div class="controls">
+								<a href="mailto: <?php echo get_account_data("email", $course_details["studrep_id"]);?>">
+									<?php echo get_account_data("fullname", $course_details["studrep_id"]);?>
+								</a>
+							</div>
+						</div>
+						<?php 
+						} ?>
 
-						if((int) $course_details["studrep_id"]) {
-							echo "<tr>\n";
-							echo "    <td>Student Rep</td>\n";
-							echo "    <td><a href=\"mailto:".get_account_data("email", $course_details["studrep_id"])."\">".get_account_data("fullname", $course_details["studrep_id"])."</a></td>\n";
-							echo "</tr>\n";
-						}
-						echo "<tr>\n";
-						echo "	<td colspan=\"2\">&nbsp;</td>\n";
-						echo "</tr>\n";
-						echo "<tr>\n";
-						echo "	<td style=\"vertical-align: top\"><label for=\"course_description\" class=\"form-nrequired\">" . $module_singular_name . " Description</label></td>\n";
-						echo "	<td>\n";
-						echo "		<textarea id=\"course_description\" name=\"course_description\" style=\"width: 100%; height: 150px\" cols=\"70\" rows=\"10\">".((isset($PROCESSED["course_description"])) ? html_encode(trim(strip_selected_tags($PROCESSED["course_description"], array("font")))) : "")."</textarea>";
-						echo "	</td>\n";
-						echo "</tr>\n";
-						echo "<tr>\n";
-						echo "	<td colspan=\"2\">&nbsp;</td>\n";
-						echo "</tr>\n";
-						echo "<tr>\n";
-						echo "	<td style=\"vertical-align: top\"><label for=\"course_message\" class=\"form-nrequired\">Director's Message</label></td>\n";
-						echo "	<td>\n";
-						echo "		<textarea id=\"course_message\" name=\"course_message\" style=\"width: 100%; height: 150px\" cols=\"70\" rows=\"10\">".((isset($PROCESSED["course_message"])) ? html_encode(trim(strip_selected_tags($PROCESSED["course_message"], array("font")))) : "")."</textarea>";
-						echo "	</td>\n";
-						echo "</tr>\n";
-						?>
-						</tbody>
-					</table>
+						<div class="control-group">
+							<label for="course_description" class="form-nrequired control-label"><?php echo $module_singular_name . " Description";?></label>
+							<div class="controls">
+								<textarea id="course_description" name="course_description" cols="70" rows="10"><?php echo ((isset($PROCESSED["course_description"])) ? html_encode(trim(strip_selected_tags($PROCESSED["course_description"], array("font")))) : "");?></textarea>
+							</div>
+						</div>			
+								
+						<div class="control-group">
+							<label for="course_message" class="form-nrequired control-label">Director's Message</label>
+							<div class="controls">
+								<textarea id="course_message" name="course_message" cols="70" rows="10"><?php echo ((isset($PROCESSED["course_message"])) ? html_encode(trim(strip_selected_tags($PROCESSED["course_message"], array("font")))) : "");?></textarea>
+							</div>
+						</div>							
+						<div class="pull-right clearfix">
+							<input type="submit" value="Save" class="btn"/>
+						</div>
 					</form>
 				</div>
+
 				<?php
 				$query = "	SELECT COUNT(*) FROM course_objectives WHERE course_id = ".$db->qstr($COURSE_ID);
 				$result = $db->GetOne($query);
@@ -516,12 +524,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 				if ($result) {
 					?>
-					<a name="course-objectives-section"></a>
-					<h2 title="Course Objectives Section"><?php echo $module_singular_name; ?> Objectives</h2>
-					<div id="course-objectives-section">
-						<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
-						<input type="hidden" name="type" value="objectives" />
-						<input type="hidden" id="objectives_head" name="course_objectives" value="" />
+				<a name="course-objectives-section"></a>
+				<h2 title="Course Objectives Section"><?php echo $module_singular_name; ?> Objectives</h2>
+				<div id="course-objectives-section">
+					<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
+					<input type="hidden" name="type" value="objectives" />
+					<input type="hidden" id="objectives_head" name="course_objectives" value="" />
 						<?php
 						if (is_array($course_objectives["primary_ids"])) {
 							foreach ($course_objectives["primary_ids"] as $objective_id) {
@@ -533,68 +541,47 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								echo "<input type=\"hidden\" class=\"secondary_objectives\" id=\"secondary_objective_".$objective_id."\" name=\"secondary_objectives[]\" value=\"".$objective_id."\" />\n";
 							}
 						}
-						?>
-						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
-						<colgroup>
-							<col width="22%" />
-							<col width="78%" />
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" class="btn" /></td>
-							</tr>
-						</tfoot>
-						<tbody>
-							<?php
-							$query = "	SELECT b.*
-										FROM `course_objectives` AS a
-										JOIN `global_lu_objectives` AS b
-										ON a.`objective_id` = b.`objective_id`
-										JOIN `objective_organisation` AS c
-										ON b.`objective_id` = c.`objective_id`
-										WHERE a.`objective_type` = 'event'
-										AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-										AND b.`objective_active` = '1'
-										AND a.`course_id` = ".$db->qstr($COURSE_ID)."
-										GROUP BY b.`objective_id`
-										ORDER BY b.`objective_order`";
-							$results = $db->GetAll($query);
 
-							if ($results) { ?>
-							<tr>
-								<td colspan="2">&nbsp;</td>
-							</tr>
-							<tr>
-								<td colspan="2">
-										<?php
-										echo "<h3>Clinical Presentations</h3>";
-										echo "<ul class=\"objectives\">\n";
-										foreach ($results as $result) {
-											if ($result["objective_name"]) {
-												echo "	<li>".$result["objective_name"]."</li>\n";
-											}
-										}
-										echo "</ul>\n";
-										?>
-								</td>
-							</tr>
-							<tr>
-								<td colspan="2">&nbsp;</td>
-							</tr>
-							<?php } ?>
-							<tr>
-								<td colspan="2">
-									<div id="objectives_list">
-									<h3>Curriculum Objectives</h3>
-									<strong>The learner will be able to:</strong>
-									<?php echo event_objectives_in_list($course_objectives, $top_level_id, $top_level_id, true, false, 1, true, true, "primary", false, $COURSE_ID); ?>
-									</div>
-								</td>
-							</tr>
-						</tbody>
-						</table>
-						</form>
-					</div>
+						$query = "	SELECT b.*
+									FROM `course_objectives` AS a
+									JOIN `global_lu_objectives` AS b
+									ON a.`objective_id` = b.`objective_id`
+									JOIN `objective_organisation` AS c
+									ON b.`objective_id` = c.`objective_id`
+									WHERE a.`objective_type` = 'event'
+									AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+									AND b.`objective_active` = '1'
+									AND a.`course_id` = ".$db->qstr($COURSE_ID)."
+									GROUP BY b.`objective_id`
+									ORDER BY b.`objective_order`";
+						$results = $db->GetAll($query);
+
+					if ($results) { ?>
+						<h3>Clinical Presentations</h3>
+						<ul class="objectives">
+						<?php
+						foreach ($results as $result) {
+							if ($result["objective_name"]) { ?>
+								<li><?php echo $result["objective_name"];?></li>
+							<?php
+							}
+						} ?>
+						</ul>
+				
+
+					<?php 
+					} ?>
+
+						<div id="objectives_list">
+							<h3>Curriculum Objectives</h3>
+							<strong>The learner will be able to:</strong>
+							<?php echo event_objectives_in_list($course_objectives, $top_level_id, $top_level_id, true, false, 1, true, true, "primary", false, $COURSE_ID); ?>
+						</div>
+						<div class="clearfix pull-right">
+							<input type="submit" value="Save" class="btn" />
+						</div>
+					</form>
+				</div>
 					<?php
 					if ((@is_array($edit_ajax)) && (@count($edit_ajax))) {
 						echo "<script type=\"text/javascript\">\n";
@@ -608,146 +595,217 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				<a name="course-resources-section"></a>
 				<h2 title="Course Resources Section"><?php echo $module_singular_name; ?> Resources</h2>
 				<div id="course-resources-section">
-					<div style="margin-bottom: 15px">
-						<div style="float: left; margin-bottom: 5px">
-							<h3>Attached Files</h3>
+					<div class="space-bottom medium">
+						<div class="clearfix">
+							<div class="pull-left space-bottom">
+								<h3>Attached Files</h3>
+							</div>
+							<div class="pull-right space-bottom">
+								<a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')" class="btn btn-primary">Add A File</a>
+							</div>
 						</div>
-						<div style="float: right; margin-bottom: 5px">
-							<a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')" class="btn btn-primary">Add A File</a>
-						</div>
-						<div class="clear"></div>
+						
 						<?php
 						$query		= "SELECT * FROM `course_files` WHERE `course_id`=".$db->qstr($COURSE_ID)." ORDER BY `file_category` ASC, `file_title` ASC";
 						$results	= ((USE_CACHE) ? $db->CacheGetAll(CACHE_TIMEOUT, $query) : $db->GetAll($query));
-						echo "<form id=\"file-listing\" action=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query()."\" method=\"post\">\n";
-						echo "<input type=\"hidden\" name=\"type\" value=\"files\" />\n";
-						echo "<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Files\">\n";
-						echo "<colgroup>\n";
-						echo "	<col class=\"modified\" style=\"width: 50px\" />\n";
-						echo "	<col class=\"file-category\" />\n";
-						echo "	<col class=\"title\" />\n";
-						echo "	<col class=\"date\" />\n";
-						echo "	<col class=\"date\" />\n";
-						echo "	<col class=\"accesses\" />\n";
-						echo "</colgroup>\n";
-						echo "<thead>\n";
-						echo "	<tr>\n";
-						echo "		<td class=\"modified\">&nbsp;</td>\n";
-						echo "		<td class=\"file-category sortedASC\"><div class=\"noLink\">Category</div></td>\n";
-						echo "		<td class=\"title\">File Title</td>\n";
-						echo "		<td class=\"date-small\">Accessible Start</td>\n";
-						echo "		<td class=\"date-small\">Accessible Finish</td>\n";
-						echo "		<td class=\"accesses\">Saves</td>\n";
-						echo "	</tr>\n";
-						echo "</thead>\n";
-						echo "<tfoot>\n";
-						echo "	<tr>\n";
-						echo "		<td>&nbsp;</td>\n";
-						echo "		<td colspan=\"5\" style=\"padding-top: 10px\">\n";
-						echo			(($results) ? "<input type=\"button\" class=\"button\" value=\"Delete Selected\" onclick=\"confirmFileDelete()\" />" : "&nbsp;")."\n";
-						echo "		</td>\n";
-						echo "	</tr>\n";
-						echo "</tfoot>\n";
-						echo "<tbody>\n";
+						?>
+						<form id="file-listing" action="<?php echo ENTRADA_URL;?>/admin/<?php echo $MODULE."?".replace_query();?>" method="post">
+							<input type="hidden" name="type" value="files" />
+							<table class="tableList" cellspacing="0" summary="List of Files">
+								<colgroup>
+									<col class="modified wide"/>
+									<col class="file-category" />
+									<col class="title" />
+									<col class="date" />
+									<col class="date" />
+									<col class="accesses" />
+								</colgroup>
+								<thead>
+									<tr>
+										<td class="modified">&nbsp;</td>
+										<td class="file-category sortedASC"><div class="noLink">Category</div></td>
+										<td class="title">File Title</td>
+										<td class="date-small">Accessible Start</td>
+										<td class="date-small">Accessible Finish</td>
+										<td class="accesses">Saves</td>
+									</tr>
+								</thead>
+								<tfoot>
+									<tr class="space-above">
+										<td>&nbsp;</td>
+										<td colspan="5">
+										<?php
+										echo (($results) ? "<input type=\"button\" class=\"button\" value=\"Delete Selected\" onclick=\"confirmFileDelete()\" />" : "&nbsp;");
+										?>
+										</td>
+									</tr>
+								</tfoot>
+								<tbody>
+						<?php
 						if($results) {
 							foreach($results as $result) {
 								$filename	= $result["file_name"];
 								$parts		= pathinfo($filename);
 								$ext		= $parts["extension"];
-
-								echo "<tr id=\"file-".$result["id"]."\">\n";
-								echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
-								echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["id"]."\" style=\"vertical-align: middle\" />\n";
-								echo "		<a href=\"".ENTRADA_URL."/file-course.php?id=".$result["id"]."\"><img src=\"".ENTRADA_URL."/images/btn_save.gif\" width=\"16\" height=\"16\" alt=\"Download ".html_encode($result["file_name"])." to your computer.\" title=\"Download ".html_encode($result["file_name"])." to your computer.\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
-								echo "	</td>\n";
-								echo "	<td class=\"file-category\">".((isset($RESOURCE_CATEGORIES["course"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["course"][$result["file_category"]]) : "Unknown Category")."</td>\n";
-								echo "	<td class=\"title\">\n";
-								echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />";
-								echo "		<a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-course.api.php?action=edit&id=".$COURSE_ID."&fid=".$result["id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
-								echo "	</td>\n";
-								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions")."</span></td>\n";
-								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions")."</span></td>\n";
-								echo "	<td class=\"accesses\" style=\"text-align: center\">".$result["accesses"]."</td>\n";
-								echo "</tr>\n";
+								?>
+									<tr id="file-<?php echo $result["id"];?>">
+										<td class="modified wide">
+											<input type="checkbox" name="delete[]" value="<?php echo $result["id"];?>"/>
+											<a href="<?php echo ENTRADA_URL;?>/file-course.php?id=<?php echo $result["id"];?>">
+												<img 	src="<?php echo ENTRADA_URL;?>/images/btn_save.gif" 
+														width="16" 
+														height="16" 
+														alt="Download <?php echo html_encode($result["file_name"]);?> to your computer." 
+														title="Download <?php echo html_encode($result["file_name"]);?> to your computer." 
+														border="0" />
+											</a>
+										</td>
+										<td class="file-category">
+											<?php echo ((isset($RESOURCE_CATEGORIES["course"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["course"][$result["file_category"]]) : "Unknown Category");?>
+										</td>
+										<td class="title">
+											<img 	src="<?php echo ENTRADA_URL;?>/serve-icon.php?ext=<?php echo $ext;?>" 
+													width="16" 
+													height="16" 
+													alt="<?php echo strtoupper($ext);?> Document" 
+													title="<?php echo strtoupper($ext);?> Document"/>
+											<a 	href="#" 
+												onclick="openDialog('<?php echo ENTRADA_URL;?>/api/file-wizard-course.api.php?action=edit&id=<?php echo $COURSE_ID."&fid=".$result["id"];?>')" 
+												title="Click to edit <?php echo html_encode($result["file_title"]);?>">
+												<strong>
+												<?php echo html_encode($result["file_title"]);?>
+												</strong>
+											</a>
+										</td>
+										<td class="date-small">
+											<span class="content-date">
+												<?php echo (((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions");?>
+											</span>
+										</td>
+										<td class="date-small">
+											<span class="content-date">
+												<?php echo (((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions");?>
+											</span>
+										</td>
+										<td class="accesses text-center"><?php echo $result["accesses"];?></td>
+									</tr>
+							<?php 
 							}
-						} else {
-							echo "<tr>\n";
-							echo "	<td colspan=\"6\">\n";
-							echo "		<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no files added to this " . strtolower($module_singular_name) . ". To <strong>add a new file</strong>, simply click the Add File button.</div>\n";
-							echo "	</td>\n";
-							echo "</tr>\n";
-						}
-						echo "	</tbody>\n";
-						echo "	</table>\n";
-						echo "	</form>\n";
-						?>
+						} else { ?>
+									<tr>
+										<td colspan="6">
+											<div class="well well-small content-small">
+												There have been no files added to this <?php echo strtolower($module_singular_name);?>. To <strong>add a new file</strong>, simply click the Add File button.
+											</div>
+										</td>
+									</tr>
+						<?php 
+						} ?>
+								</tbody>
+							</table>
+						</form>
 					</div>
 
-					<div style="margin-bottom: 15px">
-						<div style="float: left; margin-bottom: 5px">
+					<div class="space-bottom medium">
+						<div class="clearfix">
+						<div class="pull-left space-below">
 							<h3>Attached Links</h3>
 						</div>
-						<div style="float: right; margin-bottom: 5px">
-							<a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')" class="btn btn-primary">Add A Link</a>
+						<div class="pull-right space-below">
+							<a 	href="#page-top" 
+								onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')" 
+								class="btn btn-primary">
+								Add A Link
+							</a>
 						</div>
-						<div class="clear"></div>
+						</div>
 						<?php
 						$query		= "SELECT * FROM `course_links` WHERE `course_id`=".$db->qstr($COURSE_ID)." ORDER BY `link_title` ASC";
 						$results	= ((USE_CACHE) ? $db->CacheGetAll(CACHE_TIMEOUT, $query) : $db->GetAll($query));
-						echo "<form id=\"link-listing\" action=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query()."\" method=\"post\">\n";
-						echo "<input type=\"hidden\" name=\"type\" value=\"links\" />\n";
-						echo "<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Linked Resources\">\n";
-						echo "<colgroup>\n";
-						echo "	<col class=\"modified\" style=\"width: 50px\" />\n";
-						echo "	<col class=\"title\" />\n";
-						echo "	<col class=\"date\" />\n";
-						echo "	<col class=\"date\" />\n";
-						echo "	<col class=\"accesses\" />\n";
-						echo "</colgroup>\n";
-						echo "<thead>\n";
-						echo "	<tr>\n";
-						echo "		<td class=\"modified\">&nbsp;</td>\n";
-						echo "		<td class=\"title sortedASC\"><div class=\"noLink\">Linked Resource</div></td>\n";
-						echo "		<td class=\"date-small\">Accessible Start</td>\n";
-						echo "		<td class=\"date-small\">Accessible Finish</td>\n";
-						echo "		<td class=\"accesses\">Hits</td>\n";
-						echo "	</tr>\n";
-						echo "</thead>\n";
-						echo "<tfoot>\n";
-						echo "	<tr>\n";
-						echo "		<td>&nbsp;</td>\n";
-						echo "		<td colspan=\"4\" style=\"padding-top: 10px\">\n";
-						echo 			(($results) ? "<input type=\"button\" class=\"button\" value=\"Delete Selected\" onclick=\"confirmLinkDelete()\" />" : "&nbsp;")."\n";
-						echo "		</td>\n";
-						echo "	</tr>\n";
-						echo "</tfoot>\n";
-						echo "<tbody>\n";
-						if($results) {
-							foreach($results as $result) {
-								echo "<tr>\n";
-								echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
-								echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["id"]."\" style=\"vertical-align: middle\" />\n";
-								echo "		<a href=\"".ENTRADA_URL."/link-course.php?id=".$result["id"]."\" target=\"_blank\"><img src=\"".ENTRADA_URL."/images/url-visit.gif\" width=\"16\" height=\"16\" alt=\"Visit ".html_encode($result["link"])."\" title=\"Visit ".html_encode($result["link"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
-								echo "	</td>\n";
-								echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-								echo "		<a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-course.api.php?action=edit&id=".$COURSE_ID."&lid=".$result["id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
-								echo "	</td>\n";
-								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions")."</span></td>\n";
-								echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions")."</span></td>\n";
-								echo "	<td class=\"accesses\" style=\"text-align: center\">".$result["accesses"]."</td>\n";
-								echo "</tr>\n";
-							}
-						} else {
-							echo "<tr>\n";
-							echo "	<td colspan=\"5\">\n";
-							echo "		<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no links added to this " . strtolower($module_singular_name) . ". To <strong>add a new link</strong>, simply click the Add Link button.</div>\n";
-							echo "	</td>\n";
-							echo "</tr>\n";
-						}
-						echo "</tbody>\n";
-						echo "</table>\n";
-						echo "</form>\n";
 						?>
+						<form id="link-listing" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query();?>" method="post">
+							<input type="hidden" name="type" value="links" />
+							<table class="tableList" cellspacing="0" summary="List of Linked Resources">
+								<colgroup>
+									<col class="modified wide"/>
+									<col class="title" />
+									<col class="date" />
+									<col class="date" />
+									<col class="accesses" />
+								</colgroup>
+								<thead>
+									<tr>
+										<td class="modified">&nbsp;</td>
+										<td class="title sortedASC"><div class="noLink">Linked Resource</div></td>
+										<td class="date-small">Accessible Start</td>
+										<td class="date-small">Accessible Finish</td>
+										<td class="accesses">Hits</td>
+									</tr>
+								</thead>
+								<tfoot>
+									<tr>
+										<td>&nbsp;</td>
+										<td colspan="4">
+											<?php 
+											echo (($results) ? "<input type=\"button\" class=\"button\" value=\"Delete Selected\" onclick=\"confirmLinkDelete()\" />" : "&nbsp;")."\n";
+											?>
+										</td>
+									</tr>
+								</tfoot>
+								<tbody>
+							<?php 
+							if($results) {
+								foreach($results as $result) { ?>
+									<tr>
+										<td class="modified wide">
+											<input type="checkbox" name="delete[]" value="<?php echo $result["id"];?>"/>
+											<a href="<?php echo ENTRADA_URL;?>/link-course.php?id=<?php echo $result["id"];?>" target="_blank">
+												<img 	src="<?php echo ENTRADA_URL;?>/images/url-visit.gif" 
+														width="16" 
+														height="16" 
+														alt="Visit <?php echo html_encode($result["link"]);?>" 
+														title="Visit <?php echo html_encode($result["link"]);?>" 
+														border="0" />
+											</a>
+										</td>
+										<td class="title">
+											<a 	href="#" 
+												onclick="openDialog('<?php echo ENTRADA_URL;?>/api/link-wizard-course.api.php?action=edit&id=<?php echo $COURSE_ID."&lid=".$result["id"];?>')" 
+												title="Click to edit <?php echo html_encode($result["link"]);?>">
+												<strong>
+												<?php echo (($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"]);?>
+												</strong>
+											</a>
+										</td>
+										<td class="date-small">
+											<span class="content-date">
+												<?php echo (((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions");?>
+											</span>
+										</td>
+										<td class="date-small">
+											<span class="content-date">
+												<?php echo (((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions");?>
+											</span>
+										</td>
+										<td class="accesses text-center">
+											<?php echo $result["accesses"];?>
+										</td>
+									</tr>
+								<?php 
+								}
+							} else { ?>
+									<tr>
+										<td colspan="5">
+											<div class="well well-small content-small">
+												There have been no links added to this <?php echo strtolower($module_singular_name);?>. To <strong>add a new link</strong>, simply click the Add Link button.
+											</div>
+										</td>
+									</tr>
+							<?php 
+							} ?>
+								</tbody>
+							</table>
+						</form>
 					</div>
 				</div>
 				<?php

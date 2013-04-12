@@ -185,7 +185,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : ""); ?>?section=add&id=<?php echo $COURSE_ID ?>" class="btn btn-primary">Add Group</a></li>
 			</div>
 			<h2 style="margin-top: 10px">Manage Groups</h2>
-			<div style=" width: 484px">
+			<div>
 				<div style="clear: both"></div> 
 				<?php echo (($ERROR) ? display_error($ERRORSTR) : ""); ?>
 				<table class="tableList" cellspacing="1" cellpadding="1">
@@ -206,9 +206,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : ""); ?>?section=manage&id=<?php echo $COURSE_ID; ?>&step=1" method="post" id="addMembersForm">
 				<input type="hidden" id="step" name="step" value="1" />
 				<input type="hidden" id="cgroup_id" name="cgroup_id" value="" />
-				<div STYLE="overflow: auto; width: 482px; height: 100px; 
-		            border-left: 1px gray solid; border-bottom: 1px gray solid; 
-		            border-right: 1px gray solid; padding:0px; margin: 0px">
+				<div >
 					<table class="tableList" width="452px" cellspacing="0" cellpadding="1" summary="List of groups">
 						<colgroup>
 							<col style="width: 32px" />
@@ -240,7 +238,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			</form>
 			<form action="<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=edit&action=delmember&id=<?php echo $COURSE_ID; ?>&gid=<?php echo $GROUP_ID;?>" method="post">
 				<h2 style="margin-top: 10px">View Members</h2>
-				<div style=" width: 484px">
+				<div>
 					<div style="clear: both"></div> 
 					<?php echo (($ERROR) ? display_error($ERRORSTR) : ""); ?>
 					<table class="tableList" cellspacing="1" cellpadding="1">
@@ -258,9 +256,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						</thead>
 					</table>
 				</div>	
-				<div STYLE="overflow: auto; width: 482px; height: 100px; 
-	            border-left: 1px gray solid; border-bottom: 1px gray solid; 
-	            border-right: 1px gray solid; padding:0px; margin: 0px">
+				<div>
 					<table class="tableList" width="452px" cellspacing="0" cellpadding="1" summary="List of Members">
 						<colgroup>
 							<col style="width: 32px" />

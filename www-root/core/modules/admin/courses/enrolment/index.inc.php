@@ -345,7 +345,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 					if ($group["group_type"] == "cohort") {
                         ?>
                         <div class="display-generic">
-                            <strong>Please Note:</strong> This student list is used by multiple courses, so editing is reserved for system administrators.
+                            <strong>Please Note:</strong> Because this student list is used by multiple courses editing it is reserved for administrators.
                         </div>
 						<?php
 					} else {

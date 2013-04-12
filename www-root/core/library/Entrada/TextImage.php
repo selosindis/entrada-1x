@@ -10,28 +10,28 @@
  * $Id: textimage.class.php 1 2008-07-11 20:11:41Z simpson $
 */
 
-class TextImage {
+class Entrada_TextImage {
 	var $message		= "na";				// Default text to display if no message is present.
 	var $font			= "fonts/Vera.ttf";	// Default font. directory relative to script directory.
 	var $size			= 12;				// Default font size to use if not specified.
 	var $rotation		= 0;				// Rotation in degrees.
 	var $padding		= 0;				// Padding surrounding the type.
-	
+
 	var $transparent	= false;			// Transparency set to on (true | false).
-	
+
 	var $red			= 255;				// White text (RGB value).
 	var $green			= 255;
 	var $blue			= 255;
-	
+
 	var $bg_red			= 0;				// On blue background (RGB value).
 	var $bg_green		= 51;
 	var $bg_blue		= 102;
 
 	var $width			= 0;				// 0 = auto-set image width, otherwise, specify.
 	var $height			= 0;				// 0 = auto-set image height, otherwise, specify.
-	
+
 	var $image_format	= "png";			// Type of image to output (gif, jpg, wbmp, png).
-	
+
 	/**
 	 * Constructor function.
 	 *
@@ -43,12 +43,12 @@ class TextImage {
 	 */
 	function TextImage($message = "", $format = "", $width = 0, $height = 0) {
 		if($message != "") {
-			$this->message = $message;	
+			$this->message = $message;
 		}
-		
+
 		if($format = strtolower(trim($format)) != "") {
 			if(@in_array($format, $this->_getSupportedImageTypes())) {
-				$this->image_format = $format;	
+				$this->image_format = $format;
 			}
 		}
 
@@ -60,7 +60,7 @@ class TextImage {
 			$this->height = $height;
 		}
 	}
-	
+
 	/**
 	 * Draw function will actually draw the image.
 	 * @return Draw's image.
@@ -68,20 +68,20 @@ class TextImage {
 	function draw() {
 		$offset_x	= 0;
 		$offset_y	= 0;
-		
+
 		$bounds	= array();
 		$image	= "";
-	
+
 		// Determine font height.
 		$bounds = ImageTTFBBox($this->size, $this->rotation, $this->font, "W");
 		if ($this->rotation < 0) {
-			$font_height = abs($bounds[7] - $bounds[1]);		
+			$font_height = abs($bounds[7] - $bounds[1]);
 		} else if ($this->rotation > 0) {
 			$font_height = abs($bounds[1] - $bounds[7]);
 		} else {
 			$font_height = abs($bounds[7] - $bounds[1]);
 		}
-	
+
 		// Determine bounding box.
 		$bounds = ImageTTFBBox($this->size, $this->rotation, $this->font, $this->message);
 		if ($this->rotation < 0) {
@@ -106,21 +106,21 @@ class TextImage {
 			$offset_y = $font_height;
 			$offset_x = 0;
 		}
-		
+
 		$image		= imagecreate(($this->width + ($this->padding * 2) + 1), ($this->height + ($this->padding * 2) + 1));
-		
+
 		$background	= imagecolorallocate($image, $this->bg_red, $this->bg_green, $this->bg_blue);
 		$foreground	= imagecolorallocate($image, $this->red, $this->green, $this->blue);
-		
+
 		if($this->transparent) {
 			imagecolortransparent($image, $background);
 		}
-		
+
 		imageinterlace($image, false);
-		
+
 		// Render it text.
 		imagettftext($image, $this->size, $this->rotation, ($offset_x + $this->padding), ($offset_y + $this->padding), $foreground, $this->font, $this->message);
-		
+
 		switch($this->image_format) {
 			case "jpg" :
 				if(imagetypes() & IMG_JPG) {
@@ -161,17 +161,17 @@ class TextImage {
 			break;
 		}
 	}
-	
+
 	function _getSupportedImageTypes() {
 		$aSupportedTypes		= array();
 		$aPossibleImageTypeBits	= array(IMG_GIF => "gif", IMG_JPG => "jpg", IMG_PNG => "png", IMG_WBMP => "wbmp");
-	
+
 		foreach ($aPossibleImageTypeBits as $iImageTypeBits => $sImageTypeString) {
 			if (imagetypes() & $iImageTypeBits) {
 				$aSupportedTypes[] = $sImageTypeString;
 			}
 		}
-	
+
 		return $aSupportedTypes;
 	}
 }

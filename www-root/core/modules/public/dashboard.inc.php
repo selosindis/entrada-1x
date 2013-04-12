@@ -614,9 +614,11 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 				</tr>
 				</table>
 				<div id="dashboardCalendar"></div>
-				<div style="text-align: right; margin-top: 5px">
-					<a href="<?php echo str_ireplace(array("https://", "http://"), "webcal://", ENTRADA_URL); ?>/calendars<?php echo ((isset($_SESSION["details"]["private_hash"])) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : ""); ?>/<?php echo html_encode($_SESSION["details"]["username"]); ?>.ics" class="feeds ics">Subscribe to Calendar</a>
-				</div>
+
+                <div class="pull-right">
+                    <a class="btn btn-info btn-small" href="<?php echo str_ireplace(array("https://", "http://"), "webcal://", ENTRADA_URL)."/calendars".(isset($_SESSION["details"]["private_hash"]) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : "")."/".html_encode($ENTRADA_USER->getUsername()).".ics"; ?>"><i class="icon-calendar icon-white"></i> Subscribe to Calendar</a>
+                </div>
+
 				<?php
 			}
 			if ($display_schedule_tabs) {
@@ -849,47 +851,28 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			While you are in <strong>edit mode</strong> you can rearrange the feeds below by dragging them to your preferred location. You can also <a href="#edit-rss-feeds" id="rss-feed-reset">reset this page to the default RSS feeds</a> if you would like. <span id="rss-save-results">&nbsp;</span>
 		</div>
 		<div id="rss-add-details">
-			<form id="rss-add-form">
-				<table style="width: 450px;" cellspacing="0" cellpadding="2" border="0" summary="Adding Dashboard RSS Feed">
-					<colgroup>
-						<col style="width: 3%" />
-						<col style="width: 25%" />
-						<col style="width: 72%" />
-					</colgroup>
-					<tr>
-						<td colspan="3">
-							<h2 style="margin-top: 0">Add RSS Feed</h2>
-							<p>You can add your own external news feeds to your dashboard by providing both a title, and the full URL to your valid RSS feed.</p>
-						</td>
-					</tr>
-					<tr>
-						<td id="rss-add-status" colspan="3"></td>
-					</tr>
-					<tr>
-						<td></td>
-						<td><label for="rss-add-title" class="form-required">RSS Feed Title</label></td>
-						<td><input id="rss-add-title" style="width: 98%" /></td>
-					</tr>
-					<tr>
-						<td></td>
-						<td><label id="rss-add-url-label" for="rss-add-url" class="form-required">RSS Feed URL</label></td>
-						<td><input id="rss-add-url" style="width: 98%" value="http://" /></td>
-					</tr>
-					<tr>
-						<td colspan="3">
-							<table style="margin-top: 15px; width: 100%" cellspacing="0" cellpadding="0" border="0">
-								<tr>
-									<td style="width: 25%; text-align: left">
-										<input type="button" class="button" value="Cancel" id="add-rss-feeds-close-link"/>
-									</td>
-									<td style="width: 75%; text-align: right; vertical-align: middle">
-										<input type="submit" id="rss-add-button" value="Add">
-									</td>
-								</tr>
-							</table>
-						</td>
-					</tr>
-				</table>
+			<form id="rss-add-form" class="form-horizontal">
+                <h2>Add RSS Feed</h2>
+                <p>If you would like to add an additional news feed to your <?php echo APPLICATION_NAME; ?> Dashboard, simple provide us with the feed URL below.</p>
+
+                <div id="rss-add-status"></div>
+
+                <div class="control-group">
+                    <label class="control-label form-required" for="rss-add-title">RSS Feed Title:</label>
+                    <div class="controls">
+                        <input id="rss-add-title" class="input-xlarge" placeholder="Your personalized feed title" />
+					</div>
+                </div>
+
+                <div class="control-group">
+                    <label class="control-label form-required" id="rss-add-url-label" for="rss-add-url">RSS Feed URL:</label>
+                    <div class="controls">
+                        <input id="rss-add-url" class="input-xlarge" value="http://" />
+					</div>
+                </div>
+
+                <input type="button" class="btn" id="add-rss-feeds-close-link" value="Cancel" />
+				<input type="submit" class="pull-right btn btn-primary" id="rss-add-button" value="Add" />
 			</form>
 		</div>
 	</div>
@@ -902,7 +885,6 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	</script>
 	<div id="dashboard-syndicated-content">
 		<ul id="rss-list-1" class="rss-list first">
-
 			<?php
 			if ((is_array($dashboard_feeds)) && (count($dashboard_feeds))) {
 				$list_2 = false;
@@ -922,8 +904,8 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 					$feed = $dashboard_feeds[$i];
 					echo "<li> \n";
-					echo "<h2 class=\"rss-title\"><a href=\"".$feed["url"]."\" title=\"".$feed["title"]."\" target=\"_blank\">".$feed["title"]."</a></h2>\n";
-					echo "<div class=\"rss-content\" data-feedurl=\"".$feed["url"]."\"></div>\n";
+					echo "  <h2 class=\"rss-title\">".$feed["title"]."</h2>\n";
+					echo "  <div class=\"rss-content\" data-feedurl=\"".$feed["url"]."\"></div>\n";
 
 					if (isset($feed["removable"]) && $feed["removable"] == true) {
 						echo "<a href=\"#\" class=\"rss-remove-link\">Remove This Feed</a>\n";
@@ -933,8 +915,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 				}
 				if (!$list_2) {
 					$list_2 = true;
-					echo "</ul>
-					<ul id=\"rss-list-2\" class=\"rss-list\">\n";
+					echo "</ul>\n<ul id=\"rss-list-2\" class=\"rss-list\">\n";
 				}
 			}
 			?>

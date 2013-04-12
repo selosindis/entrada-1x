@@ -61,7 +61,33 @@
                             ?>
                             <div class="span5">
                                 <div class="welcome-area">
-                                    <a href="#"><span class="userAvatar"><?php echo "<img src=\"".webservice_url("photo", array($ENTRADA_USER->getID(), (isset($uploaded_file_active) && $uploaded_file_active ? "upload" : (!file_exists(STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-official") && file_exists(STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-upload") ? "upload" : "official"))))."\" width=\"32\" height=\"32\" alt=\"".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."\" class=\"img-polaroid\" />"; ?></span></a> Welcome <span class="userName"><?php echo $ENTRADA_USER->getFirstname() . " " . $ENTRADA_USER->getLastname(); ?></span>
+                                    <div class="userAvatar">
+                                        <a href="#"><?php echo "<img src=\"".webservice_url("photo", array($ENTRADA_USER->getID(), (isset($uploaded_file_active) && $uploaded_file_active ? "upload" : (!file_exists(STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-official") && file_exists(STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-upload") ? "upload" : "official"))))."\" width=\"32\" height=\"32\" alt=\"".html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"])."\" class=\"img-polaroid\" />"; ?></a>
+                                    </div>
+                                    <div class="welcome-block">
+                                        Welcome <span class="userName"><?php echo $ENTRADA_USER->getFirstname() . " " . $ENTRADA_USER->getLastname(); ?></span>
+                                        <br />
+                                        <a href="<?php echo ENTRADA_RELATIVE; ?>/profile">My Profile</a> |
+                                        <a href="<?php echo ENTRADA_RELATIVE; ?>/evaluations">My Evaluations</a>
+                                        <?php
+                                        /**
+                                         * Cache any outstanding evaluations.
+                                         */
+                                        if (!isset($ENTRADA_CACHE) || !$ENTRADA_CACHE->test("evaluations_outstanding_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID())) {
+                                            $evaluations_outstanding = Models_Evaluation::getOutstandingEvaluations($ENTRADA_USER->getID(), true);
+
+                                            if (isset($ENTRADA_CACHE)) {
+                                                $ENTRADA_CACHE->save($evaluations_outstanding, "evaluations_outstanding_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
+                                            }
+                                        } else {
+                                            $evaluations_outstanding = $ENTRADA_CACHE->load("evaluations_outstanding_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
+                                        }
+
+                                        if ($evaluations_outstanding) {
+                                            echo "<span class=\"badge badge-success\"><small>".$evaluations_outstanding."</small></span>";
+                                        }
+                                        ?>
+                                    </div>
                                 </div>
                             </div>
                             <div class="span2">

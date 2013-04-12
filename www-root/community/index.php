@@ -141,6 +141,7 @@ if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
 				if ($ENTRADA_USER == false) {
 					$ENTRADA_USER = User::get($result["ID"]);
 				}
+
 				$_SESSION["isAuthorized"] = true;
 				$_SESSION["details"]["app_id"] = AUTH_APP_ID;
 				$_SESSION["details"]["id"] = $result["ID"];
@@ -179,6 +180,11 @@ if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
 		unset($username, $password);
 	}
 }
+
+
+//added because Smarty can't access these values from ENTRADA_USER object and they're required for course template
+$USER_PROXY_ID = $ENTRADA_USER->getID();
+$USER_FULLNAME = $ENTRADA_USER->getFirstname() . " " . $ENTRADA_USER->getLastname();
 
 /**
  * Setup Smarty template engine.

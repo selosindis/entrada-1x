@@ -140,6 +140,10 @@ font-family:'Century Gothic', Helvetica, Arial, sans-serif;
 font-size:28px;
 font-weight:400;
 color:#036;
+margin-top:20px;
+margin-bottom:20px;
+margin-left:10px;
+display:block;
 }
 
 h2,.content-subheading {
@@ -368,7 +372,18 @@ margin-bottom:10px;
 padding-bottom:4px;
 padding-left:37px;
 }
-
+ul.shares {
+	margin: 0;
+	padding: 0;
+}
+ul.shares li {
+	list-type: none;
+	margin: 0;
+	padding: 5px 0 5px 0;
+}
+ul.shares .media-body .well{
+	margin-top:8px;
+}
 ul.shares li.folder-1 {
 background:transparent url(../images/list-folder-1.gif) no-repeat 0 2px;
 }
@@ -498,32 +513,6 @@ background:transparent url(../images/list-status-offline.gif) no-repeat;
 
 ul.menu li.rss {
 background:transparent url(../images/rss-enabled.gif) no-repeat;
-}
-
-input[type=submit],input.button {
-background:#EEE url(../images/btn_bg.gif) no-repeat center center;
-color:#000;
-width:115px;
-height:22px;
-border:none;
-}
-
-input.button.small {
-background:#EEE url(../images/btn_bg_sm.gif) no-repeat center center;
-font-size:11px;
-width:57px;
-height:20px;
-}
-
-input.button-sm {
-background-color:#EEE;
-color:#000;
-background-image:url(../images/btn_bg_sm.gif);
-font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
-font-size:11px;
-width:57px;
-height:20px;
-border:none;
 }
 
 ul.page-action {

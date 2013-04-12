@@ -397,7 +397,18 @@ padding-bottom:4px;
 padding-left:37px;
 height:32px;
 }
-
+ul.shares {
+	margin: 0;
+	padding: 0;
+}
+ul.shares li {
+	list-type: none;
+	margin: 0;
+	padding: 5px 0 5px 0;
+}
+ul.shares .media-body .well{
+	margin-top:8px;
+}
 ul.shares li.folder-1 {
 background:transparent url(../images/list-folder-1.gif) no-repeat 0 2px;
 }

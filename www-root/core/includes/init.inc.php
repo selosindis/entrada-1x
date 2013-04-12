@@ -30,7 +30,8 @@
  */
 require_once "Zend/Loader/Autoloader.php";
 $loader = Zend_Loader_Autoloader::getInstance();
-//$loader->registerNamespace('Entrada_');
+$loader->registerNamespace('Entrada_');
+$loader->registerNamespace('Models_');
 
 require_once("config/settings.inc.php");
 
@@ -41,7 +42,6 @@ require_once("functions.inc.php");
 require_once("dbconnection.inc.php");
 
 require_once("Entrada/pagination/pagination.class.php");
-require_once("Entrada/router/router.class.php");
 
 require_once("cache.inc.php");
 
@@ -105,8 +105,8 @@ if ($ENTRADA_USER) {
 	//Load preferences into local variable as well as $_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]
 	$original_preferences = preferences_load("organisation_switcher");
     if (isset($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) {
-        $query = "SELECT `id` FROM `user_access` 
-                    WHERE `user_id` = ".$db->qstr($ENTRADA_USER->getID())." 
+        $query = "SELECT `id` FROM `user_access`
+                    WHERE `user_id` = ".$db->qstr($ENTRADA_USER->getID())."
                     AND `access_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"])."
 					AND `account_active` = 'true'
 					AND (`access_starts` = '0' OR `access_starts` < ".$db->qstr(time()).")
@@ -143,11 +143,11 @@ if ($ENTRADA_USER) {
 		$ENTRADA_USER->setActiveOrganisation($result["organisation_id"]);
 		$_SESSION["permissions"] = permissions_load();
 	}
-	
+
 	if ((!isset($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) || !$_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) && $ENTRADA_USER->getActiveId() == $ENTRADA_USER->getID()) {
 		$_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"] = $ENTRADA_USER->getAccessId();
 	}
-		
+
 	if (isset($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"] && $ENTRADA_USER->getActiveId() == $ENTRADA_USER->getID()) {
 		$ENTRADA_USER->setAccessId($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]);
 		$query = "	SELECT a.`group`, a.`role`, a.`id`, a.`organisation_id`

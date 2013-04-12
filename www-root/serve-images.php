@@ -1,7 +1,7 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
- * 
+ *
  * Entrada is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -17,12 +17,12 @@
  *
  * Outputs a dynamically generated image of the users choice containing the
  * requested text to the users web-browser.
- * 
+ *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
- * 
+ *
  * @version $Id: serve-images.php 1171 2010-05-01 14:39:27Z ad29 $
  *
  * @example /images/dynamic/20/235/5/90/Class%20of%202009/jpg
@@ -48,11 +48,9 @@
  */
 require_once("init.inc.php");
 
-require_once("Entrada/textimage.class.php");
-
 if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
 	application_log("error", "Someone attempted to access the serve-images.php file without being authenticated.");
-	
+
 	header("HTTP/1.0 404 Not Found");
 	exit;
 }
@@ -69,7 +67,7 @@ $rotation		= clean_input($parameters[4], array("trim", "int"));
 $message		= rawurldecode(clean_input($parameters[5], array("trim", "notags")));
 $file_type		= clean_input($parameters[6], array("nows", "lower"));
 
-$text			= new TextImage($message, $file_type, $width, $height);
+$text			= new Entrada_TextImage($message, $file_type, $width, $height);
 $text->font		= ENTRADA_ABSOLUTE."/core/fonts/Vera.ttf";
 $text->rotation	= $rotation;
 $text->padding	= $padding;

@@ -2498,7 +2498,9 @@ background-image:top center;
 background-repeat:repeat-x;
 text-align:right;
 position:relative;
-
+}
+.select_multiple_submit select{
+  width:auto;
 }
 
 .inline .select_multiple_submit {
@@ -2573,7 +2575,7 @@ padding:0 4px 0 2px;
 
 div.select_multiple_scroll {
 overflow-y:auto;
-overflow-x:hidden;
+width:100%;
 height:250px;
 }
 
@@ -4170,6 +4172,160 @@ Curriculum Browser CSS
 	font-size:1.2em;
 }
 
+/**
+* Objective CSS
+*/
+
+ul.objective-list{
+  position: relative;
+  padding: 0px;
+  margin: 0px;
+  list-style: none;
+}
+ul.objective-list{
+  position:relative;
+}
+ul.objective-list ul{
+  list-style-type: none;
+  background:transparent url('../images/vline.png') repeat-y;
+  margin: 0 0 0 10px;
+  padding:0;
+}
+
+#mapped_objectives ul.objective-list li, ul.tl-objective-list > li > .objective-children > ul.objective-list > li{
+  background:none!important;
+
+}
+#mapped_objectives ul.objective-list li{
+  border-left:2px solid #CCCCCC!important;
+}
+ul.objective-list li{
+  background:transparent url('../images/node.png') no-repeat;
+  padding-left:5px;
+  display:block;
+  overflow:hidden;
+  line-height: 125%;
+  border-left:none!important;
+}
+.objective-title{
+  cursor:pointer;
+  margin-left:5px;
+  margin-top:-2px;
+}
+.objective-description{
+  font-size: 11px;
+  font-style: normal;
+  color: #666;
+  margin-top:20px;
+  margin-left:5px;
+}
+#mapped_objectives .objective-description{
+  margin-left:0px;
+}
+.objective-list{
+  padding-left:5px;
+}
+#mapped_objectives,#objective_list_0{
+  margin-left:0px;
+  padding-left: 0px;
+}
+.objectives{
+  width:48%;
+  float:left;
+}
+.mapped_objectives{
+  float:right;
+  height:100%;
+  width:100%;
+}
+.remove{
+  cursor:pointer;
+}
+.droppable.hover{
+  background-color:#ddd;
+}
+.objective-title{
+  font-weight:bold;
+}
+.objective-children{
+  margin-top:5px;
+}
+.objective-container{
+  position:relative;
+  padding-right:0px!important;
+  margin-right:0px!important;
+}
+.objective-description{
+  font-size: 11px;
+  font-style: normal;
+  color: #666;
+  margin-top:12px;
+}
+.list-heading{
+  font-size:18px;
+}
+.mapped-objective{
+  position:relative;
+}
+.objective-controls{
+  position:absolute;
+  top:5px;
+  right:5px;
+}
+.objective-controls .loading{
+  margin-top:7px!important;
+}
+.assessment-objective-controls, .event-objective-controls{
+    position:absolute;
+    top:5px;
+    left:5px;
+}
+.objective-remove{
+  display:block;
+  float:right;
+}
+.importance{
+  font-size:.8em;
+  margin-right:30px;
+  float:left;
+}
+li.display-notice{
+  border:1px #FC0 solid!important;
+  padding-top:10px!important;
+  text-align:center;
+}
+
+.hide{
+  display:none;
+}
+.tl-objective-list{
+  padding-left:0px;
+  padding-top:5px;
+  padding-bottom:5px;
+  list-style: none;
+}
+.tl-objective-list > li{
+  padding:5px;
+  margin-bottom:5px;
+}
+.tl-objective-list > .objective-set h4{
+  -webkit-border-radius:5px;
+  -moz-border-radius:5px;
+  border-radius:5px;
+  background-color:#036!important;
+  color:#fff!important;
+  padding:10px;
+}
+select.mini {
+    height: auto;
+    line-height: 14px;
+}
+
+
+/**
+* Utility Classes/Bootstrap Overrides
+*/
+
 a.clean {
     color:inherit;
     text-decoration:none;
@@ -4194,4 +4350,35 @@ a.help {
 }
 .collapse.in {
   height:auto;
+}
+
+.space-above{
+  margin-top:10px;
+}
+.space-below{
+  margin-bottom:10px;
+}
+.space-above.medium{
+  margin-top:20px;
+}
+.space-below.medium{
+  margin-bottom:20px;
+}
+.space-above.large{
+  margin-top:40px;
+}
+.space-below.large{
+  margin-bottom:40px;
+}
+.text-center{
+  text-align: center;
+}
+.text-right{
+  text-align: right;
+}
+.text-left{
+  text-align: left;
+}
+.modified.wide{
+  width:50px;
 }

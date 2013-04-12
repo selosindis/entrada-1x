@@ -120,7 +120,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 		<br /><br />			
 		<?php
 			if ($statistics) {
-				?><ul class="history" style="margin-left:-40px;"><?php
+				?><ul class="history"><?php
 				foreach($statistics as $key=>$statistic){
 					$module = explode(':',$statistic['module']);
 					$action = explode('_',$statistic['action']); 

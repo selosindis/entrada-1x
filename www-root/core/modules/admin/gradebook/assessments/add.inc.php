@@ -772,146 +772,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$objectives = $db->GetAll($query);
 
 						if ($objectives) {	?>
+
+                            <style type="text/css">
+                            	.mapped-objective{
+                        			padding-left: 30px!important;
+                            	}
+                            </style>
                             <a name="assessment-objectives-section"></a>
                             <h2 title="Assessment Objectives Section">Assessment Objectives</h2>
                             <div id="assessment-objectives-section">
-                                <style>
-                                    ul.objective-list{
-                                        position: relative;
-                                        padding: 0px;
-                                        margin: 0px;
-                                        list-style: none;
-                                    }
-                                    ul.objective-list{
-                                        position:relative;
-                                    }
-                                    ul.objective-list ul{
-                                        list-style-type: none;
-                                        background:transparent url('<?php echo ENTRADA_URL;?>/images/vline.png') repeat-y;
-                                        margin: 0 0 0 10px;
-                                        padding:0;
-                                    }
-                                    #mapped_objectives ul.objective-list li, ul.tl-objective-list > li > .objective-children > ul.objective-list > li{
-                                        background:none!important;
-
-                                    }
-                                    #mapped_objectives ul.objective-list li{
-                                        border-left:2px solid #CCCCCC!important;
-                                    }
-                                    ul.objective-list li{
-                                        background:transparent url('<?php echo ENTRADA_URL;?>/images/node.png') no-repeat;
-                                        padding-left:5px;
-                                        display:block;
-                                        overflow:hidden;
-                                        line-height: 125%;
-                                        border-left:none!important;
-                                    }
-                                    .objective-title{
-                                        cursor:pointer;
-                                        margin-left:5px;
-                                        margin-top:-2px;
-                                    }
-                                    .objective-list{
-                                        padding-left:5px;
-                                    }
-                                    #mapped_objectives,#objective_list_0{
-                                        margin-left:0px;
-                                        padding-left: 0px;
-                                    }
-                                    .objectives{
-                                        width:48%;
-                                        float:left;
-                                    }
-                                    .mapped_objectives{
-                                        float:right;
-                                        height:100%;
-                                        width:100%;
-                                    }
-                                    .mapped-objective{
-                                        padding-left:35px!important;
-                                    }
-                                    .objective-remove{
-                                        cursor:pointer;
-                                        position:relative!important;
-                                        margin-left:15px;
-                                    }
-                                    .droppable.hover{
-                                        background-color:#ddd;
-                                    }
-                                    .objective-title{
-                                        font-weight:bold;
-                                    }
-                                    .objective-children{
-                                        margin-top:5px;
-                                    }
-                                    .objective-container{
-                                        position:relative;
-                                        padding-right:0px!important;
-                                        margin-right:0px!important;
-                                    }
-                                    .objective_text_container{
-                                        margin-top:5px;
-                                    }
-                                    .objective-description{
-                                        font-size: 11px;
-                                        font-style: normal;
-                                        color: #666;
-                                        margin-top:5px;
-                                        margin-left:5px;
-                                    }
-                                    .list-heading{
-                                        font-size: 18px;
-                                    }
-                                    #mapped_objectives .objective-description{
-                                        margin-left:0px;
-                                    }
-                                    .importance{
-                                        font-size:.8em;
-                                        margin-right:5px;
-                                    }
-                                    .mapped-objective{
-                                        position:relative;
-                                    }
-                                    .objective-controls{
-                                        position:absolute;
-                                        top:5px;
-                                        right:5px;
-                                    }
-                                    .objective-controls .loading{
-                                        margin-top:7px!important;
-                                    }
-                                    .assessment-objective-controls{
-                                        position:absolute;
-                                        top:5px;
-                                        left:5px;
-                                    }
-                                    li.display-notice{
-                                        border:1px #FC0 solid!important;
-                                        padding-top:10px!important;
-                                        text-align:center;
-                                    }
-                                    .hide{
-                                        display:none;
-                                    }
-                                    .tl-objective-list{
-                                        padding-left:0px;
-                                        padding-top:5px;
-                                        padding-bottom:5px;
-                                        list-style: none;
-                                    }
-                                    .tl-objective-list > li{
-                                        padding:5px;
-                                        margin-bottom:5px;
-                                    }
-                                    .tl-objective-list > .objective-set h4{
-                                        -webkit-border-radius:5px;
-                                        -moz-border-radius:5px;
-                                        border-radius:5px;
-                                        background-color:#036!important;
-                                        color:#fff!important;
-                                        padding:10px;
-                                    }
-                                </style>
                                 <?php
                                 $objective_name = $translate->_("events_filter_controls");
                                 $hierarchical_name = $objective_name["co"]["global_lu_objectives_name"];
@@ -922,7 +791,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             <?php		foreach($objectives as $objective){
                                             ?>
 
-                                            <li class = "objective-container objective-set"
+                                            <li class = "objective-container objective-set assessment-objective"
                                                 id = "objective_<?php echo $objective["objective_id"]; ?>"
                                                 data-list="<?php echo $objective["objective_name"] == $hierarchical_name?'hierarchical':'flat'; ?>"
                                                 data-id="<?php echo $objective["objective_id"]; ?>">

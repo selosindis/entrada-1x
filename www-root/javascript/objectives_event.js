@@ -92,11 +92,11 @@
 			if(state == "show"){
 				$(this).attr('data-toggle','hide');
 				$(this).html('Hide Additional Objectives');
-				jQuery('.mapped_objectives').animate({width:'48%'},400,'swing',function(){
+				jQuery('.mapped_objectives').animate({width:'60%'},400,'swing',function(){
 					//jQuery('.objectives').animate({display:'block'},400,'swing');											
 					jQuery('.objectives').css({width:'0%'});
 					jQuery('.objectives').show();
-					jQuery('.objectives').animate({width:'48%'},400,'linear');
+					jQuery('.objectives').animate({width:'38%'},400,'linear');
 				});										
 			}else{
 				$(this).attr('data-toggle','show');

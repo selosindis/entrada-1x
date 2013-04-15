@@ -31,7 +31,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
      */
     function build_entry_grad_year_container($entry_year = "", $grad_year = "") {
         $output  = "<div id=\"entry_year_container\" style=\"float: left; margin-right: 20px;\">\n";
-        $output .= "    <label for=\"entry_year\" class=\"form-required\" style=\"display: block;\">Year of Program Entry</label>&nbsp;\n";
+        $output .= "    <label for=\"entry_year\" class=\"form-required\" style=\"display: block;\"><strong>Year of Program Entry</strong></label>&nbsp;\n";
         $output .= "    <select id=\"entry_year\" name=\"entry_year\" style=\"width: 140px\">\n";
 
         $selected_year = ($entry_year) ? $entry_year : (date("Y", time()) - ((date("m", time()) < 7) ?  1 : 0));
@@ -43,7 +43,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
         $output .= "</div>\n";
         $output .= "&nbsp;&nbsp;\n";
         $output .= "<div id=\"grad_year_container\" style=\"float: left;\">\n";
-        $output .= "    <label for=\"grad_year\" class=\"form-required\" style=\"display: block;\">Expected Graduation Year</label>&nbsp;\n";
+        $output .= "    <label for=\"grad_year\" class=\"form-required\" style=\"display: block;\"><strong>Expected Graduation Year</strong></label>&nbsp;\n";
         $output .= "    <select id=\"grad_year\" name=\"grad_year\" style=\"width: 140px;\">\n";
 
         for($i = (fetch_first_year() + 1); $i >= 1995; $i--) {
@@ -716,497 +716,372 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 
 					?>
-					<h1>Edit <strong><?php echo html_encode($user_record["firstname"]." ".$user_record["lastname"]); ?></strong></h1>
+					<h1>Edit Profile for <strong><?php echo html_encode($user_record["firstname"]." ".$user_record["lastname"]); ?></strong></h1>
 
-					<form name="user-edit" id="user-edit" action="<?php echo ENTRADA_URL; ?>/admin/users/manage?section=edit&id=<?php echo $PROXY_ID; ?>&amp;step=2" method="post">
-						<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Edit MEdTech Profile">
-							<colgroup>
-								<col style="width: 3%" />
-								<col style="width: 25%" />
-								<col style="width: 72%" />
-							</colgroup>
-							<tfoot>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-								<tr>
-									<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-										<input type="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_RELATIVE; ?>/admin/users/manage?id=<?php echo $PROXY_ID; ?>'" />
-										<input type="submit" value="Save" />
-									</td>
-								</tr>
-							</tfoot>
-							<tbody>
-								<tr>
-									<td colspan="3">
-										<h2>Account Details</h2>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label for="number" class="form-nrequired">Staff / Student Number</label></td>
-									<td>
-										<input type="text" id="number" name="number" value="<?php echo ((isset($PROCESSED["number"])) ? html_encode($PROCESSED["number"]) : ""); ?>" style="width: 250px" maxlength="25" />
-										<span class="content-small">(<strong>Important:</strong> Required when ever possible)</span>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label for="username" class="form-required">Username</label></td>
-									<td>
-										<input type="text" id="username" name="username" value="<?php echo ((isset($PROCESSED["username"])) ? html_encode($PROCESSED["username"]) : ""); ?>" style="width: 250px" maxlength="25" />
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="password" class="form-nrequired">Password</label></td>
-									<td>
-										<input type="text" id="password" name="password" value="" style="width: 250px" maxlength="25" />
-										<div class="content-small" style="margin-top: 5px">
-											<strong>Important:</strong> Enter a new password only if you want to change the current password.
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="3">
-										<h2>Account Options</h2>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="account_active" class="form-required">Account Status</label></td>
-									<td>
-										<select id="account_active" name="account_active" style="width: 209px">
-											<option value="true"<?php echo (((!isset($PROCESSED_ACCESS["account_active"])) || ($PROCESSED_ACCESS["account_active"] == "true")) ? " selected=\"selected\"" : ""); ?>>Active</option>
-											<option value="false"<?php echo (($PROCESSED_ACCESS["account_active"] == "false") ? " selected=\"selected\"" : ""); ?>>Disabled</option>
-										</select>
-									</td>
-								</tr>
-								<?php echo generate_calendars("access", "Access", true, true, ((isset($PROCESSED_ACCESS["access_starts"])) ? $PROCESSED_ACCESS["access_starts"] : time()), true, false, ((isset($PROCESSED_ACCESS["access_expires"])) ? $PROCESSED_ACCESS["access_expires"] : 0)); ?>
-								<tr>
-									<td colspan="3">
-										<h2>Personal Information</h2>
-									</td>
-								</tr>
+					<form name="user-edit" id="user-edit" class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/users/manage?section=edit&id=<?php echo $PROXY_ID; ?>&amp;step=2" method="post">
+						<h2>Account Details</h2>
+						<div class="control-group">
+							<label class="control-label" for="number">Staff / Student Number:</label>
+							<div class="controls">
+								<input type="text" id="number" class="input-medium" name="number" value="<?php echo ((isset($PROCESSED["number"])) ? html_encode($PROCESSED["number"]) : ""); ?>" maxlength="25" />
+								<span class="help-inline"><strong>Important:</strong> Required when ever possible.</span>
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="username">Username:</label>
+							<div class="controls">
+								<input type="text" id="username" class="input-medium" name="username" value="<?php echo ((isset($PROCESSED["username"])) ? html_encode($PROCESSED["username"]) : ""); ?>" maxlength="25" />
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="password">Password:</label>
+							<div class="controls">
+								<input type="password" id="password" class="input-medium" name="password" value="" maxlength="25" />
+								<span class="help-inline"><strong>Important:</strong> This will change the current password.</span>
+							</div>
+						</div>
+						<h2>Account Options</h2>
+						<div class="control-group">
+							<label class="control-label" for="account_active">Account Status:</label>
+							<div class="controls">
+								<select id="account_active" name="account_active" class="input-medium">
+									<option value="true"<?php echo (((!isset($PROCESSED_ACCESS["account_active"])) || ($PROCESSED_ACCESS["account_active"] == "true")) ? " selected=\"selected\"" : ""); ?>>Active</option>
+									<option value="false"<?php echo (($PROCESSED_ACCESS["account_active"] == "false") ? " selected=\"selected\"" : ""); ?>>Disabled</option>
+								</select>
+							</div>
+						</div>
+						<div class="control-group">
+							
+							<div class="controls">
+								<table>
+									<?php echo generate_calendars("access", "Access", true, true, ((isset($PROCESSED_ACCESS["access_starts"])) ? $PROCESSED_ACCESS["access_starts"] : time()), true, false, ((isset($PROCESSED_ACCESS["access_expires"])) ? $PROCESSED_ACCESS["access_expires"] : 0)); ?>
+								</table>
+							</div>
+						</div>
+						<h2>Personal Information</h2>
+						<div class="control-group">
+							<label class="control-label" for="prefix">First Name:</label>
+							<div class="controls">
+								<select id="prefix" name="prefix" class="input-medium">
+								<option value=""<?php echo ((!$result["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
 								<?php
-								$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type`='1' AND `proxy_id` = ".$db->qstr($PROXY_ID);
-								$uploaded_photo = $db->GetRow($query);
-								if ($uploaded_photo && @file_exists(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload")) {
-									?>
-									<tr>
-										<td>&nbsp;</td>
-										<td style="vertical-align: bottom; padding-bottom: 15px;"><label for="photo_active" class="photo_active">Uploaded Photo</label></td>
-										<td>
-											<div style="position: relative">
-												<?php
-												echo "		<div style=\"position: relative; width: 74px; height: 102px;\" id=\"img-holder-".$user_record["id"]."\" class=\"img-holder\">\n";
-												echo "			<img src=\"".webservice_url("photo", array($user_record["id"], "upload"))."\" width=\"72\" height=\"100\" alt=\"".$user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]."\" title=\"".$user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]."\" class=\"current-".$user_record["id"]."\" id=\"uploaded_profile_pic_".$user_record["id"]."\" name=\"uploaded_profile_pic_".$user_record["id"]."\" style=\"border: 1px solid #999999; position: absolute; z-index: 5;\"/>\n";
-												if (($uploaded_file_active)) {
-													echo "		<a id=\"zoomin_profile_photo_".$user_record["id"]."\" class=\"zoomin\" onclick=\"growPic($('uploaded_profile_pic_".$user_record["id"]."'), $('uploaded_profile_pic_".$user_record["id"]."'), null, null, $('zoomout_profile_photo_".$user_record["id"]."'));\">+</a>";
-													echo "		<a id=\"zoomout_profile_photo_".$user_record["id"]."\" class=\"zoomout\" onclick=\"shrinkPic($('uploaded_profile_pic_".$user_record["id"]."'), $('uploaded_profile_pic_".$user_record["id"]."'), null, null, $('zoomout_profile_photo_".$user_record["id"]."'));\"></a>";
-												}
-												echo "		</div>\n";
-												?>
-											</div>
-											<br/><input style="margin-bottom: 15px" type="checkbox" id="photo_active" name="photo_active" value="1" <?php echo ($uploaded_photo["photo_active"] == 1 ? " checked=\"true\"" : "") ?> /> <?php echo ( $uploaded_photo["photo_active"] == 1  ? "<span class=\"content-small\">Uncheck this to deactivate the uploaded photo for this user.</span>" : "<span class=\"content-small\">Check this to activate the uploaded photo of this user.</span>" ); ?>
-										</td>
-									</tr>
-									<?php
+								if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
+									foreach ($PROFILE_NAME_PREFIX as $key => $prefix) {
+										echo "<option value=\"".html_encode($prefix)."\"".(((isset($PROCESSED["prefix"])) && ($PROCESSED["prefix"] == $prefix)) ? " selected=\"selected\"" : "").">".html_encode($prefix)."</option>\n";
+									}
 								}
 								?>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label for="prefix" class="form-nrequired">Prefix</label></td>
-									<td>
-										<select id="prefix" name="prefix" style="width: 55px; vertical-align: middle; margin-right: 5px">
-										<option value=""<?php echo ((!$result["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
-										<?php
-										if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
-											foreach ($PROFILE_NAME_PREFIX as $key => $prefix) {
-												echo "<option value=\"".html_encode($prefix)."\"".(((isset($PROCESSED["prefix"])) && ($PROCESSED["prefix"] == $prefix)) ? " selected=\"selected\"" : "").">".html_encode($prefix)."</option>\n";
-											}
-										}
-										?>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label for="firstname" class="form-required">Firstname</label></td>
-									<td><input type="text" id="firstname" name="firstname" value="<?php echo ((isset($PROCESSED["firstname"])) ? html_encode($PROCESSED["firstname"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="35" /></td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label for="lastname" class="form-required">Lastname</label></td>
-									<td><input type="text" id="lastname" name="lastname" value="<?php echo ((isset($PROCESSED["lastname"])) ? html_encode($PROCESSED["lastname"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="35" /></td>
-								</tr>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label for="gender" class="form-nrequired">Gender</label></td>
-									<td>
-										<select name="gender" id="gender" style="width: 256px">
-											<option value="0"<?php echo ($PROCESSED["gender"] == 0 ? " selected=\"selected\"" : ""); ?>>Not Specified</option>
-											<option value="1"<?php echo ($PROCESSED["gender"] == 1 ? " selected=\"selected\"" : ""); ?>>Female</option>
-											<option value="2"<?php echo ($PROCESSED["gender"] == 2 ? " selected=\"selected\"" : ""); ?>>Male</option>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label for="email" class="form-required">Primary E-Mail</label></td>
-									<td>
-										<input type="text" id="email" name="email" value="<?php echo ((isset($PROCESSED["email"])) ? html_encode($PROCESSED["email"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
-										<span class="content-small">(<strong>Important:</strong> Official e-mail accounts only)</span>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label for="email_alt" class="form-nrequired">Alternative E-Mail</label></td>
-									<td><input type="text" id="email_alt" name="email_alt" value="<?php echo ((isset($PROCESSED["email_alt"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="128" /></td>
-								</tr>
-								<tr>
-									<td colspan="2">&nbsp;</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label for="telephone" class="form-nrequired">Telephone Number</label></td>
-									<td>
-										<input type="text" id="telephone" name="telephone" value="<?php echo ((isset($PROCESSED["telephone"])) ? html_encode($PROCESSED["telephone"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
-										<span class="content-small">(<strong>Example:</strong> 613-533-6000 x74918)</span>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label for="fax" class="form-nrequired">Fax Number</label></td>
-									<td>
-										<input type="text" id="fax" name="fax" value="<?php echo ((isset($PROCESSED["fax"])) ? html_encode($PROCESSED["fax"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="25" />
-										<span class="content-small">(<strong>Example:</strong> 613-533-3204)</span>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label for="country_id" class="form-required">Country</label></td>
-									<td>
-										<?php
-										$countries = fetch_countries();
-										if ((is_array($countries)) && (count($countries))) {
-											echo "<select id=\"country_id\" name=\"country_id\" style=\"width: 256px\" onchange=\"provStateFunction();\">\n";
-											echo "<option value=\"0\"".((!$PROCESSED["country_id"]) ? " selected=\"selected\"" : "").">-- Select Country --</option>\n";
-											foreach ($countries as $country) {
-												echo "<option value=\"".(int) $country["countries_id"]."\"".(($PROCESSED["country_id"] == $country["countries_id"]) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
-											}
-											echo "</select>\n";
-										} else {
-											echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
-											echo "Country information not currently available.\n";
-										}
-										?>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label id="prov_state_label" for="prov_state_div" class="form-nrequired">Province / State</label></td>
-									<td>
-										<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label for="city" class="form-nrequired">City</label></td>
-									<td>
-										<input type="text" id="city" name="city" value="<?php echo ((isset($PROCESSED["city"])) ? html_encode($PROCESSED["city"]) : "Kingston"); ?>" style="width: 250px; vertical-align: middle" maxlength="35" />
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label for="address" class="form-nrequired">Address</label></td>
-									<td>
-										<input type="text" id="address" name="address" value="<?php echo ((isset($PROCESSED["address"])) ? html_encode($PROCESSED["address"]) : ""); ?>" style="width: 250px; vertical-align: middle" maxlength="255" />
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><label for="postcode" class="form-nrequired">Postal Code</label></td>
-									<td>
-										<input type="text" id="postcode" name="postcode" value="<?php echo ((isset($PROCESSED["postcode"])) ? html_encode($PROCESSED["postcode"]) : "K7L 3N6"); ?>" style="width: 250px; vertical-align: middle" maxlength="7" />
-										<span class="content-small">(<strong>Example:</strong> K7L 3N6)</span>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="office_hours">Office Hours</label></td>
-									<td>
-										<textarea id="office_hours" name="office_hours" style="width: 254px; height: 40px;" maxlength="100"><?php echo html_encode($PROCESSED["office_hours"]); ?></textarea>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td style="vertical-align: top"><label for="notes" class="form-nrequired">General Comments</label></td>
-									<td>
-										<textarea id="notes" name="notes" class="expandable" style="width: 246px; height: 75px"><?php echo ((isset($PROCESSED["notes"])) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
-									</td>
-								</tr>
-								<tr>
-							<td colspan="3">
-								<h2>Permissions</h2>
-							</td>
-						</tr>
-						<?php
-								if (strtolower($ENTRADA_USER->getActiveGroup()) == "medtech" && strtolower($ENTRADA_USER->getActiveRole()) == "admin") {
-									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
-													FROM `" . AUTH_DATABASE . "`.`organisations` o";
+								</select>
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="firstname">First Name:</label>
+							<div class="controls">
+								<input type="text" id="firstname" class="input-medium" name="firstname" value="<?php echo ((isset($PROCESSED["firstname"])) ? html_encode($PROCESSED["firstname"]) : ""); ?>" maxlength="35" />
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="lastname">Last Name:</label>
+							<div class="controls">
+								<input type="text" id="lastname" class="input-medium" name="lastname" value="<?php echo ((isset($PROCESSED["lastname"])) ? html_encode($PROCESSED["lastname"]) : ""); ?>" maxlength="35" />
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="gender">Gender:</label>
+							<div class="controls">
+								<select name="gender" id="gender" class="input-medium">
+									<option value="0"<?php echo ($PROCESSED["gender"] == 0 ? " selected=\"selected\"" : ""); ?>>Not Specified</option>
+									<option value="1"<?php echo ($PROCESSED["gender"] == 1 ? " selected=\"selected\"" : ""); ?>>Female</option>
+									<option value="2"<?php echo ($PROCESSED["gender"] == 2 ? " selected=\"selected\"" : ""); ?>>Male</option>
+								</select>
+							</div>
+						</div>
+						<br />
+						<div class="control-group">
+							<label class="control-label" for="email">Primary E-mail:</label>
+							<div class="controls">
+								<input type="text" id="email" class="input-medium" name="email" value="<?php echo ((isset($PROCESSED["email"])) ? html_encode($PROCESSED["email"]) : ""); ?>" maxlength="128" />
+								<span class="help-inline"><strong>Important:</strong> Official E-mail Only.</span>
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="email_alt">Alternate E-mail:</label>
+							<div class="controls">
+								<input type="text" id="email_alt" class="input-medium" name="email_alt" value="<?php echo ((isset($PROCESSED["email_alt"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" maxlength="128" />
+							</div>
+						</div>
+						
+						<div class="control-group">
+							<label class="control-label" for="telephone">Telephone Number:</label>
+							<div class="controls">
+								<input type="text" id="telephone" class="input-medium" name="telephone" value="<?php echo ((isset($PROCESSED["telephone"])) ? html_encode($PROCESSED["telephone"]) : ""); ?>" maxlength="25" />
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="fax">Fax Number:</label>
+							<div class="controls">
+								<input type="text" id="fax" class="input-medium" name="fax" value="<?php echo ((isset($PROCESSED["fax"])) ? html_encode($PROCESSED["fax"]) : ""); ?>" maxlength="25" />
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="country_id">Country:</label>
+							<div class="controls">
+								<?php
+								$countries = fetch_countries();
+								if ((is_array($countries)) && (count($countries))) {
+									echo "<select id=\"country_id\" name=\"country_id\" style=\"width: 256px\" onchange=\"provStateFunction();\">\n";
+									echo "<option value=\"0\"".((!$PROCESSED["country_id"]) ? " selected=\"selected\"" : "").">-- Select Country --</option>\n";
+									foreach ($countries as $country) {
+										echo "<option value=\"".(int) $country["countries_id"]."\"".(($PROCESSED["country_id"] == $country["countries_id"]) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
+									}
+									echo "</select>\n";
 								} else {
-									$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
-													FROM `".AUTH_DATABASE."`.`user_access` ua
-													JOIN `" . AUTH_DATABASE . "`.`organisations` o
-													ON ua.`organisation_id` = o.`organisation_id`
-													WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getId()). "
-													AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
+									echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
+									echo "Country information not currently available.\n";
 								}
+								?>
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="prov_state_div">Province / State:</label>
+							<div class="controls">
+								<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="city">City:</label>
+							<div class="controls">
+								<input type="text" id="city" class="input-medium" name="city" value="<?php echo ((isset($PROCESSED["city"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" maxlength="35" />
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="address">Address:</label>
+							<div class="controls">
+								<input type="text" id="address" class="input-medium" name="address" value="<?php echo ((isset($PROCESSED["address"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" maxlength="255" />
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="postcode">Postal Code:</label>
+							<div class="controls">
+								<input type="text" id="postcode" class="input-medium" name="postcode" value="<?php echo ((isset($PROCESSED["postcode"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" maxlength="7" />
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="office_hours">Office Hours:</label>
+							<div class="controls">
+								<textarea id="office_hours" class="input-large" name="office_hours" maxlength="100"><?php echo ((isset($PROCESSED["office_hours"])) ? html_encode($PROCESSED["office_hours"]) : ""); ?></textarea>
+							</div>
+						</div>
+						<div class="control-group">
+							<label class="control-label" for="notes">General Comments:</label>
+							<div class="controls">
+								<textarea id="notes" class="input-large" name="notes"><?php echo ((isset($PROCESSED["notes"])) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
+							</div>
+						</div>
+						<h2>Permissions</h2>
+						
+						<?php
+						if (strtolower($ENTRADA_USER->getActiveGroup()) == "medtech" && strtolower($ENTRADA_USER->getActiveRole()) == "admin") {
+							$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
+											FROM `" . AUTH_DATABASE . "`.`organisations` o";
+						} else {
+							$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
+											FROM `".AUTH_DATABASE."`.`user_access` ua
+											JOIN `" . AUTH_DATABASE . "`.`organisations` o
+											ON ua.`organisation_id` = o.`organisation_id`
+											WHERE ua.`user_id` = " . $db->qstr($ENTRADA_USER->getId()). "
+											AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
+						}
 
-								$all_orgs	= $db->GetAll($query);
-								if ($all_orgs) {
-									 ?>
-						<tr>
-							<td colspan="3">
-								<table class="org_table" style="width:100%">
+						$all_orgs	= $db->GetAll($query);
+						if ($all_orgs) { ?>
+						<div class="row-fluid">
+							<div class="span4">
+								<label for="organisations"><strong>Organisation</strong></label><br />
+								<select id="organisations" name="organisations" style="width:200px">
+								<?php
+									foreach($all_orgs as $a_org) {
+										echo build_option($a_org["organisation_id"], ucfirst($a_org["organisation_title"]), $selected);
+									}
+								?>
+								</select>
+							</div>
+							<div class="span4">		
+								<label for="groups"><strong>Groups</strong></label><br />
+								<select id="groups" name="groups" style="width:200px">
+									<option value="0">Select a Group</option>
+								</select>
+							</div>
+							<div class="span4">				
+								<label for="roles"><strong>Role</strong></label><br />
+								<select id="roles" name="roles" style="width:200px">
+									<option value="0">Select a Role</option>
+								</select>			
+							</div>
+						</div>
+						<br />
+						<div class="row-fluid"><input id="add_permissions" name="add_permissions" type="button" value="Add" class="btn pull-right" /></div>
+						
+							<?php
+								$initial_permissions = array();
+
+								foreach($all_orgs as $org) {
+
+							?>
+							<h2><?php echo $org["organisation_title"]; ?></h2>
+							<div class="row-fluid">
+								<div class="span2"></div>
+								<div class="span10">
+								<table style="width: 100%;" id="<?php echo "perm_organisation_" . $org["organisation_id"]; ?>" >
 									<tbody>
 										<tr>
-											<td style="padding-top:10px">
-											<label for="organisations"><strong>Organisation</strong></label><br />
-											<select id="organisations" name="organisations" style="width:200px">
-										<?php
-											foreach($all_orgs as $a_org) {
-												echo build_option($a_org["organisation_id"], ucfirst($a_org["organisation_title"]), $selected);
-											}
-										?>
-											</select>
-											</td>
-											<td style="padding-top:10px;">
-											<label for="groups"><strong>Groups</strong></label><br />
-											<select id="groups" name="groups" style="width:200px">
-												<option value="0">Select a Group</option>
-											</select>
-											</td>
-											<td style="padding-top:10px">
-											<label for="roles"><strong>Role</strong></label><br />
-											<select id="roles" name="roles" style="width:200px">
-												<option value="0">Select a Role</option>
-											</select>
-											</td>
+											<td colspan="3"><h3>Profiles</h3></td>
+										</tr>
+								<?php
+								$query = "	SELECT ua.*, o.`organisation_id`, o.`organisation_title`, ud.`clinical`, ud.`entry_year`, ud.`grad_year`
+											FROM `".AUTH_DATABASE."`.`user_access` ua
+											JOIN `" . AUTH_DATABASE . "`.`organisations` o
+											ON ua.`organisation_id` = o.`organisation_id`
+											JOIN `".AUTH_DATABASE."`.`user_data` ud
+											ON ua.`user_id` = ud.`id`
+											AND ua.`organisation_id` = " . $db->qstr($org["organisation_id"]) . "
+											WHERE ua.`user_id` = " . $db->qstr($PROXY_ID) ."
+											AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
+
+								$results = $db->GetAll($query);
+								if ($results) {
+									foreach ($results as $result) {
+										switch (strtolower($result["group"])) {
+											case "faculty":
+												$checked = ($result["clinical"] ? "checked" : "");
+												$options = "<input id=\"clinical_" . $result["organisation_id"] . "\" name=\"clinical_"  . $result["organisation_id"] . "\" type=\"checkbox\" " . $checked . " /><label for=\"clincal" . $result["organisation_id"] . "\">This new user is a <strong>clinical</strong> faculty member.</label>";
+											break;
+											case "student":
+												$options = build_entry_grad_year_container($result["entry_year"], $result["grad_year"]);
+											break;
+											default:
+												$options = "";
+											break;
+										}
+										$query = "SELECT sg.`id`
+												  FROM " . AUTH_DATABASE . ".`system_groups` sg
+												  WHERE sg.`group_name` = " . $db->qstr(strtolower($result["group"]));
+										$group_id = $db->GetOne($query);
+
+										$query = "SELECT sr.`id`
+												  FROM " . AUTH_DATABASE . ".`system_roles` sr
+												  WHERE sr.`role_name` = " . $db->qstr(strtolower($result["role"]));
+										$role_id = $db->GetOne($query);
+
+										$initial_acl["access_id"] = $result["id"];
+										$initial_acl["org_id"] = $result["organisation_id"];
+										$initial_acl["group_id"] = $group_id;
+										$initial_acl["role_id"] = $role_id;
+										$initial_acl["clinical"] = $result["clinical"];
+										$initial_acl["entry_year"] = $result["entry_year"];
+										$initial_acl["grad_year"] = $result["grad_year"];
+										$initial_permissions[] = $initial_acl;
+
+										echo "<tr id=\"" . $result["organisation_id"] . "_" . $group_id . "_" . $role_id . "\">\n";
+										echo "	<td valign=\"top\"><label><strong>" . ucfirst($result["group"]) . " / " . ucfirst($result["role"]) . "</strong></label></td>\n";
+										echo "	<td valign=\"top\">" . $options . "</td>\n";
+										echo "	<td valign=\"top\"><a class=\"remove_perm\" href=\"#\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\"></a></td>\n";
+										echo "</tr>";
+
+										}
+									}
+									?>
+									</tbody>
+									<tfoot>
+										<tr>
+											<td colspan="3"><h3>Options</h3></td>
 										</tr>
 										<tr>
-											<td>&nbsp;</td>
-											<td>&nbsp;</td>
-											<td style="text-align: right;"><br /><input id="add_permissions" name="add_permissions" type="button" value="Add" /></td>
-										</tr>
-									</tbody>
-								</table>
-								<hr />
-							</td>
-						</tr>
-						<?php } ?>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-						<tr>
-							<td colspan="3">
-								<?php
-									$initial_permissions = array();
-
-									foreach($all_orgs as $org) {
-
-								?>
-
-									<table class="tableList" style="width: 100%;" id="<?php echo "perm_organisation_" . $org["organisation_id"]; ?>" >
-										<caption><h2 style="text-align: left;"><?php echo $org["organisation_title"]; ?></h2></caption>
-										<colgroup>
-											<col style="width: 15%" />
-											<col style="width: 15%" />
-											<col style="width: 60%" />
-											<col style="width: 10%" />
-										</colgroup>
-										<thead>
-											<tr>
-												<th></th>
-												<th></th>
-												<th></th>
-												<th></th>
-											</tr>
-										</thead>
-										<tbody>
-											<tr>
-												<td colspan="4"><h3>Profiles</h3></td>
-											</tr>
-									<?php
-									$query = "	SELECT ua.*, o.`organisation_id`, o.`organisation_title`, ud.`clinical`, ud.`entry_year`, ud.`grad_year`
-												FROM `".AUTH_DATABASE."`.`user_access` ua
-												JOIN `" . AUTH_DATABASE . "`.`organisations` o
-												ON ua.`organisation_id` = o.`organisation_id`
-												JOIN `".AUTH_DATABASE."`.`user_data` ud
-												ON ua.`user_id` = ud.`id`
-												AND ua.`organisation_id` = " . $db->qstr($org["organisation_id"]) . "
-												WHERE ua.`user_id` = " . $db->qstr($PROXY_ID) ."
-												AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
-
-									$results = $db->GetAll($query);
-									if ($results) {
-										foreach ($results as $result) {
-											switch (strtolower($result["group"])) {
-												case "faculty":
-													$checked = ($result["clinical"] ? "checked" : "");
-													$options = "<input id=\"clinical_" . $result["organisation_id"] . "\" name=\"clinical_"  . $result["organisation_id"] . "\" type=\"checkbox\" " . $checked . " /><label for=\"clincal" . $result["organisation_id"] . "\">This new user is a <strong>clinical</strong> faculty member.</label>";
-												break;
-												case "student":
-													$options = build_entry_grad_year_container($result["entry_year"], $result["grad_year"]);
-												break;
-												default:
-													$options = "";
-												break;
-											}
-											$query = "SELECT sg.`id`
-													  FROM " . AUTH_DATABASE . ".`system_groups` sg
-													  WHERE sg.`group_name` = " . $db->qstr(strtolower($result["group"]));
-											$group_id = $db->GetOne($query);
-
-											$query = "SELECT sr.`id`
-													  FROM " . AUTH_DATABASE . ".`system_roles` sr
-													  WHERE sr.`role_name` = " . $db->qstr(strtolower($result["role"]));
-											$role_id = $db->GetOne($query);
-
-											$initial_acl["access_id"] = $result["id"];
-											$initial_acl["org_id"] = $result["organisation_id"];
-											$initial_acl["group_id"] = $group_id;
-											$initial_acl["role_id"] = $role_id;
-											$initial_acl["clinical"] = $result["clinical"];
-											$initial_acl["entry_year"] = $result["entry_year"];
-											$initial_acl["grad_year"] = $result["grad_year"];
-											$initial_permissions[] = $initial_acl;
-
-											echo "<tr id=\"" . $result["organisation_id"] . "_" . $group_id . "_" . $role_id . "\">\n";
-											echo "	<td></td>\n";
-											echo "	<td>" . ucfirst($result["group"]) . " / " . ucfirst($result["role"]) . "</td>\n";
-											echo "	<td>" . $options . "</td>\n";
-											echo "	<td><a class=\"remove_perm\" href=\"#\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\"></a></td>\n";
-											echo "</tr>";
-
-											}
-										}
-										?>
-										</tbody>
-										<tfoot>
-											<tr>
-												<td colspan="4"><h3>Options</h3></td>
-											</tr>
-											<tr>
-												<td>&nbsp;</td>
-												<td colspan="3">
-													<label for="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="display: block;">Departments</label><br />
-													<select id="<?php echo "in_departments_" . $result["organisation_id"]; ?>" name="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="">
-														<option value="0">-- Select Departments --</option>
-													<?php
-														foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
-															if ($org["organisation_id"] == $organisation_id){
-																foreach($dlist as $d){
-																	if (!array_key_exists($d["department_id"], $PROCESSED_DEPARTMENTS)) {
-																		echo build_option($d["department_id"], $d["department_title"], $selected);
+											<td colspan="3">
+												<div class="control-group">
+													<label class="control-label" for="<?php echo "in_departments_" . $result["organisation_id"]; ?>">Departments</label>
+													<div class="controls">
+														<select id="<?php echo "in_departments_" . $result["organisation_id"]; ?>" name="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="">
+															<option value="0">-- Select Departments --</option>
+														<?php
+															foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
+																if ($org["organisation_id"] == $organisation_id){
+																	foreach($dlist as $d){
+																		if (!array_key_exists($d["department_id"], $PROCESSED_DEPARTMENTS)) {
+																			echo build_option($d["department_id"], $d["department_title"], $selected);
+																		}
 																	}
 																}
 															}
-														}
-													?>
-													</select><br />
-													<div id="departments_notice_<?php echo $result["organisation_id"]; ?>" class="content-small"><div style="margin: 5px 0 5px 0"><strong>Note:</strong> Selected departments will appear here.</div></div>
-													<hr />
-													<ol id="departments_container_<?php echo $result["organisation_id"]; ?>" class="sortableList" style="display: block;">
-													<?php
-													if (is_array($PROCESSED_DEPARTMENTS)) {
-														foreach($PROCESSED_DEPARTMENTS as $department_id => $department_title) {
-															$query = "	SELECT d.`department_id`, d.`department_title`
-																		FROM `".AUTH_DATABASE."`.`departments` d
-																		WHERE d.`department_id` = " . $db->qstr($department_id) . "
-																		AND d.`organisation_id` = " . $db->qstr($org["organisation_id"]);
-															$result = $db->GetRow($query);
-															if ($result) {
-																echo "<li id=\"dept_" . $department_id . "\"><img src=\"" . ENTRADA_URL . "/images/icon-apartment.gif\" alt=\"Department Icon\" title=\"\" width=\"16\" height=\"16\" />" . $department_title . " <a class=\"remove_dept\" href=\"\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\" alt=\"Delete\"></a></li>";
-															}
+														?>
+														</select>
+														<div class="help-inline"><strong>Note:</strong> Selected departments will appear here.</div>
+													</div>
+												</div>
+												<ol id="departments_container_<?php echo $result["organisation_id"]; ?>" class="sortableList" style="display: block;">
+												<?php
+												if (is_array($PROCESSED_DEPARTMENTS)) {
+													foreach($PROCESSED_DEPARTMENTS as $department_id => $department_title) {
+														$query = "	SELECT d.`department_id`, d.`department_title`
+																	FROM `".AUTH_DATABASE."`.`departments` d
+																	WHERE d.`department_id` = " . $db->qstr($department_id) . "
+																	AND d.`organisation_id` = " . $db->qstr($org["organisation_id"]);
+														$result = $db->GetRow($query);
+														if ($result) {
+															echo "<li id=\"dept_" . $department_id . "\"><img src=\"" . ENTRADA_URL . "/images/icon-apartment.gif\" alt=\"Department Icon\" title=\"\" width=\"16\" height=\"16\" />" . $department_title . " <a class=\"remove_dept\" href=\"\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\" alt=\"Delete\"></a></li>";
 														}
 													}
-													?>
-													</ol>
-												</td>
-											</tr>
-										</tfoot>
-										<tbody>
-										</tbody>
-									</table>
-									<br />
-								<?php
-
-									}
-									//create final JSON object
-									$initial_permissions = array("acl" => $initial_permissions);
-									$initial_permissions = json_encode((object) $initial_permissions);
-
-									$initial_departments = array();
-									if (is_array($PROCESSED_DEPARTMENTS)) {
-										echo "<br />";
-										foreach($PROCESSED_DEPARTMENTS as $department_id => $department_title) {
-											$department_accum = array();
-											$department_accum["department_id"] = $department_id;
-											$department_accum["department_title"] = $department_title;
-											echo "<br />";
-											$initial_departments[] = $department_accum;
-										}
-									}
-									$initial_departments = array("dept_list" => $initial_departments);
-									$initial_departments = json_encode((object) $initial_departments);
-								?>
-								<input id="my_departments" name="my_departments" type="hidden" value="0" />
-							</td>
-						</tr>
-
-						<tr>
-							<td colspan="3">
-								<h2>Notification Options</h2>
-							</td>
-						</tr>
-						<tr>
-							<td><input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"])) ? " checked=\"checked\"" : ""); ?> style="vertical-align: middle" onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" /></td>
-							<td colspan="2"><label for="send_notification" class="form-nrequired">Send this new user a password reset e-mail after updating their profile.</label></td>
-						</tr>
-						<tr>
-							<td>&nbsp;</td>
-							<td colspan="2">
-								<div id="send_notification_msg" style="display: none;">
-									<label for="notification_message" class="form-required">Notification Message</label><br />
-									<textarea id="notification_message" name="notification_message" rows="10" cols="65" style="width: 100%; height: 200px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_NEW_USER_NOTIFICATION); ?></textarea>
-									<span class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</span>
+												}
+												?>
+												</ol>
+											</td>
+										</tr>
+									</tfoot>
+									<tbody>
+									</tbody>
+								</table>
 								</div>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="3">&nbsp;</td>
-						</tr>
-					</tbody>
-				</table>
-				<input type="hidden" id="permissions" name="permissions" value="0" />
-			</form>
+							</div>
+								<br />
+							<?php
+
+								}
+								//create final JSON object
+								$initial_permissions = array("acl" => $initial_permissions);
+								$initial_permissions = json_encode((object) $initial_permissions);
+
+								$initial_departments = array();
+								if (is_array($PROCESSED_DEPARTMENTS)) {
+									echo "<br />";
+									foreach($PROCESSED_DEPARTMENTS as $department_id => $department_title) {
+										$department_accum = array();
+										$department_accum["department_id"] = $department_id;
+										$department_accum["department_title"] = $department_title;
+										echo "<br />";
+										$initial_departments[] = $department_accum;
+									}
+								}
+								$initial_departments = array("dept_list" => $initial_departments);
+								$initial_departments = json_encode((object) $initial_departments);
+							?>
+							<input id="my_departments" name="my_departments" type="hidden" value="0" />
+						<?php } ?>
+						<h2>Notification Options</h2>
+						<div class="row-fluid">
+							<input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"])) ? " checked=\"checked\"" : ""); ?> onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" />
+							<label for="send_notification" class="form-nrequired">Send this new user a password reset e-mail after updating their profile.</label>
+
+							<div id="send_notification_msg" style="display: none;">
+								<label for="notification_message" class="form-required">Notification Message</label>
+								<textarea id="notification_message" name="notification_message" rows="10" cols="65" style="width: 100%; height: 200px"><?php echo ((isset($_POST["notification_message"])) ? html_encode($_POST["notification_message"]) : $DEFAULT_NEW_USER_NOTIFICATION); ?></textarea>
+								<span class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</span>
+							</div>
+						</div>
+						<br />
+						<div class="pull-left"><input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_RELATIVE; ?>/admin/users/manage?id=<?php echo $PROXY_ID; ?>'" /></div>
+						<div class="pull-right"><input type="submit" class="btn btn-primary" value="Save" /></div>
+						<input type="hidden" id="permissions" name="permissions" value="0" />
+					</form>
 			<div style="display: none;" id="entry_grad_year_container">
                 <?php echo build_entry_grad_year_container($PROCESSED["entry_year"], $PROCESSED["grad_year"]); ?>
             </div>
@@ -1390,7 +1265,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									entry_year = $('#entry_year').val();
 									grad_year = $('#grad_year').val();
 								}
-								$('#perm_organisation_' + $('#organisations').val() + ' > tbody:last').append('<tr id=\"' + org_id + '_' + group_id + '_' + role_id + '\"><td></td><td>' + group_text + ' / ' + role_text + '</td><td>' + options + '</td><td><a class=\"remove_perm\" href=\"\"><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif"></a></td></tr>');
+								$('#perm_organisation_' + $('#organisations').val() + ' > tbody:last').append('<tr id=\"' + org_id + '_' + group_id + '_' + role_id + '\"><td valign="top"><strong>' + group_text + ' / ' + role_text + '</strong></td><td>' + options + '</td><td><a class=\"remove_perm\" href=\"\"><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif"></a></td></tr>');
 								$('#perm_organisation_' + $('#organisations').val()).show();
 
 								var temp_permissions = {"org_id" : org_id, "group_id" : group_id, "role_id" : role_id, "clinical" : clinical, "entry_year" : entry_year, "grad_year" : grad_year};

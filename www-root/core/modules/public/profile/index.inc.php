@@ -74,6 +74,16 @@ if (!defined("IN_PROFILE")) {
 					echo json_encode(array("status" => "error", "data" => "No uploaded photo record on file. You must upload a photo before you can toggle photos."));
 				}
 			break;
+			case "generatehash" :
+				$new_private_hash = generate_hash();
+				$query = "UPDATE `".AUTH_DATABASE."`.`user_access` SET `private_hash` = ".$db->qstr($new_private_hash)." WHERE `user_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+				if ($db->Execute($query)) {
+					echo json_encode(array("status" => "success", "data" => $new_private_hash));
+					$_SESSION["details"]["private_hash"] = $new_private_hash;
+				} else {
+					echo json_encode(array("status" => "error"));
+				}
+			break;
 			default:
 			break;
 		}
@@ -196,8 +206,10 @@ if (!defined("IN_PROFILE")) {
 			#profile-image-container {position:absolute;right:0px;}
 			#upload-image-modal-btn {position:absolute;right:7px;top:7px;display:none;outline:none;}
 			#btn-toggle {position:absolute;right:7px;bottom:7px;display:none;outline:none;}
+			#btn-toggle .btn {outline:none;}
 			.profile-image-preview {text-align:center;max-width:250px;margin:auto;}
-			.modal-body{max-height:none;}
+			.modal-body {max-height:none;}
+			#reset-hash {cursor:pointer;}
 		</style>
 		<?php $profile_image = ENTRADA_ABSOLUTE . '/../public/images/' . $ENTRADA_USER->getID() . '/' . $ENTRADA_USER->getID() . '-large.png'; ?>
 		<script type="text/javascript">
@@ -213,11 +225,23 @@ if (!defined("IN_PROFILE")) {
 
 		jQuery(function(){
 
+			jQuery("#reset-hash").live("click", function() {
+				jQuery.ajax({
+					url : "<?php echo ENTRADA_URL; ?>/profile",
+					data : "action=generatehash",
+					type : "post",
+					async : true,
+					success : function(data) {
+						var jsonResponse = JSON.parse(data);
+						jQuery("#hash-value").html(jsonResponse.data);
+					}
+				});
+				return false;
+			});
+
 			jQuery("#btn-toggle .btn").live("click", function() {
 				var clicked = jQuery(this);
-				if (clicked.parent().hasClass(clicked.html().toLowerCase())) { 
-					
-				} else {
+				if (!clicked.parent().hasClass(clicked.html().toLowerCase())) {
 					jQuery.ajax({
 						url : "<?php echo ENTRADA_URL; ?>/profile",
 						data : "action=togglephoto",
@@ -337,7 +361,6 @@ if (!defined("IN_PROFILE")) {
 
 			jQuery("#upload_profile_image_form").submit(function(){
 				var imageFile = dataURItoBlob(jQuery(".preview-image").attr("src"));
-				console.log(imageFile);
 
 				var xhr = new XMLHttpRequest();
 				var fd = new FormData();
@@ -354,6 +377,10 @@ if (!defined("IN_PROFILE")) {
 						var jsonResponse = JSON.parse(xhr.responseText);
 						if (jsonResponse.status == "success") {
 							jQuery("#profile-image-container .thumbnail img.img-polaroid").attr("src", jsonResponse.data);
+							if (jQuery("#image-nav-right").length <= 0) {
+								jQuery("#btn-toggle").append("<a href=\"#\" class=\"btn active\" id=\"image-nav-right\" style=\"display:none;\">Uploaded</a>");
+								jQuery("#image-nav-right").removeClass("active");
+							}
 						} else {
 							// Some kind of failure notification.
 						};
@@ -415,13 +442,13 @@ if (!defined("IN_PROFILE")) {
 		<div id="profile-image-container">
 			<a href="#upload-image" id="upload-image-modal-btn" data-toggle="modal" class="btn btn-primary" id="upload-profile-image">Upload Photo</a>
 			<?php
-			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($result["id"])." AND `photo_active` = '1'";
+			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($result["id"]);
 			$uploaded_photo = $db->GetRow($query);
 			?>
 			<span class="thumbnail"><img src="<?php echo webservice_url("photo", array($ENTRADA_USER->getID(), $uploaded_photo ? "upload" : "official"))."/".time(); ?>" width="192" height="250" class="img-polaroid" /></span>
 			<div class="btn-group" id="btn-toggle" class=" <?php echo $uploaded_photo ? "uploaded" : "official"; ?>">
-				<a href="#" class="btn <?php echo $uploaded_photo ? "" : "active"; ?>" id="image-nav-left">Official</a>
-				<a href="#" class="btn <?php echo $uploaded_photo ? "active" : ""; ?>" id="image-nav-right">Uploaded</a>
+				<a href="#" class="btn btn-small <?php echo $uploaded_photo["photo_active"] == "0" ? "active" : ""; ?>" id="image-nav-left">Official</a>
+				<?php if ($uploaded_photo) { ?><a href="#" class="btn btn-small <?php echo $uploaded_photo["photo_active"] == "1" ? "active" : ""; ?>" id="image-nav-right">Uploaded</a><?php } ?>
 			</div>
 		</div>
 
@@ -444,6 +471,15 @@ if (!defined("IN_PROFILE")) {
 				<label class="control-label">Password:</label>
 				<div class="controls">
 					<a class="btn btn-link" href="<?php echo PASSWORD_CHANGE_URL; ?>">Click here to change password</a>
+				</div>
+			</div>
+			<div class="control-group">
+				<label class="control-label">Private Hash:</label>
+				<div class="controls">
+					<div class="input-append">
+						<span class="input-large uneditable-input" id="hash-value"><?php echo $_SESSION["details"]["private_hash"]; ?></span><span class="add-on" id="reset-hash"><i class="icon-repeat"></i></span>
+					</div>
+					
 				</div>
 			</div>
 			<div class="control-group">

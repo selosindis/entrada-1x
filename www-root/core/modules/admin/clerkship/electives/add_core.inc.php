@@ -101,7 +101,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 				}
 
 				// Not Required
-				if (strlen(trim($_POST["event_desc"])) > 0) {
+				if (isset($_POST["event_desc"]) && strlen(trim($_POST["event_desc"])) > 0) {
 					$PROCESSED["event_desc"] = trim($_POST["event_desc"]);
 				} else {
 					$PROCESSED["event_desc"] = "";
@@ -275,7 +275,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							<td style="width: 75%; padding-left: 5px">
 								<?php
 								foreach($user_ids as $user_id) {
-									$query	= "SELECT CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname` FROM `".AUTH_DATABASE."`.`user_data` LEFT JOIN `".AUTH_DATABASE."`.`user_access` ON `".AUTH_DATABASE."`.`user_access`.`user_id`=`".AUTH_DATABASE."`.`user_data`.`id` WHERE `".AUTH_DATABASE."`.`user_data`.`id`='".$user_id."' AND `group`='student'";
+									$query	= "SELECT CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname` 
+                                                    FROM `".AUTH_DATABASE."`.`user_data` AS a
+                                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+                                                    ON b.`user_id` = a.`id` 
+                                                    AND b.`group` = 'student'
+                                                    WHERE a.`id` = ".$db->qstr($user_id);
 									$result	= $db->GetRow($query);
 									if ($result) {
 										echo "<a href=\"".ENTRADA_URL."/admin/clerkship/clerk?ids=".$user_id."\" style=\"font-weight: bold\">".html_encode($result["fullname"])."</a><br />";
@@ -360,7 +365,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							<td colspan="3">&nbsp;</td>
 						</tr>
 						<?php
-							if (isset($_POST)) {
+							if (isset($event_dates)) {
 								$event_start = $PROCESSED["event_start"];
 								$event_finish = $PROCESSED["event_finish"];
 							}
@@ -374,7 +379,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							<td colspan="3" style="vertical-align: top"><label for="event_desc" class="form-nrequired">Administrative notes about this rotation</label></td>
 						</tr>
 						<tr>
-							<td colspan="3"><textarea id="event_desc" name="event_desc" style="width: 82%; height: 75px"><?php echo html_encode($_POST["event_desc"]) ?></textarea></td>
+							<td colspan="3"><textarea id="event_desc" name="event_desc" style="width: 82%; height: 75px"><?php echo (isset($PROCESSED["event_desc"]) && $PROCESSED["event_desc"] ? html_encode($PROCESSED["event_desc"]) : ""); ?></textarea></td>
 						</tr>
 						<tr>
 							<td colspan="3">&nbsp;</td>

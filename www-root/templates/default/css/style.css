@@ -20,7 +20,7 @@ h1{
   font-size:26px;
   font-weight:500;
   letter-spacing:-0.5px;
-  margin-bottom:28px;
+/*  margin-bottom:28px;*/
 }
 .banner h1{
   margin-bottom:0;
@@ -490,15 +490,15 @@ div.ps-tab-style {
 	margin-bottom: 10px;
 }
 .mc-pager-prev {
-	width: 20px; 
-	vertical-align: middle; 
-	margin-right: 3px; 
+	width: 20px;
+	vertical-align: middle;
+	margin-right: 3px;
 	text-align: left;
 }
 .mc-pager-next {
-	width: 20px; 
-	vertical-align: middle; 
-	margin-left: 3px; 
+	width: 20px;
+	vertical-align: middle;
+	margin-left: 3px;
 	text-align: right;
 }
 .mc-pager-link-align, .mc-pager-image-align {

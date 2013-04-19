@@ -1140,12 +1140,10 @@ border-collapse:collapse;
 table.tableList thead tr td {
 height:20px;
 vertical-align:middle;
-/*border:1px solid #999;*/
 background:#f5f5f5;
 color:#333;
 font-size:11px;
 font-weight:700;
-/*background:#EBEBEB url(../images/list-header.gif);*/
 padding:0 4px 0 2px;
 }
 
@@ -1156,7 +1154,6 @@ background:#f5f5f5;
 color:#333;
 font-size:11px;
 font-weight:700;
-/*background:#EBEBEB url(../images/list-header.gif);*/
 padding:0 4px 0 2px;
 }
 
@@ -1193,7 +1190,6 @@ border-right:none;
 }
 
 table.tableList thead tr td.sortedASC,table.tableList thead tr td.sortedDESC,table.tableList thead tr td.sorting_asc,table.tableList thead tr td.sorting_desc {
-/*background-image:url(../images/list-header-dark.gif);*/
 background:#DDD;
 }
 
@@ -1203,7 +1199,6 @@ font-size:12px;
 width:auto!important;
 color:#333;
 text-decoration:none;
-/*padding:5px;*/
 }
 
 table.tableList thead tr td {
@@ -1238,8 +1233,9 @@ table.DataTable tbody tr td.flex {
 overflow:visible;
 white-space:normal;
 }
+
 table.DataTable tbody tr th {
-	padding: 2ex 0ex 2ex 0ex;
+padding: 2ex 0ex 2ex 0ex;
 }
 
 table.DataTable tfoot td.control {
@@ -1312,7 +1308,7 @@ border-left:none;
 }
 
 table.tableList tr td.date {
-/*width:160px;*/
+width:160px;
 border-left:none;
 }
 
@@ -2870,7 +2866,7 @@ padding-left:15px;
 }
 
 table.tableList tr td.general,table.tableList tr td.filetype,table.tableList tr td.filesize,table.tableList tr td.teacher,table.tableList tr td.CP,table.tableList tr td.ED10,table.tableList tr td.ED11,table.tableList tr td.Event {
-/*width:135px;*/
+width:135px;
 border-left:none;
 }
 
@@ -4260,9 +4256,6 @@ ul.objective-list li{
   font-style: normal;
   color: #666;
   margin-top:12px;
-}
-.list-heading{
-  font-size:18px;
 }
 .mapped-objective{
   position:relative;

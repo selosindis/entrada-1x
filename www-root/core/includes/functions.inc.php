@@ -3080,7 +3080,8 @@ function display_success($success_messages = array()) {
 	}
 
 	if ($num_success) {
-		$output_html .= "<div id=\"display-success-box\" class=\"display-success\">\n";
+		$output_html .= "<div id=\"display-success-box\" class=\"alert alert-block alert-success\">\n";
+        $output_html .= "   <button type=\"button\" class=\"close\" data-dismiss=\"alert\">&times;</button>\n";
 		$output_html .= "	<ul>\n";
 		foreach ($success_messages as $success_message) {
 			$output_html .= "	<li>".$success_message."</li>\n";
@@ -3118,7 +3119,8 @@ function display_notice($notice_messages = array()) {
 	}
 
 	if ($num_notices) {
-		$output_html .= "<div id=\"display-notice-box\" class=\"display-notice\">\n";
+		$output_html .= "<div id=\"display-notice-box\" class=\"alert alert-block\">\n";
+        $output_html .= "   <button type=\"button\" class=\"close\" data-dismiss=\"alert\">&times;</button>\n";
 		$output_html .= "	<ul>\n";
 		foreach ($notice_messages as $notice_message) {
 			$output_html .= "	<li>".$notice_message."</li>\n";
@@ -3156,7 +3158,8 @@ function display_error($error_messages = array()) {
 	}
 
 	if($num_errors) {
-		$output_html .= "<div id=\"display-error-box\" class=\"display-error\">\n";
+		$output_html .= "<div id=\"display-error-box\" class=\"alert alert-block alert-error\">\n";
+        $output_html .= "   <button type=\"button\" class=\"close\" data-dismiss=\"alert\">&times;</button>\n";
 		$output_html .= "	<ul>\n";
 		foreach ($error_messages as $error_message) {
 			$output_html .= "	<li>".$error_message."</li>\n";
@@ -4255,9 +4258,9 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
                     array("name" => "styles"),
                     array("name" => "colors"),
                 );
-			break;
-			case "communityadvanced" :
-			case "communitybasic" :
+            break;
+            case "communityadvanced" :
+            case "communitybasic" :
             case "advanced" :
                 $toolbar_groups = array (
                     array("name" => "clipboard", "groups" => array("clipboard")),
@@ -4271,8 +4274,8 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
                     array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
                     array("name" => "colors"),
                 );
-			break;
-			case "community" :
+            break;
+            case "community" :
             case "minimal" :
             case "mspr" :
                 $toolbar_groups = array (
@@ -4286,9 +4289,9 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
                     array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
                     array("name" => "document", "groups" => array("mode", "document", "doctools")),
                 );
-			break;
-			case "basic" :
-			default :
+            break;
+            case "basic" :
+            default :
                 $toolbar_groups = array (
                     array("name" => "clipboard", "groups" => array("clipboard")),
                     array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
@@ -4296,9 +4299,9 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
                     array("name" => "insert"),
                     array("name" => "document", "groups" => array("mode", "document", "doctools")),
                 );
-			break;
-		}
-	}
+            break;
+        }
+    }
 
 	$output  = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/ckeditor/ckeditor.js\"></script>\n";
 	$output .= "<script type=\"text/javascript\" defer=\"defer\">\n";

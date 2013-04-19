@@ -28,7 +28,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 	require_once("Models/mspr/MSPRs.class.php");
 	$PROXY_ID = $user_record["id"];
 	$user = User::get($PROXY_ID);
-	
+
 	if (!(isset($_GET['from']) && ($from = $_GET['from']) && (in_array($from,array("attention", "class","user"))))) {
 		$from = 'user';
 	}
@@ -47,47 +47,47 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			$success_url = ENTRADA_URL."/admin/users/manage/students?section=mspr&id=".$PROXY_ID;
 			$success_title = $user->getFirstName() . " " . $user->getLastName() . "'s MSPR";
 	}
-	
+
 	if (isset($_GET['revision']) && $REVISION = clean_input($_POST['revision'], array("int)"))) {
 		$rev_append = "&revision=".$REVISION;
 	}
-	
+
 	if ($user) {
 		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users/manage/students?section=mspr-edit&id=".$PROXY_ID."&from=".$from.$rev_append, "title" => "Edit MSPR" );
-		
+
 		$mspr = MSPR::get($user);
-		
-		if ($mspr) { 
-			
+
+		if ($mspr) {
+
 			$is_closed = $mspr->isClosed();
 			$rev = $mspr->getMSPRRevisions("html");
 			if ($is_closed) {
-				
+
 				if (!empty($rev)) {
-					
+
 					if (isset($_POST['action']) && ($_POST['action']=='save')) {
 						if (isset($_POST['edit-html']) && ($edit_html = trim($_POST['edit-html']))) {
 							$ts = time();
 							$pdf = $mspr->generatePDF($edit_html);
-							
+
 							$wrote_html = $mspr->saveMSPRFile("html",$edit_html,$ts);
 							$wrote_pdf = $mspr->saveMSPRFile("pdf",$pdf,$ts);
 							if ($wrote_html && $wrote_pdf) {
 								$mspr->setGeneratedTimestamp($ts);
 								success_redirect($success_url, $success_title,"Successfully edited HTML and generated PDF.");
 							}
-							
+
 						} else {
 							error_redirect(ENTRADA_URL."/admin/users/manage/students?section=mspr-edit&id=".$PROXY_ID."&from=".$from.$rev_append, "Edit MSPR", "No content provided. Cannot create empty MSPR.");
 						}
 					} else {
-						
+
 						if ($REVISION) {
 							$html_file = $mspr->getMSPRFile("html", $REVISION);
 						} else {
 							$html_file = $mspr->getMSPRFile("html");
 						}
-						load_mspr_editor();
+						load_rte("mspr");
 						?>
 						<h1>Edit MSPR: <?php echo $user->getFullName(); ?></h1>
 						<form method="post">

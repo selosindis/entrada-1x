@@ -1,7 +1,7 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
- * 
+ *
  * Entrada is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -17,12 +17,12 @@
  *
  * This file is used by quiz authors to add / edit or remove quiz questions
  * from a particular quiz.
- * 
+ *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
- * 
+ *
 */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
@@ -57,7 +57,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				/**
 				 * Load the rich text editor.
 				 */
-				load_rte("advanced", array(), array("theme_advanced_toolbar_location : 'external'"));
+				load_rte("advanced");
 
 				// Error Checking
 				switch ($STEP) {
@@ -68,7 +68,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						 * this is something we will be expanding on shortly.
 						 */
 						$PROCESSED["questiontype_id"] = $quiz_record["questiontype_id"];
-						
+
 						/**
 						 * Required field "question_text" / Quiz Question.
 						 */
@@ -78,7 +78,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							$ERROR++;
 							$ERRORSTR[] = "The <strong>Quiz Question</strong> field is required.";
 						}
-						
+
 						switch ($quiz_record["questiontype_id"]) {
 							case 3 :
 							case 2 :
@@ -156,7 +156,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									$ERROR++;
 									$ERRORSTR[] = "You must specify which of the responses is the <strong>correct response</strong>.";
 								}
-								
+
 								/**
 								 * Required field "question_points" / points for the correct response.
 								 */
@@ -166,7 +166,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									$ERROR++;
 									$ERRORSTR[] = "You must provide the <strong>number of points</strong> given for the correct response to this question.";
 								}
-								
+
 							break;
 						}
 
@@ -233,6 +233,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									application_log("error", "Unable to update a quiz question [".$RECORD_ID."] to quiz_id [".$quiz_record["quiz_id"]."] due to a lack of permissions.");
 
 								}
+
 								switch ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
 									case "new" :
 										$url	= ENTRADA_URL."/admin/".$MODULE."?section=add-question&amp;id=".$quiz_record["quiz_id"];
@@ -430,14 +431,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									<textarea id="question_text" name="question_text" style="width: 100%; height: 100px"><?php echo ((isset($PROCESSED["question_text"])) ? clean_input($PROCESSED["question_text"], "encode") : ""); ?></textarea>
 								</td>
 							</tr>
-							<?php 
-								switch ($quiz_record["questiontype_id"]) { 
+							<?php
+								switch ($quiz_record["questiontype_id"]) {
 									case 3 :
-									case 2 : 
+									case 2 :
 									break;
 									case 1 :
 									default : ?>
-									
+
 							<tr>
 								<td>&nbsp;</td>
 								<td style="padding-top: 5px; vertical-align: top">
@@ -477,7 +478,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 													if ((isset($PROCESSED["quiz_question_responses"][$number]["response_is_html"])) && ($PROCESSED["quiz_question_responses"][$number]["response_is_html"] == 1)) {
 														?>
 														<script type="text/javascript">
-														tinyMCE.execCommand('mceAddControl', false, 'response_text_<?php echo $number; ?>');
+                                                        if (!CKEDITOR.instances['response_text_<?php echo $number; ?>']) {
+                                                            CKEDITOR.replace('response_text_<?php echo $number; ?>');
+                                                        }
 														</script>
 														<?php
 													}
@@ -509,7 +512,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 									function alterFeedbackTerm(event) {
 										var element = event.element();
-										
+
 										$$('span.response_feedback_term').each(function (el) {
 											$(el.id).removeClassName('correctly');
 											$(el.id).addClassName('incorrectly');
@@ -542,7 +545,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							</tr>
 							<?php
 									break;
-								} 
+								}
 							?>
 						</tbody>
 						</table>
@@ -553,9 +556,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "You cannot edit a question in a quiz that has already been taken. This precaution exists to protect the integrity of the data in the database.<br /><br />If you would like to add questions to this quiz you can <strong>copy the quiz</strong> from the <strong>Manage Quizzes</strong> index.";
-	
+
 				echo display_error();
-	
+
 				application_log("error", "Attempted to edit a quiz question in quiz [".$RECORD_ID."] that has already been taken.");
 			}
 		} else {

@@ -515,7 +515,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 						jQuery('.add_comment').click(function(){
 							var id = jQuery(this).attr('id').substring(12);
-							//var comment_desc = tinyMCE.get('new_comment_desc_'+id).getContent();
 							var comment_desc = jQuery('#new_comment_desc_'+id).val();
 							var comment_title = jQuery('#new_comment_title_'+id).val();
 							jQuery.ajax({

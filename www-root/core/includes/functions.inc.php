@@ -4229,154 +4229,104 @@ function help_create_button($help_title = "", $help_content = "") {
 }
 
 /**
- * Function will load TinyMCE (WYSIWYG / Rich Text Editor) into the page <head></head>
- * causing all textareas on the page to be replaced with rte's.
+ * Function will load CKEditor (WYSIWYG / Rich Text Editor) into the page <head></head>
+ * causing all textareas on the page to be replaced with a rich text equivilant.
  *
  * @param array $buttons
  * @return true
  */
-function load_rte($buttons = array(), $plugins = array(), $other_options = array()) {
+function load_rte($toolbar_groups = array(), $plugins = array(), $other_options = array()) {
 	global $HEAD;
 
-	$rte_set = "basic";
-
-	/**
-	 * If $buttons is scalar then assign the set, and include the requested
-	 * buttons.
-	 */
-	if ((!is_array($buttons)) || (!count($buttons))) {
-	/**
-	 * If you are specifying a button set, apply it, otherwise the default
-	 * will be used.
-	 */
-		if ((is_scalar($buttons)) && ($tmp_input = clean_input($buttons, "alpha"))) {
-			$rte_set = $tmp_input;
-		}
-
-		$buttons = array();
-
-		switch ($rte_set) {
-			case "communityadvanced" :
-			case "advanced" :
-				$buttons[1]	= array ("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull");
-				$buttons[2]	= array ("ltr", "rtl", "|", "undo", "redo", "|", "tablecontrols", "|", "insertlayer", "moveforward", "movebackward", "absolute", "|", "visualaid");
-				$buttons[3]	= array ("spellchecker", "pasteword", "pastetext", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "charmap", "|", "cleanup", "removeformat", "code");
+    if (!$toolbar_groups || (is_scalar($toolbar_groups) && ($toolbar_groups = clean_input($toolbar_groups, "alpha")))) {
+        switch ($toolbar_groups) {
+            case "full" :
+                $toolbar_groups = array (
+                    array("name" => "clipboard", "groups" => array("clipboard")),
+                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
+                    array("name" => "links"),
+                    array("name" => "insert"),
+                    array("name" => "forms"),
+                    array("name" => "tools"),
+                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
+                    "/",
+                    array("name" => "basicstyles", "groups" => array("basicstyles", "cleanup")),
+                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
+                    array("name" => "styles"),
+                    array("name" => "colors"),
+                );
 			break;
+			case "communityadvanced" :
 			case "communitybasic" :
-				$buttons[1]	= array("fullscreen", "styleprops", "|", "formatselect", "fontselect", "fontsizeselect", "|", "bold", "italic", "underline", "forecolor", "backcolor", "|", "justifyleft", "justifycenter", "justifyright", "justifyfull");
-				$buttons[2]	= array("spellchecker", "pasteword", "pastetext", "ltr", "rtl", "|", "outdent", "indent", "|", "bullist", "numlist", "|", "link", "unlink", "anchor", "image", "media", "|", "sub", "sup", "charmap", "|", "cleanup", "removeformat", "code");
+            case "advanced" :
+                $toolbar_groups = array (
+                    array("name" => "clipboard", "groups" => array("clipboard")),
+                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
+                    array("name" => "links"),
+                    array("name" => "insert"),
+                    array("name" => "forms"),
+                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
+                    "/",
+                    array("name" => "basicstyles", "groups" => array("basicstyles", "cleanup")),
+                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
+                    array("name" => "colors"),
+                );
 			break;
 			case "community" :
-				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "unlink", "anchor", "image", "media", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "spellchecker", "pasteword", "cleanup", "removeformat", "code");
-			break;
-			case "minimal" :
-				$buttons[1] = array("link", "separator", "undo", "redo", "spellchecker", "pasteword", "cleanup", "code");
-				$buttons[2] = array();
-				$buttons[3] = array();
+            case "minimal" :
+            case "mspr" :
+                $toolbar_groups = array (
+                    array("name" => "clipboard", "groups" => array("clipboard")),
+                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
+                    array("name" => "links"),
+                    array("name" => "insert"),
+                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
+                    "/",
+                    array("name" => "basicstyles", "groups" => array("basicstyles", "cleanup")),
+                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
+                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
+                );
 			break;
 			case "basic" :
 			default :
-				$buttons[1] = array("bold", "italic", "underline", "strikethrough", "|", "link", "|", "numlist", "bullist", "|", "outdent", "indent", "blockquote", "|", "undo", "redo", "|", "spellchecker", "pasteword", "cleanup", "removeformat", "code");
-				$buttons[2] = array();
-				$buttons[3] = array();
+                $toolbar_groups = array (
+                    array("name" => "clipboard", "groups" => array("clipboard")),
+                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
+                    array("name" => "links"),
+                    array("name" => "insert"),
+                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
+                );
 			break;
 		}
 	}
 
-	/**
-	 * If $plugins isn't an array or if it's empty, apply basic plugins,
-	 * otherwise add the plugin set.
-	 */
-	if ((!is_array($plugins)) || (!count($plugins))) {
-		switch ($rte_set) {
-			case "advanced" :
-			case "communityadvanced" :
-			case "communitybasic" :
-				$plugins = array("preview", "inlinepopups", "style", "layer", "table", "advimage", "advlink", "media", "contextmenu", "paste", "directionality", "fullscreen", "noneditable", "visualchars", "xhtmlxtras", "tabfocus", "spellchecker");
-			break;
-			case "community" :
-				$plugins = array("autosave", "contextmenu", "advimage", "advlink", "media", "paste", "inlinepopups", "tabfocus", "spellchecker");
-			break;
-			case "basic" :
-			default :
-				$plugins = array("autosave", "save", "contextmenu", "paste", "inlinepopups", "tabfocus", "spellchecker");
-			break;
-		}
-	}
+	$output  = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/ckeditor/ckeditor.js\"></script>\n";
+	$output .= "<script type=\"text/javascript\" defer=\"defer\">\n";
+    $output .= "CKEDITOR.editorConfig = function( config ) {\n";
+    $output .= "    config.customConfig = '';\n";
+    $output .= "    config.baseHref = '".ENTRADA_URL."';\n";
+    $output .= "    config.forcePasteAsPlainText = true;\n";
+    $output .= "    config.autoParagraph = false;\n";
+    $output .= "    config.toolbarGroups = ".json_encode($toolbar_groups).";\n";
+    $output .= "}\n";
 
-	/**
-	 * If $other_options isn't an array or if it's empty, don't do anything,
-	 * otherwise add the extra options.
-	 */
-	if ((!is_array($other_options)) || (!count($other_options))) {
-		$other_options = array();
+	$output .= "window.onload = function() {\n";
+    $output .= "    CKEDITOR.replaceAll(function(textarea, config) {\n";
+    $output .= "        if (jQuery(textarea).hasClass('expandable')) {\n";
+    $output .= "            return false;\n";
+    $output .= "        }\n";
+    $output .= "    });\n";
+    $output .= "}\n";
+    $output .= "function toggleEditor(id) {\n";
+	$output .= "    if(!CKEDITOR.instances[id]) {\n";
+	$output .= "        CKEDITOR.replace(id);\n";
+	$output .= "    } else {\n";
+	$output .= "        CKEDITOR.instances[id].destroy(false);\n";
+	$output .= "    }\n";
+	$output .= "}\n";
+    $output .= "</script>\n";
 
-		switch ($rte_set) {
-			case "advanced" :
-			case "communityadvanced" :
-			case "communitybasic" :
-			case "community" :
-			case "basic" :
-			default :
-				continue;
-			break;
-		}
-	}
-
-	$tinymce  = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tiny_mce/tiny_mce.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-	$tinymce .= "<script type=\"text/javascript\">\n";
-	$tinymce .= "tinyMCE.init({\n";
-	$tinymce .= "	mode : 'textareas',\n";
-	$tinymce .= "	theme : 'advanced',\n";
-	$tinymce .= "	plugins : '".implode(",", $plugins)."',\n";
-	$tinymce .= "	editor_deselector : 'expandable',\n";
-	$tinymce .= "	save_enablewhendirty : true,\n";
-	$tinymce .= "	theme_advanced_layout_manager : 'SimpleLayout',\n";
-	$tinymce .= "	theme_advanced_toolbar_location : 'top',\n";
-	$tinymce .= "	theme_advanced_toolbar_align : 'left',\n";
-	$tinymce .= "	theme_advanced_statusbar_location : 'bottom',\n";
-	$tinymce .= "	theme_advanced_resizing : true,\n";
-	$tinymce .= "	theme_advanced_resize_horizontal : false,\n";
-	$tinymce .= "	theme_advanced_resizing_use_cookie : true,\n";
-	$tinymce .= "	paste_auto_cleanup_on_paste : true,\n";
-	$tinymce .= "	paste_convert_middot_lists : true,\n";
-	$tinymce .= "	paste_convert_headers_to_strong : true,\n";
-	$tinymce .= "	paste_remove_spans : true,\n";
-	$tinymce .= "	paste_remove_styles : true,\n";
-	$tinymce .= "	force_p_newlines : false,\n";
-	$tinymce .= "	force_br_newlines : true,\n";
-	$tinymce .= "	forced_root_block : false,\n";
-	$tinymce .= "	document_base_url : '".ENTRADA_URL."/',\n";
-	$tinymce .= "	relative_urls : false,\n";
-	$tinymce .= "	remove_script_host : false,\n";
-	$tinymce .= "	paste_strip_class_attributes : 'all',\n";
-	$tinymce .= "	theme_advanced_buttons1 : '".(((is_array($buttons)) && (is_array($buttons[1])) && (count($buttons[1]))) ? implode(",", $buttons[1]) : "")."',\n";
-	$tinymce .= "	theme_advanced_buttons2 : '".(((is_array($buttons)) && (is_array($buttons[2])) && (count($buttons[2]))) ? implode(",", $buttons[2]) : "")."',\n";
-	$tinymce .= "	theme_advanced_buttons3 : '".(((is_array($buttons)) && (is_array($buttons[3])) && (count($buttons[3]))) ? implode(",", $buttons[3]) : "")."',\n";
-	$tinymce .= "	tab_focus : ':prev,:next',\n";
-	$tinymce .= "	extended_valid_elements : 'a[name|href|target|title|class],img[class|src|border=0|alt|title|hspace|vspace|width|height|align|name],hr[class|width|size|noshade],font[face|size|color|style],span[class|align|style],object[classid|width|height|codebase|data|type|*]'";
-	$tinymce .= 	((count($other_options)) ? ",\n\t".implode(",\n\t", $other_options) : "")."\n";
-	$tinymce .= "});\n";
-	$tinymce .= "function toggleEditor(id) {\n";
-	$tinymce .= "	if(!tinyMCE.getInstanceById(id)) {\n";
-	$tinymce .= "		tinyMCE.execCommand('mceAddControl', false, id);\n";
-	$tinymce .= "	} else {\n";
-	$tinymce .= "		tinyMCE.execCommand('mceRemoveControl', false, id);\n";
-	$tinymce .= "	}\n";
-	$tinymce .= "}\n";
-	$tinymce .= "</script>\n";
-
-	/**
-	 * You must add this first in the $HEAD array because TinyMCE will
-	 * not load if scriptaculous is loaded before it (PITA). Do you know
-	 * how long it took me to figure this out? ARG.
-	 * Ref: http://wiki.script.aculo.us/scriptaculous/show/TinyMCE
-	 */
-	if ((is_array($HEAD)) && (count($HEAD))) {
-		array_unshift($HEAD, $tinymce);
-	} else {
-		$HEAD[] = $tinymce;
-	}
+    $HEAD[] = $output;
 
 	return true;
 }
@@ -4398,7 +4348,7 @@ function communities_approval_notice() {
 }
 
 /**
- * Function will load TinyMCE (WYSIWYG / Rich Text Editor) into the page <head></head>
+ * Function will load Rich Text Editor into the page <head></head>
  * causing all textareas on the page to be replaced with rte's.
  *
  * @param array $buttons

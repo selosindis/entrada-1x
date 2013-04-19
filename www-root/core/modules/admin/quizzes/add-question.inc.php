@@ -1,7 +1,7 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
- * 
+ *
  * Entrada is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,12 +16,12 @@
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
  * This file is used by quiz authors to add quiz questions to a particular quiz.
- * 
+ *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
- * 
+ *
 */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
@@ -42,13 +42,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 	$query = "SELECT GROUP_CONCAT(`questiontype_id`) AS `questiontypes` FROM `quizzes_lu_questiontypes` WHERE `questiontype_active` = '1'";
 	$question_types = explode(",", $db->GetOne($query));
-	
+
 	if (in_array($_GET["type"], $question_types)) {
 		$type = clean_input($_GET["type"], "numeric");
 	} else {
 		$type = 1;
 	}
-	
+
 	if ($RECORD_ID) {
 		$query			= "	SELECT a.*
 							FROM `quizzes` AS a
@@ -63,7 +63,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				/**
 				 * Load the rich text editor.
 				 */
-				load_rte("advanced", array(), array("theme_advanced_toolbar_location : 'external'"));
+				load_rte("advanced");
 
 				// Error Checking
 				switch ($STEP) {
@@ -94,7 +94,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							$ERRORSTR[] = "The <strong>Quiz Question</strong> field is required.";
 						}
 
-						
+
 						switch ($type) {
 							case 3 :
 							case 2 :
@@ -173,7 +173,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									$ERROR++;
 									$ERRORSTR[] = "You must specify which of the responses is the <strong>correct response</strong>.";
 								}
-								
+
 								/**
 								 * Required field "question_points" / points for the correct response.
 								 */
@@ -183,7 +183,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									$ERROR++;
 									$ERRORSTR[] = "You must provide the <strong>number of points</strong> given for the correct response to this question.";
 								}
-								
+
 							break;
 						}
 
@@ -485,7 +485,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 													if ((isset($PROCESSED["quiz_question_responses"][$number]["response_is_html"])) && ($PROCESSED["quiz_question_responses"][$number]["response_is_html"] == 1)) {
 														?>
 														<script type="text/javascript">
-														tinyMCE.execCommand('mceAddControl', false, 'response_text_<?php echo $number; ?>');
+                                                        if (!CKEDITOR.instances['response_text_<?php echo $number; ?>']) {
+                                                            CKEDITOR.replace('response_text_<?php echo $number; ?>');
+                                                        }
 														</script>
 														<?php
 													}
@@ -517,7 +519,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 									function alterFeedbackTerm(event) {
 										var element = event.element();
-										
+
 										$$('span.response_feedback_term').each(function (el) {
 											$(el.id).removeClassName('correctly');
 											$(el.id).addClassName('incorrectly');

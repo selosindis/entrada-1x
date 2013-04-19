@@ -1,7 +1,7 @@
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
-CREATE TABLE IF NOT EXISTS `ar_book_chapter_mono` (
-  `book_chapter_mono_id` int(11) NOT NULL auto_increment,
+CREATE TABLE `ar_book_chapter_mono` (
+  `book_chapter_mono_id` int(11) NOT NULL AUTO_INCREMENT,
   `title` text NOT NULL,
   `source` varchar(200) NOT NULL,
   `author_list` varchar(200) NOT NULL,
@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS `ar_book_chapter_mono` (
   `pubmed_id` varchar(200) NOT NULL,
   `year_reported` int(4) NOT NULL,
   `proxy_id` int(11) DEFAULT NULL,
-  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `visible_on_website` int(1) DEFAULT '0',
+  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
   PRIMARY KEY (`book_chapter_mono_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -80,20 +81,21 @@ CREATE TABLE IF NOT EXISTS `ar_clinics` (
   PRIMARY KEY (`clinics_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `ar_conference_papers` (
-  `conference_papers_id` int(11) NOT NULL auto_increment,
+CREATE TABLE `ar_conference_papers` (
+  `conference_papers_id` int(11) NOT NULL AUTO_INCREMENT,
   `lectures_papers_list` text NOT NULL,
-  `status` varchar(25) NOT NULL default '',
+  `status` varchar(25) NOT NULL DEFAULT '',
   `institution` text NOT NULL,
-  `location` varchar(250) default NULL,
-  `countries_id` int(12) default NULL,
-  `city` varchar(100) default NULL,
-  `prov_state` varchar(200) default NULL,
-  `type` varchar(30) NOT NULL default '',
-  `year_reported` int(4) NOT NULL default '0',
-  `proxy_id` int(11) default NULL,
-  `updated_date` timestamp NOT NULL default CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
-  `updated_by` int(11) default NULL,
+  `location` varchar(250) DEFAULT NULL,
+  `countries_id` int(12) DEFAULT NULL,
+  `city` varchar(100) DEFAULT NULL,
+  `prov_state` varchar(200) DEFAULT NULL,
+  `type` varchar(30) NOT NULL DEFAULT '',
+  `year_reported` int(4) NOT NULL DEFAULT '0',
+  `proxy_id` int(11) DEFAULT NULL,
+  `visible_on_website` int(1) DEFAULT '0',
+  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `updated_by` int(11) DEFAULT NULL,
   PRIMARY KEY (`conference_papers_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -641,8 +643,8 @@ CREATE TABLE IF NOT EXISTS `ar_memberships` (
   PRIMARY KEY (`memberships_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `ar_non_peer_reviewed_papers` (
-  `non_peer_reviewed_papers_id` int(11) NOT NULL auto_increment,
+CREATE TABLE `ar_non_peer_reviewed_papers` (
+  `non_peer_reviewed_papers_id` int(11) NOT NULL AUTO_INCREMENT,
   `title` text NOT NULL,
   `source` varchar(200) NOT NULL,
   `author_list` varchar(200) NOT NULL,
@@ -661,7 +663,8 @@ CREATE TABLE IF NOT EXISTS `ar_non_peer_reviewed_papers` (
   `pubmed_id` varchar(200) NOT NULL,
   `year_reported` int(4) NOT NULL,
   `proxy_id` int(11) DEFAULT NULL,
-  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `visible_on_website` int(1) DEFAULT '0',
+  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
   PRIMARY KEY (`non_peer_reviewed_papers_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -715,8 +718,8 @@ CREATE TABLE IF NOT EXISTS `ar_patent_activity` (
   PRIMARY KEY (`patent_activity_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `ar_peer_reviewed_papers` (
-  `peer_reviewed_papers_id` int(11) NOT NULL auto_increment,
+CREATE TABLE `ar_peer_reviewed_papers` (
+  `peer_reviewed_papers_id` int(11) NOT NULL AUTO_INCREMENT,
   `title` text NOT NULL,
   `source` varchar(200) NOT NULL,
   `author_list` varchar(200) NOT NULL,
@@ -736,13 +739,14 @@ CREATE TABLE IF NOT EXISTS `ar_peer_reviewed_papers` (
   `keywords` text,
   `year_reported` int(4) NOT NULL,
   `proxy_id` int(11) DEFAULT NULL,
-  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `visible_on_website` int(1) DEFAULT '0',
+  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
   PRIMARY KEY (`peer_reviewed_papers_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `ar_poster_reports` (
-  `poster_reports_id` int(11) NOT NULL auto_increment,
+CREATE TABLE `ar_poster_reports` (
+  `poster_reports_id` int(11) NOT NULL AUTO_INCREMENT,
   `title` text NOT NULL,
   `source` varchar(200) NOT NULL,
   `author_list` varchar(200) NOT NULL,
@@ -761,7 +765,8 @@ CREATE TABLE IF NOT EXISTS `ar_poster_reports` (
   `pubmed_id` varchar(200) NOT NULL,
   `year_reported` int(4) NOT NULL,
   `proxy_id` int(11) DEFAULT NULL,
-  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP,
+  `visible_on_website` int(1) DEFAULT '0',
+  `updated_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `updated_by` int(11) DEFAULT NULL,
   PRIMARY KEY (`poster_reports_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;

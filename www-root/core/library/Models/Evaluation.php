@@ -128,7 +128,7 @@ class Models_Evaluation {
 							</thead>
 							<tbody id="columns_list">
 								<?php
-									echo Evaluation::getRubricColumnList($question_data);
+									echo Models_Evaluation::getRubricColumnList($question_data);
 								?>
 							</tbody>
 							</table>
@@ -153,7 +153,7 @@ class Models_Evaluation {
 						<td style="padding-top: 5px" colspan="2">
 							<table class="form-question" id="category_list" cellspacing="0" cellpadding="2" border="0" summary="Form Question Responses">
 							<?php
-								echo Evaluation::getRubricCategoryList($question_data);
+								echo Models_Evaluation::getRubricCategoryList($question_data);
 							?>
 							</table>
 						</td>
@@ -244,7 +244,7 @@ class Models_Evaluation {
 						<td style="padding-top: 5px">
 							<table class="form-question" id="response_list" cellspacing="0" cellpadding="2" border="0" summary="Form Question Responses">
 								<?php
-								echo Evaluation::getQuestionResponseList($question_data);
+								echo Models_Evaluation::getQuestionResponseList($question_data);
 								?>
 							</table>
 						</td>
@@ -428,7 +428,7 @@ class Models_Evaluation {
 			<ol id="form-questions-list">
 			<?php
 			if ($eprogress_id) {
-				$current_progress_record = Evaluation::loadProgress($eprogress_id);
+				$current_progress_record = Models_Evaluation::loadProgress($eprogress_id);
 			} else {
 				$current_progress_record = false;
 			}
@@ -2925,7 +2925,7 @@ class Models_Evaluation {
                     } else {
                         $temp_proxy_id = $evaluation_target["proxy_id"];
                     }
-                    $requests = Evaluation::getTargetRequests($temp_proxy_id, $evaluation_id, $request_id, ($request["request_code"] ? true : false));
+                    $requests = Models_Evaluation::getTargetRequests($temp_proxy_id, $evaluation_id, $request_id, ($request["request_code"] ? true : false));
                     if ($requests && count($requests)) {
                         if (!$simple && $requests[0]["erequest_id"] == $request_id) {
                             $evaluation_target["requested"] = true;
@@ -2949,7 +2949,7 @@ class Models_Evaluation {
                     } else {
                         $temp_proxy_id = $evaluation_target["proxy_id"];
                     }
-                    $requests = Evaluation::getTargetRequests($temp_proxy_id, $evaluation_id);
+                    $requests = Models_Evaluation::getTargetRequests($temp_proxy_id, $evaluation_id);
                     if ($requests && count($requests)) {
                         if (!$simple && !count($evaluation_targets)) {
                             $evaluation_target["requested"] = true;
@@ -3023,9 +3023,9 @@ class Models_Evaluation {
 		$query = "SELECT * FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"]);
 		$evaluators = $db->GetAll($query);
 		foreach ($evaluators as $evaluator) {
-			$evaluator_users = Evaluation::getEvaluatorUsers($evaluator);
+			$evaluator_users = Models_Evaluation::getEvaluatorUsers($evaluator);
 			foreach ($evaluator_users as $evaluator_user) {
-				$temp_evaluation = Evaluation::getUserPendingEvaluation($evaluation, $evaluator, $evaluator_user, $recent);
+				$temp_evaluation = Models_Evaluation::getUserPendingEvaluation($evaluation, $evaluator, $evaluator_user, $recent);
 				if ($temp_evaluation) {
                     if ($evaluation["event_id"]) {
                         $temp_evaluation["event_id"] = $evaluation["event_id"];
@@ -3045,9 +3045,9 @@ class Models_Evaluation {
 		$query = "SELECT * FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"]);
 		$evaluators = $db->GetAll($query);
 		foreach ($evaluators as $evaluator) {
-			$evaluator_users = Evaluation::getEvaluatorUsers($evaluator);
+			$evaluator_users = Models_Evaluation::getEvaluatorUsers($evaluator);
 			foreach ($evaluator_users as $evaluator_user) {
-				$temp_evaluation = Evaluation::getUserOverdueEvaluation($evaluation, $evaluator, $evaluator_user);
+				$temp_evaluation = Models_Evaluation::getUserOverdueEvaluation($evaluation, $evaluator, $evaluator_user);
 				if ($temp_evaluation) {
 					$overdue_evaluations[] = $temp_evaluation;
 				}
@@ -3134,13 +3134,13 @@ class Models_Evaluation {
 					$submissions_count = $db->GetOne($query);
 				}
 				if ((!isset($submissions_count) || !$submissions_count || $submissions_count < $evaluation["max_submittable"]) && ($evaluation["evaluation_start"] <= time() && $evaluation["evaluation_start"] >= strtotime("-1 day"))) {
-					$evaluation_targets = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true);
+					$evaluation_targets = Models_Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true);
 				}
 			break;
 			case "preceptor" :
 			case "rotation_core" :
 			case "rotation_elective" :
-				$evaluation_targets = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true, $recent);
+				$evaluation_targets = Models_Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true, $recent);
 			break;
 		}
 		if (isset($evaluation_targets) && $evaluation_targets) {
@@ -3159,7 +3159,7 @@ class Models_Evaluation {
 			switch ($evaluation["target_shortname"]) {
 				case "peer" :
 					if (!$evaluation["min_submittable"]) {
-						$evaluation_targets_list = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, false);
+						$evaluation_targets_list = Models_Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, false);
 						$evaluation["min_submittable"] = (count($evaluation_targets_list) ? count($evaluation_targets_list) : 0);
 					}
 				case "self" :
@@ -3174,13 +3174,13 @@ class Models_Evaluation {
 								AND `progress_value` = 'complete'";
 					$submissions_count = $db->GetOne($query);
 					if ((!isset($submissions_count) || !$submissions_count || $submissions_count < $evaluation["min_submittable"]) && ($evaluation["evaluation_finish"] <= time() && $evaluation["evaluation_start"] <= strtotime("-1 day"))) {
-						$evaluation_targets = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true);
+						$evaluation_targets = Models_Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true);
 					}
 				break;
 				case "preceptor" :
 				case "rotation_core" :
 				case "rotation_elective" :
-					$evaluation_targets = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true);
+					$evaluation_targets = Models_Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true);
 				break;
 			}
 			if (isset($evaluation_targets) && $evaluation_targets) {
@@ -3462,7 +3462,7 @@ class Models_Evaluation {
 									if ($evaluation["max_submittable"] == 0) {
 										$evaluation_targets_list = array();
 										foreach ($evaluator_records as $evaluator_record) {
-											$temp_targets = Evaluation::getTargetsArray($evaluation_id, $evaluator_record["eevaluator_id"], $ENTRADA_USER->getID());
+											$temp_targets = Models_Evaluation::getTargetsArray($evaluation_id, $evaluator_record["eevaluator_id"], $ENTRADA_USER->getID());
 											foreach ($temp_targets as $temp_target) {
 												$evaluation_targets_list[] = $temp_target;
 											}
@@ -3560,9 +3560,9 @@ class Models_Evaluation {
 		$output_evaluations = array();
 
 		foreach ($evaluations as $evaluation) {
-			$permissions = Evaluation::getReviewPermissions($evaluation["evaluation_id"]);
+			$permissions = Models_Evaluation::getReviewPermissions($evaluation["evaluation_id"]);
 			if ($permissions) {
-				$progress_records = Evaluation::getProgressRecordsByPermissions($evaluation["evaluation_id"], $permissions, true);
+				$progress_records = Models_Evaluation::getProgressRecordsByPermissions($evaluation["evaluation_id"], $permissions, true);
 				if (isset($progress_records) && count($progress_records)) {
 					$evaluation["completed_attempts"] = count($progress_records);
 					$evaluation["evaluation_progress"] = $progress_records;
@@ -3576,7 +3576,7 @@ class Models_Evaluation {
 
 			if (!isset($progress_records) && $ENTRADA_ACL->amIAllowed(new EvaluationResource($evaluation["evaluation_id"], true), 'update')) {
 				$permissions = array(array("contact_type" => "reviewer"));
-				$progress_records = Evaluation::getProgressRecordsByPermissions($evaluation["evaluation_id"], $permissions, true);
+				$progress_records = Models_Evaluation::getProgressRecordsByPermissions($evaluation["evaluation_id"], $permissions, true);
 				if (isset($progress_records) && count($progress_records)) {
 					$evaluation["completed_attempts"] = count($progress_records);
 					$evaluation["evaluation_progress"] = $progress_records;
@@ -3859,10 +3859,10 @@ class Models_Evaluation {
 		if ($temp_evaluations) {
 			foreach ($temp_evaluations as $evaluation) {
                 if (isset($evaluation["require_requests"]) && $evaluation["require_requests"]) {
-                    $requests = Evaluation::getEvaluationRequests($evaluation["evaluation_id"], $ENTRADA_USER->getID());
+                    $requests = Models_Evaluation::getEvaluationRequests($evaluation["evaluation_id"], $ENTRADA_USER->getID());
                 }
                 if (!(isset($evaluation["require_requests"]) && $evaluation["require_requests"]) || (is_array($requests) && count($requests))) {
-                    $evaluation_targets_list = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluation["eevaluator_id"], $ENTRADA_USER->getID());
+                    $evaluation_targets_list = Models_Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluation["eevaluator_id"], $ENTRADA_USER->getID());
                     if ($evaluation_targets_list) {
                         $evaluation_targets_count = count($evaluation_targets_list);
                         if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation["max_submittable"]) {
@@ -3992,10 +3992,10 @@ class Models_Evaluation {
 		if ($temp_evaluations) {
 			foreach ($temp_evaluations as $evaluation) {
                 if (isset($evaluation["require_requests"]) && $evaluation["require_requests"]) {
-                    $requests = Evaluation::getEvaluationRequests($evaluation["evaluation_id"], $proxy_id);
+                    $requests = Models_Evaluation::getEvaluationRequests($evaluation["evaluation_id"], $proxy_id);
                 }
                 if (!(isset($evaluation["require_requests"]) && $evaluation["require_requests"]) || (is_array($requests) && count($requests))) {
-                    $evaluation_targets_list = Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluation["eevaluator_id"], $proxy_id);
+                    $evaluation_targets_list = Models_Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluation["eevaluator_id"], $proxy_id);
                     if ($evaluation_targets_list) {
                         $evaluation_targets_count = count($evaluation_targets_list);
                         if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation["max_submittable"]) {
@@ -4032,7 +4032,7 @@ class Models_Evaluation {
                     }
 
                     if ($completed_attempts >= $evaluation["max_submittable"]) {
-                        break;
+                        continue;
                     } else {
                         $query = "	SELECT COUNT(`efquestion_id`) FROM `evaluation_form_questions`
                                     WHERE `eform_id` = ".$db->qstr($evaluation["eform_id"])."
@@ -4172,7 +4172,7 @@ class Models_Evaluation {
 
 		if ($evaluators) {
 			foreach ($evaluators as $evaluator) {
-				$evaluator_users = Evaluation::getEvaluatorUsers($evaluator, $available_only);
+				$evaluator_users = Models_Evaluation::getEvaluatorUsers($evaluator, $available_only);
 				$evaluators_output = array_merge($evaluators_output, $evaluator_users);
 			}
 		}
@@ -4227,7 +4227,7 @@ class Models_Evaluation {
 				if ($parent_id) {
 					$presentations[] = $result;
 				}
-				$presentations = Evaluation::getClinicalPresentations($result["objective_id"], $presentations, 0, (isset($presentation_ids) && $presentation_ids ? $presentation_ids : array()), $org_id);
+				$presentations = Models_Evaluation::getClinicalPresentations($result["objective_id"], $presentations, 0, (isset($presentation_ids) && $presentation_ids ? $presentation_ids : array()), $org_id);
 			}
 		}
 

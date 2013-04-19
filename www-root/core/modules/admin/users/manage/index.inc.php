@@ -34,8 +34,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			$PROCESSED_DEPARTMENTS = array();
 			$department_names = array();
 
-			echo "<h1><strong>".html_encode($user_record["firstname"]." ".$user_record["lastname"])."</strong></h1>\n";
-
 			$PROCESSED = $user_record;
 
 			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($PROXY_ID)." AND `app_id` = ".$db->qstr(AUTH_APP_ID);
@@ -86,9 +84,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			}
 			?>
 
-			<h2 title="User Profile Section">User Profile</h2>
+			<h1 title="User Profile Section">User Profile for <?php echo html_encode($user_record["firstname"]." ".$user_record["lastname"]); ?></h1>
 			<div class="row-fluid">
-				<div class="span2">
+				<div class="span4">
 					<?php
 										$uploaded_file_active = $db->GetOne("SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = 1 AND `proxy_id` = ".$db->qstr($user_record["id"]));
 										echo "<div style=\"position: relative; width: 74px; height: 102px;\" id=\"img-holder-".$user_record["id"]."\" class=\"img-holder\">\n";
@@ -126,18 +124,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								}
 
 								if ($offical_file_active) {
-									echo "		<img id=\"official_photo_".$user_record["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($user_record["id"], "official"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" title=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" />\n";
+									echo "		<img id=\"official_photo_".$user_record["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($user_record["id"], "official"))."\" width=\"192\" height=\"250\" alt=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" title=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" />\n";
 								}
 
 								if ($uploaded_file_active) {
-									echo "		<img id=\"uploaded_photo_".$user_record["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($user_record["id"], "upload"))."\" width=\"72\" height=\"100\" alt=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" title=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" />\n";
+									echo "		<img id=\"uploaded_photo_".$user_record["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($user_record["id"], "upload"))."\" width=\"192\" height=\"250\" alt=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" title=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" />\n";
 								}
 
-								if (($offical_file_active) || ($uploaded_file_active)) {
-									echo "		<a id=\"zoomin_photo_".$user_record["id"]."\" class=\"zoomin\" onclick=\"growPic($('official_photo_".$user_record["id"]."'), $('uploaded_photo_".$user_record["id"]."'), $('official_link_".$user_record["id"]."'), $('uploaded_link_".$user_record["id"]."'), $('zoomout_photo_".$user_record["id"]."'));\">+</a>";
-									echo "		<a id=\"zoomout_photo_".$user_record["id"]."\" class=\"zoomout\" onclick=\"shrinkPic($('official_photo_".$user_record["id"]."'), $('uploaded_photo_".$user_record["id"]."'), $('official_link_".$user_record["id"]."'), $('uploaded_link_".$user_record["id"]."'), $('zoomout_photo_".$user_record["id"]."'));\"></a>";
-								} else {
-									echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
+								if ((!$offical_file_active) && (!$uploaded_file_active)) {
+									echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"192\" height=\"250\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
 								}
 
 								if (($offical_file_active) && ($uploaded_file_active)) {
@@ -147,58 +142,43 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								echo "</div>\n";
 								?>
 				</div>
-				<div class="span10">
-					<table class="tableList">
-									<colgroup>
-										<col style="width: 20%" />
-										<col style="width: 80%" />
-									</colgroup>
-									<tbody>
-										<tr>
-											<td>Full Name:</td>
-											<td><?php echo $user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]; ?></td>
-										</tr>
-										<tr>
-											<td>Number:</td>
-											<td><?php echo $user_record["number"]; ?></td>
-										</tr>
-										<tr>
-											<td>Gender:</td>
-											<td><?php echo display_gender($gender); ?></td>
-										</tr>
-										<tr>
-											<td>E-Mail Address:</td>
-											<td><a href="mailto:<?php echo $user_record["email"]; ?>"><?php echo $user_record["email"]; ?></a></td>
-										</tr>
-										<tr>
-											<td colspan="2">&nbsp;</td>
-										</tr>
-										<tr>
-											<td style="vertical-align: top; padding-top: 10px">Organisations:</td>
-											<td>
-												<?php
-												echo $default_organisation["organisation_title"];
+				<div class="span8">
+					<div class="row">
+						<div class="span3"><strong>Full Name:</strong></div>
+						<div class="span9"><?php echo $user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]; ?></div>
+					</div>
+					<div class="row">
+						<div class="span3"><strong>Number:</strong></div>
+						<div class="span9"><?php echo $user_record["number"]; ?></div>
+					</div>
+					<div class="row">
+						<div class="span3"><strong>Gender:</strong></div>
+						<div class="span9"><?php echo display_gender($gender); ?></div>
+					</div>
+					<div class="row">
+						<div class="span3"><strong>E-Mail Address:</strong></div>
+						<div class="span9"><a href="mailto:<?php echo $user_record["email"]; ?>"><?php echo $user_record["email"]; ?></a></div>
+					</div>
+					<br />
+					<div class="row">
+						<div class="span3"><strong>Organisations:</strong></div>
+						<div class="span9">
+							<?php
+							echo $default_organisation["organisation_title"];
 
-												$organisation_names_diff = array_diff($organisation_names, array($default_organisation["organisation_title"]));
-												if (count($organisation_names_diff) > 0) {
-													echo implode("<br />", $organisation_names_diff);
-												}
-												?>
-											</td>
-										</tr>
-
-										<?php
-										if (!empty($department_names)) {
-											?>
-											<tr>
-												<td>Departments:</td>
-												<td><?php echo implode(", ", $department_names) ?></td>
-											</tr>
-											<?php
-										}
-										?>
-									</tbody>
-								</table>
+							$organisation_names_diff = array_diff($organisation_names, array($default_organisation["organisation_title"]));
+							if (count($organisation_names_diff) > 0) {
+								echo implode("<br />", $organisation_names_diff);
+							}
+							?>
+						</div>
+					</div>
+					<?php if ($department_names) { ?>
+					<div class="row">
+						<div class="span3"><strong>Departments:</strong></div>
+						<div class="span9"><?php echo implode(", ", $department_names) ?></div>
+					</div>
+					<?php } ?>
 				</div> <!--/span10-->
 			</div> <!-- /row-fluid-->
 			

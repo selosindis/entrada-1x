@@ -370,19 +370,20 @@ CREATE TABLE IF NOT EXISTS `user_data` (
 INSERT INTO `user_data` (`id`, `number`, `username`, `password`, `organisation_id`, `department`, `prefix`, `firstname`, `lastname`, `email`, `email_alt`, `google_id`, `telephone`, `fax`, `address`, `city`, `province`, `postcode`, `country`, `notes`, `office_hours`, `privacy_level`, `notifications`, `clinical`) VALUES
 (1, 0, '%ADMIN_USERNAME%', '%ADMIN_PASSWORD_HASH%', 1, NULL, '', '%ADMIN_FIRSTNAME%', '%ADMIN_LASTNAME%', '%ADMIN_EMAIL%', '', NULL, '', '', '', '', '', '', '', 'System Administrator', NULL, 0, 0, 1);
 
-CREATE TABLE IF NOT EXISTS `user_departments` (
+CREATE TABLE `user_departments` (
   `udep_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `user_id` int(12) unsigned NOT NULL DEFAULT '0',
   `dep_id` int(12) unsigned NOT NULL DEFAULT '0',
   `dep_title` varchar(255) NOT NULL DEFAULT '',
-  PRIMARY KEY  (`udep_id`),
+  `entrada_only` int(1) DEFAULT '0',
+  PRIMARY KEY (`udep_id`),
   KEY `user_id` (`user_id`),
   KEY `dep_id` (`dep_id`),
   KEY `dep_title` (`dep_title`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
 
-INSERT INTO `user_departments` (`udep_id`, `user_id`, `dep_id`, `dep_title`) VALUES
-(1, 1, 1, 'System Administrator');
+INSERT INTO `user_departments` (`udep_id`, `user_id`, `dep_id`, `dep_title`, `entrada_only`) VALUES
+(1, 1, 1, 'System Administrator', 0);
 
 CREATE TABLE IF NOT EXISTS `user_incidents` (
   `incident_id` int(12) unsigned NOT NULL AUTO_INCREMENT,

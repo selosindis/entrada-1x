@@ -40,16 +40,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 	if((isset($_GET["id"])) && ((int) trim($_GET["id"]))) {
 		$EVENT_ID = (int) trim($_GET["id"]);
 	}
-	
+
 	if ($EVENT_ID) {
-		
+
 		$nameArray 	= clerkship_student_name($EVENT_ID);
-		
+
 		$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`electives`, `".CLERKSHIP_DATABASE."`.`event_contacts`
 					WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` = ".$db->qstr($EVENT_ID)."
 					AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
 					AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`";
-		
+
 		if ($event_info	= $db->GetRow($query)) {
 			$query = "	SELECT `countries_id`, `prov_state`, `region_name`
 						FROM `".CLERKSHIP_DATABASE."`.`regions`
@@ -65,12 +65,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/clerkship/electives?".replace_query(array("section" => "edit")), "title" => "Editing Elective");
 			$student_id   = $event_info["etype_id"];
 			$student_name = get_account_data("firstlast", $student_id);
-			
+
 			echo "<h1>Editing / Approving Elective for ".$student_name."</h1>\n";
-				
+
 			// Error Checking
 			switch ($STEP) {
-				case 2 :					
+				case 2 :
 					/**
 					 * Required field "geo_location" / Geographic Location.
 					 */
@@ -93,7 +93,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Elective Period</strong> field is required.";
 					}
-		
+
 					/**
 					 * Required field "department_id" / Elective Department.
 					 */
@@ -103,7 +103,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Department</strong> field is required.";
 					}
-		
+
 					/**
 					 * Required field "discipline_id" / Elective Discipline.
 					 */
@@ -117,14 +117,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Discipline</strong> field is required.";
 					}
-					
+
 					/**
 					 * Non-required field "sub_discipline" / Sub-Discipline .
 					 */
 					if ((isset($_POST["sub_discipline"])) && ($sub_discipline = clean_input($_POST["sub_discipline"], array("notags", "trim")))) {
 						$PROCESSED["sub_discipline"] = $sub_discipline;
 					}
-					
+
 					/**
 					 * Required field "start_date" / Start Date .
 					 */
@@ -135,26 +135,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$month 			= $explodedDate[1];
 						$day 			= $explodedDate[2];
 						$start_stamp 	= mktime(9,0,0,$month,$day,$year);
-						
+
 						$PROCESSED["start_date"] 	= $start_stamp;
 						$PROCESSED["end_date"] 		= strtotime($startCleaned . "+". clean_input($_POST["event_finish_name"], array("int")) . " weeks");
 						$end_stamp 					= $PROCESSED["end_date"];
-						
-						$dateCheckQuery = "	SELECT `event_title`, `event_start`, `event_finish` 
+
+						$dateCheckQuery = "	SELECT `event_title`, `event_start`, `event_finish`
 											FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`electives`, `".CLERKSHIP_DATABASE."`.`event_contacts`
-											WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` != ".$db->qstr($EVENT_ID)." 
+											WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` != ".$db->qstr($EVENT_ID)."
 											AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
 											AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`
-											AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($student_id)." 
+											AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($student_id)."
 											AND `".CLERKSHIP_DATABASE."`.`events`.`event_type` = \"elective\"
 											AND `".CLERKSHIP_DATABASE."`.`events`.`event_status` != \"trash\"
-											AND ((".$db->qstr($start_stamp)." > `".CLERKSHIP_DATABASE."`.`events`.`event_start` 
+											AND ((".$db->qstr($start_stamp)." > `".CLERKSHIP_DATABASE."`.`events`.`event_start`
 											AND ".$db->qstr($start_stamp)." < `".CLERKSHIP_DATABASE."`.`events`.`event_finish`)
-											OR (".$db->qstr($end_stamp)." > `".CLERKSHIP_DATABASE."`.`events`.`event_start` 
+											OR (".$db->qstr($end_stamp)." > `".CLERKSHIP_DATABASE."`.`events`.`event_start`
 											AND ".$db->qstr($end_stamp)." < `".CLERKSHIP_DATABASE."`.`events`.`event_finish`)
-											OR (`".CLERKSHIP_DATABASE."`.`events`.`event_start` > ".$db->qstr($start_stamp)." 
+											OR (`".CLERKSHIP_DATABASE."`.`events`.`event_start` > ".$db->qstr($start_stamp)."
 											AND `".CLERKSHIP_DATABASE."`.`events`.`event_finish` < ".$db->qstr($end_stamp)."))";
-						
+
 						if ($dateCheck	= $db->GetAll($dateCheckQuery))  {
 							$dateErrorCtr = 0;
 							foreach ($dateCheck as $dateValue) {
@@ -171,7 +171,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Start Date</strong> field is required.";
-						
+
 						if (isset($_POST["start_date"]) && $_POST["start_date"] != '') {
 							$startCleaned	= html_encode($_POST["start_date"]);
 							$explodedDate 	= explode("-", $startCleaned);
@@ -179,13 +179,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							$month 			= $explodedDate[1];
 							$day 			= $explodedDate[2];
 							$start_stamp 	= mktime(0,0,0,$month,$day,$year);
-							
+
 							$PROCESSED["start_date"] 	= $start_stamp;
 							$PROCESSED["end_date"] 		= strtotime($startCleaned . "+". clean_input($_POST["event_finish_name"], array("int")) . " weeks");
 							$end_stamp 					= $PROCESSED["end_date"];
 						}
 					}
-					
+
 					/**
 					 * Required field "schools_id" / Host School.
 					 */
@@ -205,7 +205,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Host School</strong> field is required.";
 					}
-					
+
 					/**
 					 * Required field "objective" / Objective.
 					 */
@@ -215,21 +215,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Objective</strong> field is required.";
 					}
-					
+
 					/**
 					 * Non-required field "preceptor_prefix" / Preceptor Prefix.
 					 */
 					if ((isset($_POST["preceptor_prefix"])) && ($preceptor_prefix = clean_input($_POST["preceptor_prefix"], array("notags", "trim")))) {
 						$PROCESSED["preceptor_prefix"] = $preceptor_prefix;
 					}
-					
+
 					/**
 					 * Non-required field "preceptor_first_name" / Preceptor First Name.
 					 */
 					if ((isset($_POST["preceptor_first_name"])) && ($preceptor_first_name = clean_input($_POST["preceptor_first_name"], array("notags", "trim")))) {
 						$PROCESSED["preceptor_first_name"] = $preceptor_first_name;
 					}
-					
+
 					/**
 					 * Required field "preceptor_last_name" / Preceptor Last Name.
 					 */
@@ -239,7 +239,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Preceptor Last Name</strong> field is required.";
 					}
-					
+
 					/**
 					 * Required field "address" / Address.
 					 */
@@ -249,7 +249,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Address</strong> field is required.";
 					}
-					
+
 					/**
 					 * Required field "countries_id" / Country.
 					 */
@@ -265,7 +265,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$ERRORSTR[] = "The <strong>Country</strong> field is required.";
 						$province_required = false;
 					}
-					
+
 					/**
 					 * Required field "city" / City.
 					 */
@@ -275,8 +275,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>City</strong> field is required, and should not contain either the province/state or any commas.";
 					}
-					
-					
+
+
 					/**
 					 * Required field "prov_state" / Prov / State.
 					 */
@@ -291,28 +291,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Prov / State</strong> field is required.";
 					}
-					
+
 					/**
 					 * Non-required field "postal_zip_code" / Postal / Zip Code.
 					 */
 					if ((isset($_POST["postal_zip_code"])) && ($postal_zip_code = clean_input($_POST["postal_zip_code"], array("notags", "trim")))) {
 						$PROCESSED["postal_zip_code"] = strtoupper(str_replace(" ", "", $postal_zip_code));
 					}
-					
+
 					/**
 					 * Non-required field "fax" / Fax.
 					 */
 					if ((isset($_POST["fax"])) && ($fax = clean_input($_POST["fax"], array("notags", "trim")))) {
 						$PROCESSED["fax"] = $fax;
 					}
-					
+
 					/**
 					 * Non-required field "phone" / Phone.
 					 */
 					if ((isset($_POST["phone"])) && ($phone = clean_input($_POST["phone"], array("notags", "trim")))) {
 						$PROCESSED["phone"] = $phone;
 					}
-					
+
 					/**
 					 * Required field "email" /  Email.
 					 */
@@ -326,7 +326,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Email</strong> field is required.";
 					}
-					
+
 					/**
 					 * Required field "status" /  Status.
 					 */
@@ -341,18 +341,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Status</strong> field is required.";
 					}
-					
+
 					/**
 					 * Required field "notification_send" /  Notifications.
 					 */
 					if ((isset($_POST["notifaction_send"])) && ($notifaction_send = clean_input($_POST["notifaction_send"], array("notags")))) {
 						$PROCESSED["notifaction_send"] = $notifaction_send;
 					}
-					
+
 					if (!$ERROR) {
 						$PROCESSED["updated_date"]			= time();
 						$PROCESSED["updated_by"]			= $ENTRADA_USER->getID();
-						
+
 						$EVENT["category_id"]				= $PROCESSED["category_id"];
 						$query = "	SELECT `region_id` FROM `".CLERKSHIP_DATABASE."`.`regions`
 									WHERE `region_name` LIKE ".$db->qstr($PROCESSED["city"])."
@@ -360,7 +360,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 									".(isset($PROCESSED["countries_id"]) && $PROCESSED["countries_id"] ? "AND `countries_id` = ".$db->qstr($PROCESSED["countries_id"]) : "")."
 									AND `region_active` = 1";
 						$region_id = $db->GetOne($query);
-						
+
 						if ($region_id) {
 							$ELECTIVE["region_id"] = clean_input($region_id, "int");
 							$EVENT["region_id"] = clean_input($region_id, "int");
@@ -387,13 +387,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$EVENT["event_status"]				= $PROCESSED["event_status"];
 						$EVENT["modified_last"]				= $PROCESSED["updated_date"];
 						$EVENT["modified_by"]				= $PROCESSED["updated_by"];
-						
+
 						if ($db->AutoExecute(CLERKSHIP_DATABASE.".events", $EVENT, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
 							$url = ENTRADA_URL."/admin/clerkship/electives";
-							
+
 							$msg	= "You will now be redirected to the clerkship index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-							
-								
+
+
 							$ELECTIVE["geo_location"]			= $PROCESSED["geo_location"];
 							$ELECTIVE["department_id"]			= $PROCESSED["department_id"];
 							$ELECTIVE["discipline_id"]			= $PROCESSED["discipline_id"];
@@ -414,7 +414,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							$ELECTIVE["email"]					= $PROCESSED["email"];
 							$ELECTIVE["updated_date"]			= $PROCESSED["updated_date"];
 							$ELECTIVE["updated_by"]				= $PROCESSED["updated_by"];
-							
+
 							if ($db->AutoExecute(CLERKSHIP_DATABASE.".electives", $ELECTIVE, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
 								// Only send out the notifications if they admin wants them sent.
 								if(isset($PROCESSED["notifaction_send"])) {
@@ -425,7 +425,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										if ($PROCESSED["geo_location"] == "International") {
 											$international_msg	= "The completion of the documentation for international activity is mandatory. Academic credit will not be granted unless all steps have been completed and approval granted prior to departure. Please go to the following link and ensure you have completed the necessary steps:\n\n";
 											$international_msg .= $CLERKSHIP_INTERNATIONAL_LINK."\n\n";
-											
+
 											$message  = "Attention ".$AGENT_CONTACTS["agent-clerkship-international"]["name"].",\n\n";
 											$message .= "An international clerkship elective has been approved by Queen's University please review this:\n";
 											$message .= "=======================================================\n\n";
@@ -436,35 +436,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 											$message .= "The clerk's name is: " . $student_name ." and they will begin this elective on " . date("Y-m-d", $PROCESSED["start_date"])." and will finish on " . date("Y-m-d", $PROCESSED["end_date"])."\n\n";
 											$message .= "Contact:\t\t".$AGENT_CONTACTS["agent-clerkship"]["email"]." if you have any questions.\n\n";
 											$message .= "=======================================================";
-                                                                                        
+
                                                                                         $mail->addHeader("X-Priority", "3");
 											$mail->addHeader('Content-Transfer-Encoding', '8bit');
 											$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
 											$mail->addHeader("X-Section", "Electives Approval");
-                                                                                        
+
 											$mail->addTo($AGENT_CONTACTS["agent-clerkship-international"]["email"], $AGENT_CONTACTS["agent-clerkship-international"]["name"]);
 											$mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
 											$mail->setSubject("International Electives Approval - ".APPLICATION_NAME);
 											$mail->setReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
 											$mail->setBodyText($message);
-											
+
                                                                                         try {
                                                                                                 $mail->send();
                                                                                         } catch (Zend_Mail_Transport_Exception $e){
                                                                                                 $BIGERROR++;
 												$ERRORSTR[] = "There was a problem sending the approval email to the international rep for this elective. The MEdTech Unit was informed of this error; please try again later.";
-							
+
 												application_log("error", "There was an error sending an approval email to the international clerkship admin for clerkship elective ID[".$EVENT_ID."]. Mail said: ".$e->getMessage());
                                                                                         }
-											
+
 											$mail->clearRecipients();
 											$mail->clearReplyTo();
 										}
-										
+
 										$msg	= "You have approved this elective.  An email will be sent to the student informing them of this.<br /><br /> You will now be redirected to the clerkship index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-										
+
 										$student_email = get_account_data("email", $event_info["etype_id"]);
-										
+
 										$message  = "Attention ".$student_name.",\n\n";
 										$message .= "A Clerkship elective has been approved by the undergraduate office:\n";
 										$message .= "=======================================================\n\n";
@@ -476,30 +476,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$message .= "Go here to view this elective: " . ENTRADA_URL."/clerkship/electives?section=view&id=".$EVENT_ID."\n\n";
 										$message .= $international_msg;
 										$message .= "=======================================================";
-										
+
                                                                                 $mail->addHeader("X-Priority", "3");
 										$mail->addHeader('Content-Transfer-Encoding', '8bit');
 										$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
-										mail->addHeader("X-Section", "Electives Approval");
-                                                                                        
+										$mail->addHeader("X-Section", "Electives Approval");
+
 										$mail->addTo($AGENT_CONTACTS["agent-clerkship-international"]["email"], $AGENT_CONTACTS["agent-clerkship-international"]["name"]);
 										$mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
 										$mail->setSubject("Electives Approval - ".APPLICATION_NAME);
 										$mail->setReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
 										$mail->setBodyText($message);
-											
+
                                                                                 try {
                                                                                         $mail->send();
                                                                                 } catch (Zend_Mail_Transport_Exception $e){
                                                                                         $BIGERROR++;
                                                                                         $ERRORSTR[] = "There was a problem sending the approval email to the student for this elective. The MEdTech Unit was informed of this error; please try again later.";
-							
+
 											application_log("error", "There was an error sending an approval email to the student for clerkship elective ID[".$EVENT_ID."]. Mail said: ".$e->getMessage());
                                                                                 }
-											
+
 										$mail->clearRecipients();
 										$mail->clearReplyTo();
-										
+
 										$message  = "Attention ".(isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").(isset($PROCESSED["preceptor_first_name"]) && $PROCESSED["preceptor_first_name"] != "" ? $PROCESSED["preceptor_first_name"] . " " : "") . $PROCESSED["preceptor_last_name"].",\n\n";
 										$message .= "A Clerkship elective has been approved by Queen's University please review this:\n";
 										$message .= "=======================================================\n\n";
@@ -513,34 +513,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$message .= "Contact:\t\t".$AGENT_CONTACTS["agent-clerkship"]["email"]." if you have any questions.\n\n";
 										$message .= "Please fill out this evaluation form upon the clerk's completion of the elective:\n\n".$CLERKSHIP_EVALUATION_FORM."\n\n";
 										$message .= "=======================================================";
-										
+
                                                                                 $mail->addHeader("X-Priority", "3");
 										$mail->addHeader('Content-Transfer-Encoding', '8bit');
 										$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
-										mail->addHeader("X-Section", "Electives Approval");
-                                                                                        
+										$mail->addHeader("X-Section", "Electives Approval");
+
 										$mail->addTo($PROCESSED["email"], (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").$PROCESSED["preceptor_first_name"] . " " . $PROCESSED["preceptor_last_name"]);
 										$mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
 										$mail->setSubject("Electives Approval - ".APPLICATION_NAME);
 										$mail->setReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
 										$mail->setBodyText($message);
-											
+
                                                                                 try {
                                                                                         $mail->send();
                                                                                 } catch (Zend_Mail_Transport_Exception $e){
                                                                                         $BIGERROR++;
                                                                                         $ERRORSTR[] = "There was a problem sending the approval email to the preceptor for this elective. The MEdTech Unit was informed of this error; please try again later.";
-							
+
 											application_log("error", "There was an error sending an approval email to the preceptor of clerkship elective ID[".$EVENT_ID."]. Mail said: ".$e->getMessage());
                                                                                 }
-											
+
 										$mail->clearRecipients();
 										$mail->clearReplyTo();
 									} else if ($PROCESSED["event_status"] == "trash") {
 										$msg	= "You have rejected this elective.  An email will be sent to the student informing them of this.<br /><br /> You will now be redirected to the clerkship index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-										
+
 										$student_email = get_account_data("email", $event_info["etype_id"]);
-										
+
 										$message  = "Attention ".$student_name.",\n\n";
 										$message .= "A Clerkship elective has been rejected by the undergraduate office:\n";
 										$message .= "=======================================================\n\n";
@@ -552,27 +552,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$message .= "Go here to view this elective: " . ENTRADA_URL."/clerkship/electives?section=edit&id=".$EVENT_ID."\n\n";
 										$message .= "=======================================================";
 										$message .= "Reason(s) for rejections:\n\n" . $PROCESSED['rejection_comments'];
-										
+
                                                                                 $mail->addHeader("X-Priority", "3");
 										$mail->addHeader('Content-Transfer-Encoding', '8bit');
 										$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
-										mail->addHeader("X-Section", "Electives Approval");
-                                                                                        
+										$mail->addHeader("X-Section", "Electives Approval");
+
 										$mail->addTo($PROCESSED["email"], (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").$PROCESSED["preceptor_first_name"] . " " . $PROCESSED["preceptor_last_name"]);
 										$mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
 										$mail->setSubject("Electives Rejection - ".APPLICATION_NAME);
 										$mail->setReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
 										$mail->setBodyText($message);
-											
+
                                                                                 try {
                                                                                         $mail->send();
                                                                                 } catch (Zend_Mail_Transport_Exception $e){
                                                                                         $BIGERROR++;
                                                                                         $ERRORSTR[] = "There was a problem sending the rejection email to the student for this elective. The MEdTech Unit was informed of this error; please try again later.";
-							
+
 											application_log("error", "There was an error sending a rejection email to the student for clerkship elective ID[".$EVENT_ID."]. Mail said: ".$e->getMessage());
                                                                                 }
-											
+
 										$mail->clearRecipients();
 										$mail->clearReplyTo();
 									}
@@ -580,18 +580,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								$SUCCESS++;
 								$SUCCESSSTR[]  	= "You have successfully edited this <strong>".html_encode($PROCESSED["geo_location"])."</strong> elective in the system.<br /><br />".$msg;
 								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-								
+
 								application_log("success", "New elective [".$EVENT["event_title"]."] edited in the system.");
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "There was a problem editing this elective into the system. The MEdTech Unit was informed of this error; please try again later.";
-			
+
 								application_log("error", "There was an error editing a clerkship elective. Database said: ".$db->ErrorMsg());
 							}
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "There was a problem editing this elective into the system. The MEdTech Unit was informed of this error; please try again later.";
-		
+
 							application_log("error", "There was an error editing a clerkship elective. Database said: ".$db->ErrorMsg());
 						}
 					} else {
@@ -603,7 +603,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					continue;
 				break;
 			}
-		
+
 			// Display Content
 			switch ($STEP) {
 				case 2 :
@@ -621,7 +621,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 				default :
 					$PROCESSED["geo_location"]			= $event_info["geo_location"];
 					$PROCESSED["category_id"]			= $event_info["category_id"];
-					$PROCESSED["department_id"]			= $event_info["department_id"];	
+					$PROCESSED["department_id"]			= $event_info["department_id"];
 					$PROCESSED["discipline_id"]			= $event_info["discipline_id"];
 					$PROCESSED["sub_discipline"]		= $event_info["sub_discipline"];
 					$PROCESSED["schools_id"]			= $event_info["schools_id"];
@@ -642,9 +642,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					$PROCESSED["end_date"] 				= $event_info["event_finish"];
 					$PROCESSED["event_status"]			= $event_info["event_status"];
 					$PROCESSED["notifaction_send"]		= true;
-					
+
 					$HEAD[]			= "<script type=\"text/javascript\">
-					function checkInternational (flag) 
+					function checkInternational (flag)
 					{
 						if (flag == \"true\") {
 							$('international_notice').style.display = 'block';
@@ -652,8 +652,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							$('international_notice').style.display = 'none';
 						}
 					}
-					
-					function showRejection (flag) 
+
+					function showRejection (flag)
 					{
 						if (flag == 'true') {
 							$('rejection_notice').style.display = 'block';
@@ -662,8 +662,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							$('rejection_notice').value = '';
 						}
 					}
-					
-					function showNotification (flag) 
+
+					function showNotification (flag)
 					{
 						if (flag == 'approved') {
 							$('approval_notice').style.display = 'none';
@@ -681,13 +681,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							Effect.Pulsate('approval_notice', { pulses: 5, duration: 2.5 });
 						}
 					}
-					
+
 					function showOther()
 					{
 						var obj = $('schools_id');
-						
+
 						var value = obj.options[obj.selectedIndex].value;
-						
+
 						if (value == '99999') {
 							$('other_label').style.display = 'block';
 							$('other_medical_school').style.display = 'block';
@@ -699,7 +699,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							$('other_span').style.display = 'none';
 						}
 					}
-					
+
 					function changeDurationMessage() {
 						$('auto_end_date').style.display = 'inline';
 						var value = $('start_date').value;
@@ -730,7 +730,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						newDate = toCalendarDate(newDate);
 						$('auto_end_date').innerHTML = '&nbsp;&nbsp;&nbsp;Ending in '+\$F('event_finish')+weekText+' on ' +newDate;
 					}
-					
+
 					function setDateValue(field, date) {
 						$('auto_end_date').style.display = 'inline';
 						newDate = toJSDate(date);
@@ -763,21 +763,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					}
 					var updater = null;
 					function AjaxFunction(cat_id)
-					{	
+					{
 						var url='".webservice_url("clerkship_department")."';
 						url=url+'?cat_id='+cat_id+'&dept_id=".(isset($_POST["department_id"]) ? clean_input($_POST["department_id"], array("int")) : $PROCESSED["department_id"])."';
-				    	new Ajax.Updater($('department_category'), url, 
-							{ 
+				    	new Ajax.Updater($('department_category'), url,
+							{
 								method:'get'
 							});
 					}
-					
+
 					function provStateFunction(countries_id)
-					{	
+					{
 						var url='".webservice_url("clerkship_prov")."';
 						url=url+'?countries_id='+countries_id+'&prov_state=".rawurlencode((isset($_POST["prov_state"]) ? clean_input($_POST["prov_state"], array("notags", "trim")) : $PROCESSED["prov_state"]))."';
-				    	new Ajax.Updater($('prov_state_div'), url, 
-							{ 
+				    	new Ajax.Updater($('prov_state_div'), url,
+							{
 								method:'get',
 								onComplete: function () {
 									generateAutocomplete();
@@ -791,33 +791,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								}
 							});
 					}
-					
+
 					function generateAutocomplete() {
 						if (updater != null) {
 							updater.url = '".ENTRADA_URL."/api/cities-by-country.api.php?countries_id='+$('countries_id').options[$('countries_id').selectedIndex].value+'&prov_state='+($('prov_state') !== null ? ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0 ? $('prov_state').options[$('prov_state').selectedIndex].value : $('prov_state').value) : '');
 						} else {
-							updater = new Ajax.Autocompleter('city', 'city_auto_complete', 
-								'".ENTRADA_URL."/api/cities-by-country.api.php?countries_id='+$('countries_id').options[$('countries_id').selectedIndex].value+'&prov_state='+($('prov_state') !== null ? ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0 ? $('prov_state').options[$('prov_state').selectedIndex].value : $('prov_state').value) : ''), 
+							updater = new Ajax.Autocompleter('city', 'city_auto_complete',
+								'".ENTRADA_URL."/api/cities-by-country.api.php?countries_id='+$('countries_id').options[$('countries_id').selectedIndex].value+'&prov_state='+($('prov_state') !== null ? ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0 ? $('prov_state').options[$('prov_state').selectedIndex].value : $('prov_state').value) : ''),
 								{
-									frequency: 0.2, 
+									frequency: 0.2,
 									minChars: 2
 								});
 						}
 					}
 					</script>\n";
-					
+
 					$ONLOAD[]		= "showOther()";
 					$ONLOAD[]		= "AjaxFunction(\$F($('editElectiveForm')['category_id']))";
 					$ONLOAD[]		= "provStateFunction(\$F($('editElectiveForm')['countries_id']))";
 					$ONLOAD[]		= "setMaxLength()";
 					$ONLOAD[]		= "changeDurationMessage()";
-					
+
 					if ($PROCESSED["event_status"] == "trash" || $_POST["event_status"] == "trash") {
 						$ONLOAD[]		= "showRejection('true')";
 					} else {
 						$ONLOAD[]		= "showRejection('false')";
 					}
-					
+
 					if ($PROCESSED["event_status"] == "trash" || $_POST["event_status"] == "trash") {
 						$ONLOAD[]		= "showNotification('rejected')";
 					} else if($_POST["event_status"] == "published" || $PROCESSED["event_status"] == "published") {
@@ -825,9 +825,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					} else {
 						$ONLOAD[]		= "showNotification('false')";
 					}
-					
+
 					$LASTUPDATED	= $result["updated_date"];
-					
+
 					if ($ERROR) {
 						echo display_error();
 					}
@@ -836,7 +836,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					 */
 					$elective_weeks = clerkship_get_elective_weeks($event_info["etype_id"]);
 					$remaining_weeks = (int)$CLERKSHIP_REQUIRED_WEEKS - (int)$elective_weeks["approved"];
-					
+
 					$sidebar_html  = "<ul class=\"menu\">\n";
 					$sidebar_html .= "	<li><strong>".$elective_weeks["approval"]."</strong> Pending Approval</li>\n";
 					$sidebar_html .= "	<li class=\"checkmark\"><strong>".$elective_weeks["approved"]."</strong> Weeks Approved</li>\n";
@@ -846,17 +846,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$sidebar_html .= "	<li><a target=\"blank\" href=\"".ENTRADA_URL."/admin/clerkship/electives?section=disciplines&id=".$event_info["etype_id"]."\">Discipline Breakdown</a></li>\n";
 					}
 					$sidebar_html .= "</ul>\n";
-				
+
 					$sidebar_html .= "<div style=\"margin-top: 10px\">\n";
 					$sidebar_html .= $student_name. " has ".$remaining_weeks." required elective week".(($remaining_weeks != 1) ? "s" : "")." remaining.\n";
 					$sidebar_html .= "</div>\n";
-				
+
 					new_sidebar_item("Elective Weeks", $sidebar_html, "page-clerkship", "open");
 					?>
 					<div class="display-notice" style="vertical-align: middle; padding: 15px;">
 						<strong>Please Note:</strong> Removing this elective will permanently remove it from the system. <input type="button" class="button" value="Remove Elective" style="margin-left: 15px" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives?section=delete&id=<?php echo $EVENT_ID; ?>'" />
 					</div>
-					
+
 					<form id="editElectiveForm" action="<?php echo ENTRADA_URL; ?>/admin/clerkship/electives?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="selIt()">
 					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Elective">
 					<colgroup>
@@ -889,15 +889,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							<?php
 							$query	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories` WHERE `category_type` = ".$db->qstr($CLERKSHIP_CATEGORY_TYPE_ID)." AND `category_name` = ".$db->qstr("Class of ".$nameArray["role"]);
 							$result	= $db->GetRow($query);
-							
+
 							if ($result) {
 								echo "<option value=\"0\"".((!isset($PROCESSED["category_id"])) ? " selected=\"selected\"" : "").">-- Elective Period --</option>\n";
 								$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories` WHERE `category_parent` = ".$db->qstr($result["category_id"])." AND `category_type` = '22'";
 								$results	= $db->GetAll($query);
-								
+
 								if ($results) {
 									foreach ($results as $result) {
-										echo "<option value=\"".(int)$result["category_id"]."\"".(isset($PROCESSED["category_id"]) && $PROCESSED["category_id"] == (int)$result["category_id"] ? " selected=\"selected\"" : "")."\">".clerkship_categories_title($result["category_id"])." (".date("Y-m-d", $result["category_start"])." &gt; ".date("Y-m-d", $result["category_finish"]).")</option>\n";	
+										echo "<option value=\"".(int)$result["category_id"]."\"".(isset($PROCESSED["category_id"]) && $PROCESSED["category_id"] == (int)$result["category_id"] ? " selected=\"selected\"" : "")."\">".clerkship_categories_title($result["category_id"])." (".date("Y-m-d", $result["category_start"])." &gt; ".date("Y-m-d", $result["category_finish"]).")</option>\n";
 									}
 								}
 							} else {
@@ -992,7 +992,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								echo "<option value=\"".$i."\"".(($i == $duration) ? " selected=\"selected\"" : "").">".$i."</option>\n";
 							}
 							echo "</select>\n<div id=\"auto_end_date\" class=\"content-small\" style=\"display: none\"></div>";
-							
+
 						?>
 						</td>
 					</tr>
@@ -1168,14 +1168,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 				break;
 			}
 		} else {
-			
+
 			$query		= "	SELECT *
 							FROM `".CLERKSHIP_DATABASE."`.`events`
 							WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` = ".$db->qstr($EVENT_ID)."
 							AND `event_type` != 'elective'";
 			if ($event_info	= $db->GetRow($query)) {
 				$user_ids_dirty = $db->GetAll("SELECT `etype_id` FROM `".CLERKSHIP_DATABASE."`.`event_contacts` WHERE `event_id` = ".$db->qstr($EVENT_ID));
-				
+
 				$user_ids = array();
 				foreach ($user_ids_dirty as $user_id) {
 					$user_ids[] = $user_id["etype_id"];
@@ -1196,10 +1196,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								$ERROR++;
 								$ERRORSTR[] = "You must select a user to add this event to. Please be sure that you select at least one user to add this event to from the interface.";
 							}
-							
+
 							if(strlen(trim($_POST["category_id"])) < 1) {
 								$ERROR++;
-								$ERRORSTR[] = "You must select a child category for this event to take place in.";	
+								$ERRORSTR[] = "You must select a child category for this event to take place in.";
 							} else {
 								if(clerkship_categories_children_count(trim($_POST["category_id"])) > 0) {
 									$ERROR++;
@@ -1208,10 +1208,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 									$PROCESSED["category_id"] = trim($_POST["category_id"]);
 								}
 							}
-							
+
 							if($_POST["region_id"] == "new") {
 								if(trim($_POST["new_region"]) != "") {
-									$query	= "	SELECT `region_id` FROM `".CLERKSHIP_DATABASE."`.`regions` 
+									$query	= "	SELECT `region_id` FROM `".CLERKSHIP_DATABASE."`.`regions`
 												WHERE UPPER(`region_name`) = ".$db->qstr(strtoupper(trim($_POST["new_region"])), get_magic_quotes_gpc());
 									$result	= $db->GetRow($query);
 									if($result) {
@@ -1221,12 +1221,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 											$PROCESSED["region_id"] = (int) $db->Insert_Id();
 										} else {
 											$ERROR++;
-											$ERRORSTR[] = "Unable to insert your new region information into the database. Please notify the MEdTech Unit of this error.";	
+											$ERRORSTR[] = "Unable to insert your new region information into the database. Please notify the MEdTech Unit of this error.";
 										}
 									}
 								} else {
 									$ERROR++;
-									$ERRORSTR[] = "You selected that you were adding a new region; however, you did not enter a name for this new region.";	
+									$ERRORSTR[] = "You selected that you were adding a new region; however, you did not enter a name for this new region.";
 								}
 							} elseif(trim($_POST["region_id"]) != "" && ($region_id = clean_input($_POST["region_id"], array("trim", "int")))) {
 								$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`regions` WHERE `region_id` = ".$db->qstr($region_id);
@@ -1246,21 +1246,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								$ERROR++;
 								$ERRORSTR[] = "You must select a region that this event resides in.";
 							}
-							
+
 							if(strlen(trim($_POST["event_title"])) < 1) {
 								$ERROR++;
-								$ERRORSTR[] = "You must enter a title for this event or choose the auto generated one.";	
+								$ERRORSTR[] = "You must enter a title for this event or choose the auto generated one.";
 							} else {
 								$PROCESSED["event_title"] = trim($_POST["event_title"]);
 							}
-			
+
 							// Not Required
 							if(strlen(trim($_POST["event_desc"])) > 0) {
 								$PROCESSED["event_desc"] = trim($_POST["event_desc"]);
 							} else {
 								$PROCESSED["event_desc"] = "";
 							}
-			
+
 							$event_dates = validate_calendars("event", true, true);
 							if ((isset($event_dates["start"])) && ((int) $event_dates["start"])) {
 								$PROCESSED["event_start"] = (int) $event_dates["start"];
@@ -1268,14 +1268,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								$ERROR++;
 								$ERRORSTR[] = "The <strong>Event Start</strong> field is required if this is to appear on the calendar.";
 							}
-					
+
 							if ((isset($event_dates["finish"])) && ((int) $event_dates["finish"])) {
 								$PROCESSED["event_finish"] = (int) $event_dates["finish"];
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "The <strong>Event Finish</strong> field is required if this is to appear on the calendar.";
 							}
-			
+
 							if(strlen(trim($_POST["event_status"])) < 1) {
 								$ERROR++;
 								$ERRORSTR[] = "Please select the status of this category after you have saved it.";
@@ -1299,7 +1299,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								}
 								//Delete apartment schedule info for this student if the location has changed.
 								if (($PROCESSED["region_id"] != $event_info["region_id"]) || ($event_info["event_start"] != $PROCESSED["event_start"]) ||  ($event_info["event_finish"] != $PROCESSED["event_finish"])) {
-									
+
 									if(!notify_regional_education("change-critical", $EVENT_ID)) {
 										system_log_data("error", "Unable to notify the regional education office that event_id [".$EVENT_ID."] endured a critical change.");
 									}
@@ -1314,17 +1314,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					break;
 					default :
 						// No error checking for step 1.
-					break;	
+					break;
 				}
-				
+
 				// PAGE DISPLAY
 				switch($STEP) {
 					case "2" :			// Step 2
 						$ONLOAD[] = "setTimeout('window.location=\'".ENTRADA_URL."/admin/clerkship/clerk?ids=".$_POST["ids"][0]."\'', 5000)";
-			
+
 						$SUCCESS++;
 						$SUCCESSSTR[] = "You have successfully edited this event on ".@count($_POST["ids"])." student".((@count($_POST["ids"]) != "1") ? "s calendars.<br /><br />You will now be redirected to the first students calendar." : " and you're being redirected back to their calendar.")."<br /><br />If you do not wish to wait, please <a href=\"".ENTRADA_URL."/admin/clerkship/clerk?ids=".$_POST["ids"][0]."\">click here</a>.";
-			
+
 						echo display_success($SUCCESSSTR);
 					break;
 					default :				// Step 1
@@ -1335,7 +1335,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						} else {
 							$CATEGORY_ID	= 0;
 						}
-						
+
 						$HEAD[]	= "
 									<script type=\"text/javascript\">
 									function selectCategory(category_id) {
@@ -1344,11 +1344,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										return;
 									}
 									</script>";
-			
+
 						$DECODE_HTML_ENTITIES	= true;
-						
+
 						$ONLOAD[]	= "selectCategory(".($CATEGORY_ID ? $CATEGORY_ID : "0").")";
-						
+
 						?>
 						<span class="content-heading">Editing Core Rotation</span>
 						<br />
@@ -1394,7 +1394,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								$region_results	= $db->GetAll($region_query);
 								if($region_results) {
 									foreach($region_results as $region_result) {
-										echo "<option value=\"".$region_result["region_id"]."\"".(($PROCESSED["region_id"] == $region_result["region_id"]) ? " SELECTED" : "").">".html_encode($region_result["region_name"])."</option>\n";	
+										echo "<option value=\"".$region_result["region_id"]."\"".(($PROCESSED["region_id"] == $region_result["region_id"]) ? " SELECTED" : "").">".html_encode($region_result["region_name"])."</option>\n";
 									}
 								}
 								?>
@@ -1426,7 +1426,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<?php
 							$event_start	= $PROCESSED["event_start"];
 							$event_finish	= $PROCESSED["event_finish"];
-							echo generate_calendars("event", "", true, true, ((isset($event_start)) ? $event_start : time()), true, true, ((isset($event_finish)) ? $event_finish : 0));				
+							echo generate_calendars("event", "", true, true, ((isset($event_start)) ? $event_start : time()), true, true, ((isset($event_finish)) ? $event_finish : 0));
 						?>
 						<tr>
 							<td colspan="3" style="vertical-align: top"><label for="event_desc" class="form-nrequired">Private notes on this student:</label></td>
@@ -1446,7 +1446,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										echo (($status["visible"]) ? "<option value=\"".$key."\"".(($PROCESSED["event_status"] == $key) ? " SELECTED" : "").">".$status["name"]."</option>\n" : "");
 									}
 									?>
-								</select> 
+								</select>
 							</td>
 						</tr>
 						<?php if(@count($user_ids) > 1) : ?>
@@ -1473,16 +1473,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						</table>
 						</form>
 						<?php
-					break;	
+					break;
 				}
 			} else {
 				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
-	
+
 				$ERROR++;
 				$ERRORSTR[]	= "This Event ID is not valid<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
-			
+
 				echo display_error();
-			
+
 				application_log("error", "Error, invalid Event ID [".$EVENT_ID."] supplied for editing a clerkship elective in module [".$MODULE."].");
 			}
 		}
@@ -1491,9 +1491,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 
 		$ERROR++;
 		$ERRORSTR[]	= "You must provide a valid Event ID<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
-	
+
 		echo display_error();
-	
+
 		application_log("error", "Error, invalid Event ID [".$EVENT_ID."] supplied for clerkship elective in module [".$MODULE."].");
 	}
 }

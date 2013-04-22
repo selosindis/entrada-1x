@@ -144,7 +144,7 @@ function profile_update_personal_info() {
 					break;
 					default :
 						if ($_POST["custom"][$field["department_id"]][$field_id]) {
-							if (strlen($_POST["custom"][$field["department_id"]][$field_id]) > $field["length"]) {
+							if ($field["length"] != NULL && strlen($_POST["custom"][$field["department_id"]][$field_id]) > $field["length"]) {
 								add_error("<strong>".$field["title"]."</strong> has a character limit of <strong>".$field["length"]."</strong> and you have entered <strong>".strlen($_POST["custom"][$field["department_id"]][$field_id])."</strong> characters. Please edit your response and re-save your profile.");
 							} else {
 								$PROCESSED["custom"][$field_id] = clean_input($_POST["custom"][$field["department_id"]][$field_id], array("trim", strtolower($field["type"]) == "richtext" ? "html" : "striptags"));

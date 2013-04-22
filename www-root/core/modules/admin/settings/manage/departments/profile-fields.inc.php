@@ -106,9 +106,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					$PROCESSED["id"] = $tmp_input;
 				}
 				
-				$PROCESSED["active"] = 0;
-				
-				$db->AutoExecute("profile_custom_fields", $PROCESSED, "UPDATE", "`id` = ".$db->qstr($PROCESSED["id"]));
+				if ($PROCESSED["id"]) {
+					$PROCESSED["active"] = 0;
+
+					if($db->AutoExecute("profile_custom_fields", $PROCESSED, "UPDATE", "`id` = ".$db->qstr($PROCESSED["id"]))) {
+						echo json_encode(array("status" => "success"));
+					}
+				} else {
+					echo json_encode(array("status" => "error", "data" => "Invalid id provided."));
+				}
 				
 			break;
 			case "fetch_field" :
@@ -129,6 +135,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				}
 				
 			break;
+			case "save_order" :
+				if (!empty($_POST["id"])) {
+					$PROCESSED["id"] = (int) clean_input($_POST["id"], array("numeric"));
+				}
+				if (!empty($_POST["order"]) || $_POST["order"] == 0) {
+					$PROCESSED["order"] = (int) $_POST["order"];
+				}
+				if (is_int($PROCESSED["id"]) && is_int($PROCESSED["order"])) {
+					$query = "UPDATE `profile_custom_fields` SET `order` = ".$db->qstr($PROCESSED["order"])." WHERE `id` = ".$db->qstr($PROCESSED["id"]);
+					if ($db->Execute($query)) {
+						echo json_encode(array("status" => "success"));
+					}
+				}
+			break;
 			default:
 			break;
 		}
@@ -143,31 +163,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	<script type="text/javascript">
 	jQuery(function(){
 		jQuery(".field-action").tooltip();
-		jQuery(".field-action").on("click", function() {
-			var id = jQuery(this).parent().parent().attr("data-id");
-			if (jQuery(this).hasClass("edit-field")) {
-				jQuery.ajax({
-					url : "<?php echo ENTRADA_URL; ?>/admin/settings/manage/departments?section=profile-fields&org=<?php echo $ENTRADA_USER->getActiveOrganisation(); ?>&department_id=<?php echo $department_id; ?>",
-					data : "ajax_action=fetch_field&id=" + id,
-					type : "post",
-					success : function(data) {
-						var json_data = JSON.parse(data);
-						jQuery("#add_field").modal('show');
-						jQuery("#add_field #field_title").attr("value", json_data.data.title);
-						jQuery("#add_field #field_length").attr("value", json_data.data.length);
-						jQuery("#add_field #field_type option[value="+json_data.data.type.toLowerCase()+"]").attr("selected", "selected");
-						if (json_data.data.required == "1") {
-							jQuery("#add_field #field_required").attr("checked", "checked");
-						}
-						jQuery("#add_mode").attr("value", "update");
-						jQuery("#add_field #id").attr("value", id);
-					}
-				})
-			} else if (jQuery(this).hasClass("delete-field")) {
-				jQuery("#delete_field").attr("data-id", jQuery(this).parent().parent().attr("data-id")).modal("show");
-			}
-			return false;
-		});
 		jQuery("#delete_btn").on("click", function() {
 			var data_id = jQuery("#delete_field").attr("data-id");
 			jQuery.ajax({
@@ -179,13 +174,57 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					jQuery("#delete_field").attr("data-id", "").modal("hide");
 				}
 			})
+			return false;
 		});
 		jQuery("#delete_field").on("hide", function() {
 			jQuery(this).attr("data-id", "");
 		});
+		var reordering = false;
+		jQuery("#field-list tbody tr").on("drag", function() {
+			if (reordering == false) {
+				reordering = true;
+			}
+		});
+		var canSave = false;
 		jQuery("#reorder").on("click", function() {
-			alert("reorder clicked");
+			if (canSave == false) {
+				jQuery(this).html("Save Order");
+				var cancel_reorder = document.createElement("a");
+				jQuery(cancel_reorder).addClass("btn").addClass("pull-left").attr("id", "reorder-cancel").css("margin-left", "10px").html("Cancel").appendTo(jQuery("#reorder").parent());
+				jQuery(".action .field-action").hide();
+				jQuery(".action").append("<i class=\"icon-resize-vertical reorder-handle\"></i>");
+				jQuery("#field-list tbody").sortable({
+					helper: "clone"
+				}).disableSelection();
+				canSave = true;
+			} else {
+				var i = 0;
+				jQuery("#field-list tbody tr").each(function() {
+					
+					jQuery.ajax({
+						url : "<?php echo ENTRADA_URL; ?>/admin/settings/manage/departments?section=profile-fields&org=<?php echo $ENTRADA_USER->getActiveOrganisation(); ?>&department_id=<?php echo $department_id; ?>",
+						data : "ajax_action=save_order&id=" + jQuery(this).attr("data-id") + "&order=" + i,
+						type : "post",
+						success: function(data) {
+						}
+					});
+					
+					i++;
+				});
+				jQuery(this).html("Reorder");
+				jQuery("#reorder-cancel, .reorder-handle").remove();
+				jQuery(".action .field-action").show();
+				canSave = false;
+			}
 			return false;
+		});
+		jQuery(".row-fluid").delegate("#reorder-cancel", "click", function() {
+			if (reordering == true) {
+				jQuery("#field-list tbody").sortable('cancel');
+			}
+			jQuery("#reorder-cancel").remove();
+			jQuery(".reorder-handle").remove();
+			jQuery(".action .field-action").show();
 		});
 		jQuery("#add_field_btn").on("click", function() {
 			jQuery("#add_field #field_title").attr("value", "");
@@ -222,7 +261,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							jQuery(required).html("<i class=\"" + (json_data.data.required == "1" ? "icon-ok-sign" : "icon-remove-sign") + "\"></i>");
 
 							var edit = document.createElement("td");
-							jQuery(edit).html('<a href="#" class="field-action edit-field" data-toggle="tooltip" title="Edit Field"><i class="icon-edit"></i></a>');
+							jQuery(edit).addClass("action");
+							jQuery(edit).html('<a href="#" class="field-action edit-field" data-toggle="tooltip" title="Edit Field"><i class="icon-edit"></i></a><a href="#" class="field-action delete-field" data-toggle="tooltip" title="Delete Field"><i class="icon-trash"></i></a>');
 
 							jQuery(new_row).append(title).append(type).append(length).append(required).append(edit);
 
@@ -241,9 +281,40 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			});
 			return false;
 		});
+		jQuery(".row-fluid").delegate(".field-action", "click", function() {
+			var id = jQuery(this).parent().parent().attr("data-id");
+			if (jQuery(this).hasClass("edit-field")) {
+				jQuery.ajax({
+					url : "<?php echo ENTRADA_URL; ?>/admin/settings/manage/departments?section=profile-fields&org=<?php echo $ENTRADA_USER->getActiveOrganisation(); ?>&department_id=<?php echo $department_id; ?>",
+					data : "ajax_action=fetch_field&id=" + id,
+					type : "post",
+					success : function(data) {
+						var json_data = JSON.parse(data);
+						jQuery("#add_field").modal('show');
+						jQuery("#add_field #field_title").attr("value", json_data.data.title);
+						jQuery("#add_field #field_length").attr("value", json_data.data.length);
+						jQuery("#add_field #field_type option[value="+json_data.data.type.toLowerCase()+"]").attr("selected", "selected");
+						if (json_data.data.required == "1") {
+							jQuery("#add_field #field_required").attr("checked", "checked");
+						}
+						jQuery("#add_mode").attr("value", "update");
+						jQuery("#add_field #id").attr("value", id);
+					}
+				})
+			} else if (jQuery(this).hasClass("delete-field")) {
+				jQuery("#delete_field").attr("data-id", jQuery(this).parent().parent().attr("data-id")).modal("show");
+			}
+			return false;
+		});
 	});
 	</script>
+	<style type="text/css">
+		.reorder-handle {cursor:pointer;}
+	</style>
 	<h1>Custom Profile Fields</h1>
+	<div class="display-generic">
+		Department specific profile fields can be defined here. These fields are filled out by users in their profiles, which are pulled in to department websites. The responses to these fields should be considered public information.</p>
+	</div>
 	<?php echo departments_nav($department_id, "profile-fields"); ?>
 	<div class="row-fluid">
 		<a href="#" class="btn btn-navbar pull-left" id="reorder">Reorder</a>

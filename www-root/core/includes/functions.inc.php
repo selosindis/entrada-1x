@@ -16903,6 +16903,7 @@ function fetch_department_fields($proxy_id = NULL) {
 					AND (b.`proxy_id` = ".$db->qstr($user->getID())." OR b.`proxy_id` IS NULL)
 					WHERE a.`department_id` IN ('".implode("','", $department_list)."')
 					AND a.`organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
+					AND a.`active` = '1'
 					GROUP BY a.`id`
 					ORDER BY a.`organisation_id`, a.`department_id`, a.`order`";
 		$dep_custom_fields = $db->GetAll($query);

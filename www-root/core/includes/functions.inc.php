@@ -3827,7 +3827,7 @@ function generate_calendar($fieldname, $display_name = "", $required = false, $c
 			$output .= "	<option value=\"".(($minute < 10) ? "0" : "").$minute."\"".(($minute == $time_min) ? " selected=\"selected\"" : "").">".(($minute < 10) ? "0" : "").$minute."</option>\n";
 		}
 		$output .= "		</select>\n";
-		$output .= "		&nbsp;( <span class=\"content-small\" id=\"".$fieldname."_display\"></span> )\n";
+		$output .= "		<span class=\"time-wrapper\">&nbsp;( <span class=\"content-small\" id=\"".$fieldname."_display\"></span> )</span>\n";
 	}
 	if($auto_end_date) {
 		$output .= "<div id=\"auto_end_date\" class=\"content-small\" style=\"display: none\"></div>";
@@ -16871,4 +16871,50 @@ function moveImage($source, $id, $coords, $dimensions, $type = "user", $sizes = 
 	}
 
 	return filesize(STORAGE_USER_PHOTOS . "/" . $id . "-upload");
+}
+
+/*
+ * A function to fetch the department custom fields for a user
+ */
+function fetch_department_fields($proxy_id = NULL) {
+	global $db, $ENTRADA_USER;
+	if ($proxy_id == NULL) {
+		$user = $ENTRADA_USER;
+	} else {
+		$user = User::get($proxy_id);
+	}
+	/*
+	 * Fetch the departments this use is a part of.
+	 */
+	$departments = get_user_departments($user->getID());
+	
+	if ($departments) {
+		
+		foreach ($departments as $department) {
+			$department_list[] = (int) $department["department_id"];
+		}
+		/*
+		* Fetch the custom fields and responses for the user.
+		*/
+		$query = "	SELECT a.*, b.`value`
+					FROM `profile_custom_fields` AS a
+					LEFT JOIN `profile_custom_responses` AS b
+					ON a.`id` = b.`field_id`
+					AND (b.`proxy_id` = ".$db->qstr($user->getID())." OR b.`proxy_id` IS NULL)
+					WHERE a.`department_id` IN ('".implode("','", $department_list)."')
+					AND a.`organisation_id` = ".$db->qstr($user->getActiveOrganisation())."
+					GROUP BY a.`id`
+					ORDER BY a.`organisation_id`, a.`department_id`, a.`order`";
+		$dep_custom_fields = $db->GetAll($query);
+
+		if ($dep_custom_fields) {
+		   foreach ($dep_custom_fields as $field) {
+			   $custom_fields[$field["department_id"]][$field["id"]] = $field;
+		   }
+		}
+		
+	}
+	
+	return $custom_fields;
+	
 }

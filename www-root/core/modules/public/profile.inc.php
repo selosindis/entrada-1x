@@ -125,6 +125,41 @@ function add_profile_sidebar () {
  */
 function profile_update_personal_info() {
 	global $db, $PROCESSED, $PROFILE_NAME_PREFIX, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $NOTICE, $NOTICESTR, $PROCESSED_PHOTO, $PROCESSED_PHOTO_STATUS, $PROCESSED_NOTIFICATIONS, $VALID_MIME_TYPES, $ENTRADA_USER;
+	
+	if (isset($_POST["custom"]) && $_POST["custom"]) {
+		/*
+		* Fetch the custom fields
+		*/
+		$query = "SELECT * FROM `profile_custom_fields` WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())." ORDER BY `organisation_id`, `department_id`, `id`";
+		$dep_fields = $db->GetAssoc($query);
+		if ($dep_fields) {
+			foreach ($dep_fields as $field_id => $field) {
+				switch (strtolower($field["type"])) {
+					case "checkbox" :
+						if (isset($_POST["custom"][$field["department_id"]][$field_id])) {
+							$PROCESSED["custom"][$field_id] = "1";
+						} else {
+							$PROCESSED["custom"][$field_id] = "0";
+						}
+					break;
+					default :
+						if ($_POST["custom"][$field["department_id"]][$field_id]) {
+							if (strlen($_POST["custom"][$field["department_id"]][$field_id]) > $field["length"]) {
+								add_error("<strong>".$field["title"]."</strong> has a character limit of <strong>".$field["length"]."</strong> and you have entered <strong>".strlen($_POST["custom"][$field["department_id"]][$field_id])."</strong> characters. Please edit your response and re-save your profile.");
+							} else {
+								$PROCESSED["custom"][$field_id] = clean_input($_POST["custom"][$field["department_id"]][$field_id], array("trim", strtolower($field["type"]) == "richtext" ? "html" : "striptags"));
+							}
+						} else {
+							if ($field["mandatory"] == "1") {
+								add_error("<strong>".$field["title"]."</strong> is a required field, please enter a response and re-save your profile.");
+							}
+						}
+					break;
+				}
+			}
+		}
+	}
+	
 	if ((isset($_POST["prefix"])) && (@in_array(trim($_POST["prefix"]), $PROFILE_NAME_PREFIX))) {
 		$PROCESSED["prefix"] = trim($_POST["prefix"]);
 	} else {
@@ -229,14 +264,23 @@ function profile_update_personal_info() {
 
 		$PROCESSED["prov_state"] = ($PROCESSED["province_id"] ? $PROCESSED["province_id"] : ($PROCESSED["province"] ? $PROCESSED["province"] : ""));
 	}
-	
-	if (!$ERROR) {			
+	if (!$ERROR) {
 		if ($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
 			$SUCCESS++;
 			$SUCCESSSTR[] = "Your account profile has been successfully updated.";
 
 			application_log("success", "User successfully updated their profile.");
 
+			if (isset($PROCESSED["custom"])) {
+				foreach ($PROCESSED["custom"] as $field_id => $value) {
+					$query = "DELETE FROM `profile_custom_responses` WHERE `field_id` = ".$db->qstr($field_id)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+					$db->Execute($query);
+
+					$query = "INSERT INTO `profile_custom_responses` (`field_id`, `proxy_id`, `value`) VALUES (".$db->qstr($field_id).", ".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($value).")"; 
+					$db->Execute($query);
+				}
+			}
+			
 		} else {
 			$ERROR++;
 			$ERRORSTR[] = "We were unfortunately unable to update your profile at this time. The system administrator has been informed of the problem, please try again later.";

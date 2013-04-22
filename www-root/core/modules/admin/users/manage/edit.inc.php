@@ -61,6 +61,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($PROXY_ID);
 		$user_record = $db->GetRow($query);
 		if ($user_record) {
+			
 			$BREADCRUMB[] = array("url" => "", "title" => "Edit Profile");
 
 			$PROCESSED_ACCESS = array();
@@ -69,6 +70,41 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			// Error Checking
 			switch ($STEP) {
 				case 2 :
+					
+					if (isset($_POST["custom"]) && $_POST["custom"]) {
+						/*
+						* Fetch the custom fields
+						*/
+						$query = "SELECT * FROM `profile_custom_fields` WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())." ORDER BY `organisation_id`, `department_id`, `id`";
+						$dep_fields = $db->GetAssoc($query);
+						if ($dep_fields) {
+							foreach ($dep_fields as $field_id => $field) {
+								switch (strtolower($field["type"])) {
+									case "checkbox" :
+										if (isset($_POST["custom"][$field["department_id"]][$field_id])) {
+											$PROCESSED["custom"][$field_id] = "1";
+										} else {
+											$PROCESSED["custom"][$field_id] = "0";
+										}
+									break;
+									default :
+										if ($_POST["custom"][$field["department_id"]][$field_id]) {
+											if (strlen($_POST["custom"][$field["department_id"]][$field_id]) > $field["length"]) {
+												add_error("<strong>".$field["title"]."</strong> has a character limit of <strong>".$field["length"]."</strong> and you have entered <strong>".strlen($_POST["custom"][$field["department_id"]][$field_id])."</strong> characters. Please edit your response and re-save your profile.");
+											} else {
+												$PROCESSED["custom"][$field_id] = clean_input($_POST["custom"][$field["department_id"]][$field_id], array("trim", strtolower($field["type"]) == "richtext" ? "html" : "striptags"));
+											}
+										} else {
+											if ($field["required"] == "1") {
+												add_error("<strong>".$field["title"]."</strong> is a required field, please enter a response and re-save your profile.");
+											}
+										}
+									break;
+								}
+							}
+						}
+					}
+					
 					$permissions = json_decode($_POST["permissions"], true);
 					$permissions = json_decode($permissions["acl"], true);
 
@@ -557,6 +593,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                                     $db->AutoExecute("group_members", $gmember, "INSERT");
                                 }
                             }
+							
+							if (isset($PROCESSED["custom"])) {
+								foreach ($PROCESSED["custom"] as $field_id => $value) {
+									$query = "DELETE FROM `profile_custom_responses` WHERE `field_id` = ".$db->qstr($field_id)." AND `proxy_id` = ".$db->qstr($PROXY_ID);
+									$db->Execute($query);
+									
+									$query = "INSERT INTO `profile_custom_responses` (`field_id`, `proxy_id`, `value`) VALUES (".$db->qstr($field_id).", ".$db->qstr($PROXY_ID).", ".$db->qstr($value).")"; 
+									$db->Execute($query);
+								}
+							}
 
 							$url = ENTRADA_URL."/admin/users/manage?id=".$PROXY_ID;
 
@@ -585,18 +631,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($PROXY_ID)." AND `app_id` = ".$db->qstr(AUTH_APP_ID);
 					$PROCESSED_ACCESS = $db->GetRow($query);
 
-					$query = "	SELECT d.`department_id`, d.`department_title`
-								FROM `".AUTH_DATABASE."`.`user_departments` ud
-								JOIN `".AUTH_DATABASE."`.`departments` d
-								ON ud.`dep_id` = d.`department_id`
-								WHERE ud.`user_id` = ".$db->qstr($PROXY_ID);
-					$results = $db->GetAll($query);
-					if ($results) {
-						foreach ($results as $result) {
-							$PROCESSED_DEPARTMENTS[$result["department_id"]] = $result["department_title"];
-						}
+					/*
+					 * Get the user departments and the custom fields for the departments.
+					 */
+					$user_departments = get_user_departments($PROXY_ID);
+					foreach ($user_departments as $department) {
+					   $PROCESSED_DEPARTMENTS[$department["department_id"]] = $department["department_title"];
 					}
-
+					ksort($PROCESSED_DEPARTMENTS);
+					$custom_fields = fetch_department_fields($PROXY_ID);
+					
 					//Initialize Organisation ID array for initial page display
 					$organisation_ids = array();
 					$query = "SELECT `organisation_id` FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($PROXY_ID);
@@ -661,7 +705,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					$_SESSION["tmp"]["current_role"] = $current_role;
 
 
-					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+//					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 					$HEAD[] = "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 					$HEAD[] = "<style type=\"text/css\"> .dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
 					$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/selectchained.js\"></script>\n";
@@ -750,15 +794,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								</select>
 							</div>
 						</div>
-						<div class="control-group">
-							
-							<div class="controls">
-								<table>
-									<?php echo generate_calendars("access", "Access", true, true, ((isset($PROCESSED_ACCESS["access_starts"])) ? $PROCESSED_ACCESS["access_starts"] : time()), true, false, ((isset($PROCESSED_ACCESS["access_expires"])) ? $PROCESSED_ACCESS["access_expires"] : 0)); ?>
-								</table>
-							</div>
+						<div class="row-fluid">
+							<table>
+								<?php echo generate_calendars("access", "Access", true, true, ((isset($PROCESSED_ACCESS["access_starts"])) ? $PROCESSED_ACCESS["access_starts"] : time()), true, false, ((isset($PROCESSED_ACCESS["access_expires"])) ? $PROCESSED_ACCESS["access_expires"] : 0)); ?>
+							</table>
 						</div>
+						
 						<h2>Personal Information</h2>
+						
+						<?php
+						$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type`='1' AND `proxy_id` = ".$db->qstr($PROXY_ID);
+						$uploaded_photo = $db->GetRow($query);
+						if ($uploaded_photo && @file_exists(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload")) { ?>
+						<div class="pull-right">
+							<?php echo "<img src=\"".webservice_url("photo", array($user_record["id"], "upload"))."\" width=\"72\" height=\"100\" alt=\"".$user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]."\" title=\"".$user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]."\" class=\"current-".$user_record["id"]."\" id=\"uploaded_profile_pic_".$user_record["id"]."\" name=\"uploaded_profile_pic_".$user_record["id"]."\" />\n"; ?>
+						</div>
+						<?php } ?>
+						
 						<div class="control-group">
 							<label class="control-label" for="prefix">First Name:</label>
 							<div class="controls">
@@ -930,116 +982,113 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							?>
 							<h2><?php echo $org["organisation_title"]; ?></h2>
 							<div class="row-fluid">
-								<div class="span2"></div>
-								<div class="span10">
-								<table style="width: 100%;" id="<?php echo "perm_organisation_" . $org["organisation_id"]; ?>" >
-									<tbody>
-										<tr>
-											<td colspan="3"><h3>Profiles</h3></td>
-										</tr>
-								<?php
-								$query = "	SELECT ua.*, o.`organisation_id`, o.`organisation_title`, ud.`clinical`, ud.`entry_year`, ud.`grad_year`
-											FROM `".AUTH_DATABASE."`.`user_access` ua
-											JOIN `" . AUTH_DATABASE . "`.`organisations` o
-											ON ua.`organisation_id` = o.`organisation_id`
-											JOIN `".AUTH_DATABASE."`.`user_data` ud
-											ON ua.`user_id` = ud.`id`
-											AND ua.`organisation_id` = " . $db->qstr($org["organisation_id"]) . "
-											WHERE ua.`user_id` = " . $db->qstr($PROXY_ID) ."
-											AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
+								<div class="span12">
+									<table style="width: 100%;" id="<?php echo "perm_organisation_" . $org["organisation_id"]; ?>" >
+										<tbody>
+											<tr>
+												<td colspan="3"><h3>Profiles</h3></td>
+											</tr>
+									<?php
+									$query = "	SELECT ua.*, o.`organisation_id`, o.`organisation_title`, ud.`clinical`, ud.`entry_year`, ud.`grad_year`
+												FROM `".AUTH_DATABASE."`.`user_access` ua
+												JOIN `" . AUTH_DATABASE . "`.`organisations` o
+												ON ua.`organisation_id` = o.`organisation_id`
+												JOIN `".AUTH_DATABASE."`.`user_data` ud
+												ON ua.`user_id` = ud.`id`
+												AND ua.`organisation_id` = " . $db->qstr($org["organisation_id"]) . "
+												WHERE ua.`user_id` = " . $db->qstr($PROXY_ID) ."
+												AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
 
-								$results = $db->GetAll($query);
-								if ($results) {
-									foreach ($results as $result) {
-										switch (strtolower($result["group"])) {
-											case "faculty":
-												$checked = ($result["clinical"] ? "checked" : "");
-												$options = "<input id=\"clinical_" . $result["organisation_id"] . "\" name=\"clinical_"  . $result["organisation_id"] . "\" type=\"checkbox\" " . $checked . " /><label for=\"clincal" . $result["organisation_id"] . "\">This new user is a <strong>clinical</strong> faculty member.</label>";
-											break;
-											case "student":
-												$options = build_entry_grad_year_container($result["entry_year"], $result["grad_year"]);
-											break;
-											default:
-												$options = "";
-											break;
+									$results = $db->GetAll($query);
+									if ($results) {
+										foreach ($results as $result) {
+											switch (strtolower($result["group"])) {
+												case "faculty":
+													$checked = ($result["clinical"] ? "checked" : "");
+													$options = "<input id=\"clinical_" . $result["organisation_id"] . "\" name=\"clinical_"  . $result["organisation_id"] . "\" type=\"checkbox\" " . $checked . " /><label for=\"clincal" . $result["organisation_id"] . "\">This new user is a <strong>clinical</strong> faculty member.</label>";
+												break;
+												case "student":
+													$options = build_entry_grad_year_container($result["entry_year"], $result["grad_year"]);
+												break;
+												default:
+													$options = "";
+												break;
+											}
+											$query = "SELECT sg.`id`
+													  FROM " . AUTH_DATABASE . ".`system_groups` sg
+													  WHERE sg.`group_name` = " . $db->qstr(strtolower($result["group"]));
+											$group_id = $db->GetOne($query);
+
+											$query = "SELECT sr.`id`
+													  FROM " . AUTH_DATABASE . ".`system_roles` sr
+													  WHERE sr.`role_name` = " . $db->qstr(strtolower($result["role"]));
+											$role_id = $db->GetOne($query);
+
+											$initial_acl["access_id"] = $result["id"];
+											$initial_acl["org_id"] = $result["organisation_id"];
+											$initial_acl["group_id"] = $group_id;
+											$initial_acl["role_id"] = $role_id;
+											$initial_acl["clinical"] = $result["clinical"];
+											$initial_acl["entry_year"] = $result["entry_year"];
+											$initial_acl["grad_year"] = $result["grad_year"];
+											$initial_permissions[] = $initial_acl;
+
+											echo "<tr id=\"" . $result["organisation_id"] . "_" . $group_id . "_" . $role_id . "\">\n";
+											echo "	<td valign=\"top\"><label><strong>" . ucfirst($result["group"]) . " / " . ucfirst($result["role"]) . "</strong></label></td>\n";
+											echo "	<td valign=\"top\">" . $options . "</td>\n";
+											echo "	<td valign=\"top\"><a class=\"remove_perm\" href=\"#\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\"></a></td>\n";
+											echo "</tr>";
+
+											}
 										}
-										$query = "SELECT sg.`id`
-												  FROM " . AUTH_DATABASE . ".`system_groups` sg
-												  WHERE sg.`group_name` = " . $db->qstr(strtolower($result["group"]));
-										$group_id = $db->GetOne($query);
-
-										$query = "SELECT sr.`id`
-												  FROM " . AUTH_DATABASE . ".`system_roles` sr
-												  WHERE sr.`role_name` = " . $db->qstr(strtolower($result["role"]));
-										$role_id = $db->GetOne($query);
-
-										$initial_acl["access_id"] = $result["id"];
-										$initial_acl["org_id"] = $result["organisation_id"];
-										$initial_acl["group_id"] = $group_id;
-										$initial_acl["role_id"] = $role_id;
-										$initial_acl["clinical"] = $result["clinical"];
-										$initial_acl["entry_year"] = $result["entry_year"];
-										$initial_acl["grad_year"] = $result["grad_year"];
-										$initial_permissions[] = $initial_acl;
-
-										echo "<tr id=\"" . $result["organisation_id"] . "_" . $group_id . "_" . $role_id . "\">\n";
-										echo "	<td valign=\"top\"><label><strong>" . ucfirst($result["group"]) . " / " . ucfirst($result["role"]) . "</strong></label></td>\n";
-										echo "	<td valign=\"top\">" . $options . "</td>\n";
-										echo "	<td valign=\"top\"><a class=\"remove_perm\" href=\"#\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\"></a></td>\n";
-										echo "</tr>";
-
-										}
-									}
-									?>
-									</tbody>
-									<tfoot>
-										<tr>
-											<td colspan="3"><h3>Options</h3></td>
-										</tr>
-										<tr>
-											<td colspan="3">
-												<div class="control-group">
-													<label class="control-label" for="<?php echo "in_departments_" . $result["organisation_id"]; ?>">Departments</label>
-													<div class="controls">
-														<select id="<?php echo "in_departments_" . $result["organisation_id"]; ?>" name="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="">
-															<option value="0">-- Select Departments --</option>
-														<?php
-															foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
-																if ($org["organisation_id"] == $organisation_id){
-																	foreach($dlist as $d){
-																		if (!array_key_exists($d["department_id"], $PROCESSED_DEPARTMENTS)) {
-																			echo build_option($d["department_id"], $d["department_title"], $selected);
+										?>
+										</tbody>
+										<tfoot>
+											<tr>
+												<td colspan="3"><h3>Options</h3></td>
+											</tr>
+											<tr>
+												<td colspan="3" class="departments-list">
+													<div class="control-group">
+														<label class="control-label" for="<?php echo "in_departments_" . $result["organisation_id"]; ?>">Departments</label>
+														<div class="controls">
+															<select id="<?php echo "in_departments_" . $result["organisation_id"]; ?>" name="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="">
+																<option value="0">-- Select Departments --</option>
+															<?php
+																foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
+																	if ($org["organisation_id"] == $organisation_id){
+																		foreach($dlist as $d){
+																			if (!array_key_exists($d["department_id"], $PROCESSED_DEPARTMENTS)) {
+																				echo build_option($d["department_id"], $d["department_title"], $selected);
+																			}
 																		}
 																	}
 																}
-															}
-														?>
-														</select>
-														<div class="help-inline"><strong>Note:</strong> Selected departments will appear here.</div>
+															?>
+															</select>
+															<div class="help-inline"><strong>Note:</strong> Selected departments will appear here.</div>
+														</div>
 													</div>
-												</div>
-												<ol id="departments_container_<?php echo $result["organisation_id"]; ?>" class="sortableList" style="display: block;">
-												<?php
-												if (is_array($PROCESSED_DEPARTMENTS)) {
-													foreach($PROCESSED_DEPARTMENTS as $department_id => $department_title) {
-														$query = "	SELECT d.`department_id`, d.`department_title`
-																	FROM `".AUTH_DATABASE."`.`departments` d
-																	WHERE d.`department_id` = " . $db->qstr($department_id) . "
-																	AND d.`organisation_id` = " . $db->qstr($org["organisation_id"]);
-														$result = $db->GetRow($query);
-														if ($result) {
-															echo "<li id=\"dept_" . $department_id . "\"><img src=\"" . ENTRADA_URL . "/images/icon-apartment.gif\" alt=\"Department Icon\" title=\"\" width=\"16\" height=\"16\" />" . $department_title . " <a class=\"remove_dept\" href=\"\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\" alt=\"Delete\"></a></li>";
+													<ol id="departments_container_<?php echo $result["organisation_id"]; ?>" class="sortableList" style="display: block;">
+													<?php
+													if (is_array($PROCESSED_DEPARTMENTS)) {
+														foreach($PROCESSED_DEPARTMENTS as $department_id => $department_title) {
+															$query = "	SELECT d.`department_id`, d.`department_title`
+																		FROM `".AUTH_DATABASE."`.`departments` d
+																		WHERE d.`department_id` = " . $db->qstr($department_id) . "
+																		AND d.`organisation_id` = " . $db->qstr($org["organisation_id"]);
+															$result = $db->GetRow($query);
+															if ($result) {
+																echo "<li id=\"dept_" . $department_id . "\"><img src=\"" . ENTRADA_URL . "/images/icon-apartment.gif\" alt=\"Department Icon\" title=\"\" width=\"16\" height=\"16\" />" . $department_title . " <a class=\"remove_dept\" href=\"\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\" alt=\"Delete\"></a></li>";
+															}
 														}
 													}
-												}
-												?>
-												</ol>
-											</td>
-										</tr>
-									</tfoot>
-									<tbody>
-									</tbody>
-								</table>
+													?>
+													</ol>
+												</td>
+											</tr>
+										</tfoot>
+									</table>
 								</div>
 							</div>
 								<br />
@@ -1077,6 +1126,74 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								<span class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</span>
 							</div>
 						</div>
+						<?php 
+						load_rte();
+						if ($custom_fields) {
+							echo "<h2>Department Specific Information</h2>";
+							add_notice("The information below has been requested by departments the user is a member of. This information is considered public and may be published on department websites.");
+							echo display_notice();
+							echo "<div class=\"tabbable departments\">";
+							echo "<ul class=\"nav nav-tabs\">";
+							$i = 0;
+							foreach ($PROCESSED_DEPARTMENTS as $department_id => $department) {
+								if (count($custom_fields[$department_id]) >= 1) {
+									?>
+									<li class="<?php echo $i == 0 ? "active" : ""; ?>"><a data-toggle="tab" href="#dep-<?php echo $department_id; ?>"><?php echo strlen($department) > 15 ? substr($department, 0, 15)."..." : $department; ?></a></li>
+									<?php
+									$i++;
+								}
+							}
+							echo "</ul>";
+							
+							echo "<div class=\"tab-content\">";
+							$i = 0;
+							foreach ($PROCESSED_DEPARTMENTS as $department_id => $department) {
+								if (count($custom_fields[$department_id]) >= 1) {
+								echo "<div class=\"tab-pane ".($i == 0 ? "active" : "")."\" id=\"dep-".$department_id."\">";
+								echo "<h3>".$department."</h3>";
+								foreach ($custom_fields[$department_id] as $field) { ?>
+									<div class="control-group">
+										<label class="control-label <?php echo $field["required"] == "1" ? " form-required" : ""; ?>" for="<?php echo $field["name"]; ?>"><?php echo $field["title"]; ?></label>
+										<div class="controls">
+											<?php
+												$field["type"] = strtolower($field["type"]);
+												switch ($field["type"]) {
+													case "textarea" :
+														?>
+														<textarea id="<?php echo $field["name"]; ?>" class="input-xlarge expandable expanded" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>"><?php echo $field["value"]; ?></textarea>
+														<?php
+													break;
+													case "textinput" :
+														?>
+														<input type="text" id="<?php echo $field["name"]; ?>" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>" value="<?php echo $field["value"]; ?>" />
+														<?php
+													break;
+													case "richtext" :
+														?>
+														<textarea id="<?php echo $field["name"]; ?>" class="input-xlarge" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>"><?php echo $field["value"]; ?></textarea>
+														<?php
+													break;
+													case "checkbox" :
+														?>
+														<label class="checkbox"><input type="checkbox" id="<?php echo $field["name"]; ?>" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" value="<?php echo $field["value"]; ?>" <?php echo $field["value"] == "1" ? " checked=\"checked\"" : ""; ?> />
+														<?php echo $field["helptext"] ? $field["helptext"] : ""; ?></label>
+														<?php
+													break;
+												}
+											?>
+
+										</div>
+									</div>
+								<?php } 
+								echo "</div>";
+								$i++;
+								}
+							}
+							echo "</div>";
+							echo "</div>";
+						}
+						?>
+							
 						<br />
 						<div class="pull-left"><input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_RELATIVE; ?>/admin/users/manage?id=<?php echo $PROXY_ID; ?>'" /></div>
 						<div class="pull-right"><input type="submit" class="btn btn-primary" value="Save" /></div>
@@ -1086,6 +1203,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                 <?php echo build_entry_grad_year_container($PROCESSED["entry_year"], $PROCESSED["grad_year"]); ?>
             </div>
 			<style>
+				.departments textarea.expandable.expanded {min-height:60px;}
+				td.departments-list ol {margin-left:170px;}
+				.time-wrapper {display:none;}
 				td {
 					text-align: left;
 					white-space: normal;

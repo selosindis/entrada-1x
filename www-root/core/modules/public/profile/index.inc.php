@@ -26,12 +26,12 @@ if (!defined("IN_PROFILE")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	
-	$action = clean_input($_POST["action"], "alpha");
+	$ajax_action = clean_input($_POST["ajax_action"], "alpha");
 	
-	if ($action) {
+	if (!empty($ajax_action)) {
 		ob_clear_open_buffers();
 
-		switch ($action) {
+		switch ($ajax_action) {
 			case "uploadimage" :
 				$filesize = moveImage($_FILES["image"]["tmp_name"], $ENTRADA_USER->getID(), $_POST["coordinates"], $_POST["dimensions"]);
 
@@ -118,8 +118,8 @@ if (!defined("IN_PROFILE")) {
 		new_sidebar_item("Delegated Permissions", $sidebar_html, "delegated-permissions", "open");
 	}
 
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-	$HEAD[] = "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
+//	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+//	$HEAD[] = "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 	$HEAD[] = "<style type=\"text/css\"> .dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/profile.js\"></script>";
 
@@ -150,6 +150,17 @@ if (!defined("IN_PROFILE")) {
 	$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `".AUTH_DATABASE."`.`user_data`.`id`=".$db->qstr($ENTRADA_USER->getID());
 	$result	= $db->GetRow($query);
 	if ($result) {
+		
+		/*
+		 * Get the user departments and the custom fields for the departments.
+		 */
+		$user_departments = get_user_departments($ENTRADA_USER->getID());
+		foreach ($user_departments as $department) {
+			$departments[$department["department_id"]] = $department["department_title"];
+		}
+	
+		$custom_fields = fetch_department_fields();
+		
 		?>
 		<script type="text/javascript">
 		function provStateFunction(country_id) {
@@ -228,7 +239,7 @@ if (!defined("IN_PROFILE")) {
 			jQuery("#reset-hash").live("click", function() {
 				jQuery.ajax({
 					url : "<?php echo ENTRADA_URL; ?>/profile",
-					data : "action=generatehash",
+					data : "ajax_action=generatehash",
 					type : "post",
 					async : true,
 					success : function(data) {
@@ -244,7 +255,7 @@ if (!defined("IN_PROFILE")) {
 				if (!clicked.parent().hasClass(clicked.html().toLowerCase())) {
 					jQuery.ajax({
 						url : "<?php echo ENTRADA_URL; ?>/profile",
-						data : "action=togglephoto",
+						data : "ajax_action=togglephoto",
 						type : "post",
 						async : true,
 						success : function(data) {
@@ -364,7 +375,7 @@ if (!defined("IN_PROFILE")) {
 
 				var xhr = new XMLHttpRequest();
 				var fd = new FormData();
-				fd.append('action', 'uploadimage');
+				fd.append('ajax_action', 'uploadimage');
 				fd.append('image', imageFile);
 				fd.append('coordinates', jQuery("#coordinates").val());
 				fd.append('dimensions', jQuery("#dimensions").val());
@@ -649,6 +660,78 @@ if (!defined("IN_PROFILE")) {
 				</div>
 			</div>
 			<?php } ?>
+			
+			<?php
+			load_rte();
+			if ($custom_fields) {
+				echo "<h2>Department Specific Information</h2>";
+				add_notice("The information below has been requested by departments the user is a member of. This information is considered public and may be published on department websites.");
+				echo display_notice();
+				echo "<div class=\"tabbable departments\">";
+				echo "<ul class=\"nav nav-tabs\">";
+				$i = 0;
+				foreach ($departments as $department_id => $department) {
+					if (count($custom_fields[$department_id]) >= 1) {
+						?>
+						<li class="<?php echo $i == 0 ? "active" : ""; ?>"><a data-toggle="tab" href="#dep-<?php echo $department_id; ?>"><?php echo strlen($department) > 15 ? substr($department, 0, 15)."..." : $department; ?></a></li>
+						<?php
+						$i++;
+					}
+				}
+				echo "</ul>";
+
+				echo "<div class=\"tab-content\">";
+				$i = 0;
+				foreach ($departments as $department_id => $department) {
+					if (count($custom_fields[$department_id]) >= 1) {
+					echo "<div class=\"tab-pane ".($i == 0 ? "active" : "")."\" id=\"dep-".$department_id."\">";
+					echo "<h3>".$department."</h3>";
+					foreach ($custom_fields[$department_id] as $field) { ?>
+						<div class="control-group">
+							<label class="control-label <?php echo $field["required"] == "1" ? " form-required" : ""; ?>" for="<?php echo $field["name"]; ?>"><?php echo $field["title"]; ?></label>
+							<div class="controls">
+								<?php
+									$field["type"] = strtolower($field["type"]);
+									switch ($field["type"]) {
+										case "textarea" :
+											?>
+											<textarea id="<?php echo $field["name"]; ?>" class="input-xlarge expandable expanded" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>"><?php echo $field["value"]; ?></textarea>
+											<?php
+										break;
+										case "textinput" :
+											?>
+											<input type="text" id="<?php echo $field["name"]; ?>" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>" value="<?php echo $field["value"]; ?>" />
+											<?php
+										break;
+										case "richtext" :
+											?>
+											<textarea id="<?php echo $field["name"]; ?>" class="input-xlarge" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>"><?php echo $field["value"]; ?></textarea>
+											<?php
+										break;
+										case "checkbox" :
+											?>
+											<label class="checkbox"><input type="checkbox" id="<?php echo $field["name"]; ?>" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" value="<?php echo $field["value"]; ?>" <?php echo $field["value"] == "1" ? " checked=\"checked\"" : ""; ?> />
+											<?php echo $field["helptext"] ? $field["helptext"] : ""; ?></label>
+											<?php
+										break;
+									}
+								?>
+
+							</div>
+						</div>
+					<?php } 
+					echo "</div>";
+					$i++;
+					}
+				}
+				echo "</div>";
+				echo "</div>";
+			}
+			?>
+			
+			
+			
+			
 			<div class="control-group">
 				
 				<span class="controls">

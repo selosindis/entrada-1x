@@ -263,7 +263,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					</colgroup>
 					<thead>
 						<tr>
-							<td colspan="2"><h1>Edit Department</h1></td>
+							<td colspan="2">
+								<h1>Edit Department</h1>
+								<?php echo departments_nav($department_id, "edit"); ?>
+							</td>
 						</tr>
 					</thead>
 					<tfoot>

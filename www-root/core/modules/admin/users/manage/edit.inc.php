@@ -89,10 +89,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									break;
 									default :
 										if ($_POST["custom"][$field["department_id"]][$field_id]) {
-											if (strlen($_POST["custom"][$field["department_id"]][$field_id]) > $field["length"]) {
+											if ($field["length"] != NULL && strlen($_POST["custom"][$field["department_id"]][$field_id]) > $field["length"]) {
 												add_error("<strong>".$field["title"]."</strong> has a character limit of <strong>".$field["length"]."</strong> and you have entered <strong>".strlen($_POST["custom"][$field["department_id"]][$field_id])."</strong> characters. Please edit your response and re-save your profile.");
 											} else {
-												$PROCESSED["custom"][$field_id] = clean_input($_POST["custom"][$field["department_id"]][$field_id], array("trim", strtolower($field["type"]) == "richtext" ? "html" : "striptags"));
+												$PROCESSED["custom"][$field_id] = clean_input($_POST["custom"][$field["department_id"]][$field_id], array("trim", strtolower($field["type"]) == "richtext" ? "html" : (strtolower($field["type"]) == "twitter" ? "alphanumeric" : "striptags")));
 											}
 										} else {
 											if ($field["required"] == "1") {
@@ -100,6 +100,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											}
 										}
 									break;
+								}
+							}
+						}
+					}
+					
+					if (isset($_POST["publications"]) && $_POST["publications"]) {
+						foreach ($_POST["publications"] as $pub_type => $ppublications) {
+							foreach ($ppublications as $department_id => $publications) {
+								foreach ($publications as $publication_id => $status) {
+									$PROCESSED["publications"][$pub_type][$department_id][] = clean_input($publication_id, "numeric");
 								}
 							}
 						}
@@ -601,6 +611,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									
 									$query = "INSERT INTO `profile_custom_responses` (`field_id`, `proxy_id`, `value`) VALUES (".$db->qstr($field_id).", ".$db->qstr($PROXY_ID).", ".$db->qstr($value).")"; 
 									$db->Execute($query);
+								}
+							}
+							
+							if (isset($PROCESSED["publications"])) {
+								$query = "DELETE FROM `profile_publications` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+								if ($db->Execute($query)) {
+									foreach ($PROCESSED["publications"] as $pub_type => $ppublications) {
+										foreach ($ppublications as $dep_id => $publications) {
+											foreach ($publications as $publication) {
+												$query = "INSERT INTO `profile_publications` (`pub_type`, `pub_id`, `dep_id`, `proxy_id`) VALUES (".$db->qstr($pub_type).", ".$db->qstr($publication).", ".$db->qstr($dep_id).", ".$db->qstr($ENTRADA_USER->getID()).")";
+												$db->Execute($query);
+											}
+										}
+									}
 								}
 							}
 
@@ -1129,6 +1153,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						<?php 
 						load_rte();
 						if ($custom_fields) {
+							$pub_types = array (
+								"ar_poster_reports"				=> array("id_field" => "poster_reports_id", "title" => "title"),
+								"ar_peer_reviewed_papers"		=> array("id_field" => "peer_reviewed_papers_id", "title" => "title"),
+								"ar_non_peer_reviewed_papers"	=> array("id_field" => "non_peer_reviewed_papers_id", "title" => "title"),
+								"ar_book_chapter_mono"			=> array("id_field" => "book_chapter_mono_id", "title" => "title"),
+								"ar_conference_papers"			=> array("id_field" => "conference_papers_id", "title" => "lectures_papers_list")
+							);
 							echo "<h2>Department Specific Information</h2>";
 							add_notice("The information below has been requested by departments the user is a member of. This information is considered public and may be published on department websites.");
 							echo display_notice();
@@ -1164,6 +1195,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 														<?php
 													break;
 													case "textinput" :
+													case "twitter" :
+													case "link" :
 														?>
 														<input type="text" id="<?php echo $field["name"]; ?>" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>" value="<?php echo $field["value"]; ?>" />
 														<?php
@@ -1185,6 +1218,42 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										</div>
 									</div>
 								<?php } 
+								
+								echo "<h3>Publications on ".$department." Website</h3>";
+
+								foreach ($pub_types as $type_table => $data) {
+									$query = "	SELECT a.`".$data["id_field"]."` AS `id`, a.`".$data["title"]."` AS `title`, a.`year_reported`, b.`id` AS `dep_pub_id`
+												FROM `".$type_table."` AS a
+												LEFT JOIN `profile_publications` AS b
+												ON a.`proxy_id` = b.`proxy_id`
+												AND b.`pub_id` = a.`".$data["id_field"]."`
+												AND (b.`dep_id` = ".$db->qstr($department_id). " || b.`dep_id` IS NULL)
+												WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+									$pubs = $db->GetAll($query);
+									if ($pubs) { ?>
+										<h4><?php echo ucwords(str_replace("ar ", "", str_replace("_", " ", $type_table))); ?></h4>
+										<table width="100%" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-hover table-bordered table-nowrap">
+											<thead>
+												<tr>
+													<th>Title</th>
+													<th width="10%">Date</th>
+													<th width="8%">Visible</th>
+												</tr>
+											</thead>
+											<tbody>
+											<?php foreach ($pubs as $publication) { ?>
+												<tr data-id="<?php echo $publication["id"]; ?>">
+													<td><?php echo $publication["title"]; ?></td>
+													<td><?php echo $publication["year_reported"]; ?></td>
+													<td><input type="checkbox" name="publications[<?php echo str_replace("ar_", "", $type_table); ?>][<?php echo $department_id; ?>][<?php echo $publication["id"]; ?>]" <?php echo ($publication["dep_pub_id"] != NULL ? "checked=\"checked\"" : ""); ?> /></td>
+												</tr>
+											<?php } ?>
+											</tbody>
+										</table>
+										<?php
+									}
+								}
+								
 								echo "</div>";
 								$i++;
 								}

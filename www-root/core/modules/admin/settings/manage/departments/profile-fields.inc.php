@@ -64,7 +64,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				} else {
 					$errors["title"] = "A title is required.";
 				}
-				if (!empty($_POST["type"]) && ($_POST["type"] == "richtext" || $_POST["type"] == "textarea" || $_POST["type"] == "textinput" || $_POST["type"] == "checkbox")) {
+				if (!empty($_POST["type"]) && ($_POST["type"] == "richtext" || $_POST["type"] == "textarea" || $_POST["type"] == "textinput" || $_POST["type"] == "checkbox" || $_POST["type"] == "twitter" || $_POST["type"] == "link")) {
 					$PROCESSED["type"] = strtoupper(clean_input($_POST["type"], array("notags", "trim")));
 				} else {
 					$errors["type"] = "Invalid type selected.";
@@ -391,6 +391,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							<option value="textarea">Plain Text</option>
 							<option value="textinput">One Line Text</option>
 							<option value="checkbox">Checkbox</option>
+							<option value="twitter">Twitter</option>
+							<option value="link">Link</option>
 						</select>
 						<span class="help-inline"><?php echo html_encode($result["firstname"]." ".$result["lastname"]); ?></span>
 					</div>

@@ -707,6 +707,8 @@ if (!defined("IN_PROFILE")) {
 											<?php
 										break;
 										case "textinput" :
+										case "twitter" :
+										case "link" :
 											?>
 											<input type="text" id="<?php echo $field["name"]; ?>" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>" value="<?php echo $field["value"]; ?>" />
 											<?php
@@ -728,10 +730,9 @@ if (!defined("IN_PROFILE")) {
 							</div>
 						</div>
 					<?php }
+					
 					echo "<h3>Publications on ".$department." Website</h3>";
 					
-					?>
-					<?php
 					foreach ($pub_types as $type_table => $data) {
 						$query = "	SELECT a.`".$data["id_field"]."` AS `id`, a.`".$data["title"]."` AS `title`, a.`year_reported`, b.`id` AS `dep_pub_id`
 									FROM `".$type_table."` AS a

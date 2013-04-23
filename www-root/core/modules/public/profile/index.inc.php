@@ -212,6 +212,7 @@ if (!defined("IN_PROFILE")) {
 		<script src="<?php echo ENTRADA_URL; ?>/javascript/jquery/jquery.imgareaselect.min.js" type="text/javascript"></script>
 		<link href='<?php echo ENTRADA_URL; ?>/css/imgareaselect-default.css' rel='stylesheet' type='text/css' />
 		<style type="text/css">
+			.table-nowrap {white-space:nowrap;}
 			#profile-wrapper {position:relative;}
 			#upload_profile_image_form {margin:0px;float:left;}
 			#profile-image-container {position:absolute;right:0px;}
@@ -664,6 +665,13 @@ if (!defined("IN_PROFILE")) {
 			<?php
 			load_rte();
 			if ($custom_fields) {
+				$pub_types = array (
+					"ar_poster_reports"				=> array("id_field" => "poster_reports_id", "title" => "title"),
+					"ar_peer_reviewed_papers"		=> array("id_field" => "peer_reviewed_papers_id", "title" => "title"),
+					"ar_non_peer_reviewed_papers"	=> array("id_field" => "non_peer_reviewed_papers_id", "title" => "title"),
+					"ar_book_chapter_mono"			=> array("id_field" => "book_chapter_mono_id", "title" => "title"),
+					"ar_conference_papers"			=> array("id_field" => "conference_papers_id", "title" => "lectures_papers_list")
+				);
 				echo "<h2>Department Specific Information</h2>";
 				add_notice("The information below has been requested by departments the user is a member of. This information is considered public and may be published on department websites.");
 				echo display_notice();
@@ -719,7 +727,44 @@ if (!defined("IN_PROFILE")) {
 
 							</div>
 						</div>
-					<?php } 
+					<?php }
+					echo "<h3>Publications on ".$department." Website</h3>";
+					
+					?>
+					<?php
+					foreach ($pub_types as $type_table => $data) {
+						$query = "	SELECT a.`".$data["id_field"]."` AS `id`, a.`".$data["title"]."` AS `title`, a.`year_reported`, b.`id` AS `dep_pub_id`
+									FROM `".$type_table."` AS a
+									LEFT JOIN `profile_publications` AS b
+									ON a.`proxy_id` = b.`proxy_id`
+									AND b.`pub_id` = a.`".$data["id_field"]."`
+									AND (b.`dep_id` = ".$db->qstr($department_id). " || b.`dep_id` IS NULL)
+									WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+						$pubs = $db->GetAll($query);
+						if ($pubs) { ?>
+							<h4><?php echo ucwords(str_replace("ar ", "", str_replace("_", " ", $type_table))); ?></h4>
+							<table width="100%" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-hover table-bordered table-nowrap">
+								<thead>
+									<tr>
+										<th>Title</th>
+										<th width="10%">Date</th>
+										<th width="8%">Visible</th>
+									</tr>
+								</thead>
+								<tbody>
+								<?php foreach ($pubs as $publication) { ?>
+									<tr data-id="<?php echo $publication["id"]; ?>">
+										<td><?php echo $publication["title"]; ?></td>
+										<td><?php echo $publication["year_reported"]; ?></td>
+										<td><input type="checkbox" name="publications[<?php echo str_replace("ar_", "", $type_table); ?>][<?php echo $department_id; ?>][<?php echo $publication["id"]; ?>]" <?php echo ($publication["dep_pub_id"] != NULL ? "checked=\"checked\"" : ""); ?> /></td>
+									</tr>
+								<?php } ?>
+								</tbody>
+							</table>
+							<?php
+						}
+					}
+						
 					echo "</div>";
 					$i++;
 					}
@@ -728,13 +773,8 @@ if (!defined("IN_PROFILE")) {
 				echo "</div>";
 			}
 			?>
-			
-			
-			
-			
-			<div class="control-group">
-				
-				<span class="controls">
+			<div>
+				<div class="pull-right">
 					<input type="submit" class="btn btn-primary right" value="Save" />
 				</div>
 			</div>

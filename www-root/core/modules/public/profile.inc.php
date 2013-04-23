@@ -160,6 +160,16 @@ function profile_update_personal_info() {
 		}
 	}
 	
+	if (isset($_POST["publications"]) && $_POST["publications"]) {
+		foreach ($_POST["publications"] as $pub_type => $ppublications) {
+			foreach ($ppublications as $department_id => $publications) {
+				foreach ($publications as $publication_id => $status) {
+					$PROCESSED["publications"][$pub_type][$department_id][] = clean_input($publication_id, "numeric");
+				}
+			}
+		}
+	}
+	
 	if ((isset($_POST["prefix"])) && (@in_array(trim($_POST["prefix"]), $PROFILE_NAME_PREFIX))) {
 		$PROCESSED["prefix"] = trim($_POST["prefix"]);
 	} else {
@@ -278,6 +288,20 @@ function profile_update_personal_info() {
 
 					$query = "INSERT INTO `profile_custom_responses` (`field_id`, `proxy_id`, `value`) VALUES (".$db->qstr($field_id).", ".$db->qstr($ENTRADA_USER->getID()).", ".$db->qstr($value).")"; 
 					$db->Execute($query);
+				}
+			}
+			
+			if (isset($PROCESSED["publications"])) {
+				$query = "DELETE FROM `profile_publications` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+				if ($db->Execute($query)) {
+					foreach ($PROCESSED["publications"] as $pub_type => $ppublications) {
+						foreach ($ppublications as $dep_id => $publications) {
+							foreach ($publications as $publication) {
+								$query = "INSERT INTO `profile_publications` (`pub_type`, `pub_id`, `dep_id`, `proxy_id`) VALUES (".$db->qstr($pub_type).", ".$db->qstr($publication).", ".$db->qstr($dep_id).", ".$db->qstr($ENTRADA_USER->getID()).")";
+								$db->Execute($query);
+							}
+						}
+					}
 				}
 			}
 			

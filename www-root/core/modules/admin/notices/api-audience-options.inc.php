@@ -309,13 +309,13 @@ if (!defined("IN_NOTICES")) {
 				<select id="audience_type" name="target_audience" onchange="showMultiSelect();" style="width: 275px;">
 					<option value="">-- Select an audience type --</option>
 					<option value="public"<?php echo ($target_audience == "public" ? "selected=\"selected\"" : ""); ?>>Public announcement visible on login page.</option>
-					<option value="all:users"<?php echo ($target_audience=="all:users"?"selected=\"selected\"":"");?>>All users should receive this notice.</option>
-					<option value="all:students"<?php echo ($target_audience=="all:students"?"selected=\"selected\"":"");?>>All students should receive this notice.</option>
+					<option value="all"<?php echo ($target_audience=="all:users"?"selected=\"selected\"":"");?>>Everyone should receive this notice.</option>
+					<option value="all:student"<?php echo ($target_audience=="all:students"?"selected=\"selected\"":"");?>>All students should receive this notice.</option>
 					<option value="all:faculty"<?php echo ($target_audience=="all:faculty"?"selected=\"selected\"":"");?>>All faculty should receive this notice.</option>
 					<option value="all:staff"<?php echo ($target_audience=="all:staff"?"selected=\"selected\"":"");?>>All staff should receive this notice.</option>
-					<option value="cohorts">Selected cohorts of students should receive this notice.</option>
+					<option value="cohort">Selected cohorts of students should receive this notice.</option>
 					<option value="course_list">Students in selected course lists should receive this notice.</option>
-					<option value="students">Selected individual students should receive this notice.</option>
+					<option value="student">Selected individual students should receive this notice.</option>
 					<option value="faculty">Selected individual faculty should receive this notice.</option>
 					<option value="staff">Selected individual staff should receive this notice.</option>
 				</select>
@@ -336,12 +336,12 @@ if (!defined("IN_NOTICES")) {
 						foreach ($PROCESSED["associated_cohorts"] as $group) {
 							if ((array_key_exists($group, $COHORT_LIST)) && is_array($COHORT_LIST[$group])) {
 								?>
-								<li class="group" id="audience_group_<?php echo $COHORT_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $COHORT_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('group_<?php echo $COHORT_LIST[$group]["group_id"]; ?>', 'cohorts');" class="list-cancel-image" /></li>
+								<li class="group" id="audience_group_<?php echo $COHORT_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $COHORT_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('group_<?php echo $COHORT_LIST[$group]["group_id"]; ?>', 'cohort');" class="list-cancel-image" /></li>
 								<?php
 							}
 						}
 					}
-	
+
 					if (is_array($PROCESSED["associated_course_list"]) && count($PROCESSED["associated_course_list"])) {
 						foreach ($PROCESSED["associated_course_list"] as $group) {
 							if ((array_key_exists($group, $GROUP_LIST)) && is_array($GROUP_LIST[$group])) {
@@ -351,7 +351,7 @@ if (!defined("IN_NOTICES")) {
 							}
 						}
 					}
-	
+
 					if (is_array($PROCESSED["associated_students"]) && count($PROCESSED["associated_students"])) {
 						foreach ($PROCESSED["associated_students"] as $student) {
 							if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
@@ -361,7 +361,7 @@ if (!defined("IN_NOTICES")) {
 							}
 						}
 					}
-	
+
 					if (is_array($PROCESSED["associated_faculty"]) && count($PROCESSED["associated_faculty"])) {
 						foreach ($PROCESSED["associated_faculty"] as $faculty) {
 							if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
@@ -371,7 +371,7 @@ if (!defined("IN_NOTICES")) {
 							}
 						}
 					}
-	
+
 					if (is_array($PROCESSED["associated_staff"]) && count($PROCESSED["associated_staff"])) {
 						foreach ($PROCESSED["associated_staff"] as $staff) {
 							if ((array_key_exists($staff, $STAFF_LIST)) && is_array($STAFF_LIST[$staff])) {

@@ -37,7 +37,6 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$DISPLAY_DURATION		= array();
-	$notice_where_clause	= "";
 	$poll_where_clause		= "";
 	$PREFERENCES			= preferences_load("dashboard");
 
@@ -86,9 +85,9 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		$sidebar_html  = "<ul class=\"menu\">\n";
 		foreach ($results as $key => $result) {
 			if ($key < 10) {
-				$sidebar_html .= "<li class=\"community\"><a href=\"".ENTRADA_URL."/community".$result["community_url"]."\">".html_encode($result["community_title"])."</a></li>\n";
+				$sidebar_html .= "<li class=\"community\"><a href=\"".ENTRADA_RELATIVE."/community".$result["community_url"]."\">".html_encode($result["community_title"])."</a></li>\n";
 			} else {
-				$sidebar_html .= "<li><a href=\"".ENTRADA_URL."/communities\">more ...</a></li>\n";
+				$sidebar_html .= "<li><a href=\"".ENTRADA_RELATIVE."/communities\">more ...</a></li>\n";
 				break;
 			}
 		}
@@ -96,8 +95,8 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		new_sidebar_item("My Communities", $sidebar_html, "my-communities", "open");
 	} else {
 		$sidebar_html  = "<div style=\"text-align: center\">\n";
-		$sidebar_html .= "	<a href=\"".ENTRADA_URL."/podcasts\"><img src=\"".ENTRADA_URL."/images/podcast-dashboard-image.jpg\" width=\"149\" height=\"99\" alt=\"MEdTech Podcasts\" title=\"Subscribe to our Podcast feed.\" border=\"0\"></a><br />\n";
-		$sidebar_html .= "	<a href=\"".ENTRADA_URL."/podcasts\" style=\"color: #557CA3; font-size: 14px\">Podcasts Available</a>";
+		$sidebar_html .= "	<a href=\"".ENTRADA_RELATIVE."/podcasts\"><img src=\"".ENTRADA_RELATIVE."/images/podcast-dashboard-image.jpg\" width=\"149\" height=\"99\" alt=\"MEdTech Podcasts\" title=\"Subscribe to our Podcast feed.\" border=\"0\"></a><br />\n";
+		$sidebar_html .= "	<a href=\"".ENTRADA_RELATIVE."/podcasts\" style=\"color: #557CA3; font-size: 14px\">Podcasts Available</a>";
 		$sidebar_html .= "</div>\n";
 		new_sidebar_item("Podcasts in iTunes", $sidebar_html, "podcast-bar", "open");
 	}
@@ -119,47 +118,28 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		break;
 	}
 
-	switch ($_SESSION["details"]["group"]) {
+	switch ($ENTRADA_USER->getActiveGroup()) {
 		case "alumni" :
-			$rss_feed_name = "alumni";
-			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'alumni' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'alumni')";;
-			$corrected_role = "students";
 		break;
 		case "faculty" :
-			$rss_feed_name = "faculty";
-			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'faculty' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'faculty')";;
-			$corrected_role = "faculty";
 		break;
 		case "medtech" :
-			$rss_feed_name = "medtech";
-			$notice_where_clause = "(a.`target` NOT LIKE 'proxy_id:%' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
-			$corrected_role = "medtech";
 		break;
 		case "resident" :
-			$rss_feed_name = "resident";
-			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'resident' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'resident')";;
-			$corrected_role = "resident";
 		break;
 		case "staff" :
-			$rss_feed_name = "staff";
-			$notice_where_clause = "(a.`target` = 'all' OR a.`target` = 'staff' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target` = 'all' OR a.`poll_target` = 'staff')";;
-			$corrected_role = "staff";
 		break;
 		case "student" :
 		default :
 			$cohort = groups_get_cohort($ENTRADA_USER->getID());
-			$rss_feed_name = clean_input((isset($_SESSION["details"]["grad_year"]) && $_SESSION["details"]["grad_year"] ? $_SESSION["details"]["grad_year"] : "default"), "alphanumeric");
-			$notice_where_clause = "(a.`target`='cohort:".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`target` = 'all' OR a.`target` = 'students' OR a.`target` = ".$db->qstr("proxy_id:".((int) $ENTRADA_USER->getID())).")";
 			$poll_where_clause = "(a.`poll_target_type` = 'cohort' AND a.`poll_target`='".clean_input($cohort["group_id"], "alphanumeric")."' OR a.`poll_target` = 'all' OR a.`poll_target` = 'students')";
-			$corrected_role = "students";
 		break;
 	}
-	$notice_where_clause .= "AND (a.`organisation_id` IS NULL OR a.`organisation_id` = ".$_SESSION["details"]["organisation_id"].")";
 
 	if (!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"][$MODULE]["poll_id"])) {
 		$query = "	SELECT a.`poll_id`
@@ -194,96 +174,35 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	}
 
 	if ($_SESSION[APPLICATION_IDENTIFIER]["tmp"][$MODULE]["poll_id"]) {
-		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/poll-js.php\"></script>\n";
+		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/poll-js.php\"></script>\n";
 
-		new_sidebar_item("Quick Polls", poll_display($_SESSION[APPLICATION_IDENTIFIER]["tmp"][$MODULE]["poll_id"]), "quick-poll", "open");
+		new_sidebar_item($translate->_("Quick Polls"), poll_display($_SESSION[APPLICATION_IDENTIFIER]["tmp"][$MODULE]["poll_id"]), "quick-poll", "open");
 	}
 
-	if ((defined("ENABLE_NOTICES")) && (ENABLE_NOTICES)) {
-		$notices_to_display = array();
-		$query = "	SELECT a.*, b.`statistic_id`, MAX(b.`timestamp`) AS `last_read`
-					FROM `notices` AS a
-					LEFT JOIN `statistics` AS b
-					ON b.`module` = 'notices'
-					AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-					AND b.`action` = 'read'
-					AND b.`action_field` = 'notice_id'
-					AND b.`action_value` = a.`notice_id`
-					LEFT JOIN `notice_audience` AS c
-					ON a.`notice_id` = c.`notice_id`
-					WHERE (
-						c.`audience_type` = 'all:users'
-						".($corrected_role == "medtech" ? "OR c.`audience_type` LIKE '%all%' OR c.`audience_type` = 'cohorts'" : "OR c.`audience_type` = 'all:".$corrected_role."'")."
-						OR
-						((
-							c.`audience_type` = 'students'
-							OR c.`audience_type` = 'faculty'
-							OR c.`audience_type` = 'staff')
-							AND c.`audience_value` = ".$db->qstr($ENTRADA_USER->getID())."
-						)
-						OR ((
-							c.`audience_type` = 'cohorts'
-							OR c.`audience_type` = 'course_list')
-							AND c.`audience_value` IN (
-								SELECT `group_id`
-								FROM `group_members`
-								WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID()).")
-						)
-					)
-					AND (a.`organisation_id` IS NULL
-					OR a.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"]).")
-					AND (a.`display_from`='0'
-					OR a.`display_from` <= '".time()."')
-					AND (a.`display_until`='0'
-					OR a.`display_until` >= '".time()."')
-					AND a.`organisation_id` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
-					GROUP BY a.`notice_id`
-					ORDER BY a.`updated_date` DESC, a.`display_until` ASC";
-
-		$results = $db->GetAll($query);
-		if ($results) {
-			foreach ($results as $result) {
-				if ((!$result["statistic_id"]) || ($result["last_read"] <= $result["updated_date"])) {
-					$notices_to_display[] = $result;
-				}
-			}
-			unset($results);
-		}
-
-		if (($notices_to_display) && ($total_notices = @count($notices_to_display))) {
+	if (defined("ENABLE_NOTICES") && ENABLE_NOTICES) {
+		$notices_to_display = Models_Notice::fetchUserNotices();
+		if ($notices_to_display && ($total_notices = count($notices_to_display))) {
 			?>
-			<div class="display-notice" style="color: #333333; max-height: 200px; overflow: auto">
-				<div style="float: right"><a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $_SESSION["details"]["username"]; ?>.rss" target="_blank" style="color: #666666; font-size: 10px; text-decoration: none">RSS feed available</a> <a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $_SESSION["details"]["username"]; ?>.rss" target="_blank"><img src="<?php echo ENTRADA_URL; ?>/images/rss-enabled.gif" width="11" height="11" alt="RSS Icon" title="Notices are RSS enabled" border="0" /></a></div>
-				<h2>New <?php echo APPLICATION_NAME; ?> Notice<?php echo (($total_notices != 1) ? "s" : ""); ?></h2>
-				<form action="<?php echo ENTRADA_URL; ?>/dashboard?action=read" method="post">
-					<table style="width: 97%" cellspacing="2" cellpadding="2" border="0" summary="New Notice<?php echo (($total_notices != 1) ? "s" : ""); ?>">
-						<colgroup>
-							<col style="width: 25%" />
-							<col style="width: 75%" />
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="2" style="text-align: right; padding-right: 15px">
-									<input type="submit" class="button" value="Mark as Read" />
-								</td>
-							</tr>
-						</tfoot>
-						<tbody>
-							<?php
-							foreach ($notices_to_display as $result) {
-								echo "<tr>\n";
-								echo "	<td style=\"vertical-align: top; white-space: nowrap; font-size: 12px\">\n";
-								echo "		<input type=\"checkbox\" name=\"mark_read[]\" id=\"notice_msg_".(int) $result["notice_id"]."\" value=\"".(int) $result["notice_id"]."\" style=\"vertical-align: middle\" /> ";
-								echo "		<label for=\"notice_msg_".(int) $result["notice_id"]."\">".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</label>\n";
-								echo "	</td>\n";
-								echo "	<td style=\"padding-top: 3px; vertical-align: top; white-space: normal; font-size: 12px\">".$result["notice_summary"]."</td>\n";
-								echo "</tr>\n";
-							}
-							?>
-						</tbody>
-					</table>
-				</form>
-			</div>
+            <form action="<?php echo ENTRADA_RELATIVE; ?>/dashboard?action=read" method="post">
+                <div class="dashboard-notices alert">
+                    <h2><?php echo APPLICATION_NAME; ?> Notice<?php echo (($total_notices != 1) ? "s" : ""); ?></h2>
+                    <?php
+                    foreach ($notices_to_display as $announcement) {
+                        echo "<div id=\"notice_box_".(int) $announcement["notice_id"]."\">";
+                        echo "  <label class=\"checkbox\"><input type=\"checkbox\" name=\"mark_read[]\" id=\"notice_msg_".(int) $announcement["notice_id"]."\" value=\"".(int) $result["notice_id"]."\" /> ";
+                        echo "	<strong>".date(DEFAULT_DATE_FORMAT, $announcement["updated_date"])."</strong>";
+                        echo    ($announcement["lastname"] ? " <small>by ".html_encode($announcement["firstname"]." ".$announcement["lastname"])."</small>" : "");
+                        echo "  </label> | <a href=\"#\"><small>Mark As Read</small></a>\n";
+                        echo "	<p>".trim(strip_selected_tags(clean_input($announcement["notice_summary"], "html"), "p"))."</p>";
+                        echo "</div>";
+                    }
+                    ?>
+                </div>
+                <a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $ENTRADA_USER->getUsername() ?>.rss" target="_blank" class="btn-mini"><i class="icon-fire"></i> Subscribe to RSS Feed</a>
+                <button class="btn btn-small btn-success pull-right"><i class="icon-ok icon-white"></i> Mark As Read</button>
+                <div class="clearfix"></div>
+            </form>
+
 			<?php
 		}
 	}
@@ -291,7 +210,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	switch ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 		case "medtech" :
 		case "student" :
-			$BREADCRUMB[] = array("url" => ENTRADA_URL, "title" => "Student Dashboard");
+			$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE, "title" => "Student Dashboard");
 
 			/**
 			 * How did this person not get assigned this already? Mak'em new.
@@ -313,7 +232,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			$display_schedule_tabs	= false;
 
 			if ($ENTRADA_ACL->amIAllowed("clerkship", "read")) {
-				$query = "	SELECT a.*, c.`region_name`, d.`aschedule_id`, d.`apartment_id`, e.`rotation_title`
+				$query = "SELECT a.*, c.`region_name`, d.`aschedule_id`, d.`apartment_id`, e.`rotation_title`
 							FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 							LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 							ON b.`event_id` = a.`event_id`
@@ -345,14 +264,14 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 						if ($clerkship_schedule) {
 							?>
 							<div class="display-notice">
-								<strong>Notice:</strong> Keeping the Undergrad office informed of clerkship schedule changes is very important. This information is used to ensure you can graduate; therefore, if you see any inconsistencies, please let us know immediately: <a href="javascript:sendClerkship('<?php echo ENTRADA_URL; ?>/agent-clerkship.php')">click here</a>.
+								<strong>Notice:</strong> Keeping the Undergrad office informed of clerkship schedule changes is very important. This information is used to ensure you can graduate; therefore, if you see any inconsistencies, please let us know immediately: <a href="javascript:sendClerkship('<?php echo ENTRADA_RELATIVE; ?>/agent-clerkship.php')">click here</a>.
 							</div>
 							<h2>Remaining Clerkship Rotations</h2>
 							<div style="float: right; margin-bottom: 5px">
 								<div id="module-content">
 									<ul class="page-action">
 										<li>
-											<a href="<?php echo ENTRADA_URL."/clerkship/electives?section=add";?>" class="strong-green">Add Elective</a>
+											<a href="<?php echo ENTRADA_RELATIVE."/clerkship/electives?section=add";?>" class="strong-green">Add Elective</a>
 										</li>
 									</ul>
 								</div>
@@ -367,7 +286,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 								<div id="module-content">
 									<ul class="page-action">
 										<li>
-											<a href="<?php echo ENTRADA_URL."/clerkship/logbook?section=add&event=".$clerkship_schedule[0]["event_id"];?>" class="strong-green">Log Encounter</a>
+											<a href="<?php echo ENTRADA_RELATIVE."/clerkship/logbook?section=add&event=".$clerkship_schedule[0]["event_id"];?>" class="strong-green">Log Encounter</a>
 										</li>
 									</ul>
 								</div>
@@ -405,7 +324,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 									if ((int) $result["aschedule_id"]) {
 										$apartment_available = true;
-										$click_url = ENTRADA_URL."/regionaled/view?id=".$result["aschedule_id"];
+										$click_url = ENTRADA_RELATIVE."/regionaled/view?id=".$result["aschedule_id"];
 									} else {
 										$apartment_available = false;
 										$click_url = "";
@@ -429,19 +348,19 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 											case "approval":
 												$elective_word = "Pending";
 												$cssclass = " class=\"in_draft\"";
-												$click_url = ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
+												$click_url = ENTRADA_RELATIVE."/clerkship/electives?section=edit&id=".$result["event_id"];
 												$skip = false;
 											break;
 											case "published":
 												$elective_word = "Approved";
 												$cssclass = " class=\"published\"";
-												$click_url = ENTRADA_URL."/clerkship/electives?section=view&id=".$result["event_id"];
+												$click_url = ENTRADA_RELATIVE."/clerkship/electives?section=view&id=".$result["event_id"];
 												$skip = false;
 											break;
 											case "trash":
 												$elective_word = "Rejected";
 												$cssclass = " class=\"rejected\"";
-												$click_url = ENTRADA_URL."/clerkship/electives?section=edit&id=".$result["event_id"];
+												$click_url = ENTRADA_RELATIVE."/clerkship/electives?section=edit&id=".$result["event_id"];
 												$skip = true;
 											break;
 											default:
@@ -458,7 +377,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 									if (!$skip) {
 										echo "<tr".(($is_here) && $cssclass != " class=\"in_draft\"" ? " class=\"current\"" : $cssclass).">\n";
-										echo "	<td class=\"modified\">".(($apartment_available) ? "<a href=\"".$click_url."\">" : "")."<img src=\"".ENTRADA_URL."/images/".(($apartment_available) ? "housing-icon-small.gif" : "pixel.gif")."\" width=\"16\" height=\"16\" alt=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" title=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" style=\"border: 0px\" />".(($apartment_available) ? "</a>" : "")."</td>\n";
+										echo "	<td class=\"modified\">".(($apartment_available) ? "<a href=\"".$click_url."\">" : "")."<img src=\"".ENTRADA_RELATIVE."/images/".(($apartment_available) ? "housing-icon-small.gif" : "pixel.gif")."\" width=\"16\" height=\"16\" alt=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" title=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" style=\"border: 0px\" />".(($apartment_available) ? "</a>" : "")."</td>\n";
 										echo "	<td class=\"type\">".(($apartment_available || $elective) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").(($elective) ? "Elective".(($elective_word != "") ? " (".$elective_word.")" : "") : "Core Rotation").(($apartment_available || $elective) ? "</a>" : "")."</td>\n";
 										echo "	<td class=\"title\"><span title=\"".$event_title."\">".(($apartment_available) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").limit_chars(html_decode($event_title), 55).(($apartment_available) ? "</a>" : "")."</span></td>\n";
 										echo "	<td class=\"region\">".(($apartment_available || $elective) ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").html_encode((($result["city"] == "") ? limit_chars(($result["region_name"]), 30) : $result["city"])).(($apartment_available || $elective) ? "</a>" : "")."</td>\n";
@@ -471,7 +390,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 								</tbody>
 							</table>
 							<div style="margin-top: 15px; text-align: right">
-								<a href="<?php echo ENTRADA_URL; ?>/clerkship" style="font-size: 11px">Click here to view your full schedule.</a>
+								<a href="<?php echo ENTRADA_RELATIVE; ?>/clerkship" style="font-size: 11px">Click here to view your full schedule.</a>
 							</div>
 							<?php
 						}
@@ -481,146 +400,136 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 						<h2 class="tab">Learning Event Schedule</h2>
 						<?php
 			}
-			if (strpos($_SERVER["HTTP_USER_AGENT"], "MSIE 6.") !== false) {
-				echo display_error(array("Unfortunately you are using <strong>Internet Explorer 6.0</strong> as your web-browser to view this site and we are unable to display a dashboard calendar that is compatible with this browser.<br /><br />To view your learning events, please click the <a href=\"".ENTRADA_RELATIVE."/events\" style=\"font-weight: bold\">Learning Events</a> tab at the top."));
-			} else {
-				// If saturday or sunday add 48 or 24 hours to the current time so the calendar displays the correct week, otherwise use the current time.
-				switch (date("N", time())) {
-					case '6' :
-						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"] = time() + (86400 * 2);
-					break;
-					case '7' :
-						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"] = time() + 86400;
-					break;
-					default :
-						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"] = time();
-					break;
-				}
-				?>
-				<script type="text/javascript">
-				var year = new Date().getFullYear();
-				var month = new Date().getMonth();
-				var day = new Date().getDate();
 
-				jQuery(document).ready(function() {
-					jQuery('#dashboardCalendar').weekCalendar({
-						date : new Date(<?php echo ((($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"]) ? $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"] : time()) * 1000); ?>),
-						dateFormat : 'M d, Y',
-						height: function($calendar) {
-							return 600;
-						},
-						daysToShow: 5,
-						firstDayOfWeek: 1,
-						useShortDayNames: true,
-						allowCalEventOverlap: true,
-						overlapEventsSeparate: false,
-						timeslotsPerHour: 4,
-						timeslotHeight: 19,
-						buttons: false,
-						readonly: true,
-						businessHours : { start: 8, end: 18, limitDisplay : false },
-						eventRender : function(calEvent, $event) {
-							switch (calEvent.type) {
-								case 3 :
-									$event.find('.wc-time').css({'backgroundColor': '#5F718F', 'border':'1px solid #354868'});
-									$event.css({'backgroundColor':'#7E92B5'});
-								break;
-								case 2 :
-									$event.find('.wc-time').css({'backgroundColor':'#9E9E48', 'border':'1px solid #8A8A2D'});
-									$event.css({'backgroundColor':'#B5B37E'});
+            // If saturday or sunday add 48 or 24 hours to the current time so the calendar displays the correct week, otherwise use the current time.
+            switch (date("N", time())) {
+                case '6' :
+                    $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"] = time() + (86400 * 2);
+                break;
+                case '7' :
+                    $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"] = time() + 86400;
+                break;
+                default :
+                    $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"] = time();
+                break;
+            }
+            ?>
+            <script type="text/javascript">
+            var year = new Date().getFullYear();
+            var month = new Date().getMonth();
+            var day = new Date().getDate();
 
-									if (calEvent.updated) {
-										calEvent.title += '<div class="wc-updated-event calEventUpdated' + calEvent.id + '"> Last updated ' + calEvent.updated + '</div>';
-									}
-								break;
-								default :
-								break;
-							}
+            jQuery(document).ready(function() {
+                jQuery('#dashboardCalendar').weekCalendar({
+                    date : new Date(<?php echo ((($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"]) ? $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["caltime"] : time()) * 1000); ?>),
+                    dateFormat : 'M d, Y',
+                    height: function($calendar) {
+                        return 600;
+                    },
+                    daysToShow: 5,
+                    firstDayOfWeek: 1,
+                    useShortDayNames: true,
+                    allowCalEventOverlap: true,
+                    overlapEventsSeparate: false,
+                    timeslotsPerHour: 4,
+                    timeslotHeight: 19,
+                    buttons: false,
+                    readonly: true,
+                    businessHours : { start: 8, end: 18, limitDisplay : false },
+                    eventRender : function(calEvent, $event) {
+                        switch (calEvent.type) {
+                            case 3 :
+                                $event.find('.wc-time').css({'backgroundColor': '#5F718F', 'border':'1px solid #354868'});
+                                $event.css({'backgroundColor':'#7E92B5'});
+                            break;
+                            case 2 :
+                                $event.find('.wc-time').css({'backgroundColor':'#9E9E48', 'border':'1px solid #8A8A2D'});
+                                $event.css({'backgroundColor':'#B5B37E'});
 
-							$event.find('.wc-time,.wc-title').qtip({
-								content: {
-									text: '<img class="throbber" src="<?php echo ENTRADA_RELATIVE; ?>/images/throbber.gif" alt="Loading..." />',
-									url: '<?php echo ENTRADA_RELATIVE; ?>/api/events.api.php?id=' + calEvent.id + (calEvent.drid != 'undefined' ? '&drid=' + calEvent.drid : ''),
-									title: {
-										text: '<a href="<?php echo ENTRADA_RELATIVE; ?>/events?' + (calEvent.drid != 'undefined' ? 'drid=' + calEvent.drid : 'id=' + calEvent.id) + '">' + calEvent.title + '</a>',
-										button: 'Close'
-									}
-								},
-								position: {
-									corner: {
-										target: 'topMiddle',
-										tooltip: 'topMiddle'
-									},
-									adjust: {
-										screen: true
-									}
-								},
-								show: {
-									when: 'click',
-									solo: true
-								},
-								hide: 'unfocus',
-								style: {
-									tip: true,
-									border: { width: 0, radius: 4 },
-									name: 'light',
-									width: 485
-								}
-							});
-						},
-						eventClick : function(calEvent, $event) {
-							if (calEvent.type == 2) {
-								$event.find('.wc-time').animate({'backgroundColor':'#2B72D0', 'border':'1px solid #1B62C0'}, 500);
-								$event.animate({'backgroundColor':'#68A1E5'}, 500);
-								$event.find('.calEventUpdated' + calEvent.id).fadeOut(500);
-							}
-						},
-						externalDates : function (calendar) {
-							jQuery('#currentDateInfo').html(calendar.find('.wc-day-1').html() + ' - ' + calendar.find('.wc-day-5').html());
-						},
-						data : '<?php echo ENTRADA_RELATIVE; ?>/calendars/<?php echo html_encode($_SESSION["details"]["username"]); ?>.json'
-					});
-				});
+                                if (calEvent.updated) {
+                                    calEvent.title += '<div class="wc-updated-event calEventUpdated' + calEvent.id + '"> Last updated ' + calEvent.updated + '</div>';
+                                }
+                            break;
+                            default :
+                            break;
+                        }
 
-				function setDateValue(field, date) {
-					timestamp = (getMSFromDate(date) * 1000);
+                        $event.find('.wc-time,.wc-title').qtip({
+                            content: {
+                                text: '<img class="throbber" src="<?php echo ENTRADA_RELATIVE; ?>/images/throbber.gif" alt="Loading..." />',
+                                url: '<?php echo ENTRADA_RELATIVE; ?>/api/events.api.php?id=' + calEvent.id + (calEvent.drid != 'undefined' ? '&drid=' + calEvent.drid : ''),
+                                title: {
+                                    text: '<a href="<?php echo ENTRADA_RELATIVE; ?>/events?' + (calEvent.drid != 'undefined' ? 'drid=' + calEvent.drid : 'id=' + calEvent.id) + '">' + calEvent.title + '</a>',
+                                    button: 'Close'
+                                }
+                            },
+                            position: {
+                                corner: {
+                                    target: 'topMiddle',
+                                    tooltip: 'topMiddle'
+                                },
+                                adjust: {
+                                    screen: true
+                                }
+                            },
+                            show: {
+                                when: 'click',
+                                solo: true
+                            },
+                            hide: 'unfocus',
+                            style: {
+                                tip: true,
+                                border: { width: 0, radius: 4 },
+                                name: 'light',
+                                width: 485
+                            }
+                        });
+                    },
+                    eventClick : function(calEvent, $event) {
+                        if (calEvent.type == 2) {
+                            $event.find('.wc-time').animate({'backgroundColor':'#2B72D0', 'border':'1px solid #1B62C0'}, 500);
+                            $event.animate({'backgroundColor':'#68A1E5'}, 500);
+                            $event.find('.calEventUpdated' + calEvent.id).fadeOut(500);
+                        }
+                    },
+                    externalDates : function (calendar) {
+                        jQuery('#currentDateInfo').html(calendar.find('.wc-day-1').html() + ' - ' + calendar.find('.wc-day-5').html());
+                    },
+                    data : '<?php echo ENTRADA_RELATIVE; ?>/calendars/<?php echo html_encode($_SESSION["details"]["username"]); ?>.json'
+                });
+            });
 
-					if (field.value != timestamp) {
-						field.value = getMSFromDate(date);
-						jQuery('#dashboardCalendar').weekCalendar('gotoWeek', new Date(timestamp));
-					}
+            function setDateValue(field, date) {
+                timestamp = (getMSFromDate(date) * 1000);
 
-					return;
-				}
-				</script>
-				<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Weekly Student Calendar">
-				<tr>
-					<td style="text-align: left; vertical-align: middle; white-space: nowrap">
-						<table style="width: 375px; height: 23px" cellspacing="0" cellpadding="0" border="0">
-						<tr>
-							<td style="width: 22px; height: 23px"><img src="<?php echo ENTRADA_URL; ?>/images/cal-back.gif" width="22" height="23" alt="Previous Week" title="Previous Week" border="0" class="wc-prev" onclick="jQuery('#dashboardCalendar').weekCalendar('prevWeek');" /></td>
-							<td style="width: 271px; height: 23px; background: url('<?php echo ENTRADA_URL; ?>/images/cal-table-bg.gif'); text-align: center; font-size: 10px; color: #666666">
-								<div id="currentDateInfo"></div>
-							</td>
-							<td style="width: 22px; height: 23px"><img src="<?php echo ENTRADA_URL; ?>/images/cal-next.gif" width="22" height="23" alt="Next Week" title="Next Week" border="0" class="wc-next" onclick="jQuery('#dashboardCalendar').weekCalendar('nextWeek');" /></td>
-							<td style="width: 30px; height: 23px; text-align: right"><img src="<?php echo ENTRADA_URL; ?>/images/cal-home.gif" width="23" height="23" alt="Reset to this week" title="Reset to this week" border="0" class="wc-today" onclick="jQuery('#dashboardCalendar').weekCalendar('today');" /></td>
-							<td style="width: 30px; height: 23px; text-align: right"><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" width="23" height="23" alt="Show Calendar" title="Show Calendar" onclick="showCalendar('', document.getElementById('dstamp'), document.getElementById('dstamp'), '<?php echo html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]); ?>', 'calendar-holder', 8, 8, 1)" style="cursor: pointer" id="calendar-holder" /></td>
-						</tr>
-						</table>
-					</td>
-					<td style="text-align: right; vertical-align: middle; white-space: nowrap">
-						<h1 style="margin: 8px 0"><strong>My</strong> Schedule</h1>
-					</td>
-				</tr>
-				</table>
-				<div id="dashboardCalendar"></div>
+                if (field.value != timestamp) {
+                    field.value = getMSFromDate(date);
+                    jQuery('#dashboardCalendar').weekCalendar('gotoWeek', new Date(timestamp));
+                }
 
-                <div class="pull-right">
-                    <a class="btn btn-info btn-small" href="<?php echo str_ireplace(array("https://", "http://"), "webcal://", ENTRADA_URL)."/calendars".(isset($_SESSION["details"]["private_hash"]) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : "")."/".html_encode($ENTRADA_USER->getUsername()).".ics"; ?>"><i class="icon-calendar icon-white"></i> Subscribe to Calendar</a>
+                return;
+            }
+            </script>
+            <div class="row-fluid">
+                <div class="span6">
+                    <div class="btn-group">
+                        <button class="btn wc-prev" onclick="jQuery('#dashboardCalendar').weekCalendar('prevWeek');"><i class="icon-chevron-left"></i></button>
+                        <button class="btn content-small" id="calendar-holder" onclick="showCalendar('', document.getElementById('dstamp'), document.getElementById('dstamp'), '<?php echo html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]); ?>', 'calendar-holder', 8, 8, 1)"><span id="currentDateInfo"></span></button>
+                        <button class="btn wc-next" onclick="jQuery('#dashboardCalendar').weekCalendar('nextWeek');"><i class="icon-chevron-right"></i></button>
+                    </div>
                 </div>
+                <div class="span6">
+                    <button class="btn wc-today" onclick="jQuery('#dashboardCalendar').weekCalendar('today');"><i class="icon-refresh"></i></button>
+                    <h1 class="pull-right"><strong>My</strong> Schedule</h1>
+                </div>
+            </div>
 
-				<?php
-			}
+            <div id="dashboardCalendar"></div>
+
+            <div class="pull-right">
+                <a class="btn btn-info btn-small" href="<?php echo str_ireplace(array("https://", "http://"), "webcal://", ENTRADA_URL)."/calendars".(isset($_SESSION["details"]["private_hash"]) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : "")."/".html_encode($ENTRADA_USER->getUsername()).".ics"; ?>"><i class="icon-calendar icon-white"></i> Subscribe to Calendar</a>
+            </div>
+            <?php
 			if ($display_schedule_tabs) {
 					?>
 					</div>
@@ -631,18 +540,10 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			echo "<form action=\"\" method=\"get\">\n";
 			echo "<input type=\"hidden\" id=\"dstamp\" name=\"dstamp\" value=\"".html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"])."\" />\n";
 			echo "</form>\n";
-
-			$sidebar_html = "<ul class=\"legend-list\">\n";
-			$sidebar_html  .= "<li><img src=\"".ENTRADA_URL."/images/legend-class-event.gif\"  alt=\"\" title=\"\" style=\"vertical-align: middle\" /> entire class event</li>\n";
-			$sidebar_html .= "<li><img src=\"".ENTRADA_URL."/images/legend-individual.gif\"  alt=\"\" title=\"\" style=\"vertical-align: middle\" /> individual learning event</li>\n";
-			$sidebar_html .= "<li><img src=\"".ENTRADA_URL."/images/legend-updated.gif\"  alt=\"\" title=\"\" style=\"vertical-align: middle\" /> recently updated event</li>\n";
-			$sidebar_html .= "</ul>\n";
-
-			new_sidebar_item("Learning Event Legend", $sidebar_html, "event-legend", "open");
 		break;
 		case "resident" :
 		case "faculty" :
-			$BREADCRUMB[] = array("url" => ENTRADA_URL, "title" => ucwords($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"])." Dashboard");
+			$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE, "title" => ucwords($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"])." Dashboard");
 
 			/**
 			 * Update requested timestamp to display.
@@ -717,7 +618,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 						<h1>My Teaching Events</h1>
 					</td>
 					<td style="padding-bottom: 3px; text-align: right; vertical-align: middle; white-space: nowrap">
-						<form id="dlength_form" action="<?php echo ENTRADA_URL; ?>" method="get">
+						<form id="dlength_form" action="<?php echo ENTRADA_RELATIVE; ?>" method="get">
 							<label for="dlength" class="content-small">Events taking place:</label>
 							<select id="dlength" name="dlength" onchange="document.getElementById('dlength_form').submit()">
 								<option value="1"<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["dlength"] == 1) ? " selected=\"selected\"" : ""); ?>>Last Term</option>
@@ -734,7 +635,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 				?>
 				<div id="list-of-learning-events" style="max-height: 300px; overflow: auto">
 					<div style="background-color: #FAFAFA; padding: 3px; border: 1px #9D9D9D solid; border-bottom: none">
-						<img src="<?php echo ENTRADA_URL; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
+						<img src="<?php echo ENTRADA_RELATIVE; ?>/images/lecture-info.gif" width="15" height="15" alt="" title="" style="vertical-align: middle" />
 										<?php echo "Found ".$TOTAL_ROWS." event".(($TOTAL_ROWS != 1) ? "s" : "")." from <strong>".date("D, M jS, Y", $DISPLAY_DURATION["start"])."</strong> to <strong>".date("D, M jS, Y", $DISPLAY_DURATION["end"])."</strong>.\n"; ?>
 					</div>
 					<table class="tableList" cellspacing="0" summary="List of Learning Events">
@@ -758,7 +659,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							<?php
 							foreach ($results["events"] as $result) {
                                 $attachments = attachment_check($result["event_id"]);
-                                $url = ENTRADA_URL."/admin/events?section=content&id=".$result["event_id"];
+                                $url = ENTRADA_RELATIVE."/admin/events?section=content&id=".$result["event_id"];
                 				$accessible = true;
 
                                 if ((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {
@@ -773,11 +674,11 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
                                 }
 
                                 echo "<tr id=\"event-".$result["event_id"]."\" class=\"event".(!$accessible ? " na" : "")."\">\n";
-                                echo "	<td class=\"modified\">".(($is_modified) ? "<img src=\"".ENTRADA_URL."/images/lecture-modified.gif\" width=\"15\" height=\"15\" alt=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" title=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"15\" height=\"15\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
+                                echo "	<td class=\"modified\">".(($is_modified) ? "<img src=\"".ENTRADA_RELATIVE."/images/lecture-modified.gif\" width=\"15\" height=\"15\" alt=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" title=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/pixel.gif\" width=\"15\" height=\"15\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
                                 echo "	<td class=\"date\"><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
                                 echo "	<td class=\"course-code\"><a href=\"".$url."\">".html_encode($result["course_code"])."</a></td>\n";
                                 echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\">".html_encode($result["event_title"])."</a></td>\n";
-                                echo "	<td class=\"attachment\">".(($attachments) ? "<img src=\"".ENTRADA_URL."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" title=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
+                                echo "	<td class=\"attachment\">".(($attachments) ? "<img src=\"".ENTRADA_RELATIVE."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" title=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
                                 echo "</tr>\n";
 							}
 							?>
@@ -877,11 +778,11 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 		</div>
 	</div>
 	<script type="text/javascript">
-		var CROSS_DOMAIN_PROXY_URL = "<?php echo ENTRADA_URL."/serve-remote-feed.php"; ?>";
-		var SPINNER_URL = "<?php echo ENTRADA_URL."/images/loading.gif" ?>";
-		var DASHBOARD_API_URL = "<?php echo ENTRADA_URL."/api/dashboard.api.php"; ?>";
-		var SUCCESS_IMAGE_URL = "<?php echo ENTRADA_URL."/images/question-correct.gif"; ?>";
-		var ERROR_IMAGE_URL = "<?php echo ENTRADA_URL."/images/question-correct.gif"; ?>";
+		var CROSS_DOMAIN_PROXY_URL = "<?php echo ENTRADA_RELATIVE."/serve-remote-feed.php"; ?>";
+		var SPINNER_URL = "<?php echo ENTRADA_RELATIVE."/images/loading.gif" ?>";
+		var DASHBOARD_API_URL = "<?php echo ENTRADA_RELATIVE."/api/dashboard.api.php"; ?>";
+		var SUCCESS_IMAGE_URL = "<?php echo ENTRADA_RELATIVE."/images/question-correct.gif"; ?>";
+		var ERROR_IMAGE_URL = "<?php echo ENTRADA_RELATIVE."/images/question-correct.gif"; ?>";
 	</script>
 	<div id="dashboard-syndicated-content">
 		<ul id="rss-list-1" class="rss-list first">

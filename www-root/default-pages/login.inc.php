@@ -50,21 +50,6 @@ if ($PROCEED_TO && (stristr($PROCEED_TO, "link-course.php") || stristr($PROCEED_
 if ($PROCEED_TO && (stristr($PROCEED_TO, "file-course.php") || stristr($PROCEED_TO, "file-event.php"))) {
 	echo display_notice("You must log in to download the requested file; once you have logged in the download will start automatically.");
 }
-
-/**
- * Fetch public announcements that will be displayed below.
- */
-$query = "SELECT a.*
-			FROM `notices` AS a
-			JOIN `notice_audience` AS b
-			ON a.`notice_id` = b.`notice_id`
-			WHERE b.`audience_type` = 'public'
-			AND (a.`display_from` = 0 OR a.`display_from` <= UNIX_TIMESTAMP())
-			AND (a.`display_until` = 0 OR a.`display_until` > UNIX_TIMESTAMP())
-			GROUP BY a.`notice_id`
-			ORDER BY a.`updated_date` DESC, a.`display_until` ASC
-			LIMIT 0, 5";
-$public_announcements = $db->CacheGetAll(CACHE_TIMEOUT, $query);
 ?>
 <div class="row-fluid">
 	<div class="span6">
@@ -91,16 +76,17 @@ $public_announcements = $db->CacheGetAll(CACHE_TIMEOUT, $query);
 		</form>
 	</div>
 	<?php
-	if ($public_announcements) {
+    $public_notices = Models_Notice::fetchPublicNotices();
+	if ($public_notices) {
 		?>
 		<div class="span6">
-			<h2>Public Announcements</h2>
-			<ul class="public-announcements">
+			<h2>Public Notices</h2>
+			<ul class="public-notices">
 				<?php
-				foreach ($public_announcements as $announcement) {
+				foreach ($public_notices as $notice) {
 					echo "<li>";
-					echo "	<span class=\"label label-info\">".date(DEFAULT_DATE_FORMAT, $announcement["updated_date"])."</span>\n";
-					echo "	<p>".strip_selected_tags(clean_input($announcement["notice_summary"], "html"), "p")."</p>";
+					echo "	<span class=\"label label-info\">".date(DEFAULT_DATE_FORMAT, $notice["updated_date"])."</span>\n";
+					echo "	<p>".trim(strip_selected_tags(clean_input($notice["notice_summary"], "html"), "p"))."</p>";
 					echo "</li>";
 				}
 				?>

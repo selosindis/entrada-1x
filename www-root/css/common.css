@@ -195,7 +195,6 @@ font-size:12px;
 .display-generic ul,.display-success ul,.display-notice ul,.display-error ul,ul.notify-communities {
 list-style-type:none;
 margin:0;
-/*padding:4px 10px 10px;*/
 padding:0;
 }
 

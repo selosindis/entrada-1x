@@ -144,47 +144,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					}
 				}
 
-				// if (isset($_POST["clinical_presentations_submit"]) && $_POST["clinical_presentations_submit"]) {
-					if (((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"])))) {
-						foreach ($_POST["clinical_presentations"] as $objective_id) {
-							if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
-								$query	= "	SELECT a.`objective_id`
-										FROM `global_lu_objectives` AS a
-										JOIN `course_objectives` AS b
-										ON b.`course_id` = ".$event_info["course_id"]."
-										AND a.`objective_id` = b.`objective_id`
-										JOIN `objective_organisation` AS c
-										ON a.`objective_id` = c.`objective_id`
-										WHERE a.`objective_id` = ".$db->qstr($objective_id)."
-										AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-										AND b.`objective_type` = 'event'
-										AND a.`objective_active` = '1'";
-								$result	= $db->GetRow($query);
-								if ($result) {
-									$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
-								}
-							}
-						}
-					} else {
-						$clinical_presentations = array();
-					}
-					history_log($EVENT_ID, "updated clinical presentations.");
-				// } else {
-				// 	$query = "	SELECT a.`objective_id`
-				// 				FROM `event_objectives` AS a
-				// 				JOIN `course_objectives` AS b
-				// 				ON b.`course_id` = ".$event_info["course_id"]."
-				// 				AND a.`objective_id` = b.`objective_id`
-				// 				WHERE a.`objective_type` = 'event'
-				// 				AND b.`objective_type` = 'event'
-				// 				AND a.`event_id` = ".$db->qstr($EVENT_ID);
-				// 	$results = $db->GetAll($query);
-				// 	if ($results) {
-				// 		foreach ($results as $result) {
-				// 			$clinical_presentations[$result["objective_id"]] = $clinical_presentations_list[$result["objective_id"]];
-				// 		}
-				// 	}
-				// }
+                if (((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"])))) {
+                    foreach ($_POST["clinical_presentations"] as $objective_id) {
+                        if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
+                            $query	= "	SELECT a.`objective_id`
+                                    FROM `global_lu_objectives` AS a
+                                    JOIN `course_objectives` AS b
+                                    ON b.`course_id` = ".$event_info["course_id"]."
+                                    AND a.`objective_id` = b.`objective_id`
+                                    JOIN `objective_organisation` AS c
+                                    ON a.`objective_id` = c.`objective_id`
+                                    WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+                                    AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+                                    AND b.`objective_type` = 'event'
+                                    AND a.`objective_active` = '1'";
+                            $result	= $db->GetRow($query);
+                            if ($result) {
+                                $clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
+                            }
+                        }
+                    }
+                } else {
+                    $clinical_presentations = array();
+                }
+
+                history_log($EVENT_ID, "updated clinical presentations.");
 
 				/**
 				 * Fetch the Curriculum Objective details.
@@ -634,7 +618,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 				</style>
 				<?php
-				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js\"></script>";
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/wizard.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 				$HEAD[] = "<link href=\"".ENTRADA_URL."/css/wizard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 				?>
@@ -791,7 +774,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</colgroup>
 						<tfoot>
 							<tr>
-								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" class="btn" value="Save" /></td>
+								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" class="btn btn-primary" value="Save" /></td>
 							</tr>
 						</tfoot>
 						<tbody>
@@ -900,117 +883,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								</td>
 							</tr>
 							<tr>
-								<td style="vertical-align: top">Event Description:</td>
-								<td>
-									<textarea id="event_description" name="event_description" style="width: 100%; height: 150px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_description"], array("font")))); ?></textarea>
+								<td colspan="2">
+                                    <label for="event_description" class="form-nrequired">Event Description:</label><br />
+									<textarea id="event_description" name="event_description" style="width: 100%; height: 100px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_description"], array("font")))); ?></textarea>
 								</td>
 							</tr>
-						</tbody>
-					</table>
-				</div>
 
-				<a name="event-audience-section"></a>
-				<h2 title="Event Audience Section">Event Audience</h2>
-				<div id="event-audience-section">
-					<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Event Information">
-						<colgroup>
-							<col style="width: 20%" />
-							<col style="width: 80%" />
-						</colgroup>
-						<tfoot>
 							<tr>
-								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" class="btn" value="Save" /></td>
-							</tr>
-						</tfoot>
-						<tbody>
-							<tr>
-								<td colspan="2">&nbsp;</td>
-							</tr>
-							<?php
-							switch ($event_audience_type) {
-								case "grad_year" :
-									echo "<tr>\n";
-									echo "	<td>Associated Class</td>\n";
-									echo "	<td>Class of ".$associated_grad_year."</td>\n";
-									echo "</tr>\n";
-								break;
-								case "group_id" :
-									echo "<tr>\n";
-									echo "	<td style=\"vertical-align: top\">Associated Group</td>\n";
-									echo "	<td style=\"vertical-align: top\">\n";
-									echo "		<ul class=\"general-list\">";
-										foreach ($associated_group_ids as $group_id) {
-											echo "	<li>Group ID: ".$group_id."</li>\n";
-										}
-									echo "		</ul>\n";
-									echo "	</td>\n";
-									echo "</tr>\n";
-								break;
-								case "proxy_id" :
-									echo "<tr>\n";
-									echo "	<td style=\"vertical-align: top\">Associated Learner".((count($associated_proxy_ids) != 1) ? "s" : "")."</td>\n";
-									echo "	<td style=\"vertical-align: top\">\n";
-									echo "		<ul class=\"general-list\">";
-										foreach ($associated_proxy_ids as $proxy_id) {
-											/**
-											 * @todo Once the group support has been added this will need to be changed.
-											 */
-											echo "	<li><a href=\"".ENTRADA_URL."/people?profile=".get_account_data("username", $proxy_id)."\" target=\"_blank\">".get_account_data("firstlast", $proxy_id)."</a></li>\n";
-										}
-									echo "		</ul>\n";
-									echo "	</td>\n";
-									echo "</tr>\n";
-								break;
-								case "organisation_id":
-									echo "<tr>\n";
-									echo "	<td>Associated Organisation</td>\n";
-									echo "	<td>".$associated_organisation."</td>\n";
-									echo "</tr>\n";
-								break;
-							}
-							?>
-							<tr>
-								<td colspan="2">&nbsp;</td>
-							</tr>
-							<tr>
-								<td style="vertical-align: top">
-									Teacher's Message
-									<div class="content-small" style="margin-top: 10px">
-										<strong>Note:</strong> You can use this to provide your learners with instructions or information they need for this class.
-									</div>
-								</td>
-								<td>
-									<textarea id="event_message" name="event_message" style="width: 100%; height: 150px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_message"], array("font")))); ?></textarea>
+								<td colspan="2">
+                                    <label for="event_message" class="form-nrequired">Teacher's Message:</label><br />
+									<textarea id="event_message" name="event_message" style="width: 100%; height: 100px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_message"], array("font")))); ?></textarea>
 								</td>
 							</tr>
 						</tbody>
 					</table>
 				</div>
-				<?php
-				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-				?>
 				<a name="event-objectives-section"></a>
 				<h2 title="Event Objectives Section">Event Objectives</h2>
 				<div id="event-objectives-section">
-					<table style="width: 100%" cellspacing="0" cellpadding="0" border="0" summary="Event Objectives Information">
-						<colgroup>
-							<col style="width: 20%" />
-							<col style="width: 80%" />
-						</colgroup>
-						<tfoot>
-							<tr>
-								<td colspan="2" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" class="btn"/></td>
-							</tr>
-						</tfoot>
-						<tbody>
-							<tr>
-								<td style="vertical-align: top"><label for="event_objectives" class="form-nrequired">Free-Text Objectives</label></td>
-								<td>
-									<textarea id="event_objectives" name="event_objectives" style="width: 100%; height: 150px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_objectives"], array("font")))); ?></textarea>
-								</td>
-							</tr>
-						</tbody>
-					</table>
+                    <label for="event_objectives" class="form-nrequired">Free-Text Objectives</label><br />
+                    <textarea id="event_objectives" name="event_objectives" style="width: 100%; height: 100px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_objectives"], array("font")))); ?></textarea>
+					
 					<?php
 					$query = "	SELECT a.* FROM `global_lu_objectives` a
 								JOIN `objective_audience` b
@@ -1035,7 +928,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         	.mapped-objective{
                     			padding-left: 30px!important;
                         	}
-                        </style>						
+                        </style>
 						<div class="objectives half left">
 							<h3>Objective Sets</h3>
 							<ul class="tl-objective-list" id="objective_list_0">
@@ -1128,7 +1021,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Map Additional Objectives</a>
 								</li>
 							</ul>
-						</div>												
+						</div>
 						<p class="well well-small content-small">
 							<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left and it will be mapped to the event.
 						</p>
@@ -1252,10 +1145,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 					</div>
 					<div style="clear:both;"></div>
-					<div style="float:right;margin-top:10px;">
-						<input type="submit" value="Save"/>
+					<div class="pull-right">
+						<input type="submit" value="Save" class="btn btn-primary" />
 					</div>
-					<div style="clear:both;"></div>
+
 					<?php 	} 	?>
 				</div>
 
@@ -1288,7 +1181,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             </colgroup>
                             <tfoot>
                                 <tr>
-                                    <td colspan="4" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" /></td>
+                                    <td colspan="4" style="text-align: right; padding-top: 5px"><input type="submit" value="Save" class="btn btn-primary" /></td>
                                 </tr>
                             </tfoot>
 							<tr>

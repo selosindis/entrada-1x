@@ -14,7 +14,7 @@
 global $AGENT_CONTACTS;
 return array (
 	/**
-	 * Core Navigation
+	 * Navigation
 	 */
 	"navigation_tabs" => array (
 		"public" => array (
@@ -67,6 +67,40 @@ return array (
 */
 	),
 
+	/**
+	 * Global terminology used across different Entrada modules.
+	 */
+    "Organisation" => "Organisation",
+    "Organisations" => "Organisations",
+    "My Organisations" => "My Organisations",
+    "Give Feedback!" => "Give Feedback!",
+    "Quick Polls" => "Quick Polls",
+
+    "global_button_save" => "Save",
+    "global_button_cancel" => "Cancel",
+    "global_button_proceed" => "Proceed",
+
+	"global_feedback_widget" => array(
+		"global" => array(
+			"system"		=> array(
+				"link-text" => APPLICATION_NAME." Feedback",
+				"link-desc" => "Please share any feedback you may have about this page.",
+				"form"		=> array(
+					"title" => "Feedback about ".APPLICATION_NAME,
+					"description" => "This form is provided so you can efficiently provide our developers with important feedback regarding this application. Whether you are reporting a bug, feature request or just general feedback, all messages are important to us and appreciated.<br /><br />
+									<span class=\"content-small\">Please note: If you are submitting a bug or problem, please try to be specific as to the issue. If possible also let us know how to recreate the problem.</span>",
+					"anon"	=> false,
+					"recipients" => array(
+						$AGENT_CONTACTS["administrator"]["email"] => $AGENT_CONTACTS["administrator"]["name"]
+					)
+				)
+			)
+		)
+	),
+
+    /**
+     * Events Module
+     */
 	"events_filter_controls" => array (
 		"teacher" => array (
 			"label" => "Teacher Filters"
@@ -103,40 +137,14 @@ return array (
 	),
 
 	/**
-	 * Global terminology used across different Entrada modules.
-	 */
-    "global_button_save" => "Save",
-    "global_button_cancel" => "Cancel",
-    "global_button_proceed" => "Proceed",
-
-	"global_feedback_widget" => array(
-		"global" => array(
-			"system"		=> array(
-				"link-text" => APPLICATION_NAME." Feedback",
-				"link-desc" => "Please share any feedback you may have about this page.",
-				"form"		=> array(
-					"title" => "Feedback about ".APPLICATION_NAME,
-					"description" => "This form is provided so you can efficiently provide our developers with important feedback regarding this application. Whether you are reporting a bug, feature request or just general feedback, all messages are important to us and appreciated.<br /><br />
-									<span class=\"content-small\">Please note: If you are submitting a bug or problem, please try to be specific as to the issue. If possible also let us know how to recreate the problem.</span>",
-					"anon"	=> false,
-					"recipients" => array(
-						$AGENT_CONTACTS["administrator"]["email"] => $AGENT_CONTACTS["administrator"]["name"]
-					)
-				)
-			)
-		)
-	),
-
-	/**
-	 * Public Dashboard Module
-	 * modules/public/dashboard
+	 * Dashboard Module
 	 */
     "public_dashboard_feeds" => array (
 		"global" => array (
 			array ("title" => "Entrada Announcement Feed", "url" => "http://www.entrada-project.org/news/feed", "removable" => false),
 			array ("title" => "Zend DevZone", "url" => "http://feeds.feedburner.com/PHPDevZone", "removable" => true),
 			array ("title" => "Insider Medicine", "url" => "http://insidermedicine.ca/xml/Patient/insidermedicine_English.xml", "removable" => true),
-			array ("title" => "Google News Top Stories", "url" => "http://news.google.com/news?pz=1&cf=all&ned=ca&hl=en&topic=h&num=3&output=rss", "removable" => true)
+			array ("title" => "Google News Top Stories", "url" => "https://news.google.ca/news/feeds?pz=1&cf=all&ned=ca&hl=en&output=rss", "removable" => true)
 		),
 		"medtech" => array (
 			// array ("title" => "Admin Feed Example", "url" => "http://www.yourschool.ca/admin.rss", "removable" => false)
@@ -193,17 +201,11 @@ return array (
     "public_dashboard_block_community" => "My Communities",
 
 	/**
-	 * Public Communities Module
-	 * modules/public/communities
+	 * Communities Module
 	 */
     "public_communities_heading_line" => "Creating a <strong>new community</strong> in the <strong>Entrada Community System</strong> gives you a <strong>place to connect</strong> on-line.",
     "public_communities_title" => "Entrada Communities",
     "breadcrumb_communities_title"=> "Entrada Communities",
-
-	/**
-	 * Community System History Strings
-	 * community
-	 */
     "community_history_add_announcement" => "A new announcement (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been added.",
     "community_history_edit_announcement" => "Announcement (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been updated.",
     "community_history_add_forum" => "A new discussion forum (<a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?id=%RECORD_ID%\">%RECORD_TITLE%</a>) has been added.",
@@ -247,7 +249,7 @@ return array (
 	"community_history_move_photo" => "The <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-photo&id=%RECORD_ID%\">%RECORD_TITLE%</a> photo was moved to a different <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-gallery&id=%PARENT_ID%\">gallery</a>.",
 
 	/**
-	 * mspr messages
+	 * MSPR Module
 	 */
 	"mspr_no_entity" => "No Entity ID provided.",
 	"mspr_invalid_entity" => "Item not found or invalid identifier provided",
@@ -266,12 +268,9 @@ return array (
 	"mspr_too_many_critical_enquiry" => "Cannot have more than one Critical Enquiry on MSPR. Please edit the existing project or remove it before adding a new one.",
 	"mspr_too_many_community_based_project" => "Cannot have more than one Community-Based Project on MSPR. Please edit the existing project or remove it before adding a new one.",
 
-
-	/*****************
-	 * Tasks Module  *
-	 *****************/
-
-	/** Heading labels **/
+	/**
+     * Tasks Module
+     */
 	"task_heading_create" => "Create Task",
 	"task_heading_edit" => "Edit Task",
 	"task_heading_recipients" => "Task Recipients",
@@ -279,8 +278,6 @@ return array (
 	"task_heading_verification_options" => "Task Verification Options",
 	"task_heading_time_release_options" => "Time Release Options",
 	"task_heading_description" => "Task Description",
-
-	/** field labels **/
 	"task_field_title" => "Task Title",
 	"task_field_deadline" => "Deadline",
 	"task_field_time_required" => "Estimated Time Required",
@@ -304,14 +301,9 @@ return array (
 	"task_field_verification_notification_dashboard" => "Dashboard Notification [disabled]",
 	"task_field_verification_notificaiton_email" => "Email Notification",
 	"task_field_after_saving_options" => "After Saving:",
-
-
-	/** button labels **/
 	"task_button_add" => "Add",
 	"task_button_save" => "Save",
 	"task_button_cancel" => "Cancel",
-
-	/** instructions **/
 	"task_instructions_recipients_class" => "This task is intended for an entire class",
 	"task_instructions_recipients_students" => "This task is intended for a specific student or students",
 	"task_instructions_recipients_organisation" => "This task is intended for every member of an organisation",
@@ -321,8 +313,6 @@ return array (
 	"task_instructions_verification_none" => "No external verification required. Task recipients assertion of completion functions as self-verification.",
 	"task_instructions_verification_other" => "The individual specified will receive all verification requests (if applicable) and will be granted verification authority where they might not otherwise have it.",
 	"task_instructions_verification_faculty" => "The selected associated faculty will receive verification requests (if applicable)",
-
-	/** option labels **/
 	"task_option_complete_allow_comments" => "Allow comments",
 	"task_option_complete_no_comments" => "Disable comments",
 	"task_option_complete_require_comments" => "Require comments",
@@ -330,11 +320,7 @@ return array (
 	"task_option_faculty_selection_off" => "Off",
 	"task_option_faculty_selection_allow" => "Allowed",
 	"task_option_faculty_selection_require" => "Required",
-
-	/** misc labels **/
 	"task_misc_minutes" => "minutes",
-
-	/** errors **/
 	"task_title_too_short" => "The <strong>Task Title</strong> field is required.",
 	"task_course_invalid" => "The <strong>Course</strong> you selected does not exist.",
 	"task_course_permission_fail" => "You do not have permission to add a task for the course you selected. <br />Please re-select the course you would like to associate with this task.",
@@ -350,14 +336,13 @@ return array (
 	"task_verification_no_verifier" => "You have chosen <strong>Other Specified Individual Verifiction</strong>, but have not selected an individual as <strong>Designated Verifier</strong>.",
 	"task_completion_comment_policy_invalid" => "Invalid completion comment policy provided. Please select one of the options from the list.",
 	"task_rejection_comment_policy_invalid" => "Invalid rejection comment policy provided. Please select one of the options from the list.",
-
-	/** notices **/
 	"task_title_too_long" => "The <strong>Task Title</strong> field has a maximum length of %MAX_LENGTH% characters. The title was truncated to accomodate this.", //note, the field has the same restriction, so the user is unlikely to receive this message
 
-	/** courses **/
+	/**
+     * Courses Module
+     */
 	"course" => "Course",
 	"courses" => "Courses",
 	"evaluation_filtered_words" => "Dr. Doctor; Firstname Lastname"
 
-	);
-?>
+);

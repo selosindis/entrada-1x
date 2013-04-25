@@ -599,31 +599,7 @@ require_once(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/p
 if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
 	add_task_sidebar();
 
-	system_feedback_sidebar($ENTRADA_USER->getGroup());
+	add_feedback_sidebar($ENTRADA_USER->getGroup());
 
-	/**
-	 * Create the Organisation side bar.
-	 * If the org request attribute is set then change the current org id for this user.
-	 */
-	if (($ENTRADA_USER->getAllOrganisations() && count($ENTRADA_USER->getAllOrganisations()) > 1) || ($ENTRADA_USER->getOrganisationGroupRole() && max(array_map('count', $ENTRADA_USER->getOrganisationGroupRole())) > 1)) {
-		$org_group_role = $ENTRADA_USER->getOrganisationGroupRole();
-		$sidebar_html = "<ul class=\"menu none\">\n";
-		foreach ($ENTRADA_USER->getAllOrganisations() as $key => $organisation_title) {
-			if ($key == $ENTRADA_USER->getActiveOrganisation()) {
-				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?organisation_id=" . $key . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
-				if ($org_group_role && !empty($org_group_role)) {
-					foreach($org_group_role[$key] as $group_role) {
-						if ($group_role["access_id"] == $ENTRADA_USER->getAccessId()) {
-							$sidebar_html .= "<li style=\"padding-left: 15px;\"><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $group_role["access_id"])) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-on.gif\" alt=\"\" /> <span>" . html_encode(ucfirst($group_role["group"]) . " - " . ucfirst($group_role["role"])) . "</span></a></li>\n";
-						} else {
-							$sidebar_html .= "<li style=\"padding-left: 15px;\"><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $group_role["access_id"])) . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>" . html_encode(ucfirst($group_role["group"]) . " - " . ucfirst($group_role["role"])) . "</span></a></li>\n";						}
-					}
-				}
-			} else {
-				$sidebar_html .= "<li><a href=\"" . ENTRADA_URL . "/" . $MODULE . "/" . "?organisation_id=" . $key . "\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-off.gif\" alt=\"\" /> <span>" . html_encode($organisation_title) . "</span></a></li>\n";
-			}
-		}
-		$sidebar_html .= "</ul>\n";
-		new_sidebar_item("Organisations", $sidebar_html, "org-switch", "open", SIDEBAR_PREPEND);
-	}
+	add_organisation_sidebar();
 }

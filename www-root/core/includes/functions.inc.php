@@ -864,38 +864,15 @@ if(!defined("SIDEBAR_PREPEND")) {
 function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $position = SIDEBAR_APPEND) {
 	global $SIDEBAR, $NOTICE, $NOTICESTR;
 
-
-	$state	= (($state == "open") ? $state : "close");
-	$id		= (($id == "") ? "sidebar-".$weight : $id);
-/* //If moving to layout without tables
-	$output = "<div class=\"sidebar\" id=\"".html_encode($id)."\">";
-	$output .= "<span class=\"sidebar-head\">".html_encode($title)."</span>\n";
-	$output .= "<div class=\"sidebar-body\">".$html."</div>\n";
-	$output .= "</div><br />\n";*/
-
-	/*$output  = "<table class=\"sidebar\" id=\"".html_encode($id)."\" cellspacing=\"0\" summary=\"".html_encode($title)."\">\n";
-	$output .= "<thead>\n";
-	$output .= "	<tr>\n";
-	$output .= "		<td class=\"sidebar-head\">".html_encode($title)."</td>\n";
-	$output .= "	</tr>\n";
-	$output .= "</thead>\n";
-	$output .= "<tbody>\n";
-	$output .= "	<tr>\n";
-	$output .= "		<td class=\"sidebar-body\">".$html."</td>\n";
-	$output .= "	</tr>\n";
-	$output .= "</tbody>\n";
-	$output .= "</table>\n";
-	$output .= "<br />\n";*/
+	$state = (($state == "open") ? $state : "close");
+	$id = (($id == "") ? "sidebar-".$weight : $id);
 
 	$output  = "<div class=\"panel\" id=\"".html_encode($id)."\" summary=\"".html_encode($title)."\">\n";
-	$output .= "<div class=\"panel-head\">\n";
-	$output .= "		<h3>".html_encode($title)."</h3>\n";
+	$output .= "    <div class=\"panel-head\">\n";
+	$output .= "        <h3>".html_encode($title)."</h3>\n";
+	$output .= "    </div>\n";
+	$output .= "    <div class=\"clearfix panel-body\">".$html."</div>\n";
 	$output .= "</div>\n";
-	$output .= "		<div class=\"clearfix panel-body\">".$html."</div>\n";
-	$output .= "</div>\n";
-
-
-
 
 	switch ($position) {
 		case SIDEBAR_PREPEND:
@@ -904,9 +881,41 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 		case SIDEBAR_APPEND:
 		default:
 			array_push($SIDEBAR, $output);
+        break;
 	}
 
 	return true;
+}
+
+/**
+ * Function to add the organisation switcher to the sidebar.
+ *
+ * @global type $translate
+ * @global type $ENTRADA_USER
+ */
+function add_organisation_sidebar() {
+    global $translate, $ENTRADA_USER;
+
+    /**
+	 * Create the Organisation side bar.
+	 * If the org request attribute is set then change the current org id for this user.
+	 */
+	if (($ENTRADA_USER->getAllOrganisations() && count($ENTRADA_USER->getAllOrganisations()) > 1) || ($ENTRADA_USER->getOrganisationGroupRole() && max(array_map('count', $ENTRADA_USER->getOrganisationGroupRole())) > 1)) {
+		$org_group_role = $ENTRADA_USER->getOrganisationGroupRole();
+
+		$sidebar_html = "<ul class=\"nav nav-list\">\n";
+		foreach ($ENTRADA_USER->getAllOrganisations() as $key => $organisation_title) {
+            $sidebar_html .= "<li class=\"nav-header\">" . html_encode($organisation_title) . "</li>\n";
+            if ($org_group_role && !empty($org_group_role)) {
+                foreach ($org_group_role[$key] as $group_role) {
+                    $sidebar_html .= "<li><a href=\"" . ENTRADA_RELATIVE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $group_role["access_id"])) . "\"".(($group_role["access_id"] == $ENTRADA_USER->getAccessId()) ? " style=\"font-weight: bold\"" : "").">" . html_encode(ucfirst($group_role["group"]) . " / " . ucfirst($group_role["role"])) . "</a></li>\n";
+                }
+            }
+		}
+		$sidebar_html .= "</ul>\n";
+
+		new_sidebar_item($translate->_("My Organisations"), $sidebar_html, "org-switch", "open", SIDEBAR_PREPEND);
+	}
 }
 
 /*
@@ -915,24 +924,25 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
  * @param $group string or array
  * @return bool
  */
-function system_feedback_sidebar($group = "") {
-
+function add_feedback_sidebar($group = "") {
 	global $translate, $SCRIPT;
 
-	if ($feedback_text = $translate->_("global_feedback_widget")) {
-		$SCRIPT[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/feedback.js\"></script>";
+    $feedback_text = $translate->_("global_feedback_widget");
 
-		$sidebar_html = '<div id="feedback-widget">';
-		$sidebar_html .= '<ul class="menu feedback" data-enc="'.feedback_enc().'">';
+	if ($feedback_text) {
+		$SCRIPT[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/feedback.js\"></script>";
+
+		$sidebar_html  = "<div id=\"feedback-widget\">";
+		$sidebar_html .= "  <ul class=\"menu feedback\" data-enc=\"".feedback_enc()."\">";
 
 		/*
 		 * Global Feedback options
 		 */
 		foreach ($feedback_text["global"] as $css_class => $feedback) {
-			$sidebar_html .= '<li class="'.$css_class.'">';
-			$sidebar_html .= '<a href="'.ENTRADA_URL.'/agent-feedback.php"><strong>'.$feedback["link-text"].'</strong></a><br />';
-			$sidebar_html .= '<span class="content-small">'.$feedback["link-desc"].'</span>';
-			$sidebar_html .= '</li>';
+			$sidebar_html .= "<li class=\"".$css_class."\">";
+			$sidebar_html .= "  <a href=\"".ENTRADA_RELATIVE."/agent-feedback.php\"><strong>".$feedback["link-text"]."</strong></a><br />";
+			$sidebar_html .= "  <span class=\"content-small\">".$feedback["link-desc"]."</span>";
+			$sidebar_html .= "</li>";
 		}
 
 		/*
@@ -942,30 +952,28 @@ function system_feedback_sidebar($group = "") {
 			foreach ($group as $groupname) {
 				if (!empty($feedback_text[$groupname])) {
 					foreach ($feedback_text[$groupname] as $css_class => $feedback) {
-						$sidebar_html .= '<li class="'.$css_class.'">';
-						$sidebar_html .= '<a href="'.ENTRADA_URL.'/agent-feedback.php"><strong>'.$feedback["link-text"].'</strong></a><br />';
-						$sidebar_html .= '<span class="content-small">'.$feedback["link-desc"].'</span>';
-						$sidebar_html .= '</li>';
+                        $sidebar_html .= "<li class=\"".$css_class."\">";
+                        $sidebar_html .= "  <a href=\"".ENTRADA_RELATIVE."/agent-feedback.php\"><strong>".$feedback["link-text"]."</strong></a><br />";
+                        $sidebar_html .= "  <span class=\"content-small\">".$feedback["link-desc"]."</span>";
+                        $sidebar_html .= "</li>";
 					}
 				}
 			}
 		} else if (is_string($group)) {
 			if (!empty($feedback_text[$group])) {
 				foreach ($feedback_text[$group] as $css_class => $feedback) {
-					$sidebar_html .= '<li class="'.$css_class.'">';
-					$sidebar_html .= '<a href="'.ENTRADA_URL.'/agent-feedback.php"><strong>'.$feedback["link-text"].'</strong></a><br />';
-					$sidebar_html .= '<span class="content-small">'.$feedback["link-desc"].'</span>';
-					$sidebar_html .= '</li>';
+                    $sidebar_html .= "<li class=\"".$css_class."\">";
+                    $sidebar_html .= "  <a href=\"".ENTRADA_RELATIVE."/agent-feedback.php\"><strong>".$feedback["link-text"]."</strong></a><br />";
+                    $sidebar_html .= "  <span class=\"content-small\">".$feedback["link-desc"]."</span>";
+                    $sidebar_html .= "</li>";
 				}
 			}
 		}
 
+		$sidebar_html .= "  </ul>";
+		$sidebar_html .= "</div>";
 
-
-		$sidebar_html .= '</ul>';
-		$sidebar_html .= '</div>';
-
-		new_sidebar_item("Feedback", $sidebar_html, "page-feedback", "open");
+		new_sidebar_item($translate->_("Give Feedback!"), $sidebar_html, "page-feedback", "open");
 
 		return true;
 	} else {
@@ -3642,59 +3650,57 @@ function poll_results($poll_id = 0) {
 	global $db;
 
 	$output = "";
+    $poll_id = (int) $poll_id;
 
-	if($poll_id = (int) $poll_id) {
-		$query		= "SELECT `poll_question` FROM `poll_questions` WHERE `poll_id`=".$db->qstr($poll_id);
-		$poll_question	= $db->GetRow($query);
-		if($poll_question) {
-			$query		= "SELECT `answer_id`, `answer_text`, `answer_order` FROM `poll_answers` WHERE `poll_id`=".$db->qstr($poll_id)." ORDER BY `answer_order` ASC";
-			$poll_answers	= $db->GetAll($query);
-			$total_votes	= poll_responses($poll_id);
-			$answers		= array();
-			$winner		= 0;
-			$highest		= 0;
+    if ($poll_id) {
+		$query = "SELECT `poll_question` FROM `poll_questions` WHERE `poll_id` = ".$db->qstr($poll_id);
+		$poll_question = $db->GetRow($query);
+		if ($poll_question) {
+			$answers = array();
+			$winner = 0;
+			$highest = 0;
 
-			$output .= "<div id=\"poll\">\n";
-			$output .= "<div id=\"poll-question\" style=\"margin-bottom: 9px\">".html_encode($poll_question["poll_question"])."</div>";
-			$output .= "<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\" summary=\"Quick Sidebar Poll\">\n";
-			$output .= "<colgroup>\n";
-			$output .= "	<col style=\"width: 80%\" />\n";
-			$output .= "	<col style=\"width: 20%\" />\n";
-			$output .= "</colgroup>\n";
-			$output .= "<tbody>\n";
+			$total_votes = poll_responses($poll_id);
 
-			foreach ($poll_answers as $poll_answer) {
-				if(trim($poll_answer["answer_text"]) != "") {
-					$answers[$poll_answer["answer_order"]]["answer_id"]	= $poll_answer["answer_id"];
-					$answers[$poll_answer["answer_order"]]["answer_text"]	= $poll_answer["answer_text"];
-					$answers[$poll_answer["answer_order"]]["votes"]		= poll_answer_responses($poll_id, $poll_answer["answer_id"]);
+            $query = "SELECT `answer_id`, `answer_text`, `answer_order` FROM `poll_answers` WHERE `poll_id`=".$db->qstr($poll_id)." ORDER BY `answer_order` ASC";
+			$poll_answers = $db->GetAll($query);
+            if ($poll_answers) {
+                foreach ($poll_answers as $poll_answer) {
+                    if (trim($poll_answer["answer_text"]) != "") {
+                        $answers[$poll_answer["answer_order"]]["answer_id"]	= $poll_answer["answer_id"];
+                        $answers[$poll_answer["answer_order"]]["answer_text"] = $poll_answer["answer_text"];
+                        $answers[$poll_answer["answer_order"]]["votes"] = poll_answer_responses($poll_id, $poll_answer["answer_id"]);
 
-					if($answers[$poll_answer["answer_order"]]["votes"] > $highest) {
-						$winner	= $answers[$poll_answer["answer_order"]]["answer_id"];
-						$highest	= $answers[$poll_answer["answer_order"]]["votes"];
-					}
-				}
+                        if ($answers[$poll_answer["answer_order"]]["votes"] > $highest) {
+                            $winner	= $answers[$poll_answer["answer_order"]]["answer_id"];
+                            $highest = $answers[$poll_answer["answer_order"]]["votes"];
+                        }
+                    }
+                }
+            }
+
+			$output .= "<div class=\"poll\">\n";
+			$output .= "    <div class=\"poll-question\">".html_encode($poll_question["poll_question"])."</div>\n";
+
+            foreach ($answers as $answer) {
+				$percent = round($answer["votes"] / ($total_votes + 0.0001) * 100);
+
+				$output .= html_encode($answer["answer_text"]);
+                $output .= "<div class=\"poll-response row-fluid\">\n";
+                $output .= "    <div class=\"span10\">\n";
+				$output .= "        <div class=\"progress\">\n";
+				$output .= "            <div class=\"bar\" style=\"width: ".((!$percent) ? "1" : $percent)."%\"></div>";
+				$output .= "        </div>\n";
+				$output .= "    </div>\n";
+                $output .= "    <div class=\"span2\">\n";
+				$output .=          $percent."%\n";
+				$output .= "    </div>\n";
+				$output .= "</div>\n";
 			}
 
-			foreach ($answers as $result) {
-				$percent = round($result["votes"] / ($total_votes + 0.0001) * 100);
-				$output .= "<tr>";
-				$output .= "	<td colspan=\"2\">\n";
-				$output .= "		<span style=\"font-size: 11px\">".html_encode($result["answer_text"])."</span>\n";
-				$output .= "	</td>\n";
-				$output .= "</tr>\n";
-				$output .= "<tr>";
-				$output .= "	<td style=\"padding-bottom: 5px\">\n";
-				$output .= "		<div style=\"width: 100%; height: 12px; background-color: #EEEEEE; border: 1px #333333 solid\">\n";
-				$output .= "			<div style=\"width: ".((!$percent) ? "1" : $percent)."%; height: 12px; background-color: #666666\"></div>";
-				$output .= "		</div>\n";
-				$output .= "	</td>\n";
-				$output .= "	<td style=\"padding-bottom: 5px; text-align: right; padding-right: 3px; font-size: 10px; color: #666666\">".$percent."%</td>\n";
-				$output .= "</tr>";
-			}
-			$output .= "</tbody>\n";
-			$output .= "</table>\n";
-			$output .= "<div style=\"border-top: 1px #666666 dotted; font-size: 11px; color: #666666\"><b>Total Votes:</b> ".$total_votes."</div>\n";
+			$output .= "    <div class=\"poll-votes\">\n";
+            $output .= "        <strong>Total Votes:</strong> ".$total_votes."\n";
+            $output .= "    </div>\n";
 			$output .= "</div>\n";
 		}
 	}

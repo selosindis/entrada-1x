@@ -35,6 +35,9 @@ $loader->registerNamespace('Models_');
 
 require_once("config/settings.inc.php");
 
+if (defined("DEVELOPMENT_MODE") && (bool) DEVELOPMENT_MODE) {
+    require_once("Entrada/adodb/adodb-exceptions.inc.php");
+}
 require_once("Entrada/adodb/adodb.inc.php");
 
 require_once("functions.inc.php");
@@ -60,7 +63,7 @@ require_once("acl.inc.php");
  * If Entrada is in development mode and the user is not a developer send them to the
  * notavailable.html file.
  */
-if ((defined("DEVELOPMENT_MODE")) && ((bool) DEVELOPMENT_MODE)) {
+if (defined("DEVELOPMENT_MODE") && (bool) DEVELOPMENT_MODE) {
 	if ((!is_array($DEVELOPER_IPS)) || (!in_array($_SERVER["REMOTE_ADDR"], $DEVELOPER_IPS))) {
 		header("Location: ".ENTRADA_URL."/notavailable.html");
 		exit;
@@ -105,9 +108,10 @@ if ($ENTRADA_USER) {
 	//Load preferences into local variable as well as $_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]
 	$original_preferences = preferences_load("organisation_switcher");
     if (isset($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"]) {
-        $query = "SELECT `id` FROM `user_access`
+        $query = "SELECT `id`
+                    FROM `".AUTH_DATABASE."`.`user_access`
                     WHERE `user_id` = ".$db->qstr($ENTRADA_USER->getID())."
-                    AND `access_id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"])."
+                    AND `id` = ".$db->qstr($_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"])."
 					AND `account_active` = 'true'
 					AND (`access_starts` = '0' OR `access_starts` < ".$db->qstr(time()).")
 					AND (`access_expires` = '0' OR `access_expires` >= ".$db->qstr(time()).")
@@ -208,12 +212,9 @@ if (!$ENTRADA_ACTIVE_TEMPLATE) {
 	$ENTRADA_ACTIVE_TEMPLATE = DEFAULT_TEMPLATE;
 }
 
-global $ENTRADA_ACTIVE_TEMPLATE;
-
 define("TEMPLATE_URL", ENTRADA_URL."/templates/".$ENTRADA_ACTIVE_TEMPLATE);
 define("TEMPLATE_ABSOLUTE", ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE);
 define("TEMPLATE_RELATIVE", ENTRADA_RELATIVE."/templates/".$ENTRADA_ACTIVE_TEMPLATE);
-
 
 /**
  * Setup Zend_Translate for language file support.
@@ -289,3 +290,4 @@ if ((isset($_GET["step"])) && ($tmp_input = clean_input($_GET["step"], array("no
 } elseif ((isset($_POST["step"])) && ($tmp_input = clean_input($_POST["step"], array("nows", "int")))) {
 	$STEP = $tmp_input;
 }
+

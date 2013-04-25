@@ -36,6 +36,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
+	
+	function departments_nav($dep_id, $current = NULL) {
+		global $ENTRADA_USER;
+		
+		$tabs = "";
+		$tabs .= "<ul class=\"nav nav-tabs\">";
+		$tabs .= "<li class=\"".($current == "edit" || $current == NULL ? "active" : "")."\"><a href=\"" . ENTRADA_URL . "/admin/settings/manage/departments" . "?section=edit&org=" . $ENTRADA_USER->getActiveOrganisation() . "&department_id=" . $dep_id . "\">Edit Department</a></li>";
+		$tabs .= "<li class=\"".($current == "profile-fields" ? "active" : "")."\"><a href=\"" . ENTRADA_URL . "/admin/settings/manage/departments" . "?section=profile-fields&org=" . $ENTRADA_USER->getActiveOrganisation() . "&department_id=" . $dep_id . "\">Department Profile Fields</a></li>";
+		$tabs .= "</ul>";
+		
+		return $tabs;
+	}
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
@@ -58,6 +70,5 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		header("Location: ".$url);
 		exit;
 	}
-
 
 }

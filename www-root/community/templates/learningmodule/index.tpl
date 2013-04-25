@@ -8,19 +8,19 @@
 	<meta charset="{$site_default_charset}">
 	 <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
        Remove this if you use the .htaccess  -->
-	  <!-- <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> // Remove the comment for this line if you don't care too much about validation --> 
+	  <!-- <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"> // Remove the comment for this line if you don't care too much about validation -->
 
 	<title>{$page_title}</title>
 	<meta name="description" content="{$page_description}" />
 	<meta name="keywords" content="{$page_keywords}" />
 
 	<meta name="robots" content="index, follow" />
-	<link href="{$sys_website_url}/css/jquery/jquery-ui.css" rel="stylesheet" type="text/css" />
-	
-	<link href="http://localhost/entrada/www-root/css/jquery/jquery-ui.css" rel="stylesheet" type="text/css" />
+
+    <link href="{$sys_website_url}/css/jquery/jquery-ui.css" rel="stylesheet" type="text/css" />
 	<script type="text/javascript" src="{$sys_website_url}/javascript/jquery/jquery.min.js"></script>
 	<script type="text/javascript" src="{$sys_website_url}/javascript/jquery/jquery-ui.min.js"></script>
 	<script type="text/javascript">jQuery.noConflict();</script>
+
 	<script src="{$template_relative}/js/script.js"></script>
 	<script src="{$template_relative}/js/libs/modernizr-1.7.min.js"></script>
 	{$page_head}
@@ -48,7 +48,7 @@
 				{$site_breadcrumb_trail}
 			</div>
 		</nav>
-		
+
     </header>
 	 <div class="container">
 		<div id="main" role="main" class="span-24">
@@ -84,11 +84,11 @@
 			</section>
 		{/if}
 		</div>
-	
+
     <footer class="span-24">
 		<p>{php}echo COPYRIGHT_STRING;{/php}</p>
     </footer>
   </div> <!--! end of #container -->
 </body>
-	
+
 </html>

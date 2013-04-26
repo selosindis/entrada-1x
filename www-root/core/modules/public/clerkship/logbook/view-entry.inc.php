@@ -1,7 +1,7 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
- * 
+ *
  * Entrada is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -19,7 +19,7 @@
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: James Ellis <james.ellis@queensu.ca>
+ * @author Developer: Andrew Dos-Santos <andrew.dos-santos@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */
@@ -29,7 +29,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('logbook', 'read')) {
+} elseif (!$ENTRADA_ACL->amIAllowed('clerkship', 'read')) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
@@ -45,7 +45,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	if ($RECORD_ID) {
 		$PROCESSED = $db->GetRow("SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` WHERE `lentry_id` = ".$db->qstr($RECORD_ID));
 		if ($PROCESSED) {
-			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/clerkship/logbook?id=".$PROCESSED["proxy_id"], "title" => "Clerk Management");
+			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/clerkship/clerk?ids=".$PROCESSED["proxy_id"], "title" => "Clerk Management");
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/clerkship/logbook?".replace_query(array("section" => "view-entry")), "title" => "View Logbook Entry");
 			echo "<h1>View Clerkship Logbook Entry</h1>\n";
 		
@@ -193,9 +193,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 								$query = "SELECT a.* FROM `global_lu_objectives` AS a
 											JOIN `objective_organisation` AS b
 											ON a.`objective_id` = b.`objective_id`
-											AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 											WHERE a.`objective_id` = ".$db->qstr($objective_id["objective_id"])." 
 											AND a.`objective_active` = '1'
+											AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 											AND 
 											(
 												a.`objective_parent` = '200' 
@@ -264,8 +264,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				</tr>
 				<tr>
 					<td colspan="3">&nbsp;</td>
-				</tr><
-				tr>
+				</tr>
+				<tr>
 					<td></td>
 					<td style="vertical-align: top"><label for="reflection" class="form-nrequired">Reflection</label></td>
 					<td>
@@ -281,7 +281,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<td>
 						<div id="comments" class="comments" style="width: 95%"><?php echo ((isset($PROCESSED["comments"]) && $PROCESSED["comments"]) ? html_encode($PROCESSED["comments"]) : "<span class=\"content-small\">No comments recorded for this entry.</span>"); ?></div>
 					</td>
-				</tr>				
+				</tr>			
 			</tbody>
 			</table>
 			<?php

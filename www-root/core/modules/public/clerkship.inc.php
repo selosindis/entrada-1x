@@ -153,7 +153,7 @@ if(!defined("PARENT_INCLUDED")) {
 	 * Add the schedule correction sidebar item.
 	 */
 	$sidebar_html  = "<a href=\"javascript:sendClerkship('".ENTRADA_URL."/agent-clerkship.php')\"><img src=\"".ENTRADA_URL."/images/icon-important.gif\" width=\"48\" height=\"48\" alt=\"Clerkship Schedule Correction\" title=\"Clerkship Schedule Correction\" border=\"0\"  border=\"0\" align=\"right\" hspace=\"3\" vspace=\"5\" /></a>\n";
-	$sidebar_html .= "<strong>Spot a schedule problem?</strong> To report any issues with this clerkship schedule, please <a href=\"javascript:sendClerkship('".ENTRADA_URL."/agent-clerkship.php')\" style=\"font-size: 11px; font-weight: bold\">click here</a>.\n";
+	$sidebar_html .= "<strong>Spot a schedule problem?</strong> To report any issues with this clerkship schedule, please <a href=\"javascript:sendClerkship('".ENTRADA_URL."/agent-clerkship.php')\">click here</a>.\n";
 
 	new_sidebar_item("Schedule Corrections", $sidebar_html, "page-clerkship", "open");
 	
@@ -165,7 +165,6 @@ if(!defined("PARENT_INCLUDED")) {
 		$sidebar_html .= "<label for=\"name\" class=\"form-nrequired\">Student Search:</label><br />";
 		$sidebar_html .= "<input type=\"text\" id=\"name\" name=\"name\" value=\"\" style=\"width: 95%\" /><br />\n";
 		$sidebar_html .= "<input type=\"hidden\" name=\"action\" value=\"results\" />";
-		$sidebar_html .= "<span style=\"float: left; padding-top: 7px;\"><a href=\"".ENTRADA_URL."/clerkship?section=search\" style=\"font-size: 11px\">Advanced Search</a></span>\n";
 		$sidebar_html .= "<span style=\"float: right; padding-top: 4px;\"><input type=\"submit\" class=\"btn\" value=\"Search\" /></span>\n";
 		$sidebar_html .= "</form>\n";
 	
@@ -182,7 +181,7 @@ if(!defined("PARENT_INCLUDED")) {
 		$sidebar_html  = "<ul class=\"menu\">\n";
 		$sidebar_html .= "	<li><a href=\"".ENTRADA_URL."/clerkship/electives?section=view&type=approval\"><strong>".$elective_weeks["approval"]."</strong> Pending Approval</a></li>\n";
 		$sidebar_html .= "	<li class=\"checkmark\"><a href=\"".ENTRADA_URL."/clerkship/electives?section=view&type=published\"><strong>".$elective_weeks["approved"]."</strong> Weeks Approved</a></li>\n";
-		$sidebar_html .= "	<li class=\"incorrect\"><a href=\"".ENTRADA_URL."/clerkship/electives?section=view&type=rejected\"><strong>".$elective_weeks["trash"]."</strong> Weeks Rejected</a></li>\n";
+		$sidebar_html .= "	<li class=\"rejected\"><a href=\"".ENTRADA_URL."/clerkship/electives?section=view&type=rejected\"><strong>".$elective_weeks["trash"]."</strong> Weeks Rejected</a></li>\n";
 		$sidebar_html .= "	<br />";
 		if((int)$elective_weeks["approval"] + (int)$elective_weeks["approved"] > 0) {
 			$sidebar_html .= "	<li><a href=\"".ENTRADA_URL."/clerkship/electives?section=disciplines\">Discipline Breakdown</a></li>\n";
@@ -192,7 +191,7 @@ if(!defined("PARENT_INCLUDED")) {
 		$sidebar_html .= "<div style=\"margin-top: 10px\">\n";
 		$sidebar_html .= "	You have ".$remaining_weeks." required elective week".(($remaining_weeks != 1) ? "s" : "")." remaining.\n";
 		if ($remaining_weeks > 0) {
-			$sidebar_html .= "	To submit electives for approval, <a href=\"".ENTRADA_URL."/clerkship/electives?section=add\" style=\"font-size: 11px; font-weight: bold\">click here</a>.";
+			$sidebar_html .= "	To submit electives for approval, <a href=\"".ENTRADA_URL."/clerkship/electives?section=add\">click here</a>.";
 		}
 		$sidebar_html .= "</div>\n";
 
@@ -266,7 +265,7 @@ if(!defined("PARENT_INCLUDED")) {
 							}
 							$objectives_recorded += ($recorded <= $required_objective["required"] ? $recorded : $required_objective["required"]);
 						} else {
-							if ($objective_ids) {
+							if (isset($objective_ids) && $objective_ids) {
 								$objective_ids .= ",".$db->qstr($required_objective["objective_id"]);
 							} else {
 								$objective_ids = $db->qstr($required_objective["objective_id"]);
@@ -278,7 +277,7 @@ if(!defined("PARENT_INCLUDED")) {
 			$remaining_weeks	 	= clerkship_get_rotation_schedule($rotation);
 			$sidebar_html  			= "<center><a href=\"".ENTRADA_URL."/clerkship/logbook?section=select\"><strong>$clinical_rotation[title]</strong></a></center><br>";
 			$sidebar_html 			.= "<ul class=\"menu\">\n";
-			$sidebar_html 			.= "	<li class=\"incorrect\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=missing&core=$rotation\"><strong>".($objectives_required-$objectives_recorded)."</strong>  CPs Not Seen</a></li>\n";
+			$sidebar_html 			.= "	<li class=\"rejected\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=missing&core=$rotation\"><strong>".($objectives_required-$objectives_recorded)."</strong>  CPs Not Seen</a></li>\n";
 			$sidebar_html 			.= "	<li class=\"checkmark\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=mandatories&core=$rotation\"><strong>".($objectives_recorded)."</strong>  CPs Seen</a></li>\n";
 			$sidebar_html 			.= "	<li><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=procedures&core=$rotation\"><strong>".$clinical_encounters["procedures"]."</strong> Procedures</a></li>\n";
 			$sidebar_html 			.= "</ul>\n";

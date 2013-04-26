@@ -47,7 +47,8 @@ class Entrada_ACL extends ACL_Factory {
 			"clerkship" => array (
 				"electives",
 				"logbook",
-				"lottery"
+				"lottery",
+                "categories"
 			),
 			"term",
 			"objective",

@@ -8504,6 +8504,83 @@ function clerkship_get_rotation_overview($rotation_id, $proxy_id = 0) {
 				)";
     $entries = $db->GetOne($query);
 
+    $query 	= "SELECT a.*, b.* FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS a
+				JOIN `global_lu_objectives` AS b
+				ON a.`objective_id` = b.`objective_id`
+				JOIN `objective_organisation` AS c
+				ON b.`objective_id` = c.`objective_id`
+				WHERE a.`rotation_id` = ".$db->qstr($rotation_id)."
+				AND a.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
+				AND (a.`grad_year_max` = 0 OR a.`grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")
+				AND c.`organisation_id` = ".$db->qstr(get_account_data("organisation_id", $proxy_id));
+	$oresults = $db->GetAll($query);
+	if ($oresults) {
+		$total_required = 0;
+		$total_logged = 0;
+		$required_list = array();
+		$missing_list = array();
+		$logged_list = array();
+		$objective_string = "";
+		foreach ($oresults as $objective) {
+			if ($objective_string) {
+				$objective_string .= ",".$db->qstr($objective["objective_id"]);
+			} else {
+				$objective_string = $db->qstr($objective["objective_id"]);
+			}
+			$objectives[$objective["objective_id"]] = $objective["number_required"];
+			$total_required += $objective["number_required"];
+			$query = "SELECT c.* FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS a
+						JOIN `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS b
+						ON a.`lmobjective_id` = b.`lmobjective_id`
+						JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_location_types` AS c
+						ON b.`lltype_id` = c.`lltype_id`
+						WHERE a.`lmobjective_id` = ".$db->qstr($objective["lmobjective_id"])."
+						GROUP BY c.`lltype_id`";
+			$locations = $db->GetAll($query);
+			$location_string = "";
+			foreach ($locations as $location) {
+				$location_string .= ($location_string ? "/" : "").html_encode($location["location_type_short"]);
+			}
+			$required_list[$objective["objective_id"]] = $objective["objective_name"].($location_string ? " (".$location_string.")" : "");
+		}
+		if ($objective_string) {
+			$query 	= "SELECT COUNT(a.`objective_id`) as `number_logged`, a.`objective_id`
+						FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
+					LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
+    			ON a.`lentry_id` = b.`lentry_id`
+					WHERE a.`objective_id` IN  (".$objective_string.")
+					AND b.`proxy_id` = ".$db->qstr($proxy_id)."
+			    AND b.`entry_active` = 1
+						".(CLERKSHIP_SETTINGS_REQUIREMENTS ? "AND b.`llocation_id` IN
+				(
+					SELECT dd.`llocation_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS aa
+					JOIN `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS bb
+					ON aa.`lmobjective_id` = bb.`lmobjective_id`
+							JOIN `".CLERKSHIP_DATABASE."`.`logbook_location_types` AS cc
+					ON bb.`lltype_id` = cc.`lltype_id`
+					JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_locations` AS dd
+							ON cc.`llocation_id` = dd.`llocation_id`
+					WHERE aa.`objective_id` = a.`objective_id`
+					AND aa.`rotation_id` = ".$db->qstr($rotation_id)."
+					AND aa.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
+					AND (aa.`grad_year_max` = 0 OR aa.`grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")
+						)" : "")."
+					GROUP BY a.`objective_id`";
+			$numbers_logged = $db->GetAll($query);
+			if ($numbers_logged) {
+				foreach ($numbers_logged as $number_logged) {
+					if ($number_logged > $objectives[$number_logged["objective_id"]]) {
+						$total_logged += $objectives[$number_logged["objective_id"]];
+					} else {
+						$total_logged += $number_logged["number_logged"];
+					}
+					$logged_list[$number_logged["objective_id"]] = $required_list[$number_logged["objective_id"]];
+					unset($required_list[$number_logged["objective_id"]]);
+				}
+			}
+		}
+	}
+
     // Count of objectives entered in this rotation
     $query  = "	SELECT COUNT(*) FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
     			INNER JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
@@ -8517,48 +8594,6 @@ function clerkship_get_rotation_overview($rotation_id, $proxy_id = 0) {
 				)";
     $objectives = $db->GetOne($query);
 
-    // Count of Mandatory objectives entered in this rotation
-    $query  = "	SELECT  DISTINCT(a.`objective_id`) FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
-  				INNER JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
-  				ON a.`lentry_id` = b.`lentry_id`
-	        	WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
-	        	AND b.`entry_active` = 1
-	        	AND b.`rotation_id` IN
-	        	(
-	        		SELECT e.`event_id` FROM `".CLERKSHIP_DATABASE."`.`events` AS e
-	        		WHERE e.`rotation_id` = ".$db->qstr($rotation_id)."
-	        	)
-				AND a.`objective_id` IN
-				(
-					SELECT `objective_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
-					WHERE `rotation_id` = ".$db->qstr($rotation_id)."
-					AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
-					AND (`grad_year_max` = 0 OR `grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")
-				)".(get_account_data("grad_year", $proxy_id) >= 2013 ? "
-				AND b.`llocation_id` IN
-				(
-					SELECT dd.`llocation_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS aa
-					JOIN `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS bb
-					ON aa.`lmobjective_id` = bb.`lmobjective_id`
-					JOIN `".CLERKSHIP_DATABASE."`.`logbook_locations_types` AS cc
-					ON bb.`lltype_id` = cc.`lltype_id`
-					JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_locations` AS dd
-					ON cc.`lltype_id` = dd.`lltype_id`
-					WHERE aa.`objective_id` = a.`objective_id`
-					AND aa.`rotation_id` = ".$db->qstr($rotation_id)."
-					AND aa.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
-					AND (aa.`grad_year_max` = 0 OR aa.`grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")
-				)" : "");
-    $result = $db->GetAll($query);
-    $mandatories = (int) ($result) ? count($result) : 0;
-
-    // Get count of all Mandatory clinical presentations for this rotation
-    $query  = " SELECT  COUNT(*) FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
-				WHERE `rotation_id` = ".$db->qstr($rotation_id)."
-				AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
-				AND (`grad_year_max` = 0 OR `grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")";
-    $all_mandatories = $db->GetOne($query);
-
     $query  = "	SELECT COUNT(*) FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures` AS a
     			INNER JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
     			ON a.`lentry_id` = b.`lentry_id`
@@ -8571,7 +8606,7 @@ function clerkship_get_rotation_overview($rotation_id, $proxy_id = 0) {
 				)";
     $procedures = $db->GetOne($query);
 
-    return array("entries" => $entries, "objectives" => $objectives, "mandatories" => $mandatories, "all_mandatories" => $all_mandatories, "procedures" => $procedures);
+    return array("entries" => $entries, "objectives" => $objectives, "mandatories" => $total_logged, "all_mandatories" => $total_required, "procedures" => $procedures);
 }
 
 /**
@@ -9073,31 +9108,43 @@ function clerkship_rotation_objectives_progress($proxy_id, $rotation_id) {
 			}
 			$objectives[$objective["objective_id"]] = $objective["number_required"];
 			$total_required += $objective["number_required"];
-			$required_list[$objective["objective_id"]] = $objective["objective_name"];
+			$query = "SELECT c.* FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS a
+						JOIN `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS b
+						ON a.`lmobjective_id` = b.`lmobjective_id`
+						JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_location_types` AS c
+						ON b.`lltype_id` = c.`lltype_id`
+						WHERE a.`lmobjective_id` = ".$db->qstr($objective["lmobjective_id"])."
+						GROUP BY c.`lltype_id`";
+			$locations = $db->GetAll($query);
+			$location_string = "";
+			foreach ($locations as $location) {
+				$location_string .= ($location_string ? "/" : "").html_encode($location["location_type_short"]);
+			}
+			$required_list[$objective["objective_id"]] = $objective["objective_name"].($location_string ? " (".$location_string.")" : "");
 		}
 		if ($objective_string) {
-			$query 	= "SELECT COUNT(a.`objective_id`) as number_logged, a.`objective_id`
+			$query 	= "SELECT COUNT(a.`objective_id`) as `number_logged`, a.`objective_id`
 						FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives` AS a
 						LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
 						ON a.`lentry_id` = b.`lentry_id`
 						WHERE a.`objective_id` IN  (".$objective_string.")
 						AND b.`proxy_id` = ".$db->qstr($proxy_id)."
 						AND b.`entry_active` = 1
-						".(get_account_data("grad_year", $proxy_id) >= 2013 ? "AND b.`llocation_id` IN
+						".(CLERKSHIP_SETTINGS_REQUIREMENTS ? "AND b.`llocation_id` IN
 						(
 							SELECT dd.`llocation_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives` AS aa
 							JOIN `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS bb
 							ON aa.`lmobjective_id` = bb.`lmobjective_id`
-							JOIN `".CLERKSHIP_DATABASE."`.`logbook_locations_types` AS cc
+							JOIN `".CLERKSHIP_DATABASE."`.`logbook_location_types` AS cc
 							ON bb.`lltype_id` = cc.`lltype_id`
 							JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_locations` AS dd
-							ON cc.`lltype_id` = dd.`lltype_id`
+							ON cc.`llocation_id` = dd.`llocation_id`
 							WHERE aa.`objective_id` = a.`objective_id`
 							AND aa.`rotation_id` = ".$db->qstr($rotation_id)."
 							AND aa.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
 							AND (aa.`grad_year_max` = 0 OR aa.`grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")
-						)
-						GROUP BY a.`objective_id`" : "");
+						)" : "")."
+					GROUP BY a.`objective_id`";
 			$numbers_logged = $db->GetAll($query);
 			if ($numbers_logged) {
 				foreach ($numbers_logged as $number_logged) {
@@ -9125,11 +9172,14 @@ function clerkship_rotation_objectives_progress($proxy_id, $rotation_id) {
  * @return array
  */
 function clerkship_rotation_tasks_progress($proxy_id, $rotation_id) {
-	$query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures`
-			WHERE `rotation_id` = ".$db->qstr($rotation_id)."
-			AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
-			AND (`grad_year_max` = 0 OR `grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")";
-	$oresults = $db->GetAll($query);
+	global $db;
+	$query 	= "SELECT b.*, a.* FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS a
+				JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures` AS b
+				ON a.`lprocedure_id` = b.`lprocedure_id`
+				WHERE a.`rotation_id` = ".$db->qstr($rotation_id)."
+				AND a.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
+				AND (a.`grad_year_max` = 0 OR a.`grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")";
+	$tresults = $db->GetAll($query);
 	if ($tresults) {
 		$total_required = 0;
 		$total_logged = 0;
@@ -9142,6 +9192,19 @@ function clerkship_rotation_tasks_progress($proxy_id, $rotation_id) {
 			}
 			$tasks[$task["lprocedure_id"]] = $task["number_required"];
 			$total_required += $task["number_required"];
+			$query = "SELECT c.* FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS a
+						JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedure_locations` AS b
+						ON a.`lpprocedure_id` = b.`lpprocedure_id`
+						JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_location_types` AS c
+						ON b.`lltype_id` = c.`lltype_id`
+						WHERE a.`lpprocedure_id` = ".$db->qstr($task["lpprocedure_id"])."
+						GROUP BY c.`lltype_id`";
+			$locations = $db->GetAll($query);
+			$location_string = "";
+			foreach ($locations as $location) {
+				$location_string .= ($location_string ? "/" : "").html_encode($location["location_type_short"]);
+			}
+			$required_list[$task["lprocedure_id"]] = $task["procedure"].($location_string ? " (".$location_string.")" : "");
 		}
 		if ($task_string) {
 			$query 	= "SELECT COUNT(a.`lprocedure_id`) as number_logged, a.`lprocedure_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures` AS a
@@ -9150,6 +9213,20 @@ function clerkship_rotation_tasks_progress($proxy_id, $rotation_id) {
 					WHERE a.`lprocedure_id` IN  (".$task_string.")
 					AND b.`proxy_id` = ".$db->qstr($proxy_id)."
 					AND b.`entry_active` = 1
+						".(CLERKSHIP_SETTINGS_REQUIREMENTS ? "AND b.`llocation_id` IN
+						(
+							SELECT dd.`llocation_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures` AS aa
+							JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedure_locations` AS bb
+							ON aa.`lpprocedure_id` = bb.`lpprocedure_id`
+							JOIN `".CLERKSHIP_DATABASE."`.`logbook_location_types` AS cc
+							ON bb.`lltype_id` = cc.`lltype_id`
+							JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_locations` AS dd
+							ON cc.`llocation_id` = dd.`llocation_id`
+							WHERE aa.`lprocedure_id` = a.`lprocedure_id`
+							AND aa.`rotation_id` = ".$db->qstr($rotation_id)."
+							AND aa.`grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $proxy_id))."
+							AND (aa.`grad_year_max` = 0 OR aa.`grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $proxy_id)).")
+						)" : "")."
 					GROUP BY a.`lprocedure_id`";
 			$numbers_logged = $db->GetAll($query);
 			if ($numbers_logged) {
@@ -9222,7 +9299,7 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 			}
 			$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
 
-			if (($rotation["email"] && $administrator) || !$administrator) {
+			if (($rotation["proxy_id"] && $administrator) || !$administrator) {
 				if ($administrator) {
 					$notice_message = "The clerk [%CLERK_FULLNAME%] has completed a plan to attain deficiencies for a rotation [%ROTATION_TITLE%] after the allotted time. Please review their <a href=\"%DEFICIENCY_PLAN_URL%\">Deficiency Plan</a> now to ensure it meets all requirements.";
 				} else {
@@ -9263,9 +9340,9 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 						$sent = false;
 					}
 					if($sent && $administrator) {
-						application_log("success", "Sent overdue logging notification to Program Coordinator ID [".$rotation["proxy_id"]."].");
+						application_log("success", "Sent overdue logging notification to Course Director ID [".$rotation["proxy_id"]."].");
 					} elseif ($administrator) {
-						application_log("error", "Unable to send overdue logging notification to Program Coordinator ID [".$rotation["proxy_id"]."].");
+						application_log("error", "Unable to send overdue logging notification to Course Director ID [".$rotation["proxy_id"]."].");
 					} elseif (!$administrator && $sent) {
 						application_log("success", "Sent overdue logging notification to Clerk ID [".$clerk_id."].");
 					} else {
@@ -16577,6 +16654,119 @@ function categories_inarray($parent_id, $indent = 0) {
 	return ((@count($sub_category_ids) > 0) ? true : false);
 }
 
+/*
+ * This function recursively deactivates child categories.
+ *
+ * @param int $parent_id
+ * @param int $i
+ * @return boolean
+ */
+function categories_deactivate_children($parent_id, $level = 0) {
+	global $db, $ENTRADA_USER;
+	if ($level > 99) {
+		exit;
+	}
+
+	$query = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories`
+				WHERE `category_parent` = ".$db->qstr($parent_id)."
+				AND `category_status` != 'trash'
+				GROUP BY `category_id`";
+	$categories = $db->GetAll($query);
+	if ($categories) {
+		foreach ($categories as $category) {
+            $query = "UPDATE `".CLERKSHIP_DATABASE."`.`categories` SET `category_status` = 'trash', `updated_date` = " . $db->qstr(time()) . ", `updated_by` = " . $db->qstr($ENTRADA_USER->getID()) . " WHERE `category_id` = ".$db->qstr($category["category_id"]);
+			$level++;
+            if ($db->Execute($query)) {
+                return categories_deactivate_children($category["category_id"], $level);
+            }
+		}
+	} elseif ($level) {
+        return true;
+    }
+	return false;
+}
+
+/**
+ * Function will return all categories below the specified category_parent.
+ *
+ * @param int $identifier
+ * @param int $indent
+ * @return string
+ */
+function categories_intable($identifier = 0, $indent = 0, $excluded_categories = false) {
+	global $db, $ONLOAD;
+
+	if($indent > 99) {
+		die("Preventing infinite loop");
+	}
+
+	$selected				= 0;
+	$selectable_children	= true;
+
+
+	$identifier	= (int) $identifier;
+	$output		= "";
+
+	if(($identifier)) {
+		$query	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories`
+					WHERE `category_id` = ".$db->qstr((int)$identifier)."
+					AND `category_status` != 'trash'
+					ORDER BY `category_order` ASC";
+	}
+
+	$result	= $db->GetRow($query);
+	if($result) {
+		$output .= "<tr id=\"content_".$result["category_id"]."\">\n";
+		$output .= "	<td>&nbsp;</td>\n";
+		$output .= "	<td style=\"padding-left: ".($indent * 25)."px; vertical-align: middle\">";
+		$output .= "		<img src=\"".ENTRADA_URL."/images/record-next-off.gif\" width=\"11\" height=\"11\" border=\"0\" alt=\"\" title=\"\" style=\"vertical-align: middle; margin-right: 5px\" />";
+		$output .= "		".html_encode($result["category_name"]);
+		$output .= "		<input type=\"hidden\" name=\"delete[".((int)$identifier)."][category_id]\" value=\"".((int)$identifier)."\" />";
+		$output .= "</td>\n";
+		$output .= "</tr>\n";
+		$query = "SELECT COUNT(`category_id`) FROM `".CLERKSHIP_DATABASE."`.`categories`
+					WHERE `category_status` != 'trash'
+					GROUP BY `category_parent`
+					HAVING `category_parent` = ".$db->qstr((int)$identifier);
+		$children = $db->GetOne($query);
+		if ($children) {
+			$output .= "<tbody id=\"delete-".((int)$identifier)."-children\">";
+			$output .= "</tbody>";
+			$output .= "	<tr>";
+			$output .= "		<td>&nbsp;</td>\n";
+			$output .= "		<td style=\"vertical-align: top;\">";
+			$output .= "		<div style=\"padding-left: 30px\">";
+			$output .= "		<span class=\"content-small\">There are children residing under <strong>".$result["category_name"]."</strong>.</span>";
+			$output .= "		</div>";
+			$output .= "		<div style=\"padding-left: 30px\">";
+			$output .= "			<input type=\"radio\" name=\"delete[".((int)$identifier)."][move]\" id=\"delete_".((int)$identifier)."_children\" value=\"0\" onclick=\"$('move-".((int)$identifier)."-children').hide();\" checked=\"checked\"/>";
+			$output .= "			<label for=\"delete_".((int)$identifier)."_children\" class=\"form-nrequired\"><strong>Deactivate</strong> all children</label>";
+			$output .= "			<br />";
+			$output .= "			<input type=\"radio\" name=\"delete[".((int)$identifier)."][move]\" id=\"move_".((int)$identifier)."_children\" value=\"1\" onclick=\"$('move-".((int)$identifier)."-children').show();\" />";
+			$output .= "			<label for=\"move_".((int)$identifier)."_children\" class=\"form-nrequired\"><strong>Move</strong> all children</label>";
+			$output .= "			<br /><br />";
+			$output .= "		</div>";
+			$output .= "		</td>";
+			$output .= "	</tr>";
+			$output .= "<tbody id=\"move-".((int)$identifier)."-children\" style=\"display: none;\">";
+			$output .= "	<tr>";
+			$output .= "		<td>&nbsp;</td>\n";
+			$output .= "		<td style=\"vertical-align: top; padding: 0px 0px 0px 30px\">";
+			$output .= "			<div id=\"selectParent".(int)$identifier."Field\"></div>";
+			$output .= "		</td>";
+			$output .= "	</tr>";
+			$output .= "	<tr>";
+			$output .= "		<td colspan=\"2\">&nbsp;</td>";
+			$output .= "	</tr>";
+			$output .= "</tbody>";
+			$ONLOAD[]	= "selectCategory(0, ".$identifier.", '".$excluded_categories."')";
+
+		}
+	}
+
+	return $output;
+}
+
 /**
  * This function handles adding update records of event_history changes.
  *
@@ -16633,7 +16823,7 @@ function event_text_change($event, $field) {
 }
 
 /*
- * This funciton recursively deactivates child objectives.
+ * This function recursively deactivates child objectives.
  *
  * @param int $parent_id
  * @param int $organisation_id
@@ -16680,7 +16870,6 @@ function deactivate_objective_children($parent_id, $organisation_id, $i = 0) {
 	} else {
 		return false;
 	}
-
 }
 
 /*

@@ -43,10 +43,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 }
 
 if ($DISPLAY) {
-	if (($_GET["gradyear"]) || ($_GET["gradyear"] === "0")) {
+	if (isset($_GET["gradyear"]) && ($_GET["gradyear"] || $_GET["gradyear"] === "0")) {
 		$GRADYEAR = trim($_GET["gradyear"]);
 		@app_setcookie("search[gradyear]", trim($_GET["gradyear"]));
-	} elseif (($_POST["gradyear"]) || ($_POST["gradyear"] === "0")) {
+	} elseif (isset($_POST["gradyear"]) && ($_POST["gradyear"] || $_POST["gradyear"] === "0")) {
 		$GRADYEAR	= trim($_POST["gradyear"]);
 		@app_setcookie("search[gradyear]", trim($_POST["gradyear"]));
 	} elseif (isset($_COOKIE["search"]["gradyear"])) {
@@ -65,8 +65,8 @@ if ($DISPLAY) {
 			<div class="content-heading">Student Search Results</div>
 			<br />
 			<?php
-			if (trim($_GET["year"]) != "" || trim($_POST["year"]) != "") {
-				if (trim($_POST["year"]) != "") {
+			if ((isset($_GET["year"]) && trim($_GET["year"]) != "") || (isset($_POST["year"]) && trim($_POST["year"]) != "")) {
+				if (isset($_POST["year"]) && trim($_POST["year"]) != "") {
 					$query_year = trim($_POST["year"]);
 				} else {
 					$query_year = trim($_GET["year"]);
@@ -127,10 +127,8 @@ if ($DISPLAY) {
 					echo "</tr>\n";
 					echo "<tr>\n";
 					echo "	<td colspan=\"3\" style=\"border-top: 1px #333333 dotted; padding-top: 5px\">\n";
-					echo "		<ul type=\"none\">\n";
-					echo "		<li><input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp;";
-					echo "		<input type=\"submit\" value=\"Add Mass Event\" class=\"button\" style=\"background-image: url('".ENTRADA_URL."/images/btn_bg.gif')\" /></li>\n";
-					echo "		</ul>\n";
+					echo "		<input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp;";
+					echo "		<input type=\"submit\" value=\"Add Mass Event\" class=\"btn\" />\n";
 					echo "	</td>\n";
 					echo "</tr>\n";
 					echo "</table>\n";
@@ -142,8 +140,8 @@ if ($DISPLAY) {
 					echo "<br />";
 					echo display_error($ERRORSTR);
 				}
-			} elseif (trim($_GET["name"]) != "" || trim($_POST["name"]) != "") {
-				if (trim($_POST["name"]) != "") {
+			} elseif ((isset($_GET["name"]) && trim($_GET["name"]) != "") || (isset($_POST["name"]) && trim($_POST["name"]) != "")) {
+				if (isset($_POST["name"]) && trim($_POST["name"]) != "") {
 					$query_name = trim($_POST["name"]);
 				} else {
 					$query_name = trim($_GET["name"]);
@@ -177,10 +175,8 @@ if ($DISPLAY) {
 					echo "</tr>\n";
 					echo "<tr>\n";
 					echo "	<td colspan=\"3\" style=\"border-top: 1px #333333 dotted; padding-top: 5px\">\n";
-					echo "		<ul type=\"none\">\n";
-					echo "		<li><input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp;";
-					echo "		<input type=\"submit\" value=\"Add Mass Event\" class=\"button\" style=\"background-image: url('".ENTRADA_URL."/images/btn_bg.gif')\" /></li>\n";
-					echo "		</ul>\n";
+					echo "		<input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp;";
+					echo "		<input type=\"submit\" value=\"Add Mass Event\" class=\"btn\" />\n";
 					echo "	</td>\n";
 					echo "</tr>\n";
 					echo "</table>\n";

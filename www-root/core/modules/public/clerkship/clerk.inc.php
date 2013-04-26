@@ -80,7 +80,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			?>
 		<div class="tab-pane" id="people-search-tabs">
 			<div class="tab-page">
-				<h2 class="tab">Clerkship Schedule</h2>
+				<h3 class="tab">Clerkship Schedule</h3>
 				<h1><?php echo $student_name.(substr($student_name, -1) != "s" ? "'s" : "'");?> Clerkship Schedule</h1>
 				<table class="tableList" cellspacing="0" summary="List of Clerkship Schedule">
 				<colgroup>
@@ -188,7 +188,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				</table>
 			</div>
 			<div class="tab-page">
-				<h2 class="tab">Logged Encounters</h2>
+				<h3 class="tab">Logged Encounters</h3>
 				<?php
 
 				if (isset($_GET["ids"]) && ((int)$_GET["ids"])) {
@@ -427,7 +427,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				?>
 			</div>
 			<div class="tab-page">
-				<h2 class="tab">Progress Report</h2>
+				<h3 class="tab">Progress Report</h3>
 				<div id="progress-summary" style="min-height: 100px;">
 					<div style="width: 100%; text-align: center; margin-top: 80px;">
 						<div id="display-generic-box" class="display-generic">

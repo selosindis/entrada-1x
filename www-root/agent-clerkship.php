@@ -35,7 +35,6 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-require_once("Entrada/phpmailer/class.phpmailer.php");
 
 ob_start("on_checkout");
 
@@ -61,6 +60,18 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	if((isset($_GET["step"])) && ((int) trim($_GET["step"]))) {
 		$STEP = (int) trim($_GET["step"]);
 	}
+    
+	$ENCODED_INFORMATION = "";
+
+	if((isset($_GET["step"])) && ((int) trim($_GET["step"]))) {
+		$STEP = (int) trim($_GET["step"]);
+	}
+
+	if(isset($_POST["enc"])) {
+		$ENCODED_INFORMATION = trim($_POST["enc"]);
+	} elseif(isset($_POST["action"])) {
+		$ENCODED_INFORMATION = trim($_POST["enc"]);
+	}
 	?>
 	<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
 	<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
@@ -83,6 +94,13 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 
 		<link href="<?php echo ENTRADA_URL; ?>/images/favicon.ico" rel="shortcut icon" type="image/x-icon" />
 		<link href="<?php echo ENTRADA_URL; ?>/w3c/p3p.xml" rel="P3Pv1" type="text/xml" />
+		<link href="<?php echo ENTRADA_RELATIVE; ?>/css/common.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
+		<link href="<?php echo ENTRADA_RELATIVE; ?>/css/print.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="print" />
+		<link href="<?php echo TEMPLATE_RELATIVE; ?>/css/common.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
+		<link href="<?php echo ENTRADA_RELATIVE; ?>/css/jquery/jquery-ui.css" media="screen" rel="stylesheet" type="text/css" />
+		<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.min.js"></script>
+		<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery-ui.min.js"></script>
+		<script type="text/javascript">jQuery.noConflict();</script>
 
 		%HEAD%
 
@@ -128,7 +146,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		}
 		
 		function closeWindow() {
-			jQuery('#clerkship-modal').dialog('close')
+			window.close();
 		}
 		</script>
 	</head>

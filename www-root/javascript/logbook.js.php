@@ -28,8 +28,8 @@
 				method:		'post',
 				insertion: 'bottom',
 				onComplete: function () {
-					if (!$('objective-list').visible()) {
-						$('objective-list').show();
+					if (!$('objective-container').visible()) {
+						$('objective-container').show();
 					}
 					if ($('objective-loading').visible()) {
 						$('objective-loading').hide();
@@ -67,8 +67,8 @@
 				method:		'post',
 				insertion: 'bottom',
 				onComplete: function () { 
-					if (!$('procedure-list').visible()) {
-						$('procedure-list').show();
+					if (!$('procedure-container').visible()) {
+						$('procedure-container').show();
 					}
 					if ($('procedure-loading').visible()) {
 						$('procedure-loading').hide();

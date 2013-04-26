@@ -259,7 +259,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 				?>
 				<div class="tab-pane" id="clerkship-schedule">
 					<div class="tab-page" style="height: auto;">
-						<h2 class="tab">Clerkship Schedule</h2>
+						<h3 class="tab">Clerkship Schedule</h3>
 						<?php
 						if ($clerkship_schedule) {
 							?>
@@ -397,7 +397,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 						?>
 					</div>
 					<div class="tab-page" style="height: auto">
-						<h2 class="tab">Learning Event Schedule</h2>
+						<h3 class="tab">Learning Event Schedule</h3>
 						<?php
 			}
 

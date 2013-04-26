@@ -45,13 +45,15 @@ if (isset($_POST["id"]) && $_SESSION["isAuthorized"]) {
 		$objective = $db->GetRow($query);
 		if ($objective) {
 			?>
-			<tr id="objective_<?php echo $objective_id; ?>_row">
-				<td><input type="checkbox" class="objective_delete" value="<?php echo $objective_id; ?>" /></td>
-				<td>
-					<label for="delete_objective_<?php echo $objective_id; ?>"><?php echo $objective["objective_name"]?></label>
-					<input type="hidden" name="objectives[<?php echo $objective_id; ?>]" value="<?php echo $objective_id; ?>" />
-				</td>
-			</tr>
+            <div class="row-fluid" id="objective_<?php echo $objective_id; ?>_row">
+                <span class="span1">
+                    <input type="checkbox" class="objective_delete" value="<?php echo $objective_id; ?>" />
+                </span>
+                <label class="offset1 span10" for="delete_objective_<?php echo $objective_id; ?>">
+                    <?php echo $objective["objective_name"]?>
+                </label>
+                <input type="hidden" name="objectives[<?php echo $objective_id; ?>]" value="<?php echo $objective_id; ?>" />
+            </div>
 			<?php
 		}
 	}

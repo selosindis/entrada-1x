@@ -160,6 +160,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						$PROCESSED["clerk_accepted"] = false;
 					}
 					if (!$ERROR) {
+						$PROCESSED["administrator_id"] = $ENTRADA_USER->getID();
 						if ($db->AutoExecute("`".CLERKSHIP_DATABASE."`.`logbook_deficiency_plans`", $PROCESSED, "UPDATE", "`ldeficiency_plan_id` = ".$db->qstr($PROCESSED["ldeficiency_plan_id"]))) {
 							$PLAN_ID = $PROCESSED["ldeficiency_plan_id"];
 							@clerkship_deficiency_notifications($PROXY_ID, $ROTATION_ID, false, $PROCESSED["administrator_accepted"], $PROCESSED["administrator_comments"]);
@@ -331,26 +332,64 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							<td colspan="3">&nbsp;</td>
 						</tr>
 						<?php
-						$query = "	SELECT a.`objective_name`
-									FROM `global_lu_objectives` AS a
-									JOIN `objective_organisation` AS b
-									ON a.`objective_id` = b.`objective_id`
-									AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-									WHERE a.`objective_id` NOT IN 
-									(
-										SELECT `objective_id` 
-										FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`
-										WHERE `lentry_id` IN 
-										(".$entry_ids_string.")
-									)
-									AND a.`objective_id` IN
-									(
-										SELECT `objective_id`
-										FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
-										WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
-									)
-									AND a.`objective_parent` = '200'
-									AND a.`objective_active` = '1'";
+						$grad_year = get_account_data("grad_year", $PROXY_ID);
+						
+						$query = "SELECT `objective_id`, `lmobjective_id`, MAX(`number_required`) AS `required`
+									FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
+									WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
+									AND `grad_year_min` <= ".$db->qstr($grad_year)."
+									AND (`grad_year_max` >= ".$db->qstr($grad_year)." OR `grad_year_max` = 0)
+									GROUP BY `objective_id`";
+						$required_objectives = $db->GetAll($query);
+						$lmobjective_ids = array();
+						if ($required_objectives) {
+							foreach ($required_objectives as $required_objective) {
+								$lmobjective_ids[$required_objective["objective_id"]] = $required_objective["lmobjective_id"];
+								$objectives_required += $required_objective["required"];
+								$number_required[$required_objective["objective_id"]] = $required_objective["required"];
+								$query = "SELECT COUNT(`objective_id`) AS `recorded`
+											FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`
+											WHERE `lentry_id` IN
+											(
+												SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` AS a
+												".(CLERKSHIP_SETTINGS_REQUIREMENTS ? "
+												JOIN `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS b
+												ON b.`lmobjective_id` = ".$db->qstr($required_objective["lmobjective_id"])."
+												JOIN `".CLERKSHIP_DATABASE."`.`logbook_location_types` AS c
+												ON b.`lltype_id` = c.`lltype_id`
+												AND a.`llocation_id` = c.`llocation_id`" : "")."
+												WHERE a.`entry_active` = '1' 
+												AND a.`proxy_id` = ".$db->qstr($PROXY_ID)."
+												
+											)
+											AND `objective_id` = ".$db->qstr($required_objective["objective_id"])."
+											GROUP BY `objective_id`";
+								$recorded = $db->GetOne($query);
+								
+								if ($recorded) {
+									if ($required_objective["required"] > $recorded) {
+										if ($objective_ids) {
+											$objective_ids .= ",".$db->qstr($required_objective["objective_id"]);
+										} else {
+											$objective_ids = $db->qstr($required_objective["objective_id"]);
+										}
+										$number_required[$required_objective["objective_id"]] -= $recorded;
+									}
+									$objectives_recorded += ($recorded <= $required_objective["required"] ? $recorded : $required_objective["required"]);
+								} else {
+									if ($objective_ids) {
+										$objective_ids .= ",".$db->qstr($required_objective["objective_id"]);
+									} else {
+										$objective_ids = $db->qstr($required_objective["objective_id"]);
+									}
+								}
+							}
+						}
+						
+						$query  = "SELECT * FROM `".DATABASE_NAME."`.`global_lu_objectives`
+									WHERE `objective_id` IN (".$objective_ids.")
+									AND `objective_active` = '1'
+									ORDER BY `objective_name`";
 						$objectives = $db->CacheGetAll($query);
 						if ($objectives && count($objectives)) {
 							?>
@@ -361,7 +400,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 									<?php
 										echo "<ul style=\"list-style:none; margin-top: 0px; padding-left: 0px;\">";
 										foreach ($objectives as $objective) {
-											echo "<li>".$objective["objective_name"]."</li>";
+										    $query = "SELECT b.* FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS a
+										    			JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_location_types` AS b
+										    			ON a.`lltype_id` = b.`lltype_id`
+										    			WHERE a.`lmobjective_id` = ".$db->qstr($lmobjective_ids[$objective["objective_id"]]);
+										    $locations = $db->GetAll($query);
+										    $location_string = "";
+										    foreach ($locations as $location) {
+										    	$location_string .= ($location_string ? "/" : "").html_encode($location["location_type_short"]);
+										    }
+											echo "<li>".$objective["objective_name"].(CLERKSHIP_SETTINGS_REQUIREMENTS && $location_string ? " (".$location_string.")" : "")."</li>";
 										}
 										echo "</ul>";
 									?>
@@ -369,21 +417,63 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							</tr>
 							<?php
 						}
-						$query = "	SELECT `procedure`
-									FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures`
-									WHERE `lprocedure_id` NOT IN 
-									(
-										SELECT `lprocedure_id` 
+						$query = "SELECT `lprocedure_id`, `lpprocedure_id`, MAX(`number_required`) AS `required`
+									FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures`
+									WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
+									AND `grad_year_min` <= ".$db->qstr($grad_year)."
+									AND (`grad_year_max` >= ".$db->qstr($grad_year)." OR `grad_year_max` = 0)
+									GROUP BY `lprocedure_id`";
+						$required_procedures = $db->GetAll($query);
+						if ($required_procedures) {
+							foreach ($required_procedures as $required_procedure) {
+								$lpprocedure_ids[$required_procedure["lprocedure_id"]] = $required_procedure["lpprocedure_id"];
+								$procedures_required += $required_procedure["required"];
+								$number_required[$required_procedure["lprocedure_id"]] = $required_procedure["required"];
+								$query = "SELECT COUNT(`lprocedure_id`) AS `recorded`
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures`
-										WHERE `lentry_id` IN 
-										(".$entry_ids_string.")
-									)
-									AND `lprocedure_id` IN
-									(
-										SELECT `lprocedure_id`
-										FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures`
-										WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
-									)";
+										WHERE `lentry_id` IN
+										(
+											SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` AS a
+											JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedure_locations` AS b
+											ON b.`lpprocedure_id` = ".$db->qstr($required_procedure["lpprocedure_id"])."
+											JOIN `".CLERKSHIP_DATABASE."`.`logbook_location_types` AS c
+											ON b.`lltype_id` = c.`lltype_id`
+											AND a.`llocation_id` = c.`llocation_id`
+											".(CLERKSHIP_SETTINGS_REQUIREMENTS ? "
+											JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedure_locations` AS d
+											ON d.`lpprocedure_id` = ".$db->qstr($required_procedure["lpprocedure_id"])."
+											JOIN `".CLERKSHIP_DATABASE."`.`logbook_location_types` AS e
+											ON d.`lltype_id` = e.`lltype_id`
+											AND a.`llocation_id` = e.`llocation_id`" : "")."
+											WHERE a.`entry_active` = '1' 
+											AND a.`proxy_id` = ".$db->qstr($PROXY_ID)."
+										)
+										AND `lprocedure_id` = ".$db->qstr($required_procedure["lprocedure_id"])."
+										GROUP BY `lprocedure_id`";
+								$recorded = $db->GetOne($query);
+								
+								if ($recorded) {
+									if ($required_procedure["required"] > $recorded) {
+										if ($procedure_ids) {
+											$procedure_ids .= ",".$db->qstr($required_procedure["lprocedure_id"]);
+										} else {
+											$procedure_ids = $db->qstr($required_procedure["lprocedure_id"]);
+										}
+										$number_required[$required_procedure["lprocedure_id"]] -= $recorded;
+									}
+									$procedures_recorded += ($recorded <= $required_procedure["required"] ? $recorded : $required_procedure["required"]);
+								} else {
+									if (isset($procedure_ids) && $procedure_ids) {
+										$procedure_ids .= ",".$db->qstr($required_procedure["lprocedure_id"]);
+									} else {
+										$procedure_ids = $db->qstr($required_procedure["lprocedure_id"]);
+									}
+								}
+							}
+						}
+					    $query  = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures`
+									WHERE `lprocedure_id` IN (".$procedure_ids.")
+									ORDER BY `procedure`";
 						$procedures = $db->CacheGetAll($query);
 						if ($procedures && count($procedures)) {
 						?>
@@ -394,7 +484,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 									<?php
 										echo "<ul style=\"list-style:none; margin-top: 0px; padding-left: 0px;\">";
 										foreach ($procedures as $procedure) {
-											echo "<li>".$procedure["procedure"]."</li>";
+										    $query = "SELECT b.* FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS a
+										    			JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_location_types` AS b
+										    			ON a.`lltype_id` = b.`lltype_id`
+										    			WHERE a.`lpprocedure_id` = ".$db->qstr($lpprocedure_ids[$procedure["lprocedure"]]);
+										    $locations = $db->GetAll($query);
+										    $location_string = "";
+										    foreach ($locations as $location) {
+										    	$location_string .= ($location_string ? "/" : "").html_encode($location["location_type_short"]);
+										    }
+											echo "<li>".$procedure["procedure"].(CLERKSHIP_SETTINGS_REQUIREMENTS && $location_string ? " (".$location_string.")" : "")."</li>";
 										}
 										echo "</ul>";
 									?>
@@ -471,7 +570,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							if (!isset($PROCESSED["clerk_accepted"]) || !$PROCESSED["clerk_accepted"]) {
 								?>
 								<td><label for="clerk_accepted" class="form-required">Confirm completion of deficiency plan</label></td>
-								<td><span class="content-small">Select this once your plan to attain all deficient objectives and tasks is complete; an administrator will be asked to review your plan. This confirmation cannot be reversed once given, please thoroughly review this plan before selecting this option.</span></td>
+								<td><span class="content-small">Check this box to confirm you are satisfied with your deficiency plan. This will cause the Course Director for this rotation to be notified and asked to review the plan. This confirmation cannot be reversed once given, so please ensure you thoroughly review the plan before selecting this option.</span></td>
 								<?php
 							} else {
 								?>
@@ -490,7 +589,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							<tr>
 								<td><input type="checkbox" id="administrator_accepted" name="administrator_accepted"<?php echo (isset($PROCESSED["administrator_accepted"]) && $PROCESSED["administrator_accepted"] ? " checked=\"checked\"" : ""); ?> /></td>
 								<td><label for="administrator_accepted" class="form-required">Confirm completion of deficiency plan</label></td>
-								<td><span class="content-small">Select this once the clerk's deficiency plan meets all required criteria to attain deficeincies from this rotation. Otherwise, please write a message to the clerk in the comment box below and the clerk's confirmation will be reversed until they review your comments and amend the plan.</span></td>
+								<td><span class="content-small">Select this once the clerk's deficiency plan meets all required criteria to attain deficiencies from this rotation. Otherwise, please write a message to the clerk in the comment box below and the clerk's confirmation will be reversed until they review your comments and amend the plan.</span></td>
 							</tr>	
 							<tr>
 								<td colspan="3">&nbsp;</td>
@@ -534,26 +633,64 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							<td colspan="3">&nbsp;</td>
 						</tr>
 						<?php
-						$query = "	SELECT a.`objective_name`
-									FROM `global_lu_objectives` AS a
-									JOIN `objective_organisation` AS b
-									ON a.`objective_id` = b.`objective_id`
-									AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-									WHERE a.`objective_id` NOT IN 
-									(
-										SELECT `objective_id` 
-										FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`
-										WHERE `lentry_id` IN 
-										(".$entry_ids_string.")
-									)
-									AND a.`objective_id` IN
-									(
-										SELECT `objective_id`
-										FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
-										WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
-									)
-									AND a.`objective_parent` = '200'
-									AND a.`objective_active` = '1'";
+						$grad_year = get_account_data("grad_year", $PROXY_ID);
+						
+						$query = "SELECT `objective_id`, `lmobjective_id`, MAX(`number_required`) AS `required`
+									FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
+									WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
+									AND `grad_year_min` <= ".$db->qstr($grad_year)."
+									AND (`grad_year_max` >= ".$db->qstr($grad_year)." OR `grad_year_max` = 0)
+									GROUP BY `objective_id`";
+						$required_objectives = $db->GetAll($query);
+						$lmobjective_ids = array();
+						if ($required_objectives) {
+							foreach ($required_objectives as $required_objective) {
+								$lmobjective_ids[$required_objective["objective_id"]] = $required_objective["lmobjective_id"];
+								$objectives_required += $required_objective["required"];
+								$number_required[$required_objective["objective_id"]] = $required_objective["required"];
+								$query = "SELECT COUNT(`objective_id`) AS `recorded`
+											FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_objectives`
+											WHERE `lentry_id` IN
+											(
+												SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` AS a
+												".(CLERKSHIP_SETTINGS_REQUIREMENTS ? "
+												JOIN `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS b
+												ON b.`lmobjective_id` = ".$db->qstr($required_objective["lmobjective_id"])."
+												JOIN `".CLERKSHIP_DATABASE."`.`logbook_location_types` AS c
+												ON b.`lltype_id` = c.`lltype_id`
+												AND a.`llocation_id` = c.`llocation_id`" : "")."
+												WHERE a.`entry_active` = '1' 
+												AND a.`proxy_id` = ".$db->qstr($PROXY_ID)."
+												
+											)
+											AND `objective_id` = ".$db->qstr($required_objective["objective_id"])."
+											GROUP BY `objective_id`";
+								$recorded = $db->GetOne($query);
+								
+								if ($recorded) {
+									if ($required_objective["required"] > $recorded) {
+										if ($objective_ids) {
+											$objective_ids .= ",".$db->qstr($required_objective["objective_id"]);
+										} else {
+											$objective_ids = $db->qstr($required_objective["objective_id"]);
+										}
+										$number_required[$required_objective["objective_id"]] -= $recorded;
+									}
+									$objectives_recorded += ($recorded <= $required_objective["required"] ? $recorded : $required_objective["required"]);
+								} else {
+									if ($objective_ids) {
+										$objective_ids .= ",".$db->qstr($required_objective["objective_id"]);
+									} else {
+										$objective_ids = $db->qstr($required_objective["objective_id"]);
+									}
+								}
+							}
+						}
+						
+						$query  = "SELECT * FROM `".DATABASE_NAME."`.`global_lu_objectives`
+									WHERE `objective_id` IN (".$objective_ids.")
+									AND `objective_active` = '1'
+									ORDER BY `objective_name`";
 						$objectives = $db->GetAll($query);
 						if ($objectives && count($objectives)) {
 							?>
@@ -564,7 +701,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 									<?php
 										echo "<ul style=\"list-style:none; margin-top: 0px; padding-left: 0px;\">";
 										foreach ($objectives as $objective) {
-											echo "<li>".$objective["objective_name"]."</li>";
+										    $query = "SELECT b.* FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS a
+										    			JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_location_types` AS b
+										    			ON a.`lltype_id` = b.`lltype_id`
+										    			WHERE a.`lmobjective_id` = ".$db->qstr($lmobjective_ids[$objective["objective_id"]]);
+										    $locations = $db->GetAll($query);
+										    $location_string = "";
+										    foreach ($locations as $location) {
+										    	$location_string .= ($location_string ? "/" : "").html_encode($location["location_type_short"]);
+										    }
+											echo "<li>".$objective["objective_name"].(CLERKSHIP_SETTINGS_REQUIREMENTS && $location_string ? " (".$location_string.")" : "")."</li>";
 										}
 										echo "</ul>";
 									?>
@@ -572,21 +718,63 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							</tr>
 							<?php
 						}
-						$query = "	SELECT `procedure`
-									FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures`
-									WHERE `lprocedure_id` NOT IN 
-									(
-										SELECT `lprocedure_id` 
+						$query = "SELECT `lprocedure_id`, `lpprocedure_id`, MAX(`number_required`) AS `required`
+									FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures`
+									WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
+									AND `grad_year_min` <= ".$db->qstr($grad_year)."
+									AND (`grad_year_max` >= ".$db->qstr($grad_year)." OR `grad_year_max` = 0)
+									GROUP BY `lprocedure_id`";
+						$required_procedures = $db->GetAll($query);
+						if ($required_procedures) {
+							foreach ($required_procedures as $required_procedure) {
+								$lpprocedure_ids[$required_procedure["lprocedure_id"]] = $required_procedure["lpprocedure_id"];
+								$procedures_required += $required_procedure["required"];
+								$number_required[$required_procedure["lprocedure_id"]] = $required_procedure["required"];
+								$query = "SELECT COUNT(`lprocedure_id`) AS `recorded`
 										FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures`
-										WHERE `lentry_id` IN 
-										(".$entry_ids_string.")
-									)
-									AND `lprocedure_id` IN
-									(
-										SELECT `lprocedure_id`
-										FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures`
-										WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
-									)";
+										WHERE `lentry_id` IN
+										(
+											SELECT `lentry_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` AS a
+											JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedure_locations` AS b
+											ON b.`lpprocedure_id` = ".$db->qstr($required_procedure["lpprocedure_id"])."
+											JOIN `".CLERKSHIP_DATABASE."`.`logbook_location_types` AS c
+											ON b.`lltype_id` = c.`lltype_id`
+											AND a.`llocation_id` = c.`llocation_id`
+											".(CLERKSHIP_SETTINGS_REQUIREMENTS ? "
+											JOIN `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedure_locations` AS d
+											ON d.`lpprocedure_id` = ".$db->qstr($required_procedure["lpprocedure_id"])."
+											JOIN `".CLERKSHIP_DATABASE."`.`logbook_location_types` AS e
+											ON d.`lltype_id` = e.`lltype_id`
+											AND a.`llocation_id` = e.`llocation_id`" : "")."
+											WHERE a.`entry_active` = '1' 
+											AND a.`proxy_id` = ".$db->qstr($PROXY_ID)."
+										)
+										AND `lprocedure_id` = ".$db->qstr($required_procedure["lprocedure_id"])."
+										GROUP BY `lprocedure_id`";
+								$recorded = $db->GetOne($query);
+								
+								if ($recorded) {
+									if ($required_procedure["required"] > $recorded) {
+										if ($procedure_ids) {
+											$procedure_ids .= ",".$db->qstr($required_procedure["lprocedure_id"]);
+										} else {
+											$procedure_ids = $db->qstr($required_procedure["lprocedure_id"]);
+										}
+										$number_required[$required_procedure["lprocedure_id"]] -= $recorded;
+									}
+									$procedures_recorded += ($recorded <= $required_procedure["required"] ? $recorded : $required_procedure["required"]);
+								} else {
+									if (isset($procedure_ids) && $procedure_ids) {
+										$procedure_ids .= ",".$db->qstr($required_procedure["lprocedure_id"]);
+									} else {
+										$procedure_ids = $db->qstr($required_procedure["lprocedure_id"]);
+									}
+								}
+							}
+						}
+					    $query  = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures`
+									WHERE `lprocedure_id` IN (".$procedure_ids.")
+									ORDER BY `procedure`";
 						$procedures = $db->GetAll($query);
 						if ($procedures && count($procedures)) {
 						?>
@@ -597,7 +785,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 									<?php
 										echo "<ul style=\"list-style:none; margin-top: 0px; padding-left: 0px;\">";
 										foreach ($procedures as $procedure) {
-											echo "<li>".$procedure["procedure"]."</li>";
+										    $query = "SELECT b.* FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS a
+										    			JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_location_types` AS b
+										    			ON a.`lltype_id` = b.`lltype_id`
+										    			WHERE a.`lpprocedure_id` = ".$db->qstr($lpprocedure_ids[$procedure["lprocedure"]]);
+										    $locations = $db->GetAll($query);
+										    $location_string = "";
+										    foreach ($locations as $location) {
+										    	$location_string .= ($location_string ? "/" : "").html_encode($location["location_type_short"]);
+										    }
+											echo "<li>".$procedure["procedure"].(CLERKSHIP_SETTINGS_REQUIREMENTS && $location_string ? " (".$location_string.")" : "")."</li>";
 										}
 										echo "</ul>";
 									?>

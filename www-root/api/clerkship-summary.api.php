@@ -26,7 +26,8 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	if (isset($_REQUEST["id"]) && ((int)$_REQUEST["id"])) {
 		$PROXY_ID = clean_input($_REQUEST["id"], array("int"));
 	} else {
-		$PROXY_ID = 0;
+		$PROXY_ID = $ENTRADA_USER->getID();
+		$STUDENT_VIEW = true;
 	}
 	$grad_year = get_account_data("grad_year", $PROXY_ID);
 	$query = "	SELECT DISTINCT(b.`rotation_id`), c.`rotation_title` FROM
@@ -68,7 +69,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				<tbody>									
 				<?php
 				foreach ($rotations as $rotation) {
-					if ($rotation["rotation_id"]) {
+					if ($rotation["rotation_id"] && $rotation["rotation_id"] != 12) {
 						$procedures_required = 0;
 					    $objectives_required = 0;
 					    $objectives_recorded = 0;
@@ -86,7 +87,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 							foreach ($required_objectives as $required_objective) {
 								$objectives_required += $required_objective["required"];
 								$llocation_ids_string = "";
-								if ($grad_year >= 2013) {
+								if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
 									$query = "SELECT c.`llocation_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objective_locations` AS a
 												JOIN `".CLERKSHIP_DATABASE."`.`logbook_location_types` AS b
 												ON a.`lltype_id` = b.`lltype_id`
@@ -127,21 +128,21 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 						$query = "SELECT `lprocedure_id`, `lpprocedure_id`, MAX(`number_required`) AS `required`
 									FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedures`
 									WHERE `rotation_id` = ".$db->qstr($rotation["rotation_id"])."
-									AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $ENTRADA_USER->getID()))."
-									AND (`grad_year_max` = 0 OR `grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $ENTRADA_USER->getID())).")
+									AND `grad_year_min` <= ".$db->qstr(get_account_data("grad_year", $PROXY_ID))."
+									AND (`grad_year_max` = 0 OR `grad_year_max` >= ".$db->qstr(get_account_data("grad_year", $PROXY_ID)).")
 									GROUP BY `lprocedure_id`";
 						$required_procedures = $db->GetAll($query);
 						if ($required_procedures) {
 							foreach ($required_procedures as $required_procedure) {
 								$procedures_required += $required_procedure["required"];
 								$llocation_ids_string = "";
-								if ($grad_year >= 2013) {
+								if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
 									$query = "SELECT b.`llocation_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedure_locations` AS a
 												JOIN `".CLERKSHIP_DATABASE."`.`logbook_location_types` AS b
 												ON a.`lltype_id` = b.`lltype_id
 												JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_locations` AS c
 												ON b.`llocation_id` = c.`llocation_id`
-												WHERE a.`lpprocedure_id` = ".$db->qstr($required_objective["lpprocedure_id"]);
+												WHERE a.`lpprocedure_id` = ".$db->qstr($required_procedure["lpprocedure_id"]);
 									$valid_locations = $db->GetAll($query);
 									if ($valid_locations) {
 										foreach ($valid_locations as $location) {

@@ -44,14 +44,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	?>
 	<div class="content-heading">Student Search Results</div>
 	<?php
-	if (trim($_GET["year"]) != "" || trim($_POST["year"]) != "") {
+	if (((isset($_GET["year"]) && trim($_GET["year"]) != "") || (isset($_POST["year"]) && trim($_POST["year"]) != ""))) {
 		if (trim($_POST["year"]) != "") {
 			$query_year = trim($_POST["year"]);
 		} else {
 			$query_year = trim($_GET["year"]);
 		}
 		
-		$query = "	SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`, d.`group_name`
+		$query = "	SELECT a.*, a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`, d.`group_name`
 					FROM `".AUTH_DATABASE."`.`user_data` AS a
 					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 					ON b.`user_id` = a.`id`
@@ -78,7 +78,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			
 			echo "There are a total of <b>".$total."</b> student".(($total != "1") ? "s" : "")." in the <b>".checkslashes(trim($results[0]["group_name"]))."</b>. Please choose a student you wish to work with by clicking on their name, or if you wish to add an event to multiple students simply check the checkbox beside their name and click the &quot;Add Mass Event&quot; button.";
 	
-			echo "<form id=\"clerkship_form\" action=\"".ENTRADA_URL."/clerkship/electives?section=add_core\" method=\"post\">\n";
+			echo "<form id=\"clerkship_form\" action=\"".ENTRADA_URL."/admin/clerkship/electives?section=add_core\" method=\"post\">\n";
 			echo "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
 			echo "<tr>\n";
 			echo "	<td style=\"vertical-align: top\">\n";
@@ -135,11 +135,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			echo "</tr>\n";
 			echo "<tr>\n";
 			echo "	<td colspan=\"3\" style=\"border-top: 1px #333333 dotted; padding-top: 5px\">\n";
-			echo "		<ul type=\"none\">\n";
-			echo "		<li><input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp;";
-			echo "		<input type=\"button\" value=\"Add Mass Elective\" class=\"button\" style=\"background-image: url('".ENTRADA_URL."/images/btn_bg.gif')\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/clerkship/electives?section=add_elective'; $('clerkship_form').submit();\"/>\n";
-			echo "		<input type=\"button\" value=\"Add Mass Core\" class=\"button\" style=\"display: inline; margin-left: 10px; background-image: url('".ENTRADA_URL."/images/btn_bg.gif')\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/clerkship/electives?section=add_core'; $('clerkship_form').submit();\"/></li>\n";
-			echo "		</ul>\n";
+			echo "		<input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp;";
+			echo "		<input type=\"button\" class=\"btn\" value=\"Add Mass Elective\" class=\"button\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/clerkship/electives?section=add'; $('clerkship_form').submit();\"/>\n";
+			echo "		<input type=\"button\" class=\"btn\" value=\"Add Mass Core\" class=\"button\" style=\"display: inline; margin-left: 10px;\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/admin/clerkship/electives?section=add_core'; $('clerkship_form').submit();\"/>\n";
 			echo "	</td>\n";
 			echo "</tr>\n";
 			echo "</table>\n";
@@ -166,7 +164,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			
 			echo "There are a total of <b>".$total."</b> student".(($total != "1") ? "s" : "")." that match the search term of <b>".checkslashes(trim($query_name), "display")."</b>. Please choose a student you wish to work with by clicking on their name, or if you wish to add an event to multiple students simply check the checkbox beside their name and click the &quot;Add Mass Event&quot; button.";
 	
-			echo "<form id=\"clerkship_form\" action=\"".ENTRADA_URL."/clerkship/electives?section=add_core\" method=\"post\">\n";
+			echo "<form id=\"clerkship_form\" action=\"".ENTRADA_URL."/admin/clerkship/electives?section=add_core\" method=\"post\">\n";
 			echo "<table width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
 			echo "<tr>\n";
 			echo "	<td style=\"vertical-align: top\">\n";
@@ -189,7 +187,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			echo "		<ul type=\"none\">\n";
 			echo "		<li><input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp;";
 			echo "		<input type=\"button\" value=\"Add Mass Elective\" class=\"button\" style=\"background-image: url('".ENTRADA_URL."/images/btn_bg.gif')\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/clerkship/electives?section=add_elective'; $('clerkship_form').submit();\"/>\n";
-			echo "		<input type=\"button\" value=\"Add Mass Core\" class=\"button\" style=\"display: inline; margin-left: 10px; background-image: url('".ENTRADA_URL."/images/btn_bg.gif')\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/clerkship/electives?section=add_core'; $('clerkship_form').submit();\"/></li>\n";
+			echo "		<input type=\"button\" value=\"Add Mass Core\" class=\"button\" style=\"display: inline; margin-left: 10px; background-image: url('".ENTRADA_URL."/images/btn_bg.gif')\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/admin/clerkship/electives?section=add_core'; $('clerkship_form').submit();\"/></li>\n";
 			echo "		</ul>\n";
 			echo "	</td>\n";
 			echo "</tr>\n";

@@ -245,7 +245,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 			
 			$HEAD[]	= "	<script type=\"text/javascript\">
 						function selectCategory(category_id) {
-							new Ajax.Updater('selectCategoryField', '".ENTRADA_URL."/api/category-list.api.php', {parameters: {'cid': category_id}});
+							new Ajax.Updater('selectCategoryField', '".ENTRADA_URL."/api/category-in-select.api.php', {parameters: {'cid': category_id}});
 							new Ajax.Updater('hidden_event_title', '".ENTRADA_URL."/api/category-title.api.php', {parameters: {'cid': category_id}, onComplete: function(){ $('event_title').value = $('hidden_event_title').innerHTML.unescapeHTML(); }});
 							return;
 						}

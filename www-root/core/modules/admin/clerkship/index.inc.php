@@ -46,7 +46,7 @@ if (!defined("IN_CLERKSHIP")) {
 	
 	if (!isset($_POST["action"]) || $_POST["action"] != "results") {
 		?>
-		<div class="tab-pane" id="people-search-tabs">
+		<div class="tab-pane" id="clerk-admin-tabs">
 		<?php
 	}
 	
@@ -66,22 +66,21 @@ if (!defined("IN_CLERKSHIP")) {
 		if (!isset($_POST["action"]) || $_POST["action"] != "results") {
 			?>
 			<div class="tab-page">
-				<h2 class="tab">Electives Pending</h2>
-				<div class="content-heading">Electives Pending</div>
+				<h3 class="tab">Electives Pending</h3>
 				<br />
 				<table class="tableList" cellspacing="0" summary="List of Clerkship Rotations">
 				<colgroup>
 					<col class="modified" />
-					<col class="date" />
-					<col class="date" />
+					<col class="date-small" />
+					<col class="date-smallest" />
 					<col class="region" />
 					<col class="title" />
 				</colgroup>
 				<thead>
 					<tr>
 						<td class="modified">&nbsp;</td>
-						<td class="date">Student</td>
-						<td class="date">Start Date</td>
+						<td class="date-small">Student</td>
+						<td class="date-smallest">Start Date</td>
 						<td class="region">Region</td>
 						<td class="title">Category Title</td>
 					</tr>
@@ -89,14 +88,6 @@ if (!defined("IN_CLERKSHIP")) {
 				<tbody>
 				<?php
 				foreach ($results as $result) {
-					if ((time() >= $result["event_start"]) && (time() <= $result["event_finish"])) {
-						$bgcolour	= "#E7ECF4";
-						$is_here	= true;
-					} else {
-						$bgcolour	= "#FFFFFF";
-						$is_here	= false;
-					}
-
 					$click_url	= ENTRADA_URL."/admin/clerkship/electives?section=edit&id=".$result["event_id"];
 
 					if (!isset($result["region_name"]) || $result["region_name"] == "") {
@@ -105,24 +96,6 @@ if (!defined("IN_CLERKSHIP")) {
 						$result["city"]		   = $result_region["city"];
 					} else {
 						$result["city"] = "";
-					}
-
-					$cssclass = "";
-
-					if ($result["event_type"] == "elective") {
-						switch ($result["event_status"]) {
-							case "approval":
-								$cssclass = " class=\"in_draft\"";
-								break;
-							case "published":
-								$cssclass = " class=\"published\"";
-								break;
-							case "rejected":
-								$cssclass = " class=\"rejected\"";
-								break;
-							default:
-								$cssclass = "";
-						}
 					}
 
 					$getStudentsQuery	= "SELECT `etype_id`
@@ -134,10 +107,10 @@ if (!defined("IN_CLERKSHIP")) {
 
 						$name	= get_account_data("firstlast", $student["etype_id"]);
 
-						echo "<tr".(($is_here) ? " class=\"current\"" : $cssclass).">\n";
+						echo "<tr>\n";
 						echo "	<td class=\"modified\">&nbsp</td>\n";
-						echo "	<td class=\"date\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".$name."</a></td>\n";
-						echo "	<td class=\"date\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
+						echo "	<td class=\"date-small\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".$name."</a></td>\n";
+						echo "	<td class=\"date-smallest\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".date("M d/Y", $result["event_start"])."</a></td>\n";
 						echo "	<td class=\"region\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".($result["city"] == "" ? html_encode(limit_chars(($result["region_name"]), 30)) : $result["city"])."</a></td>\n";
 						echo "	<td class=\"title\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".limit_chars(html_decode($result["event_title"]), 55, true, false)."</a></td>\n";
 						echo "</tr>\n";
@@ -171,14 +144,14 @@ if (!defined("IN_CLERKSHIP")) {
 						?>
 						<div class="content-heading">Student Search Results</div>
 						<?php
-						if (trim($_GET["year"]) != "" || trim($_POST["year"]) != "") {
+                        if (((isset($_GET["year"]) && trim($_GET["year"]) != "") || (isset($_POST["year"]) && trim($_POST["year"]) != ""))) {
 							if (trim($_POST["year"]) != "") {
 								$query_year = trim($_POST["year"]);
 							} else {
 								$query_year = trim($_GET["year"]);
 							}
 							
-							$query = "SELECT a.*, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`, d.`group_name`
+							$query = "SELECT a.*, a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, b.`account_active`, b.`access_starts`, b.`access_expires`, b.`last_login`, b.`role`, b.`group`, d.`group_name`
 											FROM `".AUTH_DATABASE."`.`user_data` AS a
 											LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 											ON b.`user_id` = a.`id`
@@ -408,22 +381,21 @@ if (!defined("IN_CLERKSHIP")) {
 				if ($results && (!isset($_POST["action"]) || $_POST["action"] != "results")) {
 					?>
 					<div class="tab-page">
-						<h2 class="tab">Clerks with overdue logging</h2>
-						<div class="content-heading">Clerks with overdue logging</div>
+						<h3 class="tab">Clerks with overdue logging</h3>
 						<br />		
 						<table class="tableList" cellspacing="0" summary="List of Clerkship Rotations">
 						<colgroup>
 							<col class="modified" />
+							<col class="date-small" />
 							<col class="title" />
-							<col class="date" />
 							<col class="date-small" />
 							<col class="date-small" />
 						</colgroup>				
 						<thead>
 							<tr>
 								<td class="modified">&nbsp;</td>
-								<td class="title">Student</td>
-								<td class="date">Rotation</td>
+								<td class="date-small">Student</td>
+								<td class="title">Rotation</td>
 								<td class="date-small">Logged Objectives</td>
 								<td class="date-small">Required Objectives</td>
 							</tr>
@@ -434,8 +406,8 @@ if (!defined("IN_CLERKSHIP")) {
 							$click_url = ENTRADA_URL."/admin/clerkship?section=clerk&ids=".$result["proxy_id"];
 							echo "<tr>\n";
 							echo "	<td class=\"modified\">&nbsp</td>\n";
-							echo "	<td class=\"title\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".$result["fullname"]."</a></td>\n";
-							echo "	<td class=\"date\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".$result["rotation_title"]."</a></td>\n";
+							echo "	<td class=\"date-small\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".$result["fullname"]."</a></td>\n";
+							echo "	<td class=\"title\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".$result["rotation_title"]."</a></td>\n";
 							echo "	<td class=\"date-small\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".$result["logged_completed"]."</a></td>\n";
 							echo "	<td class=\"date-small\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".$result["logged_required"]."</a></td>\n";
 							echo "</tr>\n";

@@ -518,7 +518,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$mail->addHeader('Content-Transfer-Encoding', '8bit');
 										$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
 										$mail->addHeader("X-Section", "Electives Approval");
-
 										$mail->addTo($PROCESSED["email"], (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").$PROCESSED["preceptor_first_name"] . " " . $PROCESSED["preceptor_last_name"]);
 										$mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
 										$mail->setSubject("Electives Approval - ".APPLICATION_NAME);
@@ -557,7 +556,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$mail->addHeader('Content-Transfer-Encoding', '8bit');
 										$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
 										$mail->addHeader("X-Section", "Electives Approval");
-
 										$mail->addTo($PROCESSED["email"], (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").$PROCESSED["preceptor_first_name"] . " " . $PROCESSED["preceptor_last_name"]);
 										$mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
 										$mail->setSubject("Electives Rejection - ".APPLICATION_NAME);
@@ -1339,7 +1337,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$HEAD[]	= "
 									<script type=\"text/javascript\">
 									function selectCategory(category_id) {
-										new Ajax.Updater('selectCategoryField', '".ENTRADA_URL."/api/category-list.api.php', {parameters: {'cid': category_id}});
+										new Ajax.Updater('selectCategoryField', '".ENTRADA_URL."/api/category-in-select.api.php', {parameters: {'cid': category_id}});
 										new Ajax.Updater('hidden_event_title', '".ENTRADA_URL."/api/category-title.api.php', {parameters: {'cid': category_id}, onComplete: function(){ $('event_title').value = $('hidden_event_title').innerHTML.unescapeHTML(); }});
 										return;
 									}

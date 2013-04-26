@@ -131,7 +131,7 @@ CREATE TABLE IF NOT EXISTS `categories` (
 INSERT INTO `categories` (`category_id`, `category_parent`, `category_code`, `category_type`, `category_name`, `category_desc`, `category_min`, `category_max`, `category_buffer`, `category_start`, `category_finish`, `subcategory_strict`, `category_expiry`, `category_status`, `category_order`, `rotation_id`)
 VALUES
 (1, 0, NULL, 12, 'School of Medicine', NULL, NULL, NULL, NULL, 0, 0, 0, 0, 'published', 0, 0),
-(2, 0, NULL, 13, 'All Students', NULL, NULL, NULL, NULL, 0, 1924927200, 0, 0, 'published', 0, 0),
+(2, 1, NULL, 13, 'All Students', NULL, NULL, NULL, NULL, 0, 1924927200, 0, 0, 'published', 0, 0),
 (3, 2, NULL, 17, 'Example Stream', NULL, 9, 9, NULL, 0, 1924927200, 0, 0, 'published', 0, 0),
 (4, 3, NULL, 32, 'Pediatrics', NULL, 9, 9, NULL, 0, 1924927200, 0, 0, 'published', 4, 4),
 (5, 3, NULL, 32, 'Obstetrics & Gynecology', NULL, 9, 9, NULL, 0, 1924927200, 0, 0, 'published', 3, 3),

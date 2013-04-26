@@ -83,7 +83,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			?>
 		<div class="tab-pane" id="clerk-tabs">
 			<div class="tab-page" id="schedule">
-				<h2 class="tab">Clerkship Schedule</h2>
+				<h3 class="tab">Clerkship Schedule</h3>
 				<div style="float: right; padding-top: 8px">
 				    <div id="module-content">
 				        <ul class="page-action">
@@ -102,7 +102,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				        </ul>
 				    </div>
 				</div>
-				<table class="tableList" cellspacing="0" summary="List of Clerkship Schedule">
+				<table class="tableList" cellspacing="0" summary="List of Clerkship Services">
 				<colgroup>
 					<col class="modified" />
 					<col class="type" />
@@ -210,7 +210,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				</table>
 			</div>
 			<div class="tab-page" id="encounters">
-				<h2 class="tab">Logged Encounters</h2>
+				<h3 class="tab">Logged Encounters</h3>
 				<?php
 
 				if (isset($_GET["ids"]) && ((int)$_GET["ids"])) {
@@ -442,7 +442,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				?>
 				</div>
 				<div class="tab-page" id="progress">
-					<h2 class="tab">Progress Report</h2>
+					<h3 class="tab">Progress Report</h3>
 					<div id="progress-summary" style="min-height: 100px;">
 						<div style="width: 100%; text-align: center; margin-top: 80px;">
 							<div id="display-generic-box" class="display-generic">

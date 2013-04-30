@@ -2818,11 +2818,11 @@ class Models_Evaluation {
                                     JOIN `".AUTH_DATABASE."`.`user_data` AS b
                                     ON a.`target_value` = b.`id`
                                     AND a.`target_type` = 'proxy_id'
-                                                                    JOIN `course_group_contacts` AS c
-                                                                    ON c.`proxy_id` = b.`id`
+                                    JOIN `course_group_contacts` AS c
+                                    ON c.`proxy_id` = b.`id`
                                     WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
                                     ".($evaluator_proxy_id && $available_only && $unavailable_proxy_ids_string ? "AND a.`etarget_id` NOT IN (".$unavailable_proxy_ids_string.")" : "")."
-                                                                    AND c.`cgroup_id` = ".$db->qstr($cgroup_id)."
+                                    AND c.`cgroup_id` = ".$db->qstr($cgroup_id)."
                                     AND a.`target_active` = 1";
                         $evaluation_target_users = $db->GetAll($query);
                         if ($evaluation_target_users) {
@@ -2994,24 +2994,22 @@ class Models_Evaluation {
         
         $output_requests = array();
         
-        if ($request_id) {
-           $query = "SELECT * FROM `evaluation_requests` AS a
-                JOIN `evaluations` AS b
-                ON a.`evaluation_id` = b.`evaluation_id`
-                WHERE `proxy_id` = ".$db->qstr($proxy_id)."
-                ".($evaluation_id ? "AND a.`evaluation_id` = ".$db->qstr($evaluation_id) : "")."
-                ".($request_id ? "AND a.`erequest_id` = ".$db->qstr($request_id) : "")."
-                ".($codes_only ? "AND a.`request_code` IS NOT NULL" : "")."
-                AND (
-                    a.`request_expires` = 0
-                    OR a.`request_expires` > ".$db->qstr(time())."
-                )
-                AND a.`request_fulfilled` = 0";
-            $evaluation_request = $db->GetRow($query);
-            if ($evaluation_request) {
-                $output_requests[] = $evaluation_request;
-            } 
-        }
+        $query = "SELECT * FROM `evaluation_requests` AS a
+             JOIN `evaluations` AS b
+             ON a.`evaluation_id` = b.`evaluation_id`
+             WHERE `proxy_id` = ".$db->qstr($proxy_id)."
+             ".($evaluation_id ? "AND a.`evaluation_id` = ".$db->qstr($evaluation_id) : "")."
+             ".($request_id ? "AND a.`erequest_id` = ".$db->qstr($request_id) : "")."
+             ".($codes_only ? "AND a.`request_code` IS NOT NULL" : "")."
+             AND (
+                 a.`request_expires` = 0
+                 OR a.`request_expires` > ".$db->qstr(time())."
+             )
+             AND a.`request_fulfilled` = 0";
+         $evaluation_request = $db->GetRow($query);
+         if ($evaluation_request) {
+             $output_requests[] = $evaluation_request;
+         } 
 		if (!$codes_only) {
             $query = "SELECT * FROM `evaluation_requests` AS a
                 JOIN `evaluations` AS b

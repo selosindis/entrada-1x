@@ -49,7 +49,6 @@ if (isset($_POST["request_code"]) && ($code = clean_input($_POST["request_code"]
 }
 
 if ($RECORD_ID) {							
-	require_once("Models/evaluation/Evaluation.class.php");
 	$cohort = groups_get_cohort($ENTRADA_USER->getID());
 	
 	$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
@@ -111,7 +110,7 @@ if ($RECORD_ID) {
 	$evaluation_record	= $db->GetRow($query);
 	if ($evaluation_record) {
 		if ($evaluation_record["allow_target_request"] && (!isset($evaluation_request) || !$evaluation_request)) {
-            $evaluation_requests = Evaluation::getEvaluationRequests($RECORD_ID, $ENTRADA_USER->getID());
+            $evaluation_requests = Models_Evaluation::getEvaluationRequests($RECORD_ID, $ENTRADA_USER->getID());
             if ($evaluation_requests && count($evaluation_requests)) {
                 $evaluation_request = $evaluation_requests[0];
             } else {
@@ -120,23 +119,13 @@ if ($RECORD_ID) {
         }
     }
 	if ($evaluation_record) {
+        $temp_evaluation_record = Models_Evaluation::getEvaluationDetails($evaluation_record, $ENTRADA_USER->getId());
+        if ($temp_evaluation_record) {
+            $evaluation_record = $temp_evaluation_record;
+        }
 		$PROCESSED = $evaluation_record;
-
-		if (array_search($PROCESSED["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false) {
-			$full_evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), true, false, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
-			$evaluation_targets_count = count($full_evaluation_targets_list);
-			if (isset($full_evaluation_targets_list) && $evaluation_targets_count) {
-				$evaluation_record["max_submittable"] = ($evaluation_targets_count * (int) $evaluation_record["max_submittable"]);
-			}
-		}
-		
-		$query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
-					WHERE `evaluation_id` = ".$db->qstr($evaluation_record["evaluation_id"])."
-					AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-					AND `progress_value` = 'complete'";
-		$completed_attempts = $db->GetOne($query);
 			
-		if (!isset($completed_attempts) || !$evaluation_record["max_submittable"] || $completed_attempts < $evaluation_record["max_submittable"]) {
+		if (!isset($evaluation_record["completed_attempts"]) || !$evaluation_record["max_submittable"] || $evaluation_record["completed_attempts"] < $evaluation_record["max_submittable"]) {
 			
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/".$MODULE."?section=attempt&id=".$RECORD_ID, "title" => limit_chars($evaluation_record["evaluation_title"], 32));
 	
@@ -146,46 +135,9 @@ if ($RECORD_ID) {
 			 */
 			if ((((int) $evaluation_record["release_date"] === 0) || ($evaluation_record["release_date"] <= time()))) {
 				/**
-				 * Providing there is no expiry date, or the expiry date is in the
-				 * future on the evaluation, allow them to continue.
-				 */
-				/**
-				 * Get the number of completed attempts this user has made.
-				 */
-				$completed_attempts = evaluations_fetch_attempts($RECORD_ID);
-				
-				$evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID(), true, false, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
-				$max_submittable = $evaluation_record["max_submittable"];
-				if ($evaluation_targets_list) {
-					$evaluation_targets_count = count($evaluation_targets_list);
-					if (array_search($evaluation_record["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation_record["max_submittable"]) {
-						$max_submittable = ($evaluation_targets_count * (int) $evaluation_record["max_submittable"]);
-					} elseif ($evaluation_record["target_shortname"] == "peer" && $evaluation_record["max_submittable"] == 0) {
-						$max_submittable = $evaluation_targets_count;
-					}
-					if (isset($max_submittable) && $max_submittable) {
-						$evaluation_record["max_submittable"] = $max_submittable;
-					}
-				}
-
-				$evaluation_targets_list = Evaluation::getTargetsArray($RECORD_ID, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID(), true, false, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
-				$max_submittable = $evaluation_record["max_submittable"];
-				if ($evaluation_targets_list) {
-					$evaluation_targets_count = count($evaluation_targets_list);
-					if (array_search($evaluation_record["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation_record["max_submittable"]) {
-						$max_submittable = ($evaluation_targets_count * (int) $evaluation_record["max_submittable"]);
-					} elseif ($evaluation_record["target_shortname"] == "peer" && $evaluation_record["max_submittable"] == 0) {
-						$max_submittable = $evaluation_targets_count;
-					}
-					if (isset($max_submittable) && $max_submittable) {
-						$evaluation_record["max_submittable"] = $max_submittable;
-					}
-				}
-
-				/**
 				 * Providing they can still still make attempts at this evaluation, allow them to continue.
 				 */
-				if (((int) $evaluation_record["max_submittable"] === 0) || ($completed_attempts < $evaluation_record["max_submittable"])) {
+				if (((int) $evaluation_record["max_submittable"] === 0) || ($evaluation_record["completed_attempts"] < $evaluation_record["max_submittable"])) {
 					$problem_questions = array();
 
 					echo "<div class=\"content-small\">".clean_input($evaluation_record["target_title"], array("trim", "encode"))." Form</div>";
@@ -276,7 +228,7 @@ if ($RECORD_ID) {
 									break;
 								}
 								if ((isset($target_record_id) && $target_record_id) || ((isset($_POST["target_record_id"])) && ($target_record_id = clean_input($_POST["target_record_id"], array("trim", "int"))))) {
-									$evaluation_targets = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
+									$evaluation_targets = Models_Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
 									foreach ($evaluation_targets as $evaluation_target) {
 										switch ($evaluation_target["target_type"]) {
 											case "cgroup_id" :
@@ -371,7 +323,7 @@ if ($RECORD_ID) {
 									$questions	= $db->GetAll($query);
 									if ($questions) {
 										$questions_found = true;
-										if ((count($_POST["responses"])) != (count($questions))) {
+										if (isset($_POST["responses"]) && (count($_POST["responses"])) != (count($questions))) {
 											$ERROR++;
 											$ERRORSTR[] = "In order to submit your evaluation, you must first answer all of the questions.";
 										}
@@ -470,12 +422,12 @@ if ($RECORD_ID) {
                                                 application_log("error", "Unable to mark evaluation request as completed [".$progress_record["evaluation_id"]."]. Database said: ".$db->ErrorMsg());
                                             }
 											if ($evaluation_record["threshold_notifications_type"] != "disabled") {
-												$is_below_threshold = Evaluation::responsesBelowThreshold($evaluation_record["evaluation_id"], $eprogress_id);
+												$is_below_threshold = Models_Evaluation::responsesBelowThreshold($evaluation_record["evaluation_id"], $eprogress_id);
 												if ($is_below_threshold) {
 													if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
 														require_once("Models/notifications/NotificationUser.class.php");
 														require_once("Models/notifications/Notification.class.php");
-														$threshold_notification_recipients = Evaluation::getThresholdNotificationRecipients($evaluation_record["evaluation_id"], $eprogress_id, $PROCESSED["eevaluator_id"]);
+														$threshold_notification_recipients = Models_Evaluation::getThresholdNotificationRecipients($evaluation_record["evaluation_id"], $eprogress_id, $PROCESSED["eevaluator_id"]);
 														if (isset($threshold_notification_recipients) && $threshold_notification_recipients) {
 															foreach ($threshold_notification_recipients as $threshold_notification_recipient) {
 																$notification_user = NotificationUser::get($threshold_notification_recipient["proxy_id"], "evaluation_threshold", $evaluation_record["evaluation_id"], $ENTRADA_USER->getID());
@@ -552,7 +504,7 @@ if ($RECORD_ID) {
 						break;
 					}
 
-					if (((int) $evaluation_record["max_submittable"] === 0) || ($completed_attempts < $evaluation_record["max_submittable"])) {
+					if (((int) $evaluation_record["max_submittable"] === 0) || ($evaluation_record["completed_attempts"] < $evaluation_record["max_submittable"])) {
 						// Display Content
 						switch ($STEP) {
 							case 2 :
@@ -562,7 +514,7 @@ if ($RECORD_ID) {
 							break;
 							case 1 :
 							default :
-								if ($evaluation_record["evaluation_finish"] < time() && $evaluation_record["min_submittable"] > $completed_attempts) {
+								if ($evaluation_record["evaluation_finish"] < time() && $evaluation_record["min_submittable"] > $evaluation_record["completed_attempts"]) {
 									$NOTICE++;
 									$NOTICESTR[] = "This evaluation has not been completed and was marked as to be completed by ".date(DEFAULT_DATE_FORMAT, $evaluation_record["evaluation_finish"]).". Please complete this evaluation now to continue using ".APPLICATION_NAME.".";
 								}
@@ -614,7 +566,7 @@ if ($RECORD_ID) {
 									<?php
 									add_statistic("evaluation", "evaluation_view", "evaluation_id", $RECORD_ID);
 									if (!isset($evaluation_targets) || !count($evaluation_targets)) {
-										$evaluation_targets = Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
+										$evaluation_targets = Models_Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
 									}
                                     if ($PROCESSED["target_shortname"] == "preceptor") {
                                         $HEAD[] = "
@@ -663,7 +615,7 @@ if ($RECORD_ID) {
 												echo "<div class=\"content-small\">Evaluating <strong>".$target_name."</strong>.</div>";
                                                 if ($PROCESSED["target_shortname"] == "preceptor") {
                                                     echo "<div id=\"preceptor_select\">\n";
-                                                    echo Evaluation::getPreceptorSelect($RECORD_ID, $evaluation_targets[0]["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
+                                                    echo Models_Evaluation::getPreceptorSelect($RECORD_ID, $evaluation_targets[0]["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
                                                     echo "</div>\n";
                                                 } 
 											}
@@ -690,7 +642,7 @@ if ($RECORD_ID) {
 											if ($PROCESSED["target_shortname"] == "preceptor") {
 												echo "<div id=\"preceptor_select\">\n";
 												if (isset($PROCESSED["event_id"]) && $PROCESSED["event_id"]) {
-													echo Evaluation::getPreceptorSelect($RECORD_ID, $PROCESSED["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
+													echo Models_Evaluation::getPreceptorSelect($RECORD_ID, $PROCESSED["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
 												} else {
 													echo display_notice("Please select a <strong>Clerkship Service</strong> to evaluate a <strong>Preceptor</strong> for.");
 												}
@@ -800,7 +752,7 @@ if ($RECORD_ID) {
 										<div id="form-content-questions-holder">
 											<div id="form-questions-list">
 												<?php
-												echo Evaluation::getQuestionAnswerControls($questions, $PROCESSED["eform_id"], false, true, $eprogress_id);
+												echo Models_Evaluation::getQuestionAnswerControls($questions, $PROCESSED["eform_id"], false, true, $eprogress_id);
 												?>
 											</div>
 										</div>
@@ -868,7 +820,7 @@ if ($RECORD_ID) {
 									}
 									</script>
 									<?php
-									$sidebar_html = evaluation_generate_description($evaluation_record["min_submittable"], $total_questions, $evaluation_record["max_submittable"], $evaluation_record["evaluation_finish"]);
+									$sidebar_html = evaluation_generate_description((isset($evaluation_record["base_min_submittable"]) && $evaluation_record["base_min_submittable"] ? $evaluation_record["base_min_submittable"] : $evaluation_record["min_submittable"]), $total_questions, (isset($evaluation_record["base_max_submittable"]) && $evaluation_record["base_max_submittable"] ? $evaluation_record["base_max_submittable"] : $evaluation_record["max_submittable"]), $evaluation_record["evaluation_finish"]);
 									new_sidebar_item("Evaluation Statement", $sidebar_html, "page-anchors", "open", "1.9");
 								} else {
 									$ERROR++;
@@ -906,7 +858,7 @@ if ($RECORD_ID) {
 			}
 		} else {
 			$NOTICE++;
-			$NOTICESTR[] = "You have already completed <strong>".((int)$completed_attempts)."</strong> out of the allowable <strong>".$evaluation_record["max_submittable"]."</strong> attempts for this evaluation.<br /><br />Please contact a teacher if you require further assistance.";
+			$NOTICESTR[] = "You have already completed <strong>".((int)$evaluation_record["completed_attempts"])."</strong> out of the allowable <strong>".$evaluation_record["max_submittable"]."</strong> attempts for this evaluation.<br /><br />Please contact a teacher if you require further assistance.";
 
 			echo display_notice();
 

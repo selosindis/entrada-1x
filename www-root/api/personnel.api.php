@@ -78,8 +78,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			case "evaluators" :
 				$evaluator_ids_string = "";
 				if (isset($_GET["id"]) && ($evaluation_id = clean_input($_GET["id"], "int"))) {
-					require_once("Models/evaluation/Evaluation.class.php");
-					$evaluators = Evaluation::getEvaluators($evaluation_id);
+					$evaluators = Models_Evaluation::getEvaluators($evaluation_id);
 					if ($evaluators) {
 						foreach ($evaluators as $evaluator) {
 							$evaluator_ids_string .= ($evaluator_ids_string ? ", " : "").$db->qstr($evaluator["proxy_id"]);

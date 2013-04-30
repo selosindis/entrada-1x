@@ -2563,8 +2563,7 @@ class EvaluationReviewerAssertion implements Zend_Acl_Assert_Interface {
 			$user_id = $db->GetOne($query);
 		}
 		
-		require_once("Models/evaluation/Evaluation.class.php");
-		$permissions = Evaluation::getReviewPermissions($evaluation_id);
+		$permissions = Models_Evaluation::getReviewPermissions($evaluation_id);
 		if (count($permissions)) {
 			return true;
 		} else {
@@ -2615,8 +2614,7 @@ class EvaluationFormAuthorAssertion implements Zend_Acl_Assert_Interface {
 			$user_id = $db->GetOne($query);
 		}
 		
-		require_once("Models/evaluation/Evaluation.class.php");
-		$permissions = Evaluation::getFormAuthorPermissions($eform_id);
+		$permissions = Models_Evaluation::getFormAuthorPermissions($eform_id);
 		if ($permissions) {
 			return true;
 		} else {

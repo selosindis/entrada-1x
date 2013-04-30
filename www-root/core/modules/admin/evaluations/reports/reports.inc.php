@@ -39,7 +39,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	require_once("Models/evaluation/Evaluation.class.php");
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/", "title" => "Evaluation Reports");
 
 	$QUESTION_COMMENTS = false;  // Show question comments at the end of the question
@@ -127,7 +126,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		}
 		echo "	</tr>\n";
 
-		$evaluators_list = Evaluation::getEvaluators($report["evaluation"]);
+		$evaluators_list = Models_Evaluation::getEvaluators($report["evaluation"]);
 		$evaluators = count($evaluators_list);
 		
 		if ($STUDENTS) {		

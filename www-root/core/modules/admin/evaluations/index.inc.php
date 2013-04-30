@@ -49,7 +49,7 @@ if (!defined("IN_EVALUATIONS")) {
 		<?php
 	}
 
-    $evaluations = Evaluation::getAuthorEvaluations();
+    $evaluations = Models_Evaluation::getAuthorEvaluations();
 
 	if (count($evaluations)) {
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";

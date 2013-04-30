@@ -77,7 +77,7 @@ if (!defined("IN_EVALUATIONS")) {
 	$form_id = 0;
 	
 	if ((!$use_ajax || $options_for) && $ENTRADA_USER->getActiveOrganisation()) {
-		Evaluation::getTargetControls($PROCESSED, $options_for);
+		Models_Evaluation::getTargetControls($PROCESSED, $options_for);
 	}
 	if ($use_ajax) {
 		exit;

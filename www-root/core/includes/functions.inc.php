@@ -16245,7 +16245,7 @@ function groups_get_name($group_id = 0) {
  * @param int $proxy_id
  * @return array $group
  */
-function groups_get_cohort($proxy_id = 0, $strict = false) {
+function groups_get_cohort($proxy_id = 0, $organisation_id = 0, $strict = false) {
 	global $db, $ENTRADA_USER;
 
 	$proxy_id = (int) $proxy_id;
@@ -16260,7 +16260,7 @@ function groups_get_cohort($proxy_id = 0, $strict = false) {
 					WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
 					AND b.`member_active` = '1'
 					AND a.`group_type` = 'cohort'
-					AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+					AND c.`organisation_id` = ".$db->qstr((isset($organisation_id) && ((int)$organisation_id) ? ((int) $organisation_id) : $ENTRADA_USER->getActiveOrganisation()));
 		$cohort = $db->CacheGetRow(CACHE_TIMEOUT, $query);
 		if ($cohort) {
 			return $cohort;
@@ -16269,7 +16269,7 @@ function groups_get_cohort($proxy_id = 0, $strict = false) {
 						FROM `groups` AS a
 						JOIN `group_organisations` AS b
 						ON a.`group_id` = b.`group_id`
-						WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+						WHERE b.`organisation_id` = ".$db->qstr((isset($organisation_id) && ((int)$organisation_id) ? ((int) $organisation_id) : $ENTRADA_USER->getActiveOrganisation()))."
 						AND a.`group_type` = 'cohort'
 						ORDER BY a.`group_id` DESC";
 			$cohort = $db->CacheGetRow(CACHE_TIMEOUT,$query);

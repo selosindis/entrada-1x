@@ -49,10 +49,10 @@ if (!defined("IN_EVALUATIONS")) {
 		 */
 		ob_clear_open_buffers();
 
-		$PROCESSED = Evaluation::processTargets($_POST);
+		$PROCESSED = Models_Evaluation::processTargets($_POST);
 	}
 	if ($PROCESSED["eform_id"]) {
-		Evaluation::getTargetControls($PROCESSED, "", $PROCESSED["eform_id"]);
+		Models_Evaluation::getTargetControls($PROCESSED, "", $PROCESSED["eform_id"]);
 	}
 
 	/**

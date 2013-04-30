@@ -242,7 +242,7 @@ if($EVALUATION_ID) {
               			} else  {
               				$inprogress = false;
               			}
-						$evaluation_targets_list = Evaluation::getTargetsArray($EVALUATION_ID, $evaluation_evaluator["eevaluator_id"], $evaluation_evaluator["proxy_id"]);
+						$evaluation_targets_list = Models_Evaluation::getTargetsArray($EVALUATION_ID, $evaluation_evaluator["eevaluator_id"], $evaluation_evaluator["proxy_id"]);
 						$max_submittable = $evaluation_details["max_submittable"];
 						if ($evaluation_targets_list) {
 							$evaluation_targets_count = count($evaluation_targets_list);
@@ -609,7 +609,7 @@ if($EVALUATION_ID) {
 	                <?php
 	                foreach($evaluation_evaluators as $evaluation_evaluator) {
 	                	if (array_search($evaluation_evaluator["proxy_id"], $ignore_list) === false) {
-							$evaluation_targets_list = Evaluation::getTargetsArray($EVALUATION_ID, $evaluation_evaluator["eevaluator_id"], $evaluation_evaluator["proxy_id"]);
+							$evaluation_targets_list = Models_Evaluation::getTargetsArray($EVALUATION_ID, $evaluation_evaluator["eevaluator_id"], $evaluation_evaluator["proxy_id"]);
 							if ($evaluation_targets_list) {
 								$evaluation_targets_count = count($evaluation_targets_list);
 								if (array_search($evaluation_details["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation_details["max_submittable"]) {

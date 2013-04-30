@@ -390,7 +390,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				add_error("Please select an appropriate type of evaluator (i.e. entire class, percentage, etc).");
 			}
 
-			$PROCESSED = Evaluation::processTargets($_POST, $PROCESSED);
+			$PROCESSED = Models_Evaluation::processTargets($_POST, $PROCESSED);
 
 			/**
 			 * Non-required field "associated_reviewer" / Associated Reviewers (array of proxy ids).

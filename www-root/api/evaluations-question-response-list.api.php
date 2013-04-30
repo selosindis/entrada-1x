@@ -22,7 +22,6 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-require_once("Models/evaluation/Evaluation.class.php");
 
 if (isset($_POST["response_text"]) && $_POST["response_text"]) {
 	$question_data = json_decode($_POST["response_text"], true);
@@ -34,6 +33,6 @@ if (isset($_GET["responses"]) && $_GET["responses"]) {
 
 $question_data["responses_count"] = $responses;
 
-echo Evaluation::getQuestionResponseList($question_data);
+echo Models_Evaluation::getQuestionResponseList($question_data);
 
 ?>

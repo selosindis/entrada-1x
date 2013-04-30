@@ -39,7 +39,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	require_once("Models/evaluation/Evaluation.class.php");
 	switch ($STEP) {
 		case 2:
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations/reports?section=student-teacher-evaluations".replace_query(array("step" => 1)), "title" => "Students' Teacher Evaluations" );
@@ -66,7 +65,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 				$single = count($results) == 1;
 
-				$evaluators_list = Evaluation::getEvaluators($evaluation_id);
+				$evaluators_list = Models_Evaluation::getEvaluators($evaluation_id);
 				$evaluators = count($evaluators_list);
 
 				echo "<h1>".$results[0]["evaluation_title"]."</h1>";

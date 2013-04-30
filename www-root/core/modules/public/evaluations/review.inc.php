@@ -59,8 +59,6 @@ if ($RECORD_ID) {
     }); 
 	</script>
 	<?php
-	
-	require_once("Models/evaluation/Evaluation.class.php");
 	$query = "SELECT * FROM `evaluations` AS a
 				JOIN `evaluation_forms` AS b
 				ON a.`eform_id` = b.`eform_id`
@@ -70,7 +68,7 @@ if ($RECORD_ID) {
 		$questions = array();
 		$responses = array();
 		$criteria_response_ids = array();
-		$permissions = Evaluation::getReviewPermissions($evaluation["evaluation_id"]);
+		$permissions = Models_Evaluation::getReviewPermissions($evaluation["evaluation_id"]);
 		$query = "SELECT * FROM `evaluation_form_questions` AS a
 					JOIN `evaluations_lu_questions` AS b
 					ON a.`equestion_id` = b.`equestion_id`
@@ -119,7 +117,7 @@ if ($RECORD_ID) {
 		$available_target_ids = array();
 		$available_targets = array();
 		$target_attempts = array();
-		$completed_attempts = Evaluation::getProgressRecordsByPermissions($RECORD_ID, $permissions, true);
+		$completed_attempts = Models_Evaluation::getProgressRecordsByPermissions($RECORD_ID, $permissions, true);
 		foreach ($completed_attempts as $completed_attempt) {
 			if (!isset($progress_id) || !$progress_id || $completed_attempt["eprogress_id"] == $progress_id) {
                 if (isset($completed_attempt["preceptor_proxy_id"]) && $completed_attempt["preceptor_proxy_id"]) {

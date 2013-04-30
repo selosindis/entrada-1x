@@ -349,8 +349,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 											ORDER BY a.`question_order` ASC";
 								$questions = $db->GetAll($query);
 								if ($questions) {
-									require_once("Models/evaluation/Evaluation.class.php");
-									Evaluation::getQuestionAnswerControls($questions, $FORM_ID, $ALLOW_QUESTION_MODIFICATIONS);
+									Models_Evaluation::getQuestionAnswerControls($questions, $FORM_ID, $ALLOW_QUESTION_MODIFICATIONS);
 								} else {
 									$ONLOAD[] = "$('display-no-question-message').show()";
 								}

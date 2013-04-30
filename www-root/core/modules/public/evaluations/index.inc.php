@@ -32,8 +32,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 	exit;
 }
 
-require_once("Models/evaluation/Evaluation.class.php");
-
 if (isset($_GET["view"]) && $_GET["view"] == "review") {
 	$view = "review";
 } elseif (isset($_GET["view"]) && $_GET["view"] == "attempt") { 
@@ -42,8 +40,8 @@ if (isset($_GET["view"]) && $_GET["view"] == "review") {
 	$view = "index";
 }
 
-$evaluations = Evaluation::getEvaluatorEvaluations();
-$review_evaluations = Evaluation::getReviewerEvaluations();
+$evaluations = Models_Evaluation::getEvaluatorEvaluations($ENTRADA_USER->getId(), $ENTRADA_USER->getActiveOrganisation());
+$review_evaluations = Models_Evaluation::getReviewerEvaluations();
 $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";
 
 if (isset($_GET["request"]) && $_GET["request"]) {
@@ -52,7 +50,7 @@ if (isset($_GET["request"]) && $_GET["request"]) {
 		$evaluation = $db->GetRow($query);
         if ($evaluation) {
             $evaluation_title = $evaluation["evaluation_title"];
-            $target_evaluations = Evaluation::getTargetEvaluations();
+            $target_evaluations = Models_Evaluation::getTargetEvaluations();
             $found = false;
             if ($target_evaluations) {
                 foreach ($target_evaluations as $target_evaluation) {
@@ -147,7 +145,7 @@ if (isset($_GET["request"]) && $_GET["request"]) {
 	}
 }
 
-$evaluation_requests = Evaluation::getTargetRequests($ENTRADA_USER->GetID(), false, false, true);
+$evaluation_requests = Models_Evaluation::getTargetRequests($ENTRADA_USER->GetID(), false, false, true);
 if ($evaluation_requests) {
     $notice_msg = "The following Evaluation Request Codes are still active but unused: <br />";
     foreach ($evaluation_requests as $evaluation_request) {
@@ -384,7 +382,7 @@ if ($evaluations && $view != "review") {
 
 
 $request_evaluations = array();
-$target_evaluations = Evaluation::getTargetEvaluations();
+$target_evaluations = Models_Evaluation::getTargetEvaluations();
 if ($target_evaluations) {
 	foreach ($target_evaluations as $target_evaluation) {
 		if (isset($target_evaluation["allow_target_request"]) && $target_evaluation["allow_target_request"]) {

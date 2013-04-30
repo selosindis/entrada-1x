@@ -38,7 +38,7 @@ class Models_Evaluation {
 	 * @param array $arr
 	 * @return Evaluation
 	 */
-	public static function fromArray(array $arr, Evaluation $evaluation) {
+	public static function fromArray(array $arr, Models_Evaluation $evaluation) {
 		$evaluation->id = $arr['id'];
 		return $evaluation;
 	}
@@ -2422,7 +2422,7 @@ class Models_Evaluation {
 		return $PROCESSED;
 	}
 
-	public static function getTargetsArray ($evaluation_id, $evaluator_id = 0, $evaluator_proxy_id = 0, $simple = true, $available_only = false, $recent = false, $request_id = false) {
+	public static function getTargetsArray ($evaluation_id, $evaluator_id = 0, $evaluator_proxy_id = 0, $simple = true, $available_only = false, $recent = false, $request_id = false, $mandatory_only = false) {
 		global $db, $ENTRADA_USER;
 
 		if (!$evaluator_proxy_id && isset($ENTRADA_USER) && $ENTRADA_USER->getProxyId()) {
@@ -2617,6 +2617,7 @@ class Models_Evaluation {
 					$rotations = $db->GetAll($query);
 					foreach ($rotations as $rotation) {
 						$evaluated_event_ids_string = "";
+						$fulfilled_event_ids_string = "";
 						if ($evaluator_proxy_id) {
 							if ($available_only) {
 								$query = "SELECT a.`event_id` FROM `evaluation_progress_clerkship_events` AS a
@@ -2633,14 +2634,32 @@ class Models_Evaluation {
 									}
 								}
 							}
+							if ($mandatory_only) {
+								$query = "SELECT a.`event_id` FROM `evaluation_progress_clerkship_events` AS a
+											JOIN `evaluation_progress` AS b
+											ON a.`eprogress_id` = b.`eprogress_id`
+											WHERE b.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+											AND b.`proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+											GROUP BY a.`event_id`
+											HAVING COUNT(a.`event_id`) >= ".$evaluation["min_submittable"];
+								$event_ids = $db->GetAll($query);
+								if ($event_ids) {
+									foreach ($event_ids as $event) {
+										$fulfilled_event_ids_string .= ($fulfilled_event_ids_string ? ", " : "").$db->qstr($event["event_id"]);
+									}
+								}
+							}
 							$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`events` AS a
 										JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
 										ON a.`event_id` = b.`event_id`
 										WHERE a.`rotation_id` = ".$db->qstr($rotation["rotation_id"])."
+                                        AND a.`event_finish` >= ".$db->qstr($evaluation["evaluation_start"])."
 										AND b.`etype_id` = ".$db->qstr($evaluator_proxy_id)."
 										".($evaluated_event_ids_string && $available_only ? "AND a.`event_id` NOT IN (".$evaluated_event_ids_string.")" : "")."
+										".($fulfilled_event_ids_string && $mandatory_only ? "AND a.`event_id` NOT IN (".$fulfilled_event_ids_string.")" : "")."
 										".($recent ? "AND a.`event_finish` > ".$db->qstr(strtotime("-36 hours"))."" : "")."
 										".(defined("CLERKSHIP_EVALUATION_LOCKOUT") && CLERKSHIP_EVALUATION_LOCKOUT ? "AND a.`event_finish` > ".$db->qstr(time() - CLERKSHIP_EVALUATION_LOCKOUT)."" : "")."
+										".($mandatory_only && defined("CLERKSHIP_EVALUATION_TIMEOUT") && CLERKSHIP_EVALUATION_TIMEOUT ? "AND a.`event_finish` <= ".$db->qstr(time() - CLERKSHIP_EVALUATION_TIMEOUT) : "")."
 										AND a.`event_finish` <= ".$db->qstr(time());
 							$events = $db->GetAll($query);
 							if ($events) {
@@ -2966,32 +2985,34 @@ class Models_Evaluation {
                 }
             }
         }
-
+        
 		return $evaluation_targets;
 	}
-
+	
 	public static function getTargetRequests ($proxy_id, $evaluation_id = false, $request_id = false, $codes_only = false) {
 		global $db;
-
+        
         $output_requests = array();
-
-        $query = "SELECT * FROM `evaluation_requests` AS a
-             JOIN `evaluations` AS b
-             ON a.`evaluation_id` = b.`evaluation_id`
-             WHERE `proxy_id` = ".$db->qstr($proxy_id)."
-             ".($evaluation_id ? "AND a.`evaluation_id` = ".$db->qstr($evaluation_id) : "")."
-             ".($request_id ? "AND a.`erequest_id` = ".$db->qstr($request_id) : "")."
-             ".($codes_only ? "AND a.`request_code` IS NOT NULL" : "")."
-             AND (
-                 a.`request_expires` = 0
-                 OR a.`request_expires` > ".$db->qstr(time())."
-             )
-             AND a.`request_fulfilled` = 0";
-        $evaluation_request = $db->GetRow($query);
-        if ($evaluation_request) {
-            $output_requests[] = $evaluation_request;
+        
+        if ($request_id) {
+           $query = "SELECT * FROM `evaluation_requests` AS a
+                JOIN `evaluations` AS b
+                ON a.`evaluation_id` = b.`evaluation_id`
+                WHERE `proxy_id` = ".$db->qstr($proxy_id)."
+                ".($evaluation_id ? "AND a.`evaluation_id` = ".$db->qstr($evaluation_id) : "")."
+                ".($request_id ? "AND a.`erequest_id` = ".$db->qstr($request_id) : "")."
+                ".($codes_only ? "AND a.`request_code` IS NOT NULL" : "")."
+                AND (
+                    a.`request_expires` = 0
+                    OR a.`request_expires` > ".$db->qstr(time())."
+                )
+                AND a.`request_fulfilled` = 0";
+            $evaluation_request = $db->GetRow($query);
+            if ($evaluation_request) {
+                $output_requests[] = $evaluation_request;
+            } 
         }
-        if (!$codes_only) {
+		if (!$codes_only) {
             $query = "SELECT * FROM `evaluation_requests` AS a
                 JOIN `evaluations` AS b
                 ON a.`evaluation_id` = b.`evaluation_id`
@@ -3140,7 +3161,16 @@ class Models_Evaluation {
 			case "preceptor" :
 			case "rotation_core" :
 			case "rotation_elective" :
-				$evaluation_targets = Models_Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true, $recent);
+				$temp_evaluation_targets = Models_Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluator["eevaluator_id"], $evaluator_user["id"], true, true, $recent);
+                if ($evaluation["event_id"]) {
+                    foreach ($temp_evaluation_targets as $key => $evaluation_target) {
+                        if ($evaluation["event_id"] == $evaluation_target) {
+                            $evaluation_targets[] = $evaluation_target;
+                        }
+                    }
+                } else {
+                    $evaluation_targets = $temp_evaluation_targets;
+                }
 			break;
 		}
 		if (isset($evaluation_targets) && $evaluation_targets) {
@@ -3486,7 +3516,7 @@ class Models_Evaluation {
 								}
 							}
 						break;
-						case "faculty" :
+						case "teacher" :
 							foreach ($evaluation_targets as $evaluation_target) {
 								if ($evaluation_target["target_type"] == "proxy_id" && $evaluation_target["target_value"] == $ENTRADA_USER->getID()) {
 									$permissions[] = array("target_value" => $ENTRADA_USER->getID(), "target_type" => "proxy_id", "contact_type" => "faculty");
@@ -3799,18 +3829,18 @@ class Models_Evaluation {
 		}
 		return false;
 	}
-
-	public static function getEvaluatorEvaluations() {
-		global $db, $ENTRADA_USER;
-
+	
+	public static function getEvaluatorEvaluations($proxy_id, $organisation_id) {
+		global $db;
+		
 		$evaluations = array();
-
-		$cohort = groups_get_cohort($ENTRADA_USER->getID());
+		
+		$cohort = groups_get_cohort($proxy_id, $organisation_id, true);
 
 		$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
 					JOIN `course_groups` AS b
 					ON a.`cgroup_id` = b.`cgroup_id`
-					WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+					WHERE a.`proxy_id` = ".$db->qstr($proxy_id)."
 					AND a.`active` = 1
 					AND b.`active` = 1";
 		$course_groups = $db->GetAll($query);
@@ -3837,13 +3867,13 @@ class Models_Evaluation {
 					(
 						(
 							b.`evaluator_type` = 'proxy_id'
-							AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getID())."
+							AND b.`evaluator_value` = ".$db->qstr($proxy_id)."
 						)
 						OR
 						(
 							b.`evaluator_type` = 'organisation_id'
-							AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
-						)".($ENTRADA_USER->getActiveGroup() == "student" ? " OR (
+							AND b.`evaluator_value` = ".$db->qstr($organisation_id)."
+						)".(isset($cohort) && $cohort ? " OR (
 							b.`evaluator_type` = 'cohort'
 							AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
 						)" : "").($cgroup_ids_string ? " OR (
@@ -3858,87 +3888,123 @@ class Models_Evaluation {
 		$temp_evaluations = $db->GetAll($query);
 		if ($temp_evaluations) {
 			foreach ($temp_evaluations as $evaluation) {
-                if (isset($evaluation["require_requests"]) && $evaluation["require_requests"]) {
-                    $requests = Models_Evaluation::getEvaluationRequests($evaluation["evaluation_id"], $ENTRADA_USER->getID());
-                }
-                if (!(isset($evaluation["require_requests"]) && $evaluation["require_requests"]) || (is_array($requests) && count($requests))) {
-                    $evaluation_targets_list = Models_Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluation["eevaluator_id"], $ENTRADA_USER->getID());
-                    if ($evaluation_targets_list) {
-                        $evaluation_targets_count = count($evaluation_targets_list);
-                        if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation["max_submittable"]) {
-                            $evaluation["max_submittable"] = ($evaluation_targets_count * (int) $evaluation["max_submittable"]);
-                        } elseif ($evaluation["target_shortname"] == "peer" && $evaluation["max_submittable"] == 0) {
-                            $evaluation["max_submittable"] = $evaluation_targets_count;
-                        }
-                        if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation["min_submittable"]) {
-                            $evaluation["min_submittable"] = ($evaluation_targets_count * (int) $evaluation["min_submittable"]);
-                        } elseif ($evaluation["target_shortname"] == "peer" && $evaluation["min_submittable"] == 0) {
-                            $evaluation["min_submittable"] = $evaluation_targets_count;
-                        }
-                        $evaluation_target_title = fetch_evaluation_target_title($evaluation_targets_list[0], $evaluation_targets_count, $evaluation["target_shortname"]);
-
-                        if ($evaluation_target_title) {
-                            $evaluation["evaluation_target_title"] = $evaluation_target_title;
-                        }
-
-                        if ($evaluation_targets_list) {
-                            $evaluation["evaluation_targets"] = $evaluation_targets_list;
-                        }
-                    }
-
-                    $query = "	SELECT COUNT(`efquestion_id`) FROM `evaluation_form_questions`
-                                WHERE `eform_id` = ".$db->qstr($evaluation["eform_id"])."
-                                GROUP BY `eform_id`";
-                    $evaluation_questions = $db->GetOne($query);
-                    if ($evaluation_questions) {
-                        $evaluation["evaluation_questions"] = $evaluation_questions;
-                    } else {
-                        $evaluation["evaluation_questions"] = 0;
-                    }
-
-                    $query = "	SELECT * FROM `evaluation_progress`
-                                WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
-                                AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-                                AND `progress_value` = 'complete'";
-                    $evaluation_progress = $db->GetAll($query);
-                    if ($evaluation_progress) {
-                        $evaluation["evaluation_progress"] = $evaluation_progress;
-                    } else {
-                        $evaluation["evaluation_progress"] = 0;
-                    }
-
-                    $query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
-                                WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
-                                AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-                                AND `progress_value` = 'complete'";
-                    $completed_attempts = $db->GetOne($query);
-                    if ($completed_attempts) {
-                        $evaluation["completed_attempts"] = $completed_attempts;
-                    } else {
-                        $evaluation["completed_attempts"] = 0;
-                    }
-
-                    if (($evaluation["release_date"] <= time() || !$evaluation["release_date"])) {
-                        $evaluation["click_url"] = ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"];
-                    } else {
-                        $evaluation["click_url"] = "";
-                    }
-
-                    if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) === false || (isset($evaluation_targets_count) && $evaluation_targets_count)) {
-                        $evaluations[] = $evaluation;
-                    }
+                $temp_evaluation = Models_Evaluation::getEvaluationDetails($evaluation, $proxy_id);
+                if ($temp_evaluation) {
+                    $evaluations[] = $temp_evaluation;
                 }
 			}
 		}
 		return $evaluations;
 	}
+    
+    public static function getEvaluationDetails ($evaluation, $proxy_id) {
+        global $db;
+        
+        if ($evaluation["max_submittable"]) {
+            $evaluation["base_max_submittable"] = $evaluation["max_submittable"];
+        }
+        if ($evaluation["min_submittable"]) {
+            $evaluation["base_min_submittable"] = $evaluation["min_submittable"];
+        }
+        if (isset($evaluation["require_requests"]) && $evaluation["require_requests"]) {
+            $requests = Models_Evaluation::getEvaluationRequests($evaluation["evaluation_id"], $proxy_id);
+        }
+        if (!(isset($evaluation["require_requests"]) && $evaluation["require_requests"]) || (is_array($requests) && count($requests))) {
+            $evaluation_targets_list = Models_Evaluation::getTargetsArray($evaluation["evaluation_id"], $evaluation["eevaluator_id"], $proxy_id);
+            if ($evaluation_targets_list) {
+                $event_ids_string = "";
+                $evaluation["evaluation_targets"] = $evaluation_targets_list;
+                if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false) {
+                    foreach ($evaluation_targets_list as $event) {
+                        $event_ids_string .= ($event_ids_string ? ", " : "").$db->qstr($event);
+                    }
+                }
+                if ($event_ids_string) {
+                    $query = "	SELECT COUNT(a.`eprogress_id`) FROM `evaluation_progress` AS a
+                                JOIN `evaluation_progress_clerkship_events` AS b
+                                ON a.`eprogress_id` = b.`eprogress_id`
+                                WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                AND a.`proxy_id` = ".$db->qstr($proxy_id)."
+                                AND a.`progress_value` = 'complete'
+                                AND b.`event_id` NOT IN (".$event_ids_string.")";
+                    $completed_past_evaluations = $db->GetOne($query);
+                }
+                if (!isset($completed_past_evaluations) || !$completed_past_evaluations) {
+                    $completed_past_evaluations = 0;
+                }
+                $evaluation_targets_count = count($evaluation_targets_list);
+                if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation["max_submittable"]) {
+                    $evaluation["max_submittable"] = ($evaluation_targets_count * (int) $evaluation["max_submittable"]) + $completed_past_evaluations;
+                } elseif ($evaluation["target_shortname"] == "peer" && $evaluation["max_submittable"] == 0) {
+                    $evaluation["max_submittable"] = $evaluation_targets_count + $completed_past_evaluations;
+                }
+                if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $evaluation["min_submittable"]) {
+                    $evaluation["min_submittable"] = ($evaluation_targets_count * (int) $evaluation["min_submittable"]) + $completed_past_evaluations;
+                } elseif ($evaluation["target_shortname"] == "peer" && $evaluation["min_submittable"] == 0) {
+                    $evaluation["min_submittable"] = $evaluation_targets_count + $completed_past_evaluations;
+                }
+                $evaluation_target_title = fetch_evaluation_target_title($evaluation_targets_list[0], $evaluation_targets_count, $evaluation["target_shortname"]);
+                if ($evaluation["target_shortname"] == "peer" && $evaluation["max_submittable"] == 0) {
+                    $evaluation["max_submittable"] = $evaluation_targets_count;
+                }
 
-	public static function getOutstandingEvaluations($proxy_id, $return_count_only = false) {
+                if ($evaluation_target_title) {
+                    $evaluation["evaluation_target_title"] = $evaluation_target_title;
+                }
+            }
+
+            $query = "	SELECT COUNT(`efquestion_id`) FROM `evaluation_form_questions`
+                        WHERE `eform_id` = ".$db->qstr($evaluation["eform_id"])."
+                        GROUP BY `eform_id`";
+            $evaluation_questions = $db->GetOne($query);
+            if ($evaluation_questions) {
+                $evaluation["evaluation_questions"] = $evaluation_questions;
+            } else {
+                $evaluation["evaluation_questions"] = 0;
+            }
+
+            $query = "	SELECT * FROM `evaluation_progress`
+                        WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                        AND `proxy_id` = ".$db->qstr($proxy_id)."
+                        AND `progress_value` = 'complete'";
+            $evaluation_progress = $db->GetAll($query);
+            if ($evaluation_progress) {
+                $evaluation["evaluation_progress"] = $evaluation_progress;
+            } else {
+                $evaluation["evaluation_progress"] = 0;
+            }
+
+            $query = "	SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
+                        WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                        AND `proxy_id` = ".$db->qstr($proxy_id)."
+                        AND `progress_value` = 'complete'";
+            $completed_attempts = $db->GetOne($query);
+            if ($completed_attempts) {
+                $evaluation["completed_attempts"] = $completed_attempts;
+            } else {
+                $evaluation["completed_attempts"] = 0;
+            }
+
+            if (($evaluation["release_date"] <= time() || !$evaluation["release_date"])) {
+                $evaluation["click_url"] = ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"];
+            } else {
+                $evaluation["click_url"] = "";
+            }
+
+            if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) === false || (isset($evaluation_targets_count) && $evaluation_targets_count)) {
+                return $evaluation;
+            }
+        }
+        
+        return false;
+    }
+
+	public static function getOutstandingEvaluations($proxy_id, $organisation_id, $return_count_only = false) {
 		global $db;
 
 		$evaluations = array();
 
-		$cohort = groups_get_cohort($proxy_id, true);
+		$cohort = groups_get_cohort($proxy_id, $organisation_id, true);
 
 		$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
 					JOIN `course_groups` AS b
@@ -4070,10 +4136,10 @@ class Models_Evaluation {
 		}
 		return (($return_count_only) ? count($evaluations) : $evaluations);
 	}
-
+	
     public static function getEvaluationRequests($evaluation_id, $proxy_id) {
         global $db;
-
+        
         $query = "SELECT * FROM `evaluation_requests`
                     WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
                     AND `target_proxy_id` = ".$db->qstr($proxy_id)."

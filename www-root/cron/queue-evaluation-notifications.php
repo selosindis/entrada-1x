@@ -22,7 +22,6 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-require_once("Models/evaluation/Evaluation.class.php");
 
 //queue notifications for each user with the evaluations which have opened for them in the last 24 hours.
 $query = "SELECT *, '0' AS `event_id` FROM `evaluations` AS a
@@ -120,7 +119,7 @@ $pending_evaluations = array();
 
 if ($new_evaluations) {
 	foreach ($new_evaluations as $evaluation) {
-		$pending_evaluations[$evaluation["evaluation_id"]] = Evaluation::getEvaluationsPending($evaluation, true);
+		$pending_evaluations[$evaluation["evaluation_id"]] = Models_Evaluation::getEvaluationsPending($evaluation, true);
 	}
 }
 foreach ($pending_evaluations as $evaluation_id => $pending_evaluation_users) {
@@ -239,7 +238,7 @@ $query = "SELECT *, '0' AS `event_id` FROM `evaluations` AS a
 $ended_evaluations = $db->GetAll($query);
 if ($ended_evaluations) {
 	foreach ($ended_evaluations as $evaluation) {
-		$overdue_evaluations[$evaluation["evaluation_id"]] = Evaluation::getOverdueEvaluations($evaluation);
+		$overdue_evaluations[$evaluation["evaluation_id"]] = Models_Evaluation::getOverdueEvaluations($evaluation);
 	}
 }
 foreach ($overdue_evaluations as $evaluation_id => $overdue_evaluation_users) {

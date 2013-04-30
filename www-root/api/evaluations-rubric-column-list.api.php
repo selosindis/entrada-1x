@@ -22,7 +22,6 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-require_once("Models/evaluation/Evaluation.class.php");
 
 if (isset($_POST["response_text"]) && $_POST["response_text"]) {
 	$question_data = json_decode($_POST["response_text"], true);
@@ -39,6 +38,6 @@ if (isset($_GET["categories"]) && $_GET["categories"]) {
 $question_data["categories_count"] = $categories;
 $question_data["columns_count"] = $columns;
 
-echo Evaluation::getRubricColumnList($question_data);
+echo Models_Evaluation::getRubricColumnList($question_data);
 
 ?>

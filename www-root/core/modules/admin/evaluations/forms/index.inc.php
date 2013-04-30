@@ -44,8 +44,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	</ul>
 	<div class="clear"></div>
 	<?php
-	require_once("Models/evaluation/Evaluation.class.php");
-	$results = Evaluation::getAuthorEvaluationForms();
+	$results = Models_Evaluation::getAuthorEvaluationForms();
 	if ($results) {
 		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js\"></script>";
 		$HEAD[] = "<script type=\"text/javascript\">

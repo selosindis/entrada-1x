@@ -528,8 +528,7 @@ switch ($MODULE) {
 			$evaluations = $db->GetAll($query);
 			if ($evaluations) {
 				foreach ($evaluations as $evaluation) {
-					require_once("Models/evaluation/Evaluation.class.php");
-					$overdue = Evaluation::getUserOverdueEvaluation($evaluation, array("eevaluator_id" => $evaluation["eevaluator_id"]), array("id" => $ENTRADA_USER->getID()));
+					$overdue = Models_Evaluation::getUserOverdueEvaluation($evaluation, array("eevaluator_id" => $evaluation["eevaluator_id"]), array("id" => $ENTRADA_USER->getID()));
 					if ($overdue) {
 						header("Location: ".ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"]);
 						exit;

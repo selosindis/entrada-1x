@@ -3042,7 +3042,7 @@ class Models_Evaluation {
 		$query = "SELECT * FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"]);
 		$evaluators = $db->GetAll($query);
 		foreach ($evaluators as $evaluator) {
-			$evaluator_users = Models_Evaluation::getEvaluatorUsers($evaluator);
+			$evaluator_users = Models_Evaluation::getEvaluatorUsers($evaluator, true);
 			foreach ($evaluator_users as $evaluator_user) {
 				$temp_evaluation = Models_Evaluation::getUserPendingEvaluation($evaluation, $evaluator, $evaluator_user, $recent);
 				if ($temp_evaluation) {
@@ -3064,7 +3064,7 @@ class Models_Evaluation {
 		$query = "SELECT * FROM `evaluation_evaluators` WHERE `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"]);
 		$evaluators = $db->GetAll($query);
 		foreach ($evaluators as $evaluator) {
-			$evaluator_users = Models_Evaluation::getEvaluatorUsers($evaluator);
+			$evaluator_users = Models_Evaluation::getEvaluatorUsers($evaluator, true);
 			foreach ($evaluator_users as $evaluator_user) {
 				$temp_evaluation = Models_Evaluation::getUserOverdueEvaluation($evaluation, $evaluator, $evaluator_user);
 				if ($temp_evaluation) {

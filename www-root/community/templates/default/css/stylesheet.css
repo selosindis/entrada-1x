@@ -1411,17 +1411,17 @@ vertical-align: top;
 
 div.quiz-questions ul.responses li.display-correct,
 div.quiz-questions ul.responses li.correct {
-list-style-image:url(../images/question-correct.gif);
+list-style-image:url(../../../../images/question-correct.gif);
 }
 
 div.quiz-questions ul.responses li.display-incorrect,
 div.quiz-questions ul.responses li.incorrect {
-list-style-image:url(../images/question-incorrect.gif);
+list-style-image:url(../../../../images/question-incorrect.gif);
 }
 
 div.quiz-questions ul.responses li.selected {
 font-weight:700;
-list-style-image:url(../images/record-next-on.gif);
+list-style-image:url(../../../../images/record-next-on.gif);
 border-top:1px #CCC solid;
 border-bottom:1px #CCC solid;
 background-color:#F0F0F0;

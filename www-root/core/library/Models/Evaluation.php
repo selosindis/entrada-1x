@@ -3573,7 +3573,7 @@ class Models_Evaluation {
 	}
 
 	public static function getReviewerEvaluations() {
-		global $db, $ENTRADA_USER, $ENTRADA_ACL;
+		global $db, $ENTRADA_ACL;
 
 		$query = "SELECT a.*, b.*, c.*, d.* FROM `evaluations` AS a
 					JOIN `evaluation_targets` AS b
@@ -3588,32 +3588,39 @@ class Models_Evaluation {
 		$output_evaluations = array();
 
 		foreach ($evaluations as $evaluation) {
-			$permissions = Models_Evaluation::getReviewPermissions($evaluation["evaluation_id"]);
-			if ($permissions) {
-				$progress_records = Models_Evaluation::getProgressRecordsByPermissions($evaluation["evaluation_id"], $permissions, true);
-				if (isset($progress_records) && count($progress_records)) {
-					$evaluation["completed_attempts"] = count($progress_records);
-					$evaluation["evaluation_progress"] = $progress_records;
-					$evaluation["permissions"] = $permissions;
-					$evaluation["admin"] = false;
-					$output_evaluations[] = $evaluation;
-				} elseif(isset($progress_records)) {
-					unset($progress_records);
-				}
-			}
-
-			if (!isset($progress_records) && $ENTRADA_ACL->amIAllowed(new EvaluationResource($evaluation["evaluation_id"], true), 'update')) {
-				$permissions = array(array("contact_type" => "reviewer"));
-				$progress_records = Models_Evaluation::getProgressRecordsByPermissions($evaluation["evaluation_id"], $permissions, true);
-				if (isset($progress_records) && count($progress_records)) {
-					$evaluation["completed_attempts"] = count($progress_records);
-					$evaluation["evaluation_progress"] = $progress_records;
-					$evaluation["permissions"] = $permissions;
-					$evaluation["admin"] = true;
-					$output_evaluations[] = $evaluation;
-				}
-			}
-			unset($progress_records);
+            $permissions = Models_Evaluation::getReviewPermissions($evaluation["evaluation_id"]);
+            if ($ENTRADA_ACL->amIAllowed(new EvaluationResource($evaluation["evaluation_id"], true), 'update')) {
+                $evaluation["admin"] = true;
+                $permissions[] = array("contact_type" => "reviewer");
+            } else {
+                $evaluation["admin"] = false;
+            }
+            if ($permissions) {
+                if (!$evaluation["admin"]) {
+                    if (count($permissions) > 1) {
+                        foreach ($permissions as $permission) {
+                            if (isset($permission["contact_type"]) && $permission["contact_type"] == "reviewer") {
+                                $evaluation["admin"] = true;
+                            }
+                        }
+                    } elseif (isset($permissions[0]["contact_type"]) && $permissions[0]["contact_type"] == "reviewer") {
+                        $evaluation["admin"] = true;
+                    }
+                }
+                if (!$evaluation["admin"]) {
+                    $progress_records = Models_Evaluation::getProgressRecordsByPermissions($evaluation["evaluation_id"], $permissions, true, $evaluation["target_shortname"]);
+                    if (isset($progress_records) && count($progress_records)) {
+                        $evaluation["completed_attempts"] = count($progress_records);
+                        $evaluation["permissions"] = $permissions;
+                        $output_evaluations[] = $evaluation;
+                    }
+                    unset($progress_records);
+                } else {
+                    $evaluation["completed_attempts"] = $evaluation["evaluation_completions"];
+                    $evaluation["permissions"] = $permissions;
+                    $output_evaluations[] = $evaluation;
+                }
+            }
 		}
 
 		return $output_evaluations;

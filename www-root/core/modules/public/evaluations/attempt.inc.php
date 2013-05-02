@@ -388,7 +388,7 @@ if ($RECORD_ID) {
 									 * and that we have stored those responses evaluation_responses table.
 									 */
 									if (!$ERROR) {
-                                        if ($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] === "other") {
+                                        if (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] === "other") {
                                             if($PROCESSED_TEACHER["email"]) {
                                                 $query	= "SELECT `id` FROM `".AUTH_DATABASE."`.`user_data` WHERE `email` = ".$db->qstr($PROCESSED_TEACHER["email"]);
                                                 $result	= $db->GetRow($query);
@@ -418,7 +418,11 @@ if ($RECORD_ID) {
 																);
 
 										if ($db->AutoExecute("evaluation_progress", $evaluation_progress_array, "UPDATE", "eprogress_id = ".$db->qstr($eprogress_id))) {
-                                            if ($evaluation_request && !$db->AutoExecute("evaluation_requests", array("request_fulfilled" => 1), "UPDATE", "`erequest_id` = ".$db->qstr($evaluation_request["erequest_id"]))) {
+                                            $query = "UPDATE `evaluations` SET `evaluation_completions` = (`evaluation_completions` + 1) WHERE `evaluation_id` = ".$db->qstr($evaluation_record["evaluation_id"]);
+                                            if (!$db->Execute($query)) {
+                                                application_log("error", "Unable to increment evaluation [".$progress_record["evaluation_id"]."] completions by one upon a completed attempt being submitted by a user [".$ENTRADA_USER->getID()."]. Database said: ".$db->ErrorMsg());
+                                            }
+                                            if ((isset($evaluation_request) && $evaluation_request) && !$db->AutoExecute("evaluation_requests", array("request_fulfilled" => 1), "UPDATE", "`erequest_id` = ".$db->qstr($evaluation_request["erequest_id"]))) {
                                                 application_log("error", "Unable to mark evaluation request as completed [".$progress_record["evaluation_id"]."]. Database said: ".$db->ErrorMsg());
                                             }
 											if ($evaluation_record["threshold_notifications_type"] != "disabled") {

@@ -752,15 +752,7 @@ if ($RECORD_ID) {
 									$total_questions	= 0;
 									if ($questions) {
 										$total_questions = count($questions);
-										?>
-										<div id="form-content-questions-holder">
-											<div id="form-questions-list">
-												<?php
-												echo Models_Evaluation::getQuestionAnswerControls($questions, $PROCESSED["eform_id"], false, true, $eprogress_id);
-												?>
-											</div>
-										</div>
-										<?php
+                                        echo Models_Evaluation::getQuestionAnswerControls($questions, $PROCESSED["eform_id"], false, true, $eprogress_id);
 									} else {
 										$ERROR++;
 										$ERRORSTR[] = "There are no questions currently available for this evaluation. This problem has been reported to a system administrator; please try again later.";
@@ -768,7 +760,7 @@ if ($RECORD_ID) {
 										application_log("error", "Unable to locate any questions for evaluation [".$evaluation_record["evaluation_id"]."]. Database said: ".$db->ErrorMsg());
 									}
 									?>
-									<div style="border-top: 2px #CCCCCC solid; margin-top: 10px; padding-top: 10px">
+									<div class="space-above medium">
 										<input type="button" style="float: left; margin-right: 10px" onclick="window.location = '<?php echo ENTRADA_URL; ?>/evaluations'" value="Exit Evaluation" />
 										<input type="submit" style="float: right" value="Submit Evaluation" />
 									</div>

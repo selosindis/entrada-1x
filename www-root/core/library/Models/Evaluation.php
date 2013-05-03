@@ -3616,9 +3616,11 @@ class Models_Evaluation {
                     }
                     unset($progress_records);
                 } else {
-                    $evaluation["completed_attempts"] = $evaluation["evaluation_completions"];
-                    $evaluation["permissions"] = $permissions;
-                    $output_evaluations[] = $evaluation;
+                    if (isset($evaluation["evaluation_completions"]) && $evaluation["evaluation_completions"]) {
+                        $evaluation["completed_attempts"] = $evaluation["evaluation_completions"];
+                        $evaluation["permissions"] = $permissions;
+                        $output_evaluations[] = $evaluation;
+                    }
                 }
             }
 		}
@@ -3697,7 +3699,7 @@ class Models_Evaluation {
 		}
 	}
 
-	public static function getProgressRecordsByPermissions ($evaluation_id, $permissions, $complete_only = false) {
+	public static function getProgressRecordsByPermissions ($evaluation_id, $permissions, $complete_only = false, $evaluation_type = false) {
 		global $db;
 
 		$progress_records = array();
@@ -3707,8 +3709,9 @@ class Models_Evaluation {
 					$query = "SELECT *, a.`eprogress_id` FROM `evaluation_progress` AS a
 								JOIN `evaluation_targets` AS b
 								ON a.`etarget_id` = b.`etarget_id`
+                                ".($evaluation_type && array_search($evaluation_type, array("preceptor", "rotation_core", "rotation_elective")) !== false ? "
 								LEFT JOIN `evaluation_progress_clerkship_events` AS c
-								ON a.`eprogress_id` = c.`eprogress_id`
+								ON a.`eprogress_id` = c.`eprogress_id`" : "")."
 								WHERE a.`evaluation_id` = ".$db->qstr($evaluation_id)."
 								AND a.`progress_value` = 'complete'";
 					$progress_records = $db->GetAll($query);
@@ -3722,8 +3725,9 @@ class Models_Evaluation {
 							$query = "SELECT *, a.`eprogress_id` FROM `evaluation_progress` AS a
 										JOIN `evaluation_targets` AS b
 										ON a.`etarget_id` = b.`etarget_id`
-										LEFT JOIN `evaluation_progress_clerkship_events` AS c
-										ON a.`eprogress_id` = c.`eprogress_id`
+                                        ".($evaluation_type && array_search($evaluation_type, array("preceptor", "rotation_core", "rotation_elective")) !== false ? "
+                                        LEFT JOIN `evaluation_progress_clerkship_events` AS c
+                                        ON a.`eprogress_id` = c.`eprogress_id`" : "")."
 										WHERE a.`target_record_id` = ".$db->qstr($permission["target_record_id"])."
 										AND a.`evaluation_id` = ".$db->qstr($evaluation_id);
 							$temp_progress_records = $db->GetAll($query);
@@ -3752,8 +3756,9 @@ class Models_Evaluation {
                             $query = "SELECT *, a.`eprogress_id` FROM `evaluation_progress` AS a
                                         JOIN `evaluation_targets` AS b
                                         ON a.`etarget_id` = b.`etarget_id`
+                                        ".($evaluation_type && array_search($evaluation_type, array("preceptor", "rotation_core", "rotation_elective")) !== false ? "
                                         LEFT JOIN `evaluation_progress_clerkship_events` AS c
-                                        ON a.`eprogress_id` = c.`eprogress_id`
+                                        ON a.`eprogress_id` = c.`eprogress_id`" : "")."
                                         WHERE b.`target_type` = ".$db->qstr($permission["target_type"])."
                                         AND b.`target_value` = ".$db->qstr($permission["target_value"])."
                                         ".(isset($proxy_ids_string) && $proxy_ids_string ? "AND a.`proxy_id` IN (".$proxy_ids_string.")" : "")."

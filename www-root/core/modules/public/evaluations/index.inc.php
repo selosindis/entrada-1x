@@ -186,13 +186,13 @@ if ($evaluations && $view != "review") {
 				'aoColumns' : [ 
 						null,
 						null,
-						null,
 						{'sType': 'alt-string'},
 						null,
 						null,
                         { 'bVisible' : false }
 					],
-				'bInfo': false
+				'bInfo': false,
+                'bAutoWidth': false
 			}
 		);
 		eTable.fnFilter('".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "all" ? "" : $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"])."', 6);
@@ -208,7 +208,7 @@ if ($evaluations && $view != "review") {
 							}
 			});
 			var filterval = (value == 'all' ? '' : value)
-			eTable.fnFilter(filterval, 6);
+			eTable.fnFilter(filterval, 5);
 			$$('li.active').each(function (e) {
 				e.removeClassName('active');
 			});
@@ -217,55 +217,43 @@ if ($evaluations && $view != "review") {
 	}
 	</script>";
 	?>
-	<table id="evaluations" class="tableList" cellspacing="0" summary="List of Evaluations and Assessments to Attempt">
-	<colgroup>
-		<col class="modified" />
-		<col class="general" />
-		<col class="general" />
-		<col class="date-small" />
-		<col class="title" />
-		<col class="date-smallest" />
-		<col class="general" />
-	</colgroup>
-	<thead>
-		<tr>
-			<td class="modified">&nbsp;</td>
-			<td class="general">Type</td>
-			<td class="general">Target(s)</td>
-			<td class="date-small">Close Date</td>
-			<td class="title">Title</td>
-			<td class="date-smallest">Submitted</td>
-			<td class="general">Status</td>
-		</tr>
-	</thead>
-	<tbody>
-	<?php
-	foreach ($evaluations as $evaluation) {
-		if ($evaluation["click_url"]) {
-			echo "<tr>\n";
-			echo "	<td>&nbsp;</td>\n";
-			echo "	<td><a href=\"".$evaluation["click_url"]."\">".(!empty($evaluation["target_title"]) ? $evaluation["target_title"] : "No Type Found")."</a></td>\n";
-			echo "	<td><a href=\"".$evaluation["click_url"]."\">".(!empty($evaluation["evaluation_target_title"]) ? $evaluation["evaluation_target_title"] : "No Target")."</a></td>\n";
-			echo "	<td><a href=\"".$evaluation["click_url"]."\" alt=\"".$evaluation["evaluation_finish"]."\">".date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_finish"])."</a></td>\n";
-			echo "	<td><a href=\"".$evaluation["click_url"]."\">".html_encode($evaluation["evaluation_title"])."</a></td>\n";
-			echo "	<td><a href=\"".$evaluation["click_url"]."\">".($evaluation["completed_attempts"] ? ((int)$evaluation["completed_attempts"]) : "0")."/".($evaluation["max_submittable"] ? ((int)$evaluation["max_submittable"]) : "0")."</a></td>\n";
-			echo "	<td>".($evaluation["max_submittable"] > $evaluation["completed_attempts"] && $evaluation["evaluation_finish"] < time() ? "overdue available" : ($evaluation["max_submittable"] > $evaluation["completed_attempts"] ? "available" : "complete"))."</td>";
-			echo "</tr>\n";
-		} else {
-			echo "<tr>\n";
-			echo "	<td class=\"content-small\">&nbsp;</td>\n";
-			echo "	<td class=\"content-small\">".(!empty($evaluation["target_title"]) ? $evaluation["target_title"] : "No Type Found")."</td>\n";
-			echo "	<td class=\"content-small\">".(!empty($evaluation["evaluation_target_title"]) ? $evaluation["evaluation_target_title"] : "No Target")."</td>\n";
-			echo "	<td class=\"content-small\"><span alt=\"".$evaluation["evaluation_finish"]."\">".date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_finish"])."</span></td>\n";
-			echo "	<td class=\"content-small\">".html_encode($evaluation["evaluation_title"])."</td>\n";
-			echo "	<td class=\"content-small\">".($evaluation["completed_attempts"] ? ((int)$evaluation["completed_attempts"]) : "0")."/".($evaluation["max_submittable"] ? ((int)$evaluation["max_submittable"]) : "0")."</td>\n";
-			echo "	<td>".($evaluation["max_submittable"] > $evaluation["completed_attempts"] && $evaluation["evaluation_finish"] < time() ? "overdue available" : ($evaluation["max_submittable"] > $evaluation["completed_attempts"] ? "available" : "complete"))."</td>";
-			echo "</tr>\n";
-		}
-	}
-	?>
-	</tbody>
-	</table>
+    <table id="evaluations" class="tableList" cellspacing="0" summary="List of Evaluations and Assessments to Attempt">
+    <thead>
+        <tr>
+            <td class="evaluation-type">Type</td>
+            <td class="targets">Target(s)</td>
+            <td class="date-smallest">Close Date</td>
+            <td class="title">Title</td>
+            <td class="submitted">Submitted</td>
+            <td class="hide">Status</td>
+        </tr>
+    </thead>
+    <tbody>
+    <?php
+    foreach ($evaluations as $evaluation) {
+        if ($evaluation["click_url"]) {
+            echo "<tr>\n";
+            echo "	<td><a href=\"".$evaluation["click_url"]."\">".(!empty($evaluation["target_title"]) ? $evaluation["target_title"] : "No Type Found")."</a></td>\n";
+            echo "	<td><a href=\"".$evaluation["click_url"]."\">".(!empty($evaluation["evaluation_target_title"]) ? $evaluation["evaluation_target_title"] : "No Target")."</a></td>\n";
+            echo "	<td><a href=\"".$evaluation["click_url"]."\" alt=\"".$evaluation["evaluation_finish"]."\">".date("M d/y g:ia", $evaluation["evaluation_finish"])."</a></td>\n";
+            echo "	<td><a href=\"".$evaluation["click_url"]."\">".html_encode($evaluation["evaluation_title"])."</a></td>\n";
+            echo "	<td class=\"text-center\"><a href=\"".$evaluation["click_url"]."\">".($evaluation["completed_attempts"] ? ((int)$evaluation["completed_attempts"]) : "0")."/".($evaluation["max_submittable"] ? ((int)$evaluation["max_submittable"]) : "0")."</a></td>\n";
+            echo "	<td class=\"hide\">".($evaluation["max_submittable"] > $evaluation["completed_attempts"] && $evaluation["evaluation_finish"] < time() ? "overdue available" : ($evaluation["max_submittable"] > $evaluation["completed_attempts"] ? "available" : "complete"))."</td>";
+            echo "</tr>\n";
+        } else {
+            echo "<tr>\n";
+            echo "	<td class=\"content-small\">".(!empty($evaluation["target_title"]) ? $evaluation["target_title"] : "No Type Found")."</td>\n";
+            echo "	<td class=\"content-small\">".(!empty($evaluation["evaluation_target_title"]) ? $evaluation["evaluation_target_title"] : "No Target")."</td>\n";
+            echo "	<td class=\"content-small\"><span alt=\"".$evaluation["evaluation_finish"]."\">".date("M d/y g:ia", $evaluation["evaluation_finish"])."</span></td>\n";
+            echo "	<td class=\"content-small\">".html_encode($evaluation["evaluation_title"])."</td>\n";
+            echo "	<td class=\"content-small text-center\">".($evaluation["completed_attempts"] ? ((int)$evaluation["completed_attempts"]) : "0")."/".($evaluation["max_submittable"] ? ((int)$evaluation["max_submittable"]) : "0")."</td>\n";
+            echo "	<td class=\"hide\">".($evaluation["min_submittable"] > $evaluation["completed_attempts"] && $evaluation["evaluation_finish"] < time() ? "overdue available" : ($evaluation["max_submittable"] > $evaluation["completed_attempts"] ? "available" : "complete"))."</td>";
+            echo "</tr>\n";
+        }
+    }
+    ?>
+    </tbody>
+    </table>
 	<?php
 } elseif ($review_evaluations && $view != "attempt") {
 	$HEAD[] = "<script type=\"text/javascript\">
@@ -276,12 +264,12 @@ if ($evaluations && $view != "review") {
 				'sPaginationType': 'full_numbers',
 				'aoColumns' : [ 
 						null,
-						null,
 						{'sType': 'alt-string'},
 						null,
 						null
 					],
-				'bInfo': false
+				'bInfo': false,
+                'bAutoWidth': false
 			}
 		);
 	});
@@ -298,22 +286,12 @@ if ($evaluations && $view != "review") {
 	}
 	?>
 	<table id="evaluations" class="tableList" cellspacing="0" summary="List of Evaluations and Assessments to Review">
-	<colgroup>
-		<col class="modified" />
-		<col class="general" />
-		<col class="date-small" />
-		<col class="title" />
-		<col class="date-smallest" />
-		<col class="date-smallest" />
-	</colgroup>
 	<thead>
 		<tr>
-			<td class="modified">&nbsp;</td>
-			<td class="general">Type</td>
+			<td class="type">Type</td>
 			<td class="date-small">Close Date</td>
 			<td class="title">Title</td>
-			<td class="date-smallest">Submitted</td>
-			<td class="date-smallest">Status</td>
+			<td class="submitted">Submitted</td>
 		</tr>
 	</thead>
 	<tbody>
@@ -322,7 +300,6 @@ if ($evaluations && $view != "review") {
 		$url = ENTRADA_URL."/evaluations?section=review&id=".$evaluation["evaluation_id"];
 
 		echo "<tr>\n";
-		echo "	<td>&nbsp;</td>\n";
 		echo "	<td><a href=\"".$url."\">".(!empty($evaluation["target_title"]) ? $evaluation["target_title"] : "No Type Found")."</a></td>\n";
 		echo "	<td><a href=\"".$url."\" alt=\"".$evaluation["evaluation_finish"]."\">".date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_finish"])."</a></td>\n";
 		echo "	<td><a href=\"".$url."\">".html_encode($evaluation["evaluation_title"])."</a></td>\n";

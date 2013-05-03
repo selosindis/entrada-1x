@@ -62,6 +62,8 @@ if ($RECORD_ID) {
 	$query = "SELECT * FROM `evaluations` AS a
 				JOIN `evaluation_forms` AS b
 				ON a.`eform_id` = b.`eform_id`
+                JOIN `evaluations_lu_targets` AS c
+                ON b.`target_id` = c.`target_id`
 				WHERE `evaluation_id` = ".$db->qstr($RECORD_ID);
 	$evaluation = $db->GetRow($query);
 	if ($evaluation) {
@@ -117,7 +119,7 @@ if ($RECORD_ID) {
 		$available_target_ids = array();
 		$available_targets = array();
 		$target_attempts = array();
-		$completed_attempts = Models_Evaluation::getProgressRecordsByPermissions($RECORD_ID, $permissions, true);
+		$completed_attempts = Models_Evaluation::getProgressRecordsByPermissions($RECORD_ID, $permissions, true, $evaluation["target_shortname"]);
 		foreach ($completed_attempts as $completed_attempt) {
 			if (!isset($progress_id) || !$progress_id || $completed_attempt["eprogress_id"] == $progress_id) {
                 if (isset($completed_attempt["preceptor_proxy_id"]) && $completed_attempt["preceptor_proxy_id"]) {
@@ -146,6 +148,7 @@ if ($RECORD_ID) {
 								foreach ($responses as $response) {
 									$course["responses"][$response["equestion_id"]]["responses"][$response["eqresponse_id"]] = 0;
 								}
+                                $course["eprogress_id"] = $completed_attempt["eprogress_id"];
 								$course["target_title"] = $course["course_name"]." - ".$course["course_code"];
 								$course["sort_title"] = $course["course_name"]." - ".$course["course_code"];
 								$available_targets[$target_id] = $course;
@@ -162,6 +165,7 @@ if ($RECORD_ID) {
 								foreach ($responses as $response) {
 									$user["responses"][$response["equestion_id"]]["responses"][$response["eqresponse_id"]] = 0;
 								}
+                                $user["eprogress_id"] = $completed_attempt["eprogress_id"];
 								$user["target_title"] = $user["firstname"]." ".$user["lastname"];
 								$user["sort_title"] = $user["lastname"].", ".$user["firstname"];
 								$available_targets[$target_id] = $user;
@@ -177,12 +181,13 @@ if ($RECORD_ID) {
 											JOIN `".AUTH_DATABASE."`.`user_data` AS d
 											ON d.`id` = ".$db->qstr($completed_attempt["preceptor_proxy_id"])."
 											WHERE c.`event_id` = ".$db->qstr($completed_attempt["event_id"]);
-								$clerkship_preceptor = $db->GetRow($query);
+								$clerkship_preceptor = $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query);
 								if ($clerkship_preceptor) {
 									$clerkship_preceptor["responses"] = array();
 									foreach ($responses as $response) {
 										$clerkship_preceptor["responses"][$response["equestion_id"]]["responses"][$response["eqresponse_id"]] = 0;
 									}
+                                    $clerkship_preceptor["eprogress_id"] = $completed_attempt["eprogress_id"];
 									$clerkship_preceptor["target_title"] = $clerkship_preceptor["firstname"]." ".$clerkship_preceptor["lastname"];
                                     $clerkship_preceptor["event_title"] = $clerkship_preceptor["event_title"] . " (".date("d-m-Y", $clerkship_preceptor["event_start"])." to ".date("d-m-Y", $clerkship_preceptor["event_finish"]).")";
 									$clerkship_preceptor["sort_title"] = $clerkship_preceptor["lastname"].", ".$clerkship_preceptor["firstname"];
@@ -196,12 +201,13 @@ if ($RECORD_ID) {
                                                 JOIN `".CLERKSHIP_DATABASE."`.`other_teachers` AS d
                                                 ON CONCAT('OT-', d.`oteacher_id`) = ".$db->qstr($completed_attempt["preceptor_proxy_id"])."
                                                 WHERE c.`event_id` = ".$db->qstr($completed_attempt["event_id"]);
-                                    $clerkship_preceptor = $db->GetRow($query);
+                                    $clerkship_preceptor = $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query);
                                     if ($clerkship_preceptor) {
                                         $clerkship_preceptor["responses"] = array();
                                         foreach ($responses as $response) {
                                             $clerkship_preceptor["responses"][$response["equestion_id"]]["responses"][$response["eqresponse_id"]] = 0;
                                         }
+                                        $clerkship_preceptor["eprogress_id"] = $completed_attempt["eprogress_id"];
                                         $clerkship_preceptor["target_title"] = $clerkship_preceptor["firstname"]." ".$clerkship_preceptor["lastname"];
                                         $clerkship_preceptor["event_title"] = $clerkship_preceptor["event_title"] . " (".date("d-m-Y", $clerkship_preceptor["event_start"])." to ".date("d-m-Y", $clerkship_preceptor["event_finish"]).")";
                                         $clerkship_preceptor["sort_title"] = $clerkship_preceptor["lastname"].", ".$clerkship_preceptor["firstname"];
@@ -215,12 +221,13 @@ if ($RECORD_ID) {
 											LEFT JOIN `courses` AS c
 											ON b.`course_id` = c.`course_id`
 											WHERE a.`event_id` = ".$db->qstr($completed_attempt["event_id"]);
-								$clerkship_event = $db->GetRow($query);
+								$clerkship_event = $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query);
 								if ($clerkship_event) {
 									$clerkship_event["responses"] = array();
 									foreach ($responses as $response) {
 										$clerkship_event["responses"][$response["equestion_id"]]["responses"][$response["eqresponse_id"]] = 0;
 									}
+									$clerkship_event["eprogress_id"] = $completed_attempt["eprogress_id"];
 									$clerkship_event["target_title"] = $clerkship_event["event_title"].($clerkship_event["event_title"] != $clerkship_event["rotation_title"] ? " [".$clerkship_event["rotation_title"]."]" : "");
 									$clerkship_event["sort_title"] = $clerkship_event["rotation_title"].", ".$clerkship_event["event_title"];
 									$available_targets[$target_id] = $clerkship_event;
@@ -229,7 +236,7 @@ if ($RECORD_ID) {
 						break;
 					}
 					$available_targets[$target_id]["questions"] = array();
-				}
+				}/*
 				$query = "SELECT a.*, b.`equestion_id` FROM `evaluation_responses` AS a
 							LEFT JOIN `evaluation_form_questions` AS b
 							ON a.`efquestion_id` = b.`efquestion_id`
@@ -239,7 +246,7 @@ if ($RECORD_ID) {
 					$completed_attempt["responses"] = array();
 					foreach ($evaluation_responses as $evaluation_response) {
 						if (!isset($available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]])) {
-							$available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]] = array(	"responses" => array(),
+							$available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]] = array(  "responses" => array(),
 																														"comments" => array(),
 																														"selections" => 0);
 						}
@@ -263,16 +270,14 @@ if ($RECORD_ID) {
 							$available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]]["selections"]++;
 						}
 					}
-				}
-				$target_attempts[$target_id][] = $completed_attempt;
+				}*/
 			}
 		}
 		if ($available_targets) {
-			
 			function sort_by_title ($a, $b) {
 				return strcmp($a["sort_title"], $b["sort_title"]);
 			}
-			usort($available_targets, "sort_by_title");
+			uasort($available_targets, "sort_by_title");
 			
 			if (count($available_targets) > 1) {
 				$sidebar_html  = "<ul class=\"menu\">\n";
@@ -297,6 +302,57 @@ if ($RECORD_ID) {
 					$selected_target_id = $target_id;
 				}
 			}
+            if (isset($selected_target_id)) {
+                foreach ($completed_attempts as $completed_attempt) {
+                    if (!isset($progress_id) || !$progress_id || $completed_attempt["eprogress_id"] == $progress_id) {
+                        if (isset($completed_attempt["preceptor_proxy_id"]) && $completed_attempt["preceptor_proxy_id"]) {
+                            $target_id = $completed_attempt["preceptor_proxy_id"];
+                        } elseif (isset($completed_attempt["event_id"]) && ((int)$completed_attempt["event_id"])) {
+                            $target_id = ((int)$completed_attempt["event_id"]);
+                        } elseif (isset($completed_attempt["target_record_id"]) && ((int)$completed_attempt["target_record_id"])) {
+                            $target_id = ((int)$completed_attempt["target_record_id"]);
+                        } else {
+                            $target_id = ((int)$completed_attempt["target_value"]);
+                        }
+                        if ($target_id == $selected_target_id) {
+                            $query = "SELECT a.*, b.`equestion_id` FROM `evaluation_responses` AS a
+                                        LEFT JOIN `evaluation_form_questions` AS b
+                                        ON a.`efquestion_id` = b.`efquestion_id`
+                                        WHERE a.`eprogress_id` = ".$db->qstr($completed_attempt["eprogress_id"]);
+                            $evaluation_responses = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+                            if ($evaluation_responses) {
+                                $completed_attempt["responses"] = array();
+                                foreach ($evaluation_responses as $evaluation_response) {
+                                    if (!isset($available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]])) {
+                                        $available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]] = array(  "responses" => array(),
+                                                                                                                                    "comments" => array(),
+                                                                                                                                    "selections" => 0);
+                                    }
+                                    $completed_attempt["responses"][$evaluation_response["equestion_id"]] = $evaluation_response;
+                                    if ($evaluation_response["comments"]) {
+                                        if ($evaluation_response["eqresponse_id"]) {
+                                            $responses[$evaluation_response["eqresponse_id"]]["comments"][$evaluation_response["eresponse_id"]]["text"] = $evaluation_response["comments"];
+                                            $responses[$evaluation_response["eqresponse_id"]]["comments"][$evaluation_response["eresponse_id"]]["eqresponse_id"] = $evaluation_response["eqresponse_id"];
+                                        }
+                                        $available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]]["comments"][$evaluation_response["eresponse_id"]]["text"] = $evaluation_response["comments"];
+                                        $available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]]["comments"][$evaluation_response["eresponse_id"]]["eqresponse_id"] = $evaluation_response["eqresponse_id"];
+                                        $available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]]["comments"][$evaluation_response["eresponse_id"]]["equestion_id"] = $evaluation_response["equestion_id"];
+                                    }
+                                    if ($evaluation_response["eqresponse_id"] && !isset($available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]]["responses"][$evaluation_response["eqresponse_id"]])) {
+                                        $available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]]["responses"][$evaluation_response["eqresponse_id"]] = 0;
+                                    }
+                                    if ($evaluation_response["eqresponse_id"]) {
+                                        $responses[$evaluation_response["eqresponse_id"]]["selections"]++;
+                                        $questions[$evaluation_response["equestion_id"]]["selections"]++;
+                                        $available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]]["responses"][$evaluation_response["eqresponse_id"]]++;
+                                        $available_targets[$target_id]["questions"][$evaluation_response["equestion_id"]]["selections"]++;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
 			$query = "SELECT `target_title` FROM `evaluations_lu_targets` AS a
 						JOIN `evaluation_forms` AS b
 						ON a.`target_id` = b.`target_id`
@@ -311,53 +367,41 @@ if ($RECORD_ID) {
 			}
 			echo "<h1 style=\"font-weight: regular;\">".ucwords($content_type_name)." Results for:</h1><h2>".$selected_target["target_title"]."</h2>\n";
 			$count = 0;
-			echo "<table style=\"width: 100%;\">\n";
-			echo "	<colgroup>\n";
-			echo "		<col style=\"width: 60%\"/>\n";
-			echo "		<col style=\"width: 20%\"/>\n";
-			echo "		<col style=\"width: 20%\"/>\n";
-			echo "	</colgroup>\n";
 			foreach ($questions as $question) {
 				$count++;
 				if ($count > 1) {
-					echo "	<tr style=\"height: 25px;\">\n";
-					echo "		<td colspan=\"3\" style=\"border-top: medium solid #F0F0F0;\">&nbsp;</td>\n";
-					echo "	</tr>\n";
+                    echo "<div class=\"row-fluid border-above-medium\">&nbsp;</div>\n";
 				}
-				echo "	<tr>\n";
-				echo "		<td>\n";
-				echo "			<div style=\"float: left; width: 25%;\"><h3>Question #".$count.":</h3></div>";
-				echo "			<div style=\"float: left; width: 70%; margin-left: 10px;\">".$question["question_text"]."</div>\n";
-				echo "		</td>\n";
-				echo "		<td colspan=\"2\">&nbsp;</td>\n";
-				echo "	</tr>\n";
+				echo "	<div class=\"row-fluid\">\n";
+				echo "		<span class=\"span10 row-fluid\">\n";
+				echo "			<h3 class=\"span3\">Question #".$count.":</h3>\n";
+				echo "			<span class=\"span9 space-above medium\">".$question["question_text"]."</span>\n";
+				echo "		</span>\n";
+				echo "	</div>\n";
 				$total_selections = 0;
 				if (isset($question["response_ids"]) && $question["response_ids"]) { 
-					echo "	<tr>\n";
-					echo "		<td colspan=\"3\">&nbsp;</td>\n";
-					echo "	</tr>\n";
-					echo "	<tr style=\"font-weight: bold;\">\n";
-					echo "		<td style=\"border-bottom: thin solid #F0F0F0;\">Response</td>\n";
-					echo "		<td style=\"border-bottom: thin solid #F0F0F0;\">Percent</td>\n";
-					echo "		<td style=\"border-bottom: thin solid #F0F0F0;\">Selections</td>\n";
-					echo "	</tr>\n";
+					echo "	<br />\n";
+					echo "	<div class=\"row-fluid\" style=\"font-weight: bold;\">\n";
+					echo "		<span class=\"span8 border-below\">Response</span>\n";
+					echo "		<span class=\"span2 border-below\">Percent</span>\n";
+					echo "		<span class=\"span2 border-below\">Selections</span>\n";
+					echo "	</div>\n";
 					foreach ($question["response_ids"] as $response_id) {
 						$total_selections += $responses[$response_id]["selections"];
 					}
 					foreach ($question["response_ids"] as $response_id) {
 						$selections = (isset($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["responses"][$response_id]) ? $available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["responses"][$response_id] : 0);
-						echo "	<tr>\n";
-						echo "		<td>".(array_search($response_id, $criteria_response_ids) !== false ? "<a class=\"criteria-tooltip\" id=\"tooltip-".$response_id."\" href=\"#criteria-".$response_id."\">".$responses[$response_id]["response_text"]."</a>" : $responses[$response_id]["response_text"])."</td>\n";
-						echo "		<td>".(isset($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["responses"]) && count($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["responses"]) ? round(($selections / $available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["selections"] * 100), 1) : 0)."%</td>\n";
-						echo "		<td>".$selections."</td>\n";
-						echo "	</tr>\n";
+						echo "	<div class=\"row-fluid\">\n";
+						echo "		<span class=\"span8\">".(array_search($response_id, $criteria_response_ids) !== false ? "<a class=\"criteria-tooltip\" id=\"tooltip-".$response_id."\" href=\"#criteria-".$response_id."\">".$responses[$response_id]["response_text"]."</a>" : $responses[$response_id]["response_text"])."</span>\n";
+						echo "		<span class=\"span2\">".(isset($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["responses"]) && count($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["responses"]) ? round(($selections / $available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["selections"] * 100), 1) : 0)."%</span>\n";
+						echo "		<span class=\"span2\">".$selections."</span>\n";
+						echo "	</div>\n";
 					}
 					if ($evaluation["show_comments"] || $permissions[0]["contact_type"] == "reviewer") {
 						if (isset($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["comments"]) && count($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["comments"])) {
-							echo "	<tr class=\"comments-row\">\n";
-							echo "		<td style=\"padding-top: 20px;\" colspan=\"3\">Comments:</td>";
-							echo "	</tr>\n";
-							echo "	<tr class=\"comments-row\"><td colspan=\"3\"><ul>";
+							echo "	<div class=\"row-fluid comments-row\" style=\"padding-top: 20px;\">&nbsp;</div>\n";
+							echo "	<div class=\"row-fluid comments-row\">\n";
+                            echo "  <ul>\n";
 							$temp_responses = array();
 							foreach ($question["response_ids"] as $response_id) {
 								foreach ($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["comments"] as $comment) {
@@ -371,27 +415,32 @@ if ($RECORD_ID) {
 								}
 							}
 							foreach ($temp_responses as $response) {
-								echo "<li>".$response["response"].":<ul>\n";
+								echo "      <li>".$response["response"].":\n";
+                                echo "          <ul>\n";
 								foreach ($response["comments"] as $comment) {
-									echo "		<li>".$comment."</li>\n";
+									echo "              <li>".$comment."</li>\n";
 								}
-								echo "</ul></li>\n";
+								echo "          </ul>\n";
+                                echo "      </li>\n";
 							}
-							echo "	</ul></td></tr>\n";
+							echo "	</ul>\n";
+                            echo "</div>\n";
 						}
 					}
 				} elseif (($evaluation["show_comments"] || $permissions[0]["contact_type"] == "reviewer") && isset($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]) && $available_targets[$selected_target_id]["questions"][$question["equestion_id"]]) {
-					echo "	<tr class=\"comments-row\">\n";
-					echo "		<td style=\"padding-top: 20px;\" colspan=\"3\">Comments:</td>";
-					echo "	</tr>\n";
-					echo "	<tr class=\"comments-row\"><td colspan=\"3\"><ul>";
+					echo "<div class=\"row-fluid comments-row\">\n";
+					echo "	<span style=\"padding-top: 20px;\">Comments:</span>";
+					echo "</div>\n";
+					echo "<div class=\"row-fluid comments-row\">\n";
+                    echo "  <ul>";
 					$temp_responses = array();
 					foreach ($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["comments"] as $comment) {
 						if ($comment["equestion_id"] == $question["equestion_id"]) {
-							echo "		<li>".$comment["text"]."</li>\n";
+							echo "      <li>".$comment["text"]."</li>\n";
 						}
 					}
-					echo "	</ul></td></tr>\n";
+					echo "	</ul>\n";
+                    echo "</div>\n";
 				}
 			}
 			if ($evaluation["show_comments"] || $permissions[0]["contact_type"] == "reviewer") {
@@ -417,7 +466,6 @@ if ($RECORD_ID) {
 
 				new_sidebar_item("Show/Hide Comments", $sidebar_html, "view-comments", "open", "1.9");
 			}
-			echo "</table>\n";
 		}
 	} else {
 		$ERROR++;

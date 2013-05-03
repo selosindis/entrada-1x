@@ -1326,7 +1326,7 @@ width:50px;
 border-left:none;
 }
 
-table.tableList tr td.actions {
+table.tableList tr td.actions, table.tableList tr td.submitted {
 width:60px;
 border-left:none;
 }
@@ -1334,6 +1334,11 @@ border-left:none;
 table.tableList tr td.grades {
 width:40px;
 border-left:none;
+}
+
+table.tableList tr td.hidden {
+width:0px;
+overflow: hidden;
 }
 
 table.tableList tr td.course-code {
@@ -1356,7 +1361,8 @@ padding-left:5px;
 }
 
 table.tableList tr td.evaluators,
-table.tableList tr td.targets {
+table.tableList tr td.targets,
+table.tableList tr td.evaluation-type {
 overflow:hidden;
 width:120px;
 border-left:none;
@@ -2220,7 +2226,7 @@ list-style-image:url(../images/question-correct.gif);
 }
 
 div.quiz-questions ul.responses li.display-incorrect,
-div.quiz-questions ul.responses li.incorrect {
+div.quiz-questions ul.responses li.incorrect{
 list-style-image:url(../images/question-incorrect.gif);
 }
 
@@ -2331,7 +2337,7 @@ float:right;
 
 #form-questions-list > li > div.controls img,
 #form-questions-list > div > div.controls img,
-.evaluation-questions-list > div > div.controls img, {
+.evaluation-questions-list > div > div.controls img {
 border:0;
 }
 
@@ -4343,6 +4349,12 @@ a.help {
   height:auto;
 }
 
+.space-left{
+  margin-left:10px;
+}
+.space-right{
+  margin-right:10px;
+}
 .space-above{
   margin-top:10px;
 }
@@ -4361,6 +4373,24 @@ a.help {
 .space-below.large{
   margin-bottom:40px;
 }
+.border-above{
+  border-top: thin solid #F0F0F0;
+}
+.border-below{
+  border-bottom: thin solid #F0F0F0;
+}
+.border-above-medium{
+  border-top: medium solid #F0F0F0;
+}
+.border-below-medium{
+  border-bottom: medium solid #F0F0F0;
+}
+.border-above-large{
+  border-top: thick solid #F0F0F0;
+}
+.border-below-large{
+  border-bottom: thick solid #F0F0F0;
+}
 .text-center{
   text-align: center;
 }
@@ -4372,4 +4402,7 @@ a.help {
 }
 .modified.wide{
   width:50px;
+}
+.clear-width{
+  width:auto!important;
 }

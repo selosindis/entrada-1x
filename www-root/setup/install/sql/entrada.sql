@@ -2153,7 +2153,7 @@ CREATE TABLE IF NOT EXISTS `evaluations` (
   `evaluation_active` tinyint(1) NOT NULL,
   `evaluation_start` bigint(64) NOT NULL,
   `evaluation_finish` bigint(64) NOT NULL,
-  `evaluation_completions` int(12) NOT NULL '0',
+  `evaluation_completions` int(12) NOT NULL DEFAULT '0',
   `min_submittable` tinyint(1) NOT NULL DEFAULT '1',
   `max_submittable` tinyint(1) NOT NULL DEFAULT '1',
   `evaluation_mandatory` tinyint(1) NOT NULL DEFAULT '1',

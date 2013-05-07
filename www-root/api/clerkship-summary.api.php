@@ -193,8 +193,10 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		<?php
 	}
 	if (!$summary_shown) {
-		$NOTICE++;
-		$NOTICESTR[] = $student_name . " has not begun any core rotations in the system at this time.";
+        $student_name = get_account_data("firstlast", $PROXY_ID);
+		add_notice($student_name . " has not begun any core rotations in the system at this time.");
+        echo "<div style=\"width: 100%; text-align: center; margin-top: 80px;\">\n";
 		echo display_notice();
+        echo "</div>\n";
 	}
 }

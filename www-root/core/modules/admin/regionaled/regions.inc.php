@@ -53,6 +53,16 @@ if (!defined("IN_REGIONALED")) {
 				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["country"] = DEFAULT_COUNTRY_ID;
 			}
 		}
+		/**
+		 * Set the user selected country, or setup the default country.
+		 */
+		if (isset($_GET["province_id"]) && ($tmp_input = clean_input($_GET["province_id"], array("nows", "int")))) {
+			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["province_id"] = $tmp_input;
+		} else {
+			if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["province_id"])) {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["province_id"] = DEFAULT_PROVINCE_ID;
+			}
+		}
 
 		$module_file = $router->getRoute();
 		if ($module_file) {

@@ -96,74 +96,44 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				$PROCESSED["sub_discipline"] = $sub_discipline;
 			}
 			
-			/**
-			 * Required field "start_date" / Start Date .
-			 */
-			if ((isset($_POST["start_date"])) && $_POST["start_date"] > date("Y-m-d") && $_POST["start_date"] != "") {
-				$startCleaned	= html_encode($_POST["start_date"]);
-				$explodedDate 	= explode("-", $startCleaned);
-				$year 			= $explodedDate[0];
-				$month 			= $explodedDate[1];
-				$day 			= $explodedDate[2];
-				$start_stamp 	= mktime(9,0,0,$month,$day,$year);
-				
-				$PROCESSED["start_date"] 	= $start_stamp;
-				$PROCESSED["end_date"] 		= strtotime($startCleaned . "+". clean_input($_POST["event_finish_name"], array("int")) . " weeks");
-				$end_stamp 					= $PROCESSED["end_date"];
-				
-				$dateCheckQuery = "SELECT `event_title`, `event_start`, `event_finish`   
-				FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`electives`, `".CLERKSHIP_DATABASE."`.`event_contacts`
-				WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
-				AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`
-				AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($ENTRADA_USER->getID())." 
-				AND `".CLERKSHIP_DATABASE."`.`events`.`event_type` = \"elective\"
-				AND `".CLERKSHIP_DATABASE."`.`events`.`event_status` != \"trash\"
-				AND ((".$db->qstr($start_stamp)." > `".CLERKSHIP_DATABASE."`.`events`.`event_start` 
-				AND ".$db->qstr($start_stamp)." < `".CLERKSHIP_DATABASE."`.`events`.`event_finish`)
-				OR (".$db->qstr($end_stamp)." > `".CLERKSHIP_DATABASE."`.`events`.`event_start` 
-				AND ".$db->qstr($end_stamp)." < `".CLERKSHIP_DATABASE."`.`events`.`event_finish`)
-				OR (`".CLERKSHIP_DATABASE."`.`events`.`event_start` > ".$db->qstr($start_stamp)." 
-				AND `".CLERKSHIP_DATABASE."`.`events`.`event_finish` < ".$db->qstr($end_stamp)."))";
-				
-				if ($dateCheck	= $db->GetAll($dateCheckQuery))  {
-					$dateErrorCtr = 0;
-					foreach ($dateCheck as $dateValue) {
-						$dateErrorCtr++;
-						$dateError .= "<br /><tt>" . $dateValue["event_title"] . "<br />  *  Starts: ". date("Y-m-d", $dateValue["event_start"]) . "<br />  * Finishes: " . date("Y-m-d", $dateValue["event_finish"])."</tt><br />";
-					}
-					$ERROR++;
-					if ($dateErrorCtr == 1) {
-						$ERRORSTR[] = "This elective conflicts with the following elective:<br />".$dateError;
-					}  else {
-						$ERRORSTR[] = "This elective conflicts with the following electives:<br />".$dateError;
-					}
-				} else {
-					$weekTotals = clerkship_get_elective_weeks($ENTRADA_USER->getID());
-					$totalWeeks = $weekTotals["approval"] + $weekTotals["approved"];
-					
-					if ($totalWeeks + clean_input($_POST["event_finish_name"], array("int")) > $CLERKSHIP_REQUIRED_WEEKS) {
-						$ERROR++;
-						$ERRORSTR[] = "The <strong>Weeks</strong> field contains too large a number as this combined with the other electives you have in the system
-						(both approved and awaiting approval) exceeds the maximum number of weeks allowed (".$CLERKSHIP_REQUIRED_WEEKS."). Please use the Page Feedback link to 
-						contact the undergraduate office if you need help resolving this issue.";
-					}
-				}
-			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Start Date</strong> field is required and must be greater than today.";
-				
-				if (isset($_POST["start_date"]) && $_POST["start_date"] != '') {
-					$startCleaned	= html_encode($_POST["start_date"]);
-					$explodedDate 	= explode("-", $startCleaned);
-					$year 			= $explodedDate[0];
-					$month 			= $explodedDate[1];
-					$day 			= $explodedDate[2];
-					$start_stamp 	= mktime(0,0,0,$month,$day,$year);
-					
-					$PROCESSED["start_date"] = $start_stamp;
-					$PROCESSED["end_date"] = strtotime($startCleaned . "+". clean_input($_POST["event_finish_name"], array("int")) . " weeks");
-				}
-			}
+            /**
+             * Required field "event_start" / Start Date .
+             */
+            $event_date = validate_calendar("Elective", "event", false);
+            if ((isset($event_date)) && ((int) $event_date)) {
+                $PROCESSED["event_start"]   = (int) $event_date;
+                $PROCESSED["event_finish"]  = $PROCESSED["event_start"] + (clean_input($_POST["event_finish_name"], array("int")) * ONE_WEEK);
+                $start_stamp                = $PROCESSED["event_start"];
+                $end_stamp                  = $PROCESSED["event_finish"];
+                $dateCheckQuery = "SELECT `event_title`, `event_start`, `event_finish`   
+                                    FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`electives`, `".CLERKSHIP_DATABASE."`.`event_contacts`
+                                    WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
+                                    AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`
+                                    AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($ENTRADA_USER->getID())." 
+                                    AND `".CLERKSHIP_DATABASE."`.`events`.`event_type` = \"elective\"
+                                    AND `".CLERKSHIP_DATABASE."`.`events`.`event_status` != \"trash\"
+                                    AND ((".$db->qstr($start_stamp)." >= `".CLERKSHIP_DATABASE."`.`events`.`event_start` 
+                                    AND ".$db->qstr($start_stamp)." <= `".CLERKSHIP_DATABASE."`.`events`.`event_finish`)
+                                    OR (".$db->qstr($end_stamp)." >= `".CLERKSHIP_DATABASE."`.`events`.`event_start` 
+                                    AND ".$db->qstr($end_stamp)." <= `".CLERKSHIP_DATABASE."`.`events`.`event_finish`)
+                                    OR (`".CLERKSHIP_DATABASE."`.`events`.`event_start` >= ".$db->qstr($start_stamp)." 
+                                    AND `".CLERKSHIP_DATABASE."`.`events`.`event_finish` <= ".$db->qstr($end_stamp)."))";
+
+                if ($dateCheck	= $db->GetAll($dateCheckQuery))  {
+                    $dateError = "";
+                    $dateErrorCtr = 0;
+                    foreach ($dateCheck as $dateValue) {
+                        $dateErrorCtr++;
+                        $dateError .= "<br /><tt>" . $dateValue["event_title"] . "<br />  *  Starts: ". date("Y-m-d", $dateValue["event_start"]) . "<br />  * Finishes: " . date("Y-m-d", $dateValue["event_finish"])."</tt><br />";
+                    }
+                    $ERROR++;
+                    if ($dateErrorCtr == 1) {
+                        $ERRORSTR[] = "This elective conflicts with the following elective:<br />".$dateError;
+                    }  else {
+                        $ERRORSTR[] = "This elective conflicts with the following electives:<br />".$dateError;
+                    }
+                }
+            }
 			
 			/**
 			 * Required field "schools_id" / Host School.
@@ -255,11 +225,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			 */
 			if ((isset($_POST["prov_state"])) && ($prov_state = clean_input($_POST["prov_state"], array("notags", "trim")))) {
 				$PROCESSED["prov_state"] = htmlentities($prov_state);
-				if (strlen($prov_state) > 100)
-				{
+				if (strlen($prov_state) > 100) {
 					$ERROR++;
 					$ERRORSTR[] = "The <strong>Prov / State</strong> can only contain a maximum of 100 characters.";
-				}
+				} else {
+                    $query = "SELECT `province_id` FROM `global_lu_provinces` WHERE `province` = ".$db->qstr($PROCESSED["prov_state"]);
+                    $province_id = $db->GetOne($query);
+                    if ($province_id) {
+                        $PROCESSED["province_id"] = $province_id;
+                    } else {
+                        $PROCESSED["province_id"] = 0;
+                    }
+                }
 			} elseif($province_required) {
 				$ERROR++;
 				$ERRORSTR[] = "The <strong>Prov / State</strong> field is required.";
@@ -317,38 +294,40 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				$EVENT["category_id"]				= $PROCESSED["category_id"];
 				$query = "	SELECT `region_id` FROM `".CLERKSHIP_DATABASE."`.`regions`
 							WHERE `countries_id` = ".$db->qstr($PROCESSED["countries_id"])."
-							AND `prov_state` = ".$db->qstr($PROCESSED["prov_state"])."
+							AND ".($PROCESSED["province_id"] ? "`province_id` = ".$db->qstr($PROCESSED["province_id"]) : "`prov_state` = ".$db->qstr($PROCESSED["prov_state"]))."
 							AND `region_name` LIKE ".$db->qstr($PROCESSED["city"])."
 									AND `region_active` = 1";
 				$region_id = $db->GetOne($query);
 				
 				if ($region_id) {
-					$ELECTIVE["region_id"] = clean_input($region_id, "int");
+					$PROCESSED["region_id"] = clean_input($region_id, "int");
 					$EVENT["region_id"] = clean_input($region_id, "int");
 				} else {
 					$REGION = array();
 					$REGION["countries_id"] = $PROCESSED["countries_id"];
 					$REGION["prov_state"] = $PROCESSED["prov_state"];
+					$REGION["province_id"] = $PROCESSED["province_id"];
 					$REGION["region_name"] = $PROCESSED["city"];
 					if ($db->AutoExecute(CLERKSHIP_DATABASE.".regions", $REGION, "INSERT") && ( $region_id = $db->Insert_Id())) {
-						$ELECTIVE["region_id"] = clean_input($region_id, "int");
+						$PROCESSED["region_id"] = clean_input($region_id, "int");
 						$EVENT["region_id"] = clean_input($region_id, "int");
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "A region could not be added to the system for this elective. The system administrator was informed of this error; please try again later.";
 
 						application_log("error", "There was an error inserting a new region for a newly created elective. Database said: ".$db->ErrorMsg());
-						$ELECTIVE["region_id"] = 0;
+						$PROCESSED["region_id"] = 0;
 						$EVENT["region_id"] = 0;
 					}
 				}
 				$EVENT["event_title"]				= clerkship_categories_title($PROCESSED["department_id"], $levels = 3);
-				$EVENT["event_start"]				= $PROCESSED["start_date"];
-				$EVENT["event_finish"]				= $PROCESSED["end_date"];
+				$EVENT["event_start"]				= $PROCESSED["event_start"];
+				$EVENT["event_finish"]				= $PROCESSED["event_finish"];
 				$EVENT["event_type"]				= "elective";
 				$EVENT["event_status"]				= "approval";
 				$EVENT["modified_last"]				= $PROCESSED["updated_date"];
 				$EVENT["modified_by"]				= $PROCESSED["updated_by"];
+				$EVENT["rotation_id"]				= 10;
 				
 				if ($db->AutoExecute(CLERKSHIP_DATABASE.".events", $EVENT, "INSERT")) {
 					if ($EVENT_ID = $db->Insert_Id()) {
@@ -359,29 +338,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						$CONTACTS["etype_id"]				= $ENTRADA_USER->getID();
 						
 						if ($db->AutoExecute(CLERKSHIP_DATABASE.".event_contacts", $CONTACTS, "INSERT")) {
-							
-							$ELECTIVE["event_id"]				= $EVENT_ID;
-							$ELECTIVE["geo_location"]			= $PROCESSED["geo_location"];
-							$ELECTIVE["department_id"]			= $PROCESSED["department_id"];
-							$ELECTIVE["discipline_id"]			= $PROCESSED["discipline_id"];
-							$ELECTIVE["sub_discipline"]			= $PROCESSED["sub_discipline"];
-							$ELECTIVE["schools_id"]				= $PROCESSED["schools_id"];
-							$ELECTIVE["other_medical_school"]	= $PROCESSED["other_medical_school"];
-							$ELECTIVE["objective"]				= $PROCESSED["objective"];
-							$ELECTIVE["preceptor_prefix"]		= $PROCESSED["preceptor_prefix"];
-							$ELECTIVE["preceptor_first_name"]	= $PROCESSED["preceptor_first_name"];
-							$ELECTIVE["preceptor_last_name"]	= $PROCESSED["preceptor_last_name"];
-							$ELECTIVE["objective"]				= $PROCESSED["objective"];
-							$ELECTIVE["address"]				= $PROCESSED["address"];
-							$ELECTIVE["countries_id"]			= $PROCESSED["countries_id"];
-							$ELECTIVE["city"]					= $PROCESSED["city"];
-							$ELECTIVE["prov_state"]				= $PROCESSED["prov_state"];
-							$ELECTIVE["postal_zip_code"]		= $PROCESSED["postal_zip_code"];
-							$ELECTIVE["phone"]					= $PROCESSED["phone"];
-							$ELECTIVE["fax"]					= $PROCESSED["fax"];
-							$ELECTIVE["email"]					= $PROCESSED["email"];
-							$ELECTIVE["updated_date"]			= $PROCESSED["updated_date"];
-							$ELECTIVE["updated_by"]				= $PROCESSED["updated_by"];
+                            
+							$ELECTIVE               = $PROCESSED;
+							$ELECTIVE["event_id"]   = $EVENT_ID;
 							
 							if ($db->AutoExecute(CLERKSHIP_DATABASE.".electives", $ELECTIVE, "INSERT")) {
 								
@@ -456,15 +415,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			}
 			
 			function showOther() {
-				if (\$F('schools_id') == '99999') {
-					$('other_host_school').show();
-				} else {
-					$('other_host_school').hide();
-				}
+                var obj = $('schools_id');
+
+                var value = obj.options[obj.selectedIndex].value;
+
+                if (value == '99999') {
+                    $('other_label').style.display = 'block';
+                    $('other_medical_school').style.display = 'block';
+                    $('other_span').style.display = 'block';
+                } else {
+                    $('other_label').style.display = 'none';
+                    $('other_medical_school').value = '';
+                    $('other_medical_school').style.display = 'none';
+                    $('other_span').style.display = 'none';
+                }
 			}
 			
 			function changeDurationMessage() {
-				var value	= $('start_date').value;
+				var value	= $('event_date').value;
 				newDate		= toJSDate(value);
 
 				switch (\$F('event_finish')) {
@@ -506,49 +474,50 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				newDate.setDate(newDate.getDate()+days);
 				newDate = toCalendarDate(newDate);
 				$('auto_end_date').innerHTML = '&nbsp;&nbsp;&nbsp;Ending in '+\$F('event_finish')+' weeks on ' +newDate;
-				$('start_date').value = date;
+				$('event_date').value = date;
 			}
-			
-			function AjaxFunction(cat_id) {	
-				var url='".webservice_url("clerkship_department")."?cat_id=' + cat_id + '&dept_id=".(int) $PROCESSED["department_id"]."';
-		    	new Ajax.Updater($('department_category'), url, 
-		    		{
-		    			method : 'get'
-		    		});
-			}
-			
-			var updater = null;
-			function provStateFunction(countries_id) {	
-				var url='".webservice_url("clerkship_prov")."';
-				url=url+'?countries_id='+countries_id+'&prov_state=".rawurlencode((isset($_POST["prov_state"]) ? clean_input($_POST["prov_state"], array("notags", "trim")) : $PROCESSED["prov_state"]))."';
-				new Ajax.Updater($('prov_state_div'), url, 
-					{ 
-						method:'get',
-						onComplete: function () {
-							generateAutocomplete();
-							if ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0) {
-								$('prov_state_label').removeClassName('form-nrequired');
-								$('prov_state_label').addClassName('form-required');
-							} else {
-								$('prov_state_label').removeClassName('form-required');
-								$('prov_state_label').addClassName('form-nrequired');
-							}
-						}
-					});
-			}
-					
-			function generateAutocomplete() {
-				if (updater != null) {
-					updater.url = '".ENTRADA_URL."/api/cities-by-country.api.php?countries_id='+$('countries_id').options[$('countries_id').selectedIndex].value+'&prov_state='+($('prov_state') !== null ? ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0 ? $('prov_state').options[$('prov_state').selectedIndex].value : $('prov_state').value) : '');
-				} else {
-					updater = new Ajax.Autocompleter('city', 'city_auto_complete', 
-						'".ENTRADA_URL."/api/cities-by-country.api.php?countries_id='+$('countries_id').options[$('countries_id').selectedIndex].value+'&prov_state='+($('prov_state') !== null ? ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0 ? $('prov_state').options[$('prov_state').selectedIndex].value : $('prov_state').value) : ''), 
-						{
-							frequency: 0.2, 
-							minChars: 2
-						});
-				}
-			}
+            
+            function AjaxFunction(cat_id) {	
+                var url='".webservice_url("clerkship_department")."';
+                url=url+'?cat_id='+cat_id".(isset($PROCESSED["department_id"]) && $PROCESSED["department_id"] ? "+'&dept_id=".$PROCESSED["department_id"]."'" : "").";
+                new Ajax.Updater($('department_category'), url, 
+                    { 
+                        method:'get'
+                    });
+            }
+
+            var updater = null;
+            function provStateFunction(countries_id) {	
+                var url='".webservice_url("clerkship_prov")."';
+                url=url+'?countries_id='+countries_id+'&prov_state=".rawurlencode((isset($_POST["prov_state"]) ? clean_input($_POST["prov_state"], array("notags", "trim")) : DEFAULT_PROVINCE_ID))."';
+                new Ajax.Updater($('prov_state_div'), url, 
+                    { 
+                        method:'get',
+                        onComplete: function () {
+                            generateAutocomplete();
+                            if ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0) {
+                                $('prov_state_label').removeClassName('form-nrequired');
+                                $('prov_state_label').addClassName('form-required');
+                            } else {
+                                $('prov_state_label').removeClassName('form-required');
+                                $('prov_state_label').addClassName('form-nrequired');
+                            }
+                        }
+                    });
+            }
+
+            function generateAutocomplete() {
+                if (updater != null) {
+                    updater.url = '".ENTRADA_URL."/api/cities-by-country.api.php?countries_id='+$('countries_id').options[$('countries_id').selectedIndex].value+'&prov_state='+($('prov_state') !== null ? ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0 ? $('prov_state').options[$('prov_state').selectedIndex].value : $('prov_state').value) : '');
+                } else {
+                    updater = new Ajax.Autocompleter('city', 'city_auto_complete', 
+                        '".ENTRADA_URL."/api/cities-by-country.api.php?countries_id='+$('countries_id').options[$('countries_id').selectedIndex].value+'&prov_state='+($('prov_state') !== null ? ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0 ? $('prov_state').options[$('prov_state').selectedIndex].value : $('prov_state').value) : ''), 
+                        {
+                            frequency: 0.2, 
+                            minChars: 2
+                        });
+                }
+            }
 			</script>\n";
 			
 			$ONLOAD[]		= "showOther()";
@@ -556,8 +525,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			$ONLOAD[]		= "provStateFunction(\$F($('addElectiveForm')['countries_id']))";
 			$ONLOAD[]		= "setMaxLength()";
 			$ONLOAD[]		= "changeDurationMessage()";
-			
-			$LASTUPDATED	= $result["updated_date"];
 			
 			if ($ERROR) {
 				echo display_error();
@@ -576,10 +543,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 						<tr>
 							<td style="width: 25%; text-align: left">
-								<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship'" />
+								<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship'" />
 							</td>
 							<td style="width: 75%; text-align: right; vertical-align: middle">
-								<input type="submit" class="button" value="Submit" />
+								<input type="submit" class="btn btn-primary" value="Submit" />
 							</td>
 						</tr>
 						</table>
@@ -649,7 +616,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							echo "<select id=\"discipline_id\" name=\"discipline_id\" style=\"width: 256px\">\n";
 							echo "<option value=\"0\"".((!isset($PROCESSED["discipline_id"])) ? " selected=\"selected\"" : "").">-- Select Discipline --</option>\n";
 							foreach ($discipline as $value) {
-								echo "<option value=\"".(int) $value["discipline_id"]."\"".(($PROCESSED["discipline_id"] == $value["discipline_id"]) ? " selected=\"selected\"" : "").">".html_encode($value["discipline"])."</option>\n";
+								echo "<option value=\"".(int) $value["discipline_id"]."\"".((isset($PROCESSED["discipline_id"]) && $PROCESSED["discipline_id"] == $value["discipline_id"]) ? " selected=\"selected\"" : "").">".html_encode($value["discipline"])."</option>\n";
 							}
 							echo "</select>\n";
 						} else {
@@ -663,7 +630,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<td></td>
 					<td><label for="sub_discipline" class="form-nrequired">Sub-Discipline</label></td>
 					<td>
-					<input type="text" id="sub_discipline" name="sub_discipline" value="<?php echo html_encode($PROCESSED["sub_discipline"]); ?>" maxlength="64" style="width: 250px" />
+					<input type="text" id="sub_discipline" name="sub_discipline" value="<?php echo html_encode((isset($PROCESSED["sub_discipline"]) && $PROCESSED["sub_discipline"] ? $PROCESSED["sub_discipline"] : "")); ?>" maxlength="64" style="width: 250px"" />
+					<!--<span class="content-small">(<strong>Example:</strong> What should this say?)</span> -->
 					</td>
 				</tr>
 				<tr>
@@ -674,53 +642,48 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<td><label for="schools_id" class="form-required">Host School</label></td>
 					<td>
 						<?php
-						$clerkship_medical_schools = clerkship_fetch_schools();
-						if ((is_array($clerkship_medical_schools)) && (count($clerkship_medical_schools) > 0)) {
-							echo "<select id=\"schools_id\" name=\"schools_id\" style=\"width: 256px\" onchange=\"showOther();\">\n";
-							echo "<option value=\"0\"".((!isset($PROCESSED["schools_id"])) ? " selected=\"selected\"" : "").">-- Select Host School --</option>\n";
-							foreach ($clerkship_medical_schools as $value) {
-								echo "<option value=\"".(int) $value["schools_id"]."\"".(($PROCESSED["schools_id"] == $value["schools_id"]) ? " selected=\"selected\"" : "").">".html_encode($value["school_title"])."</option>\n";
-							}
-							echo "<option value=\"99999\"".($PROCESSED["schools_id"] == "99999" ? " selected=\"selected\"" : "").">-- Other (Specify) --</option>\n";
-							echo "</select>\n";
-						} else {
-							echo "<input type=\"hidden\" id=\"schools_id\" name=\"schools_id\" value=\"0\" />\n";
-							echo "Host school information is not currently available.\n";
-						}
+							if (@count($clerkship_medical_schools = clerkship_fetch_schools()) > 0) {
+								echo "<select id=\"schools_id\" name=\"schools_id\" style=\"width: 90%\" onchange=\"showOther();\">\n";
+								echo "<option value=\"0\"".((!isset($PROCESSED["schools_id"])) ? " selected=\"selected\"" : "").">-- Select Host School --</option>\n";
+								foreach ($clerkship_medical_schools as $value) {
+									echo "<option value=\"".(int) $value["schools_id"]."\"".((isset($PROCESSED["schools_id"]) && $PROCESSED["schools_id"] == $value["schools_id"]) ? " selected=\"selected\"" : "").">".html_encode($value["school_title"])."</option>\n";
+								}
+								echo "<option value=\"99999\"".(isset($PROCESSED["schools_id"]) && $PROCESSED["schools_id"] == "99999" ? " selected=\"selected\"" : "").">-- Other (Specify) --</option>\n";
+								echo "</select>\n";
+								} else {
+									echo "<input type=\"hidden\" id=\"schools_id\" name=\"schools_id\" value=\"0\" />\n";
+									echo "Host School Information Not Available\n";
+								}
 						?>
 					</td>
 				</tr>
-			</tbody>
-			<tbody id="other_host_school" style="display: none">
 				<tr>
 					<td></td>
-					<td style="vertical-align: top"><label id="other_label" for="other_medical_school" class="form-required">Other</label></td>
-					<td style="vertical-align: top">
-						<input type="text" id="other_medical_school" name="other_medical_school" value="<?php echo html_encode($PROCESSED["other_medical_school"]); ?>" maxlength="64" style="width: 250px;" />
-						<span class="content-small">(<strong>Example:</strong> Stanford University)</span>
+					<td><label id="other_label" for="other_medical_school" class="form-required" style="display: none">Other</label></td>
+					<td>
+					<input type="text" id="other_medical_school" name="other_medical_school" value="<?php echo html_encode((isset($PROCESSED["other_medical_school"]) && $PROCESSED["other_medical_school"] ? $PROCESSED["other_medical_school"] : "")); ?>" maxlength="64" style="width: 250px; display: none" />
+					<span id="other_span" class="content-small" style="display: none">(<strong>Example:</strong> Stanford University School of Medicine)</span>
 					</td>
 				</tr>
-			</tbody>
-			<tbody>
 				<tr>
 					<td colspan="3">&nbsp;</td>
 				</tr>
-				<?php
-					echo generate_calendar("start", "Start Date", true, ((isset($PROCESSED["start_date"])) ? $PROCESSED["start_date"] : 0), false, true);
+				<?php 
+					echo generate_calendar("event", "Start Date", true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0), false, true);				
 				?>
 				<tr>
 					<td></td>
-					<td style="vertical-align: top"><label for="event_finish" class="form-required">Elective Weeks</label></td>
-					<td style="vertical-align: top">
-						<?php
-						$duration = ceil(($PROCESSED["end_date"] - $PROCESSED["start_date"]) / 604800);
+					<td><label for="event_finish" class="form-required">Elective Weeks</label></td>
+					<td>
+					<?php
+						$duration = ceil((isset($PROCESSED["event_finish"]) && $PROCESSED["event_finish"] && isset($PROCESSED["event_start"]) && $PROCESSED["event_start"] ? (($PROCESSED["event_finish"] - $PROCESSED["event_start"]) / 604800) : 0));
 						echo "<select id=\"event_finish\" name=\"event_finish_name\" style=\"width: 10%\" onchange=\"changeDurationMessage();\">\n";
-						for($i = 2; $i <= 4; $i++)  {
+						for($i=1; $i<=4; $i++)  {
 							echo "<option value=\"".$i."\"".(($i == $duration) ? " selected=\"selected\"" : "").">".$i."</option>\n";
 						}
-						echo "</select>";
-						echo "<span id=\"auto_end_date\" class=\"content-small\"></span>";
-						?>
+						echo "</select>\n<div id=\"auto_end_date\" class=\"content-small\" style=\"display: none\"></div>";
+						
+					?>
 					</td>
 				</tr>
 				<tr>
@@ -728,20 +691,55 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				</tr>
 				<tr>
 					<td></td>
-					<td style="vertical-align: top">
-						<label for="objective" class="form-required">Planned Experience</label>
-						<div class="content-small" style="margin-top: 5px">
-							<strong>Tip:</strong> Provide a narrative of your educational objectives (what you hope to achieve) for this elective.
-						</div>
-					</td>
+					<td style="vertical-align: top"><label for="objective" class="form-required">Planned Experience</label></td>
 					<td>
-						<textarea id="objective" name="objective" class="expandable" style="width: 95%; height: 60px" cols="50" rows="5" maxlength="300"><?php echo ((isset($PROCESSED["objective"])) ? html_encode($PROCESSED["objective"]) : ""); ?></textarea>
-						
+						<textarea id="objective" name="objective" style="width: 95%; height: 60px" cols="50" rows="5" maxlength="300"><?php echo ((isset($PROCESSED["objective"])) ? html_encode($PROCESSED["objective"]) : ""); ?></textarea>
+						<div id="planned_note" class="content-small" style="display: block">
+							<strong><br>Note:</strong> Please provide a narrative of your educational objectives (what you hope to achieve while on the elective).
+						</div>
 					</td>
 				</tr>
 				<tr>
-					<td colspan="3" style="padding-top: 15px">
-						<h2>Location Details</h2>
+					<td colspan="3"><h2>Site Details</h2></td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><label for="preceptor_prefix" class="form-nrequired">Preceptor Prefix</label></td>
+					<td>
+						<select id="preceptor_prefix" name="preceptor_prefix" style="width: 55px; vertical-align: middle; margin-right: 5px">
+							<option value=""<?php echo ((!isset($PROCESSED["preceptor_prefix"]) || !$PROCESSED["preceptor_prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
+							<?php
+							if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
+								foreach ($PROFILE_NAME_PREFIX as $key => $prefix) {
+									echo "<option value=\"".html_encode($prefix)."\"".((isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] == $prefix) ? " selected=\"selected\"" : "").">".html_encode($prefix)."</option>\n";
+								}
+							}
+							?>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><label for="preceptor_first_name" class="form-nrequired">Preceptor First Name</label></td>
+					<td>
+					<input type="text" id="preceptor_first_name" name="preceptor_first_name" value="<?php echo html_encode((isset($PROCESSED["preceptor_first_name"]) && $PROCESSED["preceptor_first_name"] ? $PROCESSED["preceptor_first_name"] : "")); ?>" maxlength="50" style="width: 250px"" />
+					</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><label for="preceptor_last_name" class="form-required">Preceptor Last Name</label></td>
+					<td>
+					<input type="text" id="preceptor_last_name" name="preceptor_last_name" value="<?php echo html_encode((isset($PROCESSED["preceptor_last_name"]) && $PROCESSED["preceptor_last_name"] ? $PROCESSED["preceptor_last_name"] : "")); ?>" maxlength="50" style="width: 250px"" />
+					</td>
+				</tr>
+				<tr>
+					<td colspan="3">&nbsp;</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><label for="address" class="form-required">Address</label></td>
+					<td>
+					<input type="text" id="address" name="address" value="<?php echo html_encode((isset($PROCESSED["address"]) && $PROCESSED["address"] ? $PROCESSED["address"] : "")); ?>" maxlength="250" style="width: 250px"" />
 					</td>
 				</tr>
 				<tr>
@@ -749,33 +747,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<td><label for="countries_id" class="form-required">Country</label></td>
 					<td>
 						<?php
-						$countries = fetch_countries();
-						if ((is_array($countries)) && (count($countries) > 0)) {
-							echo "<select id=\"countries_id\" name=\"countries_id\" style=\"width: 256px\" onchange=\"provStateFunction(this.value);\">\n";
-							echo "<option value=\"0\"".((!isset($PROCESSED["countries_id"])) ? " selected=\"selected\"" : "").">-- Select Country --</option>\n";
-							foreach ($countries as $value) {
-								echo "<option value=\"".(int) $value["countries_id"]."\"".(($PROCESSED["countries_id"] == $value["countries_id"]) ? " selected=\"selected\"" : (!isset($PROCESSED["countries_id"]) && $value["countries_id"] == DEFAULT_COUNTRY_ID) ? " selected=\"selected\"" : "").">".html_encode($value["country"])."</option>\n";
-							}
-							echo "</select>\n";
-						} else {
-							echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
-							echo "Country information not currently available.\n";
-						}
+                        $countries = fetch_countries();
+                        if (@count($countries) > 0) {
+                            echo "<select id=\"countries_id\" name=\"countries_id\" style=\"width: 90%\" onchange=\"provStateFunction(this.value);\">\n";
+                            echo "<option value=\"0\"".((!isset($PROCESSED["countries_id"])) ? " selected=\"selected\"" : "").">-- Country --</option>\n";
+                            foreach ($countries as $value) {
+                                echo "<option value=\"".(int) $value["countries_id"]."\"".((isset($PROCESSED["countries_id"]) && $PROCESSED["countries_id"] == $value["countries_id"]) ? " selected=\"selected\"" : (!isset($PROCESSED["countries_id"]) && $value["countries_id"] == DEFAULT_COUNTRY_ID) ? " selected=\"selected\"" : "").">".html_encode($value["country"])."</option>\n";
+                            }
+                            echo "</select>\n";
+                        } else {
+                            echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
+                            echo "Country Information Not Available\n";
+                        }
 						?>
 					</td>
 				</tr>
 				<tr>
 					<td></td>
-					<td><label id="prov_state_label" for="prov_state_div" class="form-required">Province / State</label></td>
+					<td><label id="prov_state_label" for="prov_state_div" class="form-required">Prov / State</label></td>
 					<td>
-						<div id="prov_state_div">Please select a <strong>Country</strong> from above first.</div>
+						<div id="prov_state_div" style="display: inline">Select a Country above</div>
 					</td>
 				</tr>
 				<tr>
 					<td></td>
 					<td><label for="city" class="form-required">City</label></td>
 					<td>
-						<input type="text" id="city" name="city" size="100" autocomplete="off" style="width: 250px; vertical-align: middle" value="<?php echo $PROCESSED["city"]; ?>"/>
+						<input type="text" id="city" name="city" size="100" autocomplete="off" style="width: 250px; vertical-align: middle" value="<?php echo (isset($PROCESSED["city"]) && $PROCESSED["city"] ? $PROCESSED["city"] : ""); ?>"/>
 						<script type="text/javascript">
 							$('city').observe('keypress', function(event){
 								if(event.keyCode == Event.KEY_RETURN) {
@@ -788,72 +786,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				</tr>
 				<tr>
 					<td></td>
-					<td><label for="address" class="form-required">Address</label></td>
-					<td>
-					<input type="text" id="address" name="address" value="<?php echo html_encode($PROCESSED["address"]); ?>" maxlength="250" style="width: 250px" />
-					</td>
-				</tr>
-				<tr>
-					<td></td>
 					<td><label for="postal_zip_code" class="form-nrequired">Postal / Zip Code</label></td>
 					<td>
-					<input type="text" id="postal_zip_code" name="postal_zip_code" value="<?php echo html_encode($PROCESSED["postal_zip_code"]); ?>" maxlength="20" style="width: 250px"" />
+					<input type="text" id="postal_zip_code" name="postal_zip_code" value="<?php echo html_encode((isset($PROCESSED["postal_zip_code"]) && $PROCESSED["postal_zip_code"] ? $PROCESSED["postal_zip_code"] : "")); ?>" maxlength="20" style="width: 250px"" />
 					</td>
 				</tr>
 				<tr>
-					<td colspan="3" style="padding-top: 15px">
-						<h2>Preceptor Details</h2>
+					<td colspan="3">&nbsp;</td>
+				</tr>
+				<tr>
+					<td></td>
+					<td><label for="phone" class="form-nrequired">Phone</label></td>
+					<td>
+					<input type="text" id="phone" name="phone" value="<?php echo html_encode((isset($PROCESSED["phone"]) && $PROCESSED["phone"] ? $PROCESSED["phone"] : "")); ?>" maxlength="25" style="width: 250px"" />
 					</td>
 				</tr>
 				<tr>
 					<td></td>
-					<td><label for="preceptor_prefix" class="form-nrequired">Preceptor Prefix</label></td>
+					<td><label for="fax" class="form-nrequired">Fax</label></td>
 					<td>
-						<select id="preceptor_prefix" name="preceptor_prefix" style="width: 55px; vertical-align: middle; margin-right: 5px">
-							<option value=""<?php echo ((!$PROCESSED["preceptor_prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
-							<?php
-							if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
-								foreach ($PROFILE_NAME_PREFIX as $key => $prefix) {
-									echo "<option value=\"".html_encode($prefix)."\"".(($PROCESSED["preceptor_prefix"] == $prefix) ? " selected=\"selected\"" : "").">".html_encode($prefix)."</option>\n";
-								}
-							}
-							?>
-						</select>
+					<input type="text" id="fax" name="fax" value="<?php echo html_encode((isset($PROCESSED["fax"]) && $PROCESSED["fax"] ? $PROCESSED["fax"] : "")); ?>" maxlength="25" style="width: 250px"" />
 					</td>
 				</tr>
 				<tr>
 					<td></td>
-					<td><label for="preceptor_first_name" class="form-nrequired">Firstname</label></td>
+					<td><label for="email" class="form-required">Email</label></td>
 					<td>
-					<input type="text" id="preceptor_first_name" name="preceptor_first_name" value="<?php echo html_encode($PROCESSED["preceptor_first_name"]); ?>" maxlength="50" style="width: 250px" />
-					</td>
-				</tr>
-				<tr>
-					<td></td>
-					<td><label for="preceptor_last_name" class="form-required">Lastname</label></td>
-					<td>
-					<input type="text" id="preceptor_last_name" name="preceptor_last_name" value="<?php echo html_encode($PROCESSED["preceptor_last_name"]); ?>" maxlength="50" style="width: 250px" />
-					</td>
-				</tr>
-				<tr>
-					<td></td>
-					<td><label for="phone" class="form-nrequired">Telephone Number</label></td>
-					<td>
-					<input type="text" id="phone" name="phone" value="<?php echo html_encode($PROCESSED["phone"]); ?>" maxlength="25" style="width: 250px"" />
-					</td>
-				</tr>
-				<tr>
-					<td></td>
-					<td><label for="fax" class="form-nrequired">Fax Number</label></td>
-					<td>
-					<input type="text" id="fax" name="fax" value="<?php echo html_encode($PROCESSED["fax"]); ?>" maxlength="25" style="width: 250px"" />
-					</td>
-				</tr>
-				<tr>
-					<td></td>
-					<td><label for="email" class="form-required">E-Mail Address</label></td>
-					<td>
-					<input type="text" id="email" name="email" value="<?php echo html_encode($PROCESSED["email"]); ?>" maxlength="150" style="width: 250px"" />
+					<input type="text" id="email" name="email" value="<?php echo html_encode((isset($PROCESSED["email"]) && $PROCESSED["email"] ? $PROCESSED["email"] : "")); ?>" maxlength="150" style="width: 250px"" />
 					</td>
 				</tr>
 				<tr>

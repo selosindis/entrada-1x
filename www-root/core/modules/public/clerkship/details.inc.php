@@ -230,7 +230,7 @@ if ($EVENT_ID) {
 				$ONLOAD[]	= "setTimeout('window.location=\'".ENTRADA_URL."/".$MODULE."\'', 10000)";
 				
 				$ERROR++;
-				$ERRORSTR[] = "The apartment details that you are trying to load are currently notavailable.<br /><br />You will be returned to the Clerkship tab in 10 seconds, or <a href=\"".ENTRADA_URL."/".$MODULE."\"></a> to continue immediately.";
+				$ERRORSTR[] = "The apartment details that you are trying to load are currently notavailable.<br /><br />You will be returned to the Clerkship tab in 10 seconds, or <a href=\"".ENTRADA_URL."/".$MODULE."\">click here</a> to continue immediately.";
 		
 				echo display_error($ERRORSTR);
 			

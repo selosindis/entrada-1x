@@ -198,34 +198,34 @@ if(!defined("PARENT_INCLUDED")) {
 		new_sidebar_item("Elective Weeks", $sidebar_html, "page-clerkship", "open");
 
 		/* Logbook Review setup */
-		$query				= "	SELECT *
-								FROM `".CLERKSHIP_DATABASE."`.`events` AS a
-								LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
-								ON b.`event_id` = a.`event_id`
-								LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
-								ON c.`region_id` = a.`region_id`
-								WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00", time()))."
-								AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
-								AND b.`econtact_type` = 'student'
-								AND b.`etype_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-								ORDER BY a.`event_start` ASC";
+		$query = "SELECT *
+                    FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+                    LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+                    ON b.`event_id` = a.`event_id`
+                    LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
+                    ON c.`region_id` = a.`region_id`
+                    WHERE a.`event_finish` >= ".$db->qstr(strtotime("00:00:00", time()))."
+                    AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
+                    AND b.`econtact_type` = 'student'
+                    AND b.`etype_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
+                    ORDER BY a.`event_start` ASC";
 		
-		$clerkship_schedule	= $db->GetAll($query);
-		$query						= "	SELECT *
-										FROM `".CLERKSHIP_DATABASE."`.`events` AS a
-										LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
-										ON b.`event_id` = a.`event_id`
-										LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
-										ON c.`region_id` = a.`region_id`
-										WHERE a.`event_finish` <= ".$db->qstr(strtotime("00:00:00", time()))."
-										AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
-										AND b.`econtact_type` = 'student'
-										AND b.`etype_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-										ORDER BY a.`event_start` ASC";
-		$clerkship_past_schedule	= $db->GetAll($query);
+		$clerkship_schedule = $db->GetAll($query);
+		$query = "SELECT *
+                    FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+                    LEFT JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS b
+                    ON b.`event_id` = a.`event_id`
+                    LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
+                    ON c.`region_id` = a.`region_id`
+                    WHERE a.`event_finish` <= ".$db->qstr(strtotime("00:00:00", time()))."
+                    AND (a.`event_status` = 'published' OR a.`event_status` = 'approval')
+                    AND b.`econtact_type` = 'student'
+                    AND b.`etype_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
+                    ORDER BY a.`event_start` ASC";
+		$clerkship_past_schedule = $db->GetAll($query);
 		
-		if ($clerkship_schedule[0]["event_start"] <= time() || isset($clerkship_past_schedule) && $clerkship_past_schedule) {
-			$ROTATION_ID = $clerkship_schedule[0]["rotation_id"]; 
+		if ((isset($clerkship_schedule[0]) && $clerkship_schedule[0]["event_start"] <= time()) || (isset($clerkship_past_schedule) && $clerkship_past_schedule)) {
+			$ROTATION_ID = (isset($clerkship_schedule[0]) && $clerkship_schedule[0]["rotation_id"] ? $clerkship_schedule[0]["rotation_id"] : $clerkship_past_schedule[(count($clerkship_past_schedule) - 1)]["rotation_id"]); 
 			$SHOW_LOGBOOK = ((((int)$_SESSION["details"]["role"]) <= date("Y", strtotime("+1 year"))) ? true : false);
 		
 			$clinical_rotation	 	= clerkship_get_rotation(($rotation ? $rotation : ($ROTATION_ID ? $ROTATION_ID : 0)));
@@ -274,14 +274,14 @@ if(!defined("PARENT_INCLUDED")) {
 					}
 				}
 		    }
-			$remaining_weeks	 	= clerkship_get_rotation_schedule($rotation);
-			$sidebar_html  			= "<center><a href=\"".ENTRADA_URL."/clerkship/logbook?section=select\"><strong>$clinical_rotation[title]</strong></a></center><br>";
-			$sidebar_html 			.= "<ul class=\"menu\">\n";
-			$sidebar_html 			.= "	<li class=\"rejected\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=missing&core=$rotation\"><strong>".($objectives_required-$objectives_recorded)."</strong>  CPs Not Seen</a></li>\n";
-			$sidebar_html 			.= "	<li class=\"checkmark\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=mandatories&core=$rotation\"><strong>".($objectives_recorded)."</strong>  CPs Seen</a></li>\n";
-			$sidebar_html 			.= "	<li><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=procedures&core=$rotation\"><strong>".$clinical_encounters["procedures"]."</strong> Procedures</a></li>\n";
-			$sidebar_html 			.= "</ul>\n";
-			$sidebar_html .= "	<a href=\"".ENTRADA_URL."/clerkship/logbook?section=add&event=".$clerkship_schedule[0]["event_id"]."\">Log encounter</a>\n";
+			$remaining_weeks = clerkship_get_rotation_schedule($rotation);
+			$sidebar_html  = "<center><a href=\"".ENTRADA_URL."/clerkship/logbook?section=select\"><strong>$clinical_rotation[title]</strong></a></center><br>";
+			$sidebar_html .= "<ul class=\"menu\">\n";
+			$sidebar_html .= "	<li class=\"rejected\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=missing&core=$rotation\"><strong>".($objectives_required-$objectives_recorded)."</strong>  CPs Not Seen</a></li>\n";
+			$sidebar_html .= "	<li class=\"checkmark\"><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=mandatories&core=$rotation\"><strong>".($objectives_recorded)."</strong>  CPs Seen</a></li>\n";
+			$sidebar_html .= "	<li><a href=\"".ENTRADA_URL."/clerkship/logbook?section=view&type=procedures&core=$rotation\"><strong>".$clinical_encounters["procedures"]."</strong> Procedures</a></li>\n";
+			$sidebar_html .= "</ul>\n";
+			$sidebar_html .= "	<a href=\"".ENTRADA_URL."/clerkship/logbook?section=add&event=".(isset($clerkship_schedule[0]) && $clerkship_schedule[0]["event_id"] ? $clerkship_schedule[0]["event_id"] : $clerkship_past_schedule[(count($clerkship_past_schedule) - 1)]["event_id"])."\">Log encounter</a>\n";
 			if((int)$clinical_encounters["entries"] > 0) {
 				$sidebar_html .= "	<br /><br /><a href=\"".ENTRADA_URL."/clerkship/logbook?sb=rotation&rotation=".$rotation."\">View ".($clinical_encounters["entries"]==1?"entry":"entries - $clinical_encounters[entries]")."</a>\n";
 			}

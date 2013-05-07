@@ -113,6 +113,7 @@ CREATE TABLE IF NOT EXISTS `categories` (
   `category_expiry` bigint(64) NOT NULL DEFAULT '0',
   `category_status` varchar(12) NOT NULL DEFAULT 'published',
   `category_order` int(3) NOT NULL DEFAULT '0',
+  `organisation_id` int(12) DEFAULT NULL,
   `rotation_id` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`category_id`),
   KEY `category_parent` (`category_parent`),
@@ -422,6 +423,20 @@ INSERT INTO `global_lu_rotations` (`rotation_id`, `rotation_title`, `percent_req
 (8, 'Surgery-Orthopedic', 50, 50, 0),
 (9, 'Integrated', 50, 50, 0);
 
+CREATE TABLE `logbook_deficiency_plans` (
+  `ldeficiency_plan_id` int(12) NOT NULL AUTO_INCREMENT,
+  `proxy_id` int(12) NOT NULL DEFAULT '0',
+  `rotation_id` int(12) NOT NULL DEFAULT '0',
+  `plan_body` text,
+  `timeline_start` int(12) NOT NULL DEFAULT '0',
+  `timeline_finish` int(12) NOT NULL DEFAULT '0',
+  `clerk_accepted` int(1) NOT NULL DEFAULT '0',
+  `administrator_accepted` int(1) NOT NULL DEFAULT '0',
+  `administrator_comments` text,
+  `administrator_id` int(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`ldeficiency_plan_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `logbook_entries` (
   `lentry_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `proxy_id` int(12) unsigned NOT NULL,
@@ -464,7 +479,8 @@ CREATE TABLE IF NOT EXISTS `logbook_entry_objectives` (
   `leobjective_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `lentry_id` int(12) unsigned NOT NULL DEFAULT '0',
   `objective_id` int(12) unsigned NOT NULL DEFAULT '0',
-  PRIMARY KEY  (`leobjective_id`,`lentry_id`,`objective_id`)
+  PRIMARY KEY (`leobjective_id`),
+  KEY `lentry_id` (`lentry_id`,`objective_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `logbook_entry_procedures` (
@@ -472,7 +488,10 @@ CREATE TABLE IF NOT EXISTS `logbook_entry_procedures` (
   `lentry_id` int(12) unsigned NOT NULL DEFAULT '0',
   `lprocedure_id` int(12) unsigned NOT NULL DEFAULT '0',
   `level` smallint(6) NOT NULL COMMENT 'Level of involvement',
-  PRIMARY KEY  (`leprocedure_id`,`lentry_id`,`lprocedure_id`)
+  PRIMARY KEY (`leprocedure_id`),
+  KEY `lentry_id` (`lentry_id`,`lprocedure_id`),
+  KEY `lentry_id_2` (`lentry_id`),
+  KEY `lprocedure_id` (`lprocedure_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `logbook_lu_agerange` (
@@ -580,6 +599,28 @@ INSERT INTO `logbook_lu_checklist` (`lchecklist_id`, `rotation_id`, `line`, `typ
 (62, 7, 7, 2, 2, 'Final ITER'),
 (63, 7, 8, 2, 2, 'Summative MCQ Exam');
 
+CREATE TABLE `logbook_location_types` (
+  `llocation_type_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `lltype_id` int(11) NOT NULL,
+  `llocation_id` int(11) NOT NULL,
+  PRIMARY KEY (`llocation_type_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `logbook_location_types` (`llocation_type_id`, `lltype_id`, `llocation_id`)
+VALUES
+(1, 1, 1),
+(2, 1, 3),
+(3, 2, 6),
+(4, 1, 5),
+(5, 1, 9),
+(6, 2, 2),
+(7, 2, 4),
+(8, 2, 5),
+(9, 2, 7),
+(10, 2, 8),
+(11, 3, 10),
+(12, 3, 11);
+
 CREATE TABLE IF NOT EXISTS `logbook_lu_evaluations` (
   `levaluation_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `rotation_id` int(12) unsigned NOT NULL,
@@ -589,6 +630,19 @@ CREATE TABLE IF NOT EXISTS `logbook_lu_evaluations` (
   `item` varchar(255) NOT NULL,
   PRIMARY KEY  (`levaluation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `logbook_lu_location_types` (
+  `lltype_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `location_type` varchar(32) DEFAULT NULL,
+  `location_type_short` varchar(8) DEFAULT NULL,
+  PRIMARY KEY (`lltype_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `logbook_lu_location_types` (`lltype_id`, `location_type`, `location_type_short`)
+VALUES
+(1, 'Ambulatory', 'Amb'),
+(2, 'Inpatient', 'Inp'),
+(3, 'Alternative', 'Alt');
 
 CREATE TABLE IF NOT EXISTS `logbook_lu_locations` (
   `llocation_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -675,7 +729,12 @@ CREATE TABLE IF NOT EXISTS `logbook_mandatory_objectives` (
   `rotation_id` int(12) unsigned DEFAULT NULL,
   `objective_id` int(12) unsigned DEFAULT NULL,
   `number_required` int(2) NOT NULL DEFAULT '1',
-  PRIMARY KEY  (`lmobjective_id`)
+  `grad_year_min` int(11) NOT NULL DEFAULT '2011',
+  `grad_year_max` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`lmobjective_id`),
+  KEY `rotation_id` (`rotation_id`),
+  KEY `objective_id` (`objective_id`),
+  KEY `number_required` (`number_required`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `logbook_mandatory_objectives` (`lmobjective_id`, `rotation_id`, `objective_id`, `number_required`) VALUES
@@ -793,6 +852,133 @@ INSERT INTO `logbook_mandatory_objectives` (`lmobjective_id`, `rotation_id`, `ob
 (112, 1, 303, 1),
 (113, 1, 284, 1);
 
+CREATE TABLE `logbook_mandatory_objective_locations` (
+  `lmolocation_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `lmobjective_id` int(11) DEFAULT NULL,
+  `lltype_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`lmolocation_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `logbook_mandatory_objective_locations` (`lmolocation_id`, `lmobjective_id`, `lltype_id`)
+VALUES
+(1, 98, 1),
+(2, 99, 1),
+(3, 100, 1),
+(4, 101, 1),
+(5, 102, 1),
+(6, 103, 1),
+(7, 104, 1),
+(8, 105, 1),
+(9, 106, 1),
+(10, 107, 1),
+(11, 108, 1),
+(12, 109, 1),
+(13, 110, 1),
+(14, 111, 1),
+(15, 112, 1),
+(16, 113, 1),
+(17, 77, 1),
+(18, 77, 2),
+(19, 78, 1),
+(20, 78, 2),
+(21, 79, 1),
+(22, 79, 2),
+(23, 80, 1),
+(24, 80, 2),
+(25, 81, 1),
+(26, 81, 2),
+(27, 82, 1),
+(28, 82, 2),
+(29, 83, 1),
+(30, 83, 2),
+(31, 84, 1),
+(32, 84, 2),
+(33, 85, 2),
+(34, 86, 1),
+(35, 86, 2),
+(36, 87, 1),
+(37, 87, 2),
+(38, 88, 1),
+(39, 88, 2),
+(40, 89, 1),
+(41, 89, 2),
+(42, 90, 1),
+(43, 90, 2),
+(44, 91, 1),
+(45, 91, 2),
+(46, 92, 1),
+(47, 92, 2),
+(48, 93, 1),
+(49, 93, 2),
+(50, 95, 1),
+(51, 95, 2),
+(52, 97, 1),
+(53, 97, 2),
+(54, 66, 1),
+(55, 67, 1),
+(56, 68, 2),
+(57, 69, 2),
+(58, 70, 2),
+(59, 71, 1),
+(60, 72, 1),
+(61, 73, 1),
+(62, 74, 1),
+(63, 75, 1),
+(64, 76, 1),
+(65, 13, 2),
+(66, 44, 2),
+(67, 49, 1),
+(68, 49, 2),
+(69, 51, 1),
+(70, 37, 1),
+(71, 37, 2),
+(72, 42, 1),
+(73, 42, 2),
+(74, 26, 1),
+(75, 26, 2),
+(76, 12, 1),
+(77, 12, 2),
+(78, 27, 1),
+(79, 27, 2),
+(80, 28, 1),
+(81, 28, 2),
+(82, 30, 1),
+(83, 30, 2),
+(84, 14, 1),
+(85, 15, 1),
+(86, 16, 1),
+(87, 17, 1),
+(88, 17, 2),
+(89, 18, 1),
+(90, 19, 1),
+(91, 19, 2),
+(92, 20, 1),
+(93, 21, 1),
+(94, 22, 1),
+(95, 22, 2),
+(96, 23, 1),
+(97, 23, 2),
+(98, 24, 1),
+(99, 24, 2),
+(100, 25, 1),
+(101, 25, 2),
+(102, 1, 1),
+(103, 2, 1),
+(104, 4, 1),
+(105, 4, 2),
+(106, 5, 1),
+(107, 6, 1),
+(108, 6, 2),
+(109, 7, 1),
+(110, 8, 1),
+(111, 9, 1),
+(112, 9, 2),
+(113, 10, 1),
+(114, 10, 2),
+(115, 11, 1),
+(116, 11, 2),
+(117, 13, 1);
+
 CREATE TABLE IF NOT EXISTS `logbook_notification_history` (
   `lnhistory_id` int(12) NOT NULL AUTO_INCREMENT,
   `clerk_id` int(12) NOT NULL,
@@ -809,6 +995,8 @@ CREATE TABLE IF NOT EXISTS `logbook_overdue` (
   `event_id` int(12) NOT NULL,
   `logged_required` int(12) NOT NULL,
   `logged_completed` int(12) NOT NULL DEFAULT '0',
+  `procedures_required` int(12) NOT NULL DEFAULT '0',
+  `procedures_completed` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`lologging_id`),
   UNIQUE KEY `lologging_id` (`lologging_id`,`proxy_id`,`event_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -819,7 +1007,12 @@ CREATE TABLE IF NOT EXISTS `logbook_preferred_procedures` (
   `order` smallint(6) NOT NULL,
   `lprocedure_id` int(12) unsigned NOT NULL,
   `number_required` int(2) NOT NULL DEFAULT '1',
-  PRIMARY KEY  (`lpprocedure_id`)
+  `grad_year_min` int(4) NOT NULL DEFAULT '2011',
+  `grad_year_max` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`lpprocedure_id`),
+  KEY `rotation_id` (`rotation_id`),
+  KEY `order` (`order`),
+  KEY `lprocedure_id` (`lprocedure_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `logbook_preferred_procedures` (`lpprocedure_id`, `rotation_id`, `order`, `lprocedure_id`, `number_required`) VALUES
@@ -852,6 +1045,35 @@ INSERT INTO `logbook_preferred_procedures` (`lpprocedure_id`, `rotation_id`, `or
 (27, 8, 0, 24, 1),
 (28, 8, 0, 25, 4),
 (29, 8, 0, 22, 1);
+
+CREATE TABLE `logbook_preferred_procedure_locations` (
+  `lpplocation_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `lpprocedure_id` int(11) DEFAULT NULL,
+  `lltype_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`lpplocation_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `logbook_preferred_procedure_locations` (`lpplocation_id`, `lpprocedure_id`, `lltype_id`)
+VALUES
+(1, 3, 2),
+(2, 2, 2),
+(3, 7, 1),
+(4, 5, 2),
+(5, 10, 1),
+(6, 8, 1),
+(7, 6, 2),
+(8, 4, 2),
+(9, 17, 2),
+(10, 15, 2),
+(11, 18, 2),
+(12, 16, 2),
+(13, 14, 1),
+(14, 19, 2),
+(15, 26, 2),
+(16, 24, 2),
+(17, 27, 2),
+(18, 29, 2);
+
 
 CREATE TABLE IF NOT EXISTS `logbook_rotation_comments` (
   `lrcomment_id` int(12) NOT NULL AUTO_INCREMENT,

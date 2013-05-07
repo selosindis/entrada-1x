@@ -3922,7 +3922,11 @@ a.criteria-tooltip {
 	text-decoration: none;
 }
 
-div.criteria-tooltip-box {
+td.setting-tooltip {
+	cursor: pointer;
+}
+
+div.criteria-tooltip-box, div.setting-tooltip-box {
 	border:1px solid #CCCCCC;
 	background-color:#FFFFFF;
 	width:250px;
@@ -3930,6 +3934,10 @@ div.criteria-tooltip-box {
 	font-size:12px;
 	color:#333;
 	padding: 5px 10px 2px 10px;
+}
+
+td.incorrect-setting {
+	background-color:#FFD9D0;
 }
 
 

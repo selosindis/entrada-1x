@@ -111,7 +111,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 								FROM `".AUTH_DATABASE."`.`user_data`
 								WHERE `id` = ".$db->qstr($PROXY_ID));
 
-	$query = "	SELECT a.`encounter_date`, a.`patient_info`, a.`gender`, g.`age`, a.`lentry_id`, c.`site_name`, b.`location`, f.`rotation_title`, a.`reflection`, a.`comments`
+	$query = "	SELECT a.`encounter_date`, a.`patient_info`, a.`gender`, g.`age`, a.`lentry_id`, c.`site_name`, b.`location`, f.`rotation_title`, a.`reflection`, a.`comments`, d.`rotation_id`
 				FROM `".CLERKSHIP_DATABASE."`.`logbook_entries` AS a 
 				LEFT JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_locations` AS b
 				ON a.`llocation_id` = b.`llocation_id`
@@ -137,7 +137,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 		}
 		
 		if (!$student) {
-			$query = "SELECT `course_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations`";
+			$query = "SELECT a.`course_id`, b.`organisation_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
+                        JOIN `courses` AS b
+                        ON a.`course_id` = b.`course_id`";
 			$courses = $db->GetAll($query);
 			$allow_view = false;
 			foreach ($courses as $course) {

@@ -45,15 +45,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 
 		$nameArray 	= clerkship_student_name($EVENT_ID);
 
-		$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`electives`, `".CLERKSHIP_DATABASE."`.`event_contacts`
-					WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` = ".$db->qstr($EVENT_ID)."
-					AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
-					AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`";
-
-		if ($event_info	= $db->GetRow($query)) {
+		$query		= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+                        JOIN `".CLERKSHIP_DATABASE."`.`electives` AS b
+                        ON a.`event_id` = b.`event_id`
+                        JOIN `".CLERKSHIP_DATABASE."`.`event_contacts` AS c
+                        ON a.`event_id` = c.`event_id`
+                        WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
+        $event_info	= $db->GetRow($query);
+		if ($event_info) {
 			$query = "	SELECT `countries_id`, `prov_state`, `region_name`
 						FROM `".CLERKSHIP_DATABASE."`.`regions`
-						WHERE `region_id` = ".$event_info["region_id"];
+						WHERE `region_id` = ".$db->qstr($event_info["region_id"]);
 			$event_info["prov_state"] 	= "";
 			$event_info["countries_id"] = 1;
 			$event_info["city"] 		= "";
@@ -126,65 +128,45 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					}
 
 					/**
-					 * Required field "start_date" / Start Date .
+					 * Required field "event_start" / Start Date .
 					 */
-					if (isset($_POST["start_date"])) {
-						$startCleaned	= html_encode($_POST["start_date"]);
-						$explodedDate 	= explode("-", $startCleaned);
-						$year 			= $explodedDate[0];
-						$month 			= $explodedDate[1];
-						$day 			= $explodedDate[2];
-						$start_stamp 	= mktime(9,0,0,$month,$day,$year);
+                    $event_date = validate_calendar("Elective", "event", false);
+                    if ((isset($event_date)) && ((int) $event_date)) {
+                        $PROCESSED["event_start"]   = (int) $event_date;
+                        $PROCESSED["event_finish"]  = $PROCESSED["event_start"] + (clean_input($_POST["event_finish_name"], array("int")) * ONE_WEEK);
+                        $start_stamp                = $PROCESSED["event_start"];
+                        $end_stamp                  = $PROCESSED["event_finish"];
+                        $dateCheckQuery = "SELECT `event_title`, `event_start`, `event_finish` 
+                                            FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`electives`, `".CLERKSHIP_DATABASE."`.`event_contacts`
+                                            WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` != ".$db->qstr($EVENT_ID)." 
+                                            AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
+                                            AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`
+                                            AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($ENTRADA_USER->getID())." 
+                                            AND `".CLERKSHIP_DATABASE."`.`events`.`event_type` = \"elective\"
+                                            AND `".CLERKSHIP_DATABASE."`.`events`.`event_status` != \"trash\"
+                                            AND ((".$db->qstr($start_stamp)." >= `".CLERKSHIP_DATABASE."`.`events`.`event_start` 
+                                            AND ".$db->qstr($start_stamp)." <= `".CLERKSHIP_DATABASE."`.`events`.`event_finish`)
+                                            OR (".$db->qstr($end_stamp)." >= `".CLERKSHIP_DATABASE."`.`events`.`event_start` 
+                                            AND ".$db->qstr($end_stamp)." <= `".CLERKSHIP_DATABASE."`.`events`.`event_finish`)
+                                            OR (`".CLERKSHIP_DATABASE."`.`events`.`event_start` >= ".$db->qstr($start_stamp)." 
+                                            AND `".CLERKSHIP_DATABASE."`.`events`.`event_finish` <= ".$db->qstr($end_stamp)."))";
 
-						$PROCESSED["start_date"] 	= $start_stamp;
-						$PROCESSED["end_date"] 		= strtotime($startCleaned . "+". clean_input($_POST["event_finish_name"], array("int")) . " weeks");
-						$end_stamp 					= $PROCESSED["end_date"];
 
-						$dateCheckQuery = "	SELECT `event_title`, `event_start`, `event_finish`
-											FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`electives`, `".CLERKSHIP_DATABASE."`.`event_contacts`
-											WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` != ".$db->qstr($EVENT_ID)."
-											AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
-											AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`
-											AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($student_id)."
-											AND `".CLERKSHIP_DATABASE."`.`events`.`event_type` = \"elective\"
-											AND `".CLERKSHIP_DATABASE."`.`events`.`event_status` != \"trash\"
-											AND ((".$db->qstr($start_stamp)." > `".CLERKSHIP_DATABASE."`.`events`.`event_start`
-											AND ".$db->qstr($start_stamp)." < `".CLERKSHIP_DATABASE."`.`events`.`event_finish`)
-											OR (".$db->qstr($end_stamp)." > `".CLERKSHIP_DATABASE."`.`events`.`event_start`
-											AND ".$db->qstr($end_stamp)." < `".CLERKSHIP_DATABASE."`.`events`.`event_finish`)
-											OR (`".CLERKSHIP_DATABASE."`.`events`.`event_start` > ".$db->qstr($start_stamp)."
-											AND `".CLERKSHIP_DATABASE."`.`events`.`event_finish` < ".$db->qstr($end_stamp)."))";
-
-						if ($dateCheck	= $db->GetAll($dateCheckQuery))  {
-							$dateErrorCtr = 0;
-							foreach ($dateCheck as $dateValue) {
-								$dateErrorCtr++;
-								$dateError .= "<br /><tt>" . $dateValue["event_title"] . "<br />  *  Starts: ". date("Y-m-d", $dateValue["event_start"]) . "<br />  * Finishes: " . date("Y-m-d", $dateValue["event_finish"])."</tt><br />";
-							}
-							$ERROR++;
-							if ($dateErrorCtr == 1) {
-								$ERRORSTR[] = "This elective conflicts with the following elective:<br />".$dateError;
-							}  else {
-								$ERRORSTR[] = "This elective conflicts with the following electives:<br />".$dateError;
-							}
-						}
-					} else {
-						$ERROR++;
-						$ERRORSTR[] = "The <strong>Start Date</strong> field is required.";
-
-						if (isset($_POST["start_date"]) && $_POST["start_date"] != '') {
-							$startCleaned	= html_encode($_POST["start_date"]);
-							$explodedDate 	= explode("-", $startCleaned);
-							$year 			= $explodedDate[0];
-							$month 			= $explodedDate[1];
-							$day 			= $explodedDate[2];
-							$start_stamp 	= mktime(0,0,0,$month,$day,$year);
-
-							$PROCESSED["start_date"] 	= $start_stamp;
-							$PROCESSED["end_date"] 		= strtotime($startCleaned . "+". clean_input($_POST["event_finish_name"], array("int")) . " weeks");
-							$end_stamp 					= $PROCESSED["end_date"];
-						}
-					}
+                        if ($dateCheck	= $db->GetAll($dateCheckQuery))  {
+                            $dateError = "";
+                            $dateErrorCtr = 0;
+                            foreach ($dateCheck as $dateValue) {
+                                $dateErrorCtr++;
+                                $dateError .= "<br /><tt>" . $dateValue["event_title"] . "<br />  *  Starts: ". date("Y-m-d", $dateValue["event_start"]) . "<br />  * Finishes: " . date("Y-m-d", $dateValue["event_finish"])."</tt><br />";
+                            }
+                            $ERROR++;
+                            if ($dateErrorCtr == 1) {
+                                $ERRORSTR[] = "This elective conflicts with the following elective:<br />".$dateError;
+                            }  else {
+                                $ERRORSTR[] = "This elective conflicts with the following electives:<br />".$dateError;
+                            }
+                        }
+                    }
 
 					/**
 					 * Required field "schools_id" / Host School.
@@ -282,11 +264,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					 */
 					if ((isset($_POST["prov_state"])) && ($prov_state = clean_input($_POST["prov_state"], array("notags", "trim")))) {
 						$PROCESSED["prov_state"] = htmlentities($prov_state);
-						if (strlen($prov_state) > 100)
-						{
+						if (strlen($prov_state) > 100) {
 							$ERROR++;
 							$ERRORSTR[] = "The <strong>Prov / State</strong> can only contain a maximum of 100 characters.";
-						}
+						} else {
+                            $query = "SELECT `province_id` FROM `global_lu_provinces` WHERE `province` = ".$db->qstr($PROCESSED["prov_state"]);
+                            $province_id = $db->GetOne($query);
+                            if ($province_id) {
+                                $PROCESSED["province_id"] = $province_id;
+                            } else {
+                                $PROCESSED["province_id"] = 0;
+                            }
+                        }
 					} elseif ($province_required) {
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Prov / State</strong> field is required.";
@@ -345,8 +334,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					/**
 					 * Required field "notification_send" /  Notifications.
 					 */
-					if ((isset($_POST["notifaction_send"])) && ($notifaction_send = clean_input($_POST["notifaction_send"], array("notags")))) {
-						$PROCESSED["notifaction_send"] = $notifaction_send;
+					if ((isset($_POST["notification_send"])) && ($notification_send = clean_input($_POST["notification_send"], array("notags")))) {
+						$PROCESSED["notification_send"] = $notification_send;
 					}
 
 					if (!$ERROR) {
@@ -356,68 +345,50 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$EVENT["category_id"]				= $PROCESSED["category_id"];
 						$query = "	SELECT `region_id` FROM `".CLERKSHIP_DATABASE."`.`regions`
 									WHERE `region_name` LIKE ".$db->qstr($PROCESSED["city"])."
-									".(isset($PROCESSED["prov_state"]) && $PROCESSED["prov_state"] ? "AND `prov_state` = ".$db->qstr($PROCESSED["prov_state"]) : "")."
-									".(isset($PROCESSED["countries_id"]) && $PROCESSED["countries_id"] ? "AND `countries_id` = ".$db->qstr($PROCESSED["countries_id"]) : "")."
+                                    AND ".($PROCESSED["province_id"] ? "`province_id` = ".$db->qstr($PROCESSED["province_id"]) : "`prov_state` = ".$db->qstr($PROCESSED["prov_state"]))."
+									AND `countries_id` = ".$db->qstr($PROCESSED["countries_id"])."
 									AND `region_active` = 1";
 						$region_id = $db->GetOne($query);
 
 						if ($region_id) {
-							$ELECTIVE["region_id"] = clean_input($region_id, "int");
+							$PROCESSED["region_id"] = clean_input($region_id, "int");
 							$EVENT["region_id"] = clean_input($region_id, "int");
 						} else {
 							$REGION = array();
 							$REGION["countries_id"] = $PROCESSED["countries_id"];
 							$REGION["prov_state"] = $PROCESSED["prov_state"];
+							$REGION["province_id"] = $PROCESSED["province_id"];
 							$REGION["region_name"] = $PROCESSED["city"];
 							if ($db->AutoExecute(CLERKSHIP_DATABASE.".regions", $REGION, "INSERT") && ( $region_id = $db->Insert_Id())) {
-								$ELECTIVE["region_id"] = clean_input($region_id, "int");
+								$PROCESSED["region_id"] = clean_input($region_id, "int");
 								$EVENT["region_id"] = clean_input($region_id, "int");
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "A region could not be added to the system for this elective. The system administrator was informed of this error; please try again later.";
 
 								application_log("error", "There was an error inserting a new region for a newly created elective. Database said: ".$db->ErrorMsg());
-								$ELECTIVE["region_id"] = 0;
+								$PROCESSED["region_id"] = 0;
 								$EVENT["region_id"] = 0;
 							}
 						}
-						$EVENT["event_title"]				= clerkship_categories_title($PROCESSED["department_id"], $levels = 3);
-						$EVENT["event_start"]				= $PROCESSED["start_date"];
-						$EVENT["event_finish"]				= $PROCESSED["end_date"];
-						$EVENT["event_status"]				= $PROCESSED["event_status"];
-						$EVENT["modified_last"]				= $PROCESSED["updated_date"];
-						$EVENT["modified_by"]				= $PROCESSED["updated_by"];
+						$EVENT["event_title"]	= clerkship_categories_title($PROCESSED["department_id"], $levels = 3);
+						$EVENT["event_start"]	= $PROCESSED["event_start"];
+						$EVENT["event_finish"]	= $PROCESSED["event_finish"];
+						$EVENT["event_status"]	= $PROCESSED["event_status"];
+						$EVENT["modified_last"]	= $PROCESSED["updated_date"];
+						$EVENT["modified_by"]	= $PROCESSED["updated_by"];
 
 						if ($db->AutoExecute(CLERKSHIP_DATABASE.".events", $EVENT, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
-							$url = ENTRADA_URL."/admin/clerkship/electives";
+							$url = ENTRADA_URL."/admin/clerkship";
 
 							$msg	= "You will now be redirected to the clerkship index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 
-							$ELECTIVE["geo_location"]			= $PROCESSED["geo_location"];
-							$ELECTIVE["department_id"]			= $PROCESSED["department_id"];
-							$ELECTIVE["discipline_id"]			= $PROCESSED["discipline_id"];
-							$ELECTIVE["sub_discipline"]			= $PROCESSED["sub_discipline"];
-							$ELECTIVE["schools_id"]				= $PROCESSED["schools_id"];
-							$ELECTIVE["other_medical_school"]	= $PROCESSED["other_medical_school"];
-							$ELECTIVE["objective"]				= $PROCESSED["objective"];
-							$ELECTIVE["preceptor_prefix"]		= $PROCESSED["preceptor_prefix"];
-							$ELECTIVE["preceptor_first_name"]	= $PROCESSED["preceptor_first_name"];
-							$ELECTIVE["preceptor_last_name"]	= $PROCESSED["preceptor_last_name"];
-							$ELECTIVE["address"]				= $PROCESSED["address"];
-							$ELECTIVE["countries_id"]			= $PROCESSED["countries_id"];
-							$ELECTIVE["city"]					= $PROCESSED["city"];
-							$ELECTIVE["prov_state"]				= $PROCESSED["prov_state"];
-							$ELECTIVE["postal_zip_code"]		= $PROCESSED["postal_zip_code"];
-							$ELECTIVE["phone"]					= $PROCESSED["phone"];
-							$ELECTIVE["fax"]					= $PROCESSED["fax"];
-							$ELECTIVE["email"]					= $PROCESSED["email"];
-							$ELECTIVE["updated_date"]			= $PROCESSED["updated_date"];
-							$ELECTIVE["updated_by"]				= $PROCESSED["updated_by"];
+							$ELECTIVE = $PROCESSED;
 
 							if ($db->AutoExecute(CLERKSHIP_DATABASE.".electives", $ELECTIVE, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
 								// Only send out the notifications if they admin wants them sent.
-								if(isset($PROCESSED["notifaction_send"])) {
+								if(isset($PROCESSED["notification_send"])) {
 									$mail = new Zend_Mail("iso-8859-1");
 									$international_msg 	= "";
 									if ($PROCESSED["event_status"] == "published") {
@@ -433,7 +404,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 											$message .= "Approved By:\t\t".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]."\n";
 											$message .= "E-Mail Address:\t\t".$_SESSION["details"]["email"]."\n\n";
 											$message .= "-------------------------------------------------------\n\n";
-											$message .= "The clerk's name is: " . $student_name ." and they will begin this elective on " . date("Y-m-d", $PROCESSED["start_date"])." and will finish on " . date("Y-m-d", $PROCESSED["end_date"])."\n\n";
+											$message .= "The clerk's name is: " . $student_name ." and they will begin this elective on " . date("Y-m-d", $PROCESSED["event_start"])." and will finish on " . date("Y-m-d", $PROCESSED["event_finish"])."\n\n";
 											$message .= "Contact:\t\t".$AGENT_CONTACTS["agent-clerkship"]["email"]." if you have any questions.\n\n";
 											$message .= "=======================================================";
 
@@ -448,14 +419,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 											$mail->setReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
 											$mail->setBodyText($message);
 
-                                                                                        try {
-                                                                                                $mail->send();
-                                                                                        } catch (Zend_Mail_Transport_Exception $e){
-                                                                                                $BIGERROR++;
+                                            try {
+                                                $mail->send();
+                                            } catch (Zend_Mail_Transport_Exception $e){
+                                                $ERROR++;
 												$ERRORSTR[] = "There was a problem sending the approval email to the international rep for this elective. The MEdTech Unit was informed of this error; please try again later.";
 
 												application_log("error", "There was an error sending an approval email to the international clerkship admin for clerkship elective ID[".$EVENT_ID."]. Mail said: ".$e->getMessage());
-                                                                                        }
+                                            }
 
 											$mail->clearRecipients();
 											$mail->clearReplyTo();
@@ -488,14 +459,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$mail->setReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
 										$mail->setBodyText($message);
 
-                                                                                try {
-                                                                                        $mail->send();
-                                                                                } catch (Zend_Mail_Transport_Exception $e){
-                                                                                        $BIGERROR++;
-                                                                                        $ERRORSTR[] = "There was a problem sending the approval email to the student for this elective. The MEdTech Unit was informed of this error; please try again later.";
+                                        try {
+                                            $mail->send();
+                                        } catch (Zend_Mail_Transport_Exception $e){
+                                            $ERROR++;
+                                            $ERRORSTR[] = "There was a problem sending the approval email to the student for this elective. The MEdTech Unit was informed of this error; please try again later.";
 
 											application_log("error", "There was an error sending an approval email to the student for clerkship elective ID[".$EVENT_ID."]. Mail said: ".$e->getMessage());
-                                                                                }
+                                        }
 
 										$mail->clearRecipients();
 										$mail->clearReplyTo();
@@ -508,30 +479,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$message .= "E-Mail Address:\t\t".$_SESSION["details"]["email"]."\n\n";
 										$message .= "=======================================================\n\n";
 										$message .= "Clerk's Name:\t\t" . $student_name ."\n\n";
-										$message .= "Elective Start:\t\t" . date("Y-m-d", $PROCESSED["start_date"])."\n\n";
-										$message .= "Elective Finish:\t" . date("Y-m-d", $PROCESSED["end_date"])."\n\n";
+										$message .= "Elective Start:\t\t" . date("Y-m-d", $PROCESSED["event_start"])."\n\n";
+										$message .= "Elective Finish:\t" . date("Y-m-d", $PROCESSED["event_finish"])."\n\n";
 										$message .= "Contact:\t\t".$AGENT_CONTACTS["agent-clerkship"]["email"]." if you have any questions.\n\n";
 										$message .= "Please fill out this evaluation form upon the clerk's completion of the elective:\n\n".$CLERKSHIP_EVALUATION_FORM."\n\n";
 										$message .= "=======================================================";
-
-                                                                                $mail->addHeader("X-Priority", "3");
+                                        $mail->addHeader("X-Priority", "3");
 										$mail->addHeader('Content-Transfer-Encoding', '8bit');
 										$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
 										$mail->addHeader("X-Section", "Electives Approval");
-										$mail->addTo($PROCESSED["email"], (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").$PROCESSED["preceptor_first_name"] . " " . $PROCESSED["preceptor_last_name"]);
-										$mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+                                        $mail->clearRecipients();
+										$mail->addTo($PROCESSED["email"], (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").(isset($PROCESSED["preceptor_first_name"]) && $PROCESSED["preceptor_first_name"] ? $PROCESSED["preceptor_first_name"] : ""). " " . $PROCESSED["preceptor_last_name"]);
+                                        $mail->clearFrom();
+                                        $mail->clearSubject();
+										$mail->setFrom(($_SESSION["details"]["email"] ? $_SESSION["details"]["email"] : $AGENT_CONTACTS["agent-clerkship"]["email"]), $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
 										$mail->setSubject("Electives Approval - ".APPLICATION_NAME);
 										$mail->setReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
 										$mail->setBodyText($message);
 
-                                                                                try {
-                                                                                        $mail->send();
-                                                                                } catch (Zend_Mail_Transport_Exception $e){
-                                                                                        $BIGERROR++;
-                                                                                        $ERRORSTR[] = "There was a problem sending the approval email to the preceptor for this elective. The MEdTech Unit was informed of this error; please try again later.";
+                                        try {
+                                            $mail->send();
+                                        } catch (Zend_Mail_Transport_Exception $e){
+                                            $ERROR++;
+                                            $ERRORSTR[] = "There was a problem sending the approval email to the preceptor for this elective. The MEdTech Unit was informed of this error; please try again later.";
 
 											application_log("error", "There was an error sending an approval email to the preceptor of clerkship elective ID[".$EVENT_ID."]. Mail said: ".$e->getMessage());
-                                                                                }
+                                        }
 
 										$mail->clearRecipients();
 										$mail->clearReplyTo();
@@ -552,24 +525,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$message .= "=======================================================";
 										$message .= "Reason(s) for rejections:\n\n" . $PROCESSED['rejection_comments'];
 
-                                                                                $mail->addHeader("X-Priority", "3");
+                                        $mail->addHeader("X-Priority", "3");
 										$mail->addHeader('Content-Transfer-Encoding', '8bit');
 										$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
 										$mail->addHeader("X-Section", "Electives Approval");
-										$mail->addTo($PROCESSED["email"], (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").$PROCESSED["preceptor_first_name"] . " " . $PROCESSED["preceptor_last_name"]);
+										$mail->addTo($PROCESSED["email"], (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").(isset($PROCESSED["preceptor_first_name"]) && $PROCESSED["preceptor_first_name"] ? $PROCESSED["preceptor_first_name"] : "")." " . $PROCESSED["preceptor_last_name"]);
 										$mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
 										$mail->setSubject("Electives Rejection - ".APPLICATION_NAME);
 										$mail->setReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
 										$mail->setBodyText($message);
 
-                                                                                try {
-                                                                                        $mail->send();
-                                                                                } catch (Zend_Mail_Transport_Exception $e){
-                                                                                        $BIGERROR++;
-                                                                                        $ERRORSTR[] = "There was a problem sending the rejection email to the student for this elective. The MEdTech Unit was informed of this error; please try again later.";
+                                        try {
+                                            $mail->send();
+                                        } catch (Zend_Mail_Transport_Exception $e){
+                                            $ERROR++;
+                                            $ERRORSTR[] = "There was a problem sending the rejection email to the student for this elective. The MEdTech Unit was informed of this error; please try again later.";
 
 											application_log("error", "There was an error sending a rejection email to the student for clerkship elective ID[".$EVENT_ID."]. Mail said: ".$e->getMessage());
-                                                                                }
+                                        }
 
 										$mail->clearRecipients();
 										$mail->clearReplyTo();
@@ -598,6 +571,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 				break;
 				case 1 :
 				default :
+                    $PROCESSED = $event_info;
 					continue;
 				break;
 			}
@@ -617,29 +591,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 				break;
 				case 1 :
 				default :
-					$PROCESSED["geo_location"]			= $event_info["geo_location"];
-					$PROCESSED["category_id"]			= $event_info["category_id"];
-					$PROCESSED["department_id"]			= $event_info["department_id"];
-					$PROCESSED["discipline_id"]			= $event_info["discipline_id"];
-					$PROCESSED["sub_discipline"]		= $event_info["sub_discipline"];
-					$PROCESSED["schools_id"]			= $event_info["schools_id"];
-					$PROCESSED["other_medical_school"]	= $event_info["other_medical_school"];
-					$PROCESSED["objective"]				= $event_info["objective"];
-					$PROCESSED["preceptor_prefix"]		= $event_info["preceptor_prefix"];
-					$PROCESSED["preceptor_first_name"] 	= $event_info["preceptor_first_name"];
-					$PROCESSED["preceptor_last_name"] 	= $event_info["preceptor_last_name"];
-					$PROCESSED["address"] 				= $event_info["address"];
-					$PROCESSED["countries_id"] 			= $event_info["countries_id"];
-					$PROCESSED["city"] 					= $event_info["city"];
-					$PROCESSED["prov_state"] 			= $event_info["prov_state"];
-					$PROCESSED["postal_zip_code"] 		= $event_info["postal_zip_code"];
-					$PROCESSED["fax"] 					= $event_info["fax"];
-					$PROCESSED["phone"]  				= $event_info["phone"];
-					$PROCESSED["email"] 				= $event_info["email"];
-					$PROCESSED["start_date"] 			= $event_info["event_start"];
-					$PROCESSED["end_date"] 				= $event_info["event_finish"];
-					$PROCESSED["event_status"]			= $event_info["event_status"];
-					$PROCESSED["notifaction_send"]		= true;
+					$PROCESSED["notification_send"]		= true;
 
 					$HEAD[]			= "<script type=\"text/javascript\">
 					function checkInternational (flag)
@@ -665,16 +617,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					{
 						if (flag == 'approved') {
 							$('approval_notice').style.display = 'none';
-							$('notifaction_notice').style.display = 'block';
+							$('notification_notice').style.display = 'block';
 							$('message').innerHTML = '<strong>Note:</strong> Uncheck this if you are making a simple edit and do not want the preceptor / student to be notified.';
-							Effect.Pulsate('notifaction_notice', { pulses: 5,duration: 2.5 });
+							Effect.Pulsate('notification_notice', { pulses: 5,duration: 2.5 });
 						} else if (flag == 'rejected') {
 							$('approval_notice').style.display = 'none';
-							$('notifaction_notice').style.display = 'block';
+							$('notification_notice').style.display = 'block';
 							$('message').innerHTML = '<strong>Note:</strong> Uncheck this if you are making a simple edit and do not want the student to be notified.';
-							Effect.Pulsate('notifaction_notice', { pulses: 5,duration: 2.5 });
+							Effect.Pulsate('notification_notice', { pulses: 5,duration: 2.5 });
 						} else if (flag == 'false'){
-							$('notifaction_notice').style.display = 'none';
+							$('notification_notice').style.display = 'none';
 							$('approval_notice').style.display = 'block';
 							Effect.Pulsate('approval_notice', { pulses: 5, duration: 2.5 });
 						}
@@ -700,7 +652,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 
 					function changeDurationMessage() {
 						$('auto_end_date').style.display = 'inline';
-						var value = $('start_date').value;
+						var value = $('event_date').value;
 						newDate = toJSDate(value);
 						switch (\$F('event_finish')) {
 							case '1':
@@ -757,7 +709,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						newDate.setDate(newDate.getDate()+days);
 						newDate = toCalendarDate(newDate);
 						$('auto_end_date').innerHTML = '&nbsp;&nbsp;&nbsp;Ending in '+\$F('event_finish')+weekText+' on ' +newDate;
-						$('start_date').value = date;
+						$('event_date').value = date;
 					}
 					var updater = null;
 					function AjaxFunction(cat_id)
@@ -810,21 +762,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					$ONLOAD[]		= "setMaxLength()";
 					$ONLOAD[]		= "changeDurationMessage()";
 
-					if ($PROCESSED["event_status"] == "trash" || $_POST["event_status"] == "trash") {
-						$ONLOAD[]		= "showRejection('true')";
+					if ((isset($PROCESSED["event_status"]) && $PROCESSED["event_status"] == "trash") || (isset($_POST["event_status"]) && $_POST["event_status"] == "trash")) {
+						$ONLOAD[]	= "showRejection('true')";
+						$ONLOAD[]	= "showNotification('rejected')";
+					} else if((isset($_POST["event_status"]) && $_POST["event_status"] == "published") || (isset($PROCESSED["event_status"]) && $PROCESSED["event_status"] == "published")) {
+						$ONLOAD[]   = "showRejection('false')";
+						$ONLOAD[]	= "showNotification('approved')";
 					} else {
-						$ONLOAD[]		= "showRejection('false')";
+						$ONLOAD[]	= "showRejection('false')";
+						$ONLOAD[]	= "showNotification('false')";
 					}
 
-					if ($PROCESSED["event_status"] == "trash" || $_POST["event_status"] == "trash") {
-						$ONLOAD[]		= "showNotification('rejected')";
-					} else if($_POST["event_status"] == "published" || $PROCESSED["event_status"] == "published") {
-						$ONLOAD[]		= "showNotification('approved')";
-					} else {
-						$ONLOAD[]		= "showNotification('false')";
-					}
-
-					$LASTUPDATED	= $result["updated_date"];
+					$LASTUPDATED	= $event_info["updated_date"];
 
 					if ($ERROR) {
 						echo display_error();
@@ -852,7 +801,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					new_sidebar_item("Elective Weeks", $sidebar_html, "page-clerkship", "open");
 					?>
 					<div class="display-notice" style="vertical-align: middle; padding: 15px;">
-						<strong>Please Note:</strong> Removing this elective will permanently remove it from the system. <input type="button" class="button" value="Remove Elective" style="margin-left: 15px" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives?section=delete&id=<?php echo $EVENT_ID; ?>'" />
+						<strong>Please Note:</strong> Removing this elective will permanently remove it from the system. <input type="button" class="btn btn-danger" value="Remove Elective" style="margin-left: 15px" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives?section=delete&id=<?php echo $EVENT_ID; ?>'" />
 					</div>
 
 					<form id="editElectiveForm" action="<?php echo ENTRADA_URL; ?>/admin/clerkship/electives?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="selIt()">
@@ -938,7 +887,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<td></td>
 						<td><label for="sub_discipline" class="form-nrequired">Sub-Discipline</label></td>
 						<td>
-						<input type="text" id="sub_discipline" name="sub_discipline" value="<?php echo (isset($_POST["sub_discipline"]) ? html_encode($_POST["sub_discipline"]) : html_encode($PROCESSED["sub_discipline"])); ?>" maxlength="64" style="width: 250px"" />
+						<input type="text" id="sub_discipline" name="sub_discipline" value="<?php echo (isset($_POST["sub_discipline"]) ? html_encode($_POST["sub_discipline"]) : html_encode((isset($PROCESSED["sub_discipline"]) && $PROCESSED["sub_discipline"] ? $PROCESSED["sub_discipline"] : ""))); ?>" maxlength="64" style="width: 250px"" />
 						<!--<span class="content-small">(<strong>Example:</strong> What should this say?)</span> -->
 						</td>
 					</tr>
@@ -969,7 +918,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<td></td>
 						<td><label id="other_label" for="other_medical_school" class="form-required" style="display: none">Other</label></td>
 						<td>
-						<input type="text" id="other_medical_school" <?php echo $readonly; ?>name="other_medical_school" value="<?php echo html_encode($PROCESSED["other_medical_school"]); ?>" maxlength="64" style="width: 250px; display: none" />
+						<input type="text" id="other_medical_school" name="other_medical_school" value="<?php echo html_encode((isset($PROCESSED["other_medical_school"]) && $PROCESSED["other_medical_school"] ? $PROCESSED["other_medical_school"] : "")); ?>" maxlength="64" style="width: 250px; display: none" />
 						<span id="other_span" class="content-small" style="display: none">(<strong>Example:</strong> Stanford University School of Medicine)</span>
 						</td>
 					</tr>
@@ -977,14 +926,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<td colspan="3">&nbsp;</td>
 					</tr>
 					<?php
-						echo generate_calendar("start", "Start Date", true, ((isset($PROCESSED["start_date"])) ? $PROCESSED["start_date"] : 0), false, false, true);
+						echo generate_calendar("event", "Start Date", true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0), false, false, true);
 					?>
 					<tr>
 						<td></td>
 						<td><label for="event_finish" class="form-required">Elective Weeks</label></td>
 						<td>
 						<?php
-							$duration = ceil(($PROCESSED["end_date"] - $PROCESSED["start_date"]) / 604800);
+							$duration = ceil((isset($PROCESSED["event_finish"]) && $PROCESSED["event_finish"] && isset($PROCESSED["event_start"]) && $PROCESSED["event_start"] ? (($PROCESSED["event_finish"] - $PROCESSED["event_start"]) / 604800) : 0));
 							echo "<select id=\"event_finish\" name=\"event_finish_name\" style=\"width: 10%\" onchange=\"changeDurationMessage();\">\n";
 							for($i=1; $i<=4; $i++)  {
 								echo "<option value=\"".$i."\"".(($i == $duration) ? " selected=\"selected\"" : "").">".$i."</option>\n";
@@ -1001,7 +950,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<td></td>
 						<td style="vertical-align: top"><label for="objective" class="form-required">Planned Experience</label></td>
 						<td>
-							<textarea id="objective" name="objective" style="width: 95%; height: 60px" cols="50" rows="5" maxlength="300"><?php echo ((isset($_POST["objective"])) ? html_encode($_POST["objective"]) : $PROCESSED["objective"]); ?></textarea>
+							<textarea id="objective" name="objective" style="width: 95%; height: 60px" cols="50" rows="5" maxlength="300"><?php echo ((isset($_POST["objective"])) ? html_encode($_POST["objective"]) : html_encode(isset($PROCESSED["objective"]) && $PROCESSED["objective"] ? $PROCESSED["objective"] : "")); ?></textarea>
 							<div id="planned_note" class="content-small" style="display: block">
 								<strong><br>Note:</strong> Please provide a narrative of your educational objectives (what you hope to achieve while on the elective).
 							</div>
@@ -1030,14 +979,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<td></td>
 						<td><label for="preceptor_first_name" class="form-nrequired">Preceptor First Name</label></td>
 						<td>
-						<input type="text" id="preceptor_first_name" name="preceptor_first_name" value="<?php echo (isset($_POST["preceptor_first_name"]) ? html_encode($_POST["preceptor_first_name"]) : html_encode($PROCESSED["preceptor_first_name"])); ?>" maxlength="50" style="width: 250px"" />
+						<input type="text" id="preceptor_first_name" name="preceptor_first_name" value="<?php echo (isset($_POST["preceptor_first_name"]) ? html_encode($_POST["preceptor_first_name"]) : html_encode(isset($PROCESSED["preceptor_first_name"]) && $PROCESSED["preceptor_first_name"] ? $PROCESSED["preceptor_first_name"] : "")); ?>" maxlength="50" style="width: 250px"" />
 						</td>
 					</tr>
 					<tr>
 						<td></td>
 						<td><label for="preceptor_last_name" class="form-required">Preceptor Last Name</label></td>
 						<td>
-						<input type="text" id="preceptor_last_name" name="preceptor_last_name" value="<?php echo (isset($_POST["preceptor_last_name"]) ? html_encode($_POST["preceptor_last_name"]) : html_encode($PROCESSED["preceptor_last_name"])); ?>" maxlength="50" style="width: 250px"" />
+						<input type="text" id="preceptor_last_name" name="preceptor_last_name" value="<?php echo (isset($_POST["preceptor_last_name"]) ? html_encode($_POST["preceptor_last_name"]) : html_encode(isset($PROCESSED["preceptor_last_name"]) && $PROCESSED["preceptor_last_name"] ? $PROCESSED["preceptor_last_name"] : "")); ?>" maxlength="50" style="width: 250px"" />
 						</td>
 					</tr>
 					<tr>
@@ -1047,7 +996,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<td></td>
 						<td><label for="address" class="form-required">Address</label></td>
 						<td>
-						<input type="text" id="address" name="address" value="<?php echo (isset($_POST["address"]) ? html_encode($_POST["address"]) : html_encode($PROCESSED["address"])); ?>" maxlength="250" style="width: 250px"" />
+						<input type="text" id="address" name="address" value="<?php echo (isset($_POST["address"]) ? html_encode($_POST["address"]) : html_encode((isset($PROCESSED["address"]) && $PROCESSED["address"] ? $PROCESSED["address"] : ""))); ?>" maxlength="250" style="width: 250px"" />
 						</td>
 					</tr>
 					<tr>
@@ -1095,7 +1044,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<td></td>
 						<td><label for="postal_zip_code" class="form-nrequired">Postal / Zip Code</label></td>
 						<td>
-						<input type="text" id="postal_zip_code" name="postal_zip_code" value="<?php echo (isset($_POST["postal_zip_code"]) ? html_encode($_POST["postal_zip_code"]) : html_encode($PROCESSED["postal_zip_code"])); ?>" maxlength="20" style="width: 250px" />
+						<input type="text" id="postal_zip_code" name="postal_zip_code" value="<?php echo (isset($_POST["postal_zip_code"]) ? html_encode($_POST["postal_zip_code"]) : html_encode((isset($PROCESSED["postal_zip_code"]) && $PROCESSED["postal_zip_code"] ? $PROCESSED["postal_zip_code"] : ""))); ?>" maxlength="20" style="width: 250px" />
 						</td>
 					</tr>
 					<tr>
@@ -1105,21 +1054,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<td></td>
 						<td><label for="phone" class="form-nrequired">Phone</label></td>
 						<td>
-						<input type="text" id="phone" name="phone" value="<?php echo (isset($_POST["phone"]) ? html_encode($_POST["phone"]) : html_encode($PROCESSED["phone"])); ?>" maxlength="25" style="width: 250px" />
+						<input type="text" id="phone" name="phone" value="<?php echo (isset($_POST["phone"]) ? html_encode($_POST["phone"]) : html_encode((isset($PROCESSED["phone"]) && $PROCESSED["phone"] ? $PROCESSED["phone"] : ""))); ?>" maxlength="25" style="width: 250px" />
 						</td>
 					</tr>
 					<tr>
 						<td></td>
 						<td><label for="fax" class="form-nrequired">Fax</label></td>
 						<td>
-						<input type="text" id="fax" name="fax" value="<?php echo (isset($_POST["fax"]) ? html_encode($_POST["fax"]) : html_encode($PROCESSED["fax"])); ?>" maxlength="25" style="width: 250px" />
+						<input type="text" id="fax" name="fax" value="<?php echo (isset($_POST["fax"]) ? html_encode($_POST["fax"]) : html_encode((isset($PROCESSED["fax"]) && $PROCESSED["fax"] ? $PROCESSED["fax"] : ""))); ?>" maxlength="25" style="width: 250px" />
 						</td>
 					</tr>
 					<tr>
 						<td></td>
 						<td><label for="email" class="form-required">Email</label></td>
 						<td>
-						<input type="text" id="email" name="email" value="<?php echo (isset($_POST["email"]) ? html_encode($_POST["email"]) : html_encode($PROCESSED["email"])); ?>" maxlength="150" style="width: 250px" />
+						<input type="text" id="email" name="email" value="<?php echo (isset($_POST["email"]) ? html_encode($_POST["email"]) : html_encode((isset($PROCESSED["email"]) && $PROCESSED["email"] ? $PROCESSED["email"] : ""))); ?>" maxlength="150" style="width: 250px" />
 						</td>
 					</tr>
 					<tr>
@@ -1129,15 +1078,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<td></td>
 						<td style="vertical-align: top"><label for="event_status" class="form-required">Status</label></td>
 						<td>
-						<input type="radio" name="event_status" id="status_approval" value="approval"<?php echo (((isset($PROCESSED["event_status"]) && ($PROCESSED["event_status"]) == "approval")) || ($_POST["event_status"] == "approval") ? " checked=\"checked\"" : ""); ?> onclick="showRejection('false'); showNotification('false');" /> <label for="status_approval">Pending &nbsp;&nbsp;</label><br />
-						<input type="radio" name="event_status" id="status_published" value="published"<?php echo (((isset($PROCESSED["event_status"]) && $PROCESSED["event_status"] == "published")) || ($_POST["event_status"] == "published")  ? " checked=\"checked\"" : ""); ?> onclick="showRejection('false'); showNotification('approved');" /> <label for="status_published">Approved</label><br />
-						<input type="radio" name="event_status" id="status_trash" value="trash"<?php echo (((isset($PROCESSED["event_status"]) && $PROCESSED["event_status"] == "trash")) || ($_POST["event_status"] == "trash") ? " checked=\"checked\"" : ""); ?> onclick="showRejection('true'); showNotification('rejected');" /> <label for="status_trash">Rejected&nbsp;&nbsp;</label><br /><br />
+						<input type="radio" name="event_status" id="status_approval" value="approval"<?php echo (((isset($PROCESSED["event_status"]) && ($PROCESSED["event_status"]) == "approval")) || (isset($_POST["event_status"]) && $_POST["event_status"] == "approval") ? " checked=\"checked\"" : ""); ?> onclick="showRejection('false'); showNotification('false');" /> <label for="status_approval">Pending &nbsp;&nbsp;</label><br />
+						<input type="radio" name="event_status" id="status_published" value="published"<?php echo (((isset($PROCESSED["event_status"]) && $PROCESSED["event_status"] == "published")) || (isset($_POST["event_status"]) && $_POST["event_status"] == "published")  ? " checked=\"checked\"" : ""); ?> onclick="showRejection('false'); showNotification('approved');" /> <label for="status_published">Approved</label><br />
+						<input type="radio" name="event_status" id="status_trash" value="trash"<?php echo (((isset($PROCESSED["event_status"]) && $PROCESSED["event_status"] == "trash")) || (isset($_POST["event_status"]) && $_POST["event_status"] == "trash") ? " checked=\"checked\"" : ""); ?> onclick="showRejection('true'); showNotification('rejected');" /> <label for="status_trash">Rejected&nbsp;&nbsp;</label><br /><br />
 						<div id="rejection_notice" name="rejection_notice" class="content-small" style="padding-top: 2px; display: inline">
 							<strong>Reason for Rejection:</strong> <br>
-							<textarea id="rejection_comments" name="rejection_comments" style="width: 95%; height: 60px" cols="50" rows="5" maxlength="250"><?php echo $PROCESSED['rejection_comments']; ?></textarea><br />
+							<textarea id="rejection_comments" name="rejection_comments" style="width: 95%; height: 60px" cols="50" rows="5" maxlength="250"><?php echo (isset($PROCESSED['rejection_comments']) && $PROCESSED['rejection_comments'] ? html_encode((isset($PROCESSED['rejection_comments']) && $PROCESSED['rejection_comments'] ? $PROCESSED['rejection_comments'] : "")) : ""); ?></textarea><br />
 						</div>
-						<div id="notifaction_notice" name="notifaction_notice" class="content-small" style="padding-top: 2px; display: inline">
-							<input type="checkbox" name="notifaction_send" <?php echo ((isset($PROCESSED["notifaction_send"])) ? "checked=\"checked\"" : ""); ?> /> <label for="notifaction_send">Send Emails</label><br />
+						<div id="notification_notice" name="notification_notice" class="content-small" style="padding-top: 2px; display: inline">
+							<input type="checkbox" name="notification_send" <?php echo ((isset($PROCESSED["notification_send"])) ? "checked=\"checked\"" : ""); ?> /> <label for="notification_send">Send Emails</label><br />
 							<br /><div id="message" name="message"></div><br />
 						</div>
 						<div id="approval_notice" name="approval_notice" class="content-small" style="padding-top: 2px; display: inline">
@@ -1150,10 +1099,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 							<tr>
 								<td style="width: 25%; text-align: left">
-									<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives'" />
+									<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives'" />
 								</td>
 								<td style="width: 75%; text-align: right; vertical-align: middle">
-									<input type="submit" class="button" value="Save" />
+									<input type="submit" class="btn btn-primary" value="Save" />
 								</td>
 							</tr>
 							</table>
@@ -1351,7 +1300,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<span class="content-heading">Editing Core Rotation</span>
 						<br />
 						<div class="display-notice" style="vertical-align: middle; padding: 15px;">
-							<strong>Please Note:</strong> Removing this core rotation will permanently remove it from the system. <input type="button" class="button" value="Remove Core" style="margin-left: 15px" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives?section=delete&id=<?php echo $EVENT_ID; ?>'" />
+							<strong>Please Note:</strong> Removing this core rotation will permanently remove it from the system. <input type="button" class="btn" value="Remove Core" style="margin-left: 15px" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives?section=delete&id=<?php echo $EVENT_ID; ?>'" />
 						</div>
 						<br />
 						<?php echo (($ERROR) ? display_error($ERRORSTR) : ""); ?>
@@ -1464,8 +1413,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						</tr>
 						<tr>
 							<td colspan="3" style="text-align: right">
-								<input type="button" value="Cancel" class="button" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" onClick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/clerk?ids=<?php echo $user_ids[0]; ?>'" />
-								<input type="submit" value="Save" class="button" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" />
+								<input type="button" value="Cancel" class="btn" onClick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/clerk?ids=<?php echo $user_ids[0]; ?>'" />
+								<input type="submit" value="Save" class="btn" />
 							</td>
 						</tr>
 						</table>

@@ -468,6 +468,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							    		$entry_ids_string .= ", ".$db->qstr($entry_id["lentry_id"]);
 							    	}
 							    }
+                                $objective_ids_string = "";
 								foreach ($required_objectives as $required_objective) {
 									$query = "SELECT `lentry_id`, `llocation_id` FROM `".CLERKSHIP_DATABASE."`.`logbook_entries`
 												WHERE `entry_active` = '1' 
@@ -505,18 +506,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 									
 									if ($recorded) {
 										if ($required_objective["required"] > $recorded) {
-											if ($objective_ids_string_string) {
-												$objective_ids_string .= ",".$db->qstr($required_objective["objective_id"]);
-											} else {
-												$objective_ids_string = $db->qstr($required_objective["objective_id"]);
-											}
+                                            $objective_ids_string .= (isset($objective_ids_string) && $objective_ids_string ? "," : "").$db->qstr($required_objective["objective_id"]);
 										}
 									} else {
-										if ($objective_ids_string) {
-											$objective_ids_string .= ",".$db->qstr($required_objective["objective_id"]);
-										} else {
-											$objective_ids_string = $db->qstr($required_objective["objective_id"]);
-										}
+                                        $objective_ids_string .= (isset($objective_ids_string) && $objective_ids_string ? "," : "").$db->qstr($required_objective["objective_id"]);
 									}
 								}
 							}

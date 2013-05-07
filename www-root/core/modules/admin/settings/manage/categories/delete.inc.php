@@ -30,7 +30,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif(!$ENTRADA_ACL->amIAllowed('categories', 'delete', false)) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/settings/".$MODULE."\\'', 15000)";
+	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/settings/manage/".$MODULE."\\'', 15000)";
 
 	$ERROR++;
 	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
@@ -89,7 +89,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 						<p>You are about to delete the category <strong><?php echo $category["category_name"]; ?></strong>. Please click the <strong>delete</strong> button below to remove it from the system.</p>
 						<p><strong>Please note:</strong> Any children of this category will be removed as well.</p>
 					</div>
-					<form id="category-form" action="<?php echo ENTRADA_URL."/admin/clerkship/categories"."?".replace_query(array("step" => "2")); ?>" method="post">
+					<form id="category-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/categories"."?".replace_query(array("step" => "2")); ?>" method="post">
 						<input type="checkbox" name="confirm" /> Please check this box to confirm you wish to remove the category and its children.
 					</form>
 					<?php
@@ -122,7 +122,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 					}
 					$query	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories`
 								WHERE `category_id` = ".$db->qstr($category["category_id"])."
-								AND `organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+								AND (`organisation_id` = ".$db->qstr($ORGANISATION_ID)." OR `organisation_id` IS NULL)
 								AND `category_status` != 'trash'";
 					$result	= $db->GetRow($query);
 					if ($result) {
@@ -140,7 +140,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 				}
 			}
 			if (!count($categories)) {
-				header("Location: ".ENTRADA_URL."/admin/clerkship/categories");
+				header("Location: ".ENTRADA_URL."/admin/settings/manage/categories?org=".$ORGANISATION_ID);
 				exit;
 			}
 		break;
@@ -218,7 +218,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 				echo display_notice();
 			}
 			if ($success_count) {
-				$url = ENTRADA_URL."/admin/clerkship/categories";
+				$url = ENTRADA_URL."/admin/settings/manage/categories?org=".$ORGANISATION_ID;
 				$SUCCESS++;
 				$SUCCESSSTR[] = "You have successfully deactivated ".$success_count." categories from the system.".($moved_count && $deleted_count ? " <br /><br />Additionally, ".$moved_count." of these categories' children were placed under a new parent and ".$deleted_count." of the categories' children were deactivated along with their parent objective." : ($moved_count && !$deleted_count ? " <br /><br />Additionally, ".$moved_count." of these categories' children were placed under a new parent." : ($deleted_count ? " <br /><br />Additionally, ".$deleted_count." of these categories' children were deactivated along with under a new parent." : "")))."<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 				$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
@@ -245,7 +245,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 								}
 							</script>";
 				?>
-				<form action="<?php echo ENTRADA_URL."/admin/clerkship/categories?".replace_query(array("action" => "delete", "step" => 2)); ?>" method="post">
+				<form action="<?php echo ENTRADA_URL."/admin/settings/manage/categories?".replace_query(array("action" => "delete", "step" => 2)); ?>" method="post">
 				<table class="tableList" cellspacing="0" summary="List of categories to be removed">
 				<colgroup>
 					<col class="modified" />
@@ -261,7 +261,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 					<tr>
 						<td>&nbsp;</td>
 						<td style="padding-top: 10px">
-							<input type="submit" class="button" value="Delete Selected" />
+							<input type="submit" class="btn btn-danger" value="Delete Selected" />
 						</td>
 					</tr>
 				</tfoot>

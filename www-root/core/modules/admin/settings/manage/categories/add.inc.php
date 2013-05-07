@@ -132,12 +132,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
                     $query = "SELECT MAX(`category_order`) FROM `".CLERKSHIP_DATABASE."`.`categories`
                                 WHERE `category_parent` = ".$db->qstr($PARENT_ID)."
                                 AND `category_status` != 'trash'
-                                AND (`organisation_id` = ".$db->qstr($ENTRADA_USER->GetActiveOrganisation())." OR `organisation_id` IS NULL)";
+                                AND (`organisation_id` = ".$db->qstr($ORGANISATION_ID)." OR `organisation_id` IS NULL)";
                     $count = $db->GetOne($query);
                     if (($count + 1) != $PROCESSED["category_order"]) {
                         $query = "SELECT `category_id` FROM `".CLERKSHIP_DATABASE."`.`categories`
                                     WHERE `category_parent` = ".$db->qstr($PARENT_ID)."
-                                    AND (`organisation_id` = ".$db->qstr($ENTRADA_USER->GetActiveOrganisation())." OR `organisation_id` IS NULL)
+                                    AND (`organisation_id` = ".$db->qstr($ORGANISATION_ID)." OR `organisation_id` IS NULL)
                                     AND `category_status` != 'trash'
                                     ORDER BY `category_order` ASC";
                         $categories = $db->GetAll($query);
@@ -161,7 +161,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 
                 if (!$ERROR) {
                     $PROCESSED["category_parent"] = $PARENT_ID;
-                    $PROCESSED["organisation_id"] = $ENTRADA_USER->GetActiveOrganisation();
+                    $PROCESSED["organisation_id"] = $ORGANISATION_ID;
                     $PROCESSED["updated_date"] = time();
                     $PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
@@ -184,11 +184,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
                 ?>
                 <script type="text/javascript">
                 function selectCategory(parent_id) {
-                    new Ajax.Updater('m_selectCategoryField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/categories-list.api.php', {parameters: {'pid': parent_id, 'organisation_id': <?php echo $ENTRADA_USER->GetActiveOrganisation(); ?>}});
+                    new Ajax.Updater('m_selectCategoryField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/categories-list.api.php', {parameters: {'pid': parent_id, 'organisation_id': <?php echo $ORGANISATION_ID; ?>}});
                     return;
                 }
                 function selectOrder(parent_id) {
-                    new Ajax.Updater('m_selectOrderField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/categories-list.api.php', {parameters: {'type': 'order', 'pid': parent_id, 'organisation_id': <?php echo $ENTRADA_USER->GetActiveOrganisation(); ?>}});
+                    new Ajax.Updater('m_selectOrderField_<?php echo $time; ?>', '<?php echo ENTRADA_URL; ?>/api/categories-list.api.php', {parameters: {'type': 'order', 'pid': parent_id, 'organisation_id': <?php echo $ORGANISATION_ID; ?>}});
                     return;
                 }
                 jQuery(function(){
@@ -196,7 +196,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
                     selectOrder(<?php echo (isset($PARENT_ID) && $PARENT_ID ? $PARENT_ID : "0"); ?>);
                 });
                 </script>
-                <form id="category-form" action="<?php echo ENTRADA_URL."/admin/clerkship/categories"."?".replace_query(array("action" => "add", "step" => 2, "mode" => "ajax")); ?>" method="post">
+                <form id="category-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/categories"."?".replace_query(array("action" => "add", "step" => 2, "mode" => "ajax")); ?>" method="post">
                     <h2>Clerkship<?php echo (isset($PROCESSED["ctype_name"]) && $PROCESSED["ctype_name"] ? " ".$PROCESSED["ctype_name"] : ""); ?> Category Details</h2>
                     <div style="display: none;" class="display-error"></div>
                     <div id="category-set-details-section">
@@ -226,7 +226,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
                             </span>
                         </div>
                         <table style="width:100%">
-                            <?php echo generate_calendars("category", "", true, true, ((isset($PROCESSED["category_start"])) ? $PROCESSED["category_start"] : 0), true, true, ((isset($PROCESSED["category_finish"])) ? $PROCESSED["category_finish"] : 0), false); ?>
+                            <?php echo generate_calendars("category", "", true, false, ((isset($PROCESSED["category_start"])) ? $PROCESSED["category_start"] : 0), true, false, ((isset($PROCESSED["category_finish"])) ? $PROCESSED["category_finish"] : 0), false); ?>
                         </table>
                         <br />
                         <div class="control-group row-fluid">
@@ -249,7 +249,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
         }
         exit;
     } else {
-        $BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/clerkship/categories?".replace_query(array("section" => "add")), "title" => "Adding Clerkship Category");
+        $BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/settings/manage/categories?".replace_query(array("section" => "add")), "title" => "Adding Clerkship Category");
 
         // Error Checking
         if ($STEP == 2) {
@@ -321,7 +321,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
                 if ($category_details["category_order"] != $PROCESSED["category_order"]) {
                     $query = "SELECT `category_id` FROM `".CLERKSHIP_DATABASE."`.`categories`
                                 WHERE `category_parent` = ".$db->qstr($PARENT_ID)."
-                                AND (`organisation_id` = ".$db->qstr($ENTRADA_USER->GetActiveOrganisation())." OR `organisation_id` IS NULL)
+                                AND (`organisation_id` = ".$db->qstr($ORGANISATION_ID)." OR `organisation_id` IS NULL)
                                 AND `category_status` != 'trash'
                                 ORDER BY a.`category_order` ASC";
                     $categories = $db->GetAll($query);
@@ -345,13 +345,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 
             if (!$ERROR) {
                 $PROCESSED["category_parent"] = 0;
-                $PROCESSED["organisation_id"] = $ENTRADA_USER->GetActiveOrganisation();
+                $PROCESSED["organisation_id"] = $ORGANISATION_ID;
                 $PROCESSED["updated_date"] = time();
                 $PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
                 if ($db->AutoExecute("`".CLERKSHIP_DATABASE."`.`categories`", $PROCESSED, "INSERT") || !($category_id = $db->Insert_Id())) {
                     if (!$ERROR) {
-                        $url = ENTRADA_URL . "/admin/clerkship/categories";
+                        $url = ENTRADA_URL . "/admin/settings/manage/categories?org=".$ORGANISATION_ID;
 
                         $SUCCESS++;
                         $SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["category_name"])."</strong> to the system.<br /><br />You will now be redirected to the categories index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
@@ -398,11 +398,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 
                 $HEAD[]	= "<script type=\"text/javascript\">
                             function selectCategory(parent_id) {
-                                new Ajax.Updater('selectCategoryField', '".ENTRADA_URL."/api/categories-list.api.php', {parameters: {'pid': parent_id, 'organisation_id': ".$ENTRADA_USER->GetActiveOrganisation()."}});
+                                new Ajax.Updater('selectCategoryField', '".ENTRADA_URL."/api/categories-list.api.php', {parameters: {'pid': parent_id, 'organisation_id': ".$ORGANISATION_ID."}});
                                 return;
                             }
                             function selectOrder(parent_id) {
-                                new Ajax.Updater('selectOrderField', '".ENTRADA_URL."/api/categories-list.api.php', {parameters: {'type': 'order', 'pid': parent_id, 'organisation_id': ".$ENTRADA_USER->GetActiveOrganisation()."}});
+                                new Ajax.Updater('selectOrderField', '".ENTRADA_URL."/api/categories-list.api.php', {parameters: {'type': 'order', 'pid': parent_id, 'organisation_id': ".$ORGANISATION_ID."}});
                                 return;
                             }
                             </script>";
@@ -419,7 +419,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
                     });
                 </script>
                 <h1>Add Clerkship Category</h1>
-                <form id="category-form" action="<?php echo ENTRADA_URL."/admin/clerkship/categories"."?".replace_query(array("action" => "add", "step" => 2)); ?>" method="post">
+                <form id="category-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/categories"."?".replace_query(array("action" => "add", "step" => 2)); ?>" method="post">
                 <h2 class="collapsable" title="Clerkship Category Details Section">Category Details</h2>
                 <div id="category-set-details-section">
                     <div class="control-group row-fluid">
@@ -451,7 +451,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
                             <div id="selectOrderField"></div>
                         </span>
                     </div>
-                    <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/categories'" />
+                    <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/categories'" />
                     <input type="submit" class="btn btn-primary pull-right" value="<?php echo $translate->_("global_button_save"); ?>" />        
                 </div>
                 </form>
@@ -461,7 +461,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
                     var EDITABLE = true;
                 </script>
                 <?php $HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/clerkship_categories.js?release=".html_encode(APPLICATION_VERSION)."\"></script>"; ?>
-
                 <div>
                 <style>
                         .category-title{

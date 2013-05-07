@@ -75,31 +75,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				
 				switch($STEP) {
 					case 2 :
-						$query = "DELETE FROM `".CLERKSHIP_DATABASE."`.`events` WHERE `event_id`=".$db->qstr($EVENT_ID);
+						$query = "UPDATE `".CLERKSHIP_DATABASE."`.`events` SET `event_status` = 'trash' WHERE `event_id`=".$db->qstr($EVENT_ID);
 						if ($db->Execute($query)) {
-							$query = "DELETE FROM `".CLERKSHIP_DATABASE."`.`electives` WHERE `event_id`=".$db->qstr($EVENT_ID);
-							if ($db->Execute($query)) {
-								$query = "DELETE FROM `".CLERKSHIP_DATABASE."`.`event_contacts` WHERE `event_id`=".$db->qstr($EVENT_ID);
-								if ($db->Execute($query)) {
-									$url = ENTRADA_URL."/clerkship/electives";
-									
-									$msg	= " You will now be redirected to the clerkship index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-									
-									$SUCCESS++;
-									$SUCCESSSTR[]  	= "You have successfully cancelled your request for this <strong>".html_encode($PROCESSED["geo_location"])."</strong> elective in the system.<br /><br />".$msg;
-									$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-									
-									application_log("success", "New elective [".$EVENT["event_title"]."] cancelled from the system.");
-									
-									echo display_success();
-								}
-							}
+                            $url = ENTRADA_URL."/clerkship/electives";
+
+                            $msg	= " You will now be redirected to the clerkship index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+
+                            $SUCCESS++;
+                            $SUCCESSSTR[]  	= "You have successfully cancelled your request for this <strong>".html_encode($PROCESSED["geo_location"])."</strong> elective in the system.<br /><br />".$msg;
+                            $ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+
+                            application_log("success", "New elective [".$EVENT["event_title"]."] cancelled from the system.");
+
+                            echo display_success();
 						}
 						break;
 					default:
 					?>
 					<div class="display-notice" style="vertical-align: middle; padding: 15px;">
-						<strong>Confirmation:</strong> Are you sure you want to cancel this request? <input type="button" class="button" value="Confirm" style="margin-left: 15px" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship/electives?section=delete&step=2&id=<?php echo $EVENT_ID; ?>'" />
+						<strong>Confirmation:</strong> Are you sure you want to cancel this request? <input type="button" class="btn btn-danger" value="Confirm" style="margin-left: 15px" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship/electives?section=delete&step=2&id=<?php echo $EVENT_ID; ?>'" />
 					</div>
 					<?php
 					$student_name	= get_account_data("firstlast", $event_info["etype_id"]);
@@ -113,7 +107,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<tfoot>
 							<tr>
 								<td style="width: 25%; text-align: left">
-									<input type="button" class="button" value="Back" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship/electives?section=edit&id=<?php echo $EVENT_ID; ?>/'" />
+									<input type="button" class="btn" value="Back" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship/electives?section=edit&id=<?php echo $EVENT_ID; ?>/'" />
 								</td>
 								<td style="width: 75%; text-align: right">&nbsp;</td>
 							</tr>

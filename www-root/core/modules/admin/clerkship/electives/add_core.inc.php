@@ -137,60 +137,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 				if (!$ERROR) {
 					$PROCESSED["modified_last"]	= time();
 					$PROCESSED["modified_by"] = $ENTRADA_USER->getID();
-
-					switch ($_POST["add_type"]) {
-						case "single" :	// Adds all selected users to a single event.
-							if (!$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`events`", $PROCESSED, "INSERT")) {
-								$ERROR++;
-								$ERRORSTR[]	= "Failed insert this event into the database. Please contact a system administrator if this problem persists.";
-								application_log("error", "Error while inserting clerkship event into database. Database server said: ".$db->ErrorMsg());
-								$STEP		= 1;
-							} else {
-								$EVENT_ID = $db->Insert_Id();
-								if ($EVENT_ID) {
-									foreach($_POST["ids"] as $user_id) {
-										if (!$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`event_contacts`", array("event_id" => $EVENT_ID, "econtact_type" => "student", "etype_id" => $user_id), "INSERT")) {
-											$ERROR++;
-											$ERRORSTR[]	= "Failed to assign this event to user ID ".$user_id.". Please contact a system administrator if this problem persists.";
-											application_log("error", "Error while inserting clerkship event contact into database. Database server said: ".$db->ErrorMsg());
-											$STEP		= 1;
-										}
-									}
-								} else {
-									$ERROR++;
-									$ERRORSTR[]	= "Failed insert this event into the database. Please contact a system administrator if this problem persists.";
-									application_log("error", "Error while inserting clerkship event into database. Database server said: ".$db->ErrorMsg());
-									$STEP		= 1;
-								}
-							}
-						break;
-						case "multiple" :	// Adds a new event for every user.
-						default :
-							foreach($_POST["ids"] as $user_id) {
-								if (!$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`events`", $PROCESSED, "INSERT")) {
-									$ERROR++;
-									$ERRORSTR[]	= "Failed insert this event into the database. Please contact a system administrator if this problem persists.";
-									application_log("error", "Error while inserting clerkship event into database. Database server said: ".$db->ErrorMsg());
-									$STEP		= 1;
-								} else {
-									$EVENT_ID = $db->Insert_Id();
-									if ($EVENT_ID) {
-										if (!$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`event_contacts`", array("event_id" => $EVENT_ID, "econtact_type" => "student", "etype_id" => $user_id), "INSERT")) {
-											$ERROR++;
-											$ERRORSTR[]	= "Failed to assign this event to user ID ".$user_id.". Please contact a system administrator if this problem persists.";
-											application_log("error", "Error while inserting clerkship event contact into database. Database server said: ".$db->ErrorMsg());
-											$STEP		= 1;
-										}
-									} else {
-										$ERROR++;
-										$ERRORSTR[]	= "Failed insert this event into the database. Please contact a system administrator if this problem persists.";
-										application_log("error", "Error while inserting clerkship event into database. Database server said: ".$db->ErrorMsg());
-										$STEP		= 1;
-									}
-								}
-							}
-						break;
-					}
+                    foreach($_POST["ids"] as $user_id) {
+                        if (!$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`events`", $PROCESSED, "INSERT")) {
+                            $ERROR++;
+                            $ERRORSTR[]	= "Failed insert this event into the database. Please contact a system administrator if this problem persists.";
+                            application_log("error", "Error while inserting clerkship event into database. Database server said: ".$db->ErrorMsg());
+                            $STEP		= 1;
+                        } else {
+                            $EVENT_ID = $db->Insert_Id();
+                            if ($EVENT_ID) {
+                                if (!$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`event_contacts`", array("event_id" => $EVENT_ID, "econtact_type" => "student", "etype_id" => $user_id), "INSERT")) {
+                                    $ERROR++;
+                                    $ERRORSTR[]	= "Failed to assign this event to user ID ".$user_id.". Please contact a system administrator if this problem persists.";
+                                    application_log("error", "Error while inserting clerkship event contact into database. Database server said: ".$db->ErrorMsg());
+                                    $STEP		= 1;
+                                }
+                            } else {
+                                $ERROR++;
+                                $ERRORSTR[]	= "Failed insert this event into the database. Please contact a system administrator if this problem persists.";
+                                application_log("error", "Error while inserting clerkship event into database. Database server said: ".$db->ErrorMsg());
+                                $STEP		= 1;
+                            }
+                        }
+                    }
 				} else {
 					$STEP = 1;
 				}
@@ -304,7 +273,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								$results = $db->GetAll($query);
 								if ($results) {
 									foreach($results as $result) {
-										echo "<option value=\"".(int) $result["rotation_id"]."\"".(($_POST["rotation_id"] == $result["rotation_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["rotation_title"])."</option>\n";
+										echo "<option value=\"".(int) $result["rotation_id"]."\"".((isset($_POST["rotation_id"]) && $_POST["rotation_id"] == $result["rotation_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["rotation_title"])."</option>\n";
 									}
 								}
 								?>
@@ -341,7 +310,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 											$region_name[] = $region_result["country"];
 										}
 
-										echo "<option value=\"".(int) $region_result["region_id"]."\"".(($_POST["region_id"] == $region_result["region_id"]) ? " selected=\"selected\"" : "").">".html_encode(implode(", ", $region_name))."</option>\n";
+										echo "<option value=\"".(int) $region_result["region_id"]."\"".((isset($_POST["region_id"]) && $_POST["region_id"] == $region_result["region_id"]) ? " selected=\"selected\"" : "").">".html_encode(implode(", ", $region_name))."</option>\n";
 									}
 								}
 								?>
@@ -357,7 +326,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<tr>
 							<td style="vertical-align: top" colspan="2"><label for="category_id" class="form-required">Rotation Category</label></td>
 							<td style="vertical-align: top">
-								<input type="text" id="event_title" name="event_title" style="width: 75%; border: 0; margin: 0; padding: 0; font-weight: 700" readonly="readonly" value="<?php echo html_decode($PROCESSED["event_title"]) ?>" /><div style="display: none;" id="hidden_event_title"><?php echo html_decode($PROCESSED["event_title"]) ?></div>
+								<input type="text" id="event_title" name="event_title" style="width: 75%; border: 0; margin: 0; padding: 0; font-weight: 700" readonly="readonly" value="<?php echo html_decode((isset($PROCESSED["event_title"]) && $PROCESSED["event_title"] ? $PROCESSED["event_title"] : "")) ?>" /><div style="display: none;" id="hidden_event_title"><?php echo html_decode((isset($PROCESSED["event_title"]) && $PROCESSED["event_title"] ? $PROCESSED["event_title"] : "")) ?></div>
 								<div id="selectCategoryField"></div>
 							</td>
 						</tr>
@@ -390,7 +359,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								<select id="event_status" name="event_status" style="width: 150px">
 									<?php
 									foreach($CLERKSHIP_FIELD_STATUS as $key => $status) {
-										echo (($status["visible"]) ? "<option value=\"".$key."\"".(($_POST["event_status"] == $key) ? " SELECTED" : "").">".$status["name"]."</option>\n" : "");
+										echo (($status["visible"]) ? "<option value=\"".$key."\"".((isset($_POST["event_status"]) && $_POST["event_status"] == $key) ? " selected=\"selected\"" : "").">".$status["name"]."</option>\n" : "");
 									}
 									?>
 								</select>
@@ -413,8 +382,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						</tr>
 						<tr>
 							<td colspan="3" style="text-align: right">
-								<input type="button" value="Cancel" class="button" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" onClick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/clerk?ids=<?php echo $user_ids[0] ?>'" />
-								<input type="submit" value="Save" class="button" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif');" />
+								<input type="button" value="Cancel" class="btn" onClick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/clerk?ids=<?php echo $user_ids[0] ?>'" />
+								<input type="submit" value="Save" class="btn btn-primary" />
 							</td>
 						</tr>
 					</tbody>

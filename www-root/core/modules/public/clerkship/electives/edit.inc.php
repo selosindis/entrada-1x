@@ -42,17 +42,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 	if ($EVENT_ID) {
 		$nameArray 	= clerkship_student_name($EVENT_ID);
 		
-		$query		= "	SELECT *
+		$query		= "SELECT *
 						FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`electives`, `".CLERKSHIP_DATABASE."`.`event_contacts`
 						WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` = ".$db->qstr($EVENT_ID)."
 						AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
 						AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`
-						AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
+						AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($ENTRADA_USER->getID());
 		$event_info	= $db->GetRow($query);
 		if ($event_info && $event_info["event_status"] != "published") {
 			$query = "	SELECT `countries_id`, `prov_state`, `region_name`
 						FROM `".CLERKSHIP_DATABASE."`.`regions`
-						WHERE `region_id` = ".$event_info["region_id"];
+						WHERE `region_id` = ".$db->qstr($event_info["region_id"]);
 			$event_info["prov_state"] 	= "";
 			$event_info["countries_id"] = 1;
 			$event_info["city"] 		= "";
@@ -84,7 +84,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					$header_output	= "<h1>Editing Elective</h1>\n";
 				break;
 			}
-			$student_name = get_account_data("firstlast", $event_info["etype_id"]);
+			$student_name = get_account_data("firstlast", $ENTRADA_USER->getID());
 			
 			echo $header_output;
 				
@@ -147,36 +147,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					}
 					
 					/**
-					 * Required field "start_date" / Start Date .
+					 * Required field "event_start" / Start Date .
 					 */
-					if ((isset($_POST["start_date"])) && $_POST["start_date"] > date("Y-m-d")) {
-						$startCleaned	= html_encode($_POST["start_date"]);
-						$explodedDate 	= explode("-", $startCleaned);
-						$year 			= $explodedDate[0];
-						$month 			= $explodedDate[1];
-						$day 			= $explodedDate[2];
-						$start_stamp 	= mktime(9,0,0,$month,$day,$year);
-						
-						$PROCESSED["start_date"] 	= $start_stamp;
-						$PROCESSED["end_date"] 		= strtotime($startCleaned . "+". clean_input($_POST["event_finish_name"], array("int")) . " weeks");
-						$end_stamp 					= $PROCESSED["end_date"];
-						
-						$dateCheckQuery = "SELECT `event_title`, `event_start`, `event_finish` 
-						FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`electives`, `".CLERKSHIP_DATABASE."`.`event_contacts`
-						WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` != ".$db->qstr($EVENT_ID)." 
-						AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
-						AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`
-						AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($ENTRADA_USER->getID())." 
-						AND `".CLERKSHIP_DATABASE."`.`events`.`event_type` = \"elective\"
-						AND `".CLERKSHIP_DATABASE."`.`events`.`event_status` != \"trash\"
-						AND ((".$db->qstr($start_stamp)." > `".CLERKSHIP_DATABASE."`.`events`.`event_start` 
-						AND ".$db->qstr($start_stamp)." < `".CLERKSHIP_DATABASE."`.`events`.`event_finish`)
-						OR (".$db->qstr($end_stamp)." > `".CLERKSHIP_DATABASE."`.`events`.`event_start` 
-						AND ".$db->qstr($end_stamp)." < `".CLERKSHIP_DATABASE."`.`events`.`event_finish`)
-						OR (`".CLERKSHIP_DATABASE."`.`events`.`event_start` > ".$db->qstr($start_stamp)." 
-						AND `".CLERKSHIP_DATABASE."`.`events`.`event_finish` < ".$db->qstr($end_stamp)."))";
-						
+                    $event_date = validate_calendar("Elective", "event", false);
+                    if ((isset($event_date)) && ((int) $event_date)) {
+                        $PROCESSED["event_start"]   = (int) $event_date;
+                        $PROCESSED["event_finish"]  = $PROCESSED["event_start"] + (clean_input($_POST["event_finish_name"], array("int")) * ONE_WEEK);
+                        $start_stamp                = $PROCESSED["event_start"];
+                        $end_stamp                  = $PROCESSED["event_finish"];
+						$dateCheckQuery = "SELECT `event_title`, `event_start`, `event_finish`
+											FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`electives`, `".CLERKSHIP_DATABASE."`.`event_contacts`
+											WHERE `".CLERKSHIP_DATABASE."`.`events`.`event_id` != ".$db->qstr($EVENT_ID)."
+											AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
+											AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`
+											AND `".CLERKSHIP_DATABASE."`.`event_contacts`.`etype_id` = ".$db->qstr($student_id)."
+											AND `".CLERKSHIP_DATABASE."`.`events`.`event_type` = \"elective\"
+											AND `".CLERKSHIP_DATABASE."`.`events`.`event_status` != \"trash\"
+											AND ((".$db->qstr($start_stamp)." >= `".CLERKSHIP_DATABASE."`.`events`.`event_start`
+											AND ".$db->qstr($start_stamp)." <= `".CLERKSHIP_DATABASE."`.`events`.`event_finish`)
+											OR (".$db->qstr($end_stamp)." >= `".CLERKSHIP_DATABASE."`.`events`.`event_start`
+											AND ".$db->qstr($end_stamp)." <= `".CLERKSHIP_DATABASE."`.`events`.`event_finish`)
+											OR (`".CLERKSHIP_DATABASE."`.`events`.`event_start` >= ".$db->qstr($start_stamp)."
+											AND `".CLERKSHIP_DATABASE."`.`events`.`event_finish` <= ".$db->qstr($end_stamp)."))";
+
+
 						if ($dateCheck	= $db->GetAll($dateCheckQuery))  {
+                            $dateError = "";
 							$dateErrorCtr = 0;
 							foreach ($dateCheck as $dateValue) {
 								$dateErrorCtr++;
@@ -192,6 +188,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							$weekTotals = clerkship_get_elective_weeks($ENTRADA_USER->getID(), $EVENT_ID);
 							$totalWeeks = $weekTotals["approval"] + $weekTotals["approved"];
 							
+							$temp_grad_year	= get_account_data("grad_year", $ENTRADA_USER->getID());
+							if ($temp_grad_year == 2014) {
+								$CLERKSHIP_REQUIRED_WEEKS = 18;
+							} elseif ($temp_grad_year == 2015) {
+                                $CLERKSHIP_REQUIRED_WEEKS = 15;
+                            }
 							if ($totalWeeks + clean_input($_POST["event_finish_name"], array("int")) > $CLERKSHIP_REQUIRED_WEEKS) {
 								$ERROR++;
 								$ERRORSTR[] = "The <strong>Weeks</strong> field contains too large a number as this combined with the other electives you have in the system
@@ -199,22 +201,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 								contact the Undergraduate office if you need help resolving this issue.";
 							}
 						}
-					} else {
-						$ERROR++;
-						$ERRORSTR[] = "The <strong>Start Date</strong> field is required and must be greater than today.";
-						
-						if (isset($_POST["start_date"]) && $_POST["start_date"] != '') {
-							$startCleaned	= html_encode($_POST["start_date"]);
-							$explodedDate 	= explode("-", $startCleaned);
-							$year 			= $explodedDate[0];
-							$month 			= $explodedDate[1];
-							$day 			= $explodedDate[2];
-							$start_stamp 	= mktime(0,0,0,$month,$day,$year);
-							
-							$PROCESSED["start_date"] = $start_stamp;
-							$PROCESSED["end_date"] = strtotime($startCleaned . "+". clean_input($_POST["event_finish_name"], array("int")) . " weeks");
-						}
-					}
+                    }
 					
 					/**
 					 * Required field "schools_id" / Host School.
@@ -307,11 +294,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					 */
 					if ((isset($_POST["prov_state"])) && ($prov_state = clean_input($_POST["prov_state"], array("notags", "trim")))) {
 						$PROCESSED["prov_state"] = htmlentities($prov_state);
-						if (strlen($prov_state) > 100)
-						{
+						if (strlen($prov_state) > 100) {
 							$ERROR++;
 							$ERRORSTR[] = "The <strong>Prov / State</strong> can only contain a maximum of 100 characters.";
-						}
+						} else {
+                            $query = "SELECT `province_id` FROM `global_lu_provinces` WHERE `province` = ".$db->qstr($PROCESSED["prov_state"]);
+                            $province_id = $db->GetOne($query);
+                            if ($province_id) {
+                                $PROCESSED["province_id"] = $province_id;
+                            } else {
+                                $PROCESSED["province_id"] = 0;
+                            }
+                        }
 					} elseif($province_required) {
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Prov / State</strong> field is required.";
@@ -369,34 +363,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						$EVENT["category_id"]				= $PROCESSED["category_id"];
 						$query = "	SELECT `region_id` FROM `".CLERKSHIP_DATABASE."`.`regions`
 									WHERE `countries_id` = ".$db->qstr($PROCESSED["countries_id"])."
-									AND `prov_state` = ".$db->qstr($PROCESSED["prov_state"])."
+                                    AND ".($PROCESSED["province_id"] ? "`province_id` = ".$db->qstr($PROCESSED["province_id"]) : "`prov_state` = ".$db->qstr($PROCESSED["prov_state"]))."
 									AND `region_name` LIKE ".$db->qstr($PROCESSED["city"])."
 									AND `region_active` = 1";
 						$region_id = $db->GetOne($query);
 						
 						if ($region_id) {
-							$ELECTIVE["region_id"] = clean_input($region_id, "int");
+							$PROCESSED["region_id"] = clean_input($region_id, "int");
 							$EVENT["region_id"] = clean_input($region_id, "int");
 						} else {
 							$REGION = array();
 							$REGION["countries_id"] = $PROCESSED["countries_id"];
 							$REGION["prov_state"] = $PROCESSED["prov_state"];
+							$REGION["province_id"] = $PROCESSED["province_id"];
 							$REGION["region_name"] = $PROCESSED["city"];
 							if ($db->AutoExecute(CLERKSHIP_DATABASE.".regions", $REGION, "INSERT") && ( $region_id = $db->Insert_Id())) {
-								$ELECTIVE["region_id"] = clean_input($region_id, "int");
+								$PROCESSED["region_id"] = clean_input($region_id, "int");
 								$EVENT["region_id"] = clean_input($region_id, "int");
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "A region could not be added to the system for this elective. The system administrator was informed of this error; please try again later.";
 
 								application_log("error", "There was an error inserting a new region for a newly created elective. Database said: ".$db->ErrorMsg());
-								$ELECTIVE["region_id"] = 0;
+								$PROCESSED["region_id"] = 0;
 								$EVENT["region_id"] = 0;
 							}
 						}
 						$EVENT["event_title"]				= clerkship_categories_title($PROCESSED["department_id"], $levels = 3);
-						$EVENT["event_start"]				= $PROCESSED["start_date"];
-						$EVENT["event_finish"]				= $PROCESSED["end_date"];
+						$EVENT["event_start"]				= $PROCESSED["event_start"];
+						$EVENT["event_finish"]				= $PROCESSED["event_finish"];
 						$EVENT["event_type"]				= "elective";
 						$EVENT["event_status"]				= "approval";
 						$EVENT["modified_last"]				= $PROCESSED["updated_date"];
@@ -406,27 +401,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							$url	= ENTRADA_URL."/clerkship";
 							$msg	= "You will now be redirected to the clerkship index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 							
-							$ELECTIVE["geo_location"]			= $PROCESSED["geo_location"];
-							$ELECTIVE["department_id"]			= $PROCESSED["department_id"];
-							$ELECTIVE["discipline_id"]			= $PROCESSED["discipline_id"];
-							$ELECTIVE["sub_discipline"]			= $PROCESSED["sub_discipline"];
-							$ELECTIVE["schools_id"]				= $PROCESSED["schools_id"];
-							$ELECTIVE["other_medical_school"]	= $PROCESSED["other_medical_school"];
-							$ELECTIVE["objective"]				= $PROCESSED["objective"];
-							$ELECTIVE["preceptor_prefix"]		= $PROCESSED["preceptor_prefix"];
-							$ELECTIVE["preceptor_first_name"]	= $PROCESSED["preceptor_first_name"];
-							$ELECTIVE["preceptor_last_name"]	= $PROCESSED["preceptor_last_name"];
-							$ELECTIVE["objective"]				= $PROCESSED["objective"];
-							$ELECTIVE["address"]				= $PROCESSED["address"];
-							$ELECTIVE["countries_id"]			= $PROCESSED["countries_id"];
-							$ELECTIVE["city"]					= $PROCESSED["city"];
-							$ELECTIVE["prov_state"]				= $PROCESSED["prov_state"];
-							$ELECTIVE["postal_zip_code"]		= $PROCESSED["postal_zip_code"];
-							$ELECTIVE["phone"]					= $PROCESSED["phone"];
-							$ELECTIVE["fax"]					= $PROCESSED["fax"];
-							$ELECTIVE["email"]					= $PROCESSED["email"];
-							$ELECTIVE["updated_date"]			= $PROCESSED["updated_date"];
-							$ELECTIVE["updated_by"]				= $PROCESSED["updated_by"];
+							$ELECTIVE = $PROCESSED;
 							
 							if ($db->AutoExecute(CLERKSHIP_DATABASE.".electives", $ELECTIVE, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
 								$SUCCESS++;
@@ -452,6 +427,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				break;
 				case 1 :
 				default :
+					$PROCESSED = $event_info;
 					continue;
 				break;
 			}
@@ -473,28 +449,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				break;
 				case 1 :
 				default :
-					$PROCESSED["geo_location"]			= $event_info["geo_location"];
-					$PROCESSED["category_id"]			= $event_info["category_id"];
-					$PROCESSED["department_id"]			= $event_info["department_id"];					
-					$PROCESSED["discipline_id"]			= $event_info["discipline_id"];
-					$PROCESSED["sub_discipline"]		= $event_info["sub_discipline"];
-					$PROCESSED["schools_id"]			= $event_info["schools_id"];
-					$PROCESSED["other_medical_school"]	= $event_info["other_medical_school"];
-					$PROCESSED["objective"]				= $event_info["objective"];
-					$PROCESSED["preceptor_prefix"]		= $event_info["preceptor_prefix"];
-					$PROCESSED["preceptor_first_name"] 	= $event_info["preceptor_first_name"];
-					$PROCESSED["preceptor_last_name"] 	= $event_info["preceptor_last_name"];
-					$PROCESSED["address"] 				= $event_info["address"];
-					$PROCESSED["countries_id"] 			= $event_info["countries_id"];
-					$PROCESSED["city"] 					= $event_info["city"];
-					$PROCESSED["prov_state"] 			= $event_info["prov_state"];
-					$PROCESSED["postal_zip_code"] 		= $event_info["postal_zip_code"];
-					$PROCESSED["fax"] 					= $event_info["fax"];
-					$PROCESSED["phone"]  				= $event_info["phone"];
-					$PROCESSED["email"] 				= $event_info["email"];
-					$PROCESSED["start_date"] 			= $event_info["event_start"];
-					$PROCESSED["end_date"] 				= $event_info["event_finish"];
-					$PROCESSED["event_status"]			= $event_info["event_status"];
 					
 					$HEAD[] 		= "<link href=\"".ENTRADA_URL."/javascript/calendar/css/xc2_default.css\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 					$HEAD[] 		= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/config/xc2_default.js\"></script>\n";
@@ -518,7 +472,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					}
 					
 					function changeDurationMessage() {
-						var value = $('start_date').value;
+						var value = $('event_start').value;
 						newDate = toJSDate(value);
 
 						switch (\$F('event_finish')) {
@@ -577,7 +531,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						newDate.setDate(newDate.getDate()+days);
 						newDate = toCalendarDate(newDate);
 						$('auto_end_date').innerHTML = '&nbsp;&nbsp;&nbsp;Ending in '+\$F('event_finish')+weekText+' on ' +newDate;
-						$('start_date').value = date;
+						$('event_start').value = date;
 					}
 					
 					function AjaxFunction(cat_id) {	
@@ -622,13 +576,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					}
 					</script>\n";
 		
-					$ONLOAD[]		= "showOther()";
-					$ONLOAD[]		= "AjaxFunction(\$F($('editElectiveForm')['category_id']))";
-					$ONLOAD[]		= "provStateFunction(\$F($('editElectiveForm')['countries_id']))";
-					$ONLOAD[]		= "setMaxLength()";
-					$ONLOAD[]		= "changeDurationMessage()";
+					$ONLOAD[] = "showOther()";
+					$ONLOAD[] = "AjaxFunction(\$F($('editElectiveForm')['category_id']))";
+					$ONLOAD[] = "provStateFunction(\$F($('editElectiveForm')['countries_id']))";
+					$ONLOAD[] = "setMaxLength()";
+					$ONLOAD[] = "changeDurationMessage()";
 					
-					$LASTUPDATED	= $result["updated_date"];
+					$LASTUPDATED = $event_info["updated_date"];
 					
 					if ($ERROR) {
 						echo display_error();
@@ -637,10 +591,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					if ($NOTICE) {
 						echo display_notice();
 					}
-					if (!$resubmit) {
+					if (!isset($resubmit) || !$resubmit) {
 					?>
 					<div class="display-notice" style="vertical-align: middle; padding: 15px;">
-						<strong>Please Note:</strong> This elective has not yet been reviewed, as such you can cancel this request. <input type="button" class="button" value="Cancel Request" style="margin-left: 15px" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship/electives?section=delete&id=<?php echo $EVENT_ID; ?>'" />
+						<strong>Please Note:</strong> This elective has not yet been reviewed, as such you can cancel this request. <input type="button" class="btn btn-danger" value="Cancel Request" style="margin-left: 15px" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship/electives?section=delete&id=<?php echo $EVENT_ID; ?>'" />
 					</div>
 					<?php
 					}
@@ -658,14 +612,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 								<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 								<tr>
 									<td style="width: 25%; text-align: left">
-										<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship'" />
+										<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship'" />
 									</td>
 									<td style="width: 75%; text-align: right">
 									<?php
-									if (!$resubmit) {
-										echo '<input type="submit" class="button" value="Save" />';
+									if (!isset($resubmit) || !$resubmit) {
+										echo '<input type="submit" class="btn btn-primary" value="Save" />';
 									} else if ($resubmit) {
-										echo '<input type="submit" class="button" value="Resubmit" />';
+										echo '<input type="submit" class="btn btn-primary" value="Resubmit" />';
 									} else {
 										echo '&nbsp;';
 									}
@@ -795,14 +749,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<td colspan="3">&nbsp;</td>
 					</tr>
 					<?php 
-						echo generate_calendar("start", "Start Date", true, ((isset($PROCESSED["start_date"])) ? $PROCESSED["start_date"] : 0), false, false, false);
+						echo generate_calendar("event", "Start Date", true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0), false, false, false);
 					?>
 					<tr>
 						<td></td>
 						<td style="vertical-align: top"><label for="event_finish" class="form-required">Elective Weeks</label></td>
 						<td style="vertical-align: top">
 						<?php
-							$duration = ceil(($PROCESSED["end_date"] - $PROCESSED["start_date"]) / 604800);
+							$duration = ceil((isset($PROCESSED["event_finish"]) && $PROCESSED["event_finish"] && isset($PROCESSED["event_start"]) && $PROCESSED["event_start"] ? (($PROCESSED["event_finish"] - $PROCESSED["event_start"]) / 604800) : 0));
 							echo "<select id=\"event_finish\" name=\"event_finish_name\" style=\"width: 10%\" onchange=\"changeDurationMessage();\">\n";
 							if ($event_info["event_status"] == "published") {
 								$start = 1;
@@ -873,18 +827,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<td><label for="countries_id" class="form-required">Country</label></td>
 						<td>
 							<?php
-						$countries = fetch_countries();
-						if ((is_array($countries)) && (count($countries) > 0)) {
-									echo "<select id=\"countries_id\" name=\"countries_id\" style=\"width: 256px\" onchange=\"provStateFunction(this.value);\">\n";
-									echo "<option value=\"0\"".((!isset($PROCESSED["countries_id"])) ? " selected=\"selected\"" : "").">-- Select Country --</option>\n";
-									foreach ($countries as $value) {
-										echo "<option value=\"".(int) $value["countries_id"]."\"".(($PROCESSED["countries_id"] == $value["countries_id"]) ? " selected=\"selected\"" : "").">".html_encode($value["country"])."</option>\n";
-									}
-									echo "</select>\n";
-									} else {
-										echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
-										echo "Country information not currently available.\n";
-									}
+                            $countries = fetch_countries();
+                            if ((is_array($countries)) && (count($countries) > 0)) {
+                                echo "<select id=\"countries_id\" name=\"countries_id\" style=\"width: 256px\" onchange=\"provStateFunction(this.value);\">\n";
+                                echo "<option value=\"0\"".((!isset($PROCESSED["countries_id"])) ? " selected=\"selected\"" : "").">-- Select Country --</option>\n";
+                                foreach ($countries as $value) {
+                                    echo "<option value=\"".(int) $value["countries_id"]."\"".(($PROCESSED["countries_id"] == $value["countries_id"]) ? " selected=\"selected\"" : "").">".html_encode($value["country"])."</option>\n";
+                                }
+                                echo "</select>\n";
+                            } else {
+                                echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
+                                echo "Country information not currently available.\n";
+                            }
 							?>
 						</td>
 					</tr>

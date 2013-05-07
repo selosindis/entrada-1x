@@ -82,12 +82,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 								<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 								<tr>
 									<td style="width: 25%; text-align: left">
-										<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship?section=clerk&ids=<?php echo $PROCESSED["proxy_id"]; ?>'" />
+										<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship?section=clerk&ids=<?php echo $PROCESSED["proxy_id"]; ?>'" />
 									</td>
 									<td style="width: 75%; text-align: right; vertical-align: middle">
 										<form action="<?php echo ENTRADA_URL ?>/clerkship/logbook?section=flag&<?php echo replace_query(array ("step" => 2)); ?>" method="POST">
 											<input type="hidden" value="<?php echo $RECORD_ID; ?>" name="entry_id" />
-											<input type="submit" class="button" value="Confirm Deactivate" />
+											<input type="submit" class="btn" value="Confirm Deactivate" />
 										</form>
 									</td>
 								</tr>

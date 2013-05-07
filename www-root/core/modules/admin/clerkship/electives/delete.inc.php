@@ -68,31 +68,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 			
 			switch($STEP) {
 				case 2 :
-					$query = "DELETE FROM `".CLERKSHIP_DATABASE."`.`events` WHERE `event_id`=".$db->qstr($EVENT_ID);
+					$query = "UPDATE `".CLERKSHIP_DATABASE."`.`events` SET `event_status` = 'trash' WHERE `event_id`=".$db->qstr($EVENT_ID);
 					if($db->Execute($query)) {
-						$query = "DELETE FROM `".CLERKSHIP_DATABASE."`.`electives` WHERE `event_id`=".$db->qstr($EVENT_ID);
-						if($db->Execute($query)) {
-							$query = "DELETE FROM `".CLERKSHIP_DATABASE."`.`event_contacts` WHERE `event_id`=".$db->qstr($EVENT_ID);
-							if($db->Execute($query)) {
-								$url = ENTRADA_URL."/admin/clerkship/";
-								
-								$msg	= " You will now be redirected to the clerkship index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-								
-								$SUCCESS++;
-								$SUCCESSSTR[]  	= "You have successfully removed <strong>".html_encode($PROCESSED["geo_location"])."</strong> elective from the system.<br /><br />".$msg;
-								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-								
-								application_log("success", "Elective [".$EVENT["event_title"]."] removed from the system.");
-								
-								echo display_success();
-							}
-						}
+                        $url = ENTRADA_URL."/admin/clerkship/";
+
+                        $msg	= " You will now be redirected to the clerkship index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+
+                        $SUCCESS++;
+                        $SUCCESSSTR[]  	= "You have successfully removed <strong>".html_encode($PROCESSED["geo_location"])."</strong> elective from the system.<br /><br />".$msg;
+                        $ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+
+                        application_log("success", "Elective [".$event_info["event_title"]."] removed from the system.");
+
+                        echo display_success();
 					}
 					break;
 				default:
 				?>
 				<div class="display-notice" style="vertical-align: middle; padding: 15px;">
-					<strong>Confirmation:</strong> Are you sure you want to remove this elective? <input type="button" class="button" value="Confirm Removal" style="margin-left: 15px" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives?section=delete&step=2&id=<?php echo $EVENT_ID; ?>'" />
+					<strong>Confirmation:</strong> Are you sure you want to remove this elective? <input type="button" class="btn btn-danger" value="Confirm Removal" style="margin-left: 15px" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives?section=delete&step=2&id=<?php echo $EVENT_ID; ?>'" />
 				</div>
 				<?php
 				echo $header_output;
@@ -105,7 +99,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					<tfoot>
 						<tr>
 							<td style="width: 25%; text-align: left">
-								<input type="button" class="button" value="Back" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives'" />
+								<input type="button" class="btn" value="Back" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives'" />
 							</td>
 							<td style="width: 75%; text-align: right">&nbsp;</td>
 						</tr>
@@ -282,7 +276,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					default:
 					?>
 					<div class="display-notice" style="vertical-align: middle; padding: 15px;">
-						<strong>Confirmation:</strong> Are you sure you want to remove this core rotation? <input type="button" class="button" value="Confirm Removal" style="margin-left: 15px" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives?section=delete&step=2&id=<?php echo $EVENT_ID; ?>'" />
+						<strong>Confirmation:</strong> Are you sure you want to remove this core rotation? <input type="button" class="btn" value="Confirm Removal" style="margin-left: 15px" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives?section=delete&step=2&id=<?php echo $EVENT_ID; ?>'" />
 					</div>
 					<?php
 					echo $header_output;
@@ -295,7 +289,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<tfoot>
 							<tr>
 								<td style="width: 25%; text-align: left">
-									<input type="button" class="button" value="Back" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives'" />
+									<input type="button" class="btn" value="Back" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/electives'" />
 								</td>
 								<td style="width: 75%; text-align: right">&nbsp;</td>
 							</tr>

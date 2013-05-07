@@ -2050,8 +2050,7 @@ function fetch_department_children($department_id = 0) {
 function fetch_countries() {
 	global $db;
 
-	$query = "	SELECT *
-				FROM `".DATABASE_NAME."`.`global_lu_countries`
+	$query = "	SELECT * FROM `global_lu_countries`
 				ORDER BY `country` ASC";
 
 	if ($results = $db->GetAll($query)) {
@@ -2109,8 +2108,7 @@ function filter_dir($item) {
 function fetch_specific_country($countries_id) {
 	global $db;
 
-	$query	= "	SELECT `country`
-				FROM `".DATABASE_NAME."`.`global_lu_countries`
+	$query	= "	SELECT `country` FROM `global_lu_countries`
 				WHERE `countries_id` =".$db->qstr($countries_id);
 
 	if ($result = $db->GetRow($query)) {
@@ -2318,9 +2316,8 @@ function clerkship_categories_children_count($category_parent = 0) {
 function clerkship_fetch_disciplines() {
 	global $db;
 
-	$query	= "SELECT *
-		FROM `".DATABASE_NAME."`.`global_lu_disciplines`
-		ORDER BY `discipline` ASC";
+	$query	= "SELECT * FROM `global_lu_disciplines`
+                ORDER BY `discipline` ASC";
 
 	if($results	= $db->GetAll($query)) {
 		return $results;
@@ -2337,8 +2334,7 @@ function clerkship_fetch_disciplines() {
 function clerkship_fetch_specific_discipline($discipline_id) {
 	global $db;
 
-	$query	= "SELECT `discipline`
-		FROM `".DATABASE_NAME."`.`global_lu_disciplines`
+	$query	= "SELECT `discipline` FROM `global_lu_disciplines`
 		WHERE `discipline_id` =".$db->qstr($discipline_id);
 
 	if($result = $db->GetRow($query)) {
@@ -3892,7 +3888,7 @@ function validate_calendars($fieldname, $require_start = true, $require_finish =
 	if(($require_start) && ((!isset($_POST[$fieldname."_start"])) || (!$_POST[$fieldname."_start_date"]))) {
 		$ERROR++;
 		$ERRORSTR[] = "You must select a start date for the ".$fieldname." calendar entry.";
-	} elseif($_POST[$fieldname."_start"] == "1") {
+	} elseif(isset($_POST[$fieldname."_start"]) && $_POST[$fieldname."_start"] == "1") {
 		if((!isset($_POST[$fieldname."_start_date"])) || (!trim($_POST[$fieldname."_start_date"]))) {
 			$ERROR++;
 			$ERRORSTR[] = "You have checked <strong>".ucwords(strtolower($fieldname))." Start</strong> but not selected a calendar date.";
@@ -3964,7 +3960,7 @@ function validate_calendars($fieldname, $require_start = true, $require_finish =
  * @param bool $use_times
  * @return int $timestamp
  */
-function validate_calendar($label, $fieldname, $use_times = true, $required=true) {
+function validate_calendar($label, $fieldname, $use_times = true, $required = true) {
 	global $ERROR, $ERRORSTR;
 
 	$timestamp_start	= 0;
@@ -8403,14 +8399,14 @@ function clerkship_get_elective_weeks($proxy_id, $event_id = 0) {
 	$approved_amount	= 0;
 	$trash_amount		= 0;
 
-	$query		= "	SELECT `event_start`, `event_finish`, `event_status`,  `".CLERKSHIP_DATABASE."`.`electives`.`discipline_id`, `".DATABASE_NAME."`.`global_lu_disciplines`.`discipline`
-					FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`event_contacts`, `".CLERKSHIP_DATABASE."`.`electives`, `".DATABASE_NAME."`.`global_lu_disciplines`
+	$query		= "	SELECT `event_start`, `event_finish`, `event_status`,  `".CLERKSHIP_DATABASE."`.`electives`.`discipline_id`, `global_lu_disciplines`.`discipline`
+					FROM `".CLERKSHIP_DATABASE."`.`events`, `".CLERKSHIP_DATABASE."`.`event_contacts`, `".CLERKSHIP_DATABASE."`.`electives`, `global_lu_disciplines`
 					WHERE `event_type` = 'elective'
 					AND `etype_id` = ".$db->qstr($proxy_id)."
 					AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` != $event_id
 					AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`event_contacts`.`event_id`
 					AND `".CLERKSHIP_DATABASE."`.`events`.`event_id` = `".CLERKSHIP_DATABASE."`.`electives`.`event_id`
-					AND `".DATABASE_NAME."`.`global_lu_disciplines`.`discipline_id` = `".CLERKSHIP_DATABASE."`.`electives`.`discipline_id`
+					AND `global_lu_disciplines`.`discipline_id` = `".CLERKSHIP_DATABASE."`.`electives`.`discipline_id`
 					ORDER BY `".CLERKSHIP_DATABASE."`.`electives`.`discipline_id`";
 	$results	= $db->GetAll($query);
 	if ($results) {
@@ -8728,56 +8724,72 @@ function clerkship_get_agerange ($agerange_id, $rotation_id) {
 function clerkship_progress_send_notice($rotation_period_index, $rotation, $clerk) {
 	global $db;
 	$query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_notification_history`
-			WHERE `rotation_id` = ".$db->qstr($rotation["rotation_id"])."
-			AND `clerk_id` = ".$db->qstr($clerk["proxy_id"])."
-			AND `proxy_id` = ".$db->qstr($clerk["proxy_id"])."
-			AND `notified_date` > ".$db->qstr((time() - ONE_WEEK));
+                WHERE `rotation_id` = ".$db->qstr($rotation["rotation_id"])."
+                AND `clerk_id` = ".$db->qstr($clerk["proxy_id"])."
+                AND `proxy_id` = ".$db->qstr($clerk["proxy_id"])."
+                AND `notified_date` > ".$db->qstr((time() - ONE_WEEK));
 	$notified = $db->GetRow($query);
-	if (!$notified) {
-		$objective_progress = clerkship_rotation_objectives_progress($clerk["proxy_id"], $rotation["rotation_id"]);
-		switch ($rotation_period_index) {
-			case CLERKSHIP_SIX_WEEKS_PAST :
-				if ($objective_progress["required"] > $objective_progress["logged"]) {
-					$overdue_logging = array(
-												"proxy_id" => $clerk["proxy_id"],
-												"rotation_id" => $rotation["rotation_id"],
-												"event_id" => $clerk["event_id"],
-												"logged_required" => $objective_progress["required"],
-												"logged_completed" => $objective_progress["logged"]
-											);
-					$db->AutoExecute(CLERKSHIP_DATABASE.".logbook_overdue", $overdue_logging, "INSERT");
-					clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress);
-				}
-				break;
-			case CLERKSHIP_ROTATION_ENDED :
-				if ($objective_progress["required"] > $objective_progress["logged"]) {
-					$overdue_logging = array(
-												"proxy_id" => $clerk["proxy_id"],
-												"rotation_id" => $rotation["rotation_id"],
-												"event_id" => $clerk["event_id"],
-												"logged_required" => $objective_progress["required"],
-												"logged_completed" => $objective_progress["logged"]
-											);
-					$db->AutoExecute(CLERKSHIP_DATABASE.".logbook_overdue", $overdue_logging, "INSERT");
-					clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress);
-				}
-				break;
-			case CLERKSHIP_ONE_WEEK_PRIOR :
-			case CLERKSHIP_ROTATION_PERIOD :
-				if ((($objective_progress["logged"] / $objective_progress["required"]) * 100) < ($rotation["percent_required"])) {
-					$overdue_logging = array(
-												"proxy_id" => $clerk["proxy_id"],
-												"rotation_id" => $rotation["rotation_id"],
-												"event_id" => $clerk["event_id"],
-												"logged_required" => $objective_progress["required"],
-												"logged_completed" => $objective_progress["logged"]
-											);
-					$db->AutoExecute(CLERKSHIP_DATABASE.".logbook_overdue", $overdue_logging, "INSERT");
-					clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress);
-				}
-				break;
-		}
-	}
+    $objective_progress = clerkship_rotation_objectives_progress($clerk["proxy_id"], $rotation["rotation_id"]);
+    $procedure_progress = clerkship_rotation_tasks_progress($clerk["proxy_id"], $rotation["rotation_id"]);
+    $procedure_progress["required"] = (isset($procedure_progress["required"]) && $procedure_progress["required"] ? $procedure_progress["required"] : 0);
+    $procedure_progress["logged"] = (isset($procedure_progress["logged"]) && $procedure_progress["logged"] ? $procedure_progress["logged"] : 0);
+    switch ($rotation_period_index) {
+        case CLERKSHIP_SIX_WEEKS_PAST :
+            if ($objective_progress["required"] > $objective_progress["logged"]) {
+                $overdue_logging = array(
+                                            "proxy_id" => $clerk["proxy_id"],
+                                            "rotation_id" => $rotation["rotation_id"],
+                                            "event_id" => $clerk["event_id"],
+                                            "logged_required" => $objective_progress["required"],
+                                        "logged_completed" => $objective_progress["logged"],
+                                        "procedures_required" => $procedure_progress["required"],
+                                        "procedures_completed" => $procedure_progress["logged"]
+                                        );
+                $db->AutoExecute(CLERKSHIP_DATABASE.".logbook_overdue", $overdue_logging, "INSERT");
+                application_log("notice", "A clerk [".$clerk["proxy_id"]."] has been added to the `logbook_overdue` table for deficiencies in a clerkship rotation [".$rotation["rotation_id"]."] six weeks after it ended.");
+                if (!$notified && $objective_progress["required"] > $objective_progress["logged"]) {
+                    clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress);
+                }
+            }
+        break;
+        case CLERKSHIP_ROTATION_ENDED :
+            if ($objective_progress["required"] > $objective_progress["logged"]) {
+                $overdue_logging = array(
+                                            "proxy_id" => $clerk["proxy_id"],
+                                            "rotation_id" => $rotation["rotation_id"],
+                                            "event_id" => $clerk["event_id"],
+                                            "logged_required" => $objective_progress["required"],
+                                        "logged_completed" => $objective_progress["logged"],
+                                        "procedures_required" => $procedure_progress["required"],
+                                        "procedures_completed" => $procedure_progress["logged"]
+                                        );
+                $db->AutoExecute(CLERKSHIP_DATABASE.".logbook_overdue", $overdue_logging, "INSERT");
+                application_log("notice", "A clerk [".$clerk["proxy_id"]."] has been added to the `logbook_overdue` table for deficiencies in a clerkship rotation [".$rotation["rotation_id"]."] upon ending in the past week.");
+                if (!$notified && $objective_progress["required"] > $objective_progress["logged"]) {
+                    clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress);
+                }
+            }
+        break;
+        case CLERKSHIP_ONE_WEEK_PRIOR :
+        case CLERKSHIP_ROTATION_PERIOD :
+            if ((($objective_progress["logged"] / $objective_progress["required"]) * 100) < ($rotation["percent_required"])) {
+                $overdue_logging = array(
+                                            "proxy_id" => $clerk["proxy_id"],
+                                            "rotation_id" => $rotation["rotation_id"],
+                                            "event_id" => $clerk["event_id"],
+                                            "logged_required" => $objective_progress["required"],
+                                        "logged_completed" => $objective_progress["logged"],
+                                        "procedures_required" => $procedure_progress["required"],
+                                        "procedures_completed" => $procedure_progress["logged"]
+                                        );
+                $db->AutoExecute(CLERKSHIP_DATABASE.".logbook_overdue", $overdue_logging, "INSERT");
+                application_log("notice", "A clerk [".$clerk["proxy_id"]."] has been added to the `logbook_overdue` table for delinquencies in a clerkship rotation [".$rotation["rotation_id"]."] after the half-way-point of that rotation.");
+                if (!$notified) {
+                    clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress);
+                }
+            }
+        break;
+    }
 }
 
 /**
@@ -8866,13 +8878,13 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 									$clerk["fullname"],
 									$rotation["rotation_title"],
 									ENTRADA_URL."/people?id=".$clerk["proxy_id"],
-									"<a href=\"".get_account_data("email", $rotation["pcoord_id"])."\">".get_account_data("wholename", $rotation["pcoord_id"])."</a>",
+									get_account_data("wholename", $rotation["director_id"])." - ".get_account_data("email", $rotation["director_id"]),
 									ENTRADA_URL."/clerkship/logbook?section=view&core=".$clerk["rotation_id"],
 									implode(" \n", $objective_progress["required_list"]),
 									ENTRADA_URL."/clerkship/logbook?section=deficiency-plan&rotation=".$clerk["rotation_id"],
 									ENTRADA_URL."/clerkship/logbook?id=".$clerk["proxy_id"]."&sb=rotation&rotation=".$clerk["rotation_id"],
 									APPLICATION_NAME,
-									$last_notified
+									ENTRADA_URL
 							);
 				$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
 
@@ -8883,7 +8895,7 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 										"display_from" => time(),
 										"display_until" => strtotime("+1 week"),
 										"updated_date" => time(),
-										"updated_by" => 3499,
+										"updated_by" => 1,
 										"organisation_id" => 1
 								);
 					if($db->AutoExecute("notices", $NOTICE, "INSERT")) {
@@ -8951,7 +8963,7 @@ function clerkship_add_queued_notification($rotation_period_index, $clerk, $rota
 	if ($rotation) {
 		$query 	= "SELECT `notified_date` FROM `".CLERKSHIP_DATABASE."`.`logbook_notification_history`
 				WHERE `clerk_id` = ".$db->qstr($clerk["proxy_id"])."
-				AND `proxy_id` = ".$db->qstr($rotation["pcoord_id"])."
+				AND `proxy_id` = ".$db->qstr($rotation["director_id"])."
 				AND `rotation_id` = ".$db->quote($clerk["rotation_id"])."
 				ORDER BY `notified_date` DESC
 				LIMIT 1";
@@ -8961,7 +8973,7 @@ function clerkship_add_queued_notification($rotation_period_index, $clerk, $rota
 			if ($clerk["proxy_id"]) {
 				$coordinator_notification = array(
 														"clerk_id" => $clerk["proxy_id"],
-														"proxy_id" => $rotation["pcoord_id"],
+														"proxy_id" => $rotation["director_id"],
 														"rotation_id" => $clerk["rotation_id"],
 														"timeframe" => $rotation_period_index,
 														"updated_date" => time(),
@@ -9315,7 +9327,7 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 									"display_from" => time(),
 									"display_until" => strtotime("+2 weeks"),
 									"updated_date" => time(),
-									"updated_by" => 3499,
+									"updated_by" => 1,
 									"organisation_id" => 1
 								);
 				if($db->AutoExecute("notices", $NOTICE, "INSERT")) {
@@ -15813,8 +15825,8 @@ function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessme
 					AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
 					AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
 		foreach($assessments as $key => $assessment) {
-			$query .= "LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS g$key ON b.`id` = g$key.`proxy_id` AND g$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
-			$query .= "LEFT JOIN `".DATABASE_NAME."`.`assessment_exceptions` AS h$key ON b.`id` = h$key.`proxy_id` AND h$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
+			$query .= "LEFT JOIN `assessment_grades` AS g$key ON b.`id` = g$key.`proxy_id` AND g$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
+			$query .= "LEFT JOIN `assessment_exceptions` AS h$key ON b.`id` = h$key.`proxy_id` AND h$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
 		}
 
 		$query .= 	" WHERE b.`id` = ".$db->qstr($proxy_id);

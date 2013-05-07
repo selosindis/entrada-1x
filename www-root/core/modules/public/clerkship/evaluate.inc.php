@@ -299,10 +299,10 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 							echo "	<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
 							echo "	<tr>\n";
 							echo "		<td style=\"width: 50%px; text-align: left\">\n";
-							echo "			<input type=\"button\" class=\"button\" value=\"Close\" onclick=\"window.location='".ENTRADA_URL."/clerkship'\" />\n";
+							echo "			<input type=\"button\" class=\"btn\" value=\"Close\" onclick=\"window.location='".ENTRADA_URL."/clerkship'\" />\n";
 							echo "		</td>\n";
 							echo "		<td style=\"width: 50%; text-align: right\">\n";
-							echo "			<input type=\"button\" class=\"button\" value=\"Proceed\" onclick=\"window.location='".ENTRADA_URL."/clerkship?section=evaluate&amp;nid=".$NOTIFICATION_ID."'\" />\n";
+							echo "			<input type=\"button\" class=\"btn\" value=\"Proceed\" onclick=\"window.location='".ENTRADA_URL."/clerkship?section=evaluate&amp;nid=".$NOTIFICATION_ID."'\" />\n";
 							echo "		</td>\n";
 							echo "	</tr>\n";
 							echo "	</table>\n";
@@ -321,7 +321,7 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 							echo "	<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
 							echo "	<tr>\n";
 							echo "		<td style=\"text-align: right\">\n";
-							echo "			<input type=\"button\" class=\"button\" value=\"Return\" onclick=\"window.location='".ENTRADA_URL."/clerkship'\" />\n";
+							echo "			<input type=\"button\" class=\"btn\" value=\"Return\" onclick=\"window.location='".ENTRADA_URL."/clerkship'\" />\n";
 							echo "		</td>\n";
 							echo "	</tr>\n";
 							echo "	</table>\n";
@@ -351,7 +351,7 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 						<tfoot>
 							<tr>
 								<td colspan="2" style="text-align: right; padding-top: 15px">
-									<input type="submit" class="button" value="Submit" />
+									<input type="submit" class="btn" value="Submit" />
 								</td>				
 							</tr>
 						</tfoot>

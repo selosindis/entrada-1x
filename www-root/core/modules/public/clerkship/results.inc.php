@@ -136,8 +136,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			echo "<tr>\n";
 			echo "	<td colspan=\"3\" style=\"border-top: 1px #333333 dotted; padding-top: 5px\">\n";
 			echo "		<input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp;";
-			echo "		<input type=\"button\" class=\"btn\" value=\"Add Mass Elective\" class=\"button\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/clerkship/electives?section=add'; $('clerkship_form').submit();\"/>\n";
-			echo "		<input type=\"button\" class=\"btn\" value=\"Add Mass Core\" class=\"button\" style=\"display: inline; margin-left: 10px;\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/admin/clerkship/electives?section=add_core'; $('clerkship_form').submit();\"/>\n";
+			echo "		<input type=\"button\" class=\"btn\" value=\"Add Mass Elective\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/clerkship/electives?section=add'; $('clerkship_form').submit();\"/>\n";
+			echo "		<input type=\"button\" class=\"btn\" value=\"Add Mass Core\" style=\"display: inline; margin-left: 10px;\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/admin/clerkship/electives?section=add_core'; $('clerkship_form').submit();\"/>\n";
 			echo "	</td>\n";
 			echo "</tr>\n";
 			echo "</table>\n";
@@ -186,8 +186,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			echo "	<td colspan=\"3\" style=\"border-top: 1px #333333 dotted; padding-top: 5px\">\n";
 			echo "		<ul type=\"none\">\n";
 			echo "		<li><input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp;";
-			echo "		<input type=\"button\" value=\"Add Mass Elective\" class=\"button\" style=\"background-image: url('".ENTRADA_URL."/images/btn_bg.gif')\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/clerkship/electives?section=add_elective'; $('clerkship_form').submit();\"/>\n";
-			echo "		<input type=\"button\" value=\"Add Mass Core\" class=\"button\" style=\"display: inline; margin-left: 10px; background-image: url('".ENTRADA_URL."/images/btn_bg.gif')\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/admin/clerkship/electives?section=add_core'; $('clerkship_form').submit();\"/></li>\n";
+			echo "		<input type=\"button\" value=\"Add Mass Elective\" class=\"btn\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/clerkship/electives?section=add_elective'; $('clerkship_form').submit();\"/>\n";
+			echo "		<input type=\"button\" value=\"Add Mass Core\" class=\"btn\" style=\"display: inline; margin-left: 10px;\" onclick=\"$('clerkship_form').action = '".ENTRADA_URL."/admin/clerkship/electives?section=add_core'; $('clerkship_form').submit();\"/></li>\n";
 			echo "		</ul>\n";
 			echo "	</td>\n";
 			echo "</tr>\n";

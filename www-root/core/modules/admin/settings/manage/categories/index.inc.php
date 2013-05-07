@@ -47,22 +47,22 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 		?>
 		<div class="clearfix">
 			<div class="pull-right">
-				<a href="<?php echo ENTRADA_URL; ?>/admin/clerkship/categories?section=add&amp;step=1" class="btn btn-primary">Add New Category</a>
+				<a href="<?php echo ENTRADA_URL."/admin/settings/manage/categories?section=add&amp;step=1&org=".$ORGANISATION_ID; ?>" class="btn btn-primary">Add New Category</a>
 			</div>
 		</div>
 		<div style="clear: both"></div>
 		<?php
 	}
 
-	$query = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories`
+	$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`categories`
 				WHERE `category_parent` = '0'
 				AND `category_status` != 'trash'
-				AND (`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())." OR `organisation_id` IS NULL)
+				AND (`organisation_id` = ".$db->qstr($ORGANISATION_ID)." OR `organisation_id` IS NULL)
 				ORDER BY `category_order` ASC";
 	$result = $db->GetAll($query);
 	if(isset($result) && count($result)>0){
 		?>
-		<form action="<?php echo ENTRADA_URL."/admin/clerkship/categories?".replace_query(array("section" => "delete", "step" => 1)); ?>" method="post">
+		<form action="<?php echo ENTRADA_URL."/admin/settings/manage/categories?".replace_query(array("section" => "delete", "step" => 1)); ?>" method="post">
 			<table class="tableList" cellspacing="0" summary="List of Categories">
 				<thead>
 					<tr>
@@ -76,11 +76,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 //			echo categories_inlists_conf(0, 0, array('id'=>'pagelists'));
 			foreach ($result as $category) {
 				echo "<li><div class=\"category-container\"><span class=\"delete\" style=\"width:27px;display:inline-block;\"><input type=\"checkbox\" id=\"delete_".$category["category_id"]."\" name=\"delete[".$category["category_id"]."][category_id]\" value=\"".$category["category_id"]."\" onclick=\"$$('#".$category["category_id"]."-children input[type=checkbox]').each(function(e){e.checked = $('delete_".$category["category_id"]."').checked; if (e.checked) e.disable(); else e.enable();});\"/></span>\n";
-				echo "<a href=\"" . ENTRADA_URL . "/admin/clerkship/categories?" . replace_query(array("section" => "edit", "id" => $category["category_id"])) . "\">".$category["category_name"]."</a></div></li>";
+				echo "<a href=\"" . ENTRADA_URL . "/admin/settings/manage/categories?" . replace_query(array("section" => "edit", "id" => $category["category_id"])) . "\">".$category["category_name"]."</a></div></li>";
 			}
 			?>
 			</ul>
-			<input type="submit" class="button" value="Delete Selected" />
+			<input type="submit" class="btn btn-danger" value="Delete Selected" />
 		</form>
 		<?php
 	} else {

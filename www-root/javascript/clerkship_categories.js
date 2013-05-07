@@ -64,9 +64,10 @@ jQuery(document).ready(function(){
 	
 	jQuery(".category-edit-control").live("click", function(){
 		var category_id = jQuery(this).attr("data-id");
+		var organisation_id = jQuery('#organisation_id').val();
 		var modal_container = jQuery(document.createElement("div"));
 		
-		modal_container.load(SITE_URL + "/admin/clerkship/categories?section=edit&id=" + category_id + "&mode=ajax");
+		modal_container.load(SITE_URL + "/admin/settings/manage/categories?section=edit&org="+ organisation_id +"&id=" + category_id + "&mode=ajax");
 		
 		modal_container.dialog({
 			title: "Edit Category",
@@ -79,7 +80,7 @@ jQuery(document).ready(function(){
 			buttons: {
 				Cancel : {
                     click: function() {
-                        jQuery(this).dialog( "close" );
+                        modal_container.dialog("destroy");
                     },
                     class: 'btn',
                     text: 'Cancel'
@@ -112,7 +113,7 @@ jQuery(document).ready(function(){
                                     } else {
                                         jQuery("#children_" + category_parent + " #category_list_" + category_parent).append(list_item);
                                     }	
-                                    jQuery(this).dialog( "close" );							
+                                    modal_container.dialog("destroy");							
                                 } else if (jsonData.status == "error") {
                                     jQuery(".ui-dialog .display-error").html("<p class=\"check-err\">"+ jsonData.msg +"</p>");
                                     if (!jQuery(".ui-dialog .display-error").is(":visible")) {
@@ -136,7 +137,9 @@ jQuery(document).ready(function(){
 	jQuery(".category-add-control").live("click", function(){
 		var parent_id = jQuery(this).attr("data-id");
 		var modal_container = jQuery(document.createElement("div"));
-		var url = SITE_URL + "/admin/clerkship/categories?section=add&mode=ajax&parent_id="+parent_id;
+		var organisation_id = jQuery('#organisation_id').val();
+        
+		var url = SITE_URL + "/admin/settings/manage/categories?section=add&org="+ organisation_id +"&mode=ajax&parent_id="+parent_id;
 		modal_container.load(url);
 		
 		modal_container.dialog({
@@ -149,7 +152,7 @@ jQuery(document).ready(function(){
 			maxHeight: 700,
 			buttons: {
 				Cancel : function() {
-					jQuery(this).dialog( "close" );
+					modal_container.dialog("destroy");
 				},
 				Add : function() {
 					var url = modal_container.children("form").attr("action");
@@ -192,7 +195,7 @@ jQuery(document).ready(function(){
 
 						}
 					});
-					jQuery(this).dialog( "close" );
+					modal_container.dialog("destroy");;
 				}
 			},
 			close: function(event, ui){
@@ -205,7 +208,8 @@ jQuery(document).ready(function(){
 	jQuery(".category-delete-control").live("click", function(){
 		var category_id = jQuery(this).attr("data-id");
 		var modal_container = jQuery(document.createElement("div"));
-		var url = SITE_URL + "/admin/clerkship/categories?section=delete&mode=ajax&category_id="+category_id;
+		var organisation_id = jQuery('#organisation_id').val();
+		var url = SITE_URL + "/admin/settings/manage/categories?section=delete&org="+ organisation_id +"&mode=ajax&category_id="+category_id;
 		modal_container.load(url);
 		
 		modal_container.dialog({
@@ -218,7 +222,7 @@ jQuery(document).ready(function(){
 			maxHeight: 700,
 			buttons: {
 				Cancel : function() {
-					jQuery(this).dialog( "close" );
+					modal_container.dialog("destroy");
 				},
 				Delete : function() {
 					jQuery.ajax({

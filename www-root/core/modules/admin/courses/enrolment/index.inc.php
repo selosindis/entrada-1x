@@ -352,7 +352,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 						?>
                         <div id="additions_<?php echo $group["group_id"];?>" style="display:none;">
                             <h2 style="margin-top: 10px">Add Members to the group '<?php echo $group["group_name"]; ?>'</h2>
-                            <form action="<?php echo ENTRADA_URL;?>/admin/courses/enrolment?step=2&amp;id=<?php echo $COURSE_ID;?>&amp;org_id=<?php echo $ORGANIATION_ID;?>&amp;group_id=<?php echo $group["group_id"]; ?>" method="post">
+                            <form action="<?php echo ENTRADA_URL;?>/admin/courses/enrolment?step=2&amp;id=<?php echo $COURSE_ID;?>&amp;org_id=<?php echo $ORGANISATION_ID;?>&amp;group_id=<?php echo $group["group_id"]; ?>" method="post">
                                 <table style="margin-top: 1px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Member">
                                     <colgroup>
                                         <col style="width: 45%" />
@@ -569,7 +569,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 				</form>
 				<div id="additions_0" style="display:none;">
 							<h2 style="margin-top: 10px">Add Individual Members to the course '<?php echo $course_details["course_name"]; ?>'</h2>
-							<form action="<?php echo ENTRADA_URL; ?>/admin/courses/enrolment?step=2&amp;id=<?php echo $COURSE_ID;?>&amp;org_id=<?php echo $ORGANIATION_ID;?>&amp;group_id=0" method="post">
+							<form action="<?php echo ENTRADA_URL; ?>/admin/courses/enrolment?step=2&amp;id=<?php echo $COURSE_ID;?>&amp;org_id=<?php echo $ORGANISATION_ID;?>&amp;group_id=0" method="post">
 								<table style="margin-top: 1px; width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Add Member">
 									<colgroup>
 										<col style="width: 45%" />

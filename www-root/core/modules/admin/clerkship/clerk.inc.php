@@ -84,23 +84,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 		<div class="tab-pane" id="clerk-tabs">
 			<div class="tab-page" id="schedule">
 				<h3 class="tab">Clerkship Schedule</h3>
-				<div style="float: right; padding-top: 8px">
-				    <div id="module-content">
-				        <ul class="page-action">
-				            <li>
-				                <a href = "<?php echo ENTRADA_URL."/admin/clerkship/electives?section=add_elective&ids=".$PROXY_ID;?>" class="strong-green">Add Elective</a>
-				            </li>
-				        </ul>
-				    </div>
-				</div>
-				<div style="float: right; padding-top: 8px">
-				    <div id="module-content">
-				        <ul class="page-action">
-				            <li>
-				                <a href = "<?php echo ENTRADA_URL."/admin/clerkship/electives?section=add_core&ids=".$PROXY_ID;?>" class="strong-green">Add Core</a>
-				            </li>
-				        </ul>
-				    </div>
+				<div class="row-fluid space-below">
+                    <span class="span6 pull-right">
+                        <span id="module-content" class="offset2 span5">
+                            <a href="<?php echo ENTRADA_URL."/admin/clerkship/electives?section=add_elective&ids=".$PROXY_ID;?>" class="btn btn-success"><i class="icon-plus icon-white"></i> Add Elective</a>
+                        </span>
+                        <span id="module-content" class="span4">
+                            <a href="<?php echo ENTRADA_URL."/admin/clerkship/electives?section=add_core&ids=".$PROXY_ID;?>" class="btn btn-success pull-right"><i class="icon-plus icon-white"></i> Add Core</a>
+                        </span>
+                    </span>
 				</div>
 				<table class="tableList" cellspacing="0" summary="List of Clerkship Services">
 				<colgroup>
@@ -163,7 +155,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							case "approval":
 								$elective_word = "Pending";
 								$cssclass 	= " class=\"in_draft\"";
-								$click_url 	= ENTRADA_URL."/admin/clerkship/electives?action=edit&id=".$result["event_id"];
+								$click_url 	= ENTRADA_URL."/admin/clerkship/electives?section=edit&id=".$result["event_id"];
 								$skip		= false;
 							break;
 							case "published":
@@ -407,12 +399,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<?php
 						if ($allow_view) {
 							?>
-							<input type="button" value="Download All" onclick="window.location = '<?php echo ENTRADA_URL."/clerkship/logbook?section=csv&id=".$PROXY_ID;?>'" />
+							<input type="button" class="btn" value="Download All" onclick="window.location = '<?php echo ENTRADA_URL."/clerkship/logbook?section=csv&id=".$PROXY_ID;?>'" />
 							<?php 
 						}
 						if ($allow_view) {
 							?>
-							<input style="margin-left: 20px;" type="button" value="Deactivate Entry" onclick="if ($('current-entry').value != '0') {window.location = '<?php echo ENTRADA_URL."/clerkship/logbook?section=flag&entry_id="?>'+$('current-entry').value;} else {alert('You must select an active entry before selecting the Deactivate Entry button.');}" />
+							<input style="margin-left: 20px;" class="btn" type="button" value="Deactivate Entry" onclick="if ($('current-entry').value != '0') {window.location = '<?php echo ENTRADA_URL."/clerkship/logbook?section=flag&entry_id="?>'+$('current-entry').value;} else {alert('You must select an active entry before selecting the Deactivate Entry button.');}" />
 							<?php 
 						}
 						?>
@@ -432,11 +424,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					}
 				} else {
 					$ERROR++;
-					if (array_key_exists($rotation_id, $rotation_names) && $rotation_names[$rotation_id]) {
-						$ERRORSTR[]	= "No clerkship logbook entries for this rotation [".$rotation_names[$rotation_id]."] have been found for this user in the system. You may view all entries for all rotations by clicking <a href=\"".ENTRADA_URL."/admin/clerkship/clerk?".replace_query(array("rotation" => false))."\" />here</a>.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
-					} else {
-						$ERRORSTR[]	= "No clerkship logbook entries have been found for this user in the system.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
-					}
+                    $ERRORSTR[]	= "No clerkship logbook entries have been found for this user in the system.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 					echo display_error();
 				}
 				?>
@@ -464,7 +452,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				<?php
 				} else {
 					$NOTICE++;
-					$NOTICESTR[] = $student_name . " has no scheduled clerkship rotations / electives in the system at this time.  Click <a href = ".ENTRADA_URL."/admin/clerkship/electives?section=add_core&ids=".$PROXY_ID." class=\"strong-green\">here</a> to add a new core rotation.";
+					$NOTICESTR[] = $student_name . " has no scheduled clerkship rotations / electives in the system at this time.  Click <a href=".ENTRADA_URL."/admin/clerkship/electives?section=add_core&ids=".$PROXY_ID." class=\"strong-green\">here</a> to add a new core rotation.";
 		
 					echo display_notice();
 				}

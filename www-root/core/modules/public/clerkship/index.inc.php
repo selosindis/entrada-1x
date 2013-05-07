@@ -219,7 +219,7 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 
 					if (!$skip) {
 						echo "<tr".(($is_here) && $cssclass != " class=\"in_draft\"" ? " class=\"current\"" : $cssclass).">\n";
-						echo "	<td class=\"modified\">".(($apartment_available) ? "<a href=\"".$click_url."\">" : "")."<img src=\"".ENTRADA_URL."/images/".(($apartment_available) ? "housing-icon-small.gif" : "pixel.gif")."\" width=\"16\" height=\"16\" alt=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" title=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" style=\"border: 0px\" />".(($apartment_available) ? "</a>" : "")."</td>\n";
+						echo "	<td class=\"modified\">".(($apartment_available) ? "<a href=\"".$apartment_url."\">" : "")."<img src=\"".ENTRADA_URL."/images/".(($apartment_available) ? "housing-icon-small.gif" : "pixel.gif")."\" width=\"16\" height=\"16\" alt=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" title=\"".(($apartment_available) ? "Detailed apartment information available." : "")."\" style=\"border: 0px\" />".(($apartment_available) ? "</a>" : "")."</td>\n";
 						echo "	<td class=\"type\">".($elective ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").(($elective) ? "Elective".(($elective_word != "") ? " (".$elective_word.")" : "") : "Core Rotation").($elective ? "</a>" : "")."</td>\n";
 						echo "	<td class=\"title\">".($elective ? "<a href=\"".$click_url."\" style=\"font-size: 11px\">" : "").html_encode($result["rotation_title"]).($elective ? "</a>" : "")."</td>\n";
 						echo "	<td class=\"region\">".(($apartment_available) ? "<a href=\"".$apartment_url."\" style=\"font-size: 11px\">" : "").html_encode((($result["city"] == "") ? limit_chars(($result["region_name"]), 30) : $result["city"])).(($apartment_available) ? "</a>" : "")."</td>\n";
@@ -342,7 +342,7 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
                         <div class="control-group">
                             <label class="control-label form-required" for="department" >Select Department:</label>
                             <div class="controls">
-                                <select id="department" name="d" onchange="$('department-change-form').submit()">
+                                <select class="clear-width" id="department" name="d" onchange="$('department-change-form').submit()">
                                     <option value="">-- Select the Department to Browse --</option>
                                     <?php
                                     $query = "	SELECT a.`department_id`, a.`department_title`, a.`organisation_id`, b.`entity_title`, c.`organisation_title`

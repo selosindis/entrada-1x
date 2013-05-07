@@ -64,7 +64,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<tfoot>
 						<tr>
 							<td style="width: 25%; text-align: left">
-								<input type="button" class="button" value="Back" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship?section=clerk&ids=<?php echo $event_info["etype_id"]; ?>'" />
+								<input type="button" class="btn" value="Back" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship?section=clerk&ids=<?php echo $event_info["etype_id"]; ?>'" />
 							</td>
 							<td style="width: 75%; text-align: right">&nbsp;</td>
 						</tr>
@@ -243,7 +243,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						<tfoot>
 							<tr>
 								<td style="width: 25%; text-align: left">
-									<input type="button" class="button" value="Back" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship?section=clerk&ids=<?php echo $event_info["etype_id"]; ?>'" />
+									<input type="button" class="btn" value="Back" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship?section=clerk&ids=<?php echo $event_info["etype_id"]; ?>'" />
 								</td>
 								<td style="width: 75%; text-align: right">&nbsp;</td>
 							</tr>

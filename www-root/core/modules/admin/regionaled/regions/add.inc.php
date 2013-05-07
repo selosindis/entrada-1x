@@ -152,14 +152,17 @@ if (!defined("IN_REGIONS")) {
 			function provStateFunction(country_id) {
 				var url='<?php echo webservice_url("province"); ?>';
 				<?php
-					if ($PROCESSED["province"] || $PROCESSED["province_id"]) {
+					if ((isset($PROCESSED["province"]) && $PROCESSED["province"]) || (isset($PROCESSED["province_id"]) && $PROCESSED["province_id"])) {
 						$source_arr = $PROCESSED;
 					} else {
-						$source_arr = $result;
+						$source_arr = $_SESSION[APPLICATION_IDENTIFIER][$MODULE];
 					}
-					$province = $source_arr["province"];
-					$province_id = $source_arr["province_id"];
-					$prov_state = ($province) ? $province : $province_id;
+                    if (isset($source_arr["province"]) && $source_arr["province"]) {
+                        $province = $source_arr["province"];
+                    } elseif (isset($source_arr["province_id"]) && $source_arr["province_id"]) {
+                        $province_id = $source_arr["province_id"];
+                    }
+					$prov_state = (isset($province) && $province ? $province : $province_id);
 				?>
 
 				url = url + '?countries_id=' + country_id + '&prov_state=<?php echo $prov_state; ?>';

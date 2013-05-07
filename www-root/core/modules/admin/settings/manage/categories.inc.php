@@ -25,7 +25,7 @@
  *
 */
 
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/clerkship/categories", "title" => "Manage Clerkship Categories");
+$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/categories?org=".$ORGANISATION_ID, "title" => "Manage Clerkship Categories");
 
 if (!defined("PARENT_INCLUDED")) {
 	exit;
@@ -43,6 +43,7 @@ if (!defined("PARENT_INCLUDED")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]." and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	define("IN_CATEGORIES",	true);
+    echo "<input type=\"hidden\" id=\"organisation_id\" value=\"".$ORGANISATION_ID."\" />\n";
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
 		

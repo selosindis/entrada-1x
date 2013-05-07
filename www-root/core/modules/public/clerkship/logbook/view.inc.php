@@ -209,16 +209,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<table class="tableList" cellspacing="0" summary="Clinical Presentations Encountered in <?php echo $clinical_rotation["title"]; ?>">
 					    <colgroup>
 							<col style="width:3%" />
-							<col style="width:52%;"/>
+							<col style="width:<?php echo (CLERKSHIP_SETTINGS_REQUIREMENTS ? 52 : 67); ?>%;"/>
 							<col style="width:15%;"  />
+                            <?php
+                            if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                ?>
 							<col style="width:15%;"  />
+                                <?php
+                            }
+                            ?>
 							<col style="width:15%;" />
 					    </colgroup>
 					    <thead>
 						<tr>
 						    <td colspan="2">Clinical Presentations Encountered in <?php echo $clinical_rotation["title"]; ?></td>
 						    <td style="border-left: none;">Logged</td>
-						    <td style="border-left: none;">Setting</td>
+                            <?php
+                            if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                ?>
+                                <td style="border-left: none;">Setting</td>
+                                <?php
+                            }
+                            ?>
 						    <td style="border-left: none;">Required</td>
 						</tr>
 					    </thead>
@@ -257,7 +269,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							echo "<td>&nbsp;</td>";
 						    echo "<td>".$result["objective"]."</td>";
 							echo "<td>".$result["count"]."</td>";
-							echo "<td".($correct_location ? "" : " class=\"incorrect-setting setting-tooltip\" id=\"tooltip-".$result["objective_id"]."-".$result["llocation_id"]."\" href=\"#locations-cp-".$result["objective_id"]."-".$result["llocation_id"]."\"").">".$LOCATIONS[$result["llocation_id"]]["location_types_string"].($correct_location ? "" : "")."</td>";
+                            if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                echo "<td".($correct_location ? "" : " class=\"incorrect-setting setting-tooltip\" id=\"tooltip-".$result["objective_id"]."-".$result["llocation_id"]."\" href=\"#locations-cp-".$result["objective_id"]."-".$result["llocation_id"]."\"").">".$LOCATIONS[$result["llocation_id"]]["location_types_string"].($correct_location ? "" : "")."</td>";
+                            }
 						    echo "<td>".(!$correct_location ? "0" : $result["required"])."</td>";
 						    echo "</tr>";
 						}
@@ -328,16 +342,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<table class="tableList" cellspacing="0" summary="Clinical Presentations for <?php echo $clinical_rotation["title"]; ?> encountered in other rotations">
 					    <colgroup>
 							<col style="width:3%" />
-							<col style="width:52%;"/>
+							<col style="width:<?php echo (CLERKSHIP_SETTINGS_REQUIREMENTS ? 52 : 67); ?>%;"/>
 							<col style="width:15%;"  />
-							<col style="width:15%;"  />
+                            <?php
+                            if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                ?>
+                                <col style="width:15%;"  />
+                                <?php
+                            }
+                            ?>
 							<col style="width:15%;" />
 					    </colgroup>
 					    <thead>
 						<tr>
 						    <td colspan="2">Clinical Presentations for <?php echo $clinical_rotation["title"]; ?> encountered in other rotations</td>
 						    <td style="border-left: none;">Logged</td>
-						    <td style="border-left: none;">Setting</td>
+                            <?php
+                            if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                ?>
+                                <td style="border-left: none;">Setting</td>
+                                <?php
+                            }
+                            ?>
 						    <td style="border-left: none;">Required</td>
 						</tr>
 					    </thead>
@@ -348,7 +374,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							echo "<td>&nbsp;</td>";
 						    echo "<td>".$result["objective"]."</td>";
 							echo "<td>".$result["count"]."</td>";
-							echo "<td>".$LOCATIONS[$result["llocation_id"]]["location_types_string"]."</td>";
+                            if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                echo "<td>".$LOCATIONS[$result["llocation_id"]]["location_types_string"]."</td>";
+                            }
 							echo "<td>".$result["required"]."</td>";
 						    echo "</tr>";
 						}
@@ -402,16 +430,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<table class="tableList" cellspacing="0" summary="Procedures List">
 					    <colgroup>
 							<col style="width:3%" />
-							<col style="width:52%;"/>
+							<col style="width:<?php echo (CLERKSHIP_SETTINGS_REQUIREMENTS ? 52 : 67); ?>%;"/>
 							<col style="width:15%;"  />
-							<col style="width:15%;"  />
+                            <?php
+                            if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                ?>
+                                <col style="width:15%;"  />
+                                <?php
+                            }
+                            ?>
 							<col style="width:15%;" />
 					    </colgroup>
 					    <thead>
 						<tr>
 						    <td colspan="2">Tasks Completed in <?php echo $clinical_rotation["title"]?></td>
 						    <td style="border-left: none;">Logged</td>
-						    <td style="border-left: none;">Setting</td>
+                            <?php
+                            if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                ?>
+                                <td style="border-left: none;">Setting</td>
+                                <?php
+                            }
+                            ?>
 						    <td style="border-left: none;">Required</td>
 						</tr>
 					    </thead>
@@ -445,7 +485,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						    echo "<td>&nbsp;</td>";
 						    echo "<td>".$result["procedure"]."</td>";
 							echo "<td>".$result["count"]."</td>";
-							echo "<td".($correct_location ? "" : " class=\"incorrect-setting setting-tooltip\" id=\"tooltip-".$result["lprocedure_id"]."-".$result["llocation_id"]."\" href=\"#locations-ct-".$result["lprocedure_id"]."-".$result["llocation_id"]."\"").">".$LOCATIONS[$result["llocation_id"]]["location_types_string"]."</td>";
+                            if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+    							echo "<td".($correct_location ? "" : " class=\"incorrect-setting setting-tooltip\" id=\"tooltip-".$result["lprocedure_id"]."-".$result["llocation_id"]."\" href=\"#locations-ct-".$result["lprocedure_id"]."-".$result["llocation_id"]."\"").">".$LOCATIONS[$result["llocation_id"]]["location_types_string"]."</td>";
+                            }
 						    echo "<td>".($correct_location ? $result["required"] : "0" )."</td>";
 						    echo "</tr>";
 						}
@@ -521,16 +563,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<table class="tableList" cellspacing="0" summary="Procedures List">
 					    <colgroup>
 							<col style="width:3%" />
-							<col style="width:52%;"/>
+							<col style="width:<?php echo (CLERKSHIP_SETTINGS_REQUIREMENTS ? 52 : 67); ?>%;"/>
 							<col style="width:15%;"  />
-							<col style="width:15%;"  />
+                            <?php
+                            if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                ?>
+                                <col style="width:15%;"  />
+                                <?php
+                            }
+                            ?>
 							<col style="width:15%;" />
 					    </colgroup>
 					    <thead>
 						<tr>
 						    <td colspan="2">Tasks Completed for <?php echo $clinical_rotation["title"]?> in other rotations</td>
 						    <td style="border-left: none;">Logged</td>
-						    <td style="border-left: none;">Setting</td>
+                            <?php
+                            if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                ?>
+                                <td style="border-left: none;">Setting</td>
+                                <?php
+                            }
+                            ?>
 						    <td style="border-left: none;">Required</td>
 						</tr>
 					    </thead>
@@ -541,7 +595,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						    echo "<td>&nbsp;</td>";
 						    echo "<td>".$result["procedure"]."</td>";
 						    echo "<td>".$result["count"]."</td>";
-						    echo "<td>".$LOCATIONS[$result["llocation_id"]]["location_types_string"]."</td>";
+                            if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+    						    echo "<td>".$LOCATIONS[$result["llocation_id"]]["location_types_string"]."</td>";
+                            }
 						    echo "<td>".$result["number_required"]."</td>";
 						    echo "</tr>";
 						}
@@ -623,15 +679,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 					<table class="tableList" cellspacing="0" summary="Missing Objectives">
 					    <colgroup>
 						<col style="width: 3%;"/>
-						<col style="width: 67%;"/>
-						<col style="width: 15%;"/>
+						<col style="width: <?php echo (CLERKSHIP_SETTINGS_REQUIREMENTS ? 67 : 82); ?>%;"/>
+                        <?php
+                        if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                            ?>
+                            <col style="width: 15%;"/>
+                            <?php
+                        }
+                        ?>
 						<col style="width: 15%;"/>
 						<col/>
 					    </colgroup>
 					    <thead>
 						<tr>
 						    <td colspan="2">Missing Clinical Presentations</td>
-						    <td style="border-left: none;">Setting</td>
+                            <?php
+                            if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                ?>
+                                <td style="border-left: none;">Setting</td>
+                                <?php
+                            }
+                            ?>
 						    <td style="border-left: none;">Number Missing</td>
 						</tr>
 					    </thead>
@@ -658,7 +726,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                                 echo "<tr>";
                                 echo "<td>&nbsp;</td>";
                                 echo "<td>".($result["objective_name"] ? limit_chars(html_decode($result["objective_name"]), 55, true, false) : "&nbsp;")."</td>";
-                                echo "<td>".($location_string ? $location_string."" : "")."</td>";
+                                if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                    echo "<td>".($location_string ? $location_string."" : "")."</td>";
+                                }
                                 echo "<td>".$number_required[$result["objective_id"]]."</td>";
                                 echo "</tr>";
                             }
@@ -723,117 +793,82 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						}
 					}
 				}
-			    $query  = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures`
-							WHERE `lprocedure_id` IN (".$procedure_ids.")
-							ORDER BY `procedure`";
-			    $results = $db->GetAll($query);
+                if (isset($procedure_ids) && $procedure_ids) {
+                    $query  = "	SELECT * FROM `".CLERKSHIP_DATABASE."`.`logbook_lu_procedures`
+                                WHERE `lprocedure_id` IN (".$procedure_ids.")
+                                ORDER BY `procedure`";
+                    $results = $db->GetAll($query);
 
-			    if ($results) {
-					?>
-					<br />
-					<table class="tableList" cellspacing="0" summary="Missing procedures">
-					    <colgroup>
-						<col style="width: 3%;"/>
-						<col style="width: 67%;"/>
-						<col style="width: 15%;"/>
-						<col style="width: 15%;"/>
-					    </colgroup>
-					    <thead>
-						<tr>
-						    <td colspan="2">Missing Clinical Tasks</td>
-						    <td style="border-left: none;">Setting</td>
-						    <td style="border-left: none;">Number Missing</td>
-						</tr>
-					    </thead>
-					    <tbody>
-					<?php
-						foreach ($results as $result) {
-						    $query = "SELECT b.* FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedure_locations` AS a
-						    			JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_location_types` AS b
-						    			ON a.`lltype_id` = b.`lltype_id`
-						    			WHERE a.`lpprocedure_id` = ".$db->qstr($lpprocedure_ids[$result["lprocedure_id"]]);
-						    $locations = $db->GetAll($query);
-						    $location_string = "";
-						    foreach ($locations as $location) {
-						    	$location_string .= ($location_string ? "/" : "").html_encode($location["location_type_short"]);
-						    }
-						    $click_url	= ENTRADA_URL."/clerkship?core=".$rotation_id;
-						    echo "<tr>";
-						    echo "<td>&nbsp;</td>";
-						    echo "<td class=\"phase\">".limit_chars(html_decode($result["procedure"]), 55, true, false)."</td>";
-						    echo "<td>".($location_string ? $location_string."" : "")."</td>";
-						    echo "<td>".$number_required[$result["lprocedure_id"]]."</td>";
-						    echo "</tr>";
-						}
-					    ?>
-						</tbody>
-					</table>
-				    <br />
-				    <?php
-			    }
-				if ($rotation_id == 12) {
-					$query = "SELECT c.*, COUNT(a.`objective_id`) AS `number_logged` FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_mcc_presentations` AS a
-								JOIN `".CLERKSHIP_DATABASE."`.`logbook_entries` AS b
-								ON a.`lentry_id` = b.`lentry_id`
-								JOIN `global_lu_objectives` AS c
-								ON a.`objective_id` = c.`objective_id`
-								WHERE b.`proxy_id` = ".$db->qstr($PROXY_ID)."
-								GROUP BY a.`objective_id`";
-					$mcc_presentations = $db->GetAll($query);
-					if ($mcc_presentations) {
-						?>
-						<br />
-						<table class="tableList" cellspacing="0" summary="MCC Presentations">
-						    <colgroup>
-							<col style="width: 3%;"/>
-							<col style="width: 82%;"/>
-							<col style="width: 15%;"/>
-						    </colgroup>
-						    <thead>
-							<tr>
-							    <td colspan="2">MCC Presentations</td>
-							    <td style="border-left: none;">Number Logged</td>
-							</tr>
-						    </thead>
-						    <tbody>
-						<?php
-							foreach ($mcc_presentations as $mcc_presentation) {
-							    echo "<tr>";
-							    echo "<td>&nbsp;</td>";
-							    echo "<td class=\"phase\">".limit_chars(html_decode($mcc_presentation["objective_name"]), 55, true, false)."</td>";
-							    echo "<td>".$mcc_presentation["number_logged"]."</td>";
-							    echo "</tr>";
-							}
-						    ?>
-							</tbody>
-						</table>
-					    <br />
-					    <?php
-					}
-					?>
-					<h3>Summary</h3>
-					<div style="width: 80%;">
-						<?php if (isset($_GET["id"]) && $_GET["id"]) { ?>
-							<?php echo $fullname; ?> has logged <?php echo count($mcc_presentations); ?> of the 12 required <strong>MCC Presentations</strong> for this rotation. 
-						<?php } else { ?>
-							You have logged <?php echo count($mcc_presentations); ?> of the 12 required <strong>Clinical Presentations</strong> for this rotation. 
-						<?php } ?>
-					</div>
-					<br />
-					<?php
-				} else {
+                    if ($results) {
+                        ?>
+                        <br />
+                        <table class="tableList" cellspacing="0" summary="Missing procedures">
+                            <colgroup>
+                            <col style="width: 3%;"/>
+                            <col style="width: <?php echo (CLERKSHIP_SETTINGS_REQUIREMENTS ? 67 : 82); ?>%;"/>
+                            <?php
+                            if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                ?>
+                                <col style="width: 15%;"/>
+                                <?php
+                            }
+                            ?>
+                            <col style="width: 15%;"/>
+                            </colgroup>
+                            <thead>
+                            <tr>
+                                <td colspan="2">Missing Clinical Tasks</td>
+                                <?php
+                                if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                    ?>
+                                    <td style="border-left: none;">Setting</td>
+                                    <?php
+                                }
+                                ?>
+                                <td style="border-left: none;">Number Missing</td>
+                            </tr>
+                            </thead>
+                            <tbody>
+                        <?php
+                            foreach ($results as $result) {
+                                $query = "SELECT b.* FROM `".CLERKSHIP_DATABASE."`.`logbook_preferred_procedure_locations` AS a
+                                            JOIN `".CLERKSHIP_DATABASE."`.`logbook_lu_location_types` AS b
+                                            ON a.`lltype_id` = b.`lltype_id`
+                                            WHERE a.`lpprocedure_id` = ".$db->qstr($lpprocedure_ids[$result["lprocedure_id"]]);
+                                $locations = $db->GetAll($query);
+                                $location_string = "";
+                                foreach ($locations as $location) {
+                                    $location_string .= ($location_string ? "/" : "").html_encode($location["location_type_short"]);
+                                }
+                                $click_url	= ENTRADA_URL."/clerkship?core=".$rotation_id;
+                                echo "<tr>";
+                                echo "<td>&nbsp;</td>";
+                                echo "<td class=\"phase\">".limit_chars(html_decode($result["procedure"]), 55, true, false)."</td>";
+                                if (CLERKSHIP_SETTINGS_REQUIREMENTS) {
+                                    echo "<td>".($location_string ? $location_string."" : "")."</td>";
+                                }
+                                echo "<td>".$number_required[$result["lprocedure_id"]]."</td>";
+                                echo "</tr>";
+                            }
+                            ?>
+                            </tbody>
+                        </table>
+                        <br />
+                        <?php
+                    }
+                }
+				
 				?>
-					<h3>Summary</h3>
-					<div style="width: 80%;">
-						<?php if (isset($_GET["id"]) && $_GET["id"]) { ?>
-							<?php echo $fullname; ?> has logged <?php echo $objectives_recorded; ?> of the <?php echo $objectives_required; ?> required <strong>Clinical Presentations</strong> and <?php echo $procedures_recorded; ?> of the <?php echo $procedures_required; ?> required <strong>Clinical Tasks</strong> for this rotation. 
-						<?php } else { ?>
-							You have logged <?php echo $objectives_recorded; ?> of the <?php echo $objectives_required; ?> required <strong>MCC Presentations</strong> and <?php echo $procedures_recorded; ?> of the <?php echo $procedures_required; ?> required <strong>Clinical Tasks</strong> for this rotation. 
-						<?php } ?>
-					</div>
-					<br />
+                <h3>Summary</h3>
+                <div style="width: 80%;">
+                    <?php if (isset($_GET["id"]) && $_GET["id"]) { ?>
+                        <?php echo $fullname; ?> has logged <?php echo $objectives_recorded; ?> of the <?php echo $objectives_required; ?> required <strong>Clinical Presentations</strong> and <?php echo $procedures_recorded; ?> of the <?php echo $procedures_required; ?> required <strong>Clinical Tasks</strong> for this rotation. 
+                    <?php } else { ?>
+                        You have logged <?php echo $objectives_recorded; ?> of the <?php echo $objectives_required; ?> required <strong>Clinical Presentations</strong> and <?php echo $procedures_recorded; ?> of the <?php echo $procedures_required; ?> required <strong>Clinical Tasks</strong> for this rotation. 
+                    <?php } ?>
+                </div>
+                <br />
 				<?php
-				}
 				echo "<h2 title=\"Rotation Comments Section\">Discussions &amp; Comments</h2>\n";
 				
 				if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
@@ -852,7 +887,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 								okLabel:		'Yes',
 								cancelLabel:	'No',
 								closable:		'true',
-								buttonClass:	'button small',
+								buttonClass:	'btn btn-small',
 								destroyOnClose:	true,
 								ok:				function(win) {
 													new Window(	{
@@ -862,7 +897,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 																	title:			'Notification Result',
 																	className:		'medtech',
 																	okLabel:		'close',
-																	buttonClass:	'button small',
+																	buttonClass:	'btn btn-small',
 																	resizable:		false,
 																	draggable:		false,
 																	minimizable:	false,
@@ -918,7 +953,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				echo "			<label for=\"discussion_comment\" class=\"content-subheading\">Leave a Comment</label>\n";
 				echo "			<div class=\"content-small\">Posting comment as <strong>".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]."</strong></div>\n";
 				echo "			<textarea id=\"discussion_comment\" name=\"discussion_comment\" cols=\"85\" rows=\"10\" style=\"width: 100%; height: 135px\"></textarea>\n";
-				echo "			<div style=\"text-align: right; padding-top: 8px\"><input type=\"submit\" class=\"button\" value=\"Submit\" /></div>\n";
+				echo "			<div style=\"text-align: right; padding-top: 8px\"><input type=\"submit\" class=\"btn\" value=\"Submit\" /></div>\n";
 				echo "		</form>\n";
 				echo "	</div>\n";
 				echo "</div>\n";

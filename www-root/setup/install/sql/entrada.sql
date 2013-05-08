@@ -1,6 +1,6 @@
 SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";
 
-CREATE TABLE `ar_book_chapter_mono` (
+CREATE TABLE IF NOT EXISTS `ar_book_chapter_mono` (
   `book_chapter_mono_id` int(11) NOT NULL AUTO_INCREMENT,
   `title` text NOT NULL,
   `source` varchar(200) NOT NULL,
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS `ar_clinics` (
   PRIMARY KEY (`clinics_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `ar_conference_papers` (
+CREATE TABLE IF NOT EXISTS `ar_conference_papers` (
   `conference_papers_id` int(11) NOT NULL AUTO_INCREMENT,
   `lectures_papers_list` text NOT NULL,
   `status` varchar(25) NOT NULL DEFAULT '',
@@ -986,7 +986,7 @@ CREATE TABLE IF NOT EXISTS `assessment_options` (
   KEY `assessment_id` (`assessment_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `assessment_quiz_questions` (
+CREATE TABLE IF NOT EXISTS `assessment_quiz_questions` (
   `aqquestion_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `assessment_id` int(11) NOT NULL,
   `qquestion_id` int(11) NOT NULL,

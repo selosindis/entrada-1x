@@ -75,7 +75,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			dataType: 'json',
 			method: 'POST',
 			colModel : [
-				{display: 'Report Completed', name : 'report_completed', width : 188, sortable : true, align: 'left'},
+				{display: 'Report Completed', name : 'report_completed', width : 167, sortable : true, align: 'left'},
 				{display: 'In Keeping With Career Goals', name : 'career_goals', width : 188, sortable : true, align: 'left'},
 				{display: 'Consistent', name : 'consistent', width : 188, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
@@ -97,7 +97,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [

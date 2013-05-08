@@ -83,7 +83,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			method: 'POST',
 			colModel : [
 				{display: 'Principal Investigator', name : 'principal_investigator', width : 100, sortable : true, align: 'left'},
-				{display: 'Grant Title', name : 'grant_title', width : 405, sortable : true, align: 'left'},
+				{display: 'Grant Title', name : 'grant_title', width : 384, sortable : true, align: 'left'},
 				{display: 'Amount', name : 'amount_received', width : 59, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:edRow}
@@ -104,7 +104,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -192,7 +192,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			method: 'POST',
 			colModel : [
 				{display: 'Source', name : 'source', width : 100, sortable : true, align: 'left'},
-				{display: 'Title', name : 'title', width : 405, sortable : true, align: 'left'},
+				{display: 'Title', name : 'title', width : 384, sortable : true, align: 'left'},
 				{display: 'Author List', name : 'author_list', width : 59, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editPeerReviewed}
@@ -213,7 +213,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -287,7 +287,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			method: 'POST',
 			colModel : [
 				{display: 'Source', name : 'source', width : 100, sortable : true, align: 'left'},
-				{display: 'Title', name : 'title', width : 405, sortable : true, align: 'left'},
+				{display: 'Title', name : 'title', width : 384, sortable : true, align: 'left'},
 				{display: 'Author List', name : 'author_list', width : 59, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editNonPeerReviewed}
@@ -308,7 +308,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -382,7 +382,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			method: 'POST',
 			colModel : [
 				{display: 'Source', name : 'source', width : 100, sortable : true, align: 'left'},
-				{display: 'Title', name : 'title', width : 405, sortable : true, align: 'left'},
+				{display: 'Title', name : 'title', width : 384, sortable : true, align: 'left'},
 				{display: 'Author List', name : 'author_list', width : 59, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editBookChapterMono}
@@ -403,7 +403,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -477,7 +477,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			method: 'POST',
 			colModel : [
 				{display: 'Source', name : 'source', width : 100, sortable : true, align: 'left'},
-				{display: 'Title', name : 'title', width : 405, sortable : true, align: 'left'},
+				{display: 'Title', name : 'title', width : 384, sortable : true, align: 'left'},
 				{display: 'Author List', name : 'author_list', width : 59, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editPosterReports}
@@ -498,7 +498,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -572,8 +572,8 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 				method: 'POST',
 				colModel : [
 					{display: 'Institution', name : 'institution', width : 150, sortable : true, align: 'left'},
-					{display: 'Invited Lectures / Conference Papers', name : 'lectures_papers_list', width : 255, sortable : true, align: 'left'},
-					{display: 'Location', name : 'location', width : 159, sortable : true, align: 'left'},
+					{display: 'Invited Lectures / Conference Papers', name : 'lectures_papers_list', width : 243, sortable : true, align: 'left'},
+					{display: 'Location', name : 'location', width : 150, sortable : true, align: 'left'},
 					{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 					{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editConferencePapers}
 					],
@@ -593,7 +593,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 				useRp: true,
 				rp: 15,
 				showTableToggleBtn: true,
-				width: 732,
+				width: 675,
 				height: 200,
 				nomsg: 'No Results', 
 				buttons : [
@@ -667,8 +667,8 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			method: 'POST',
 			colModel : [
 				{display: 'Activity Type', name : 'scholarly_activity_type', width : 100, sortable : true, align: 'left'},
-				{display: 'Description', name : 'description', width : 255, sortable : true, align: 'left'},
-				{display: 'Location', name : 'location', width : 209, sortable : true, align: 'left'},
+				{display: 'Description', name : 'description', width : 243, sortable : true, align: 'left'},
+				{display: 'Location', name : 'location', width : 200, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editScholarly}
 				],
@@ -688,7 +688,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -776,7 +776,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			method: 'POST',
 			colModel : [
 				{display: 'Type', name : 'patent_activity_type', width : 175, sortable : true, align: 'left'},
-				{display: 'Description', name : 'description', width : 389, sortable : true, align: 'left'},
+				{display: 'Description', name : 'description', width : 379, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editPatent}
 				],
@@ -795,7 +795,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [

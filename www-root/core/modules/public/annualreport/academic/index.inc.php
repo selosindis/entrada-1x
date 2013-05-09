@@ -77,7 +77,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			method: 'POST',
 			colModel : [
 				{display: 'Hours', name : 'time_commitment', width : 59, sortable : true, align: 'left'},
-				{display: 'Description', name : 'description', width : 405, sortable : true, align: 'left'},
+				{display: 'Description', name : 'description', width : 384, sortable : true, align: 'left'},
 				{display: 'Role', name : 'role', width : 100, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:edRow}
@@ -98,7 +98,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -186,7 +186,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			method: 'POST',
 			colModel : [
 				{display: 'Days', name : 'days_of_year', width : 25, sortable : true, align: 'left'},
-				{display: 'Description', name : 'description', width : 405, sortable : true, align: 'left'},
+				{display: 'Description', name : 'description', width : 384, sortable : true, align: 'left'},
 				{display: 'Organisation', name : 'organisation', width : 134, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editExternal}
@@ -207,7 +207,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [

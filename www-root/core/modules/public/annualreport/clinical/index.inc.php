@@ -94,7 +94,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			colModel : [
 				{display: 'Hours', name : 'hours', width : 59, sortable : true, align: 'left'},
 				{display: 'Site', name : 'site', width : 100, sortable : true, align: 'left'},
-				{display: 'Description', name : 'description', width : 405, sortable : true, align: 'left'},
+				{display: 'Description', name : 'description', width : 384, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:edRow}
 				],
@@ -114,7 +114,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -202,7 +202,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			colModel : [
 				{display: 'Clerks', name : 'average_clerks', width : 59, sortable : true, align: 'left'},
 				{display: 'Patients', name : 'average_patients', width : 100, sortable : true, align: 'left'},
-				{display: 'Service', name : 'service', width : 405, sortable : true, align: 'left'},
+				{display: 'Service', name : 'service', width : 384, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editWard}
 				],
@@ -222,7 +222,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -310,7 +310,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			colModel : [
 				{display: 'Clerks', name : 'average_clerks', width : 59, sortable : true, align: 'left'},
 				{display: 'Patients', name : 'patients', width : 100, sortable : true, align: 'left'},
-				{display: 'Clinic', name : 'clinic', width : 405, sortable : true, align: 'left'},
+				{display: 'Clinic', name : 'clinic', width : 384, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editClinic}
 				],
@@ -330,7 +330,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -419,7 +419,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			colModel : [
 				{display: 'Months', name : 'months', width : 59, sortable : true, align: 'left'},
 				{display: 'Consults', name : 'average_consults', width : 100, sortable : true, align: 'left'},
-				{display: 'Activity', name : 'activity', width : 405, sortable : true, align: 'left'},
+				{display: 'Activity', name : 'activity', width : 384, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editConsult}
 				],
@@ -439,7 +439,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -528,7 +528,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			colModel : [
 				{display: 'Frequency', name : 'frequency', width : 59, sortable : true, align: 'left'},
 				{display: 'Site', name : 'site', width : 100, sortable : true, align: 'left'},
-				{display: 'Special Features', name : 'special_features', width : 405, sortable : true, align: 'left'},
+				{display: 'Special Features', name : 'special_features', width : 384, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editOnCall}
 				],
@@ -548,7 +548,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -637,7 +637,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			colModel : [
 				{display: 'Hours', name : 'average_hours', width : 59, sortable : true, align: 'left'},
 				{display: 'Site', name : 'site', width : 100, sortable : true, align: 'left'},
-				{display: 'Special Features', name : 'special_features', width : 405, sortable : true, align: 'left'},
+				{display: 'Special Features', name : 'special_features', width : 384, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editProcedure}
 				],
@@ -657,7 +657,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -746,7 +746,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			colModel : [
 				{display: 'Hours', name : 'average_hours', width : 59, sortable : true, align: 'left'},
 				{display: 'Site', name : 'site', width : 100, sortable : true, align: 'left'},
-				{display: 'Special Features', name : 'special_features', width : 405, sortable : true, align: 'left'},
+				{display: 'Special Features', name : 'special_features', width : 384, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editOther}
 				],
@@ -766,7 +766,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -871,7 +871,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [

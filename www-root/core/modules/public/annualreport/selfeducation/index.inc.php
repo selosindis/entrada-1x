@@ -76,7 +76,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			method: 'POST',
 			colModel : [
 				{display: 'Institution', name : 'institution', width : 104, sortable : true, align: 'left'},
-				{display: 'Description', name : 'description', width : 385, sortable : true, align: 'left'},
+				{display: 'Description', name : 'description', width : 363, sortable : true, align: 'left'},
 				{display: 'Activity Type', name : 'activity_type', width : 75, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:edRow}
@@ -97,7 +97,7 @@ if ($ENTRADA_ACL->amIAllowed('annualreport', 'read')) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [

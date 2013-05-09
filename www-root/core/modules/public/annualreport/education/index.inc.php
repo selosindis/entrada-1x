@@ -310,7 +310,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			method: 'POST',
 			colModel : [
 				{display: 'Course Code', name : 'course_number', width : 100, sortable : true, align: 'left'},
-				{display: 'Course', name : 'course_name', width : 405, sortable : true, align: 'left'},
+				{display: 'Course', name : 'course_name', width : 359, sortable : true, align: 'left'},
 				{display: 'Phase', name : 'lecture_phase', width : 59, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit / View', name : 'ctled', width : 50,  sortable : false, align: 'center', process:editUndergradMedicalTeaching}
@@ -332,7 +332,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -359,7 +359,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			method: 'POST',
 			colModel : [
 				{display: 'Course Code', name : 'course_number', width : 100, sortable : true, align: 'left'},
-				{display: 'Course', name : 'course_name', width : 405, sortable : true, align: 'left'},
+				{display: 'Course', name : 'course_name', width : 384, sortable : true, align: 'left'},
 				{display: 'Assigned', name : 'assigned', width : 59, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:edRow}
@@ -380,7 +380,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -468,7 +468,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			method: 'POST',
 			colModel : [
 				{display: 'Course Code', name : 'course_number', width : 100, sortable : true, align: 'left'},
-				{display: 'Course', name : 'course_name', width : 405, sortable : true, align: 'left'},
+				{display: 'Course', name : 'course_name', width : 384, sortable : true, align: 'left'},
 				{display: 'Assigned', name : 'assigned', width : 59, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editGraduate}
@@ -489,7 +489,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -577,7 +577,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			method: 'POST',
 			colModel : [
 				{display: 'Course Code', name : 'course_number', width : 100, sortable : true, align: 'left'},
-				{display: 'Student', name : 'student_name', width : 405, sortable : true, align: 'left'},
+				{display: 'Student', name : 'student_name', width : 384, sortable : true, align: 'left'},
 				{display: 'Degree', name : 'degree', width : 59, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editUndergraduateSupervision}
@@ -598,7 +598,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -686,7 +686,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			method: 'POST',
 			colModel : [
 				{display: 'Supervision', name : 'supervision', width : 100, sortable : true, align: 'left'},
-				{display: 'Student', name : 'student_name', width : 405, sortable : true, align: 'left'},
+				{display: 'Student', name : 'student_name', width : 384, sortable : true, align: 'left'},
 				{display: 'Degree', name : 'degree', width : 59, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editGraduateSupervision}
@@ -707,7 +707,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -794,8 +794,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			dataType: 'json',
 			method: 'POST',
 			colModel : [
-				{display: 'Student', name : 'student_name', width : 205, sortable : true, align: 'left'},
-				{display: 'Department', name : 'department', width : 300, sortable : true, align: 'left'},
+				{display: 'Student', name : 'student_name', width : 200, sortable : true, align: 'left'},
+				{display: 'Department', name : 'department', width : 284, sortable : true, align: 'left'},
 				{display: 'Degree', name : 'degree', width : 59, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editMemberships}
@@ -816,7 +816,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -906,8 +906,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				method: 'POST',
 				colModel : [
 					{display: 'Level', name : 'level', width : 100, sortable : true, align: 'left'},
-					{display: 'Description', name : 'description', width : 255, sortable : true, align: 'left'},
-					{display: 'Location', name : 'location', width : 209, sortable : true, align: 'left'},
+					{display: 'Description', name : 'description', width : 243, sortable : true, align: 'left'},
+					{display: 'Location', name : 'location', width : 200, sortable : true, align: 'left'},
 					{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 					{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editClinicalEducation}
 					],
@@ -927,7 +927,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				useRp: true,
 				rp: 15,
 				showTableToggleBtn: true,
-				width: 732,
+				width: 675,
 				height: 200,
 				nomsg: 'No Results', 
 				buttons : [
@@ -1017,8 +1017,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			method: 'POST',
 			colModel : [
 				{display: 'Unit', name : 'unit', width : 100, sortable : true, align: 'left'},
-				{display: 'Description', name : 'description', width : 255, sortable : true, align: 'left'},
-				{display: 'Location', name : 'location', width : 209, sortable : true, align: 'left'},
+				{display: 'Description', name : 'description', width : 243, sortable : true, align: 'left'},
+				{display: 'Location', name : 'location', width : 200, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editContinuingEducation}
 				],
@@ -1038,7 +1038,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -1126,7 +1126,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			method: 'POST',
 			colModel : [
 				{display: 'Course Code', name : 'course_number', width : 100, sortable : true, align: 'left'},
-				{display: 'Course', name : 'course_name', width : 320, sortable : true, align: 'left'},
+				{display: 'Course', name : 'course_name', width : 299, sortable : true, align: 'left'},
 				{display: 'Type', name : 'type', width : 144, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editInnovation}
@@ -1147,7 +1147,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [
@@ -1235,7 +1235,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			method: 'POST',
 			colModel : [
 				{display: 'Description', name : 'description', width : 214, sortable : true, align: 'left'},
-				{display: 'Course', name : 'course_name', width : 270, sortable : true, align: 'left'},
+				{display: 'Course', name : 'course_name', width : 249, sortable : true, align: 'left'},
 				{display: 'Type', name : 'type', width : 80, sortable : true, align: 'left'},
 				{display: 'Year', name : 'year_reported', width : 50, sortable : true, align: 'left'},
 				{display: 'Edit', name : 'ctled', width : 25,  sortable : false, align: 'center', process:editOther}
@@ -1256,7 +1256,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			useRp: true,
 			rp: 15,
 			showTableToggleBtn: true,
-			width: 732,
+			width: 675,
 			height: 200,
 			nomsg: 'No Results', 
 			buttons : [

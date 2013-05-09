@@ -119,9 +119,17 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 								FROM `quiz_progress`
 								WHERE `aquiz_id` = ".$db->qstr($quiz_record["aquiz_id"])."
 								AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
-				$progress_record	= $db->GetAll($query);
-				if ($progress_record) {
-					$quiz_attempts = count($progress_record);
+				$progress_records	= $db->GetAll($query);
+				if ($progress_records) {
+					$quiz_attempts = count($progress_records);
+					$quiz_record["last_visited"] = 0;
+					foreach ($progress_records as $progress_record) {
+						if ($progress_record["updated_date"] > $quiz_record["last_visited"]) {
+							$quiz_record["last_visited"] = $progress_record["updated_date"];
+						}
+					}
+				} else {
+					$quiz_attempts = 0;
 				}
 			}
 
@@ -134,7 +142,7 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 			}
 
 			echo "	<tr id=\"quiz-".$quiz_record["aquiz_id"]."\">\n";
-			echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $quiz_record["last_visited"]) ? (((int) $quiz_record["last_visited"] >= (int) $quiz_record["updated_date"]) ? "<img src=\"".ENTRADA_URL."/images/checkmark.gif\" width=\"20\" height=\"20\" alt=\"You have previously completed this quiz.\" title=\"You have previously completed this quiz.\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_URL."/images/exclamation.gif\" width=\"20\" height=\"20\" alt=\"This attached quiz has been updated since you last completed it.\" title=\"This attached quiz has been updated since you last completed it.\" style=\"vertical-align: middle\" />") : "")."</td>\n";
+			echo "		<td class=\"modified\" style=\"vertical-align: top\">".(isset($quiz_record["last_visited"]) && ((int) $quiz_record["last_visited"]) ? (((int) $quiz_record["last_visited"] >= (int) $quiz_record["updated_date"]) ? "<img src=\"".ENTRADA_URL."/images/checkmark.gif\" width=\"20\" height=\"20\" alt=\"You have previously completed this quiz.\" title=\"You have previously completed this quiz.\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_URL."/images/exclamation.gif\" width=\"20\" height=\"20\" alt=\"This attached quiz has been updated since you last completed it.\" title=\"This attached quiz has been updated since you last completed it.\" style=\"vertical-align: middle\" />") : "")."</td>\n";
 			echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
 			if ($COMMUNITY_ADMIN && $_SESSION["details"]["group"] != "student") {
 				echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($quiz_record["quiz_title"])."\" title=\"View results of ".html_encode($quiz_record["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
@@ -159,10 +167,10 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 			echo quiz_generate_description($quiz_record["required"], $quiz_record["quiztype_code"], $quiz_record["quiz_timeout"], $total_questions, $quiz_record["quiz_attempts"], $quiz_record["timeframe"]);
 			echo "			</div>\n";
 
-			if ($progress_record) {
+			if ($progress_records) {
 				echo "<strong>Your Attempts</strong>";
 				echo "<ul class=\"menu\">";
-				foreach ($progress_record as $entry) {
+				foreach ($progress_records as $entry) {
 					$quiz_start_time	= $entry["updated_date"];
 					$quiz_end_time		= (((int) $quiz_record["quiz_timeout"]) ? ($quiz_start_time + ($quiz_record["quiz_timeout"] * 60)) : 0);
 

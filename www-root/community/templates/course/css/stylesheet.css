@@ -369,17 +369,11 @@ padding-left:20px;
 
 ul.shares li {
 margin-bottom:10px;
-padding-bottom:4px;
-padding-left:37px;
+padding: 10px 0 4px 37px;
 }
 ul.shares {
 	margin: 0;
 	padding: 0;
-}
-ul.shares li {
-	list-type: none;
-	margin: 0;
-	padding: 5px 0 5px 0;
 }
 ul.shares .media-body .well{
 	margin-top:8px;

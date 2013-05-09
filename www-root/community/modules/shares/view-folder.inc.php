@@ -90,6 +90,19 @@ if ($RECORD_ID) {
 			}
 
 			/**
+			 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
+			 */
+			if (isset($_GET["pv"])) {
+				$PAGE_CURRENT = (int) trim($_GET["pv"]);
+
+				if (($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
+					$PAGE_CURRENT = 1;
+				}
+			} else {
+				$PAGE_CURRENT = 1;
+			}
+
+			/**
 			 * Get the total number of results using the generated queries above and calculate the total number
 			 * of pages that are available based on the results per page preferences.
 			 */
@@ -122,19 +135,6 @@ if ($RECORD_ID) {
 			} else {
 				$TOTAL_ROWS		= 0;
 				$TOTAL_PAGES	= 1;
-			}
-
-			/**
-			 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
-			 */
-			if (isset($_GET["pv"])) {
-				$PAGE_CURRENT = (int) trim($_GET["pv"]);
-
-				if (($PAGE_CURRENT < 1) || ($PAGE_CURRENT > $TOTAL_PAGES)) {
-					$PAGE_CURRENT = 1;
-				}
-			} else {
-				$PAGE_CURRENT = 1;
 			}
 
 			$PAGE_PREVIOUS	= (($PAGE_CURRENT > 1) ? ($PAGE_CURRENT - 1) : false);
@@ -299,7 +299,7 @@ if ($RECORD_ID) {
 					foreach($results as $key => $result) {
 						$accessible	= true;
 						$parts		= pathinfo($result["file_title"]);
-						$ext		= $parts["extension"];
+						$ext		= (isset($parts["extension"]) && $parts["extension"] ? $parts["extension"] : "");
 
 						if ((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {
 							$accessible = false;

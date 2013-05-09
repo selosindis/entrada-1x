@@ -11716,11 +11716,15 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
         $stored_events_count = false;
 		if (($community_id && isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"]) || (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"])) {
 			if ($community_id == false) {
-				$stored_query = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"];
-				$stored_events_count = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_returned_rows"];
+				if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"])) {
+					$stored_query = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["limitless_query"];
+					$stored_events_count = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["events"]["previous_query"]["total_returned_rows"];
+				}
 			} else {
-				$stored_query = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"];
-				$stored_events_count = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_returned_rows"];
+				if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"])) {
+					$stored_query = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["limitless_query"];
+					$stored_events_count = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["community_page"][$community_id]["previous_query"]["total_returned_rows"];
+				}
 			}
 		}
 

@@ -60,7 +60,7 @@ if ($RECORD_ID) {
 			if ( !file_exists($dir) ) {
 			  mkdir ($dir, 0777);
 			}
-			$zip_file_name = str_replace('/','_',$assignment["course_code"])."_".str_replace(array(" ", "/"), '_', $assignment["assignment_title"]).'.zip';
+			$zip_file_name = str_replace(array("/", " ") , "_", $assignment["course_code"]."_".$assignment["assignment_title"]).'.zip';
 			$zipname = $dir."/".$zip_file_name;
 			if ($results) {
                 $zip = new ZipArchive();

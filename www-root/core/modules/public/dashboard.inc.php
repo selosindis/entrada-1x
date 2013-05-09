@@ -189,11 +189,11 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
                     <?php
                     foreach ($notices_to_display as $announcement) {
                         echo "<div id=\"notice_box_".(int) $announcement["notice_id"]."\">";
-                        echo "  <label class=\"checkbox\"><input type=\"checkbox\" name=\"mark_read[]\" id=\"notice_msg_".(int) $announcement["notice_id"]."\" value=\"".(int) $result["notice_id"]."\" /> ";
+                        echo "  <label class=\"checkbox\"><input type=\"checkbox\" name=\"mark_read[]\" id=\"notice_msg_".(int) $announcement["notice_id"]."\" value=\"".(int) $announcement["notice_id"]."\" /> ";
                         echo "	<strong>".date(DEFAULT_DATE_FORMAT, $announcement["updated_date"])."</strong>";
                         echo    ($announcement["lastname"] ? " <small>by ".html_encode($announcement["firstname"]." ".$announcement["lastname"])."</small>" : "");
-                        echo "  </label> | <a href=\"#\"><small>Mark As Read</small></a>\n";
-                        echo "	<p>".trim(strip_selected_tags(clean_input($announcement["notice_summary"], "html"), "p"))."</p>";
+                        echo "  </label>\n";
+                        echo "	<div class=\"space-left\">".trim(clean_input($announcement["notice_summary"], "html"))."</div>";
                         echo "</div>";
                     }
                     ?>

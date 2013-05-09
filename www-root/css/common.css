@@ -3233,14 +3233,8 @@ table.mspr_table tr.unapproved {
 table.mspr_table tr.unapproved td {
 	color:#999999;
 }
-#gradebook_grades, #gradebook_stats {
-	float: left;
-}
 #gradebook_grades {
-	margin-right: 10px;
-}
-#gradebook_stats {
-	width: 300px;
+	margin-left: 0px;
 }
 #gradebook_stats h2, #gradebook_grades h2 {
 	margin-top: 0px;

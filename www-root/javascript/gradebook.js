@@ -12,21 +12,20 @@ jQuery(document).ready(function($) {
 	
 	var gradebookize = function() {
 		$('table.gradebook.single').flexigrid($.extend({}, flexiopts, {
-			width: 440,
 			colModel: [
-				{display: 'Student Name', name: 'name', width: 160, sortable: false},
-				{display: 'Student Number', name: 'number', width: 140, sortable: false},
-				{display: 'Student Mark', name: 'name', width: 102, sortable: false},
+				{display: 'Student Name', name: 'name', width: 133, sortable: false},
+				{display: 'Student Number', name: 'number', width: 100, sortable: false},
+				{display: 'Student Mark', name: 'name', width: 73, sortable: false},
+				{display: 'Percent', name: 'name', width: 30, sortable: false}
 			]
 		}));
 
 		$('table.gradebook.numeric').flexigrid($.extend({}, flexiopts, {
-			width: 440,
 			colModel: [
-				{display: 'Student Name', name: 'name', width: 150, sortable: false},
+				{display: 'Student Name', name: 'name', width: 133, sortable: false},
 				{display: 'Student Number', name: 'number', width: 100, sortable: false},
-				{display: 'Student Mark', name: 'name', width: 100, sortable: false},
-				{display: 'Percent', name: 'name', width: 40, sortable: false}
+				{display: 'Student Mark', name: 'name', width: 73, sortable: false},
+				{display: 'Percent', name: 'name', width: 30, sortable: false}
 			]
 		}));
 

@@ -65,7 +65,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                 switch ($assessment["handler"]) {
                     case "Boolean" :
                     case "IncompleteComplete" :
-                        $clean_parameters[] = "alphanum";
+                        $clean_parameters[] = "alphanumeric";
                     break;
                     case "Numeric" :
                     case "Percentage" :

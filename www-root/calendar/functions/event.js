@@ -1,4 +1,3 @@
-<script type="text/javascript">
 function openEventWindow(num) {
 	// populate the hidden form
 	var data = document.popup_data[num];
@@ -42,4 +41,3 @@ function TodoData(todo_data,todo_text) {
 
 document.popup_data = new Array();
 document.todo_popup_data = new Array();
-</script>

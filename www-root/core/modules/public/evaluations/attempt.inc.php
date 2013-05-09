@@ -31,7 +31,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 	exit;
 }
 
-if (isset($_POST["request_code"]) && ($code = clean_input($_POST["request_code"], "alphanum"))) {
+if (isset($_POST["request_code"]) && ($code = clean_input($_POST["request_code"], "alphanumeric"))) {
     $query = "SELECT * FROM `evaluation_requests`
                 WHERE `request_code` = ".$db->qstr($code)."
                 AND `target_proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
@@ -159,7 +159,7 @@ if ($RECORD_ID) {
 								$PROCESSED["target_record_id"] = $event_id;
 							}
 							if ($PROCESSED["target_shortname"] == "preceptor") {
-								if (isset($_POST["preceptor_proxy_id"]) && ($preceptor_proxy_id = clean_input($_POST["preceptor_proxy_id"], "trim", "alphanum")) && ((int)$preceptor_proxy_id || ($preceptor_proxy_id == "other"))) {
+								if (isset($_POST["preceptor_proxy_id"]) && ($preceptor_proxy_id = clean_input($_POST["preceptor_proxy_id"], "trim", "alphanumeric")) && ((int)$preceptor_proxy_id || ($preceptor_proxy_id == "other"))) {
                                     if ($preceptor_proxy_id !== "other") {
                                         $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] = $preceptor_proxy_id;
                                     } else {

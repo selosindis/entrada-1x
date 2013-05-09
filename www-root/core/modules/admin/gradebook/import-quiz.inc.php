@@ -37,10 +37,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-		
-	$assessment_id = (int) $_POST["assessment_id"];
-	$course_id = (int) $_POST["course_id"];
-	
+    
+    if (isset($_POST["assessment_id"]) && ((int) $_POST["assessment_id"])) {
+        $assessment_id = (int) $_POST["assessment_id"];
+    }
+    
+    if (isset($_POST["course_id"]) && ((int) $_POST["course_id"])) {
+        $course_id = (int) $_POST["course_id"];
+    }
+    
+    if (isset($_POST["import_type"]) && (clean_input($_POST["import_type"], "alpha"))) {
+        $import_type = clean_input($_POST["import_type"], "alpha");
+    } else {
+        $import_type = "all";
+    }
+    
 	$url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&id=".$course_id."&assessment_id=".$assessment_id;
 	
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => "Grading Assessment");
@@ -116,20 +127,80 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                 
                 $audience_members = explode(",", $assessment["group_members"]);
                 foreach ($audience_members as $proxy_id) {
-                    $query = "SELECT b.`qquestion_id`, a.`aquiz_id`, c.`response_correct` 
-                                FROM `quiz_progress` AS a
-                                JOIN `quiz_progress_responses` AS b
-                                ON a.`qprogress_id` = b.`qprogress_id`
-                                JOIN `quiz_question_responses` AS c
-                                ON b.`qqresponse_id` = c.`qqresponse_id`
-                                WHERE a.`proxy_id` = ".$db->qstr($proxy_id)."
-                                AND (\n";
-                    $first = true;
-                    foreach ($question_ids_strings as $aquiz_id => $question_ids_string) {
-                        $query .= (!$first ? "OR " : "")."(a.`aquiz_id` = ".$db->qstr($aquiz_id)." AND b.`qquestion_id` IN (".$question_ids_string."))\n";
-                        $first = false;
+                    switch ($import_type) {
+                        case "all" :
+                        default :
+                            $query = "SELECT b.`qquestion_id`, a.`aquiz_id`, c.`response_correct` 
+                                        FROM `quiz_progress` AS a
+                                        JOIN `quiz_progress_responses` AS b
+                                        ON a.`qprogress_id` = b.`qprogress_id`
+                                        JOIN `quiz_question_responses` AS c
+                                        ON b.`qqresponse_id` = c.`qqresponse_id`
+                                        WHERE a.`proxy_id` = ".$db->qstr($proxy_id)."
+                                        AND (\n";
+                            $first = true;
+                            foreach ($question_ids_strings as $aquiz_id => $question_ids_string) {
+                                $query .= (!$first ? "OR " : "")."(a.`aquiz_id` = ".$db->qstr($aquiz_id)." AND b.`qquestion_id` IN (".$question_ids_string."))\n";
+                                $first = false;
+                            }
+                            $query .= " )";
+                        break;
+                        case "first" :
+                            $query = "SELECT b.`qquestion_id`, a.`aquiz_id`, c.`response_correct`, a.`updated_date`, MIN(a.`updated_date`)
+                                        FROM `quiz_progress` AS a
+                                        JOIN `quiz_progress_responses` AS b
+                                        ON a.`qprogress_id` = b.`qprogress_id`
+                                        JOIN `quiz_question_responses` AS c
+                                        ON b.`qqresponse_id` = c.`qqresponse_id`
+                                        WHERE a.`proxy_id` = ".$db->qstr($proxy_id)."
+                                        AND (\n";
+                            $first = true;
+                            foreach ($question_ids_strings as $aquiz_id => $question_ids_string) {
+                                $query .= (!$first ? "OR " : "")."(a.`aquiz_id` = ".$db->qstr($aquiz_id)." AND b.`qquestion_id` IN (".$question_ids_string."))\n";
+                                $first = false;
+                            }
+                            $query .= " )
+                                        GROUP BY b.`qquestion_id`
+                                        HAVING a.`updated_date` = MIN(a.`updated_date`)";
+                        break;
+                        case "last" :
+                            $query = "SELECT b.`qquestion_id`, a.`aquiz_id`, c.`response_correct`, a.`updated_date`, MAX(a.`updated_date`)
+                                        FROM `quiz_progress` AS a
+                                        JOIN `quiz_progress_responses` AS b
+                                        ON a.`qprogress_id` = b.`qprogress_id`
+                                        JOIN `quiz_question_responses` AS c
+                                        ON b.`qqresponse_id` = c.`qqresponse_id`
+                                        WHERE a.`proxy_id` = ".$db->qstr($proxy_id)."
+                                        AND (\n";
+                            $first = true;
+                            foreach ($question_ids_strings as $aquiz_id => $question_ids_string) {
+                                $query .= (!$first ? "OR " : "")."(a.`aquiz_id` = ".$db->qstr($aquiz_id)." AND b.`qquestion_id` IN (".$question_ids_string."))\n";
+                                $first = false;
+                            }
+                            $query .= " )
+                                        GROUP BY b.`qquestion_id`
+                                        HAVING a.`updated_date` = MAX(a.`updated_date`)";
+                        break;
+                        case "best" :
+                            $query = "SELECT b.`qquestion_id`, a.`aquiz_id`, c.`response_correct`, a.`quiz_score`, MAX(a.`quiz_score`)
+                                        FROM `quiz_progress` AS a
+                                        JOIN `quiz_progress_responses` AS b
+                                        ON a.`qprogress_id` = b.`qprogress_id`
+                                        JOIN `quiz_question_responses` AS c
+                                        ON b.`qqresponse_id` = c.`qqresponse_id`
+                                        WHERE a.`proxy_id` = ".$db->qstr($proxy_id)."
+                                        AND (\n";
+                            $first = true;
+                            foreach ($question_ids_strings as $aquiz_id => $question_ids_string) {
+                                $query .= (!$first ? "OR " : "")."(a.`aquiz_id` = ".$db->qstr($aquiz_id)." AND b.`qquestion_id` IN (".$question_ids_string."))\n";
+                                $first = false;
+                            }
+                            $query .= " )
+                                        GROUP BY b.`qquestion_id`
+                                        HAVING a.`quiz_score` = MAX(a.`quiz_score`)";
+                        break;
                     }
-                    $query .= ")";
+                    echo $query; exit;
                     $responses = $db->GetAll($query);
                     if ($responses) {
                         $total_value = 0;

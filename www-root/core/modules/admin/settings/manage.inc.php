@@ -38,7 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		$PREFERENCES = preferences_load($MODULE);
 
 		if (isset($_GET["org"]) && ($org = clean_input($_GET["org"], array("notags", "trim")))) {
-				$ORGANISATION_ID = $org;
+            $ORGANISATION_ID = $org;
 		}
 
 		if($ORGANISATION_ID){
@@ -57,6 +57,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/eventtypes?org=".$ORGANISATION_ID."\">Manage Event Types</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/hottopics?org=".$ORGANISATION_ID."\">Manage Hot Topics</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/metadata?org=".$ORGANISATION_ID."\">Manage Meta Data</a></li>\n";
+					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/categories?org=".$ORGANISATION_ID."\">Manage Clerkship Categories</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/objectives?org=".$ORGANISATION_ID."\">Manage Objective Sets</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqinstructional?org=".$ORGANISATION_ID."\">Medbiq Instructional Methods</a></li>\n";
 					$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqassessment?org=".$ORGANISATION_ID."\">Medbiq Assessment Methods</a></li>\n";
@@ -85,9 +86,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			$ONLOAD[]	= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 		}
-
-
-
 
 		/**
 		 * Check if preferences need to be updated on the server at this point.

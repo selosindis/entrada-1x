@@ -237,13 +237,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                 			</label>
                 			<div class="controls">
 								<select id="cohort-quick-select" name="cohort-quick-select" onchange="window.location='<?php echo ENTRADA_URL;?>/admin/gradebook?section=view&id=<?php echo $COURSE_ID;?>&cohort='+this.options[this.selectedIndex].value">
-				<?php
-                foreach ($cohorts as $key => $cohort) { ?>
-                    				<option value="<?php echo $cohort["group_id"];?>" <?php echo (($cohort["group_id"] == $selected_cohort) ? "selected=\"selected\"" : "");?>>
-                    					<?php echo $cohort["group_name"];?>
-                    				</option>
-                <?php
-                } ?>
+                                    <?php
+                                    foreach ($cohorts as $key => $cohort) { ?>
+                                        <option value="<?php echo $cohort["group_id"];?>" <?php echo (($cohort["group_id"] == $selected_cohort) ? "selected=\"selected\"" : "");?>>
+                                            <?php echo $cohort["group_name"];?>
+                                        </option>
+                                    <?php
+                                    } ?>
                 				</select>
                 			</div>
                 		</div>

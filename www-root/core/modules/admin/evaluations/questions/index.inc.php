@@ -91,7 +91,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			oTable = jQuery('#evaluationquestions').dataTable(
 				{    
 					'sPaginationType': 'full_numbers',
-					'bInfo': false
+					'bInfo': false,
+                    'bAutoWidth': false
 				}
 			);
 		});

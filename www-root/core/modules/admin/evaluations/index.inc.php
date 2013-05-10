@@ -48,7 +48,7 @@ if (!defined("IN_EVALUATIONS")) {
 		<div style="clear: both"></div>
 		<?php
 	}
-
+    
     $evaluations = Models_Evaluation::getAuthorEvaluations();
 
 	if (count($evaluations)) {
@@ -66,14 +66,18 @@ if (!defined("IN_EVALUATIONS")) {
 						{'sType': 'alt-string'},
 						null,
 						null
-					]
+					],
+                    'bAutoWidth': false
 				}
 			);
 		});
 		</script>";
-		if ($ENTRADA_ACL->amIAllowed("evaluation", "delete", false)) : ?>
-		<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=delete" method="post">
-		<?php endif; ?>
+		if ($ENTRADA_ACL->amIAllowed("evaluation", "delete", false)) { 
+            ?>
+            <form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=delete" method="post">
+            <?php 
+        }
+        ?>
 		<table id="evaluations" class="tableList" cellspacing="0" cellpadding="1" summary="List of Evaluations">
 			<colgroup>
 				<col class="modified" />

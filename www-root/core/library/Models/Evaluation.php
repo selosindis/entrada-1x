@@ -4168,7 +4168,7 @@ class Models_Evaluation {
     }
 
 	public static function getAuthorEvaluations() {
-		global $db, $ENTRADA_USER, $ENTRADA_ACL;
+		global $db, $ENTRADA_ACL;
 
 		$evaluations = array();
 

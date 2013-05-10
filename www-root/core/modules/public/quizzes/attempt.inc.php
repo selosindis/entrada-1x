@@ -518,26 +518,47 @@ if ($RECORD_ID) {
 														$counter ++;
 													}
 												} ?>
-										<?php if ($page_counter > 1) { ?>
-										<div class="pagination pagination-right">
-											<ul>
-												<li><a href="#" class="prev">&laquo;</a></li>
-												<?php 
-												for ($i = 1; $i <= $page_counter; $i++) {
-													echo "<li".($i == 1 ? " class=\"active\"" : "")."><a href=\"#".$i."\" data-id=\"".$i."\">".$i."</a></li>";
-												} 
-												?>
-												<li><a href="#" class="next">&raquo;</a></li>
-											</ul>
-										</div>
-										<?php } ?>
 											<div class="quiz-questions" id="quiz-content-questions-holder">
+												<?php
+												if ($page_counter > 1) { 
+													?>
+													<div class="row-fluid pagination pagination-right pagination-top">
+														<ul>
+															<li><a href="#" class="prev">&laquo;</a></li>
+															<?php 
+															for ($i = 1; $i <= $page_counter; $i++) {
+																echo "<li".($i == 1 ? " class=\"active\"" : "")."><a href=\"#".$i."\" data-id=\"".$i."\">".$i."</a></li>";
+															} 
+															?>
+															<li><a href="#" class="next">&raquo;</a></li>
+														</ul>
+													</div>
+													<?php
+												}
+												?>
 												<div class="page active" data-id="1">
 												<?php echo ($page_counter > 1 ? "<h2>Quiz Page 1</h2>" : ""); ?>
 												<ol class="questions" id="quiz-questions-list">
 													<?php echo $quiz_markup; ?>
 												</ol>
 												</div>
+												<?php
+												if ($page_counter > 1) { 
+													?>
+													<div class="row-fluid pagination pagination-right pagination-bottom">
+														<ul>
+															<li><a href="#" class="prev">&laquo;</a></li>
+															<?php 
+															for ($i = 1; $i <= $page_counter; $i++) {
+																echo "<li".($i == 1 ? " class=\"active\"" : "")."><a href=\"#".$i."\" data-id=\"".$i."\">".$i."</a></li>";
+															} 
+															?>
+															<li><a href="#" class="next">&raquo;</a></li>
+														</ul>
+													</div>
+													<?php
+												}
+												?>
 											</div>
 											<?php
 										} else {
@@ -547,14 +568,13 @@ if ($RECORD_ID) {
 											application_log("error", "Unable to locate any questions for quiz [".$quiz_record["quiz_id"]."]. Database said: ".$db->ErrorMsg());
 										}
 										?>
-										<div style="border-top: 2px #CCCCCC solid; margin-top: 10px; padding-top: 10px">
+										<div class="row-fluid border-above-medium space-above pad-top">
 											<input type="button" class="btn space-left" onclick="window.location = '<?php echo ENTRADA_URL; ?>/events?id=<?php echo $quiz_record["content_id"]; ?>'" value="Exit Quiz" />
-											<input type="submit" class="btn btn-primary pull-right" value="Submit Quiz" class="submit" />
+											<input id="submit-button" type="submit" class="btn btn-primary pull-right" style="display: none;" value="Submit Quiz" />
 										</div>
-										<div class="clear"></div>
 										</form>
 										<script type="text/javascript">
-											var total_pages = jQuery(".pagination").length >= 1 ? jQuery(".pagination ul li").length - 2 : 1;
+											var total_pages = jQuery(".pagination-top").length >= 1 ? jQuery(".pagination-top ul li").length - 2 : 1;
 											var active_page = 1;
 											jQuery(function(){
 												jQuery(".pagination ul li a").live("click", function() {
@@ -566,8 +586,10 @@ if ($RECORD_ID) {
 															active_page++;
 														}
 														if (old_page != active_page) {
-															jQuery(".pagination ul li").removeClass("active");
-															jQuery(".pagination ul li").eq(active_page).addClass("active");
+															jQuery(".pagination-top ul li").removeClass("active");
+															jQuery(".pagination-top ul li").eq(active_page).addClass("active");
+															jQuery(".pagination-bottom ul li").removeClass("active");
+															jQuery(".pagination-bottom ul li").eq(active_page).addClass("active");
 															jQuery(".page.active").fadeOut("fast", function() {
 																jQuery(".page.active").removeClass("active").addClass("inactive");
 																jQuery(".page[data-id="+ (active_page) + "]").fadeIn().removeClass("inactive").addClass("active");
@@ -575,7 +597,8 @@ if ($RECORD_ID) {
 														}
 													} else {
 														if (active_page != jQuery(this).attr("data-id")) {
-															jQuery(".pagination ul li").removeClass("active");
+															jQuery(".pagination-top ul li").removeClass("active");
+															jQuery(".pagination-bottom ul li").removeClass("active");
 															jQuery(this).parent().addClass("active");
 															active_page = jQuery(this).attr("data-id");
 															jQuery(".page.active").fadeOut("fast", function() {
@@ -583,6 +606,9 @@ if ($RECORD_ID) {
 																jQuery(".page.inactive[data-id="+ (active_page) + "]").fadeIn().removeClass("inactive").addClass("active");
 															});
 														}
+													}
+													if (active_page >= total_pages) {
+														jQuery('#submit-button').show();
 													}
 													return false;
 												});

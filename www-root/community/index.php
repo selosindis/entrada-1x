@@ -110,7 +110,7 @@ if (isset($PAGE_URL) && $PAGE_URL) {
                 AND `page_url` = ".$db->qstr($PAGE_URL);
     $page_permissions = $db->GetRow($query);
 }
-$PAGE_PROTECTED = ($page_permissions && ($page_permissions["community_protected"] == 1 || $page_permissions["allow_public_view"] == 0) ? true : false);
+$PAGE_PROTECTED = (isset($page_permissions) && $page_permissions && ($page_permissions["community_protected"] == 1 || $page_permissions["allow_public_view"] == 0) ? true : false);
 
 if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
 	if (!isset($_SERVER["PHP_AUTH_USER"])) {
@@ -275,7 +275,7 @@ if ($COMMUNITY_URL) {
 											"resources",
 											"expectations_of_students",
 											"expectations_of_faculty");
-			if ($COMMUNITY_MODULE == "course" && array_search($PAGE_URL, $default_course_pages) !== false) {
+			if ($COMMUNITY_MODULE == "course" && isset($PAGE_URL) && array_search($PAGE_URL, $default_course_pages) !== false) {
 				$COMMUNITY_MODULE = "default";
 			}
 

@@ -166,7 +166,7 @@ if ($community_courses) {
 					echo "		<td style=\"padding-top: 1.3em;\">\n";
 					echo "			<div>\n";
 					echo "				<table class=\"address-info\" style=\"width: 100%;\">\n";
-					if ($result["telephone"] && ($result["privacy_level"] > 2 || $is_administrator)) {
+					if ($result["telephone"] && ($result["privacy_level"] > 2 || (isset($is_administrator) && $is_administrator))) {
 						echo "			<tr>\n";
 						echo "				<td style=\"width: 30%;\">Telephone: </td>\n";
 						echo "				<td>".html_encode($result["telephone"])."</td>\n";

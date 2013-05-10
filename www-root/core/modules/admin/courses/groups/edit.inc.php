@@ -27,7 +27,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif(!$ENTRADA_ACL->amIAllowed('course', 'update', false)) {
+} elseif(!$ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $ENTRADA_USER->getActiveOrganisation()), 'update', false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 1000)";
 
 	$ERROR++;
@@ -349,7 +349,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 									<tbody>
 									<?php
 										$url			= "";
-										if($ENTRADA_ACL->amIAllowed('group', 'delete')) {
 											foreach ($results as $result) {
 												$url 	= ENTRADA_URL."/admin/courses/groups?section=edit&amp;gid=".$result["group_id"]."&amp;id=".$COURSE_ID;
 											
@@ -362,7 +361,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 												echo "</tr>\n";
 											
 											}											
-										}
 									?>
 									</tbody>
 								</table>
@@ -374,7 +372,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 			case 'delete':
 			default:
 						echo "<h1>De/Activate or Delete Groups</h1>";
-						if($ENTRADA_ACL->amIAllowed('course', 'update', false)) {
 							$total_groups	= count($GROUP_IDS);
 
 							$query = "	SELECT * FROM `course_groups`
@@ -438,9 +435,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 								header("Location: ".ENTRADA_URL."/admin/courses/groups?id=".$COURSE_ID);
 								exit;
 							}
-						} else {
-							echo display_error("Sorry, but your user account does not have permission to update this course. If this is in error please use the feedback system to contact the system administrator.");
-						}
 						break;
 			}
 			break;

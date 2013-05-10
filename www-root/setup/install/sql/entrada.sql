@@ -977,6 +977,17 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   KEY `order` (`order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE `assessment_attached_quizzes` (
+  `aaquiz_id` int(12) NOT NULL AUTO_INCREMENT,
+  `assessment_id` int(12) NOT NULL DEFAULT '0',
+  `aquiz_id` int(12) NOT NULL DEFAULT '0',
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`aaquiz_id`),
+  KEY `assessment_id` (`assessment_id`),
+  KEY `quiz_id` (`aquiz_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `assessment_options` (
   `aoption_id` int(12) NOT NULL AUTO_INCREMENT,
   `assessment_id` int(12) NOT NULL DEFAULT '0',

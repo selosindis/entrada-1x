@@ -6,7 +6,7 @@ CREATE TABLE `assessment_attached_quizzes` (
   `updated_by` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY (`aaquiz_id`),
   KEY `assessment_id` (`assessment_id`),
-  KEY `quiz_id` (`aquiz_id`),
+  KEY `quiz_id` (`aquiz_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `assessment_attached_quizzes` (`assessment_id`, `aquiz_id`, `updated_date`, `updated_by`)
@@ -16,6 +16,6 @@ INSERT INTO `assessment_attached_quizzes` (`assessment_id`, `aquiz_id`, `updated
     ON a.`quiz_id` = b.`quiz_id`
     AND b.`content_type` != 'assessment'
     WHERE a.`content_type` = 'assessment'
-)
+);
 
 UPDATE `settings` SET `value` = '1506' WHERE `shortname` = 'version_db';

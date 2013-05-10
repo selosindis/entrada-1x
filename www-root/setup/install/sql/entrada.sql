@@ -985,7 +985,7 @@ CREATE TABLE `assessment_attached_quizzes` (
   `updated_by` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY (`aaquiz_id`),
   KEY `assessment_id` (`assessment_id`),
-  KEY `quiz_id` (`aquiz_id`),
+  KEY `quiz_id` (`aquiz_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `assessment_options` (

@@ -504,9 +504,9 @@ if ($RECORD_ID) {
 															$responses	= $db->GetAll($query);
 															if ($responses) {
 																foreach ($responses as $response) {
-																	$quiz_markup .= "<li>";
-																	$quiz_markup .= "	<input type=\"radio\" id=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\" name=\"responses[".$question["qquestion_id"]."]\" value=\"".$response["qqresponse_id"]."\"".(($ajax_load_progress[$question["qquestion_id"]] == $response["qqresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question["qquestion_id"]."', '".$response["qqresponse_id"]."') : false)\" />";
-																	$quiz_markup .= "	<label for=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</label>";
+																	$quiz_markup .= "<li class=\"row-fluid\">";
+																	$quiz_markup .= "	<span class=\"span1\"><input type=\"radio\" id=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\" name=\"responses[".$question["qquestion_id"]."]\" value=\"".$response["qqresponse_id"]."\"".(($ajax_load_progress[$question["qquestion_id"]] == $response["qqresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question["qquestion_id"]."', '".$response["qqresponse_id"]."') : false)\" /></span>";
+																	$quiz_markup .= "	<label class=\"span11\" for=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</label>";
 																	$quiz_markup .= "</li>\n";
 																}
 															}

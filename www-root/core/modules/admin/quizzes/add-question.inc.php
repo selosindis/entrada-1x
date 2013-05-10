@@ -40,12 +40,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 
-	$query = "SELECT GROUP_CONCAT(`questiontype_id`) AS `questiontypes` FROM `quizzes_lu_questiontypes` WHERE `questiontype_active` = '1'";
-	$question_types = explode(",", $db->GetOne($query));
+	$query = "SELECT * FROM `quizzes_lu_questiontypes` WHERE `questiontype_active` = '1'";
+	$question_types = $db->GetAll($query);
+	if ($question_types) {
+		$question_type_ids = array();
+		foreach ($question_types as $question_type) {
+			$question_type_ids[] = $question_type["questiontype_id"];
+		}
+	}
+	
 
-	if (in_array($_GET["type"], $question_types)) {
+	if ($question_types && isset($_GET["type"]) && in_array($_GET["type"], $question_type_ids)) {
+		$set_type = true;
 		$type = clean_input($_GET["type"], "numeric");
 	} else {
+		$set_type = false;
 		$type = 1;
 	}
 
@@ -208,9 +217,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						}
 
 						if (isset($_POST["post_action"])) {
-							switch ($_POST["post_action"]) {
+							switch (clean_input($_POST["post_action"], "alpha")) {
 								case "new" :
-									$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new";
+									$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new".((int)clean_input($_POST["post_action"], "numeric") ? (int)clean_input($_POST["post_action"], "numeric") : 1);
 								break;
 								case "index" :
 									$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
@@ -221,7 +230,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								break;
 							}
 						} else {
-							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new";
+							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new1";
 						}
 
 						if (!$ERROR) {
@@ -252,9 +261,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											}
 										}
 
-										switch ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
+										switch (clean_input($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"], "alpha")) {
 											case "new" :
-												$url	= ENTRADA_URL."/admin/".$MODULE."?section=add-question&id=".$RECORD_ID;
+												$url	= ENTRADA_URL."/admin/".$MODULE."?section=add-question&id=".$RECORD_ID."&type=".((int)clean_input($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"], "numeric") ? (int)clean_input($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"], "numeric") : 1);
 												$msg	= "You will now be redirected to add another quiz question to this quiz; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 											break;
 											case "index" :
@@ -424,7 +433,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											<span class="content-small">After saving:</span>
 											<select id="post_action" name="post_action">
 												<option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Return to the quiz</option>
-												<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another question</option>
+												<?php
+												if (!$question_types || @count($question_types) <= 1) {
+													?>
+													<option value="new1"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new1") ? " selected=\"selected\"" : ""); ?>>Add another question</option>
+													<?php
+												} else {
+													foreach ($question_types as $question_type) {
+														echo "<option value=\"new".$question_type["questiontype_id"]."\"".(($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new".$question_type["questiontype_id"]) ? " selected=\"selected\"" : "").">Add ".($type == $question_type["questiontype_id"] ? "another " : "a new ").strtolower($question_type["questiontype_title"])."</option>";
+													}
+												}
+												?>
 												<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to quiz index</option>
 											</select>
 

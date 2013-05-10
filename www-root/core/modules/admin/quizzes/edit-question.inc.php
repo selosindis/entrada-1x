@@ -180,9 +180,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						}
 
 						if (isset($_POST["post_action"])) {
-							switch ($_POST["post_action"]) {
+							switch (clean_input($_POST["post_action"], "alpha")) {
 								case "new" :
-									$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new";
+									$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new".((int)clean_input($_POST["post_action"], "numeric") ? (int)clean_input($_POST["post_action"], "numeric") : 1);
 								break;
 								case "index" :
 									$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
@@ -234,9 +234,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 								}
 
-								switch ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
+								switch (clean_input($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"], "alpha")) {
 									case "new" :
-										$url	= ENTRADA_URL."/admin/".$MODULE."?section=add-question&amp;id=".$quiz_record["quiz_id"];
+										$url	= ENTRADA_URL."/admin/".$MODULE."?section=add-question&id=".$RECORD_ID."&type=".((int)clean_input($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"], "numeric") ? (int)clean_input($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"], "numeric") : 1);
 										$msg	= "You will now be redirected to add a new quiz question to this quiz; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 									break;
 									case "index" :
@@ -404,17 +404,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 									<tr>
 										<td style="width: 25%; text-align: left">
-											<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=edit&amp;id=<?php echo $quiz_record["quiz_id"]; ?>'" />
+											<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=edit&amp;id=<?php echo $quiz_record["quiz_id"]; ?>'" />
 										</td>
 										<td style="width: 75%; text-align: right; vertical-align: middle">
 											<span class="content-small">After saving:</span>
 											<select id="post_action" name="post_action">
 												<option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Return to the quiz</option>
-												<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add a new question</option>
+												<?php
+													$query = "SELECT * FROM `quizzes_lu_questiontypes` WHERE `questiontype_active` = '1'";
+													$question_types = $db->GetAll($query);
+													if (!$question_types || @count($question_types) <= 1) {
+														?>
+														<option value="new1"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new1") ? " selected=\"selected\"" : ""); ?>>Add a new question</option>
+														<?php
+													} else {
+														foreach ($question_types as $question_type) {
+															echo "<option value=\"new".$question_type["questiontype_id"]."\"".(($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new".$question_type["questiontype_id"]) ? " selected=\"selected\"" : "").">Add ".($quiz_record["questiontype_id"] == $question_type["questiontype_id"] ? "another " : "a new ").strtolower($question_type["questiontype_title"])."</option>";
+														}
+													}
+													?>
 												<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to quiz index</option>
 											</select>
-
-											<input type="submit" class="button" value="Proceed" />
+											<input type="submit" class="btn btn-primary" value="Proceed" />
 										</td>
 									</tr>
 									</table>

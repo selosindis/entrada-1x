@@ -88,6 +88,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				array_unshift($PROCESSED["associated_proxy_ids"], $ENTRADA_USER->getActiveId());
 			}
 
+			if (isset($_POST["post_action"])) {
+				switch (clean_input($_POST["post_action"], "alpha")) {
+					case "new" :
+						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new".((int)clean_input($_POST["post_action"], "numeric") ? (int)clean_input($_POST["post_action"], "numeric") : 1);
+					break;
+					case "index" :
+						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "index";
+					break;
+					case "content" :
+					default :
+						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
+					break;
+				}
+			} else {
+				$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "new";
+			}
+
 			if (!$ERROR) {
 				$PROCESSED["updated_date"]	= time();
 				$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
@@ -108,11 +125,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								}
 							}
 						}
+						
+						switch (clean_input($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"], "alpha")) {
+							case "new" :
+								$url	= ENTRADA_URL."/admin/".$MODULE."?section=add-question&id=".$quiz_id."&type=".((int)clean_input($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"], "numeric") ? (int)clean_input($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"], "numeric") : 1);
+								$msg	= "You will now be redirected to add a new quiz question to this quiz; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+							break;
+							case "index" :
+								$url	= ENTRADA_URL."/admin/".$MODULE;
+								$msg	= "You will now be redirected back to the quiz index page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+							break;
+							case "content" :
+							default :
+								$url = ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$quiz_id;
+								$msg	= "You will now be redirected back to the quiz; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+							break;
+						}
 
+						$SUCCESS++;
+						$SUCCESSSTR[]	= "You have successfully added <strong>".html_encode($PROCESSED["quiz_title"])."</strong> to this system.<br /><br />".$msg;
+						$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 						application_log("success", "New quiz [".$quiz_id."] added to the system.");
-
-						header("Location: ".ENTRADA_URL."/admin/".$MODULE."?section=add-question&id=".$quiz_id);
-						exit;
+						
 					} else {
 						$ERROR++;
 						$ERRORSTR[] = "There was a problem inserting this quiz into the system. The system administrator was informed of this error; please try again later.";
@@ -233,6 +267,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			<div class="row-fluid">
 				<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>'" />
 				<div class="pull-right">
+					<span class="content-small">After saving:</span>
+					<select id="post_action" name="post_action">
+						<option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Return to the quiz</option>
+						<?php
+							$query = "SELECT * FROM `quizzes_lu_questiontypes` WHERE `questiontype_active` = '1'";
+							$question_types = $db->GetAll($query);
+							if (!$question_types || @count($question_types) <= 1) {
+								?>
+								<option value="new1"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new1") ? " selected=\"selected\"" : ""); ?>>Add a new question</option>
+								<?php
+							} else {
+								foreach ($question_types as $question_type) {
+									echo "<option value=\"new".$question_type["questiontype_id"]."\"".(($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new".$question_type["questiontype_id"]) ? " selected=\"selected\"" : "").">Add ".($quiz_record["questiontype_id"] == $question_type["questiontype_id"] ? "another " : "a new ").strtolower($question_type["questiontype_title"])."</option>";
+								}
+							}
+							?>
+						<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to quiz index</option>
+					</select>
 					<input type="submit" class="btn btn-primary" value="Proceed" />
 				</div>
 			</div>

@@ -548,8 +548,8 @@ if ($RECORD_ID) {
 										}
 										?>
 										<div style="border-top: 2px #CCCCCC solid; margin-top: 10px; padding-top: 10px">
-											<input type="button" style="float: left; margin-right: 10px" onclick="window.location = '<?php echo ENTRADA_URL; ?>/events?id=<?php echo $quiz_record["content_id"]; ?>'" value="Exit Quiz" />
-											<input type="submit" style="float: right" value="Submit Quiz" class="submit" />
+											<input type="button" class="btn space-left" onclick="window.location = '<?php echo ENTRADA_URL; ?>/events?id=<?php echo $quiz_record["content_id"]; ?>'" value="Exit Quiz" />
+											<input type="submit" class="btn btn-primary pull-right" value="Submit Quiz" class="submit" />
 										</div>
 										<div class="clear"></div>
 										</form>

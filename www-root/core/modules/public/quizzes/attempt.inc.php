@@ -597,12 +597,13 @@ if ($RECORD_ID) {
 														}
 													} else {
 														if (active_page != jQuery(this).attr("data-id")) {
-															jQuery(".pagination-top ul li").removeClass("active");
-															jQuery(".pagination-bottom ul li").removeClass("active");
-															jQuery(this).parent().addClass("active");
 															active_page = jQuery(this).attr("data-id");
+															jQuery(".pagination-top ul li").removeClass("active");
+															jQuery(".pagination-top ul li").eq(active_page).addClass("active");
+															jQuery(".pagination-bottom ul li").removeClass("active");
+															jQuery(".pagination-bottom ul li").eq(active_page).addClass("active");
 															jQuery(".page.active").fadeOut("fast", function() {
-																jQuery(this).removeClass("active").addClass("inactive");
+																jQuery(".page.active").removeClass("active").addClass("inactive");
 																jQuery(".page.inactive[data-id="+ (active_page) + "]").fadeIn().removeClass("inactive").addClass("active");
 															});
 														}

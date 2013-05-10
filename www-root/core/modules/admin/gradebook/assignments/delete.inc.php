@@ -61,9 +61,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				default :
 					if((!isset($_GET["delete"])) || !($assignment_id = ((int)$_GET["delete"]))) {
 						$ERROR++;
-						$ERRORSTR[] = "You must select an assignment to delete from the assessments page.";
+						$ERRORSTR[] = "You must select an assignment to delete from the assignments page.";
 
-						application_log("notice", "Assessment delete page accessed without providing any assessment id's to delete.");
+						application_log("notice", "Assignment delete page accessed without providing any assignment id's to delete.");
 					} else {
                         $assignment_id = (int) trim($assignment_id);
                         if($assignment_id) {
@@ -72,7 +72,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 						if(!@count($ASSIGNMENT_IDS)) {
 							$ERROR++;
-							$ERRORSTR[] = "There were no valid assessment identifiers provided to delete. Please ensure that you access this section through the assessment index.";
+							$ERRORSTR[] = "There were no valid assignment identifiers provided to delete. Please ensure that you access this section through the assignment index.";
 						}
 					}
 
@@ -92,26 +92,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         if($total_removed = $db->Affected_Rows()) {
 
                             $SUCCESS++;
-                            $SUCCESSSTR[]  = "You have successfully removed ".$total_removed." assessment".(($total_removed != 1) ? "s" : "")." from the system.<br /><br />You will be automatically redirected to the event index in 5 seconds, or you can <strong><a href=\"".$INDEX_URL."\">click here</a></strong> to go there now.";
+                            $SUCCESSSTR[]  = "You have successfully removed ".$total_removed." assignment".(($total_removed != 1) ? "s" : "")." from the system.<br /><br />You will be automatically redirected to the event index in 5 seconds, or you can <strong><a href=\"".$INDEX_URL."\">click here</a></strong> to go there now.";
 
                             echo display_success();
 
 
                         } else {
                                 $ERROR++;
-                                $ERRORSTR[] = "We were unable to remove the requested assessments from the system. The MEdTech Unit has been informed of this issue and will address it shortly; please try again later.";
+                                $ERRORSTR[] = "We were unable to remove the requested assignments from the system. The MEdTech Unit has been informed of this issue and will address it shortly; please try again later.";
 
                                 echo display_error();
 
-                                application_log("error", "Failed to remove any assessment ids: ".implode(", ", $ASSIGNMENT_IDS).". Database said: ".$db->ErrorMsg());
+                                application_log("error", "Failed to remove any assignment ids: ".implode(", ", $ASSIGNMENT_IDS).". Database said: ".$db->ErrorMsg());
                         }
 					} else {
 						$ERROR++;
-						$ERRORSTR[] = "We were unable to remove the requested assessments from the system. The MEdTech Unit has been informed of this issue and will address it shortly; please try again later.";
+						$ERRORSTR[] = "We were unable to remove the requested assignments from the system. The MEdTech Unit has been informed of this issue and will address it shortly; please try again later.";
 
 						echo display_error();
 
-						application_log("error", "Failed to execute remove query for assessment ids: ".implode(", ", $ASSIGNMENT_IDS).". Database said: ".$db->ErrorMsg());
+						application_log("error", "Failed to execute remove query for assignment ids: ".implode(", ", $ASSIGNMENT_IDS).". Database said: ".$db->ErrorMsg());
 					}
 				break;
 				case 1 :
@@ -131,7 +131,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						
 						?>
 						
-						<table class="tableList" cellspacing="0" summary="List of Assessments">
+						<table class="tableList" cellspacing="0" summary="List of Assignments">
 						<colgroup>
 							<col class="modified" />
 							<col class="title" />
@@ -173,8 +173,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						// No assessments in this course.
 						?>
 						<div class="display-notice">
-							<h3>No Assessments to delete for <?php echo $course_details["course_name"]; ?></h3>
-							You must select some assessments to delete for this course
+							<h3>No Assignments to delete for <?php echo $course_details["course_name"]; ?></h3>
+							You must select some assignments to delete for this course
 						</div>
 						<?php
 					}

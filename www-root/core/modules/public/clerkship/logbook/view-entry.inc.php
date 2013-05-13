@@ -19,7 +19,7 @@
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: Andrew Dos-Santos <andrew.dos-santos@queensu.ca>
+ * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
 */

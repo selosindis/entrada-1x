@@ -196,14 +196,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			<?php
 			if ($student) {
 				?>
-				<div style="float: right; margin-bottom: 5px">
-					<div id="module-content">
-						<ul class="page-action">
-							<li>
-								<a href="<?php echo ENTRADA_URL."/clerkship/logbook?section=add";?>" class="strong-green">Log Encounter</a>
-							</li>
-						</ul>
-					</div>
+				<div class="pull-right space-below">
+								<a href="<?php echo ENTRADA_URL."/clerkship/logbook?section=add";?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i>Log Encounter</a>
 				</div>
 				<?php 
 			}
@@ -258,12 +252,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			<div style="clear: both"></div>
 			<div style="width: 98%; text-align: right; margin-top: 10px;">
 			<?php
-			if ($allow_view || $student) {
+			if ((isset($allow_view) && $allow_view) || (isset($student) && $student)) {
 				?>
 				<input type="button" class="btn" value="Download All" onclick="window.location = '<?php echo ENTRADA_URL."/clerkship/logbook?section=csv&id=".$PROXY_ID;?>'" />
 				<?php 
 			}
-			if ($allow_view && !$student) {
+			if ((isset($allow_view) && $allow_view) && (!isset($student) || !$student)) {
 				?>
 				<input style="margin-left: 20px;" type="button" class="btn" value="Deactivate Entry" onclick="if ($('current-entry').value != '0') {window.location = '<?php echo ENTRADA_URL."/clerkship/logbook?section=flag&entry_id="?>'+$('current-entry').value;} else {alert('You must select an active entry before selecting the Deactivate Entry button.');}" />
 				<?php 

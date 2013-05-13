@@ -267,14 +267,9 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 								<strong>Notice:</strong> Keeping the Undergrad office informed of clerkship schedule changes is very important. This information is used to ensure you can graduate; therefore, if you see any inconsistencies, please let us know immediately: <a href="javascript:sendClerkship('<?php echo ENTRADA_RELATIVE; ?>/agent-clerkship.php')">click here</a>.
 							</div>
 							<h2>Remaining Clerkship Rotations</h2>
-							<div style="float: right; margin-bottom: 5px">
-								<div id="module-content">
-									<ul class="page-action">
-										<li>
-											<a href="<?php echo ENTRADA_RELATIVE."/clerkship/electives?section=add";?>" class="strong-green">Add Elective</a>
-										</li>
-									</ul>
-								</div>
+							<div class="pull-right space-below">
+								<a href="<?php echo ENTRADA_RELATIVE."/clerkship/electives?section=add";?>" class="btn btn-success btn-small"><i class="icon-plus icon-white"></i>Add Elective</a>
+								<a href="<?php echo ENTRADA_RELATIVE."/clerkship/logbook?section=add&event=".$clerkship_schedule[0]["event_id"];?>" class="btn btn-success btn-small"><i class="icon-plus icon-white"></i>Log Encounter</a>
 							</div>
 							<?php
 							$query = "	SELECT `rotation_id`
@@ -282,15 +277,6 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 										WHERE `event_id` = ".$db->qstr($clerkship_schedule[0]["event_id"]);
 							$ROTATION_ID = $db->GetOne($query);
 							?>
-							<div style="float: right; margin-bottom: 5px">
-								<div id="module-content">
-									<ul class="page-action">
-										<li>
-											<a href="<?php echo ENTRADA_RELATIVE."/clerkship/logbook?section=add&event=".$clerkship_schedule[0]["event_id"];?>" class="strong-green">Log Encounter</a>
-										</li>
-									</ul>
-								</div>
-							</div>
 							<div style="clear: both"></div>
 							<table class="tableList" cellspacing="0" summary="List of Remaining Clerkship Rotations">
 								<colgroup>

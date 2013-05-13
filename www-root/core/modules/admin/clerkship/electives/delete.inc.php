@@ -78,7 +78,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
                         $SUCCESSSTR[]  	= "You have successfully removed <strong>".html_encode($PROCESSED["geo_location"])."</strong> elective from the system.<br /><br />".$msg;
                         $ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
-                        application_log("success", "Elective [".$event_info["event_title"]."] removed from the system.");
+						application_log("success", "An administrator removed a user's [".$event_info["etype_id"]."] elective [".$EVENT_ID."] from the system.");
 
                         echo display_success();
 					}

@@ -63,6 +63,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 		}
 		
 		/**
+		 * Non-required field "patient" / Patient.
+		 */
+		if ((isset($_POST["patient_id"])) && ($patient_id = clean_input($_POST["patient_id"], Array("notags","trim")))) {
+			$PROCESSED["patient_info"] = $patient_id;
+		}
+		
+		/**
 		 * Required field "gender" / Gender.
 		 */
 		if ((isset($_POST["gender"])) && ($gender = ($_POST["gender"] == "m" ? "m" : "f"))) {
@@ -370,6 +377,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                     </span>
                 </div>
                 <br />
+                <div class="control-group row-fluid">
+					<label for="patient_id" class="form-nrequired span3">Patient ID</label>
+                    <span class="controls span8">
+						<input type="text" id="patient_id" name="patient_id" value="<?php echo html_encode((isset($PROCESSED["patient_info"]) && $PROCESSED["patient_info"] ? $PROCESSED["patient_info"] : "")); ?>" maxlength="50" />
+                    </span>
+                </div>
                 <div class="control-group row-fluid">
                     <label for="agerange" class="form-required span3">Patient Age Range</label>
                     <span class="controls span8">
@@ -739,7 +752,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						?>
                     </span>
                 </div>
-                <div class="control-group row-fluid" id="objective-container"<?php echo !is_array($PROCESSED_OBJECTIVES) || !count($PROCESSED_OBJECTIVES) ? " style=\"display: none;\"" : ""; ?>>
+                <div class="control-group row-fluid" id="objective-container"<?php echo (!isset($PROCESSED_OBJECTIVES) || !@count($PROCESSED_OBJECTIVES) ? " style=\"display: none;\"" : ""); ?>>
                     <span class="span3">&nbsp;</span>
                     <span class="span8">
                         <div id="objective-list" class="border-bottom margin-bottom-sm">
@@ -882,7 +895,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                         ?>
                     </span>
                 </div>
-                <div class="control-group row-fluid" id="procedure-container"<?php echo !is_array($PROCESSED_PROCEDURES) || !count($PROCESSED_PROCEDURES) ? " style=\"display: none;\"" : ""; ?>>
+                <div class="control-group row-fluid" id="procedure-container"<?php echo (!isset($PROCESSED_PROCEDURES) || !@count($PROCESSED_PROCEDURES) ? " style=\"display: none;\"" : ""); ?>>
                     <span class="span3">&nbsp;</span>
                     <span class="span8">
                         <div id="procedure-list" class="border-bottom margin-bottom-sm">

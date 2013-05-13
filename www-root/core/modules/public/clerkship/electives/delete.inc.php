@@ -85,7 +85,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                             $SUCCESSSTR[]  	= "You have successfully cancelled your request for this <strong>".html_encode($PROCESSED["geo_location"])."</strong> elective in the system.<br /><br />".$msg;
                             $ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
-                            application_log("success", "New elective [".$EVENT["event_title"]."] cancelled from the system.");
+							application_log("success", "User [".$ENTRADA_USER->getActiveId()."] removed their own elective [".$EVENT_ID."] from the system.");
 
                             echo display_success();
 						}

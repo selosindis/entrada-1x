@@ -4108,7 +4108,8 @@ CREATE TABLE IF NOT EXISTS `quizzes_lu_quiztypes` (
 
 INSERT INTO `quizzes_lu_quiztypes` (`quiztype_id`, `quiztype_code`, `quiztype_title`, `quiztype_description`, `quiztype_active`, `quiztype_order`) VALUES
 (1, 'delayed', 'Delayed Quiz Results', 'This option restricts the learners ability to review the results of a quiz attempt (i.e. score, correct / incorrect responses, and question feedback) until after the time release period has expired.', 1, 0),
-(2, 'immediate', 'Immediate Quiz Results', 'This option will allow the learner to review the results of a quiz attempt (i.e. score, correct / incorrect responses, and question feedback) immediately after they complete the quiz.', 1, 1);
+(2, 'immediate', 'Immediate Quiz Results', 'This option will allow the learner to review the results of a quiz attempt (i.e. score, correct / incorrect responses, and question feedback) immediately after they complete the quiz.', 1, 1),
+(3, 'hide', 'Hide Quiz Results', 'This option restricts the learners ability to review the results of a quiz attempt (i.e. score, correct / incorrect responses, and question feedback), and requires either manual release of the results to the students, or use of a Gradebook Assessment to release the resulting score.', 1, 2);
 
 CREATE TABLE IF NOT EXISTS `quiz_contacts` (
   `qcontact_id` int(12) NOT NULL AUTO_INCREMENT,

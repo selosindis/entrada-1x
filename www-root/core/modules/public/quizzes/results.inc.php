@@ -212,6 +212,13 @@ if ($RECORD_ID) {
 
 					echo display_error();
 				}
+			} elseif (($quiz_record["quiztype_code"] == "hide")) {
+				$NOTICE++;
+				$NOTICESTR[] = "You will not be able to review your quiz results for this quiz, however the results should be released to you by a teacher, likely through a <a href=\"".ENTRADA_URL."/profile/gradebook\">Course Gradebook</a>.<br /><br />Please contact a teacher if you require further assistance.";
+
+				echo display_notice();
+
+				application_log("error", "Someone attempted to review results of qprogress_id [".$RECORD_ID."] (quiz_id [".$quiz_record["quiz_id"]."] / event_id [".$quiz_record["event_id"]."]) after the release date.");
 			} else {
 				$NOTICE++;
 				$NOTICESTR[] = "You will not be able to review your quiz results until after <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>.<br /><br />Please contact a teacher if you require further assistance.";

@@ -37,6 +37,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+
+	if(!isset($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"]) || !isset($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"])){
+		$_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] = "student";
+		$_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"] = "asc";
+	}
+
+	if(isset($_GET["sb"]) && $tmp_sb = clean_input($_GET["sb"],array("trim","notags"))){
+		if (in_array(strtolower($tmp_sb),array('student','submitted','grade'))) {
+			$_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] = $tmp_sb;
+		}
+	}
+
+	if(isset($_GET["so"]) && $tmp_so = clean_input($_GET["so"],array("trim","notags"))){
+		if (in_array(strtolower($tmp_so),array('desc','asc'))) {
+			$_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"] = $tmp_so;
+		}
+	}	
+
 	/**
 	 * Add PlotKit to the beginning of the $HEAD array.
 	 */
@@ -49,14 +67,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/SweetCanvas.js\"></script>",
 		"<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/PlotKit/EasyPlot.js\"></script>"
 		);
-
+		
 	if ($COURSE_ID) {
-		$query			= "	SELECT * FROM `courses`
+		$query			= "	SELECT * FROM `courses` 
 							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 							AND `course_active` = '1'";
 		$course_details	= $db->GetRow($query);
-
-		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
+		
+		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {			
 
 			$query = "	SELECT `assignments`.*,	`assessments`.`cohort`, `assessment_marking_schemes`.`id` AS `marking_scheme_id`, `assessment_marking_schemes`.`handler`, `assessment_marking_schemes`.`description` as `marking_scheme_description`
 						FROM `assignments`
@@ -65,7 +83,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
 						WHERE `assignments`.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID);
 			$assignment = $db->GetRow($query);
-			if ($assignment) {
+			if ($assignment) {				
 				$COHORT = $assignment["cohort"];
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assessments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "step" => false)), "title" => $assignment["assignment_title"]);
 				courses_subnavigation($course_details,"gradebook");
@@ -84,12 +102,67 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<style type="text/css">
 				.sortableList li {
 					width: 100%;
-				}
+				}	
 				</style>
 				<div>
 					<h1 class="event-title"><?php echo $assignment["assignment_title"]; ?></h1>
 				</div>
 				<?php
+//				$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, h.`grade_id` AS `grade_id`, h.`value` AS `grade_value`, i.`grade_weighting`, d.`updated_date` AS `submitted_date`
+//							FROM `entrada_auth`.`user_data` AS b
+//							JOIN `entrada_auth`.`user_access` AS c
+//							ON c.`user_id` = b.`id` 
+//							AND c.`app_id`= ".$db->qstr(AUTH_APP_ID)."
+//							AND c.`account_active` = 'true'
+//							AND (c.`access_starts` = '0' OR c.`access_starts`<= '1330627003')
+//							AND (c.`access_expires` = '0' OR c.`access_expires`>= '1330627003')
+//							JOIN `assignment_files` AS d
+//							ON d.`proxy_id` = b.`id`
+//							JOIN `assignments` AS e
+//							ON d.`assignment_id` = e.`assignment_id`
+//							AND d.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
+//							JOIN `assessments` AS f
+//							ON e.`assessment_id` = f.`assessment_id`
+//							LEFT JOIN `group_members` AS g
+//							ON g.`group_id` = f.`cohort`
+//							AND g.`proxy_id` = b.`id`
+//							LEFT JOIN `entrada`.`assessment_grades` AS h 
+//							ON b.`id` = h.`proxy_id` 
+//							AND h.`assessment_id` = ".$db->qstr($assignment["assessment_id"])."
+//							LEFT JOIN `assessment_exceptions` AS i
+//							ON b.`id` = i.`proxy_id`
+//							AND h.`assessment_id` = i.`assessment_id`
+//							ORDER BY b.`lastname` ASC, b.`firstname` ASC";
+				$order = strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"]);
+				$orders = array('student'=>"desc",'grade'=>"desc",'submitted'=>'desc');
+				switch($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"]) {
+					case 'student':
+						$by = "a.`lastname`";
+						if ($order == "DESC") {
+							$orders['student'] = "asc";
+						}
+						break;
+					case 'grade':
+						$by = "`grade_value`";
+						if ($order == "DESC") {
+							$orders['grade'] = "asc";
+						}						
+						break;
+					case 'submitted':						
+						$by = "`submitted_date`";
+						if ($order == "DESC") {
+							$orders['submitted'] = "asc";
+						}						
+						break;
+					default:
+						$by = "`submitted_date`";
+						if ($order == "DESC") {
+							$orders['submitted'] = "asc";
+						}			
+						$_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] = "submitted";
+						break;
+				}				
+
 				$query = "	SELECT a.id AS `proxy_id`, CONCAT_WS(', ',a.`lastname`,a.`firstname`) AS `fullname`, c.`assessment_id`, b.`updated_date` AS `submitted_date`, b.`afile_id`, d.`grade_id`, d.`value` AS `grade_value`, f.`handler`, g.`grade_weighting`
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
 							JOIN `assignment_files` AS b
@@ -98,7 +171,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							AND b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
 							JOIN `assignments` AS c
 							ON b.`assignment_id` = c.`assignment_id`
-							LEFT JOIN `assessment_grades` AS d
+							LEFT JOIN `assessment_grades` AS d 
 							ON c.`assessment_id` = d.`assessment_id`
 							AND d.`proxy_id` = a.`id`
 							LEFT JOIN `assessments` AS e
@@ -107,9 +180,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							ON e.`marking_scheme_id` = f.`id`
 							LEFT JOIN `assessment_exceptions` AS g
 							ON g.`assessment_id` = d.`assessment_id`
-							AND g.`proxy_id` = a.`id`";
+							AND g.`proxy_id` = a.`id`
+							ORDER BY ".$by." ".$order;			
 				$students = $db->GetAll($query);
-
+												
 				$query = "	SELECT * FROM `assessments` AS a
 							JOIN `assessment_marking_schemes` AS b
 							ON a.`marking_scheme_id` = b.`id`
@@ -118,44 +192,53 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				?>
 				<div style="float: right; text-align: right; width:400px;">
 					<ul class="page-action">
-						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "edit","assignment_id"=>$assignment["assignment_id"], "step" => false)); ?>" class="strong-green">Edit Assignment Drop Box</a></li>
-						<?php if (isset($assessment) && $assessment && $students){ ?><li><a href="#" id="advanced-options" class="strong-green">Show Options</a></li><?php } ?>
+						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "edit","assignment_id"=>$assignment["assignment_id"], "step" => false)); ?>" class="strong-green">Edit Assignment</a></li>
+						<?php if($assignment["assessment_id"]){ ?>
+						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit","assessment_id"=>$assignment["assessment_id"], "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
+						<?php } ?>
+						<?php if (isset($assessment) && $assessment){ ?><li><a href="#" id="advanced-options" class="strong-green">Show Options</a></li><?php } ?>
 					</ul>
 				</div>
 				<div style="clear: both;"></div>
-				<?php
+				<?php				
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
 				if ($students && count($students) >= 1): ?>
 					<span id="assessment_name" style="display: none;"><?php echo $assignment["assignment_title"]; ?></span>
 					<div id="assignment_submissions">
 						<h2>Submissions <?php if(extension_loaded('zip')) { ?><a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=download-submissions&id=<?php echo $assignment["assignment_id"];?>"><span style="float:right;"><img src="<?php echo ENTRADA_URL;?>/templates/default/images/btn_save.gif" title="Download File" alt="Download File" width="15"/> Download All Submissions</span></a><?php } ?></h2>
-						<div style="margin-bottom: 5px;">
+						<div style="margin-bottom: 5px;">							
 							<span class="content-small"><strong>Tip: </strong><?php echo $assignment["marking_scheme_description"]; ?></span>
-						</div>
-						<table style="width: 100%;" class="tableList gradebook assignment <?php echo $editable; ?>">
+						</div>				
+						<table style="width: 100%;" class="tableList assignment <?php echo $editable; ?>">
 							<colgroup>
 								<col class="modified" style="width: 5%;">
 								<col class="title" style="width: 45%;">
-								<col class="grade" style="width: 20%;">
+								<col class="grade" style="width: 20%;">								
 								<col class="date" style="width: 30%;">
 							</colgroup>
 							<thead>
 								<tr style="background-color:#ccc;">
 									<td class="modified">&nbsp;</td>
-									<td class="title">Student</td>
-									<td class="grade-title">Grade</td>
-									<td class="date">Submitted</td>
+									<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] == "student") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"]) : ""); ?>">
+										<a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=grade&amp;id=<?php echo $COURSE_ID;?>&amp;assignment_id=<?php echo $ASSIGNMENT_ID;?>&amp;sb=student&amp;so=<?php echo $orders['student'];?>" title="Order by Student, Sort Decending">Student</a>										
+									</td>
+									<td class="grade<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] == "grade") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"]) : ""); ?>">
+										<a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=grade&amp;id=<?php echo $COURSE_ID;?>&amp;assignment_id=<?php echo $ASSIGNMENT_ID;?>&amp;sb=grade&amp;so=<?php echo $orders['grade'];?>" title="Order by Grade, Sort Decending">Grade</a>										
+									</td>
+									<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] == "submitted") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"]) : ""); ?>">
+										<a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=grade&amp;id=<?php echo $COURSE_ID;?>&amp;assignment_id=<?php echo $ASSIGNMENT_ID;?>&amp;sb=submitted&amp;so=<?php echo $orders['submitted'];?>" title="Order by Submitted, Sort Decending">Submitted</a>										
+									</td>
 								</tr>
 							</thead>
 							<tbody>
-								<?php
+								<?php								
 								foreach ($students as $key => $student) {
 									if (isset($student["grade_id"])) {
 										$grade_id = $student["grade_id"];
 									} else {
 										$grade_id = "";
 									}
-
+									
 									if (isset($student["grade_value"])) {
 										$grade_value = format_retrieved_grade($student["grade_value"], $assessment);
 									} else {
@@ -200,20 +283,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										<td colspan="4" style="text-align:right;">
 											<a href="javascript:void(0);" class="view_comments" id="view_comments_<?php echo $student["proxy_id"] ?>">View Comments</a> &nbsp; <span class="leave_comment" id="leave_comment_<?php echo $student["proxy_id"] ?>">Leave Comment</span>
 											<ul class="comments" id="comments_<?php echo $student["proxy_id"] ?>">
-												<?php
-												$query = "	SELECT a.*, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `commenter_fullname`, c.`username` AS `commenter_username`
-															FROM `assignment_comments` AS a
-															JOIN `assignment_files` AS b
-															ON a.`afile_id` = b.`afile_id`
+												<?php 
+												$query = "	SELECT a.*, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `commenter_fullname`, c.`username` AS `commenter_username` 
+															FROM `assignment_comments` AS a 
+															JOIN `assignment_files` AS b 
+															ON a.`afile_id` = b.`afile_id` 
 															LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
-															ON a.`proxy_id` = c.`id`
-															WHERE b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
+															ON a.`proxy_id` = c.`id` 
+															WHERE b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)." 
 															AND b.`proxy_id` = ".$db->qstr($student["proxy_id"])."
 															AND a.`comment_active` = '1'";
 												$comment_results = $db->GetAll($query);
 												if($comment_results){
 												?>
-
+												
 												<?php
 												foreach($comment_results as $result) {
 													$comments++;
@@ -251,7 +334,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 												}
 												?>
 											    <li style="text-align:right;" class="list-action"><span class="leave_comment" id="leave_comment_<?php echo $student["proxy_id"] ?>">Leave Comment</span></li>
-												<?php } ?>
+												<?php } ?>													
 											</ul>
 											<div class="new_comment" id="new_comment_<?php echo $student["proxy_id"] ?>">
 												<table class="comment_form" style="width:100%;">
@@ -267,7 +350,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								}
 								?>
 							</tbody>
-						</table>
+						</table>					
 					</div>
 					<script type="text/javascript">
 						jQuery(document).ready(function(){
@@ -282,7 +365,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<div id="gradebook_stats" style="margin-top:14px;padding-left:15px;">
 						<h2>Statistics</h2>
 						<div id="graph"></div>
-					 	<?php
+					 	<?php 
 						switch($assessment["marking_scheme_id"]) {
 							case 1:
 							case 4:
@@ -389,9 +472,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<div style="margin-top: 40px;">
 							<h2>Grade Calculation Exceptions</h2>
 							<p>
-								You can use the following exception creator to modify the calculations used to create the students final grade in this course.
+								You can use the following exception creator to modify the calculations used to create the students final grade in this course. 
 							</p>
-
+							
 							<label for="student_exceptions" class="form-required">Student Name</label>
 							<select name="student_exceptions" id="student_exceptions" style="width: 210px;" onchange="add_exception(this.options[this.selectedIndex].value, '<?php echo $assignment["assessment_id"]; ?>')">
 							<option value="0">-- Select A Student --</option>
@@ -407,31 +490,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<script type="text/javascript">
 							var updating = false;
 							function delete_exception (proxy_id, assessment_id) {
-
+								
 								var anOption = document.createElement('option');
 								anOption.value = proxy_id;
 								anOption.innerHTML = $(proxy_id+'_name').innerHTML;
 								$('student_exceptions').appendChild(anOption);
-
-								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php',
+								
+								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
 									{
 										method:	'post',
 										parameters: 'remove=1&assessment_id='+assessment_id+'&proxy_id='+proxy_id
 							    	}
 							    );
 							}
-
+							
 							function modify_exception (proxy_id, assessment_id) {
 								if (!updating) {
 									updating = true;
 									setTimeout('modify_exception_ajax('+proxy_id+', '+assessment_id+')', 2000);
 								}
-
+							    
 							}
-
+							
 							function modify_exception_ajax(proxy_id, assessment_id) {
 								var grade_weighting = $('student_exception_'+proxy_id).value;
-								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php',
+								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
 									{
 										method:	'post',
 										parameters: 'assessment_id='+assessment_id+'&proxy_id='+proxy_id+'&grade_weighting='+grade_weighting,
@@ -442,9 +525,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							    	}
 							    )
 							}
-
+							
 							function add_exception (proxy_id, assessment_id) {
-								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php',
+								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
 									{
 										method:	'post',
 										parameters: 'assessment_id='+assessment_id+'&proxy_id='+proxy_id+'&grade_weighting=0'
@@ -452,7 +535,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							    );
 							    var children = $('student_exceptions').childNodes;
 							    var numchildren = children.length;
-
+							    
 								for (var i = 0; i < numchildren; i++) {
 									if (children[i].value == proxy_id) {
 										$('student_exceptions').removeChild(children[i]);
@@ -488,7 +571,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						<h2>Import Grades</h2>
 						<div id="display-notice-box" class="display-notice">
 								<strong>Important Notes:</strong>
-								<br />Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets).
+								<br />Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets). 
 								<br />Any grades entered will be overwritten if present in the CSV.
 						</div>
 						<form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $assignment["assessment_id"])); ?>" method="POST">
@@ -508,13 +591,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								jQuery('#advanced-options').text('Show Options');
 							} else {
 								jQuery('#assignment_submissions').attr('class','squeeze');
-								jQuery('#gradebook_stats').show();
+								jQuery('#gradebook_stats').show();	
 								jQuery('#advanced-options').text('Hide Options');
 							}
 						});
-
+						
 						jQuery('.add_comment').click(function(){
 							var id = jQuery(this).attr('id').substring(12);
+							//var comment_desc = tinyMCE.get('new_comment_desc_'+id).getContent();
 							var comment_desc = jQuery('#new_comment_desc_'+id).val();
 							var comment_title = jQuery('#new_comment_title_'+id).val();
 							jQuery.ajax({
@@ -528,21 +612,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											alert(result.error);
 										} else {
 											jQuery('#new_comment_desc_'+id).val('');
-											jQuery('#new_comment_title_'+id).val('');
+											jQuery('#new_comment_title_'+id).val('');											
 											jQuery('#new_comment_'+id).hide();
 											alert('Successfully sent message');
 										}
 									} catch(e) {
 											jQuery('#new_comment_desc_'+id).val('');
-											jQuery('#new_comment_title_'+id).val('');
+											jQuery('#new_comment_title_'+id).val('');											
 											jQuery('#new_comment_'+id).hide();
 											jQuery(data).insertBefore(jQuery('#comments_'+id+' > .list-action'));
-
+											
 									}
 								}
 							  });
 						});
-
+						
 						jQuery('.delete').live('click',function(){
 							id = jQuery(this).attr('id').substring(7);
 							jQuery("#dialog-confirm").dialog({
@@ -559,32 +643,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									}
 								}
 								});
-						});
-
+						});						
+						
 						jQuery('.view_comments').live('click',function(e){
 							var id = e.target.id.substring(14);
 							jQuery('#comments_'+id).show();
 							jQuery('#view_comments_'+id).text('Hide Comments');
 							jQuery('#view_comments_'+id).attr('class','hide_comments');
-						});
+						});	
 
 						jQuery('.hide_comments').live('click',function(e){
 							var id = e.target.id.substring(14);
 							jQuery('#comments_'+id).hide();
 							jQuery('#view_comments_'+id).text('View Comments');
 							jQuery('#view_comments_'+id).attr('class','view_comments');
-						});
+						});		
 
 						jQuery('.leave_comment').live('click',function(e){
 							var id = e.target.id.substring(14);
 							jQuery('#new_comment_'+id).show();
-						});
+						});	
 
 						jQuery('.cancel_comment').live('click',function(e){
 							var id = e.target.id.substring(15);
 							jQuery('#new_comment_'+id).hide();
 							jQuery('#new_comment_text_'+id).val('');
-						});
+						});	
 					});
 					</script>
 					<div id="dialog-confirm" title="Delete?" style="display: none">
@@ -608,7 +692,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					ul.comments{
 						list-style-type: none;
 						padding: 0;
-						margin-left: 0;
+						margin-left: 0;			
 					}
 					ul.comments li{
 						width:100%;
@@ -643,7 +727,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<?php
 				else:
 				?>
-				<div class="display-generic">No one has submitted their assignment just yet, but when they do you will see them here.</div>
+				<div class="display-notice">No one has submitted their assignment yet.</div>
 				<?php endif;
 			} else {
 				$ERROR++;

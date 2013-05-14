@@ -69,7 +69,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			if ($assessment) {
 				$COHORT = $assessment["cohort"];
 				
-				courses_subnavigation($course_details);
+				courses_subnavigation($course_details,"gradebook");
 
 				echo "<div class=\"content-small\">";
 				if ($COURSE_ID) {

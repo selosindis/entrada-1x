@@ -15,41 +15,41 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Primary controller file for the Users module.
- * /admin/users
+ * Primary controller file for the public Gradebook module.
+ * /gradebook
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
- * @author Developer: Matt Simpson <jonathan.fingland@queensu.ca>
+ * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
- * @version $Id: observerships.inc.php 1187 2010-05-06 13:44:57Z finglanj $
  */
+require_once("Entrada/gradebook/handlers.inc.php");
 
-if (!defined("PARENT_INCLUDED")) {
+if(!defined("PARENT_INCLUDED")) {
 	exit;
-} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("user", "update", false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("gradebook", "read") || $ENTRADA_USER->getGroup() != "student") {
 	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	$ERRORSTR[]	= "You do not have the permissions required to use this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	define("IN_OBSERVERSHIPS_ADMIN", true);
+	define("IN_PUBLIC_OBSERVERSHIPS",	true);
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/observerships", "title" => "Manage Observerships");
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/observerships", "title" => "My Observerships");
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
 
-		if (isset($_GET["id"]) && ($tmp_input = clean_input($_GET["id"], array("trim", "int")))) {
-			$PROXY_ID = $tmp_input;
+		if ((isset($_GET["id"]) && ($tmp_input = clean_input($_GET["id"], array("nows", "int")))) || isset($_POST["id"]) && ($tmp_input = clean_input($_POST["id"], array("nows", "int")))) {
+			$OBSERVERSHIP_ID = $tmp_input;
 		} else {
-			$PROXY_ID = 0;
+			$OBSERVERSHIP_ID = 0;
 		}
 
 		$module_file = $router->getRoute();
@@ -61,5 +61,11 @@ if (!defined("PARENT_INCLUDED")) {
 		 * Check if preferences need to be updated on the server at this point.
 		 */
 		preferences_update($MODULE, $PREFERENCES);
+	} else {
+		$url = ENTRADA_URL;
+		application_log("error", "The Entrada_Router failed to load a request. The user was redirected to [".$url."].");
+
+		header("Location: ".$url);
+		exit;
 	}
 }

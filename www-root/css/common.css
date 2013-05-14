@@ -420,13 +420,13 @@ font-family:Arial, Helvetica, sans-serif;
 font-size:12px;
 }
 
-.success {
+/*.success {
 font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
 font-size:12px;
 font-weight:700;
 color:#01619B;
 text-decoration:blink;
-}
+}*/
 
 .form-required {
 vertical-align: middle;

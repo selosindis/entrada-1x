@@ -38,8 +38,93 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-?>
-Observerships admin
+	
+	require_once("Models/utility/Editable.interface.php");
+	require_once("Models/mspr/Observership.class.php");
+	require_once("Models/mspr/Observerships.class.php");
+	echo "<h1>Pending Observerships</h1>";
+	
+	$observerships = Observerships::get(array("status" => "pending"));
+	
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/observerships", "title" => "Pending Observerships");
+	
+	switch ($STEP) {
+		case 2 :
+			if ($_POST["action"] == "Reject" || $_POST["action"] == "Approve") {
+				$set_status = ($_POST["action"] == "Reject" ? "rejected" : "approved");
+				if ($_POST["status"] && is_array($_POST["status"])) {
+					foreach ($_POST["status"] as $id => $status) {
+						if ($status == "on") {
+							$id = (int) $id;
+							$query = "UPDATE `student_observerships` SET `status` = ".$db->qstr($set_status)." WHERE `id` = ".$db->qstr($id);
+							if(!$db->Execute($query)) {
+								add_error("Failed to update observership. A system administrator has been informed, please try again later.");
+								application_log("error", "Failed to updated observership, DB said: ".$db->ErrorMsg());
+							}
+						} else {
+							add_error("Sorry, but a problem occurred while attempting to update the observership status. An invalid status type was sent to the server.");
+							application_log("error", "Attempt to updated observership [".$id."] with invalid status of [".$status."]");
+						}
+					}
+					if (!$ERROR) {
+						add_success("Thank you, the observerships have successfully been updated. You will be directed to the observerships page in 5 seconds. Please <a href=\"".ENTRADA_URL."/admin/observerships\">click here</a> if you do not wish to wait.");
+					}
+				}
+			} else {
+				add_error("Sorry, an error ocurred while trying to update the selected observership statuses. An administrator has been informed, please try again later.");
+			}
+		break;
+	}
+	
+	switch ($STEP) {
+		case 2 :
+			if ($ERROR) {
+				echo display_error();
+				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/observerships\\'', 5000)";
+			}
+			if ($SUCCESS) {
+				echo display_success();
+				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/observerships\\'', 5000)";
+			}
+		break;
+		case 1 :
+			if (count($observerships) > 0) { ?>
+				<form action="<?php echo ENTRADA_URL; ?>/admin/observerships" method="post">
+					<input type="hidden" name="step" value="2" />
+					<table class="table table-striped table-bordered" id="observership-list" cellspacing="0" cellpadding="1" summary="List of Observerships">
+						<thead>
+							<tr>
+								<th></th>
+								<th>Student</th>
+								<th>Title</th>
+								<th>Start</th>
+								<th>Finish</th>
+							</tr>
+						</thead>
+						<tbody>
+				<?php
+				foreach ($observerships as $observership) {
+					$student = User::get($observership->getStudentID());
+					echo "<tr>\n";
+					echo "<td><input type=\"checkbox\" name=\"status[".$observership->getId()."]\" /></td>\n";
+					echo "<td><a href=\"".ENTRADA_URL."/admin/users/manage/students?section=observerships&id=".$student->getID()."\">".$student->getFullname(false)."</a></td>\n";
+					echo "<td><a href=\"" . ENTRADA_URL . "/admin/observerships?section=review&id=".$observership->getId()."\">".$observership->getTitle()."</a></td>\n";
+					echo "<td>".date("Y-m-d", $observership->getStart())."</td>\n";
+					echo "<td>".date("Y-m-d", $observership->getEnd())."</td>\n";
+					echo "</tr>\n";
+				} ?>
+						</tbody>
+					</table>
+					<div class="row-fluid">
+						<input class="btn"  type="submit" value="Reject" name="action" />
+						<input class="btn btn-primary pull-right" type="submit" value="Approve" name="action" />
+					</div>
+				</form>
+				<?php
+			} else {
+				echo "<div class=\"display-generic\">There are no pending observerships at this time. Please use the <a href=\"".ENTRADA_URL."/admin/users\">Manage Users</a> section to review individual user observerships.</div>"; 
+			}
 
-<?php
+		break;
+	}
 }

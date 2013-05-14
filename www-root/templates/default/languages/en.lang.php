@@ -39,6 +39,9 @@ return array (
 			"annualreport" => array ("title" => "My Annual Report", "resource" => "annualreport", "permission" => "read"),
 			"help" => array ("title" => "Help")
 		),
+		"admin" => array(
+			"observerships" => array ("title" => "Manage Observerships")
+		)
 /*		@todo This is not currently used, unfortunately this exists in core/includes/settings.php in the $MODULES array.
 		We need to fix this in order to allow it to work from here. The use of the $MODULES array is silly,
 		and I believe this is something that should be handled by the ACL or is just plain unnecessary.

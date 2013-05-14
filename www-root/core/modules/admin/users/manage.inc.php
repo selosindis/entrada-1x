@@ -76,6 +76,7 @@ function add_student_management_sidebar () {
 	$baseurl = ENTRADA_URL."/admin/users/manage/students";
 	$sidebar_html  = "<ul class=\"menu\">";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".$baseurl."?section=mspr&id=".$PROXY_ID."\">MSPR</a></li>\n";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".$baseurl."?section=observerships&id=".$PROXY_ID."\">Observerships</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".$baseurl."?section=leavesofabsence&id=".$PROXY_ID."\">Leaves of Absence</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".$baseurl."?section=formalremediation&id=".$PROXY_ID."\">Formal Remediation</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".$baseurl."?section=disciplinaryactions&id=".$PROXY_ID."\">Disciplinary Actions</a></li>\n";

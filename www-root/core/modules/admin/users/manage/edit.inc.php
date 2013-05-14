@@ -1228,7 +1228,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												ON a.`proxy_id` = b.`proxy_id`
 												AND b.`pub_id` = a.`".$data["id_field"]."`
 												AND (b.`dep_id` = ".$db->qstr($department_id). " || b.`dep_id` IS NULL)
-												WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+												WHERE a.`proxy_id` = ".$db->qstr($user_record["id"]);
 									$pubs = $db->GetAll($query);
 									if ($pubs) { ?>
 										<h4><?php echo ucwords(str_replace("ar ", "", str_replace("_", " ", $type_table))); ?></h4>

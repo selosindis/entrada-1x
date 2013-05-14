@@ -234,6 +234,9 @@ $NOTICESTR = array();
 $SUCCESS = 0;
 $SUCCESSSTR = array();
 
+$GENERIC = 0;
+$GENERICSTR = array();
+
 $BREADCRUMB = array();
 $HEAD = array();
 $ONLOAD = array();

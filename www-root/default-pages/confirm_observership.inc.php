@@ -26,73 +26,89 @@
 
 if(!defined("PARENT_INCLUDED")) exit;
 
-$unique_id = clean_input($_GET["unique_id"], "alphanumeric");
+$unique_id = isset($_GET["unique_id"]) ? clean_input($_GET["unique_id"], "alphanumeric") : NULL;
+
+echo "<h1>Observership Confirmation</h1>";
 
 if ($unique_id) {
 	
-	echo "<h1>Observership Confirmation</h1>";
-
 	require_once(ENTRADA_CORE."/library/Models/utility/Editable.interface.php");
 	require_once(ENTRADA_CORE."/library/Models/mspr/Observership.class.php");
 
-	$step		= (isset($_POST["step"]) ? (int) $_POST["step"] : '1');
-	$action		= (isset($_POST["action"]) ? (strtolower($_POST["action"]) == "confirm") ? "confirm" : ((strtolower($_POST["action"]) == "reject") ? "reject" : "" ) : "");
+	$step = (isset($_POST["step"]) ? (int) $_POST["step"] : '1');
+	
+	$observership = Observership::getByUniqueID($unique_id);
 
-	$obs = Observership::getByUniqueID($unique_id);
-
-	if ($obs && $obs->getStatus() == "UNCONFIRMED") {
+	if ($observership && $observership->getStatus() == "approved") {
 
 		switch ($step) {
 			case 2 :
-				// update the status to confirmed or rejected
-				$obs->update(array(	"title" => $obs->getTitle(), 
-									"site" => $obs->getSite(),
-									"location" => $obs->getLocation(),
-									"preceptor_proxy_id" => (($obs->getPreceptor()) ? $obs->getPreceptor()->getProxyId() : NULL), 
-									"preceptor_firstname" => $obs->getPreceptorFirstname(), 
-									"preceptor_lastname" => $obs->getPreceptorLastname(), 
-									"start" => $obs->getStart(), 
-									"end" => $obs->getEnd(), 
-									"preceptor_prefix" => $obs->getPreceptorPrefix(), 
-									"preceptor_email" => $obs->getPreceptorEmail(), 
-									"status" => strtoupper($action."ed"), 
-									"id" => $obs->getID()
-								));
-				echo display_success();
+				if ($_POST["action"] == "Confirm" || $_POST["action"] == "Deny") {
+					$PROCESSED["status"] = ($_POST["action"] == "Confirm" ? "confirmed" : "denied");
+				}
+				
+				if ($PROCESSED["status"]) {
+					$query = "UPDATE `student_observerships` SET `status` = ".$db->qstr($PROCESSED["status"])." WHERE `id` = ".$db->qstr($observership->getID());
+					if ($db->Execute($query)) {
+						add_success("Thank you for updating this observership.");
+					} else {
+						application_log("error", "Error occurred when attempting to update `student_observershisp` [".$observership->getID()."], DB said: ".$db->ErrorMsg());
+						add_error("An error ocurred, we were unable to update the observership. A system administrator has been informed, please try again later.");
+					}
+				} else {
+					add_error("A problem occurred, an invalid action was provided. A system administrator has been informed, please try again later.");
+				}
 			break;
 			default :
 			continue;
 		}
 
 		switch ($step) {
+			case 2 :
+				if ($ERROR) {
+					echo display_error();
+				}
+				if ($SUCCESS) {
+					echo display_success();
+				}
+			break;
 			case 1 :
 		?>
 
-	<p><?php echo (($obs->getPreceptorPrefix() ? $obs->getPreceptorPrefix()." " : "").$obs->getPreceptorFirstname()." ".$obs->getPreceptorLastname()); ?>,</p>
-	<p>The user <?php echo $obs->getUser()->getFullname(false); ?> has indicated you were the preceptor for the following observership:</p>
-	<ul class="mspr-list ">
-		
-		<li class="entry">
-			
-			<span class="label">Title:</span>
-			<span class="data"><?php echo $obs->getTitle(); ?></span>
-			<span class="label">Site:</span>
-			<span class="data"><?php echo $obs->getSite(); ?></span>
-			<span class="label">Location:</span>
-			<span class="data"><?php echo $obs->getLocation(); ?></span>
-			<span class="label">Period:</span>
-			<span class="data"><?php echo $obs->getPeriod(); ?></span>
-		
-		</li>
-		
-	</ul>
+	<p><?php echo (($observership->getPreceptorPrefix() ? $observership->getPreceptorPrefix()." " : "").$observership->getPreceptorFirstname()." ".$observership->getPreceptorLastname()); ?>,</p>
+	<p>The learner <?php echo $observership->getUser()->getFullname(false); ?> has indicated you were the preceptor for the following observership:</p>
+	<blockquote>
+	<div class="row-fluid">
+		<div class="span2"><strong>Title:</strong></div>
+		<div class="span10"><?php echo $observership->getTitle(); ?></div>
+	</div>
+	<div class="row-fluid">
+		<div class="span2"><strong>Clinical Discipline:</strong></div>
+		<div class="span10"><?php echo $observership->getClinicalDiscipline(); ?></div>
+	</div>
+	<div class="row-fluid">
+		<div class="span2"><strong>Organisation:</strong></div>
+		<div class="span10"><?php echo $observership->getOrganisation(); ?></div>
+	</div>
+	<div class="row-fluid">
+		<div class="span2"><strong>Location:</strong></div>
+		<div class="span10"><?php echo $observership->getCity() . ", " . $observership->getProv() . ", " . $observership->getCountry(); ?></div>
+	</div>
+	<div class="row-fluid">
+		<div class="span2"><strong>Period:</strong></div>
+		<div class="span10"><?php echo $observership->getPeriod(); ?></div>
+	</div>
+	</blockquote>
+
 	
-	<p>Please confirm or reject the observership with the buttons below.</p>
+	<p>Please confirm or deny the observership with the buttons below.</p>
 	
 	<form action="<?php echo ENTRADA_URL."/confirm_observership?unique_id=".$unique_id; ?>" method="POST">
-		<input type="hidden" value="<?php echo $step + 1; ?>" name="step" />
-		<input type="submit" value="Confirm" name="action" />
-		<input type="submit" value="Reject" name="action" />
+		<div class="row-fluid">
+			<input type="hidden" value="2" name="step" />
+			<input class="btn" type="submit" value="Deny" name="action" />
+			<input class="btn btn-primary pull-right" type="submit" value="Confirm" name="action" />
+		</div>
 	</form>
 
 	<?php 
@@ -101,8 +117,15 @@ if ($unique_id) {
 			continue;
 		}
 
+	} else if ($observership && ($observership->getStatus() == "confirmed" || $observership->getStatus() == "denied")) { 
+		add_success("Thank you, your response to this observership has been recorded.");
+		echo display_success();
 	} else {
-		add_error("Observership not found.");
+		application_log("error", "Unable to find observership by unique id [".$unique_id."].");
+		add_error("Sorry, we were unable to find the observership associated with this id. An administrator has been informed, please try again later.");
 		echo display_error();
 	}
+} else {
+	add_notice("An error has ocurred, a valid unique identification number has not been supplied. Please contact support for further assistance.");
+	echo display_notice();
 }

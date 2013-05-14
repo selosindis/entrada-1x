@@ -864,7 +864,7 @@ if ($topic_results) { ?>
 								echo "This quiz was only available until <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>. Please contact a teacher for assistance if required.<br /><br />";
 							}
 
-							echo quiz_generate_description($quiz_record["required"], $quiz_record["quiztype_code"], $quiz_record["quiz_timeout"], $total_questions, $quiz_record["quiz_attempts"], $quiz_record["timeframe"], $quiz_record["require_attendance"]);
+							echo quiz_generate_description($quiz_record["required"], $quiz_record["quiztype_code"], $quiz_record["quiz_timeout"], $total_questions, $quiz_record["quiz_attempts"], $quiz_record["timeframe"], $quiz_record["require_attendance"], $event_info["course_id"]);
 							echo "			</div>\n";
 
 							if ($progress_record) {
@@ -893,12 +893,14 @@ if ($topic_results) { ?>
 
 									switch ($entry["progress_value"]) {
 										case "complete" :
-											if (($quiz_record["quiztype_code"] != "delayed") || ($quiz_record["release_until"] <= time())) {
+											if (($quiz_record["quiztype_code"] == "delayed" && $quiz_record["release_until"] <= time()) || ($quiz_record["quiztype_code"] == "immediate")) {
 												$percentage = ((round(($entry["quiz_score"] / $entry["quiz_value"]), 2)) * 100);
 												echo "<li class=\"".(($percentage >= 60) ? "correct" : "incorrect")."\">";
 												echo	date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> ".$entry["quiz_score"]."/".$entry["quiz_value"]." (".$percentage."%)";
 												echo "	( <a href=\"".ENTRADA_RELATIVE."/quizzes?section=results&amp;id=".$entry["qprogress_id"]."\">review quiz</a> )";
 												echo "</li>";
+											} elseif ($quiz_record["quiztype_code"] == "hide") {
+												echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." - <strong>Completed</strong></li>";
 											} else {
 												echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> To Be Released ".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</li>";
 											}

@@ -131,17 +131,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 		}
 		$quiz_record	= $db->GetRow($query);
 		if ($quiz_record) {
-			$community_access_query = "	SELECT * FROM `community_members`
-										WHERE `community_id` = ".$db->qstr($quiz_record["community_id"])."
-										AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-										AND `member_active` = '1'
-										AND `member_acl` = '1'";
+			if ($QUIZ_TYPE == "community_page") {
+				$query = "	SELECT * FROM `community_members`
+											WHERE `community_id` = ".$db->qstr($quiz_record["community_id"])."
+											AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+											AND `member_active` = '1'
+											AND `member_acl` = '1'";
+				$community_admin = $db->GetRow($query);
+			}
 			if ($QUIZ_TYPE == "event" && !$ENTRADA_ACL->amIAllowed(new EventContentResource($quiz_record["content_id"], $quiz_record["course_id"], $quiz_record["organisation_id"]), "update")) {
 				application_log("error", "Someone attempted to view the results of an aquiz_id [".$RECORD_ID."] that they were not entitled to view.");
 
 				header("Location: ".ENTRADA_URL."/admin/events?section=content&id=".$quiz_record["content_id"]);
 				exit;
-			} elseif ($QUIZ_TYPE == "community_page" && !($db->GetRow($community_access_query))) {
+			} elseif ($QUIZ_TYPE == "community_page" && !$community_admin) {
 				application_log("error", "Someone attempted to view the results of an aquiz_id [".$RECORD_ID."] that they were not entitled to view.");
 
 				header("Location: ".ENTRADA_URL."/community/".$quiz_record["community_url"].":".$quiz_record["page_url"]);
@@ -150,11 +153,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/livepipe/progressbar.js?release=".APPLICATION_VERSION."\"></script>";
 				if ($QUIZ_TYPE == "event") {
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?section=content&id=".$quiz_record["content_id"], "title" => limit_chars($quiz_record["content_title"], 32));	
+					if ($ENTRADA_ACL->amIAllowed(new EventContentResource($quiz_record["content_id"], $quiz_record["course_id"], $quiz_record["organisation_id"]), "update")) {
+						$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$quiz_record["quiz_id"], "title" => limit_chars($quiz_record["quiz_title"], 32));
+					}
 				} else {
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"], "title" => limit_chars($quiz_record["content_title"], 32));
-				}
-				if ($ENTRADA_ACL->amIAllowed(new EventContentResource($quiz_record["content_id"], $quiz_record["course_id"], $quiz_record["organisation_id"]), "update")) {
-					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$quiz_record["quiz_id"], "title" => limit_chars($quiz_record["quiz_title"], 32));
+					if ($community_admin) {
+						$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$quiz_record["quiz_id"], "title" => limit_chars($quiz_record["quiz_title"], 32));
+					}
 				}
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=results&id=".$RECORD_ID, "title" => "Quiz Results");
 
@@ -215,7 +221,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				 * Valid: first, last, all
 				 */
 				if (isset($_GET["attempt"])) {
-					if (in_array(trim($_GET["attempt"]), array("first", "last", "all"))) {
+					if (in_array(trim($_GET["attempt"]), array("first", "last", "best", "all"))) {
 						$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempt"] = trim($_GET["attempt"]);
 					}
 
@@ -227,7 +233,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				}
 
 				echo "<div class=\"content-small\">";
-				if ($quiz_record["course_id"]) {
+				if ($QUIZ_TYPE == "event" && $quiz_record["course_id"]) {
 					$curriculum_path = curriculum_hierarchy($quiz_record["course_id"]);
 
 					if ((is_array($curriculum_path)) && (count($curriculum_path))) {
@@ -343,6 +349,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempt"]) {
 								case "last" :
 									$query .= "	ORDER BY a.`updated_date` DESC
+												LIMIT 0, 1";
+								break;
+								case "best" :
+									$query .= "	ORDER BY a.`quiz_score` DESC
 												LIMIT 0, 1";
 								break;
 								case "all" :
@@ -492,7 +502,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									jQuery.ajax({
 										type: 'POST',
 										url: '<?php echo ENTRADA_URL."/admin/".$MODULE.'?section=results'; ?>',
-										data: 'mode=ajax&response_id='+jQuery(this).attr("rel")+'&quiz_id=<?php echo $RECORD_ID; ?>',
+										data: 'mode=ajax&response_id='+jQuery(this).attr("rel")+'&quiz_id=<?php echo $RECORD_ID.(isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempt"]) && in_array(trim($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempt"]), array("first", "last", "best", "all")) ? "&attempt=".$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempt"] : ""); ?>',
 										success: function(data) {
 											jQuery(data).dialog({
 												modal: true,
@@ -519,8 +529,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							<colgroup>
 								<col style="width: 3%" />
 								<col style="width: 3%" />
-								<col style="width: 43%" />
-								<col style="width: 35%" />
+								<col style="width: 40%" />
+								<col style="width: 38%" />
 								<col style="width: 8%" />
 								<col style="width: 8%" />
 							</colgroup>
@@ -774,6 +784,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					$sidebar_html .= "<ul class=\"menu\">\n";
 					$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempt"]) == "first") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("attempt" => "first"))."\" title=\"The First Attempt\">only the first attempt</a></li>\n";
 					$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempt"]) == "last") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("attempt" => "last"))."\" title=\"The Last Attempt\">only the last attempt</a></li>\n";
+					$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempt"]) == "best") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("attempt" => "best"))."\" title=\"The Best Attempt\">only the highest scored attempt</a></li>\n";
 					$sidebar_html .= "	<li class=\"".((strtolower($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["attempt"]) == "all") ? "on" : "off")."\"><a href=\"".ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("attempt" => "all"))."\" title=\"All Attempts\">all attempts</a></li>\n";
 					$sidebar_html .= "</ul>\n";
 

@@ -7954,7 +7954,7 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 	return true;
 }
 
-function quiz_generate_description($required = 0, $quiztype_code = "delayed", $quiz_timeout = 0, $quiz_questions = 1, $quiz_attempts = 0, $timeframe = "", $attendance = 0) {
+function quiz_generate_description($required = 0, $quiztype_code = "delayed", $quiz_timeout = 0, $quiz_questions = 1, $quiz_attempts = 0, $timeframe = "", $attendance = 0, $course_id = 0) {
 	global $db, $RESOURCE_TIMEFRAMES;
 
 	$output    = "This is %s quiz to be completed %s. You will have %s and %s to answer the %s in this quiz, and your results will be presented %s.%s";
@@ -7964,7 +7964,7 @@ function quiz_generate_description($required = 0, $quiztype_code = "delayed", $q
 	$string_3 = (((int) $quiz_timeout) ? $quiz_timeout." minute".(($quiz_timeout != 1) ? "s" :"") : "no time limitation");
 	$string_4 = (((int) $quiz_attempts) ? $quiz_attempts." attempt".(($quiz_attempts != 1) ? "s" : "") : "unlimited attempts");
 	$string_5 = $quiz_questions." question".(($quiz_questions != 1) ? "s" : "");
-	$string_6 = (($quiztype_code == "delayed") ? "only after the quiz expires" : "immediately after completion");
+	$string_6 = (($quiztype_code == "hide") ? "by a teacher, likely through ".($course_id ? "the <a href=\"".ENTRADA_URL."/profile/gradebook?section=view&id=".$course_id."\"><strong>Course Gradebook</strong></a>" : "a <a href=\"".ENTRADA_URL."/profile/gradebook\"><strong>Course Gradebook</strong></a>") : (($quiztype_code == "delayed") ? "only after the quiz expires" : "immediately after completion"));
 	$string_7 = (isset($attendance) && $attendance)?"<br /><br /> This quiz requires your attendance. You will not be able to access it if you have not been marked present.":"";
 	return sprintf($output, $string_1, $string_2, $string_3, $string_4, $string_5, $string_6, $string_7);
 }

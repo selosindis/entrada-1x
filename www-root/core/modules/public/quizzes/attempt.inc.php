@@ -33,7 +33,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_QUIZZES"))) {
 
 if ($RECORD_ID) {
 	if ($QUIZ_TYPE == "event") {
-		$query			= "	SELECT a.*, c.`event_title` AS `content_title`, c.`event_start`, c.`event_finish`, c.`release_date` AS `event_release_date`, c.`release_until` AS `event_release_until`, d.`quiztype_code`, d.`quiztype_title`
+		$query			= "	SELECT a.*, c.`course_id`, c.`event_title` AS `content_title`, c.`event_start`, c.`event_finish`, c.`release_date` AS `event_release_date`, c.`release_until` AS `event_release_until`, d.`quiztype_code`, d.`quiztype_title`
 							FROM `attached_quizzes` AS a
 							LEFT JOIN `quizzes` AS b
 							ON a.`quiz_id` = b.`quiz_id`
@@ -646,7 +646,7 @@ if ($RECORD_ID) {
 										}
 										</script>
 										<?php
-										$sidebar_html = quiz_generate_description($quiz_record["required"], $quiz_record["quiztype_code"], $quiz_record["quiz_timeout"], $total_questions, $quiz_record["quiz_attempts"], $quiz_record["timeframe"]);
+										$sidebar_html = quiz_generate_description($quiz_record["required"], $quiz_record["quiztype_code"], $quiz_record["quiz_timeout"], $total_questions, $quiz_record["quiz_attempts"], $quiz_record["timeframe"], $quiz_record["require_attendance"], (isset($quiz_record["course_id"]) && $quiz_record["course_id"] ? $quiz_record["course_id"] : 0));
 										new_sidebar_item("Quiz Statement", $sidebar_html, "page-anchors", "open", "1.9");
 									} else {
 										$ERROR++;

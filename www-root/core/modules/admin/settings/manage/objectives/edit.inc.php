@@ -58,9 +58,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					AND b.`organisation_id` = c.`organisation_id`
 					WHERE a.`objective_id` = ".$db->qstr($OBJECTIVE_ID)."
 					AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-					AND a.`objective_active` = '1'";
+					AND a.`objective_active` = '1'";					
 		$objective_details	= $db->GetRow($query);
-		
 		if ($MODE == "ajax") {
 			ob_clear_open_buffers();
 			$time = time();
@@ -184,7 +183,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						});
 						</script>
 
-						<form id="objective-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives"."?".replace_query(array("action" => "edit", "step" => 2, "mode" => "ajax")); ?>" method="post">
+						<form id="objective-form" action="<?php echo ENTRADA_URL."/admin/settings/manage/objectives"."?".replace_query(array("action" => "edit", "step" => 2, "mode" => "ajax")); ?>" method="post" style="margin-bottom:0px!important;">
 							<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
 							<colgroup>
 								<col style="width: 30%" />
@@ -227,6 +226,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 									<td style="vertical-align: top"><label for="objective_id" class="form-required">Objective Order:</label></td>
 									<td style="vertical-align: top"><div id="m_selectOrderField_<?php echo $time; ?>"></div></td>
 								</tr>
+								<tr>
+									<td colspan="2"><div class="alert alert-block alert-error hide" id="objective_error" style="margin-top:10px!important;margin-bottom:0px!important;"></div></td>
+								</tr>								
 							</tbody>
 							</table>
 						</form>

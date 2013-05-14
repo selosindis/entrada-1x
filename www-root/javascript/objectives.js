@@ -92,6 +92,7 @@ jQuery(document).ready(function(){
 				},
 				Save : function() {
 					var url = modal_container.children("form").attr("action");
+					var closeable = true;
 					jQuery.ajax({
 						url: url,
 						type: "POST",
@@ -116,11 +117,17 @@ jQuery(document).ready(function(){
 									jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent + " li").eq(order).before(list_item)
 								} else {
 									jQuery("#children_" + objective_parent + " #objective_list_" + objective_parent).append(list_item);
-								}								
-							}
-						}
-					});
-					jQuery(this).dialog( "close" );
+								}															
+							} else if(jsonData.status == "error"){
+								jQuery('#objective_error').html(jsonData.msg);
+								jQuery('#objective_error').show();
+								closeable = false;
+							}							
+						}																		
+					});	
+					if(closeable){
+						jQuery(this).dialog( "close" );	
+					}
 				}
 			},
 			close: function(event, ui){

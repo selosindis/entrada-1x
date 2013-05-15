@@ -70,9 +70,14 @@
 					mapped_siblings = true;
 				}
 			});
+
 			jQuery('#objective_'+id).parents('.objective-list').each(function(){
 				var mapped_cousins = false;
 				var pid = jQuery(this).attr('data-id');
+				var mapped_parent = false;
+				if(jQuery.inArray(pid,mapped) !== -1){
+					mapped_parent = true;
+				}
 				if(mapped_siblings == false){
 					jQuery('#objective_list_'+pid+' > li').each(function(){
 						var cid = jQuery(this).attr('data-id');
@@ -80,8 +85,10 @@
 							mapped_cousins = true;
 						}
 					});
-					if(mapped_cousins == false){
+					if(mapped_cousins == false && mapped_parent == false){
 						jQuery('#check_objective_'+pid).prop('checked',false);				
+						jQuery('#check_objective_'+pid).prop('disabled',false);
+					} else if(mapped_parent){
 						jQuery('#check_objective_'+pid).prop('disabled',false);
 					}
 				}								
@@ -288,7 +295,7 @@
 			var id = jQuery(this).attr('data-id');
 			jQuery('#check_objective_'+id).prop('checked',true);
 			jQuery('#check_objective_'+id).prop('disabled',true);
-		});
+		});	
 
 		mapped.push(id);								
 	}

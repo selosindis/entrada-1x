@@ -23,7 +23,11 @@ jQuery(document).ready(function(){
 				var type = jQuery('#mapped_objectives').attr('data-resource-type');
 				var value = jQuery('#mapped_objectives').attr('data-resource-id');
 				if(type && value){
-					query[type+'_id'] = value;
+					if (type != 'evaluation_question') {
+						query[type+'_id'] = value;
+					} else if (jQuery('#objective_ids_string_'+value).val()) {
+						query['objective_ids'] = jQuery('#objective_ids_string_'+value).val();
+					}
 				}
 			}
 			// if(mapped != undefined){

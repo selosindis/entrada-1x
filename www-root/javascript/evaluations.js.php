@@ -62,6 +62,12 @@
 			categories["evaluation_rubric_categories"][index] = {};
 			categories["evaluation_rubric_category_criteria"][index] = {};
 			categories["evaluation_rubric_categories"][index]["category"] = i.value;
+			var count = 0;
+			$$('input.objective_ids_'+index).each(function (j) {
+				categories["evaluation_rubric_categories"][index]["objective_ids"] = {};
+				categories["evaluation_rubric_categories"][index]["objective_ids"][count] = j.value;
+				count++;
+			});
 			$$('textarea.criteria_'+index).each(function (j) {
 				var jindex = j.id.replace(/[A-Za-z$_\-]/g, '');
 				categories["evaluation_rubric_category_criteria"][index][jindex] = {};
@@ -81,5 +87,56 @@
 				$('category_list').innerHTML = '<tr><td colspan="3">&nbsp;</td></tr><tr><td>&nbsp;</td><td colspan="3"><span class="content-small" style="align: center;">Loading... <img src="<?php echo ENTRADA_URL; ?>/images/indicator.gif" style="vertical-align: middle;" /></span></td></tr>';
 			}
 		});
+	}
+	
+	function addObjective(id, rownum) {
+		var ids = id;
+
+		var alreadyAdded = false;
+		$$('input.objective_ids_'+rownum).each(
+			function (e) {
+				if (!ids) {
+					ids = e.value;
+				} else {
+					ids += ','+e.value;
+				}
+				if (e.value == id) {
+					alreadyAdded = true;
+				}
+			}
+		);
+			
+		$('objective_ids_string_'+rownum).value = ids;
+			
+		if (!alreadyAdded) {
+			var attrs = {
+				type		: 'hidden',
+				className	: 'objective_ids_'+rownum,
+				id			: 'objective_ids_'+rownum+'_'+id,
+				value		: id,
+				name		:'objective_ids_'+rownum+'[]'
+			};
+
+			var newInput = new Element('input', attrs);
+			$('objectives_'+rownum+'_list').insert({bottom: newInput});
+		}
+	}
+
+	function removeObjective(id, rownum) {
+		var ids = "";
+		
+		$('objective_ids_'+rownum+'_'+id).remove();
+		
+		$$('input.objective_ids_'+rownum).each(
+			function (e) {
+				if (!ids) {
+					ids = e.value;
+				} else {
+					ids += ','+e.value;
+				}
+			}
+		);
+			
+		$('objective_ids_string_'+rownum).value = ids;
 	}
 </script>

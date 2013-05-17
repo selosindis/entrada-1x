@@ -44,7 +44,7 @@ class Models_Evaluation {
 	}
 
 	public static function getEditQuestionControls($question_data) {
-		global $db, $PROCESSED;
+		global $db, $PROCESSED, $ENTRADA_USER, $translate;
 		if (isset($question_data["questiontype_id"]) && $question_data["questiontype_id"]) {
 			$query = "SELECT * FROM `evaluations_lu_questiontypes`
 						WHERE `questiontype_id` = ".$db->qstr($question_data["questiontype_id"]);
@@ -55,113 +55,117 @@ class Models_Evaluation {
 		switch ($questiontype["questiontype_shortname"]) {
 			case "rubric" :
 				?>
-					<tr>
-						<td style="vertical-align: top">
-							<label for="rubric_title" class="form-nrequired">Rubric Title</label>
-						</td>
-						<td>
-							<input type="text" id="rubric_title" name="rubric_title" style="width: 330px;" value="<?php echo ((isset($question_data["rubric_title"])) ? clean_input($question_data["rubric_title"], "encode") : ""); ?>">
-						</td>
-					</tr>
-					<tr>
-						<td style="vertical-align: top">
-							<label for="rubric_description" class="form-nrequired">Rubric Description</label>
-						</td>
-						<td>
-							<textarea id="rubric_description" class="expandable" name="rubric_description" style="width: 98%; height:0"><?php echo ((isset($question_data["rubric_description"])) ? clean_input($question_data["rubric_description"], "encode") : ""); ?></textarea>
-						</td>
-					</tr>
-					<tr>
-						<td style="vertical-align: top">
-							<label for="columns_count" class="form-required">Number of Columns</label>
-						</td>
-						<td>
-							<select name="columns_count" id="columns_count" onchange="updateColumns(this.options[this.selectedIndex].value, $('categories_count').value)">
-								<option value="2"<?php echo (isset($question_data["columns_count"]) && $question_data["columns_count"] == 2 ? " selected=\"selected\"" : ""); ?>>2</option>
-								<option value="3"<?php echo ((isset($question_data["columns_count"]) && $question_data["columns_count"] == 3) || !isset($question_data["columns_count"]) || !$question_data["columns_count"] ? " selected=\"selected\"" : ""); ?>>3</option>
-								<option value="4"<?php echo (isset($question_data["columns_count"]) && $question_data["columns_count"] == 4 ? " selected=\"selected\"" : ""); ?>>4</option>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2">
-							&nbsp;
-						</td>
-					</tr>
-					<tr>
-						<td style="vertical-align: top">
-							<label for="allow_comments" class="form-required">Allow Comments</label>
-						</td>
-						<td>
-							<input type="checkbox" id="allow_comments" name="allow_comments"<?php echo (isset($question_data["allow_comments"]) && $question_data["allow_comments"] ? " checked=\"checked\"" : ""); ?> />
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2">
-							&nbsp;
-						</td>
-					</tr>
-					<tr>
-						<td style="padding-top: 5px; vertical-align: top">
-							<label for="response_text_0" class="form-required">Column Labels</label>
-						</td>
-						<td>
-							&nbsp;
-						</td>
-					</tr>
-					<tr>
-						<td style="padding-top: 5px; vertical-align: top">
-							<input type="hidden" value="<?php echo (isset($question_data["categories_count"]) && (int) $question_data["categories_count"] ? $question_data["categories_count"] : 1); ?>" name="categories_count" id="categories_count" />
-						</td>
-						<td style="padding-top: 5px">
-							<table class="form-question" cellspacing="0" cellpadding="2" border="0" summary="Form Question Responses">
-							<colgroup>
-								<col style="width: 3%" />
-								<col style="width: 77%" />
-								<col style="width: 20%" />
-							</colgroup>
-							<thead>
-								<tr>
-									<td colspan="2">&nbsp;</td>
-									<td class="center" style="font-weight: bold; font-size: 11px">Minimum Pass</td>
-								</tr>
-							</thead>
-							<tbody id="columns_list">
-								<?php
-									echo Models_Evaluation::getRubricColumnList($question_data);
-								?>
-							</tbody>
-							</table>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2">
-							&nbsp;
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2">
-							<h2>Categories</h2>
-							<div style="float: right; margin-top: -40px;">
-								<ul class="page-action">
-									<li><a style="cursor: pointer;" onclick="loadCategories($('columns_count').options[$('columns_count').selectedIndex].value, (parseInt($('categories_count').value) + 1), 0)">Add Another Category</a></li>
-								</ul>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td style="padding-top: 5px" colspan="2">
-							<table class="form-question" id="category_list" cellspacing="0" cellpadding="2" border="0" summary="Form Question Responses">
+				<tr>
+					<td style="vertical-align: top">
+						<label for="rubric_title" class="form-nrequired">Rubric Title</label>
+					</td>
+					<td>
+						<input type="text" id="rubric_title" name="rubric_title" style="width: 330px;" value="<?php echo ((isset($question_data["rubric_title"])) ? clean_input($question_data["rubric_title"], "encode") : ""); ?>">
+					</td>
+				</tr>
+				<tr>
+					<td style="vertical-align: top">
+						<label for="rubric_description" class="form-nrequired">Rubric Description</label>
+					</td>
+					<td>
+						<textarea id="rubric_description" class="expandable" name="rubric_description" style="width: 98%; height:0"><?php echo ((isset($question_data["rubric_description"])) ? clean_input($question_data["rubric_description"], "encode") : ""); ?></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td style="vertical-align: top">
+						<label for="columns_count" class="form-required">Number of Columns</label>
+					</td>
+					<td>
+						<select name="columns_count" id="columns_count" onchange="updateColumns(this.options[this.selectedIndex].value, $('categories_count').value)">
+							<option value="2"<?php echo (isset($question_data["columns_count"]) && $question_data["columns_count"] == 2 ? " selected=\"selected\"" : ""); ?>>2</option>
+							<option value="3"<?php echo ((isset($question_data["columns_count"]) && $question_data["columns_count"] == 3) || !isset($question_data["columns_count"]) || !$question_data["columns_count"] ? " selected=\"selected\"" : ""); ?>>3</option>
+							<option value="4"<?php echo (isset($question_data["columns_count"]) && $question_data["columns_count"] == 4 ? " selected=\"selected\"" : ""); ?>>4</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						&nbsp;
+					</td>
+				</tr>
+				<tr>
+					<td style="vertical-align: top">
+						<label for="allow_comments" class="form-required">Allow Comments</label>
+					</td>
+					<td>
+						<input type="checkbox" id="allow_comments" name="allow_comments"<?php echo (isset($question_data["allow_comments"]) && $question_data["allow_comments"] ? " checked=\"checked\"" : ""); ?> />
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						&nbsp;
+					</td>
+				</tr>
+				<tr>
+					<td style="padding-top: 5px; vertical-align: top">
+						<label for="response_text_0" class="form-required">Column Labels</label>
+					</td>
+					<td>
+						&nbsp;
+					</td>
+				</tr>
+				<tr>
+					<td style="padding-top: 5px; vertical-align: top">
+						<input type="hidden" value="<?php echo (isset($question_data["categories_count"]) && (int) $question_data["categories_count"] ? $question_data["categories_count"] : 1); ?>" name="categories_count" id="categories_count" />
+					</td>
+					<td style="padding-top: 5px">
+						<table class="form-question" cellspacing="0" cellpadding="2" border="0" summary="Form Question Responses">
+						<colgroup>
+							<col style="width: 3%" />
+							<col style="width: 77%" />
+							<col style="width: 20%" />
+						</colgroup>
+						<thead>
+							<tr>
+								<td colspan="2">&nbsp;</td>
+								<td class="center" style="font-weight: bold; font-size: 11px">Minimum Pass</td>
+							</tr>
+						</thead>
+						<tbody id="columns_list">
 							<?php
-								echo Models_Evaluation::getRubricCategoryList($question_data);
+								echo Models_Evaluation::getRubricColumnList($question_data);
 							?>
-							</table>
-						</td>
-					</tr>
+						</tbody>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						&nbsp;
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<h2>Categories</h2>
+						<a class="btn btn-small btn-success pull-right" style="cursor: pointer; margin-top: -40px;" onclick="loadCategories($('columns_count').options[$('columns_count').selectedIndex].value, (parseInt($('categories_count').value) + 1), 0)"><i class="icon-plus icon-white"></i> Add Additional Category</a>
+					</td>
+				</tr>
+				<tr>
+					<td style="padding-top: 5px" colspan="2">
+						<table class="form-question" id="category_list" cellspacing="0" cellpadding="2" border="0" summary="Form Question Responses">
+						<?php
+							echo Models_Evaluation::getRubricCategoryList($question_data);
+						?>
+						</table>
+					</td>
+				</tr>
 				<?php
 			break;
 			case "free_text" :
 				?>
+				<tr>
+					<td style="vertical-align: top">
+						<label for="question_code" class="form-nrequired">Question Code</label>
+					</td>
+					<td>
+						<input type="text" id="question_code" name="question_code" value="<?php echo (isset($question_data["question_code"]) && $question_data["question_code"] ? clean_input($question_data["question_code"], "encode") : ""); ?>" />
+					</td>
+				</tr>
 				<tr>
 					<td style="vertical-align: top">
 						<label for="question_text" class="form-required">Question Text</label>
@@ -181,74 +185,128 @@ class Models_Evaluation {
 						?>
 					</td>
 				</tr>
+				<tr>
+					<td colspan="2">
+						<div id="objectives_1_list" class="hidden">
+							<?php
+							$objective_ids_string = "";
+							if (isset($question_data["objective_ids"]) && @count($question_data["objective_ids"])) {
+								foreach ($question_data["objective_ids"] as $objective_id) {
+									$objective_ids_string .= ($objective_ids_string ? ", " : "").((int)$objective_id);
+									?>
+									<input type="hidden" class="objective_ids_1" id="objective_ids_1_<?php echo $objective_id; ?>" name="objective_ids_1[]" value="<?php echo $objective_id; ?>" />
+									<?php
+								}
+							}
+							?>
+							<input type="hidden" name="objective_ids_string_1" id="objective_ids_string_1" value="<?php echo ($objective_ids_string ? $objective_ids_string : ""); ?>" />
+							<input type="hidden" id="qrow" value="1" />
+						</div>
+						<?php
+						$question_identifier = 1;
+						require_once("api/evaluations-objectives-list.api.php");
+						?>
+					</td>
+				</tr>
 				<?php
 			break;
 			case "descriptive_text" :
 				?>
-					<tr>
-						<td style="vertical-align: top">
-							<label for="question_text" class="form-required">Descriptive Text</label>
-						</td>
-						<td>
-							<textarea id="question_text" class="expandable" name="question_text" style="width: 98%; height:0"><?php echo ((isset($question_data["question_text"])) ? clean_input($question_data["question_text"], "encode") : ""); ?></textarea>
-						</td>
-					</tr>
+				<tr>
+					<td style="vertical-align: top">
+						<label for="question_text" class="form-required">Descriptive Text</label>
+					</td>
+					<td>
+						<textarea id="question_text" class="expandable" name="question_text" style="width: 98%; height:0"><?php echo ((isset($question_data["question_text"])) ? clean_input($question_data["question_text"], "encode") : ""); ?></textarea>
+					</td>
+				</tr>
 				<?php
 			break;
 			case "matrix_single" :
 			default :
 				?>
-					<tr>
-						<td style="vertical-align: top">
-							<label for="question_text" class="form-required">Question Text</label>
-						</td>
-						<td>
-							<textarea id="question_text" class="expandable" name="question_text" style="width: 98%; height:0"><?php echo ((isset($question_data["question_text"])) ? clean_input($question_data["question_text"], "encode") : ""); ?></textarea>
-						</td>
-					</tr>
-					<tr>
-						<td style="vertical-align: top">
-							<label for="responses_count" class="form-required">Number of Responses</label>
-						</td>
-						<td>
-							<select name="responses_count" id="responses_count" onchange="updateResponses(this.options[this.selectedIndex].value)">
-								<option value="2"<?php echo (isset($question_data["responses_count"]) && $question_data["responses_count"] == 2 ? " selected=\"selected\"" : ""); ?>>2</option>
-								<option value="3"<?php echo ((isset($question_data["responses_count"]) && $question_data["responses_count"] == 3) ? " selected=\"selected\"" : ""); ?>>3</option>
-								<option value="4"<?php echo ((isset($question_data["responses_count"]) && $question_data["responses_count"] == 4) || !isset($question_data["responses_count"]) || !$question_data["responses_count"] ? " selected=\"selected\"" : ""); ?>>4</option>
-								<option value="5"<?php echo ((isset($question_data["responses_count"]) && $question_data["responses_count"] == 5) ? " selected=\"selected\"" : ""); ?>>5</option>
-							</select>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2">
-							&nbsp;
-						</td>
-					</tr>
-					<tr>
-						<td style="vertical-align: top">
-							<label for="allow_comments" class="form-required">Allow Comments</label>
-						</td>
-						<td>
-							<input type="checkbox" id="allow_comments" name="allow_comments"<?php echo (isset($question_data["allow_comments"]) && $question_data["allow_comments"] ? " checked=\"checked\"" : ""); ?> />
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2">
-							&nbsp;
-						</td>
-					</tr>
-					<tr>
-						<td style="padding-top: 5px; vertical-align: top">
-							<label for="response_text_0" class="form-required">Available Responses</label>
-						</td>
-						<td style="padding-top: 5px">
-							<table class="form-question" id="response_list" cellspacing="0" cellpadding="2" border="0" summary="Form Question Responses">
-								<?php
-								echo Models_Evaluation::getQuestionResponseList($question_data);
-								?>
-							</table>
-						</td>
-					</tr>
+				<tr>
+					<td style="vertical-align: top">
+						<label for="question_code" class="form-nrequired">Question Code</label>
+					</td>
+					<td>
+						<input type="text" id="question_code" name="question_code" value="<?php echo (isset($question_data["question_code"]) && $question_data["question_code"] ? clean_input($question_data["question_code"], "encode") : ""); ?>" />
+					</td>
+				</tr>
+				<tr>
+					<td style="vertical-align: top">
+						<label for="question_text" class="form-required">Question Text</label>
+					</td>
+					<td>
+						<textarea id="question_text" class="expandable" name="question_text" style="width: 98%; height:0"><?php echo ((isset($question_data["question_text"])) ? clean_input($question_data["question_text"], "encode") : ""); ?></textarea>
+					</td>
+				</tr>
+				<tr>
+					<td style="vertical-align: top">
+						<label for="responses_count" class="form-required">Number of Responses</label>
+					</td>
+					<td>
+						<select name="responses_count" id="responses_count" onchange="updateResponses(this.options[this.selectedIndex].value)">
+							<option value="2"<?php echo (isset($question_data["responses_count"]) && $question_data["responses_count"] == 2 ? " selected=\"selected\"" : ""); ?>>2</option>
+							<option value="3"<?php echo ((isset($question_data["responses_count"]) && $question_data["responses_count"] == 3) ? " selected=\"selected\"" : ""); ?>>3</option>
+							<option value="4"<?php echo ((isset($question_data["responses_count"]) && $question_data["responses_count"] == 4) || !isset($question_data["responses_count"]) || !$question_data["responses_count"] ? " selected=\"selected\"" : ""); ?>>4</option>
+							<option value="5"<?php echo ((isset($question_data["responses_count"]) && $question_data["responses_count"] == 5) ? " selected=\"selected\"" : ""); ?>>5</option>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						&nbsp;
+					</td>
+				</tr>
+				<tr>
+					<td style="vertical-align: top">
+						<label for="allow_comments" class="form-required">Allow Comments</label>
+					</td>
+					<td>
+						<input type="checkbox" id="allow_comments" name="allow_comments"<?php echo (isset($question_data["allow_comments"]) && $question_data["allow_comments"] ? " checked=\"checked\"" : ""); ?> />
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						&nbsp;
+					</td>
+				</tr>
+				<tr>
+					<td style="padding-top: 5px; vertical-align: top">
+						<label for="response_text_0" class="form-required">Available Responses</label>
+					</td>
+					<td style="padding-top: 5px">
+						<table class="form-question" id="response_list" cellspacing="0" cellpadding="2" border="0" summary="Form Question Responses">
+							<?php
+							echo Models_Evaluation::getQuestionResponseList($question_data);
+							?>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td colspan="2">
+						<div id="objectives_1_list" class="hidden">
+							<?php
+							$objective_ids_string = "";
+							if (isset($question_data["objective_ids"]) && @count($question_data["objective_ids"])) {
+								foreach ($question_data["objective_ids"] as $objective_id) {
+									$objective_ids_string .= ($objective_ids_string ? ", " : "").((int)$objective_id);
+									?>
+									<input type="hidden" class="objective_ids_1" id="objective_ids_1_<?php echo $objective_id; ?>" name="objective_ids_1[]" value="<?php echo $objective_id; ?>" />
+									<?php
+								}
+							}
+							?>
+							<input type="hidden" name="objective_ids_string_1" id="objective_ids_string_1" value="<?php echo ($objective_ids_string ? $objective_ids_string : ""); ?>" />
+							<input type="hidden" id="qrow" value="1" />
+						</div>
+						<?php
+						$question_identifier = 1;
+						require_once("api/evaluations-objectives-list.api.php");
+						?>
+					</td>
+				</tr>
 				<?php
 			break;
 		}
@@ -271,10 +329,25 @@ class Models_Evaluation {
 							<label for="category_<?php echo $rownum; ?>" class="form-required">Category Title</label>
 						</td>
 						<td colspan="2" style="padding: 10px 4px 0px 4px;">
+							<div id="objectives_<?php echo $rownum; ?>_list" class="hidden">
+								<?php
+								$objective_ids_string = "";
+								if (isset($question_data["evaluation_rubric_categories"][$rownum]["objective_ids"]) && @count($question_data["evaluation_rubric_categories"][$rownum]["objective_ids"])) {
+									foreach ($question_data["evaluation_rubric_categories"][$rownum]["objective_ids"] as $objective_id) {
+										$objective_ids_string .= ($objective_ids_string ? ", " : "").((int)$objective_id);
+										?>
+										<input type="hidden" class="objective_ids_<?php echo $rownum; ?>" id="objective_ids_<?php echo $rownum; ?>_<?php echo $objective_id; ?>" name="objective_ids_<?php echo $rownum; ?>[]" value="<?php echo $objective_id; ?>" />
+										<?php
+									}
+								}
+								?>
+								<input type="hidden" name="objective_ids_string_<?php echo $rownum; ?>" id="objective_ids_string_<?php echo $rownum; ?>" value="<?php echo ($objective_ids_string ? $objective_ids_string : ""); ?>" />
+							</div>
 							<input class="category" type="text" id="category_<?php echo $rownum; ?>" name="category[<?php echo $rownum; ?>]" style="width: 79%" value="<?php echo ((isset($question_data["evaluation_rubric_categories"][$rownum]["category"])) ? clean_input($question_data["evaluation_rubric_categories"][$rownum]["category"], "encode") : ""); ?>" />
 							<?php
 							echo "<div class=\"controls\" style=\"float: right;\">\n";
-							echo "	<a id=\"question_delete_".$rownum."\" class=\"question-controls-delete\" onclick=\"loadCategories($('columns_count').options[$('columns_count').selectedIndex].value, (parseInt($('categories_count').value) - 1), ".$rownum.")\" title=\"".$rownum."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
+							echo "	<a id=\"question_objectives_".$rownum."\" class=\"pointer question-controls-objectives\" onclick=\"openObjectiveDialog(".$rownum.")\"><i class=\"icon-book\" alt=\"Choose Objectives\" title=\"Choose Objectives\"></i></a>";
+							echo "	<a id=\"question_delete_".$rownum."\" class=\"pointer question-controls-delete\" onclick=\"loadCategories($('columns_count').options[$('columns_count').selectedIndex].value, (parseInt($('categories_count').value) - 1), ".$rownum.")\" title=\"".$rownum."\"><i class=\"icon-remove-sign\" alt=\"Delete Question\" title=\"Delete Question\"></i></a>";
 							echo "</div>\n";
 							?>
 						</td>
@@ -494,7 +567,7 @@ class Models_Evaluation {
 									echo "</div>\n";
 								}
 								$modified_count++;
-								echo "<br /><div class=\"question".($allow_question_modifications ? " question-handle" : "")."\"><table class=\"rubric\">\n";
+								echo "<br /><div class=\"question".($allow_question_modifications ? " cursor-move" : "")."\"><table class=\"rubric\">\n";
 								echo "	<tr>\n";
 								$columns = 0;
 								$query = "	SELECT a.*
@@ -580,7 +653,7 @@ class Models_Evaluation {
 							echo "	<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" /></a>";
 							echo "</div>\n";
 						}
-						echo "	<div id=\"question_text_".$question["equestion_id"]."\" for=\"".$question["equestion_id"]."_comment\" class=\"question".($allow_question_modifications ? " question-handle" : "")."\">\n";
+						echo "	<div id=\"question_text_".$question["equestion_id"]."\" for=\"".$question["equestion_id"]."_comment\" class=\"question".($allow_question_modifications ? " cursor-move" : "")."\">\n";
 						echo "		".clean_input($question["question_text"], "specialchars");
 						echo "	</div>\n";
 						echo "	<div class=\"clear\"></div>";
@@ -621,10 +694,10 @@ class Models_Evaluation {
 							echo "	<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" /></a>";
 							echo "</div>\n";
 						}
-						echo "	<div id=\"question_text_".$question["equestion_id"]."\" class=\"question".($allow_question_modifications ? " question-handle" : "")."\">\n";
+						echo "	<div id=\"question_text_".$question["equestion_id"]."\" class=\"question".($allow_question_modifications ? " cursor-move" : "")."\">\n";
 						echo "		".clean_input($question["question_text"], "specialchars");
 						echo "	</div>\n";
-						echo "	<div class=\"responses\">\n";
+						echo "	<div class=\"responses clearfix\">\n";
 						$query = "	SELECT a.*
 									FROM `evaluations_lu_question_responses` AS a
 									WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"])."
@@ -632,13 +705,14 @@ class Models_Evaluation {
 						$responses = $db->GetAll($query);
 						if ($responses) {
 							$response_width = floor(100 / count($responses)) - 1;
-
+							//echo "<div class=\"clearfix\">\n";
 							foreach ($responses as $response) {
 								echo "<div style=\"width: ".$response_width."%\">\n";
-								echo "	<label for=\"".$form_id."_".$response["equestion_id"]."_".$response["eqresponse_id"]."\">".clean_input($response["response_text"], "specialchars")."</label><br />";
+								echo "	<label for=\"response_".$response["equestion_id"]."_".$response["eqresponse_id"]."\">".clean_input($response["response_text"], "specialchars")."</label><br />";
 								echo "	<input type=\"radio\" style=\"margin-top: 5px\" id=\"response_".$question["equestion_id"]."_".$response["eqresponse_id"]."\" name=\"responses[".$response["equestion_id"]."]\"".($attempt ? " onclick=\"((this.checked == true) ? storeResponse('".$question["equestion_id"]."', '".$response["eqresponse_id"]."', ".($question["allow_comments"] ? "$('".$response["equestion_id"]."_comment').value" : "''").") : false)\"" : "").($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["eqresponse_id"]) && $current_progress_record[$question["equestion_id"]]["eqresponse_id"] == $response["eqresponse_id"] ? " checked=\"checked\"" : "")." value=\"".$response["eqresponse_id"]."\" />";
 								echo "</div>\n";
 							}
+							//echo "</div>\n";
 						}
 						echo "	</div>\n";
 						if ($question["allow_comments"]) {
@@ -964,7 +1038,7 @@ class Models_Evaluation {
 						$temp_question_controls[] = "	<div id=\"question_text_".$question["equestion_id"]."\" class=\"question\">\n";
 						$temp_question_controls[] = "		".clean_input($question["question_text"], "specialchars");
 						$temp_question_controls[] = "	</div>\n";
-						$temp_question_controls[] = "	<div class=\"responses\">\n";
+						$temp_question_controls[] = "	<div class=\"responses clearfix\">\n";
 						$query = "	SELECT a.*
 									FROM `evaluations_lu_question_responses` AS a
 									WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"])."
@@ -976,7 +1050,7 @@ class Models_Evaluation {
 							foreach ($responses as $response) {
 								$temp_question_controls[] = "<div style=\"width: ".$response_width."%\">\n";
 								$temp_question_controls[] = "	<label for=\"".$response["equestion_id"]."_".$response["eqresponse_id"]."\">".clean_input($response["response_text"], "specialchars")."</label><br />";
-								$temp_question_controls[] = "	<input type=\"radio\" style=\"margin-top: 5px\" id=\"response_".$question["equestion_id"]."_".$response["eqresponse_id"]."\" name=\"responses[".$response["equestion_id"]."]\" value=\"".$response["eqresponse_id"]."\" />";
+								$temp_question_controls[] = "	<input type=\"radio\" id=\"response_".$question["equestion_id"]."_".$response["eqresponse_id"]."\" name=\"responses[".$response["equestion_id"]."]\" value=\"".$response["eqresponse_id"]."\" />";
 								$temp_question_controls[] = "</div>\n";
 							}
 						}
@@ -4212,8 +4286,8 @@ class Models_Evaluation {
 
 	}
 
-	public static function getAuthorEvaluationQuestions() {
-		global $db, $ENTRADA_USER, $ENTRADA_ACL;
+	public static function getAuthorEvaluationQuestions($require_code = false) {
+		global $db, $ENTRADA_ACL;
 
 		$evaluation_questions = array();
 
@@ -4224,6 +4298,7 @@ class Models_Evaluation {
 					LEFT JOIN `evaluation_rubric_questions` AS c
 					ON a.`equestion_id` = c.`equestion_id`
 					WHERE a.`question_active` = 1
+					".($require_code ? "AND a.`question_code` IS NOT NULL" : "")."
 					GROUP BY a.`equestion_id`
 					ORDER BY c.`erubric_id`, c.`question_order`, b.`questiontype_id`";
 		$temp_evaluation_questions = $db->GetAll($query);

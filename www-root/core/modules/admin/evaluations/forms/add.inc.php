@@ -230,7 +230,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						<tr>
 							<td></td>
 							<td><label for="form_title" class="form-required">Form Title</label></td>
-							<td><input type="text" id="form_title" name="form_title" value="<?php echo html_encode($PROCESSED["form_title"]); ?>" maxlength="64" style="width: 95%" /></td>
+							<td><input type="text" id="form_title" name="form_title" value="<?php echo html_encode((isset($PROCESSED["form_title"]) && $PROCESSED["form_title"] ? $PROCESSED["form_title"] : "")); ?>" maxlength="64" style="width: 95%" /></td>
 						</tr>
 						<tr>
 							<td></td>
@@ -238,7 +238,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								<label for="form_description" class="form-nrequired">Form Description</label>
 							</td>
 							<td>
-								<textarea id="form_description" name="form_description" style="width: 550px; height: 125px" cols="70" rows="10"><?php echo clean_input($PROCESSED["form_description"], array("trim", "allowedtags", "encode")); ?></textarea>
+								<textarea id="form_description" name="form_description" style="width: 550px; height: 125px" cols="70" rows="10"><?php echo (isset($PROCESSED["form_description"]) && $PROCESSED["form_description"] ? clean_input($PROCESSED["form_description"], array("trim", "allowedtags", "encode")) : ""); ?></textarea>
 							</td>
 						</tr>
 						<tr>
@@ -260,7 +260,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 								<ul id="author_list" class="menu" style="margin-top: 15px">
 									<?php
-									if (is_array($PROCESSED["associated_authors"]) && count($PROCESSED["associated_authors"])) {
+									if (isset($PROCESSED["associated_authors"]) && @count($PROCESSED["associated_authors"])) {
 										foreach ($PROCESSED["associated_authors"] as $author) {
 											if ((array_key_exists($author, $AUTHOR_LIST)) && is_array($AUTHOR_LIST[$author])) {
 												?>

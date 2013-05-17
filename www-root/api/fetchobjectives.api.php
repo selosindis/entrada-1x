@@ -38,14 +38,22 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	$course_id = (int)(isset($_GET["course_id"])?$_GET["course_id"]:false);
 	$event_id = (int)(isset($_GET["event_id"])?$_GET["event_id"]:false);
 	$assessment_id = (int)(isset($_GET["assessment_id"])?$_GET["assessment_id"]:false);
+	$objective_ids_string = "";
+	if (isset($_GET["objective_ids"]) && ($objective_ids = explode(",", $_GET["objective_ids"])) && @count($objective_ids)) {
+		foreach ($objective_ids as $objective_id) {
+			$objective_ids_string .= ($objective_ids_string ? ", " : "").$db->qstr($objective_id);
+		}
+	}
 	$select = "a.*";
 
 	if ($course_id){
-		$select .=", COALESCE(b.`cobjective_id`,0) AS `mapped`";
-	}elseif ($event_id) {
-		$select .=", COALESCE(b.`eobjective_id`,0) AS `mapped`";
-	}elseif ($assessment_id) {
-		$select .=", COALESCE(b.`aobjective_id`,0) AS `mapped`";
+		$select .= ", COALESCE(b.`cobjective_id`, 0) AS `mapped`";
+	} elseif ($event_id) {
+		$select .= ", COALESCE(b.`eobjective_id`, 0) AS `mapped`";
+	} elseif ($assessment_id) {
+		$select .= ", COALESCE(b.`aobjective_id`, 0) AS `mapped`";
+	} elseif ($objective_ids_string) {
+		$select .= ", COALESCE(b.`objective_id`, 0) AS `mapped`";
 	}
 
 
@@ -63,6 +71,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		$qu_arr[1] = "LEFT JOIN `assessment_objectives` b
 					ON a.`objective_id` = b.`objective_id`";
 		$qu_arr[3] = "AND b.`assessment_id` = ".$db->qstr($assessment_id);									
+	} elseif ($objective_ids_string) {
+		$qu_arr[1] = "LEFT JOIN `global_lu_objectives` AS b
+					ON a.`objective_id` = b.`objective_id`";
+		$qu_arr[3] = "AND b.`objective_id` IN (".$objective_ids_string.")";	
 	}	
 	
 	$qu_arr[2] = "WHERE a.`objective_parent` = ".$db->qstr($id)." 
@@ -74,11 +86,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		$obj_array = array();
 		foreach($objectives as $objective){
 			$fields = array(	'objective_id'=>$objective["objective_id"],
-									'objective_code'=>$objective["objective_code"],
-									'objective_name'=>$objective["objective_name"],
-									'objective_description'=>$objective["objective_description"]
+								'objective_code'=>$objective["objective_code"],
+								'objective_name'=>$objective["objective_name"],
+								'objective_description'=>$objective["objective_description"]
 								);
-			if ($course_id || $event_id || $assessment_id){
+			if ($course_id || $event_id || $assessment_id || $objective_ids_string){
 				$fields["mapped"] = $objective["mapped"];
 				if ($course_id) {
 					$fields["decendant_mapped"] = course_objective_has_child_mapped($objective["objective_id"],$course_id,true);

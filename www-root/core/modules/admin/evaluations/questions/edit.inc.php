@@ -89,9 +89,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							$PROCESSED["allow_comments"] = $category["allow_comments"];
 						}
 						$PROCESSED["evaluation_rubric_categories"][$index + 1] = array();
+						$PROCESSED["evaluation_rubric_categories"][$index + 1]["objective_ids"] = array();
 						$PROCESSED["evaluation_rubric_categories"][$index + 1]["category"] = $category["question_text"];
 						$PROCESSED["evaluation_rubric_categories"][$index + 1]["question_parent_id"] = $category["question_parent_id"];
 
+						$query = "SELECT * FROM `evaluation_question_objectives` AS a
+									JOIN `global_lu_objectives` AS b
+									ON a.`objective_id` = b.`objective_id`
+									WHERE a.`equestion_id` = ".$db->qstr($category["equestion_id"])."
+									AND b.`objective_active` = 1
+									GROUP BY b.`objective_id`
+									ORDER BY a.`objective_id`";
+						$objectives = $db->GetAll($query);
+						if ($objectives) {
+							foreach ($objectives as $objective) {
+								$PROCESSED["evaluation_rubric_categories"][$index + 1]["objective_ids"][] = $objective["objective_id"];
+							}
+						}
+						
 						$query = "SELECT * FROM `evaluations_lu_question_responses`
 									WHERE `equestion_id` = ".$db->qstr($category["equestion_id"])."
 									ORDER BY `response_order` ASC";
@@ -115,6 +130,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						}
 					}
 					$PROCESSED["categories_count"] = count($categories);
+				}
+			}
+		} elseif ($PROCESSED["questiontype_id"] == 1 || $PROCESSED["questiontype_id"] == 4) {
+			$query = "SELECT a.`objective_id` FROM `evaluation_question_objectives` AS a
+						JOIN `global_lu_objectives` AS b
+						ON a.`objective_id` = b.`objective_id`
+						WHERE a.`equestion_id` = ".$db->qstr($QUESTION_ID)."
+						AND b.`objective_active` = 1
+						GROUP BY b.`objective_id`
+						ORDER BY a.`objective_id`";
+			$objectives = $db->GetAll($query);
+			if ($objectives) {
+				foreach ($objectives as $objective) {
+					$PROCESSED["objective_ids"][] = $objective["objective_id"];
 				}
 			}
 		}
@@ -193,16 +222,36 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						} else {
 							$PROCESSED["allow_comments"] = false;
 						}
-					case 2 :
 					case 4 :
-					/**
-					 * Required field "question_text" / Question.
-					 */
-					if ((isset($_POST["question_text"])) && ($tmp_input = clean_input($_POST["question_text"], array("trim", "allowedtags")))) {
-						$PROCESSED["question_text"] = $tmp_input;
-					} else {
-						add_error("The <strong>Question Text</strong> field is required.");
-					}
+						/**
+						 * Non-required field "question_code" / Question Code.
+						 */
+						if ((isset($_POST["question_code"])) && ($tmp_input = clean_input($_POST["question_code"], array("trim", "notags")))) {
+							$PROCESSED["question_code"] = $tmp_input;
+						}
+						$PROCESSED["objective_ids"] = array();
+						if ((isset($_POST["objective_ids_1"])) && (is_array($_POST["objective_ids_1"]))) {
+							foreach ($_POST["objective_ids_1"] as $objective_id) {
+								$objective_id = clean_input($objective_id, array("trim", "int"));
+								if ($objective_id && isset($PROCESSED["objective_ids"]) && @count($PROCESSED["objective_ids"])) {
+									foreach ($PROCESSED["objective_ids"] as $temp_objective_id) {
+										if ($temp_objective_id == $objective_id) {
+											add_error("You cannot have more than one identical <strong>objective</strong> in a question.");
+										}
+									}
+								}
+								$PROCESSED["objective_ids"][] = $objective_id;
+							}
+						}
+					case 2 :
+						/**
+						 * Required field "question_text" / Question.
+						 */
+						if ((isset($_POST["question_text"])) && ($tmp_input = clean_input($_POST["question_text"], array("trim", "allowedtags")))) {
+							$PROCESSED["question_text"] = $tmp_input;
+						} else {
+							add_error("The <strong>Question Text</strong> field is required.");
+						}
 					break;
 				}
 
@@ -281,6 +330,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 							$PROCESSED["evaluation_rubric_categories"][$i]["category"] = $category;
 							$PROCESSED["evaluation_rubric_categories"][$i]["category_order"] = $i;
+							$PROCESSED["evaluation_rubric_categories"][$i]["objective_ids"] = array();
+							if ((isset($_POST["objective_ids_".$i])) && (is_array($_POST["objective_ids_".$i]))) {
+								foreach ($_POST["objective_ids_".$i] as $objective_id) {
+									$objective_id = clean_input($objective_id, array("trim", "int"));
+									if ($objective_id && isset($PROCESSED["evaluation_rubric_categories"][$i]["objective_ids"]) && @count($PROCESSED["evaluation_rubric_categories"][$i]["objective_ids"])) {
+										foreach ($PROCESSED["evaluation_rubric_categories"][$i]["objective_ids"] as $temp_objective_id) {
+											if ($temp_objective_id == $objective_id) {
+												add_error("You cannot have more than one identical <strong>objective</strong> in a category.");
+											}
+										}
+									}
+									$PROCESSED["evaluation_rubric_categories"][$i]["objective_ids"][] = $objective_id;
+								}
+							}
+							
 							if ((isset($_POST["criteria"][$i])) && (is_array($_POST["criteria"][$i]))) {
 								$j = 1;
 								foreach ($_POST["criteria"][$i] as $criteria_key => $criteria) {
@@ -347,7 +411,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						if ($question_used) {
 							if ($PROCESSED["questiontype_id"] == 3) {
 								if ($db->AutoExecute("evaluations_lu_rubrics", $PROCESSED, "INSERT") && ($erubric_id = $db->Insert_Id())) {
-									$PROCESSED["question_order"]--;
 									$old_questions = array();
 									$min_order = false;
 									if (isset($FORM_ID) && $FORM_ID) {
@@ -378,14 +441,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									$form_question_order = $min_order;
 									$rubric_order = 1;
 									foreach ($PROCESSED["evaluation_rubric_categories"] as $index => $category) {
-										$PROCESSED["question_order"]++;
 										$PROCESSED_QUESTION = array("questiontype_id" => 3,
 																	"question_text" => $category["category"],
+																	"question_code" => $category["category"],
 																	"allow_comments" => $PROCESSED["allow_comments"],
 																	"question_parent_id" => (isset($category["category_parent_id"]) && (int)$category["category_parent_id"] ? (int)$category["category_parent_id"] : $QUESTION_ID));
 										$equestion_id = 0;
 										if ($db->AutoExecute("evaluations_lu_questions", $PROCESSED_QUESTION, "INSERT") && ($equestion_id = $db->Insert_Id()) &&
-												$db->AutoExecute("evaluation_rubric_questions", array("erubric_id" => $erubric_id, "equestion_id" => $equestion_id, "question_order" => $rubric_order), "INSERT")) {
+											$db->AutoExecute("evaluation_rubric_questions", array("erubric_id" => $erubric_id, "equestion_id" => $equestion_id, "question_order" => $rubric_order), "INSERT")) {
 											$rubric_order++;
 											if (isset($FORM_ID) && $FORM_ID) {
 												if (!$db->AutoExecute("evaluation_form_questions", array("equestion_id" => $equestion_id, "question_order" => $form_question_order), "INSERT")) {
@@ -437,6 +500,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 														add_error("There was an error while trying to attach a <strong>Question Response</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
 
 														application_log("error", "Unable to insert a new evaluations_lu_question_responses record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
+													}
+												}
+											}
+											/**
+											 * Add the question objectives to the evaluation_question_objectives table.
+											 */
+											if ((isset($PROCESSED["evaluation_rubric_categories"][$index]["objective_ids"])) && (@count($PROCESSED["evaluation_rubric_categories"][$index]["objective_ids"]))) {
+												foreach ($PROCESSED["evaluation_rubric_categories"][$index]["objective_ids"] as $objective_id) {
+													$PROCESSED_OBJECTIVE = array (
+																	"equestion_id" => $equestion_id,
+																	"objective_id" => $objective_id,
+																	"updated_date" => time(),
+																	"updated_by" => $ENTRADA_USER->getID()
+																	);
+													if (!$db->AutoExecute("evaluation_question_objectives", $PROCESSED_OBJECTIVE, "INSERT")) {
+														add_error("There was an error while trying to attach a <strong>Question Objective</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
+
+														application_log("error", "Unable to insert a new evaluation_question_objectives record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
 													}
 												}
 											}
@@ -493,13 +574,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 											application_log("error", "Unable to insert a new evaluations_related_questions record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
 										}
 									}
+									
 									/**
 									 * Add the question responses to the evaluations_lu_question_responses table.
 									 * Ummm... we really need to switch to InnoDB tables to get transaction support.
 									 */
 									if ((is_array($PROCESSED["evaluation_question_responses"])) && (count($PROCESSED["evaluation_question_responses"]))) {
 										foreach ($PROCESSED["evaluation_question_responses"] as $question_response) {
-											$PROCESSED = array (
+											$PROCESSED_RESPONSE = array (
 															"equestion_id" => $equestion_id,
 															"response_text" => $question_response["response_text"],
 															"response_order" => $question_response["response_order"],
@@ -507,10 +589,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 															"minimum_passing_level"	=> $question_response["minimum_passing_level"]
 															);
 
-											if (!$db->AutoExecute("evaluations_lu_question_responses", $PROCESSED, "INSERT")) {
+											if (!$db->AutoExecute("evaluations_lu_question_responses", $PROCESSED_RESPONSE, "INSERT")) {
 												add_error("There was an error while trying to attach a <strong>Question Response</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
 
 												application_log("error", "Unable to insert a new evaluations_lu_question_responses record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
+											}
+										}
+									}
+									
+									/**
+									 * Add the question objectives to the evaluation_question_objectives table.
+									 */
+									if ((isset($PROCESSED["objective_ids"])) && (@count($PROCESSED["objective_ids"]))) {
+										foreach ($PROCESSED["objective_ids"] as $objective_id) {
+											$PROCESSED_OBJECTIVE = array (
+															"equestion_id" => $equestion_id,
+															"objective_id" => $objective_id,
+															"updated_date" => time(),
+															"updated_by" => $ENTRADA_USER->getID()
+															);
+											if (!$db->AutoExecute("evaluation_question_objectives", $PROCESSED_OBJECTIVE, "INSERT")) {
+												add_error("There was an error while trying to attach a <strong>Question Objective</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
+
+												application_log("error", "Unable to insert a new evaluation_question_objectives record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
 											}
 										}
 									}
@@ -555,7 +656,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						} else {
 							if ($PROCESSED["questiontype_id"] == 3) {
 								if ($db->AutoExecute("evaluations_lu_rubrics", $PROCESSED, "UPDATE", "`erubric_id` = ".$db->qstr($erubric_id))) {
-									$PROCESSED["question_order"]--;
 									$old_questions = array();
 									$min_order = false;
 									$query = "SELECT b.* FROM `evaluation_rubric_questions` AS a
@@ -568,6 +668,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 										$db->Execute("DELETE FROM `evaluations_lu_questions` WHERE `equestion_id` = ".$db->qstr($category["equestion_id"]));
 										$db->Execute("DELETE FROM `evaluations_lu_question_responses` WHERE `equestion_id` = ".$db->qstr($category["equestion_id"]));
 										$db->Execute("DELETE FROM `evaluation_rubric_questions` WHERE `equestion_id` = ".$db->qstr($category["equestion_id"]));
+										$db->Execute("DELETE FROM `evaluation_question_objectives` WHERE `equestion_id` = ".$db->qstr($category["equestion_id"]));
 										if (isset($FORM_ID) && $FORM_ID) {
 											$query = "SELECT * FROM `evaluation_form_questions` WHERE `eform_id` = ".$db->qstr($FORM_ID)." AND `equestion_id` = ".$db->qstr($category["equestion_id"]);
 											$question = $db->GetRow($query);
@@ -582,13 +683,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									}
 									if (count($old_questions) != count($PROCESSED["evaluation_rubric_categories"])) {
 										$order_offset = count($PROCESSED["evaluation_rubric_categories"]) - count($old_questions);
-										$db->Execute("UPDATE `evaluation_form_questions` SET `question_order` = (`question_order` + (".$db->qstr((int)$order_offset).")) WHERE `question_order` > ".$db->qstr($min_order)." AND `eform_id` = ".$db->qstr($FORM_ID));
+										if (isset($FORM_ID) && $FORM_ID) {
+											$db->Execute("UPDATE `evaluation_form_questions` SET `question_order` = (`question_order` + (".$db->qstr((int)$order_offset).")) WHERE `question_order` > ".$db->qstr($min_order)." AND `eform_id` = ".$db->qstr($FORM_ID));
+										}
 									}
 									$form_question_order = $min_order;
 									$rubric_order = 1;
 									foreach ($PROCESSED["evaluation_rubric_categories"] as $index => $category) {
 										$PROCESSED_QUESTION = array("questiontype_id" => 3,
 																	"question_text" => $category["category"],
+																	"question_code" => $category["category"],
 																	"allow_comments" => $PROCESSED["allow_comments"],
 																	"question_parent_id" => (isset($category["category_parent_id"]) && (int)$category["category_parent_id"] ? (int)$category["category_parent_id"] : $default_parent_id));
 										$equestion_id = 0;
@@ -610,6 +714,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 													add_error("There was an error while trying to attach a related question to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
 
 													application_log("error", "Unable to insert a new evaluations_related_questions record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
+												}
+											}
+											/**
+											 * Add the question objectives to the evaluation_question_objectives table.
+											 */
+											if ((isset($PROCESSED["evaluation_rubric_categories"][$index]["objective_ids"])) && (@count($PROCESSED["evaluation_rubric_categories"][$index]["objective_ids"]))) {
+												foreach ($PROCESSED["evaluation_rubric_categories"][$index]["objective_ids"] as $objective_id) {
+													$PROCESSED_OBJECTIVE = array (
+																	"equestion_id" => $equestion_id,
+																	"objective_id" => $objective_id,
+																	"updated_date" => time(),
+																	"updated_by" => $ENTRADA_USER->getID()
+																	);
+													if (!$db->AutoExecute("evaluation_question_objectives", $PROCESSED_OBJECTIVE, "INSERT")) {
+														add_error("There was an error while trying to attach a <strong>Question Objective</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
+
+														application_log("error", "Unable to insert a new evaluation_question_objectives record while editing an evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
+													}
 												}
 											}
 											/**
@@ -695,13 +817,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 										}
 									}
 									$db->Execute("DELETE FROM `evaluations_lu_question_responses` WHERE `equestion_id` = ".$db->qstr($QUESTION_ID));
+									$db->Execute("DELETE FROM `evaluation_question_objectives` WHERE `equestion_id` = ".$db->qstr($QUESTION_ID));
+									
 									/**
 									 * Add the question responses to the evaluations_lu_question_responses table.
 									 * Ummm... we really need to switch to InnoDB tables to get transaction support.
 									 */
 									if ((is_array($PROCESSED["evaluation_question_responses"])) && (count($PROCESSED["evaluation_question_responses"]))) {
 										foreach ($PROCESSED["evaluation_question_responses"] as $question_response) {
-											$PROCESSED = array (
+											$PROCESSED_RESPONSE = array (
 															"equestion_id" => $QUESTION_ID,
 															"response_text" => $question_response["response_text"],
 															"response_order" => $question_response["response_order"],
@@ -709,10 +833,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 															"minimum_passing_level"	=> $question_response["minimum_passing_level"]
 															);
 
-											if (!$db->AutoExecute("evaluations_lu_question_responses", $PROCESSED, "INSERT")) {
+											if (!$db->AutoExecute("evaluations_lu_question_responses", $PROCESSED_RESPONSE, "INSERT")) {
 												add_error("There was an error while trying to attach a <strong>Question Response</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
 
 												application_log("error", "Unable to insert a new evaluations_lu_question_responses record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
+											}
+										}
+									}
+									
+									/**
+									 * Add the question objectives to the evaluation_question_objectives table.
+									 */
+									if ((isset($PROCESSED["objective_ids"])) && (@count($PROCESSED["objective_ids"]))) {
+										foreach ($PROCESSED["objective_ids"] as $objective_id) {
+											$PROCESSED_OBJECTIVE = array (
+															"equestion_id" => $QUESTION_ID,
+															"objective_id" => $objective_id,
+															"updated_date" => time(),
+															"updated_by" => $ENTRADA_USER->getID()
+															);
+											if (!$db->AutoExecute("evaluation_question_objectives", $PROCESSED_OBJECTIVE, "INSERT")) {
+												add_error("There was an error while trying to attach a <strong>Question Objective</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
+
+												application_log("error", "Unable to insert a new evaluation_question_objectives record while editing an evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
 											}
 										}
 									}
@@ -821,6 +964,51 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					echo display_status_messages();
 				}
 				require_once("javascript/evaluations.js.php");
+				$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js\"></script>";
+				$HEAD[]	= "<script type=\"text/javascript\"> var SITE_URL = '".ENTRADA_URL."'; </script>";
+				if ($PROCESSED["questiontype_id"] == 3) {
+					$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_evaluation_rubric.js\"></script>";
+					$HEAD[] = "<script type=\"text/javascript\">
+					var modalObjectiveDialog;
+					var ajax_url = '';
+
+					jQuery(document).ready(function() {
+						modalObjectiveDialog = new Control.Modal($('false-link'), {
+							position:		'center',
+							overlayOpacity:	0.75,
+							closeOnClick:	'overlay',
+							className:		'modal',
+							fade:			true,
+							fadeDuration:	0.30,
+							width: 755,
+							beforeOpen: function () {
+								jQuery('#mapped_objectives').width('55%');
+								jQuery('#default_objective_notice').hide();
+								jQuery('#alternate_objective_notice').show();
+							}
+						});
+					});
+
+					function openObjectiveDialog (rownum) {
+						var url = '".ENTRADA_URL."/api/evaluations-objectives-list.api.php?qrow='+rownum+'&ids='+$('objective_ids_string_'+rownum).value;
+						if (url && (url != ajax_url)) {
+							ajax_url = url;
+							new Ajax.Request(ajax_url, {
+								method: 'get',
+								onComplete: function(transport) {
+									loaded = [];
+									modalObjectiveDialog.container.update(transport.responseText);
+									modalObjectiveDialog.open();
+								}
+							});
+						} else {
+							modalObjectiveDialog.open();
+						}
+					}
+					</script>";
+				} else {
+					$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_evaluation_question.js\"></script>";
+				}
 				if (isset($PROCESSED["question_parent_id"]) && $PROCESSED["question_parent_id"]) {
 					$query = "SELECT a.*, b.`questiontype_shortname`, b.`questiontype_title`
 								FROM `evaluations_lu_questions` AS a
@@ -847,10 +1035,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						var question_controls = ".json_encode($question_revision_controls).";
 						var modalDialog;
 						var modalQuestionDialog;
+						
 						jQuery(document).ready(function() {
 							modalDialog = new Control.Window($('false-link'), {
 								position:		'center',
 								className:		'default-tooltip',
+								closeOnClick:	'overlay',
 								width: 735
 							});
 							modalQuestionDialog = new Control.Modal($('question-revision-link'), {
@@ -955,7 +1145,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							<label for="questiontype_id" class="form-required">Question Type</label>
 						</td>
 						<td>
-							<select onchange="window.location = '<?php echo ENTRADA_URL ?>/admin/evaluations/questions?section=edit&qtype_id='+this.options[this.selectedIndex].value" name="questiontype_id" id="questiontype_id">
+							<select onchange="window.location = '<?php echo ENTRADA_URL ?>/admin/evaluations/questions?section=edit&qtype_id='+this.options[this.selectedIndex].value+'&id=<?php echo $QUESTION_ID; ?>'" name="questiontype_id" id="questiontype_id">
 								<option value="0"> --- Choose a question type --- </option>
 								<?php
 									$query = "SELECT * FROM `evaluations_lu_questiontypes`

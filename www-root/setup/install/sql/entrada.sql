@@ -2188,6 +2188,7 @@ CREATE TABLE `evaluations_lu_questions` (
   `efquestion_id` int(12) NOT NULL DEFAULT '0',
   `question_parent_id` int(12) NOT NULL DEFAULT '0',
   `questiontype_id` int(12) NOT NULL,
+  `question_code` varchar(48) DEFAULT NULL,
   `question_text` longtext NOT NULL,
   `allow_comments` tinyint(1) NOT NULL DEFAULT '1',
   `question_active` tinyint(1) NOT NULL DEFAULT '1',
@@ -2363,6 +2364,17 @@ CREATE TABLE IF NOT EXISTS `evaluation_progress_clerkship_events` (
   `event_id` int(11) NOT NULL,
   `preceptor_proxy_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`epcevent_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE `evaluation_question_objectives` (
+  `eqobjective_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `equestion_id` int(12) NOT NULL,
+  `objective_id` int(12) NOT NULL,
+  `updated_date` bigint(64) DEFAULT NULL,
+  `updated_by` int(12) DEFAULT NULL,
+  PRIMARY KEY (`eqobjective_id`),
+  KEY `equestion_id` (`equestion_id`),
+  KEY `objective_id` (`objective_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `evaluation_responses` (
@@ -4913,6 +4925,12 @@ CREATE TABLE IF NOT EXISTS `objective_audience` (
   `updated_by` int(12) NOT NULL,
   PRIMARY KEY (`oaudience_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `objective_audience` (`oaudience_id`, `objective_id`, `organisation_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
+VALUES
+	(1, 1, 1, 'COURSE', 'all', 0, 0),
+	(2, 200, 1, 'COURSE', 'all', 0, 0),
+	(3, 309, 1, 'COURSE', 'all', 0, 0);
 
 CREATE TABLE `profile_custom_fields` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,

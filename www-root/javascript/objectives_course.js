@@ -295,7 +295,26 @@
 			var id = jQuery(this).attr('data-id');
 			jQuery('#check_objective_'+id).prop('checked',true);
 			jQuery('#check_objective_'+id).prop('disabled',true);
-		});	
+		});
+
+/*
+* This commented block should find any children of the objective that was checked and remove them from the selects
+* before removing the DOM elements. Need to add code to objectives.js in the objective-title click handler
+* to not load in children if objective is mapped, but only for courses I believe (perhaps more than courses)
+* @todo: test commented out section, unable to test before leaving
+*/	
+		// jQuery('#objective_'+id+' li').each(function(){
+		// 	var id = jQuery(this).attr('data-id');
+		// 	var key = jQuery.inArray(id,mapped);
+		// 	if(key != -1){
+		// 		mapped.splice(key,1);
+		// 		jQuery("#"+importance+"_objectives_select option[value='"+id+"']").remove();
+		// 	}			
+		// });
+
+		// jQuery('#objective_'+id+'> li').slideUp(400,function(){
+		// 	$(this).remove();
+		// });
 
 		mapped.push(id);								
 	}

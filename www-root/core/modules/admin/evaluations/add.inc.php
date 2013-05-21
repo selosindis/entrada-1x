@@ -929,13 +929,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			<div class="control-group">
 				<label for="evaluation_title" class="form-required control-label">Evaluation Title:</label>
 				<div class="controls">
-					<input type="text" id="evaluation_title" name="evaluation_title" value="<?php echo html_encode($PROCESSED["evaluation_title"]); ?>" maxlength="255" style="width: 95%" />
+					<input type="text" id="evaluation_title" name="evaluation_title" value="<?php echo html_encode((isset($PROCESSED["evaluation_title"]) && $PROCESSED["evaluation_title"] ? $PROCESSED["evaluation_title"] : "")); ?>" maxlength="255" style="width: 95%" />
 				</div>
 			</div>
 			<div class="control-group">
 				<label for="evaluation_description" class="form-nrequired control-label">Special Instructions:</label>
 				<div class="controls">
-					<textarea id="evaluation_description" name="evaluation_description" class="expandable" style="width: 95%; height:50px" cols="50" rows="15"><?php echo html_encode($PROCESSED["evaluation_description"]); ?></textarea>
+					<textarea id="evaluation_description" name="evaluation_description" class="expandable" style="width: 95%; height:50px" cols="50" rows="15"><?php echo html_encode((isset($PROCESSED["evaluation_description"]) && $PROCESSED["evaluation_description"] ? $PROCESSED["evaluation_description"] : "")); ?></textarea>
 				</div>
 			</div>
 			<h2>Evaluation Form Options</h2>
@@ -971,15 +971,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								?>
 								</select>
 				</div>
-			</div> <!--/control-grup-->
-
-			<div id="evaluation_options"<?php echo ((!$PROCESSED["eform_id"]) ? " style=\"display: none\"" : ""); ?>>
-					<?php
-					if ($PROCESSED["eform_id"]) {
-						require_once(ENTRADA_ABSOLUTE."/core/modules/admin/evaluations/api-form-options.inc.php");
-					}
-					?>
-			</div>
+			</div> <!--/control-group-->
+            <table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
+                <colgroup>
+                    <col style="width: 3%" />
+                    <col style="width: 20%" />
+                    <col style="width: 77%" />
+                </colgroup>
+                <tbody id="evaluation_options"<?php echo (!isset($PROCESSED["eform_id"]) || (!$PROCESSED["eform_id"]) ? " style=\"display: none\"" : ""); ?>>
+                    <?php
+                    if (isset($PROCESSED["eform_id"]) && $PROCESSED["eform_id"]) {
+                        require_once(ENTRADA_ABSOLUTE."/core/modules/admin/evaluations/api-form-options.inc.php");
+                    }
+                    ?>
+                </tbody>
+            </table>
 			<div class="control-group">
 				<label for="evaluation_mandatory" class="form-required control-label">Evaluation Mandatory:</label>
 				<div class="controls">
@@ -993,7 +999,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				<label for="allow_target_review" class="form-required control-label">Allow Target Review:</label>
 				<div class="controls">
 					<label class="checkbox">
-						<input type="checkbox" id="allow_target_review" name="allow_target_review"<?php echo (!isset($PROCESSED["allow_target_review"]) || $PROCESSED["allow_target_review"] ? " checked=\"checked\"" : ""); ?> />
+						<input type="checkbox" id="allow_target_review" name="allow_target_review"<?php echo (isset($PROCESSED["allow_target_review"]) && $PROCESSED["allow_target_review"] ? " checked=\"checked\"" : ""); ?> />
 						Allow targets (or users with "ownership" permissions of the target) to review the results for this evaluation.
 					</label>
 				</div>
@@ -1008,67 +1014,80 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				</div>
 			</div>
             <div class="control-group" id="evaluation_requests"<?php echo (isset($PROCESSED["allow_target_request"]) && $PROCESSED["allow_target_request"] ? "" : "style=\"display: none;\""); ?>>
-                <table style="width: 100%;" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Requests">
-                    <colgroup>
-                        <col style="width: 3%" />
-                        <col style="width: 30%" />
-                        <col style="width: 67%" />
-                    </colgroup>
-                    <tr>
-                        <td></td>
-                        <td>
-                            <label for="require_requests" class="form-nrequired">Require Requests</label>
-                        </td>
-                        <td>
-                            <input type="checkbox" id="require_requests" name="require_requests"<?php echo (isset($PROCESSED["require_requests"]) && $PROCESSED["require_requests"] ? " checked=\"checked\"" : ""); ?> />
-                            <div style="float: right; width: 91%" class="content-small">Require an open request before allowing an evaluator to attempt this evaluation.</div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td>
-                            <label for="require_request_code" class="form-nrequired">Require a Request Code</label>
-                        </td>
-                        <td>
-                            <input type="checkbox" id="require_request_code" name="require_request_code"<?php echo (isset($PROCESSED["require_request_code"]) && $PROCESSED["require_request_code"] ? " checked=\"checked\"" : ""); ?> />
-                            <div style="float: right; width: 91%" class="content-small">Generate a <strong>Request Code</strong> upon each request being made, to be inputted before allowing an evaluator to attempt this evaluation.</div>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td colspan="3">&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td></td>
-                        <td>
-                            <label for="request_timeout" class="form-nrequired">Request Timeout</label>
-                        </td>
-                        <td>
-                            <input type="text" id="request_timeout" name="request_timeout" value="<?php echo (isset($PROCESSED["request_timeout"]) && $PROCESSED["request_timeout"] ? $PROCESSED["request_timeout"] : 0); ?>" />
-                            <div class="content-small">How long (in minutes) before requests time out. To disable timeouts, set to 0.</div>
-                        </td>
-                    </tr>
-                </table>
+                <div class="controls">
+                    <table style="width: 100%;" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Requests">
+                        <colgroup>
+                            <col style="width: 3%" />
+                            <col style="width: 30%" />
+                            <col style="width: 67%" />
+                        </colgroup>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <label for="require_requests" class="form-nrequired">Require Requests</label>
+                            </td>
+                            <td>
+                                <input type="checkbox" id="require_requests" name="require_requests"<?php echo (isset($PROCESSED["require_requests"]) && $PROCESSED["require_requests"] ? " checked=\"checked\"" : ""); ?> />
+                                <div style="float: right; width: 91%" class="content-small">Require an open request before allowing an evaluator to attempt this evaluation.</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <label for="require_request_code" class="form-nrequired">Require a Request Code</label>
+                            </td>
+                            <td>
+                                <input type="checkbox" id="require_request_code" name="require_request_code"<?php echo (isset($PROCESSED["require_request_code"]) && $PROCESSED["require_request_code"] ? " checked=\"checked\"" : ""); ?> />
+                                <div style="float: right; width: 91%" class="content-small">Generate a <strong>Request Code</strong> upon each request being made, to be inputted before allowing an evaluator to attempt this evaluation.</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td colspan="3">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <label for="request_timeout" class="form-nrequired">Request Timeout</label>
+                            </td>
+                            <td>
+                                <input type="text" id="request_timeout" name="request_timeout" value="<?php echo (isset($PROCESSED["request_timeout"]) && $PROCESSED["request_timeout"] ? $PROCESSED["request_timeout"] : 0); ?>" />
+                                <div class="content-small">How long (in minutes) before requests time out. To disable timeouts, set to 0.</div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
             </div>
-
 			<div class="control-group">
 				<label for="allow_repeat_targets" class="form-required control-label">Allow Multiple Attempts on Each Target:</label>
 				<div class="controls">
 					<label class="checkbox">
-						<input type="checkbox" id="allow_repeat_targets" name="allow_repeat_targets"<?php echo (!isset($PROCESSED["allow_repeat_targets"]) || $PROCESSED["allow_repeat_targets"] ? " checked=\"checked\"" : ""); ?> />
+						<input type="checkbox" id="allow_repeat_targets" name="allow_repeat_targets"<?php echo (isset($PROCESSED["allow_repeat_targets"]) && $PROCESSED["allow_repeat_targets"] ? " checked=\"checked\"" : ""); ?> />
 						Allows evaluators to submit evaluations for the same target multiple times.
 					</label>
 				</div>
 			</div>
-
 			<div class="control-group">
 				<label for="show_comments" class="form-required control-label">Show Comments in Review:</label>
 				<div class="controls">
 					<label class="checkbox">
-						<input type="checkbox" id="show_comments" name="show_comments"<?php echo (!isset($PROCESSED["show_comments"]) || $PROCESSED["show_comments"] ? " checked=\"checked\"" : ""); ?> />
+						<input type="checkbox" onclick="$('identify_comments_holder').toggle(this.checked);" id="show_comments" name="show_comments"<?php echo (!isset($PROCESSED["show_comments"]) || $PROCESSED["show_comments"] ? " checked=\"checked\"" : ""); ?> />
 						When reviewing this evaluation, show comments to reviewers (or targets able to review results).
 					</label>
 				</div>
 			</div>
+            <div class="control-group">
+                <div class="controls">
+                    <div class="control-group" id="identify_comments_holder"<?php echo (!isset($PROCESSED["show_comments"]) || $PROCESSED["show_comments"] ? "\"" : " style=\"display: none;\""); ?>>
+                        <label for="identify_comments" class="form-required control-label">Identify Comments:</label>
+                        <div class="controls">
+                            <label class="checkbox">
+                                <input type="checkbox" id="identify_comments" name="identify_comments"<?php echo (isset($PROCESSED["identify_comments"]) && $PROCESSED["identify_comments"] ? " checked=\"checked\"" : ""); ?> />
+                                When reviewing this evaluation, show the name of the evaluator who left each comment.
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
 			<div class="control-group">
 				<label for="min_submittable" class="form-required control-label">Min Submittable:</label>
 				<div class="controls">
@@ -1104,7 +1123,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 					<ul id="reviewer_list" class="menu" style="margin-top: 15px">
 						<?php
-						if (is_array($PROCESSED["associated_reviewers"]) && count($PROCESSED["associated_reviewers"])) {
+						if (isset($PROCESSED["associated_reviewers"]) && @count($PROCESSED["associated_reviewers"])) {
 							foreach ($PROCESSED["associated_reviewers"] as $reviewer) {
 								if ((array_key_exists($reviewer, $REVIEWER_LIST)) && is_array($REVIEWER_LIST[$reviewer])) {
 									?>
@@ -1145,7 +1164,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				<input type="submit" class="btn btn-primary" value="Proceed" />
 				<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/evaluations'" />
 			</div>
-
 			</form>
 			<script type="text/javascript">
 			document.observe("dom:loaded", function() {

@@ -2172,6 +2172,7 @@ CREATE TABLE IF NOT EXISTS `evaluations` (
   `allow_target_request` tinyint(1) NOT NULL DEFAULT '0',
   `allow_repeat_targets` tinyint(1) NOT NULL DEFAULT '0',
   `show_comments` tinyint(1) NOT NULL DEFAULT '0',
+  `identify_comments` tinyint(1) NOT NULL DEFAULT '0',
   `require_requests` tinyint(1) NOT NULL DEFAULT '0',
   `require_request_code` tinyint(1) NOT NULL DEFAULT '0',
   `request_timeout` bigint(64) NOT NULL DEFAULT '0',

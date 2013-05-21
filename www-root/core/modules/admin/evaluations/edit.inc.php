@@ -1052,316 +1052,247 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						}
 					}
 					</script>
-					<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=edit&amp;step=2" method="post" name="editEvaluationForm" id="editEvaluationForm">
+					<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=edit&amp;step=2" method="post" name="editEvaluationForm" id="editEvaluationForm" class="form-horizontal">
 						<input type="hidden" name="id" value="<?php echo (int) $EVALUATION_ID; ?>" />
-						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing An Evaluation">
-							<colgroup>
-								<col style="width: 3%" />
-								<col style="width: 20%" />
-								<col style="width: 77%" />
-							</colgroup>
-							<tfoot>
-								<tr>
-									<td colspan="3" style="padding-top: 50px">
-										<input type="button" class="fleft" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/evaluations'" />
-										<input type="submit" class="fright" value="Proceed" />
-										<div class="clear"></div>
-									</td>
-								</tr>
-							</tfoot>
-							<tbody>
-								<tr>
-									<td colspan="3"><h2>Evaluation Details</h2></td>
-								</tr>
-								<tr>
-									<td></td>
-									<td><label for="evaluation_title" class="form-required">Evaluation Title</label></td>
-									<td><input type="text" id="evaluation_title" name="evaluation_title" value="<?php echo html_encode($PROCESSED["evaluation_title"]); ?>" maxlength="255" style="width: 95%" /></td>
-								</tr>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-								<tr>
-									<td></td>
-									<td style="vertical-align: top">
-										<label for="evaluation_description" class="form-nrequired">Special Instructions</label>
-										<div class="content-small" style="margin-right:3px"><strong>Note:</strong> Special instructions will appear at the top of the evaluation form.</div>
-									</td>
-									<td>
-										<textarea id="evaluation_description" name="evaluation_description" class="expandable" style="width: 94%; height:50px" cols="50" rows="15"><?php echo html_encode($PROCESSED["evaluation_description"]); ?></textarea>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="3"><h2>Evaluation Form Options</h2></td>
-								</tr>
-								<tr>
-									<td></td>
-									<td><label for="eform_id" class="form-required">Evaluation Form</label></td>
-									<td>
-										<select id="eform_id" name="eform_id" style="width:328px">
-										<option value="0"> -- Select Evaluation Form -- </option>
-										<?php
-										$query	= "	SELECT a.*, b.`target_shortname`, b.`target_title`
-													FROM `evaluation_forms` AS a
-													LEFT JOIN `evaluations_lu_targets` AS b
-													ON b.`target_id` = a.`target_id`
-													WHERE a.`form_active` = '1'
-													ORDER BY b.`target_title` ASC";
-										$results = $db->GetAll($query);
-										if ($results) {
-											$total_forms = count($results);
-											$optgroup_label = "";
+                        <h2>Evaluation Details</h2>
+                        <div class="control-group">
+                            <label for="evaluation_title" class="form-required control-label">Evaluation Title:</label>
+                            <div class="controls">
+                                <input type="text" id="evaluation_title" name="evaluation_title" value="<?php echo html_encode((isset($PROCESSED["evaluation_title"]) && $PROCESSED["evaluation_title"] ? $PROCESSED["evaluation_title"] : "")); ?>" maxlength="255" style="width: 95%" />
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="evaluation_description" class="form-nrequired control-label">Special Instructions:</label>
+                            <div class="controls">
+                                <textarea id="evaluation_description" name="evaluation_description" class="expandable" style="width: 95%; height:50px" cols="50" rows="15"><?php echo html_encode((isset($PROCESSED["evaluation_description"]) && $PROCESSED["evaluation_description"] ? $PROCESSED["evaluation_description"] : "")); ?></textarea>
+                            </div>
+                        </div>
+                        <h2>Evaluation Form Options</h2>
+                        <div class="control-group">
+                            <label for="eform_id" class="form-required control-label">Evaluation Form:</label>
+                            <div class="controls">
+                                <select id="eform_id" name="eform_id" style="width:328px">
+                                            <option value="0"> -- Select Evaluation Form -- </option>
+                                            <?php
+                                            $query	= "	SELECT a.*, b.`target_shortname`, b.`target_title`
+                                                        FROM `evaluation_forms` AS a
+                                                        LEFT JOIN `evaluations_lu_targets` AS b
+                                                        ON b.`target_id` = a.`target_id`
+                                                        WHERE a.`form_active` = '1'
+                                                        ORDER BY b.`target_title` ASC";
+                                            $results = $db->GetAll($query);
+                                            if ($results) {
+                                                $total_forms = count($results);
+                                                $optgroup_label = "";
 
-											foreach ($results as $key => $result) {
-												if ($result["target_title"] != $optgroup_label) {
-													$optgroup_label = $result["target_title"];
-													if ($key > 0) {
-														echo "</optgroup>";
-													}
-													echo "<optgroup label=\"".html_encode($optgroup_label)." Forms\">";
-												}
-												echo "<option value=\"".(int) $result["eform_id"]."\"".(($PROCESSED["eform_id"] == $result["eform_id"]) ? " selected=\"selected\"" : "")."> ".html_encode($result["form_title"])."</option>";
-											}
-											echo "</optgroup>";
-										}
-										?>
-										</select>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-							</tbody>
-							<tbody id="evaluation_options"<?php echo ((!$PROCESSED["eform_id"]) ? " style=\"display: none\"" : ""); ?>>
-							<?php
-							if ($PROCESSED["eform_id"]) {
-								require_once(ENTRADA_ABSOLUTE."/core/modules/admin/evaluations/api-form-options.inc.php");
-							}
-							?>
-							</tbody>
-							<tbody>
-								<tr>
-									<td></td>
-									<td style="vertical-align: top">
-										<label for="allow_comments" class="form-nrequired">Evaluation Mandatory</label>
-									</td>
-									<td>
-										<input type="checkbox" id="evaluation_mandatory" name="evaluation_mandatory"<?php echo (isset($PROCESSED["evaluation_mandatory"]) && $PROCESSED["evaluation_mandatory"] ? " checked=\"checked\"" : ""); ?> />
-										<div style="float: right; width: 91%" class="content-small">Require this evaluation be completed by all evaluators.</div>
-									</td>
-								</tr>
-								<tr>
-									<td></td>
-									<td style="vertical-align: top">
-										<label for="allow_target_review" class="form-nrequired">Allow Target Review</label>
-									</td>
-									<td>
-										<input type="checkbox" id="allow_target_review" name="allow_target_review"<?php echo (!isset($PROCESSED["allow_target_review"]) || $PROCESSED["allow_target_review"] ? " checked=\"checked\"" : ""); ?> />
-										<div style="float: right; width: 91%" class="content-small">Allow targets (or users with "ownership" permissions of the target) to review the results for this evaluation.</div>
-									</td>
-								</tr>
-								<tr>
-									<td></td>
-									<td style="vertical-align: top">
-										<label for="allow_target_request" class="form-nrequired">Allow Target Request</label>
-									</td>
-									<td>
-										<input type="checkbox" onclick="$('evaluation_requests').toggle(this.checked);" id="allow_target_request" name="allow_target_request"<?php echo (!isset($PROCESSED["allow_target_request"]) || $PROCESSED["allow_target_request"] ? " checked=\"checked\"" : ""); ?> />
-										<div style="float: right; width: 91%" class="content-small">Allow targets to trigger a request to be sent to a valid evaluator to fill out an evaluation for them.</div>
-									</td>
-								</tr>
-                                <tr>
-                                    <td colspan="2">&nbsp;</td>
-                                    <td>
-                                        <table id="evaluation_requests" style="width: 100%;<?php echo (isset($PROCESSED["allow_target_request"]) && $PROCESSED["allow_target_request"] ? "" : " display: none;"); ?>" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Requests">
-                                            <colgroup>
-                                                <col style="width: 3%" />
-                                                <col style="width: 30%" />
-                                                <col style="width: 67%" />
-                                            </colgroup>
-                                            <tr>
-                                                <td></td>
-                                                <td>
-                                                    <label for="require_requests" class="form-nrequired">Require Requests</label>
-                                                </td>
-                                                <td>
-                                                    <input type="checkbox" id="require_requests" name="require_requests"<?php echo (isset($PROCESSED["require_requests"]) && $PROCESSED["require_requests"] ? " checked=\"checked\"" : ""); ?> />
-                                                    <div style="float: right; width: 91%" class="content-small">Require an open request before allowing an evaluator to attempt this evaluation.</div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td></td>
-                                                <td>
-                                                    <label for="require_request_code" class="form-nrequired">Require a Request Code</label>
-                                                </td>
-                                                <td>
-                                                    <input type="checkbox" id="require_request_code" name="require_request_code"<?php echo (isset($PROCESSED["require_request_code"]) && $PROCESSED["require_request_code"] ? " checked=\"checked\"" : ""); ?> />
-                                                    <div style="float: right; width: 91%" class="content-small">Generate a <strong>Request Code</strong> upon each request being made, to be inputted before allowing an evaluator to attempt this evaluation.</div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="3">&nbsp;</td>
-                                            </tr>
-                                            <tr>
-                                                <td></td>
-                                                <td>
-                                                    <label for="request_timeout" class="form-nrequired">Request Timeout</label>
-                                                </td>
-                                                <td>
-                                                    <input type="text" id="request_timeout" name="request_timeout" value="<?php echo (isset($PROCESSED["request_timeout"]) && $PROCESSED["request_timeout"] ? $PROCESSED["request_timeout"] : 0); ?>" />
-                                                    <div class="content-small">How long (in minutes) before requests time out. To disable timeouts, set to 0.</div>
-                                                </td>
-                                            </tr>
-                                        </table>
-                                    </td>
-                                </tr>
-								<tr>
-									<td></td>
-									<td style="vertical-align: top">
-										<label for="allow_repeat_targets" class="form-nrequired">Allow Multiple Attempts on Each Target</label>
-									</td>
-									<td>
-										<input type="checkbox" id="allow_repeat_targets" name="allow_repeat_targets"<?php echo (!isset($PROCESSED["allow_repeat_targets"]) || $PROCESSED["allow_repeat_targets"] ? " checked=\"checked\"" : ""); ?> />
-										<div style="float: right; width: 91%" class="content-small">Allows evaluators to submit evaluations for the same target multiple times.</div>
-									</td>
-								</tr>
-								<tr>
-									<td></td>
-									<td style="vertical-align: top">
-										<label for="show_comments" class="form-nrequired">Show Comments in Review</label>
-									</td>
-									<td>
-										<input type="checkbox" id="show_comments" name="show_comments"<?php echo (!isset($PROCESSED["show_comments"]) || $PROCESSED["show_comments"] ? " checked=\"checked\"" : ""); ?> />
-										<div style="float: right; width: 91%" class="content-small">When reviewing this evaluation, show comments to reviewers (or targets able to review results).</div>
-									</td>
-								</tr>
-								<tr>
-									<td></td>
-									<td><label for="min_submittable" class="form-required">Min Submittable</label></td>
-									<td>
-										<input type="text" id="min_submittable" name="min_submittable" value="<?php echo (isset($PROCESSED["min_submittable"]) ? $PROCESSED["min_submittable"] : 1); ?>" maxlength="2" style="width: 30px; margin-right: 10px" />
-										<span class="content-small"><strong>Tip:</strong> The minimum number of times each evaluator must complete this evaluation.</span>
-									</td>
-								</tr>
-								<tr>
-									<td></td>
-									<td><label for="max_submittable" class="form-required">Max Submittable</label></td>
-									<td>
-										<input type="text" id="max_submittable" name="max_submittable" value="<?php echo (isset($PROCESSED["max_submittable"]) ? $PROCESSED["max_submittable"] : 1); ?>" maxlength="2" style="width: 30px; margin-right: 10px" />
-										<span class="content-small"><strong>Tip:</strong> The maximum number of times each evaluator may complete this evaluation.</span>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">&nbsp;</td>
-									<td id="submittable_notice">
-										<?php
-										if ($evaluation_target_type == "peer") {
-											echo "<div class=\"display-notice\"><ul><li>If you set the Min or Max Submittable for a Peer Evaluation to 0, the value will default to the number of targets available to evaluate.</li></ul></div>";
-										} else {
-											echo "&nbsp;";
-										}
-										?>
-									</td>
-								</tr>
-								<?php echo generate_calendars("evaluation", "Evaluation", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["evaluation_finish"])) ? $PROCESSED["evaluation_finish"] : 0)); ?>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-								<tr>
-									<td></td>
-									<td style="vertical-align: top;">
-										<label for="evaluation_reviewers" class="form-nrequired">Evaluation Reviewers</label>
-										<div class="content-small">Reviewers can create, view, and publish reports for this evaluation.</div>
-									</td>
-									<td>
-										<input type="text" id="reviewer_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
-										<?php
-										$ONLOAD[] = "reviewer_list = new AutoCompleteList({ type: 'reviewer', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=facultyorstaff', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
-										?>
-										<div class="autocomplete" id="reviewer_name_auto_complete"></div>
-										<input type="hidden" id="associated_reviewer" name="associated_reviewer" />
-										<input type="button" class="button-sm" id="add_associated_reviewer" value="Add" style="vertical-align: middle" />
-										<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
-										<ul id="reviewer_list" class="menu" style="margin-top: 15px">
-											<?php
-											if (is_array($PROCESSED["associated_reviewers"]) && count($PROCESSED["associated_reviewers"])) {
-												foreach ($PROCESSED["associated_reviewers"] as $reviewer) {
-													if ((array_key_exists($reviewer, $REVIEWER_LIST)) && is_array($REVIEWER_LIST[$reviewer])) {
-														?>
-														<li class="user" id="reviewer_<?php echo $REVIEWER_LIST[$reviewer]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $REVIEWER_LIST[$reviewer]["fullname"]; if ($reviewer != $ENTRADA_USER->getID()) {?> <img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="reviewer_list.removeItem('<?php echo $REVIEWER_LIST[$reviewer]["proxy_id"]; ?>');" class="list-cancel-image" /><?php } ?></li>
-														<?php
-													}
-												}
-											}
-											?>
-										</ul>
-										<input type="hidden" id="reviewer_ref" name="reviewer_ref" value="" />
-										<input type="hidden" id="reviewer_id" name="reviewer_id" value="" />
-									</td>
-								</tr>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-								<tr>
-									<td></td>
-									<td style="vertical-align: top;">
-										<label for="evaluation_exclusions" class="form-nrequired">Evaluator Exclusions</label>
-										<div class="content-small">Evaluators in the Exclusions list are not allowed (or required) to fill out the evaluation, despite being in the evaluators list.</div>
-									</td>
-									<td>
-										<input type="text" id="exclusion_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
-										<?php
-										$ONLOAD[] = "exclusion_list = new AutoCompleteList({ type: 'exclusion', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=evaluators&id=".$EVALUATION_ID."', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
-										?>
-										<div class="autocomplete" id="exclusion_name_auto_complete"></div>
-										<input type="hidden" id="associated_exclusion" name="associated_exclusion" />
-										<input type="button" class="button-sm" id="add_associated_exclusion" value="Add" style="vertical-align: middle" />
-										<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
-										<ul id="exclusion_list" class="menu" style="margin-top: 15px">
-											<?php
-											if (is_array($PROCESSED["associated_exclusions"]) && count($PROCESSED["associated_exclusions"])) {
-												foreach ($PROCESSED["associated_exclusions"] as $exclusion) {
-													if ((array_key_exists($exclusion, $EVALUATOR_LIST)) && is_array($EVALUATOR_LIST[$exclusion])) {
-														?>
-														<li class="user" id="exclusion_<?php echo $EVALUATOR_LIST[$exclusion]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $EVALUATOR_LIST[$exclusion]["fullname"]; if ($exclusion != $ENTRADA_USER->getID()) {?> <img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="exclusion_list.removeItem('<?php echo $EVALUATOR_LIST[$exclusion]["proxy_id"]; ?>');" class="list-cancel-image" /><?php } ?></li>
-														<?php
-													}
-												}
-											}
-											?>
-										</ul>
-										<input type="hidden" id="exclusion_ref" name="exclusion_ref" value="" />
-										<input type="hidden" id="exclusion_id" name="exclusion_id" value="" />
-									</td>
-								</tr>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-								<tr>
-									<td></td>
-									<td style="vertical-align: top;">
-										<label for="threshold_notifications_type" class="form-nrequired">Mandatory Threshold Notifications</label>
-									</td>
-									<td>
-										<select  name="threshold_notifications_type" id="threshold_notifications_type">
-											<option value="disabled"<?php echo (!isset($PROCESSED["threshold_notifications_type"]) || !$PROCESSED["threshold_notifications_type"] || $PROCESSED["threshold_notifications_type"] == "disabled" ? " checked=\"checked\"" : ""); ?>>-- Disabled --</option>
-											<option value="reviewers"<?php echo ($PROCESSED["threshold_notifications_type"] == "reviewers" ? " selected=\"selected\"" : ""); ?>>Evaluation Reviewers</option>
-											<option value="authors"<?php echo ($PROCESSED["threshold_notifications_type"] == "authors" ? " selected=\"selected\"" : ""); ?>>Evaluation Form Authors</option>
-											<option<?php echo ((!in_array($evaluation_target_type, array("student", "peer", "self"))) ? " style=\"display: none;\"" : ""); ?> value="tutors"<?php echo ($PROCESSED["threshold_notifications_type"] == "tutors" ? " selected=\"selected\"" : ""); ?> id="tutors_select">Tutors</option>
-											<option<?php echo ((!in_array($evaluation_target_type, array("course", "rotation_core", "preceptor"))) ? " style=\"display: none;\"" : ""); ?> value="directors"<?php echo ($PROCESSED["threshold_notifications_type"] == "directors" ? " selected=\"selected\"" : ""); ?> id="directors_select">Course Directors</option>
-											<option<?php echo ((!in_array($evaluation_target_type, array("course", "rotation_core", "preceptor"))) ? " style=\"display: none;\"" : ""); ?> value="pcoordinators"<?php echo ($PROCESSED["threshold_notifications_type"] == "pcoordinators" ? " selected=\"selected\"" : ""); ?> id="pcoordinators_select">Program Coordinators</option>
-										</select>
-										<div class="content-small">
-											<strong>Note</strong>: When set to a value other than Disabled, notifications will be sent out to the identified user(s) whenever an evaluation is submitted in which a question is answered below the <strong>Minimum Pass</strong> set for that question. 
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="3"><h2>Time Release Options</h2></td>
-								</tr>
-								<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-							</tbody>
-						</table>
+                                                foreach ($results as $key => $result) {
+                                                    if ($result["target_title"] != $optgroup_label) {
+                                                        $optgroup_label = $result["target_title"];
+                                                        if ($key > 0) {
+                                                            echo "</optgroup>";
+                                                        }
+                                                        echo "<optgroup label=\"".html_encode($optgroup_label)." Forms\">";
+                                                    }
+                                                    echo "<option value=\"".(int) $result["eform_id"]."\"".(($PROCESSED["eform_id"] == $result["eform_id"]) ? " selected=\"selected\"" : "")."> ".html_encode($result["form_title"])."</option>";
+                                                }
+                                                echo "</optgroup>";
+                                            }
+                                            ?>
+                                            </select>
+                            </div>
+                        </div> <!--/control-group-->
+                        <table style="width: 100%" cellspacing="0" cellpadding="2" border="0">
+                            <colgroup>
+                                <col style="width: 3%" />
+                                <col style="width: 20%" />
+                                <col style="width: 77%" />
+                            </colgroup>
+                            <tbody id="evaluation_options"<?php echo (!isset($PROCESSED["eform_id"]) || (!$PROCESSED["eform_id"]) ? " style=\"display: none\"" : ""); ?>>
+                                <?php
+                                if (isset($PROCESSED["eform_id"]) && $PROCESSED["eform_id"]) {
+                                    require_once(ENTRADA_ABSOLUTE."/core/modules/admin/evaluations/api-form-options.inc.php");
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                        <div class="control-group">
+                            <label for="evaluation_mandatory" class="form-required control-label">Evaluation Mandatory:</label>
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input type="checkbox" id="evaluation_mandatory" name="evaluation_mandatory"<?php echo (!isset($PROCESSED["evaluation_mandatory"]) || $PROCESSED["evaluation_mandatory"] ? " checked=\"checked\"" : ""); ?> />
+                                    Require this evaluation be completed by all evaluators.
+                                </label>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="allow_target_review" class="form-required control-label">Allow Target Review:</label>
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input type="checkbox" id="allow_target_review" name="allow_target_review"<?php echo (isset($PROCESSED["allow_target_review"]) && $PROCESSED["allow_target_review"] ? " checked=\"checked\"" : ""); ?> />
+                                    Allow targets (or users with "ownership" permissions of the target) to review the results for this evaluation.
+                                </label>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="allow_target_request" class="form-required control-label">Allow Target Request:</label>
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input type="checkbox" onclick="$('evaluation_requests').toggle(this.checked);" id="allow_target_request" name="allow_target_request"<?php echo (isset($PROCESSED["allow_target_request"]) && $PROCESSED["allow_target_request"] ? " checked=\"checked\"" : ""); ?> />
+                                    Allow targets to trigger a request to be sent to a valid evaluator to fill out an evaluation for them.
+                                </label>
+                            </div>
+                        </div>
+                        <div class="control-group" id="evaluation_requests"<?php echo (isset($PROCESSED["allow_target_request"]) && $PROCESSED["allow_target_request"] ? "" : "style=\"display: none;\""); ?>>
+                            <div class="controls">
+                                <table style="width: 100%;" cellspacing="0" cellpadding="2" border="0" summary="Evaluation Requests">
+                                    <colgroup>
+                                        <col style="width: 3%" />
+                                        <col style="width: 30%" />
+                                        <col style="width: 67%" />
+                                    </colgroup>
+                                    <tr>
+                                        <td></td>
+                                        <td>
+                                            <label for="require_requests" class="form-nrequired">Require Requests</label>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" id="require_requests" name="require_requests"<?php echo (isset($PROCESSED["require_requests"]) && $PROCESSED["require_requests"] ? " checked=\"checked\"" : ""); ?> />
+                                            <div style="float: right; width: 91%" class="content-small">Require an open request before allowing an evaluator to attempt this evaluation.</div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td>
+                                            <label for="require_request_code" class="form-nrequired">Require a Request Code</label>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" id="require_request_code" name="require_request_code"<?php echo (isset($PROCESSED["require_request_code"]) && $PROCESSED["require_request_code"] ? " checked=\"checked\"" : ""); ?> />
+                                            <div style="float: right; width: 91%" class="content-small">Generate a <strong>Request Code</strong> upon each request being made, to be inputted before allowing an evaluator to attempt this evaluation.</div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3">&nbsp;</td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td>
+                                            <label for="request_timeout" class="form-nrequired">Request Timeout</label>
+                                        </td>
+                                        <td>
+                                            <input type="text" id="request_timeout" name="request_timeout" value="<?php echo (isset($PROCESSED["request_timeout"]) && $PROCESSED["request_timeout"] ? $PROCESSED["request_timeout"] : 0); ?>" />
+                                            <div class="content-small">How long (in minutes) before requests time out. To disable timeouts, set to 0.</div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="allow_repeat_targets" class="form-required control-label">Allow Multiple Attempts on Each Target:</label>
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input type="checkbox" id="allow_repeat_targets" name="allow_repeat_targets"<?php echo (isset($PROCESSED["allow_repeat_targets"]) && $PROCESSED["allow_repeat_targets"] ? " checked=\"checked\"" : ""); ?> />
+                                    Allows evaluators to submit evaluations for the same target multiple times.
+                                </label>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="show_comments" class="form-required control-label">Show Comments in Review:</label>
+                            <div class="controls">
+                                <label class="checkbox">
+                                    <input type="checkbox" onclick="$('identify_comments_holder').toggle(this.checked);" id="show_comments" name="show_comments"<?php echo (!isset($PROCESSED["show_comments"]) || $PROCESSED["show_comments"] ? " checked=\"checked\"" : ""); ?> />
+                                    When reviewing this evaluation, show comments to reviewers (or targets able to review results).
+                                </label>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <div class="controls">
+                                <div class="control-group" id="identify_comments_holder"<?php echo (!isset($PROCESSED["show_comments"]) || $PROCESSED["show_comments"] ? "\"" : " style=\"display: none;\""); ?>>
+                                    <label for="identify_comments" class="form-required control-label">Identify Comments:</label>
+                                    <div class="controls">
+                                        <label class="checkbox">
+                                            <input type="checkbox" id="identify_comments" name="identify_comments"<?php echo (isset($PROCESSED["identify_comments"]) && $PROCESSED["identify_comments"] ? " checked=\"checked\"" : ""); ?> />
+                                            When reviewing this evaluation, show the name of the evaluator who left each comment.
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="min_submittable" class="form-required control-label">Min Submittable:</label>
+                            <div class="controls">
+                                <input type="text" id="min_submittable" name="min_submittable" value="<?php echo (isset($PROCESSED["min_submittable"]) ? $PROCESSED["min_submittable"] : 1); ?>" maxlength="2" style="width: 30px; margin-right: 10px" />
+                                <span class="content-small"><strong>Tip:</strong> The minimum number of times each evaluator must complete this evaluation.</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="max_submittable" class="form-required control-label">Max Submittable:</label>
+                            <div class="controls">
+                                <input type="text" id="max_submittable" name="max_submittable" value="<?php echo (isset($PROCESSED["max_submittable"]) ? $PROCESSED["max_submittable"] : 1); ?>" maxlength="2" style="width: 30px; margin-right: 10px" />
+                                <span class="content-small"><strong>Tip:</strong> The maximum number of times each evaluator may complete this evaluation.</span>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <div class="controls" id="submittable_notice"></div>
+                        </div>
+                        <div class="control-group">
+                            <table>
+                            <?php echo generate_calendars("evaluation", "Evaluation", true, true, ((isset($PROCESSED["evaluation_start"])) ? $PROCESSED["evaluation_start"] : 0), true, true, ((isset($PROCESSED["evaluation_finish"])) ? $PROCESSED["evaluation_finish"] : 0)); ?>
+                            </table>
+                        </div>
+                        <div class="control-group">
+                            <label for="evaluation_reviewers" class="control-label form-nrequired">Evaluation Reviewers:</label>
+                            <div class="controls">
+                                <input type="text" id="reviewer_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
+                                <?php
+                                $ONLOAD[] = "reviewer_list = new AutoCompleteList({ type: 'reviewer', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=facultyorstaff', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
+                                ?>
+                                <div class="autocomplete" id="reviewer_name_auto_complete"></div>
+                                <input type="hidden" id="associated_reviewer" name="associated_reviewer" />
+                                <input type="button" class="button-sm" id="add_associated_reviewer" value="Add" style="vertical-align: middle" />
+                                <span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+                                <ul id="reviewer_list" class="menu" style="margin-top: 15px">
+                                    <?php
+                                    if (isset($PROCESSED["associated_reviewers"]) && @count($PROCESSED["associated_reviewers"])) {
+                                        foreach ($PROCESSED["associated_reviewers"] as $reviewer) {
+                                            if ((array_key_exists($reviewer, $REVIEWER_LIST)) && is_array($REVIEWER_LIST[$reviewer])) {
+                                                ?>
+                                                <li class="user" id="reviewer_<?php echo $REVIEWER_LIST[$reviewer]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $REVIEWER_LIST[$reviewer]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="reviewer_list.removeItem('<?php echo $REVIEWER_LIST[$reviewer]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+                                                <?php
+                                            }
+                                        }
+                                    }
+                                    ?>
+                                </ul>
+                                <input type="hidden" id="reviewer_ref" name="reviewer_ref" value="" />
+                                <input type="hidden" id="reviewer_id" name="reviewer_id" value="" />
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="threshold_notifications_type" class="form-nrequired control-label">Mandatory Threshold Notifications:</label>
+                            <div class="controls">
+                                <select  name="threshold_notifications_type" id="threshold_notifications_type">
+                                                <option value="disabled"<?php echo (!isset($PROCESSED["threshold_notifications_type"]) || !$PROCESSED["threshold_notifications_type"] || $PROCESSED["threshold_notifications_type"] == "disabled" ? " checked=\"checked\"" : ""); ?>>-- Disabled --</option>
+                                                <option value="reviewers"<?php echo ($PROCESSED["threshold_notifications_type"] == "reviewers" ? " selected=\"selected\"" : ""); ?>>Evaluation Reviewers</option>
+                                                <option value="authors"<?php echo ($PROCESSED["threshold_notifications_type"] == "authors" ? " selected=\"selected\"" : ""); ?>>Evaluation Form Authors</option>
+                                                <option<?php echo ((!in_array($evaluation_target_type, array("student", "peer", "self"))) ? " style=\"display: none;\"" : ""); ?> value="tutors"<?php echo ($PROCESSED["threshold_notifications_type"] == "tutors" ? " selected=\"selected\"" : ""); ?> id="tutors_select">Tutors</option>
+                                                <option<?php echo ((!in_array($evaluation_target_type, array("course", "rotation_core", "preceptor"))) ? " style=\"display: none;\"" : ""); ?> value="directors"<?php echo ($PROCESSED["threshold_notifications_type"] == "directors" ? " selected=\"selected\"" : ""); ?> id="directors_select">Course Directors</option>
+                                                <option<?php echo ((!in_array($evaluation_target_type, array("course", "rotation_core", "preceptor"))) ? " style=\"display: none;\"" : ""); ?> value="pcoordinators"<?php echo ($PROCESSED["threshold_notifications_type"] == "pcoordinators" ? " selected=\"selected\"" : ""); ?> id="pcoordinators_select">Program Coordinators</option>
+                                            </select>
+                                            <div class="content-small">
+                                                <strong>Note</strong>: When set to a value other than Disabled, notifications will be sent out to the identified user(s) whenever an evaluation is submitted in which a question is answered below the <strong>Minimum Pass</strong> set for that question.
+                                            </div>
+                            </div>
+                        </div>
+                        <h2>Time Release Options</h2>
+                        <div class="control-group">
+                            <table>
+                                <?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+                            </table>
+                        </div>
+                        <div class="form-actions">
+                            <input type="submit" class="btn btn-primary" value="Proceed" />
+                            <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/evaluations'" />
+                        </div>
 					</form>
 					<script type="text/javascript">
 					document.observe("dom:loaded", function() {

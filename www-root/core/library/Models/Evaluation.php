@@ -1739,7 +1739,7 @@ class Models_Evaluation {
 								</colgroup>
 								<tbody>
 									<tr>
-										<td style="vertical-align: top"><input<?php echo ($target_data["evaluation_evaluators"][0]["evaluator_type"] == "cohort" ? " checked=\"checked\"" : ""); ?> type="radio" name="target_group_type" id="target_group_type_cohort" value="cohort" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
+										<td style="vertical-align: top"><input<?php echo (isset($target_data["evaluation_evaluators"][0]["evaluator_type"]) && $target_data["evaluation_evaluators"][0]["evaluator_type"] == "cohort" ? " checked=\"checked\"" : ""); ?> type="radio" name="target_group_type" id="target_group_type_cohort" value="cohort" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
 										<td style="padding-bottom: 15px">
 											<label for="target_group_type_cohort" class="radio-group-title">Entire class must complete this evaluation</label>
 											<div class="content-small">This evaluation must be completed by everyone in the selected class.</div>
@@ -1791,7 +1791,7 @@ class Models_Evaluation {
 										<td colspan="2">&nbsp;</td>
 									</tr>
 									<tr>
-										<td style="vertical-align: top"><input<?php echo ($target_data["evaluation_evaluators"][0]["evaluator_type"] == "cgroup_id" ? " checked=\"checked\"" : ""); ?> type="radio" name="target_group_type" id="target_group_type_cgroup_id" value="cgroup_id" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
+										<td style="vertical-align: top"><input<?php echo (isset($target_data["evaluation_evaluators"][0]["evaluator_type"]) && $target_data["evaluation_evaluators"][0]["evaluator_type"] == "cgroup_id" ? " checked=\"checked\"" : ""); ?> type="radio" name="target_group_type" id="target_group_type_cgroup_id" value="cgroup_id" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
 										<td style="padding-bottom: 15px">
 											<label for="target_group_type_cgroup_id" class="radio-group-title">Selected course groups must complete this evaluation</label>
 											<div class="content-small">This evaluation must be completed by everyone in the selected course groups.</div>
@@ -1848,7 +1848,7 @@ class Models_Evaluation {
 										<td colspan="2">&nbsp;</td>
 									</tr>
 									<tr >
-										<td style="vertical-align: top"><input<?php echo ($target_data["evaluation_evaluators"][0]["evaluator_type"] == "proxy_id" ? " checked=\"checked\"" : ""); ?> type="radio" name="target_group_type" id="target_group_type_proxy_id" value="proxy_id" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
+										<td style="vertical-align: top"><input<?php echo (isset($target_data["evaluation_evaluators"][0]["evaluator_type"]) && $target_data["evaluation_evaluators"][0]["evaluator_type"] == "proxy_id" ? " checked=\"checked\"" : ""); ?> type="radio" name="target_group_type" id="target_group_type_proxy_id" value="proxy_id" onclick="selectTargetGroupOption(this.value)" style="vertical-align: middle" /></td>
 										<td style="padding-bottom: 15px">
 											<label for="target_group_type_proxy_id" class="radio-group-title">Selected students must complete this evaluation</label>
 											<div class="content-small">This evaluation must be completed only by the selected individuals.</div>

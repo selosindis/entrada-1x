@@ -519,9 +519,11 @@ if ($RECORD_ID) {
 							case 1 :
 							default :
 								if ($evaluation_record["evaluation_finish"] < time() && $evaluation_record["min_submittable"] > $evaluation_record["completed_attempts"]) {
-									$NOTICE++;
-									$NOTICESTR[] = "This evaluation has not been completed and was marked as to be completed by ".date(DEFAULT_DATE_FORMAT, $evaluation_record["evaluation_finish"]).". Please complete this evaluation now to continue using ".APPLICATION_NAME.".";
+									add_notice("This evaluation has not been completed and was marked as to be completed by ".date(DEFAULT_DATE_FORMAT, $evaluation_record["evaluation_finish"]).". Please complete this evaluation now to continue using ".APPLICATION_NAME.".");
 								}
+                                if (isset($evaluation_record["identify_comments"]) && $evaluation_record["identify_comments"]) {
+                                   add_notice("This evaluation is set to indicate your name on comments. Please be aware that the comment portion of the results will not be totally anonymous to reviewers, while the individual multiple choice and rubric answers you select will still be unidentified.");
+                                }
 								
 								if (isset($evaluation_record["evaluation_description"]) && $evaluation_record["evaluation_description"]) {
 									echo "<div class=\"display-generic\">".$evaluation_record["evaluation_description"]."</div>";

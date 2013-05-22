@@ -83,7 +83,8 @@ if (!defined("IN_PROFILE")) {
 						null,
 						{'sType': 'alt-string'},
 						{'sType': 'alt-string'}
-					]
+					],
+                    'bAutoWidth': false
 				}
 			);
 		});

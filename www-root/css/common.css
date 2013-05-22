@@ -4413,11 +4413,12 @@ a.help {
 .clear-width{
   width:auto!important;
 }
-
 .cursor-pointer{
   cursor: pointer;
 }
-
 .cursor-move{
   cursor: move;
+}
+.align-top{
+  vertical-align: top;
 }

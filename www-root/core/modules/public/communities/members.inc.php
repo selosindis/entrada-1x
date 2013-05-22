@@ -747,7 +747,8 @@ if ($COMMUNITY_ID) {
 												null,
 												null,
 												{'sType': 'alt-string'}
-											]
+											],
+                                            'bAutoWidth': false
 										}
 									);
 								});
@@ -897,7 +898,8 @@ if ($COMMUNITY_ID) {
 															null,
 															null,
 															{'sType': 'alt-string'}
-														]
+														],
+                                                        'bAutoWidth': false
 													}
 												);
 											});

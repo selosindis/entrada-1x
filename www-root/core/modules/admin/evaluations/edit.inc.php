@@ -1152,7 +1152,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                     </colgroup>
                                     <tr>
                                         <td></td>
-                                        <td>
+                                        <td class="align-top">
                                             <label for="require_requests" class="form-nrequired">Require Requests</label>
                                         </td>
                                         <td>
@@ -1162,7 +1162,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                     </tr>
                                     <tr>
                                         <td></td>
-                                        <td>
+                                        <td class="align-top">
                                             <label for="require_request_code" class="form-nrequired">Require a Request Code</label>
                                         </td>
                                         <td>
@@ -1175,7 +1175,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                     </tr>
                                     <tr>
                                         <td></td>
-                                        <td>
+                                        <td class="align-top">
                                             <label for="request_timeout" class="form-nrequired">Request Timeout</label>
                                         </td>
                                         <td>
@@ -1286,7 +1286,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                         <h2>Time Release Options</h2>
                         <div class="control-group">
                             <table>
-                                <?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+                                <?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), 1, 1); ?>
                             </table>
                         </div>
                         <div class="form-actions">

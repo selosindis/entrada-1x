@@ -47,7 +47,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			});
 
 			jQuery('#draft-list').dataTable({
-				"aaSorting": [[ 2, "asc" ]]
+				"aaSorting": [[ 2, "asc" ]],
+                'bAutoWidth': false
 			});
 		});
 	</script>

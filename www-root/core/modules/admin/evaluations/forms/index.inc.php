@@ -52,7 +52,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			jQuery('#evaluationforms').dataTable(
 				{
 					'sPaginationType': 'full_numbers',
-					'bInfo': false
+					'bInfo': false,
+                    'bAutoWidth': false
 				}
 			);
 		});

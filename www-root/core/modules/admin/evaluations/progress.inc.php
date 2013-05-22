@@ -146,7 +146,8 @@ if($EVALUATION_ID) {
 			jQuery('#attempts').dataTable(
 				{    
 					'bPaginate': false,
-					'bInfo': false
+					'bInfo': false,
+                    'bAutoWidth': false
 				}
 			);
 		});

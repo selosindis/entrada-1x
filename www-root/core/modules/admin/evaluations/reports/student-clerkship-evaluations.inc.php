@@ -831,7 +831,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					}
 					echo "<tr>\n";
 					echo "	<td colspan=\"2\" style=\"text-align: right\">\n";
-					echo "		<input type=\"submit\" class=\"button\" style=\"background-image: url('".ENTRADA_URL."/images/btn_bg.gif')\" value=\"Generate Report\" />\n";
+					echo "		<input type=\"submit\" class=\"btn btn-primary\" value=\"Generate Report\" />\n";
 					echo "	</td>\n";
 					echo "</tr>\n";
 					echo "</table>\n";

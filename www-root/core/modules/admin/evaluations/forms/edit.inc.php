@@ -263,11 +263,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						<tr>
 							<td colspan="3" style="padding: 25px 0px 25px 0px">
 								<div style="float: left">
-									<button href="#disable-form-confirmation-box" id="form-control-disable">Disable Form</button>
+									<button href="#disable-form-confirmation-box" class="btn btn-danger" id="form-control-disable">Disable Form</button>
 								</div>
 								<div style="float: right; text-align: right">
-									<button href="#copy-form-confirmation-box" id="form-control-copy">Copy Form</button>
-									<input type="submit" class="button" value="Save Changes" />
+									<button href="#copy-form-confirmation-box" class="btn" id="form-control-copy"><i class="icon-share"></i> Copy Form</button>
+									<input type="submit" class="btn btn-primary" value="Save Changes" />
 								</div>
 								<div class="clear"></div>
 							</td>
@@ -287,7 +287,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								?>
 								<div class="autocomplete" id="author_name_auto_complete"></div>
 								<input type="hidden" id="associated_author" name="associated_author" />
-								<input type="button" class="button-sm" id="add_associated_author" value="Add" style="vertical-align: middle" />
+								<input type="button" class="btn btn-small" id="add_associated_author" value="Add" style="vertical-align: middle" />
 								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 								<ul id="author_list" class="menu" style="margin-top: 15px">
 									<?php
@@ -374,8 +374,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							</div>
 							If you confirm this action, this form will not be available for evaluations.
 							<div class="footer">
-								<input type="button" value="Close" onclick="Control.Modal.close()" style="float: left; margin: 8px 0px 4px 10px" />
-								<input type="submit" value="Confirm" style="float: right; margin: 8px 10px 4px 0px" />
+								<input type="button" class="btn" value="Close" onclick="Control.Modal.close()" style="float: left; margin: 8px 0px 4px 10px" />
+								<input type="submit" class="btn btn-primary" value="Confirm" style="float: right; margin: 8px 10px 4px 0px" />
 							</div>
 						</form>
 					</div>
@@ -402,8 +402,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								</table>
 							</div>
 							<div class="footer">
-								<input type="button" value="Cancel" onclick="Control.Modal.close()" style="float: left; margin: 8px 0px 4px 10px" />
-								<input type="submit" value="Copy Form" style="float: right; margin: 8px 10px 4px 0px" />
+								<input type="button" class="btn" value="Cancel" onclick="Control.Modal.close()" style="float: left; margin: 8px 0px 4px 10px" />
+								<input type="submit" class="btn btn-primary" value="Copy Form" style="float: right; margin: 8px 10px 4px 0px" />
 							</div>
 						</form>
 					</div>

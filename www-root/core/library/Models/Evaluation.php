@@ -606,9 +606,7 @@ class Models_Evaluation {
 								$criteria_width = floor(100 / (count($criteriae) + 1));
 								echo "		<td style=\"width: ".$criteria_width."%\">\n";
 								echo "			<div class=\"td-stretch\" style=\"position: relative; width: 100%; vertical-align: middle;\">\n";
-								if ($allow_question_modifications) {
-									echo "				<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" style=\"position: absolute; top: 10px; right: 10px;\" /></a>";
-								}
+								echo "				<img onclick=\"openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" width=\"16\" height=\"16\" class=\"question-controls cursor-pointer pull-right\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" style=\"margin-top: -15px;\" />";
 								echo "				<div style=\"position: relative; top: 50%;\">".$question["question_text"]."</div>\n";
 								echo "			</div>\n";
 								echo "		</td>\n";
@@ -646,13 +644,15 @@ class Models_Evaluation {
 						$question_number = ($key + 1);
 
 						echo "<li id=\"question_".$question["equestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">";
-						if ($allow_question_modifications) {
-							echo "<div class=\"controls\">\n";
-							echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/questions?form_id=".$form_id."&amp;section=edit&amp;id=".$question["equestion_id"]."&amp;efquestion_id=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
-							echo "	<a id=\"question_delete_".$question["equestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["equestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
-							echo "	<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" /></a>";
-							echo "</div>\n";
-						}
+                        echo "<div class=\"controls align-top\">\n";
+                            if ($allow_question_modifications) {
+                                echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/questions?form_id=".$form_id."&amp;section=edit&amp;id=".$question["equestion_id"]."&amp;efquestion_id=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
+                                echo "	<a id=\"question_delete_".$question["equestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["equestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
+                            }
+                        if ($questiontype["questiontype_shortname"] == "free_text") {
+                            echo "	<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" /></a>";
+                        }
+                        echo "</div>\n";
 						echo "	<div id=\"question_text_".$question["equestion_id"]."\" for=\"".$question["equestion_id"]."_comment\" class=\"question".($allow_question_modifications ? " cursor-move" : "")."\">\n";
 						echo "		".clean_input($question["question_text"], "specialchars");
 						echo "	</div>\n";
@@ -687,13 +687,13 @@ class Models_Evaluation {
 						$question_number = ($key + 1);
 
 						echo "<li id=\"question_".$question["equestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">";
+                        echo "<div class=\"controls\">\n";
 						if ($allow_question_modifications) {
-							echo "<div class=\"controls\">\n";
 							echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/questions?form_id=".$form_id."&amp;section=edit&amp;id=".$question["equestion_id"]."&amp;efquestion_id=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
 							echo "	<a id=\"question_delete_".$question["equestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["equestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
-							echo "	<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" /></a>";
-							echo "</div>\n";
 						}
+                        echo "	<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" /></a>";
+                        echo "</div>\n";
 						echo "	<div id=\"question_text_".$question["equestion_id"]."\" class=\"question".($allow_question_modifications ? " cursor-move" : "")."\">\n";
 						echo "		".clean_input($question["question_text"], "specialchars");
 						echo "	</div>\n";
@@ -757,8 +757,8 @@ class Models_Evaluation {
 				</div>
 				If you confirm this action, the question will be permanently removed.
 				<div class="footer">
-					<input type="button" class="button" value="Close" onclick="Control.Modal.close()" style="float: left; margin: 8px 0px 4px 10px" />
-					<input type="button" class="button" value="Confirm" onclick="deleteFormQuestion(deleteQuestion_id)" style="float: right; margin: 8px 10px 4px 0px" />
+					<input type="button" class="btn" value="Close" onclick="Control.Modal.close()" style="float: left; margin: 8px 0px 4px 10px" />
+					<input type="button" class="btn btn-danger" value="Confirm" onclick="deleteFormQuestion(deleteQuestion_id)" style="float: right; margin: 8px 10px 4px 0px" />
 				</div>
 			</div>
 			<script type="text/javascript" defer="defer">
@@ -1138,11 +1138,11 @@ class Models_Evaluation {
 								?>
 								</select>
 								<div style="float: left; display: inline">
-									<input type="button" id="courses_list_state_btn" class="button" value="Show List" onclick="toggle_list('courses_list')" />
+									<input type="button" id="courses_list_state_btn" class="btn" value="Show List" onclick="toggle_list('courses_list')" />
 								</div>
 								<div style="float: right; display: inline">
-									<input type="button" id="courses_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
-									<input type="button" id="courses_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+									<input type="button" id="courses_list_remove_btn" class="btn btn-danger" onclick="delIt()" value="Remove" />
+									<input type="button" id="courses_list_add_btn" class="btn btn-success" onclick="addIt()" style="display: none" value="Add" />
 								</div>
 								<div id="courses_list" style="clear: both; padding-top: 3px; display: none">
 									<h2>Course List</h2>
@@ -1210,11 +1210,11 @@ class Models_Evaluation {
 								?>
 								</select>
 								<div style="float: left; display: inline">
-									<input type="button" id="teachers_list_state_btn" class="button" value="Show List" onclick="toggle_list('teachers_list')" />
+									<input type="button" id="teachers_list_state_btn" class="btn" value="Show List" onclick="toggle_list('teachers_list')" />
 								</div>
 								<div style="float: right; display: inline">
-									<input type="button" id="teachers_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
-									<input type="button" id="teachers_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+									<input type="button" id="teachers_list_remove_btn" class="btn btn-danger" onclick="delIt()" value="Remove" />
+									<input type="button" id="teachers_list_add_btn" class="btn btn-success" onclick="addIt()" style="display: none" value="Add" />
 								</div>
 								<div id="teachers_list" style="clear: both; padding-top: 3px; display: none">
 									<h2>Course List</h2>
@@ -1277,11 +1277,11 @@ class Models_Evaluation {
 								?>
 								</select>
 								<div style="float: left; display: inline">
-									<input type="button" id="residents_list_state_btn" class="button" value="Show List" onclick="toggle_list('residents_list')" />
+									<input type="button" id="residents_list_state_btn" class="btn" value="Show List" onclick="toggle_list('residents_list')" />
 								</div>
 								<div style="float: right; display: inline">
-									<input type="button" id="residents_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
-									<input type="button" id="residents_list_add_btn" class="button-add" onclick="addIt()" style="display: none" value="Add" />
+									<input type="button" id="residents_list_remove_btn" class="btn btn-danger" onclick="delIt()" value="Remove" />
+									<input type="button" id="residents_list_add_btn" class="btn btn-success" onclick="addIt()" style="display: none" value="Add" />
 								</div>
 								<div id="residents_list" style="clear: both; padding-top: 3px; display: none">
 									<h2>Resident List</h2>
@@ -1863,7 +1863,7 @@ class Models_Evaluation {
 											<div class="autocomplete" id="student_name_auto_complete"></div>
 
 											<input type="hidden" id="associated_student" name="associated_student" />
-											<input type="button" class="button-sm" id="add_associated_student" value="Add" style="vertical-align: middle" />
+											<input type="button" class="btn btn-small" id="add_associated_student" value="Add" style="vertical-align: middle" />
 											<span class="content-small" style="margin-left: 3px; padding-top: 5px"><strong>e.g.</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?></span>
 											<ul id="student_list" class="menu" style="margin-top: 15px">
 												<?php
@@ -1942,7 +1942,7 @@ class Models_Evaluation {
 							<input type="text" id="evalfaculty_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
 							<div class="autocomplete" id="evalfaculty_name_auto_complete"></div>
 							<input type="hidden" id="associated_evalfaculty" name="associated_evalfaculty" />
-							<input type="button" class="button-sm" id="add_associated_evalfaculty" value="Add" style="vertical-align: middle" />
+							<input type="button" class="btn btn-small" id="add_associated_evalfaculty" value="Add" style="vertical-align: middle" />
 							<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 							<ul id="evalfaculty_list" class="menu" style="margin-top: 15px">
 								<?php

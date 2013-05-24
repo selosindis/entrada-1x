@@ -194,10 +194,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 								<tr>
 									<td style="width: 25%; text-align: left">
-										<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/evaluations/forms'" />
+										<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/evaluations/forms'" />
 									</td>
 									<td style="width: 75%; text-align: right; vertical-align: middle">
-										<input type="submit" class="button" value="Proceed" />
+										<input type="submit" class="btn btn-primary" value="Proceed" />
 									</td>
 								</tr>
 								</table>
@@ -256,7 +256,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								?>
 								<div class="autocomplete" id="author_name_auto_complete"></div>
 								<input type="hidden" id="associated_author" name="associated_author" />
-								<input type="button" class="button-sm" id="add_associated_author" value="Add" style="vertical-align: middle" />
+								<input type="button" class="btn btn-small" id="add_associated_author" value="Add" style="vertical-align: middle" />
 								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 								<ul id="author_list" class="menu" style="margin-top: 15px">
 									<?php

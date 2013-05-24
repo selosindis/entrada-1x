@@ -354,7 +354,7 @@ if (isset($requested_evaluations) && count($requested_evaluations)) {
 	$sidebar_html  = "<form method=\"post\" action=\"".ENTRADA_RELATIVE."/evaluations?section=attempt\">\n";
 	$sidebar_html .= "	<label class=\"form-nrequired\" for=\"request_code\">Request Code: </label>";
     $sidebar_html .= "  <input type=\"text\" id=\"request_code\" name=\"request_code\">";
-	$sidebar_html .= "	<br /><br /><input type=\"submit\" value=\"Submit\" />";
+	$sidebar_html .= "	<br /><br /><input type=\"submit\" class=\"btn btn-small btn-primary\" value=\"Submit\" />";
 	$sidebar_html .= "</form>";
 
 	new_sidebar_item("Fulfill an Evaluation Request", $sidebar_html, "evaluation-request-code", "open", "1.9");

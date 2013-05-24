@@ -206,8 +206,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					</select>
 					<input type="hidden" value="1" name="clinical_presentations_submit" />
 					<div style="float: right; display: inline">
-						<input type="button" id="clinical_presentations_list_remove_btn" class="button-remove" onclick="delIt()" value="Remove" />
-						<input type="button" id="clinical_presentations_list_add_btn" class="button-add" onclick="addIt()" value="Add" />
+						<input type="button" id="clinical_presentations_list_remove_btn" class="btn btn-danger" onclick="delIt()" value="Remove" />
+						<input type="button" id="clinical_presentations_list_add_btn" class="btn btn-success" onclick="addIt()" value="Add" />
 					</div>
 					<div id="clinical_presentations_list" style="clear: both; padding-top: 3px;">
 						<h2>Clinical Presentations List</h2>
@@ -240,8 +240,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					</div>
 					<hr style="margin-top: 60px;" />
 					<div id="footer">
-						<button id="close-button" onclick="Control.Modal.close()">Cancel</button>
-						<input style="float: right;" type="submit" value="Save Changes" />
+						<button id="close-button" class="btn" onclick="Control.Modal.close()">Cancel</button>
+						<input style="float: right;" class="btn btn-primary" type="submit" value="Save Changes" />
 					</div>
 				</form>
 				<?php

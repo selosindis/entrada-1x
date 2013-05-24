@@ -97,7 +97,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					<tr>
 						<td></td>
 						<td style="padding-top: 10px" colspan="2">
-							<input type="submit" class="button" value="Confirm Disable" />
+							<input type="submit" class="btn btn-danger" value="Confirm Disable" />
 						</td>
 					</tr>
 				</tfoot>

@@ -1117,7 +1117,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 							<tr>
 								<td style="width: 25%; text-align: left">
-									<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/evaluations/questions'" />
+									<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/evaluations/questions'" />
 								</td>
 								<td style="width: 75%; text-align: right; vertical-align: middle">
 									<?php
@@ -1132,7 +1132,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 										<?php
 									}
 									?>
-									<input type="submit" class="button" value="Proceed" />
+									<input type="submit" class="btn btn-primary" value="Proceed" />
 								</td>
 							</tr>
 							</table>

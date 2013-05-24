@@ -135,7 +135,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								<tr>
 									<td>&nbsp;</td>
 									<td colspan="4" style="text-align: right; padding-top: 15px">
-										<input type="submit" class="button" value="Create Report<?php echo $single ? "" : "s"; ?>" />
+										<input type="submit" class="btn btn-primary" value="Create Report<?php echo $single ? "" : "s"; ?>" />
 									</td>
 								</tr>
 							</tfoot>

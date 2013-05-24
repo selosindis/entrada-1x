@@ -201,7 +201,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						<tr>
 							<td></td>
 							<td colspan="5" style="padding-top: 10px">
-								<input type="submit" class="button" value="Confirm Removal" />
+								<input type="submit" class="btn btn-danger" value="Confirm Removal" />
 							</td>
 						</tr>
 					</tfoot>
@@ -212,7 +212,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							$accessible		= true;
 							$administrator	= false;
 
-							if($ENTRADA_ACL->amIAllowed(new EventResource($result["evaluation_id"], $result["course_id"], $result["organisation_id"]), 'delete')) {
+							if($ENTRADA_ACL->amIAllowed(new EvaluationResource($result["evaluation_id"]), 'delete')) {
 								$administrator = true;
 							} else {
 								if((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {

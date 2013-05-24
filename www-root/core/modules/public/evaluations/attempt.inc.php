@@ -763,8 +763,8 @@ if ($RECORD_ID) {
 									}
 									?>
 									<div class="space-above medium">
-										<input type="button" style="float: left; margin-right: 10px" onclick="window.location = '<?php echo ENTRADA_URL; ?>/evaluations'" value="Exit Evaluation" />
-										<input type="submit" style="float: right" value="Submit Evaluation" />
+										<input type="button" class="btn" style="float: left; margin-right: 10px" onclick="window.location = '<?php echo ENTRADA_URL; ?>/evaluations'" value="Exit Evaluation" />
+										<input type="submit" class="btn btn-primary" style="float: right" value="Submit Evaluation" />
 									</div>
 									<div class="clear"></div>
 									</form>

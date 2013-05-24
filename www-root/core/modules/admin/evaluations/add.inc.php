@@ -1119,7 +1119,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					?>
 					<div class="autocomplete" id="reviewer_name_auto_complete"></div>
 					<input type="hidden" id="associated_reviewer" name="associated_reviewer" />
-					<input type="button" class="button-sm" id="add_associated_reviewer" value="Add" style="vertical-align: middle" />
+					<input type="button" class="btn btn-small" id="add_associated_reviewer" value="Add" style="vertical-align: middle" />
 					<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 					<ul id="reviewer_list" class="menu" style="margin-top: 15px">
 						<?php

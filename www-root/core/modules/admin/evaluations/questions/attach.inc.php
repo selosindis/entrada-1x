@@ -285,7 +285,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						<tr>
 							<td></td>
 							<td colspan="3" style="padding-top: 10px">
-								<input type="submit" class="button" value="Attach Questions" />
+								<input type="submit" class="btn btn-primary" value="Attach Questions" />
 							</td>
 						</tr>
 					</tfoot>

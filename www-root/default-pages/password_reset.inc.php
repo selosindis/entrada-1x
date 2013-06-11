@@ -342,8 +342,8 @@ switch ($STEP) {
 												<tfoot>
 													<tr>
 														<td colspan="2" style="padding-top: 15px; text-align: right">
-															<input type="button" value="Cancel" class="button" onclick="window.location='<?php echo ENTRADA_RELATIVE; ?>'" />
-															<input type="submit" class="button" value="Change" />
+															<input type="button" value="Cancel" class="btn" onclick="window.location='<?php echo ENTRADA_RELATIVE; ?>'" />
+															<input type="submit" class="btn btn-primary" value="Change" />
 														</td>
 													</tr>
 												</tfoot>

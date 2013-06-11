@@ -259,8 +259,8 @@ if (!defined("IN_GROUPS")) {
 				</div>
 			</div>
 			<div class="form-actions">
-				<input type="submit" class="button" value="Search" />
-				<input type="button" class="button" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/groups'"/>
+				<input type="submit" class="btn" value="Search" />
+				<input type="button" class="btn" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/groups'"/>
 			</div>
 			<input type="hidden" name="type" value="search" />
 			</form>
@@ -347,7 +347,7 @@ if (!defined("IN_GROUPS")) {
 						if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) {
 							$colspan--;
 							?>
-							<input type="submit" class="button btn-util" value="Delete Selected"  onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=manage'" />
+							<input type="submit" class="btn btn-danger" value="Delete Selected"  onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=manage'" />
 						<?php
 						}
 						//update
@@ -355,7 +355,7 @@ if (!defined("IN_GROUPS")) {
 							$colspan--;
 							?>
 							
-								<input type="submit" class="button btn-util" value="Edit Selected" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=edit'" />
+								<input type="submit" class="btn" value="Edit Selected" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=edit'" />
 							
 							<?php
 						}
@@ -363,7 +363,7 @@ if (!defined("IN_GROUPS")) {
 							$colspan--;
 							?>
 							
-								<input type="submit" class="button btn-util" value="Export" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=csv'" />
+								<input type="submit" class="btn pull-right" value="Export" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/groups?section=csv'" />
 							
 							<?php
 						}

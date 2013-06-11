@@ -145,8 +145,8 @@ if (!defined("IN_SCHEDULE")) {
 
 				<p><input type="checkbox" id="delete-confirmation-el-notify" name="notify_learner" value="1" /> <label for="delete-confirmation-el-notify" class="form-nrequired">Notify <strong><?php echo html_encode($ASCHEDULE_INFO["firstname"]); ?></strong> via e-mail they have been removed.</label></p>
 				<div class="footer">
-					<button class="left" onclick="Control.Modal.close()">Close</button>
-					<button class="right" id="delete-confirmation-confirm">Confirm</button>
+					<button class="btn space-left" onclick="Control.Modal.close()">Close</button>
+					<button class="btn btn-danger pull-right space-right" id="delete-confirmation-confirm">Confirm</button>
 				</div>
 			</div>
 			<?php
@@ -170,8 +170,8 @@ if (!defined("IN_SCHEDULE")) {
 				<div class="display-notice">Do you really wish to remove <strong><?php echo html_encode($ASCHEDULE_INFO["occupant_title"]); ?></strong> from this apartment between <?php echo date(DEFAULT_DATE_FORMAT, $ASCHEDULE_INFO["inhabiting_start"]); ?> until <?php echo date(DEFAULT_DATE_FORMAT, $ASCHEDULE_INFO["inhabiting_finish"]); ?>?</div>
 
 				<div class="footer">
-					<button class="left" onclick="Control.Modal.close()">Close</button>
-					<button class="right" id="delete-confirmation-confirm">Confirm</button>
+					<button class="btn" onclick="Control.Modal.close()">Close</button>
+					<button class="btn btn-danger pull-right" id="delete-confirmation-confirm">Confirm</button>
 				</div>
 			</div>
 
@@ -180,14 +180,10 @@ if (!defined("IN_SCHEDULE")) {
 	}
 	?>
 
-	<div class="container">
-		<div class="col-left">
-			<a class="button" href="#delete-confirmation-box" id="delete-accommodation-button"><div>Delete</div></a>
-		</div>
-		<div class="col-right right">
-			<button onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/regionaled/apartments/manage?id=<?php echo $APARTMENT_ID; ?>&dstamp=<?php echo $ASCHEDULE_INFO["inhabiting_start"]; ?>'">Ok</button>
-		</div>
-	</div>
+    <div class="row-fluid">
+        <a class="btn btn-danger" href="#delete-confirmation-box" id="delete-accommodation-button"><div>Delete</div></a>
+        <button class="btn pull-right" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/regionaled/apartments/manage?id=<?php echo $APARTMENT_ID; ?>&dstamp=<?php echo $ASCHEDULE_INFO["inhabiting_start"]; ?>'">Ok</button>
+    </div>
 
 
 	<form id="delete-accommodation-form" action="<?php echo ENTRADA_URL; ?>/admin/regionaled/apartments/manage/schedule?id=<?php echo $APARTMENT_ID; ?>&sid=<?php echo $ASCHEDULE_ID; ?>&section=delete" method="post">

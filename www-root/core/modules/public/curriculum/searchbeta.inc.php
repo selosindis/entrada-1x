@@ -223,7 +223,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 			<tbody>
 				<tr>
 					<td><label for="q" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Boolean Search Term:</label></td>
-					<td colspan="2"><input type="text" id="q" name="q" value="<?php echo html_encode($SEARCH_QUERY); ?>" style="width: 350px" /> <input type="submit" class="button" value="Search" /></td>
+					<td colspan="2"><input type="text" id="q" name="q" value="<?php echo html_encode($SEARCH_QUERY); ?>" style="width: 350px" /> <input type="submit" class="btn btn-primary" value="Search" /></td>
 				</tr>
 				<tr>
 					<td>&nbsp;</td>

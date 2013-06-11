@@ -189,10 +189,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_AAMC_CI"))) {
 									<tbody>
 										<tr>
 											<td style="width: 25%; text-align: left">
-												<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_RELATIVE; ?>/admin/reports/aamc'" />
+												<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_RELATIVE; ?>/admin/reports/aamc'" />
 											</td>
 											<td style="width: 75%; text-align: right; vertical-align: middle">
-												<input type="submit" class="button" value="Create" />
+												<input type="submit" class="btn btn-primary" value="Create" />
 											</td>
 										</tr>
 									</tbody>

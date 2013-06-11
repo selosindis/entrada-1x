@@ -221,7 +221,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 								<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 									<tr>
 										<td style="width: 25%; text-align: left">
-											<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/groups'" />
+											<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/groups'" />
 										</td>
 										<td style="width: 75%; text-align: right; vertical-align: middle">
 											<span class="content-small">After saving:</span>
@@ -229,7 +229,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 												<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another group</option>
 												<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to group list</option>
 											</select>
-											<input type="submit" class="button" value="Proceed" />
+											<input type="submit" class="btn btn-primary" value="Proceed" />
 										</td>
 									</tr>
 								</table>

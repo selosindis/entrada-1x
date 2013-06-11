@@ -460,10 +460,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 											<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 												<tr>
 													<td style="width: 25%; text-align: left">
-														<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("action" => "modify", "step" => 1)); ?>'" />
+														<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("action" => "modify", "step" => 1)); ?>'" />
 													</td>
 													<td style="width: 75%; text-align: right; vertical-align: middle">
-														<input type="submit" class="button" value="Save Changes" />
+														<input type="submit" class="btn btn-primary" value="Save Changes" />
 													</td>
 												</tr>
 											</table>
@@ -1412,7 +1412,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 									</label>
 									 
 									<div style="margin-top: 15px; margin-bottom: 50px;">
-										<input type="button" class="button" onclick="validateDeactivate()" value="Deactivate Now" />
+										<input type="button" class="btn btn-danger" onclick="validateDeactivate()" value="Deactivate Now" />
 									</div>
 								</div>
 							</div>
@@ -1429,10 +1429,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 									<tr>
 										<td style="width: 25%; text-align: left">
-											<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo html_encode(ENTRADA_URL."/community".$community_details["community_url"]); ?>'" />
+											<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo html_encode(ENTRADA_URL."/community".$community_details["community_url"]); ?>'" />
 										</td>
 										<td style="width: 75%; text-align: right; vertical-align: middle">
-											<input type="submit" class="button" value="Save Changes" />
+											<input type="submit" class="btn btn-primary" value="Save Changes" />
 										</td>
 									</tr>
 								</table>

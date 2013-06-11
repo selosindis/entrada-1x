@@ -218,7 +218,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							</tbody>
 						</table>
 					<div style="margin-top:10px">
-						<input type="button" class="button" value="Download CSV" onclick="window.location = '<?php echo ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $EVENT_ID,"download"=>"csv"));?>'"/>
+						<input type="button" class="btn" value="Download CSV" onclick="window.location = '<?php echo ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $EVENT_ID,"download"=>"csv"));?>'"/>
 					</div>
 				</div>
 				<div class="kiosk-modal" style="display:none;">

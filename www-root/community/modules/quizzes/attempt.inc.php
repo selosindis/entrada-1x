@@ -477,8 +477,8 @@ if ($LOGGED_IN) {
 										}
 										?>
 										<div style="border-top: 2px #CCCCCC solid; margin-top: 10px; padding-top: 10px">
-											<input type="button" style="float: left; margin-right: 10px" onclick="window.location = '<?php echo ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"]; ?>'" value="Exit Quiz" />
-											<input type="submit" style="float: right" value="Submit Quiz" />
+											<input class="btn" type="button" style="float: left; margin-right: 10px" onclick="window.location = '<?php echo ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"]; ?>'" value="Exit Quiz" />
+											<input class="btn btn-primary" type="submit" style="float: right" value="Submit Quiz" />
 										</div>
 										<div class="clear"></div>
 										</form>

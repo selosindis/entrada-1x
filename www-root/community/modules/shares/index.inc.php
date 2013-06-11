@@ -35,7 +35,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-folder")) {
 					okLabel:		'Yes',
 					cancelLabel:	'No',
 					closable:		'true',
-					buttonClass:	'button small',
+					buttonClass:	'btn',
 					ok:				function(win) {
 										window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=delete-folder&id='+id;
 										return true;

@@ -1270,7 +1270,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						echo "	<tr>\n";
 						echo "		<td>&nbsp;</td>\n";
 						echo "		<td colspan=\"5\" style=\"padding-top: 10px\">\n";
-						echo "			".(($results) ? "<input type=\"button\" class=\"button\" value=\"Delete Selected\" onclick=\"confirmFileDelete()\" />" : "&nbsp;");
+						echo "			".(($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Delete Selected\" onclick=\"confirmFileDelete()\" />" : "&nbsp;");
 						echo "		</td>\n";
 						echo "	</tr>\n";
 						echo "</tfoot>\n";
@@ -1349,7 +1349,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						echo "	<tr>\n";
 						echo "		<td>&nbsp;</td>\n";
 						echo "		<td colspan=\"4\" style=\"padding-top: 10px\">\n";
-						echo "			".(($results) ? "<input type=\"button\" class=\"button\" value=\"Delete Selected\" onclick=\"confirmLinkDelete()\" />" : "&nbsp;");
+						echo "			".(($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Delete Selected\" onclick=\"confirmLinkDelete()\" />" : "&nbsp;");
 						echo "		</td>\n";
 						echo "	</tr>\n";
 						echo "</tfoot>\n";
@@ -1428,7 +1428,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						echo "	<tr>\n";
 						echo "		<td>&nbsp;</td>\n";
 						echo "		<td colspan=\"5\" style=\"padding-top: 10px\">\n";
-						echo "			".(($results) ? "<input type=\"button\" class=\"button\" value=\"Detach Selected\" onclick=\"confirmQuizDelete()\" />" : "&nbsp;");
+						echo "			".(($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Detach Selected\" onclick=\"confirmQuizDelete()\" />" : "&nbsp;");
 						echo "		</td>\n";
 						echo "	</tr>\n";
 						echo "</tfoot>\n";

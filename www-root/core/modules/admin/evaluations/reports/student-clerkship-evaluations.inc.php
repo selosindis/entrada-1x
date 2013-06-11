@@ -902,7 +902,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			</tr>
 			<tr>
 				<td colspan="2" align="right">
-					<input type="submit" class="button" style="background-image: url('<?php echo ENTRADA_URL; ?>/images/btn_bg.gif')" value="Proceed" />
+					<input type="submit" class="btn btn-primary" value="Proceed" />
 				</td>
 			</tr>
 			<tr>

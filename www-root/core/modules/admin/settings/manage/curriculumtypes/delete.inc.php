@@ -137,7 +137,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						</tbody>
 					</table>
 					<br />
-					<input type="submit" value="Confirm Delete" class="button"/>
+					<input type="submit" value="Confirm Delete" class="btn btn-danger"/>
 				</form>
 		<?php
 				break;

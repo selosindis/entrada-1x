@@ -255,7 +255,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							?>
 							<div class="autocomplete" id="author_name_auto_complete"></div>
 							<input type="hidden" id="associated_author" name="associated_proxy_ids" value="" />
-							<input type="button" class="button-sm" id="add_associated_author" value="Add" style="vertical-align: middle" />
+							<input type="button" class="btn" id="add_associated_author" value="Add" style="vertical-align: middle" />
 							<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 							<ul id="author_list" class="menu" style="margin-top: 15px">
 								<?php
@@ -293,7 +293,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					<tr>
 						<td colspan="3" style="padding: 25px 0px 25px 0px">
 							<div style="float: right; text-align: right">
-								<input type="submit" class="button" value="Save Changes" />
+								<input type="submit" class="btn btn-primary" value="Save Changes" />
 							</div>
 							<div class="clear"></div>
 						</td>
@@ -500,17 +500,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
-							<input type="button" class="button" onclick="document.frmSelect.submit()" value="Delete Selected" />
+							<input type="button" class="btn btn-danger" onclick="document.frmSelect.submit()" value="Delete Selected" />
 							<?php
 						}
 						?>
 					</td>
 					<td style="padding-top: 10px; text-align: right">
-						<input type="button" value="Calendar Preview" id="calendar_preview" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/drafts?section=preview&draft_id=".$draft_id; ?>';" />
+						<input class="btn" type="button" value="Calendar Preview" id="calendar_preview" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/drafts?section=preview&draft_id=".$draft_id; ?>';" />
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
-							<input type="button" value="Publish Draft" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/drafts?section=status&action=approve&draft_id=".$draft_id; ?>';" />
+							<input class="btn btn-primary" type="button" value="Publish Draft" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/drafts?section=status&action=approve&draft_id=".$draft_id; ?>';" />
 							<?php
 						}
 						?>

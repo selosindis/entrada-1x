@@ -782,7 +782,7 @@ if ($COMMUNITY_ID) {
 												<option value="deactivate">2. Deactivate / ban members</option>
 												<option value="promote">3. Promote to administrator</option>
 											</select>
-											<input type="submit" class="button-sm" value="Proceed" style="vertical-align: middle" />
+											<input type="submit" class="btn btn-primary" value="Proceed" style="vertical-align: middle" />
 										</td>
 									</tr>
 								</tfoot>
@@ -932,7 +932,7 @@ if ($COMMUNITY_ID) {
 								<option value="deactivate">2. Deactivate / ban administrators</option>
 								<option value="demote">3. Demote to members</option>
 							</select>
-							<input type="submit" class="button-sm" value="Proceed" style="vertical-align: middle" />
+							<input type="submit" class="btn btn-primary" value="Proceed" style="vertical-align: middle" />
 						</td>
 					</tr>
 				</tfoot>
@@ -1141,7 +1141,7 @@ if ($COMMUNITY_ID) {
 		</div>
 		<div class="row-fluid">
 			<div style="text-align:right;margin-top:20px;">
-				<input type="submit" class="button" value="Add Members"/>
+				<input type="submit" class="btn btn-primary" value="Add Members"/>
 			</div>
 		</div>
 		</form>
@@ -1173,7 +1173,7 @@ if ($COMMUNITY_ID) {
 					</tr>
 					<tr>
 						<td>&nbsp;</td>
-						<td><input type="submit" class="button" value="Add Guest">
+						<td><input type="submit" class="btn btn-primary" value="Add Guest">
 				</table>
 			</div>
 		</form>

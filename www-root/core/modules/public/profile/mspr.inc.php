@@ -241,8 +241,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					</form>
 
 					<div class="footer">
-						<button class="left modal-close">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 
 				</div>
@@ -282,8 +282,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					</form>
 
 					<div class="footer">
-						<button class="left modal-close">Close</button>
-						<button class="right modal-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
 
 				</div>
@@ -340,8 +340,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					</form>
 
 					<div class="footer">
-						<button class="left modal-close">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 
 				</div>
@@ -381,8 +381,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					</form>
 
 					<div class="footer">
-						<button class="left modal-close">Close</button>
-						<button class="right modal-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
 
 				</div>
@@ -422,8 +422,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					</form>
 
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
 
 				</div>
@@ -447,8 +447,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					</form>
 
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 
 				</div>
@@ -515,8 +515,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 						</table>
 					</form>
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
 
 				</div>
@@ -564,8 +564,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 						</table>
 					</form>
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 				</div>
 
@@ -665,8 +665,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 						</table>
 					</form>
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
 				</div>
 
@@ -744,8 +744,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 						</table>
 					</form>
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 				</div>
 
@@ -843,8 +843,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					</form>
 
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm" id="edit-submission-confirm">Update</button>
 					</div>
 
 				</div>
@@ -927,8 +927,8 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					</form>
 
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 
 				</div>

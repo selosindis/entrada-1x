@@ -429,7 +429,7 @@ switch($STEP) {
 							<option value="index">Return To Polls Index</option>
 						</select>
 					</div>
-					<input type="submit" class="button" value="Proceed" />
+					<input type="submit" class="btn btn-primary" value="Proceed" />
 				</td>
 			</tr>
 		</tfoot>
@@ -508,7 +508,7 @@ switch($STEP) {
 			<tr>
 				<td colspan="2" style="vertical-align: top">
 					<label for="poll_responses" class="form-required">Responses</label>
-					<input type="button" value="+" onclick="addItem();" />
+					<input class="btn" type="button" value="+" onclick="addItem();" />
 			  	</td>
 				<td style="text-align: right; vertical-align: top">
 					<input type="text" style="width: 94%" id="rowText" name="rowText" value="" maxlength="255" />
@@ -526,7 +526,7 @@ switch($STEP) {
 						{
 							foreach($poll_responses as $key => $value)
 							{
-								echo "<li id=\"poll_responses_".$key."\"><div style=\"float:left; text-align: left; width: 90%\" >".$value."</div><div style=\"float:right; text-align: right; width: 10%\"><input type=\"button\" value=\"-\" onclick=\"removeItem(".$key.");\" /></div></li>";
+								echo "<li id=\"poll_responses_".$key."\"><div style=\"float:left; text-align: left; width: 90%\" >".$value."</div><div style=\"float:right; text-align: right; width: 10%\"><input class=\"btn\" type=\"button\" value=\"-\" onclick=\"removeItem(".$key.");\" /></div></li>";
 							}
 							$display = "block";
 						}

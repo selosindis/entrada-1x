@@ -210,7 +210,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 							<tr>
 								<td style="width: 25%; text-align: left">
-									<input type="button" class="button" value="<?php echo $translate->translate("task_button_cancel"); ?>" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/tasks'" />
+									<input type="button" class="btn" value="<?php echo $translate->translate("task_button_cancel"); ?>" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/tasks'" />
 								</td>
 								<td style="width: 75%; text-align: right; vertical-align: middle">
 									<span class="content-small">After saving:</span>
@@ -219,7 +219,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 										<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to task list</option>
 									</select>
 									<input type="hidden" name="action" value="Save" />
-									<input type="submit" class="button" value="<?php echo $translate->translate("task_button_save"); ?>" />
+									<input type="submit" class="btn btn-primary" value="<?php echo $translate->translate("task_button_save"); ?>" />
 								</td>
 							</tr>
 						</table>
@@ -284,7 +284,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						?>
 						<div class="autocomplete" id="faculty_name_auto_complete"></div><script type="text/javascript"></script>
 						<input type="hidden" id="associated_faculty" name="associated_faculty" />
-						<input type="button" class="button-sm" id="add_associated_faculty" value="<?php echo $translate->translate("task_button_add"); ?>" style="vertical-align: middle" />
+						<input type="button" class="btn" id="add_associated_faculty" value="<?php echo $translate->translate("task_button_add"); ?>" style="vertical-align: middle" />
 						<span class="content-small"><?php echo str_replace("%MY_FULLNAME%", html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]), $translate->translate("task_instructions_faculty_name")); ?></span>
 						<ul id="faculty_list" class="menu" style="margin-top: 15px">
 							<?php
@@ -361,7 +361,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						?>
 						<div class="autocomplete" id="individual_name_auto_complete"></div><script type="text/javascript"></script>
 						<input type="hidden" id="associated_individual" name="associated_individual" />
-						<input type="button" class="button-sm" id="add_associated_individual" value="Add" style="vertical-align: middle" />
+						<input type="button" class="btn" id="add_associated_individual" value="Add" style="vertical-align: middle" />
 						<span class="content-small"><?php echo str_replace("%MY_FULLNAME%", html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]), $translate->translate("task_instructions_associated_students")); ?></span>
 						<ul id="individual_list" class="menu" style="margin-top: 15px">
 							<?php
@@ -497,7 +497,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						?>
 						<div class="autocomplete" id="verifier_name_auto_complete"></div><script type="text/javascript"></script>
 						<input type="hidden" id="associated_verifier" name="associated_verifier" />
-						<input type="button" class="button-sm" id="add_associated_verifier" value="<?php echo $translate->translate("task_button_add"); ?>" style="vertical-align: middle" />
+						<input type="button" class="btn" id="add_associated_verifier" value="<?php echo $translate->translate("task_button_add"); ?>" style="vertical-align: middle" />
 						<ul id="verifier_list" class="menu" style="margin-top: 15px">
 							<?php
 							if (is_array($PROCESSED["associated_verifier"]) && count($PROCESSED["associated_verifier"])) {

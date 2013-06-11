@@ -95,7 +95,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 								</td>
 							</tr>
 							<tr>
-								<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="button" value="Update Report" /></td>
+								<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="btn btn-primary" value="Update Report" /></td>
 							</tr>
 						</tbody>
 					</table>

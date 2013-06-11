@@ -495,7 +495,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_MTDTRACKING"))) {
 		<br class="clearboth">
 
 		<div id="button_container" style="float: right;">
-			<input type="button" id="download_button" name="download_button" value="Download Data" />
+			<input type="button" class="btn btn-primary" id="download_button" name="download_button" value="Download Data" />
 		</div>
 		<br />
 		<br class="clearboth">

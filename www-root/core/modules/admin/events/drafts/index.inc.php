@@ -113,7 +113,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<?php
 							if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 								?>
-								<input type="submit" class="button" value="Delete Selected" />
+								<input type="submit" class="btn btn-danger" value="Delete Selected" />
 								<?php
 							} ?>
 						</td>
@@ -121,8 +121,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<?php
 							if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 								?>
-								<input type="submit" class="button" value="Reopen Drafts" onclick="jQuery('#frmSelect').attr('action', '<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&action=reopen')" />
-								<input type="submit" class="button" value="Publish Drafts" onclick="jQuery('#frmSelect').attr('action', '<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&action=approve')" />
+								<input type="submit" class="btn" value="Reopen Drafts" onclick="jQuery('#frmSelect').attr('action', '<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&action=reopen')" />
+								<input type="submit" class="btn btn-primary" value="Publish Drafts" onclick="jQuery('#frmSelect').attr('action', '<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&action=approve')" />
 								<?php
 							}
 							?>

@@ -185,7 +185,7 @@ if ($RECORD_ID) {
 							<tr>
 								<td colspan="3" style="padding-top: 15px; text-align: right">
 									<div id="display-upload-button">
-										<input type="button" class="button" value="Save" onclick="uploadFile()" />
+										<input type="button" class="btn btn-primary" value="Save" onclick="uploadFile()" />
 									</div>
 								</td>
 							</tr>

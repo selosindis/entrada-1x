@@ -380,7 +380,7 @@ if ($RECORD_ID) {
 				<tfoot>
 					<tr>
 						<td colspan="3" style="padding-top: 15px; text-align: right">
-                            <input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />                     
+                            <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                     
 						</td>
 					</tr>
 				</tfoot>
@@ -527,7 +527,7 @@ if ($RECORD_ID) {
 														okLabel:		'Yes',
 														cancelLabel:	'No',
 														closable:		'true',
-														buttonClass:	'button small',
+														buttonClass:	'btn',
 														ok:				function(win) {
 																			window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=delete-question&id='+id;
 																			return true;

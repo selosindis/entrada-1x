@@ -183,7 +183,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					if($mail->Send()) {
 						add_success("Thank-you for providing us with your valuable feedback.<br /><br />Once again, thank-you for using our automated anonymous feedback system and feel free to submit comments any time.");
 						echo display_success();
-						echo "<div style=\"text-align:right;\"><input type=\"button\" value=\"Close\" /></a>";
+						echo "<div style=\"text-align:right;\"><input type=\"button\" class=\"btn\" value=\"Close\" /></a>";
 					} else {
 						add_error("We apologize however, we are unable to submit your feedback at this time due to a problem with the mail server.<br /><br />The system administrator has been informed of this error, please try again later.");
 						echo display_error();
@@ -245,10 +245,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						<table style="width: 100" cellspacing="0" cellpadding="0" border="0">
 						<tr>
 							<td style="width: 180px; text-align: left">
-								<input type="button" class="button" value="Close" />
+								<input type="button" class="btn" value="Close" />
 							</td>
 							<td style="width: 272px; text-align: right">
-								<input type="button" class="button" value="Submit" />
+								<input type="button" class="btn btn-primary" value="Submit" />
 							</td>
 						</tr>
 						</table>
@@ -260,7 +260,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		}
 	} else {
 		echo display_error();
-		echo "<input type=\"button\" value=\"Submit\" />";
+		echo "<input type=\"button\" class=\"btn btn-primary\" value=\"Submit\" />";
 	}
 
 	if (!isset($_POST["who"])) {

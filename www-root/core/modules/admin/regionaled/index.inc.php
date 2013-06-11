@@ -91,7 +91,7 @@ if (!defined("IN_REGIONALED")) {
 					<tr>
 						<td></td>
 						<td colspan="6" style="padding-top: 10px">
-							<input type="submit" class="button" value="Remove Selected" />
+							<input type="submit" class="btn btn-danger" value="Remove Selected" />
 						</td>
 					</tr>
 				</tfoot>
@@ -177,7 +177,7 @@ if (!defined("IN_REGIONALED")) {
 						<tr>
 							<td></td>
 							<td colspan="6" style="padding-top: 10px">
-								<input type="submit" class="button" value="Send Reminder" />
+								<input type="submit" class="btn" value="Send Reminder" />
 							</td>
 						</tr>
 					</tfoot>

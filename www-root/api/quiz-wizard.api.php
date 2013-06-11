@@ -427,8 +427,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 															To <strong>re-edit this quiz</strong> or <strong>close this window</strong> please use the buttons below.
 														</div>
 														<div id="footer">
-															<button id="close-button" onclick="closeWizard()">Close</button>
-															<button onclick="restartWizard('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?id=<?php echo $RECORD_ID; ?>&amp;qid=<?php echo $AQUIZ_ID; ?>&amp;action=edit')" style="float: right; margin: 4px 10px 4px 0px">Edit Again</button>
+															<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+															<button class="btn btn-primary" onclick="restartWizard('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?id=<?php echo $RECORD_ID; ?>&amp;qid=<?php echo $AQUIZ_ID; ?>&amp;action=edit')" style="float: right; margin: 4px 10px 4px 0px">Edit Again</button>
 														</div>
 													</div>
 												</div>
@@ -466,8 +466,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														<div id="footer">
 															<input type="hidden" name="go_back" id="go_back" value="0" />
 															<input type="hidden" name="go_forward" id="go_forward" value="0" />
-															<button id="close-button" onclick="closeWizard()">Close</button>
-															<input type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
+															<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+															<input class="btn" type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
 														</div>
 													</div>
 													</form>
@@ -560,9 +560,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													<div id="footer">
 														<input type="hidden" name="go_back" id="go_back" value="0" />
 														<input type="hidden" name="go_forward" id="go_forward" value="0" />
-														<button id="close-button" onclick="closeWizard()">Close</button>
-														<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Finish" />
-														<input type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
+														<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+														<input class="btn btn-primary" type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Finish" />
+														<input class="btn" type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
 													</div>
 												</div>
 												</form>
@@ -642,9 +642,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													<div id="footer">
 														<input type="hidden" name="go_back" id="go_back" value="0" />
 														<input type="hidden" name="go_forward" id="go_forward" value="0" />
-														<button id="close-button" onclick="closeWizard()">Close</button>
-														<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
-														<input type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
+														<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+														<input class="btn btn-primary" type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
+														<input class="btn" type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
 													</div>
 												</div>
 												</form>
@@ -699,8 +699,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													</div>
 													<div id="footer">
 														<input type="hidden" name="go_forward" id="go_forward" value="0" />
-														<button id="close-button" onclick="closeWizard()">Close</button>
-														<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
+														<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+														<input class="btn btn-primary" type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
 													</div>
 												</div>
 												</form>
@@ -1000,8 +1000,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													To <strong>attach another quiz</strong> or <strong>close this window</strong> please use the buttons below.
 												</div>
 												<div id="footer">
-													<button id="close-button" onclick="closeWizard()">Close</button>
-													<button onclick="restartWizard('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?id=<?php echo $RECORD_ID; ?>&amp;action=add')" style="float: right; margin: 4px 10px 4px 0px">Add Another</button>
+													<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+													<button class="btn btn-primary" onclick="restartWizard('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?id=<?php echo $RECORD_ID; ?>&amp;action=add')" style="float: right; margin: 4px 10px 4px 0px">Add Another</button>
 												</div>
 											</div>
 										</div>
@@ -1039,8 +1039,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												<div id="footer">
 													<input type="hidden" name="go_back" id="go_back" value="0" />
 													<input type="hidden" name="go_forward" id="go_forward" value="0" />
-													<button id="close-button" onclick="closeWizard()">Close</button>
-													<input type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
+													<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+													<input class="btn" type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
 												</div>
 											</div>
 											</form>
@@ -1137,9 +1137,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											<div id="footer">
 												<input type="hidden" name="go_back" id="go_back" value="0" />
 												<input type="hidden" name="go_forward" id="go_forward" value="0" />
-												<button id="close-button" onclick="closeWizard()">Close</button>
-												<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Finish" />
-												<input type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
+												<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+												<input class="btn btn-primary" type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Finish" />
+												<input class="btn" type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
 											</div>
 										</div>
 										</form>
@@ -1219,9 +1219,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											<div id="footer">
 												<input type="hidden" name="go_back" id="go_back" value="0" />
 												<input type="hidden" name="go_forward" id="go_forward" value="0" />
-												<button id="close-button" onclick="closeWizard()">Close</button>
-												<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
-												<input type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
+												<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+												<input class="btn btn-primary" type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
+												<input class="btn" type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
 											</div>
 										</div>
 										</form>
@@ -1275,9 +1275,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											<div id="footer">
 												<input type="hidden" name="go_back" id="go_back" value="0" />
 												<input type="hidden" name="go_forward" id="go_forward" value="0" />
-												<button id="close-button" onclick="closeWizard()">Close</button>
-												<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
-												<input type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
+												<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+												<input class="btn btn-primary" type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
+												<input class="btn" type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
 											</div>
 										</div>
 										</form>
@@ -1359,8 +1359,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												</div>
 												<div id="footer">
 													<input type="hidden" name="go_forward" id="go_forward" value="0" />
-													<button id="close-button" onclick="closeWizard()">Close</button>
-													<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
+													<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+													<input class="btn btn-primary" type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
 												</div>
 											</div>
 											</form>
@@ -1382,7 +1382,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													?>
 												</div>
 												<div id="footer">
-													<button id="close-button" onclick="closeWizard()">Close</button>
+													<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
 												</div>
 											</div>
 										</div>
@@ -1792,8 +1792,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 															To <strong>re-edit this quiz</strong> or <strong>close this window</strong> please use the buttons below.
 														</div>
 														<div id="footer">
-															<button id="close-button" onclick="closeWizard()">Close</button>
-															<button onclick="restartWizard('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?id=<?php echo $RECORD_ID; ?>&amp;qid=<?php echo $AQUIZ_ID; ?>&amp;action=edit&amp;type=community_page')" style="float: right; margin: 4px 10px 4px 0px">Edit Again</button>
+															<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+															<button class="btn btn-primary" onclick="restartWizard('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?id=<?php echo $RECORD_ID; ?>&amp;qid=<?php echo $AQUIZ_ID; ?>&amp;action=edit&amp;type=community_page')" style="float: right; margin: 4px 10px 4px 0px">Edit Again</button>
 														</div>
 													</div>
 												</div>
@@ -1831,8 +1831,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 														<div id="footer">
 															<input type="hidden" name="go_back" id="go_back" value="0" />
 															<input type="hidden" name="go_forward" id="go_forward" value="0" />
-															<button id="close-button" onclick="closeWizard()">Close</button>
-															<input type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
+															<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+															<input class="btn" type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
 														</div>
 													</div>
 													</form>
@@ -1904,9 +1904,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													<div id="footer">
 														<input type="hidden" name="go_back" id="go_back" value="0" />
 														<input type="hidden" name="go_forward" id="go_forward" value="0" />
-														<button id="close-button" onclick="closeWizard()">Close</button>
-														<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Finish" />
-														<input type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
+														<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+														<input class="btn btn-primary" type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Finish" />
+														<input class="btn" type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
 													</div>
 												</div>
 												</form>
@@ -1986,9 +1986,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													<div id="footer">
 														<input type="hidden" name="go_back" id="go_back" value="0" />
 														<input type="hidden" name="go_forward" id="go_forward" value="0" />
-														<button id="close-button" onclick="closeWizard()">Close</button>
-														<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
-														<input type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
+														<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+														<input class="btn btn-primary" type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
+														<input class="btn" type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
 													</div>
 												</div>
 												</form>
@@ -2042,8 +2042,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													</div>
 													<div id="footer">
 														<input type="hidden" name="go_forward" id="go_forward" value="0" />
-														<button id="close-button" onclick="closeWizard()">Close</button>
-														<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
+														<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+														<input class="btn btn-primary" type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
 													</div>
 												</div>
 												</form>
@@ -2334,8 +2334,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													To <strong>attach another quiz</strong> or <strong>close this window</strong> please use the buttons below.
 												</div>
 												<div id="footer">
-													<button id="close-button" onclick="closeWizard()">Close</button>
-													<button onclick="restartWizard('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?id=<?php echo $RECORD_ID; ?>&amp;action=add&amp;type=community_page')" style="float: right; margin: 4px 10px 4px 0px">Add Another</button>
+													<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+													<button class="btn btn-primary" onclick="restartWizard('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?id=<?php echo $RECORD_ID; ?>&amp;action=add&amp;type=community_page')" style="float: right; margin: 4px 10px 4px 0px">Add Another</button>
 												</div>
 											</div>
 										</div>
@@ -2373,8 +2373,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												<div id="footer">
 													<input type="hidden" name="go_back" id="go_back" value="0" />
 													<input type="hidden" name="go_forward" id="go_forward" value="0" />
-													<button id="close-button" onclick="closeWizard()">Close</button>
-													<input type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
+													<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+													<input class="btn" type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
 												</div>
 											</div>
 											</form>
@@ -2446,9 +2446,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											<div id="footer">
 												<input type="hidden" name="go_back" id="go_back" value="0" />
 												<input type="hidden" name="go_forward" id="go_forward" value="0" />
-												<button id="close-button" onclick="closeWizard()">Close</button>
-												<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Finish" />
-												<input type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
+												<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+												<input class="btn btn-primary" type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Finish" />
+												<input class="btn" type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
 											</div>
 										</div>
 										</form>
@@ -2528,9 +2528,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											<div id="footer">
 												<input type="hidden" name="go_back" id="go_back" value="0" />
 												<input type="hidden" name="go_forward" id="go_forward" value="0" />
-												<button id="close-button" onclick="closeWizard()">Close</button>
-												<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
-												<input type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
+												<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+												<input class="btn btn-primary" type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
+												<input class="btn" type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
 											</div>
 										</div>
 										</form>
@@ -2584,9 +2584,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											<div id="footer">
 												<input type="hidden" name="go_back" id="go_back" value="0" />
 												<input type="hidden" name="go_forward" id="go_forward" value="0" />
-												<button id="close-button" onclick="closeWizard()">Close</button>
-												<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
-												<input type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
+												<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+												<input class="btn btn-primary" type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
+												<input class="btn" type="button" id="back-button" name="back_button" onclick="quizPrevStep()" value="Previous Step" />
 											</div>
 										</div>
 										</form>
@@ -2668,8 +2668,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												</div>
 												<div id="footer">
 													<input type="hidden" name="go_forward" id="go_forward" value="0" />
-													<button id="close-button" onclick="closeWizard()">Close</button>
-													<input type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
+													<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
+													<input class="btn btn-primary" type="button" id="next-button" name="next_button" onclick="quizNextStep()" value="Next Step" />
 												</div>
 											</div>
 											</form>
@@ -2691,7 +2691,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													?>
 												</div>
 												<div id="footer">
-													<button id="close-button" onclick="closeWizard()">Close</button>
+													<button class="btn" id="close-button" onclick="closeWizard()">Close</button>
 												</div>
 											</div>
 										</div>

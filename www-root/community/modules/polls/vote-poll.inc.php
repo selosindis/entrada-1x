@@ -216,7 +216,7 @@ if ($RECORD_ID) {
 								}
 								
 								echo "		<div style=\"padding-top: 15px; text-align: right\">\n";
-								echo "			<input type=\"submit\" class=\"button\" value=\"Submit\" />\n";
+								echo "			<input type=\"submit\" class=\"btn btn-primary\" value=\"Submit\" />\n";
 								echo "		</div>\n";
 							}
 							echo "	</form>\n";

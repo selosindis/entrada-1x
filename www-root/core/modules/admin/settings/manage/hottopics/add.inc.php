@@ -149,8 +149,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			<tfoot>
 				<tr>
 					<td colspan="2" style="padding-top: 15px; text-align: right">
-						<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/hottopics?org=<?php echo $ORGANISATION_ID;?>'" />
-                        <input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/hottopics?org=<?php echo $ORGANISATION_ID;?>'" />
+                        <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
 					</td>
 				</tr>
 			</tfoot>

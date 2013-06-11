@@ -234,7 +234,7 @@ $output_file	= ANNUALREPORT_STORAGE."/".$pdf_string;
 
 echo "<h1>Your Annual Report for ".$REPORT_YEAR."</h1>";
 
-echo "<form><input type=\"button\" value=\"Download Report\" onClick=\"window.location.href='".ENTRADA_URL."/file-annualreport.php?file=".$pdf_string.".pdf'\"></form><h1></h1>";	
+echo "<form><input class=\"btn\" type=\"button\" value=\"Download Report\" onClick=\"window.location.href='".ENTRADA_URL."/file-annualreport.php?file=".$pdf_string.".pdf'\"></form><h1></h1>";	
 
 ob_end_flush();
 ob_start("on_checkout");

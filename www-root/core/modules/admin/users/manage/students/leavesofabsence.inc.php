@@ -86,7 +86,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			</tr>
 			<tr>
 				<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-					<input type="submit" class="button" value="Add Absence" />
+					<input type="submit" class="btn btn-primary" value="Add Absence" />
 					<div id="hide_leave_of_absence_link" style="display:inline-block;">
 						<ul class="page-action-cancel">
 							<li><a id="hide_leave_of_absence" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=leavesofabsence&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Leave of Absence ]</a></li>

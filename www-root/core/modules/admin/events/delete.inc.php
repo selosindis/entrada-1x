@@ -405,7 +405,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<tr>
 							<td></td>
 							<td colspan="5" style="padding-top: 10px">
-								<input type="submit" class="button" value="Confirm Removal" />
+								<input type="submit" class="btn btn-danger" value="Confirm Removal" />
 							</td>
 						</tr>
 					</tfoot>

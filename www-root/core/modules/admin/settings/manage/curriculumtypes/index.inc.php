@@ -82,7 +82,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		</tbody>
 	</table>
 	<br />
-	<input type="submit" class="button" value="Delete Selected" />
+	<input type="submit" class="btn btn-danger" value="Delete Selected" />
 	</form>
 	<?php
 

@@ -207,7 +207,7 @@ switch($STEP) {
 		<tfoot>
 			<tr>
 				<td colspan="3" style="padding-top: 15px; text-align: right">
-                    <input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />               
+                    <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />               
 				</td>
 			</tr>
 		</tfoot>

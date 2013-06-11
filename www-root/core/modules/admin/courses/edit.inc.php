@@ -928,7 +928,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<input type="text" id="director_name" name="fullname" size="30" autocomplete="off" onkeyup="checkItem('director')" onblur="addItemNoError('director')" />
 								<div class="autocomplete" id="director_name_auto_complete"></div>
 								<input type="hidden" id="associated_director" name="associated_director" />
-								<input type="button" class="button-sm" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
+								<input type="button" class="btn" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
 								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 								<ul id="director_list" class="menu" style="margin-top: 15px">
 									<?php
@@ -954,7 +954,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<input type="text" id="coordinator_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('coordinator')" onblur="addItemNoError('coordinator')" />
 								<div class="autocomplete" id="coordinator_name_auto_complete"></div>
 								<input type="hidden" id="associated_coordinator" name="associated_coordinator" />
-								<input type="button" class="button-sm" onclick="addItem('coordinator');" value="Add" style="vertical-align: middle" />
+								<input type="button" class="btn" onclick="addItem('coordinator');" value="Add" style="vertical-align: middle" />
 								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 								<ul id="coordinator_list" class="menu" style="margin-top: 15px">
 									<?php
@@ -1388,7 +1388,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                             }
                                             ?>
                                             </select>
-                                            <input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" name="fullname" class="type_select" id="student_<?php echo $key;?>_name" autocomplete="off"/><input style="display:none;" type="button" class="button-sm type_select" id="add_associated_student_<?php echo $key;?>" value="Add" style="vertical-align: middle" />
+                                            <input style="display:none;width:203px;vertical-align: middle;margin-left:10px;margin-right:10px;" type="text" name="fullname" class="type_select" id="student_<?php echo $key;?>_name" autocomplete="off"/><input style="display:none;" type="button" class="btn type_select" id="add_associated_student_<?php echo $key;?>" value="Add" style="vertical-align: middle" />
                                             <div class="autocomplete" id="student_<?php echo $key;?>_name_auto_complete" style="margin-left:200px;"></div>
                                             <div id="student_<?php echo $key;?>">(Example: Thorn, Brandon)</div>
                                             <input type="hidden" name="group_audience_members[]" id="group_audience_members_<?php echo $key;?>" value="<?php echo implode(',',$group_ids[$key]);?>"/>

@@ -375,13 +375,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<tfoot>
 						<tr>
 							<td style="padding-top: 10px; border-bottom:0;" colspan="2">
-								<input type="submit" class="button" id="delete" value="Delete Selected" />								
-								<input type="button" class="button" id="reorder" value="Reorder" />
-								<input type="button" class="button" id="saveorder" value="Save Order" />
+								<input type="submit" class="btn btn-danger" id="delete" value="Delete Selected" />								
+								<input type="button" class="btn" id="reorder" value="Reorder" />
+								<input type="button" class="btn btn-primary" id="saveorder" value="Save Order" />
 							</td>
 							<td style="padding-top: 10px; border-bottom: 0; text-align:right;" colspan="2">
-								<a id="fullscreen-edit" class="button" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Grade Spreadsheet</div></a>								
-								<input type="button" id="export-grades" class="button" value="Export Grades"/>
+								<a id="fullscreen-edit" class="btn" href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>"><div>Grade Spreadsheet</div></a>								
+								<input type="button" id="export-grades" class="btn" value="Export Grades"/>
 							</td>
 						</tr>
 						<tr>

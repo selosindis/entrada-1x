@@ -342,7 +342,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 													<tr><td style="width:100%;"><input type="text" id="new_comment_title_<?php echo $student["proxy_id"] ?>" class="new_comment_text"/></td></tr>
 													<tr><td><label for="new_comment_desc_<?php echo $student["proxy_id"] ?>"  class="form-required">Comment Description:</label></td></tr><tr><td><textarea id="new_comment_desc_<?php echo $student["proxy_id"] ?>" class="expandable new_comment_text"></textarea></td></tr>
 												</table>
-											<input type="button" value="Cancel" id="cancel_comment_<?php echo $student["proxy_id"] ?>" class="cancel_comment" style="margin-right:5px;"/><input type="button" class="add_comment" value="Add Comment" id="add_comment_<?php echo $student["proxy_id"] ?>" style="float:right;"/>
+											<input type="button" value="Cancel" id="cancel_comment_<?php echo $student["proxy_id"] ?>" class="cancel_comment btn" style="margin-right:5px;"/><input type="button" class="add_comment btn btn-primary" value="Add Comment" id="add_comment_<?php echo $student["proxy_id"] ?>" style="float:right;"/>
 											</div>
 										</td>
 									</tr>
@@ -467,8 +467,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							break;
 						}
 						?>
-						<button onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $assignment["assessment_id"])); ?>'">Download CSV</button>
-						<button onclick="location.reload(true)">Refresh</button>
+						<button class="btn" onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $assignment["assessment_id"])); ?>'">Download CSV</button>
+						<button class="btn" onclick="location.reload(true)">Refresh</button>
 						<div style="margin-top: 40px;">
 							<h2>Grade Calculation Exceptions</h2>
 							<p>

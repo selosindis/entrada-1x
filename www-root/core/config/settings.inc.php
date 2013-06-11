@@ -348,9 +348,9 @@ define("COMMUNITY_MAIL_LIST_MEMBERS_LOCK", CACHE_DIRECTORY."/mail_list_members.l
 define("COMMUNITY_NOTIFY_LIMIT", 100);											// Per batch email mailout limit
 define("COMMUNITY_MAIL_LIST_MEMBERS_LIMIT", 100);								// Per batch google requests limit
 
-define("COMMUNITY_NOTIFICATIONS_ACTIVE", false);
+define("COMMUNITY_NOTIFICATIONS_ACTIVE", true);
 define("COMMUNITY_DISCUSSIONS_ANON", true);
-define("NOTIFICATIONS_ACTIVE", false);
+define("NOTIFICATIONS_ACTIVE", true);
 define("DISCUSSIONS_ANON", true);
 
 /**

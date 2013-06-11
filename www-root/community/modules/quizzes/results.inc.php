@@ -170,7 +170,7 @@ if ($RECORD_ID) {
 					</div>
 					<div style="border-top: 2px #CCCCCC solid; margin-top: 10px; padding-top: 10px">
 						<span class="content-small">Reference ID: <?php echo $RECORD_ID; ?></span>
-						<button style="float: right" onclick="window.location = '<?php echo ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"]; ?>'">Exit Quiz</button>
+						<button class="btn" style="float: right" onclick="window.location = '<?php echo ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"]; ?>'">Exit Quiz</button>
 					</div>
 					<div class="clear"></div>
 					<?php

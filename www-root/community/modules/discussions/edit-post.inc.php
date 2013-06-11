@@ -222,8 +222,8 @@ if ($RECORD_ID) {
 						<tfoot>
 							<tr>
 								<td colspan="3" style="padding-top: 15px; text-align: right">
-									<input type="button" class="button" value="<?php echo $translate->_("global_button_cancel"); ?>" onclick="window.location='<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$RECORD_ID; ?>'" />
-                                    <input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+									<input type="button" class="btn" value="<?php echo $translate->_("global_button_cancel"); ?>" onclick="window.location='<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$RECORD_ID; ?>'" />
+                                    <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
 								</td>
 							</tr>
 						</tfoot>
@@ -377,8 +377,8 @@ if ($RECORD_ID) {
 						<tfoot>
 							<tr>
 								<td style="padding-top: 15px; text-align: right">
-									<input type="button" class="button" value="<?php echo $translate->_("global_button_cancel"); ?>" onclick="window.location='<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$topic_record["cdtopic_parent"]."#post-".$RECORD_ID; ?>'" />
-									<input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+									<input type="button" class="btn" value="<?php echo $translate->_("global_button_cancel"); ?>" onclick="window.location='<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&id=".$topic_record["cdtopic_parent"]."#post-".$RECORD_ID; ?>'" />
+									<input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
 								</td>
 							</tr>
 						</tfoot>

@@ -105,7 +105,7 @@ if (!defined("IN_REGIONS")) {
 						<tr>
 							<td></td>
 							<td colspan="4" style="padding-top: 10px">
-								<input type="submit" class="button" value="Disable Selected" />
+								<input type="submit" class="btn btn-danger" value="Disable Selected" />
 							</td>
 						</tr>
 					</tfoot>
@@ -168,7 +168,7 @@ if (!defined("IN_REGIONS")) {
 						<tr>
 							<td></td>
 							<td colspan="4" style="padding-top: 10px">
-								<input type="submit" class="button" value="Activate Selected" />
+								<input type="submit" class="btn btn-primary" value="Activate Selected" />
 							</td>
 						</tr>
 					</tfoot>

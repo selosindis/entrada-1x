@@ -101,11 +101,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 									}
 							echo "</select>\n";
 							echo "<div style=\"float: left; display: inline\">\n";
-							echo "	<input type=\"button\" id=\"courses_list_state_btn\" class=\"button\" value=\"Show List\" onclick=\"toggle_list('courses_list')\" />\n";
+							echo "	<input type=\"button\" id=\"courses_list_state_btn\" class=\"btn\" value=\"Show List\" onclick=\"toggle_list('courses_list')\" />\n";
 							echo "</div>\n";
 							echo "<div style=\"float: right; display: inline\">\n";
-							echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"btn\" onclick=\"delIt()\" value=\"Remove\" />\n";
-							echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"btn\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
+							echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"btn btn-danger\" onclick=\"delIt()\" value=\"Remove\" />\n";
+							echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"btn btn-primary\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
 							echo "</div>\n";
 							echo "<div id=\"courses_list\" style=\"clear: both; padding-top: 3px; display: none\">\n";
 							echo "	<h2>Courses List</h2>\n";

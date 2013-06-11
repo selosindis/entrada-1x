@@ -124,8 +124,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_POLLS"))) {
 			<tr>
 				<td></td>
 				<td colspan="3" style="padding-top: 10px">
-					<input type="submit" class="button" name="delete_polls" value="Delete Selected" />
-					<input type="submit" class="button" name="expire_polls" value="Expire Selected" />
+					<input type="submit" class="btn btn-danger" name="delete_polls" value="Delete Selected" />
+					<input type="submit" class="btn" name="expire_polls" value="Expire Selected" />
 				</td>
 			</tr>
 		</tfoot>

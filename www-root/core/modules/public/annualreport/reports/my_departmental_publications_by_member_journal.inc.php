@@ -149,7 +149,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 				?>
 				</td>
 			</tr>
-				<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="button" value="Create Report" /></td>
+				<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="btn btn-primary" value="Create Report" /></td>
 			</tr>
 		</tbody>
 		</table>
@@ -165,7 +165,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 		$pdf_string = "journal_count";
 		$txtfname 		= ANNUALREPORT_STORAGE."/".$pdf_string.".txt";
 		
-		echo "<form><input type=\"button\" value=\"Download Report\" onClick=\"window.location.href='".ENTRADA_URL."/file-annualreport.php?file=".$pdf_string.".txt'\"></form>";
+		echo "<form><input class=\"btn\" type=\"button\" value=\"Download Report\" onClick=\"window.location.href='".ENTRADA_URL."/file-annualreport.php?file=".$pdf_string.".txt'\"></form>";
 		
 		if(isset($_POST['start_year']) && $_POST['start_year'] != "") {
 			$startYear = (int)$_POST['start_year'];

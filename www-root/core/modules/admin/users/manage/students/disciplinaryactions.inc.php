@@ -86,7 +86,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			</tr>
 			<tr>
 				<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-					<input type="submit" class="button" value="Add Action" />
+					<input type="submit" class="btn btn-primary" value="Add Action" />
 					<div id="hide_disciplinary_action_link" style="display:inline-block;">
 						<ul class="page-action-cancel">
 							<li><a id="hide_disciplinary_action" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=disciplinaryactions&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Disciplinary Action ]</a></li>

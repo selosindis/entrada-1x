@@ -238,8 +238,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													To <strong>re-edit this link</strong> or <strong>close this window</strong> please use the buttons below.
 												</div>
 												<div id="footer">
-													<input type="button" class="button" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
-													<input type="button" class="button" value="Re-Edit Link" onclick="restartWizard('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?action=edit&amp;id=<?php echo $IDENTIFIER; ?>&amp;lid=<?php echo $LINK_ID; ?>')" style="float: right; margin: 4px 10px 4px 0px" />
+													<input type="button" class="btn" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
+													<input type="button" class="btn btn-primary" value="Re-Edit Link" onclick="restartWizard('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?action=edit&amp;id=<?php echo $IDENTIFIER; ?>&amp;lid=<?php echo $LINK_ID; ?>')" style="float: right; margin: 4px 10px 4px 0px" />
 												</div>
 											</div>
 										</div>
@@ -332,9 +332,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													</div>
 												</div>
 												<div id="footer">
-													<input type="button" class="button" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
-													<input type="button" class="button" id="next-button" value="Next Step" onclick="nextStep()" style="float: right; margin: 4px 10px 4px 0px" />
-													<input type="button" class="button" id="back-button" value="Previous Step" onclick="prevStep()" style="display: none; float: right; margin: 4px 10px 4px 0px" />
+													<input type="button" class="btn" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
+													<input type="button" class="btn btn-primary" id="next-button" value="Next Step" onclick="nextStep()" style="float: right; margin: 4px 10px 4px 0px" />
+													<input type="button" class="btn" id="back-button" value="Previous Step" onclick="prevStep()" style="display: none; float: right; margin: 4px 10px 4px 0px" />
 												</div>
 												<div id="uploading-window" style="width: 100%; height: 100%;">
 													<div style="display: table; width: 100%; height: 100%; _position: relative; overflow: hidden">
@@ -512,8 +512,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											To <strong>add another link</strong> or <strong>close this window</strong> please use the buttons below.
 										</div>
 										<div id="footer">
-											<input type="button" class="button" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
-											<input type="button" class="button" value="Add Another Link" onclick="restartWizard('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?id=<?php echo $IDENTIFIER; ?>&amp;action=add')" style="float: right; margin: 4px 10px 4px 0px" />
+											<input type="button" class="btn" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
+											<input type="button" class="btn btn-primary" value="Add Another Link" onclick="restartWizard('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?id=<?php echo $IDENTIFIER; ?>&amp;action=add')" style="float: right; margin: 4px 10px 4px 0px" />
 										</div>
 									</div>
 								</div>
@@ -604,9 +604,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											</div>
 										</div>
 										<div id="footer">
-											<input type="button" class="button" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
-											<input type="button" class="button" id="next-button" value="Next Step" onclick="nextStep()" style="float: right; margin: 4px 10px 4px 0px" />
-											<input type="button" class="button" id="back-button" value="Previous Step" onclick="prevStep()" style="display: none; float: right; margin: 4px 10px 4px 0px" />
+											<input type="button" class="btn" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
+											<input type="button" class="btn btn-primary" id="next-button" value="Next Step" onclick="nextStep()" style="float: right; margin: 4px 10px 4px 0px" />
+											<input type="button" class="btn" id="back-button" value="Previous Step" onclick="prevStep()" style="display: none; float: right; margin: 4px 10px 4px 0px" />
 										</div>
 										<div id="uploading-window" style="width: 100%; height: 100%;">
 											<div style="display: table; width: 100%; height: 100%; _position: relative; overflow: hidden">

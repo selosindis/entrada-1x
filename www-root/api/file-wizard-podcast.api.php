@@ -332,8 +332,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
 									</div>
 								</div>
 								<div id="footer">
-									<input type="button" class="button" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
-									<input type="button" class="button" value="Add Another" onclick="restartWizard('<?php echo ENTRADA_URL; ?>/api/file-wizard-podcast.api.php?id=<?php echo $EVENT_ID; ?>')" style="float: right; margin: 4px 10px 4px 0px" />
+									<input type="button" class="btn" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
+									<input type="button" class="btn btn-primary" value="Add Another" onclick="restartWizard('<?php echo ENTRADA_URL; ?>/api/file-wizard-podcast.api.php?id=<?php echo $EVENT_ID; ?>')" style="float: right; margin: 4px 10px 4px 0px" />
 								</div>
 							</div>
 						</div>
@@ -384,8 +384,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
 									</div>
 								</div>
 								<div id="footer">
-									<input type="button" class="button" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
-									<input type="button" class="button" value="Upload" onclick="submitPodcast()" style="float: right; margin: 4px 10px 4px 0px" />
+									<input type="button" class="btn" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
+									<input type="button" class="btn btn-primary" value="Upload" onclick="submitPodcast()" style="float: right; margin: 4px 10px 4px 0px" />
 								</div>
 								<div id="uploading-window" style="width: 100%; height: 100%;">
 									<div style="display: table; width: 100%; height: 100%; _position: relative; overflow: hidden">

@@ -305,8 +305,8 @@ if (!defined("IN_REGIONALED")) {
 										</tr>
 										<tr>
 											<td colspan="3" style="padding-top: 15px; text-align: right">
-												<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/regionaled'" />
-												<input type="submit" class="button" value="Proceed" />
+												<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/regionaled'" />
+												<input type="submit" class="btn btn-primary" value="Proceed" />
 											</td>
 										</tr>
 									</tfoot>

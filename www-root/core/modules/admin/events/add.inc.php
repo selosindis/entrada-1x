@@ -747,7 +747,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								?>
 								<div class="autocomplete" id="faculty_name_auto_complete"></div>
 								<input type="hidden" id="associated_faculty" name="associated_faculty" />
-								<input type="button" class="button-sm" id="add_associated_faculty" value="Add" style="vertical-align: middle" />
+								<input type="button" class="btn" id="add_associated_faculty" value="Add" style="vertical-align: middle" />
 								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 								<ul id="faculty_list" class="menu" style="margin-top: 15px">
 									<?php
@@ -781,7 +781,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				</div>
 				<hr/>
 				<div class="row-fluid">
-					<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events'" />
+					<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events'" />
 					<div class="pull-right">
 					<?php if ($is_draft) { 
 												echo "<input type=\"hidden\" name=\"post_action\" id=\"post_action\" value=\"draft\" />";

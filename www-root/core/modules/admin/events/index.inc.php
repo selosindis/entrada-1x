@@ -199,12 +199,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
-							<input type="submit" class="button" value="Delete Selected" />
+							<input type="submit" class="btn btn-danger" value="Delete Selected" />
 							<?php
 						}
 						if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
 							?>
-							<input type="submit" class="button" value="Copy Selected"  onClick="document.frmSelect.action ='<?php echo ENTRADA_URL; ?>/admin/events?section=copy'" />
+							<input type="submit" class="btn" value="Copy Selected"  onClick="document.frmSelect.action ='<?php echo ENTRADA_URL; ?>/admin/events?section=copy'" />
 							<?php
 						}
 						?>
@@ -213,7 +213,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
-							<input type="button" value="Export Results" />
+							<input type="btn" value="Export Results" />
 							<?php
 						}
 						?>

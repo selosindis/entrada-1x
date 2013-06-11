@@ -284,8 +284,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						</tbody>
 					</table>
 				</div>
-				<div id="delbutton" style="padding-top: 15px; text-align: right; display:none">
-					<input type="submit" class="button" value="Delete/Activate" style="vertical-align: middle" />
+				<div id="delbutton" style="padding-top: 15px; text-align: right;">
+					<input type="submit" class="btn btn-danger" value="Delete/Activate" style="vertical-align: middle" />
 				</div>
 				<input type="hidden" name="members" value="1" />
 			</form>
@@ -300,7 +300,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 					<tfoot>
 						<tr>
 							<td colspan="3" style="padding-top: 15px; text-align: right">
-								<input type="submit" class="button" value="Update Tutors" style="vertical-align: middle" />
+								<input type="submit" class="btn btn-primary" value="Update Tutors" style="vertical-align: middle" />
 							</td>
 						</tr>
 					</tfoot>
@@ -317,7 +317,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 								?>
 								<div class="autocomplete" id="tutor_name_auto_complete"></div>
 								<input type="hidden" id="associated_tutor" name="associated_tutor" />
-								<input type="button" class="button-sm" id="add_associated_tutor" value="Add" style="vertical-align: middle" />
+								<input type="button" class="btn" id="add_associated_tutor" value="Add" style="vertical-align: middle" />
 								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 								<ul id="tutor_list" class="menu" style="margin-top: 15px">
 									<?php
@@ -353,7 +353,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						<tfoot>
 							<tr>
 								<td colspan="3" style="padding-top: 15px; text-align: right">
-									<input type="submit" class="button" value="Proceed" style="vertical-align: middle" />
+									<input type="submit" class="btn btn-primary" value="Proceed" style="vertical-align: middle" />
 								</td>
 							</tr>
 						</tfoot>

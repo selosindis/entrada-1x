@@ -387,7 +387,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 									<td></td>
 									<td style="vertical-align: top"><label for="pubmed_id" class="form-nrequired">Enter PubMed ID</label></td>
 									<td><input type="text" id="pubmed_id" name="pubmed_id" value="<?php echo html_encode($PROCESSED["pubmed_id"]); ?>" maxlength="255" style="width: 25%" />
-									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" class="button" value="Auto Fill" />
+									&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type="submit" class="btn" value="Auto Fill" />
 									<div class="content-small"><strong>Note:</strong> Click Auto Fill to have the fields populated from PubMed.</div>
 									</td>
 								</tr>
@@ -639,7 +639,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 									<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 									<tr>
 										<td style="width: 25%; text-align: left">
-											<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/annualreport/research/'" />
+											<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/annualreport/research/'" />
 										</td>
 										<td style="width: 75%; text-align: right; vertical-align: middle">
 											<span class="content-small">After saving:</span>
@@ -647,7 +647,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 											<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "add") ? " selected=\"selected\"" : ""); ?>>Add More Research</option>
 											<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to Research list</option>
 											</select>
-											<input type="submit" class="button" onclick="setPubID('<?php echo $PROCESSED["pubmed_id"];?>');" value="Save" />
+											<input type="submit" class="btn btn-primary" onclick="setPubID('<?php echo $PROCESSED["pubmed_id"];?>');" value="Save" />
 										</td>
 									</tr>
 									</table>

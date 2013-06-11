@@ -203,8 +203,8 @@ if (!defined("IN_REGIONALED_VIEW")) {
 				<li>The Regional Education office has scheduled you to reside in this accommodation from <strong><?php echo date(DEFAULT_DATE_FORMAT, $APARTMENT_INFO["inhabiting_start"]); ?></strong> until <strong><?php echo date(DEFAULT_DATE_FORMAT, $APARTMENT_INFO["inhabiting_finish"]); ?></strong>. You must indicate whether you accept or reject these accommodations.</li>
 			</ul>
 			<div>
-				<a class="button" style="float:left" href="#reject-accommodation-box" id="reject-accommodation-button"><div>Reject</div></a>
-				<a class="button" style="float:right" href="<?php echo ENTRADA_RELATIVE; ?>/regionaled/view?id=<?php echo $ASCHEDULE_ID; ?>&action=accept"><div>Accept</div></a>
+				<a class="btn btn-danger" style="float:left" href="#reject-accommodation-box" id="reject-accommodation-button"><div>Reject</div></a>
+				<a class="btn btn-primary" style="float:right" href="<?php echo ENTRADA_RELATIVE; ?>/regionaled/view?id=<?php echo $ASCHEDULE_ID; ?>&action=accept"><div>Accept</div></a>
 			</div>
 			<div class="clear"></div>
 		</div>
@@ -351,8 +351,8 @@ if (!defined("IN_REGIONALED_VIEW")) {
 				<textarea id="reject-accommodation-details" name="reject_accommodation_details" style="width: 99%; height: 75px" cols="45" rows="5"></textarea>
 			</p>
 			<div class="footer">
-				<button class="left" onclick="Control.Modal.close()">Close</button>
-				<button class="right" id="reject-accommodation-confirm">Reject</button>
+				<button class="btn" onclick="Control.Modal.close()">Close</button>
+				<button class="btn btn-danger pull-right" id="reject-accommodation-confirm">Reject</button>
 			</div>
 		</div>
 

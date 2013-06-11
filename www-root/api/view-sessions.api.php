@@ -632,7 +632,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						<input type="text" id="session_faculty_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
 						<div class="autocomplete" id="session_faculty_name_auto_complete"></div>
 						<input type="hidden" id="associated_session_faculty" name="associated_session_faculty" />
-						<input type="button" class="button-sm" id="add_associated_session_faculty" value="Add" style="vertical-align: middle" />
+						<input type="button" class="btn" id="add_associated_session_faculty" value="Add" style="vertical-align: middle" />
 						<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 						<ul id="session_faculty_list" class="menu" style="margin-top: 15px">
 							<?php

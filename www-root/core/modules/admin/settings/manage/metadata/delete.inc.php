@@ -119,7 +119,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					</tbody>
 				</table>
 				<br />
-				<input type="button" value="Confirm Delete" class="button" id="delete_button"/>
+				<input type="button" value="Confirm Delete" class="btn btn-danger" id="delete_button"/>
 				<script type="text/javascript">
 					jQuery('#delete_button').click(function(){
 						jQuery('.checkboxes').each(function(){

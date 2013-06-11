@@ -19,7 +19,7 @@ function addItem() {
      
 	if ($('rowText').value != '')  {
      	// Append the button and div using newCount for list item removal.
-		row.innerHTML	= '<div class="response_' + newCount + '" onmouseover="this.morph(\'background: #FFFFDD;\');" onmouseout="this.morph(\'background: #FFFFFF;\');" style="float:left; text-align: left; width: 90%" onclick="showEditor(this)">' + $('rowText').value + '</div><div style="float:right; text-align: right; width: 10%"><input type="button" value="-" onclick="removeItem(' + newCount + ');" /></div>';
+		row.innerHTML	= '<div class="response_' + newCount + '" onmouseover="this.morph(\'background: #FFFFDD;\');" onmouseout="this.morph(\'background: #FFFFFF;\');" style="float:left; text-align: left; width: 90%" onclick="showEditor(this)">' + $('rowText').value + '</div><div style="float:right; text-align: right; width: 10%"><input type="button" class="btn btn-danger" value="-" onclick="removeItem(' + newCount + ');" /></div>';
      	row.id			= 'poll_responses_'+newCount;
      	row.style.clear	= 'both';
      	input.value		= $('rowText').value;

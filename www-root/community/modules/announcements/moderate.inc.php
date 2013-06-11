@@ -177,7 +177,7 @@ if ($RECORD_ID) {
 					okLabel:		'Yes',
 					cancelLabel:	'No',
 					closable:		'true',
-					buttonClass:	'button small',
+					buttonClass:	'btn',
 					ok:				function(win) {
 										window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?<?php echo (($page_current > 1) ? "pv=".$page_current."&" : ""); ?>action=moderate&id='+id;
 										return true;

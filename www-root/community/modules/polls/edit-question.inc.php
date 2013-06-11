@@ -224,7 +224,7 @@ if ($RECORD_ID) {
 			<tfoot>
 				<tr>
 					<td colspan="3" style="padding-top: 15px; text-align: right;">
-                        <input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />                  
+                        <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                  
 					</td>
 				</tr>
 			</tfoot>
@@ -257,7 +257,7 @@ if ($RECORD_ID) {
 				<tr>
 					<td colspan="2" style="vertical-align: top">
 						<label for="poll_responses" class="form-required">Responses</label>
-						<input type="button" value="+" onclick="addItem();" style="position: absolute;"/>
+						<input class="btn" type="button" value="+" onclick="addItem();" style="position: absolute;"/>
 				  	</td>
 					<td style="text-align: right; vertical-align: top">
 						<input type="text" style="width: 80%; margin-right: 40px;" id="rowText" name="rowText" value="" maxlength="255" onblur="addItem()" />
@@ -275,7 +275,7 @@ if ($RECORD_ID) {
 							{
 								foreach($poll_responses as $key => $value)
 								{
-									echo "<li id=\"poll_responses_".$key."\" ><div class=\"response_".$key."\" onmouseover=\"this.morph('background: #FFFFBB;');\" onmouseout=\"this.morph('background: #FFFFFF;');\" style=\"float:left; text-align: left; width: 90%\" onclick=\"showEditor(this)\" >".$value."</div><div style=\"float:right; text-align: right; width: 10%\"><input type=\"button\" value=\"-\" onclick=\"removeItem(".$key.");\" /></div></li>";
+									echo "<li id=\"poll_responses_".$key."\" ><div class=\"response_".$key."\" onmouseover=\"this.morph('background: #FFFFBB;');\" onmouseout=\"this.morph('background: #FFFFFF;');\" style=\"float:left; text-align: left; width: 90%\" onclick=\"showEditor(this)\" >".$value."</div><div style=\"float:right; text-align: right; width: 10%\"><input class=\"btn\" type=\"button\" value=\"-\" onclick=\"removeItem(".$key.");\" /></div></li>";
 								}
 								$display = "block";
 							}

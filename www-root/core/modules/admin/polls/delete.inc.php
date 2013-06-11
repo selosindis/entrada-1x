@@ -195,7 +195,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_POLLS"))) {
 					<tr>
 						<td></td>
 						<td colspan="3" style="padding-top: 10px">
-							<input type="submit" class="button" name="<?php echo $PAGE_ACTION; ?>_polls" value="Confirm <?php echo ucwords($PAGE_ACTION); ?>" />
+							<input type="submit" class="btn btn-danger" name="<?php echo $PAGE_ACTION; ?>_polls" value="Confirm <?php echo ucwords($PAGE_ACTION); ?>" />
 						</td>
 					</tr>
 				</tfoot>

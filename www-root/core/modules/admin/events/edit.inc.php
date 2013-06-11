@@ -823,7 +823,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											?>
 											<div class="autocomplete" id="faculty_name_auto_complete"></div>
 											<input type="hidden" id="associated_faculty" name="associated_faculty" />
-											<input type="button" class="button-sm" id="add_associated_faculty" value="Add" style="vertical-align: middle" />
+											<input type="button" class="btn" id="add_associated_faculty" value="Add" style="vertical-align: middle" />
 											<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 											<script type="text/javascript">
 											jQuery(function(){

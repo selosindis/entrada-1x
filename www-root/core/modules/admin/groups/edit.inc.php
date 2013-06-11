@@ -249,7 +249,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				</table>
 
 				<div id="delbutton" style="padding-top: 15px; text-align: right; display:none">
-					<input type="submit" class="button" value="Delete/Activate" style="vertical-align: middle" />
+					<input type="submit" class="btn btn-danger" value="Delete/Activate" style="vertical-align: middle" />
 				</div>
 
 				<input type="hidden" name="members" value="1" />
@@ -396,7 +396,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 
                 <div class="row-fluid">
                     <div class="pull-right">
-                        <input type="submit" class="button" value="Proceed" />
+                        <input type="submit" class="btn btn-primary" value="Proceed" />
                     </div>
                 </div>
                 <input type="hidden" id="add_group_id" name="add_group_id" value="" />

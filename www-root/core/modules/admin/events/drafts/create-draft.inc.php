@@ -270,11 +270,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											}
 									echo "</select>\n";
 									echo "<div style=\"float: left; display: inline\">\n";
-									echo "	<input type=\"button\" id=\"courses_list_state_btn\" class=\"button\" value=\"Show List\" onclick=\"toggle_list('courses_list')\" />\n";
+									echo "	<input type=\"button\" id=\"courses_list_state_btn\" class=\"btn\" value=\"Show List\" onclick=\"toggle_list('courses_list')\" />\n";
 									echo "</div>\n";
 									echo "<div style=\"float: right; display: inline\">\n";
-									echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"button-remove\" onclick=\"delIt()\" value=\"Remove\" />\n";
-									echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"button-add\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
+									echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"btn btn-danger\" onclick=\"delIt()\" value=\"Remove\" />\n";
+									echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"btn btn-primary\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
 									echo "</div>\n";
 									echo "<div id=\"courses_list\" style=\"clear: both; padding-top: 3px; display: none\">\n";
 									echo "	<h2>Courses List</h2>\n";
@@ -319,7 +319,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							</tr>
 							<?php echo generate_calendars("new", "", true, true, ((isset($PROCESSED["new_start_day"])) ? $PROCESSED["new_start_day"] : ((isset($PROCESSED["draft_start"])) ? strtotime(date("Y-m-d", strtotime($PROCESSED["draft_start"])) . " +1 year") : strtotime("September 1st, ".(date("o"))))), false, false, 0, false); ?>
 							<tr>
-								<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="button" value="Create" /></td>
+								<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="btn btn-primary" value="Create" /></td>
 							</tr>
 						</tbody>
 					</table>

@@ -487,7 +487,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 						<tfoot>
 							<tr>
 								<td colspan="2" style="padding-top: 15px; text-align: right">
-                                    <input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+                                    <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
 								</td>
 							</tr>
 						</tfoot>
@@ -761,7 +761,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									</td>
 									<td>
 										<input id="show_left_nav" name="show_left_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_previous_nav"]) || ((int) $PROCESSED["page_navigation"]["show_previous_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
-										<input id="change_previous_nav_button" name="change_previous_nav_button" type="button" value="Previous Page" />
+										<input class="btn" id="change_previous_nav_button" name="change_previous_nav_button" type="button" value="Previous Page" />
 										<input type="hidden" name="selected_nav_previous_page_id" id="selected_nav_previous_page_id" <?php echo (isset($nav_previous_page_id) && $nav_previous_page_id ? "value = \"" . $nav_previous_page_id . "\"" : "value = \"NULL\"") ?> />
 									</td>
 								</tr>
@@ -771,7 +771,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									</td>
 									<td>
 										<input id="show_right_nav" name="show_right_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_next_nav"]) || ((int) $PROCESSED["page_navigation"]["show_next_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
-										<input id="change_next_nav_button" name="change_next_nav_button" type="button" value="Next Page" />
+										<input class="btn" id="change_next_nav_button" name="change_next_nav_button" type="button" value="Next Page" />
 										<input type="hidden" name="selected_nav_next_page_id" id="selected_nav_next_page_id" <?php echo (isset($nav_next_page_id) && $nav_next_page_id ? "value = \"" . $nav_next_page_id . "\"" : "value = \"NULL\"") ?> />
 									</td>
 								</tr>

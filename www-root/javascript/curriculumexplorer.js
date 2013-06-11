@@ -10,20 +10,21 @@ function renderDOM(jsonResponse, link) {
 			} else {
 				count = parseInt((jsonResponse.courses != null ? jsonResponse.courses.length : 0)) + parseInt((jsonResponse.events != null ? jsonResponse.events.length : 0));
 			}
-
-			var color = "green";
-			if (count < 5) {
-				color = "red";
-			} else if (count >= 5 && count < 10) {
-				color = "yellow";
+			var percent = count / current_total;
+			var color = "";
+			if (percent <= parseFloat(BADGE_IMPORTANT)) {
+				color = "badge badge-important";
+			} else if (percent > parseFloat(BADGE_IMPORTANT) && percent < parseFloat(BADGE_SUCCESS)) {
+				color = "badge badge-warning";
+			} else {
+				color = "badge badge-success";
 			}
 			new_list_item.append(
 				jQuery(document.createElement("a"))
 					.addClass("objective-link")
 					.attr("href", SITE_URL + "/curriculum/explorer?objective_parent="+jsonResponse.child_objectives[i].objective_parent + "&id=" + jsonResponse.child_objectives[i].objective_id + "&step=2")
 					.attr("data-id", jsonResponse.child_objectives[i].objective_id)
-					.html(jsonResponse.child_objectives[i].objective_name))
-					.prepend("<span class=\"" + color + "\">" + ((COURSE != "" ? 0 : parseInt(jsonResponse.child_objectives[i].course_count)) + parseInt(jsonResponse.child_objectives[i].event_count)) + "</span>");
+					.html("<span class=\"" + color + "\">" + ((COURSE != "" ? 0 : parseInt(jsonResponse.child_objectives[i].course_count)) + parseInt(jsonResponse.child_objectives[i].event_count)) + "</span>" + jsonResponse.child_objectives[i].objective_name))
 			new_list.append(new_list_item);
 		}
 		jQuery("#objective-list").html(new_list);
@@ -56,7 +57,7 @@ function renderDOM(jsonResponse, link) {
 		jQuery("#objective-details").append(jQuery(document.createElement("h2")).html("Mapped Events"));
 		for (var v in jsonResponse.events) {
 			var course_container = jQuery(document.createElement("div")).addClass("course-container");
-			var new_course = jQuery(document.createElement("h3"));
+			var new_course = jQuery(document.createElement("h4"));
 			new_course.html(v);
 			course_container.append(new_course);
 			for (var i=0; i < jsonResponse.events[v].length; i++) {
@@ -86,7 +87,6 @@ function renderDOM(jsonResponse, link) {
 		jQuery("#objective-breadcrumb").html(jsonResponse.breadcrumb);
 	}
 }
-
 jQuery(function(){
 	jQuery(".objective-link").live("click", function(){
 		jQuery("#objective-list .objective-link.active").removeClass("active");
@@ -98,6 +98,10 @@ jQuery(function(){
 			url: SITE_URL + "/curriculum/explorer?mode=ajax&objective_parent=" + jQuery(this).attr("data-id") + "&year=" + YEAR + "&course_id=" + COURSE + "&count=" + COUNT,
 			success: function(data) {
 				var jsonResponse = JSON.parse(data);
+				current_total = 0;
+				jQuery.each(jsonResponse.child_objectives, function (i, v) {
+					current_total = current_total + v.event_count + v.course_count;
+				});
 				renderDOM(jsonResponse, link);
 			}
 		})

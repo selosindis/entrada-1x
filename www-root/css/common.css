@@ -4054,8 +4054,12 @@ Curriculum Browser CSS
 #objective-browser {
 	position:relative;
 	overflow:hidden;
-	padding-bottom: 35px;
+	/*padding-bottom: 35px;*/
 	max-height: 700px;
+	border: 1px solid #F0F0F0;
+	-moz-border-radius: 5px;
+	-webkit-border-radius: 5px;
+	border-radius: 5px;
 }
 #objective-browser #objective-list {
 	float:left;
@@ -4076,22 +4080,11 @@ Curriculum Browser CSS
 }
 
 #objective-browser #objective-list ul li span {
-	color: #fff;
-	display:block;
-	height: 27px;
-	width:37px;
-	position: absolute;
-	top: 7px;
-	left:8px;
-	padding-left: 5px;
-	padding-top: 7px;
-	font-size: 9px;
+	margin-right:5px;
 }
 
 #objective-browser #objective-list ul li span.green {
 	background: url('../images/marker-green.png') no-repeat;
-
-
 }
 
 #objective-browser #objective-list ul li span.yellow {
@@ -4105,48 +4098,42 @@ Curriculum Browser CSS
 
 #objective-browser #objective-list ul li a {
 	display:block;
-	padding:12px 10px 12px 49px;
+	padding:12px 10px;
 	white-space: nowrap;
+	width: 190px;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 #objective-browser #objective-list ul li a.active {
-	background-image: url(data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/Pgo8c3ZnIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgdmlld0JveD0iMCAwIDEgMSIgcHJlc2VydmVBc3BlY3RSYXRpbz0ibm9uZSI+PGxpbmVhckdyYWRpZW50IGlkPSJoYXQwIiBncmFkaWVudFVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgeDE9IjUwJSIgeTE9IjEwMCUiIHgyPSI1MCUiIHkyPSIwJSI+CjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM2OTY5NjkiIHN0b3Atb3BhY2l0eT0iMSIvPgo8c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiNiM2IzYjMiIHN0b3Atb3BhY2l0eT0iMSIvPgogICA8L2xpbmVhckdyYWRpZW50PgoKPHJlY3QgeD0iMCIgeT0iMCIgd2lkdGg9IjEiIGhlaWdodD0iMSIgZmlsbD0idXJsKCNoYXQwKSIgLz4KPC9zdmc+); /* gradient fill */
-	background-image: -moz-linear-gradient(90deg, #696969 0%, #b3b3b3 100%); /* gradient fill */
-	background-image: -o-linear-gradient(90deg, #696969 0%, #b3b3b3 100%); /* gradient fill */
-	background-image: -webkit-linear-gradient(90deg, #696969 0%, #b3b3b3 100%); /* gradient fill */
-	background-image: linear-gradient(top, #696969 0%, #b3b3b3 100%); /* gradient fill */
-	filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#b3b3b3', endColorstr='#696969'); /* for IE */
+	background: #f9f9f9; /* Old browsers */
+	background: -moz-linear-gradient(top,  #f9f9f9 0%, #f2f2f2 100%); /* FF3.6+ */
+	background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#f9f9f9), color-stop(100%,#f2f2f2)); /* Chrome,Safari4+ */
+	background: -webkit-linear-gradient(top,  #f9f9f9 0%,#f2f2f2 100%); /* Chrome10+,Safari5.1+ */
+	background: -o-linear-gradient(top,  #f9f9f9 0%,#f2f2f2 100%); /* Opera 11.10+ */
+	background: -ms-linear-gradient(top,  #f9f9f9 0%,#f2f2f2 100%); /* IE10+ */
+	background: linear-gradient(to bottom,  #f9f9f9 0%,#f2f2f2 100%); /* W3C */
+	filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#f9f9f9', endColorstr='#f2f2f2',GradientType=0 ); /* IE6-9 */
 	border-bottom: none;
-	color: #fff;
 }
 
 #objective-browser #objective-list ul li a.active:hover {
-	color:#fff;
+	/*color:#fff;*/
 }
 
 #objective-browser #objective-list ul li a:hover {
 	color: #036;
 }
-/*
-#objective-browser #objective-list .objective-link span {
-	background:#fff;
-	color: #036;
-	padding:3px;
-	border-radius:3px;
-	font-weight:bold;
-	margin-right:3px;
-}
-*/
 #objective-browser #objective-container {
 	border-left: 1px solid #f0f0f0;
 	height:700px;
-	overflow-y:scroll;
+	overflow-y:auto;
 	overflow-x:hidden;
 	position:relative;
 	z-index:1;
 }
 #objective-browser #objective-details {
 	float:left;
-	width:495px;
+	width:413px;
 	height:600px;
 	padding:10px;
 }
@@ -4156,23 +4143,15 @@ Curriculum Browser CSS
 #objective-browser #objective-details h1 {
 	margin-top:0px;
 }
-#objective-browser #objective-breadcrumb {
+#objective-breadcrumb {
 	z-index:2;
 	padding:10px;
-
-	border-bottom: 1px solid #f0f0f0;
 }
 #objective-browser .event-container {
-	margin-bottom:10px;
-}
-#objective-browser .event-container a {
-	font-size:.9em;
-}
-#objective-browser .course-container {
-	margin-bottom:20px;
+	margin-bottom:15px;
 }
 #objective-browser .loading {
-	width:300px;
+	width:350px;
 	margin:auto;
 	color:#777;
 	text-align:center;

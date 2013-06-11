@@ -346,6 +346,14 @@ return array (
      */
 	"course" => "Course",
 	"courses" => "Courses",
-	"evaluation_filtered_words" => "Dr. Doctor; Firstname Lastname"
+	"evaluation_filtered_words" => "Dr. Doctor; Firstname Lastname",
 
+	/*
+	 * Curriculum Explorer
+	 */
+	"curriculum_explorer" => array(
+		"badge-success" => "0.3",
+		"badge-warning" => "0.1",
+		"badge-important" => "0.05"
+	)
 );

@@ -233,7 +233,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 				<tr>
 					<td><label for="objective-set" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Objective Set:</label></td>
 					<td>
-						<select id="objective-set" name="objective_parent" style="width: 250px">
+						<select id="objective-set" name="objective_parent" >
 							<?php
                             $query = "	SELECT a.* FROM `global_lu_objectives` AS a
                                         LEFT JOIN `objective_organisation` AS b
@@ -245,6 +245,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
                                         AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
                                         AND c.`audience_value` = 'all'
                                         ORDER BY a.`objective_order` ASC";
+							
                             $objective_sets = $db->GetAssoc($query);
                             if ($objective_sets) {
                                 foreach ($objective_sets as $objective_id => $objective_set) {
@@ -259,7 +260,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 					<td>&nbsp;</td>
 					<td><label for="count" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Include:</label></td>
 					<td>
-						<select id="count" name="count" style="width: 250px">
+						<select id="count" name="count" >
 							<option value="1"<?php echo ($PROCESSED["count"] == "1" ? " selected=\"selected\"" : ""); ?>>Mapped Courses &amp; Learning Events</option>
 							<option value="2"<?php echo ($PROCESSED["count"] == "2" ? " selected=\"selected\"" : ""); ?>>Mapped Courses Only</option>
 							<option value="3"<?php echo ($PROCESSED["count"] == "3" ? " selected=\"selected\"" : ""); ?>>Mapped Learning Events Only</option>
@@ -268,7 +269,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 				<tr>
 					<td><label for="course" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Course:</label></td>
 					<td>
-						<select id="course" name="course_id" style="width: 250px">
+						<select id="course" name="course_id" >
 							<option value="0">-- All Courses --</option>
 							<?php
 							$query = "	SELECT * FROM `courses`
@@ -289,7 +290,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 					<td>&nbsp;</td>
 					<td><label for="year" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Academic Year:</label></td>
 					<td>
-						<select id="year" name="year" style="width: 250px">
+						<select id="year" name="year" >
 							<option value="0"<?php echo ((!$SEARCH_YEAR)? " selected=\"selected\"" : ""); ?>>-- All Years --</option>
 							<?php
 							$start_year = (fetch_first_year() - 3);
@@ -303,18 +304,22 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 					</td>
 				</tr>
 				<tr>
-					<td colspan="5" align="right"><input type="submit" value="Browse" /></td>
+					<td colspan="5" align="right"><br /><input type="submit" class="btn btn-primary" value="Browse" /></td>
 				</tr>
 			</tbody>
 		</table>
 	</form>
-
+	<?php $badge_settings = (array) $translate->_("curriculum_explorer"); ?>
 	<script type="text/javascript">
     var SITE_URL = "<?php echo ENTRADA_URL; ?>";
     var YEAR = "<?php echo $PROCESSED["year"]; ?>";
     var COURSE = "<?php echo $PROCESSED["course_id"]; ?>";
     var OBJECTIVE_PARENT = "<?php echo $PROCESSED["objective_parent"]; ?>";
     var COUNT = "<?php echo $PROCESSED["count"]; ?>";
+	var BADGE_SUCCESS = "<?php echo $badge_settings["badge-success"]; ?>";
+	var BADGE_WARNING = "<?php echo $badge_settings["badge-warning"]; ?>";
+	var BADGE_IMPORTANT = "<?php echo $badge_settings["badge-important"]; ?>";
+	var current_total = 0;
 	</script>
 	<script type="text/javascript" src="<?php echo ENTRADA_URL; ?>/javascript/curriculumexplorer.js" /></script>
 	<script type="text/javascript">
@@ -325,7 +330,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 		var id = parseInt(location.hash.substring(4, location.hash.length));
 		jQuery.getJSON("<?php echo ENTRADA_RELATIVE; ?>/curriculum/explorer?mode=ajax&id="+id + "&year=" + YEAR + "&course_id=" + COURSE + "&count=" + COUNT, function(data) {
 			var link = jQuery(document.createElement("a")).addClass(".objective-link").attr("data-id", "<?php echo $PROCESSED["id"]; ?>").html(data.objective_name);
-			console.log(data.objective_name);
+			current_total = 0;
+			jQuery.each(data.child_objectives, function (i, v) {
+				current_total = current_total + v.event_count + v.course_count;
+			});
 			renderDOM(data, link);
 			if (jQuery(".objective-link[data-id="+id+"]").length > 0) {
 				jQuery(".objective-link[data-id="+id+"]").addClass("active");
@@ -337,10 +345,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 	switch ($STEP) {
 		case 2 :
             ?>
+			<div id="objective-breadcrumb">
+				<a class="objective-link" href="#" data-id="<?php echo $PROCESSED["objective_parent"]; ?>"><?php echo $objective_sets[$PROCESSED["objective_parent"]]["objective_name"]; ?></a>
+			</div>
             <div id="objective-browser">
-                <div id="objective-breadcrumb">
-                    <a class="objective-link" href="#" data-id="<?php echo $PROCESSED["objective_parent"]; ?>"><?php echo $objective_sets[$PROCESSED["objective_parent"]]["objective_name"]; ?></a>
-                </div>
+                
                 <div id="objective-list">
 
                 </div>

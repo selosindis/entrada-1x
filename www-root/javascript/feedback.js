@@ -60,9 +60,9 @@ jQuery(function(){
 			data: form_data,
 			async: false,
 			success: function (data) {
-				jQuery("#wizard-body, #wizard-footer").fadeOut(500, function(){
-					jQuery("#wizard-body").html(data);
-					jQuery("#wizard-body").fadeIn();
+				jQuery("#feedback-form").fadeOut(500, function(){
+					jQuery("#feedback-form").html(data);
+					jQuery("#feedback-form").fadeIn();
 					setTimeout("removeFeedbackForm()", 5000);
 				});
 			}

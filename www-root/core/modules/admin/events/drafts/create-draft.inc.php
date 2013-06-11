@@ -33,7 +33,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => "", "title" => "Create New Draft Schedule");
-	
+	echo "<h1>Create New Draft Schedule</h1>";
 	switch ($STEP) {
 		case 2 :
 			// error checking / sanitization
@@ -220,7 +220,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			<style type="text/css">
 				.new_start_day .ui-datepicker-calendar tbody tr:hover td a {background: url("images/ui-bg_flat_55_fbec88_40x100.png") repeat-x scroll 50% 50% #FBEC88;border: 1px solid #FAD42E;color: #363636;}
 			</style>
-			<h1>Create New Draft Schedule</h1>
 			<div class="no-printing">
 				<form action="<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts?section=create-draft&step=2" method="post" onsubmit="selIt()">
 					
@@ -255,7 +254,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</colgroup>
 						<tbody>
 							<tr>
-								<td colspan="3"><h2>Learning Events</h2></td>
+								<td colspan="3">
+									<h2>Learning Event Copy</h2>
+									<?php echo display_generic("Previous learning events can be copied into a draft schedule. Select a course from the list below and set the copy date range. The events found in the selected courses during the copy timeframe will be entered into the draft, starting on the week selected in the <strong>New Start</strong> field. The events that are copied will preserve the day of the week in which they previously ran."); ?>
+								</td>
 							</tr>
 							<tr>
 								<td></td>

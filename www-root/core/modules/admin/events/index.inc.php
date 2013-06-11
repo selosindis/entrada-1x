@@ -137,9 +137,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		?>
 		<div class="row-fluid">
 			<div class="pull-right">
-				<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Add New Event</a>
+				<div class="btn-group">
+					<a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Add New Event <span class="caret"></span></a>
+					<ul class="dropdown-menu">
+						<li><a href="<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts">Draft Schedules</a></li>
+					</ul>
+				</div>
 			</div>
 		</div>
+		<br />
 		<?php
 	}
 

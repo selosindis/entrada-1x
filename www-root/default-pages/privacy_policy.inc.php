@@ -1,14 +1,37 @@
 <?php
-echo "<div style=\"padding: 2px; padding-left: 5px; border-bottom: 1px #9D9D9D dotted\">\n";
-echo "<img src=\"".ENTRADA_URL."/images/arrow-right.gif\" width=\"5\" height=\"9\" alt=\"\" align=\"absmiddle\" /> <a href=\"".ENTRADA_URL."\">".APPLICATION_NAME."</a> \n";
-echo "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"5\" height=\"9\" alt=\"\" valign=\"absmiddle\" /><img src=\"".ENTRADA_URL."/images/arrow-right.gif\" width=\"5\" height=\"9\" alt=\"\" valign=\"absmiddle\" /> Privacy Policy\n";
-echo "</div><br />\n";
+/**
+ * Entrada [ http://www.entrada-project.org ]
+ *
+ * Entrada is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Entrada is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * The default Entrada Privacy Policy
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Matt Simpson <simpson@queensu.ca>
+ * @copyright Copyright 2008 Queen's University. All Rights Reserved.
+ *
+ */
 
-// Meta information for this page.
+if (!defined("PARENT_INCLUDED")) exit;
+
+$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE . "/", "title" => APPLICATION_NAME);
+$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE . "/privacy_policy", "title" => "Privacy Policy");
+
 $PAGE_META["title"]			= "Privacy Policy";
-$PAGE_META["description"]	= "This page contains the human readable privacy policy for our online learning environment.";
-$PAGE_META["keywords"]		= "privacy, policy, online, course, resources, application";
-
+$PAGE_META["description"]	= "";
+$PAGE_META["keywords"]		= "";
 ?>
 
 <h1>Privacy Policy</h1>
@@ -45,22 +68,22 @@ P3P policies declare the data they collect in groups (also referred to as &quot;
 		<li>HTTP protocol elements</li>
 		<li>Search terms</li>
 	</ul>
-	
+
 	This data will be used for the following purposes:
 	<ul>
 		<li>Completion and support of the current activity.</li>
 		<li>Web site and system administration.</li>
 		<li>Research and development.</li>
 	</ul>
-	
+
 	This data will be used by ourselves and our agents.
 	<br /><br />
-	
+
 	The following explanation is provided for why this data is collected:
 	<blockquote>
 		Data collected from all Web users: access logs, and search strings (if entered).
 	</blockquote>
-	
+
 	<strong>Group &quot;Cookies&quot;</strong><br />
 	At the user's option, we will collect the following data:
 	<ul>
@@ -71,10 +94,10 @@ P3P policies declare the data they collect in groups (also referred to as &quot;
 		<li>Research and development.</li>
 		<li>One-time tailoring.</li>
 	</ul>
-	
+
 	This data will be used by ourselves and our agents.
 	<br /><br />
-	
+
 	The following explanation is provided for why this data is collected:
 	<blockquote>
 		Cookies are used to track visitors to our site, so we can better understand what portions of our site best serve you.

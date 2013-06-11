@@ -48,8 +48,8 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 						$notification_events = "";
 
 						/*
-						*  fetch the draft events
-						*/
+						 *  fetch the draft events
+						 */
 
 						$query = "	SELECT a.`proxy_id`, CONCAT(b.`firstname`, ' ', b.`lastname`) AS `name`, b.`email`
 									FROM `draft_creators` AS a
@@ -58,11 +58,16 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 									WHERE `draft_id` = ".$db->qstr($draft["draft_id"]);
 						$draft_creators = $db->GetAll($query);
 
+						$query = "	SELECT `option`, `value`
+									FROM `draft_options` 
+									WHERE `draft_id` = ".$db->qstr($draft_id);
+						$draft_options = $db->GetAssoc($query);
+						
 						$query = "	SELECT *
 									FROM `draft_events`
 									WHERE `draft_id` = ".$db->qstr($draft["draft_id"]);
-
-						if ($events = $db->GetAll($query)) {
+						$events = $db->GetAll($query);
+						if ($events) {
 
 							application_log("notice", "Draft schedule importer found ".count($events)." events in draft ".$draft["draft_id"].".");
 
@@ -169,130 +174,139 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 
 								if ($old_event_id) {
 
-									/*
-									*  add the event files associated with the event
-									*/
-									$query = "	SELECT *
-												FROM `event_files`
-												WHERE `event_id` = ".$db->qstr($old_event_id)."
-												AND `file_category` != 'podcast'";
-									if ($event_files = $db->GetAll($query)) {
-										application_log("notice", "Found ".count($event_files)." event files attached to original event [".$old_event_id."], will be ported over to new event [".$event_id."].");
-										foreach ($event_files as $file) {
-											$old_event_file = (int) $file["efile_id"];
-											unset($file["efile_id"]);
-											$file["event_id"]		= $event_id;
-											$file["accesses"]		= 0;
-											$file["updated_by"]		= $draft_creators[0]["proxy_id"];
-											if ($db->AutoExecute("`event_files`", $file, "INSERT")) {
-												application_log("success", "Successfully inserted file [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
-												
-												$new_file_id = (int) $db->InsertID();
-												if (copy(FILE_STORAGE_PATH."/".$old_event_file, FILE_STORAGE_PATH."/".$new_file_id)) {
-													application_log("success", "Successfully copied file [".$old_event_file."] to file [".$new_file_id."], for new event [".$event_id."].");
-													$copied_files[] = $processed_file["file_name"];
+									if ($draft_options["files"]) {
+										/*
+										*  add the event files associated with the event
+										*/
+										$query = "	SELECT *
+													FROM `event_files`
+													WHERE `event_id` = ".$db->qstr($old_event_id)."
+													AND `file_category` != 'podcast'";
+										if ($event_files = $db->GetAll($query)) {
+											application_log("notice", "Found ".count($event_files)." event files attached to original event [".$old_event_id."], will be ported over to new event [".$event_id."].");
+											foreach ($event_files as $file) {
+												$old_event_file = (int) $file["efile_id"];
+												unset($file["efile_id"]);
+												$file["event_id"]		= $event_id;
+												$file["accesses"]		= 0;
+												$file["updated_by"]		= $draft_creators[0]["proxy_id"];
+												if ($db->AutoExecute("`event_files`", $file, "INSERT")) {
+													application_log("success", "Successfully inserted file [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
+
+													$new_file_id = (int) $db->InsertID();
+													if (copy(FILE_STORAGE_PATH."/".$old_event_file, FILE_STORAGE_PATH."/".$new_file_id)) {
+														application_log("success", "Successfully copied file [".$old_event_file."] to file [".$new_file_id."], for new event [".$event_id."].");
+														$copied_files[] = $processed_file["file_name"];
+													} else {
+														application_log("success", "Failed to copy file [".$old_event_file."] to file [".$new_file_id."].");
+													}
+
 												} else {
-													application_log("success", "Failed to copy file [".$old_event_file."] to file [".$new_file_id."].");
+													$error++;
+													application_log("error", "Error inserting event_files [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
 												}
-												
-											} else {
-												$error++;
-												application_log("error", "Error inserting event_files [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
 											}
+										} else {
+											application_log("notice", "Found no event files attached to original event [".$old_event_id."].");
 										}
-									} else {
-										application_log("notice", "Found no event files attached to original event [".$old_event_id."].");
 									}
-
-
-									/*
-									*  add the event links associated with the event
-									*/
-									$query = "	SELECT *
-												FROM `event_links`
-												WHERE `event_id` = ".$db->qstr($old_event_id);
-									if ($event_links = $db->GetAll($query)) {
-										application_log("notice", "Found ".count($event_links)." event links attached to original event [".$old_event_id."], will be ported over to new event [".$event_id."].");
-										foreach ($event_links as $link) {
-											unset($link["elink_id"]);
-											$link["event_id"]		= $event_id;
-											$file["updated_by"]		= $draft_creators[0]["proxy_id"];
-											if ($db->AutoExecute("`event_links`", $link, "INSERT")) {
-												application_log("success", "Successfully inserted link [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
-											} else {
-												$error++;
-												application_log("error", "Error inserting event_links [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
+									
+									if ($draft_options["links"]) {
+										/*
+										*  add the event links associated with the event
+										*/
+										$query = "	SELECT *
+													FROM `event_links`
+													WHERE `event_id` = ".$db->qstr($old_event_id);
+										if ($event_links = $db->GetAll($query)) {
+											application_log("notice", "Found ".count($event_links)." event links attached to original event [".$old_event_id."], will be ported over to new event [".$event_id."].");
+											foreach ($event_links as $link) {
+												unset($link["elink_id"]);
+												$link["event_id"]		= $event_id;
+												$file["updated_by"]		= $draft_creators[0]["proxy_id"];
+												if ($db->AutoExecute("`event_links`", $link, "INSERT")) {
+													application_log("success", "Successfully inserted link [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
+												} else {
+													$error++;
+													application_log("error", "Error inserting event_links [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
+												}
 											}
+										} else {
+											application_log("notice", "Found no event links attached to original event [".$old_event_id."].");
 										}
-									} else {
-										application_log("notice", "Found no event links attached to original event [".$old_event_id."].");
 									}
-
-									/*
-									*  add the event objectives associated with the draft event
-									*/
-									$query = "	SELECT *
-												FROM `event_objectives`
-												WHERE `event_id` = ".$db->qstr($old_event_id);
-									if ($event_objectives = $db->GetAll($query)) {
-										foreach ($event_objectives as $objective) {
-											unset($objective["eobjective_id"]);
-											$objective["event_id"]		= $event_id;
-											$objective["updated_by"]	= $draft_creators[0]["proxy_id"];
-											if ($db->AutoExecute("`event_objectives`", $objective, "INSERT")) {
-												application_log("success", "Successfully inserted objective [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
-											} else {
-												$error++;
-												application_log("error", "Error inserting event_objectives [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
+									
+									if ($draft_options["objectives"]) {
+										/*
+										 *  add the event objectives associated with the draft event
+										 */
+										$query = "	SELECT *
+													FROM `event_objectives`
+													WHERE `event_id` = ".$db->qstr($old_event_id);
+										if ($event_objectives = $db->GetAll($query)) {
+											foreach ($event_objectives as $objective) {
+												unset($objective["eobjective_id"]);
+												$objective["event_id"]		= $event_id;
+												$objective["updated_by"]	= $draft_creators[0]["proxy_id"];
+												if ($db->AutoExecute("`event_objectives`", $objective, "INSERT")) {
+													application_log("success", "Successfully inserted objective [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
+												} else {
+													$error++;
+													application_log("error", "Error inserting event_objectives [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
+												}
 											}
+										} else {
+											application_log("notice", "Found no event objectives attached to original event [".$old_event_id."].");
 										}
-									} else {
-										application_log("notice", "Found no event objectives attached to original event [".$old_event_id."].");
 									}
-
-									/*
-									*  add the event objectives associated with the draft event
-									*/
-									$query = "	SELECT *
-												FROM `event_topics`
-												WHERE `event_id` = ".$db->qstr($old_event_id);
-									if ($event_topics = $db->GetAll($query)) {
-										foreach ($event_topics as $topic) {
-											unset($topic["eobjective_id"]);
-											$topic["event_id"]		= $event_id;
-											$topic["updated_by"]	= $draft_creators[0]["proxy_id"];
-											if ($db->AutoExecute("`event_objectives`", $topic, "INSERT")) {
-												application_log("success", "Successfully inserted topic [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
-											} else {
-												$error++;
-												application_log("error", "Error inserting event_objectives [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
+									
+									if ($draft_options["topics"]) {
+										/*
+										 *  add the event topics associated with the draft event
+										 */
+										$query = "	SELECT *
+													FROM `event_topics`
+													WHERE `event_id` = ".$db->qstr($old_event_id);
+										if ($event_topics = $db->GetAll($query)) {
+											foreach ($event_topics as $topic) {
+												unset($topic["eobjective_id"]);
+												$topic["event_id"]		= $event_id;
+												$topic["updated_by"]	= $draft_creators[0]["proxy_id"];
+												if ($db->AutoExecute("`event_objectives`", $topic, "INSERT")) {
+													application_log("success", "Successfully inserted topic [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
+												} else {
+													$error++;
+													application_log("error", "Error inserting event_objectives [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
+												}
 											}
+										} else {
+											application_log("notice", "Found no event topics attached to original event [".$old_event_id."].");
 										}
-									} else {
-										application_log("notice", "Found no event topics attached to original event [".$old_event_id."].");
 									}
-
-									/*
-									*  add the event objectives associated with the draft event
-									*/
-									$query = "	SELECT *
-												FROM `attached_quizzes`
-												WHERE `content_type` = 'event'
-												AND `content_id` = ".$db->qstr($old_event_id);
-									if ($event_quizzes = $db->GetAll($query)) {
-										foreach ($event_quizzes as $quiz) {
-											unset($quiz["aquiz_id"]);
-											$quiz["content_id"]		= $event_id;
-											$quiz["updated_by"]	= $draft_creators[0]["proxy_id"];
-											if ($db->AutoExecute("`attached_quizzes`", $quiz, "INSERT")) {
-												application_log("success", "Successfully inserted quiz [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
-											} else {
-												$error++;
-												application_log("error", "Error inserting event_objectives [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
+									
+									if ($draft_options["quizzes"]) {
+										/*
+										*  add the event objectives associated with the draft event
+										*/
+										$query = "	SELECT *
+													FROM `attached_quizzes`
+													WHERE `content_type` = 'event'
+													AND `content_id` = ".$db->qstr($old_event_id);
+										if ($event_quizzes = $db->GetAll($query)) {
+											foreach ($event_quizzes as $quiz) {
+												unset($quiz["aquiz_id"]);
+												$quiz["content_id"]		= $event_id;
+												$quiz["updated_by"]	= $draft_creators[0]["proxy_id"];
+												if ($db->AutoExecute("`attached_quizzes`", $quiz, "INSERT")) {
+													application_log("success", "Successfully inserted quiz [".$db->InsertID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
+												} else {
+													$error++;
+													application_log("error", "Error inserting event_objectives [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
+												}
 											}
+										} else {
+											application_log("notice", "Found no event quizzes attached to original event [".$old_event_id."].");
 										}
-									} else {
-										application_log("notice", "Found no event quizzes attached to original event [".$old_event_id."].");
 									}
 
 								}

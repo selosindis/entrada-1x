@@ -66,12 +66,12 @@ function build_post($post) {
 							WHERE a.`c".$post["type"]."_id` = ".$db->qstr($post["record_id"]);
 			$result		= $db->GetRow($query);
 			if ($result) {
-				$query = "	SELECT c.`organisation_installation` 
-							FROM `community_courses` AS a 
-							JOIN `courses` AS b 
-							ON a.`course_id` = b.`course_id` 
-							JOIN `".AUTH_DATABASE."`.`organisations` AS c 
-							ON b.`organisation_id` = c.`organisation_id` 
+				$query = "	SELECT c.`organisation_installation`
+							FROM `community_courses` AS a
+							JOIN `courses` AS b
+							ON a.`course_id` = b.`course_id`
+							JOIN `".AUTH_DATABASE."`.`organisations` AS c
+							ON b.`organisation_id` = c.`organisation_id`
 							WHERE a.`community_id` = ".$db->qstr($result["community_id"]);
 				$course_url = $db->GetOne($query);
 				if ($course_url) {
@@ -80,7 +80,7 @@ function build_post($post) {
 				}else {
 					$ENTRADA_URL = ENTRADA_URL;
 					$COMMUNITY_URL = COMMUNITY_URL;
-				}				
+				}
 				$replace	= array(
 									$result["fullname"],
 									$result[$post["type"]."_title"],
@@ -270,11 +270,10 @@ function build_post($post) {
 			break;
 	}
 
-	$NOTIFICATION_MESSAGE		 	 = array();
+	$NOTIFICATION_MESSAGE = array();
+	$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/email/".$post['body']);
 
-	global $ENTRADA_ACTIVE_TEMPLATE;
-	$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/".$post['body']);
-		$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean","decode")));
+    $mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean","decode")));
 }
 
 /**

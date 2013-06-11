@@ -228,19 +228,23 @@ if (!$ERROR) {
 	foreach ($auth_method_chain as $order => $auth_method) {
 		switch ($auth_method) {
 			case "local" :
-				$query	= "SELECT * FROM `user_data` WHERE `username` = ".$db->qstr($user_username)." AND `password` = MD5(".$db->qstr($user_password).")";
-				$result	= $db->GetRow($query);
-				if ($result) {
-					/**
-					 * The provided user credentials are considered valid.
-					 */
-					$user_data = $result;
-				}
-			break;
 			case "cas" :
-				$query	= "SELECT * FROM `user_data` WHERE `username` = ".$db->qstr($user_username)." AND `password` = ".$db->qstr($user_password);
+				$query	= "SELECT * FROM `user_data` WHERE `username` = ".$db->qstr($user_username)." AND ((`salt` IS NULL AND `password` = MD5(".$db->qstr($user_password).")) OR (`salt` IS NOT NULL AND `password` = SHA1(CONCAT(".$db->qstr($user_password).", `salt`))))";
 				$result	= $db->GetRow($query);
 				if ($result) {
+                    /**
+                     * Check to see if password requires some updating.
+                     */
+                    if (!$result["salt"]) {
+                        $salt = hash("sha256", (uniqid(rand(), 1) . time() . $result["id"]));
+                        $query = "UPDATE `user_data` SET `password` = ".$db->qstr(sha1($user_password.$salt)).", `salt` = ".$db->qstr($salt)." WHERE `id` = ".$db->qstr($result["id"]);
+                        if ($db->Execute($query)) {
+                            application_log("auth_success", "Successfully updated password salt for user [".$result["id"]."] via local auth method.");
+                        } else {
+                            application_log("auth_error", "Failed to update password salt for user [".$result["id"]."] via local auth method. Database said: ".$db->ErrorMsg());
+                        }
+                    }
+
 					/**
 					 * The provided user credentials are considered valid.
 					 */
@@ -279,6 +283,23 @@ if (!$ERROR) {
 										$query = "SELECT * FROM `user_data` WHERE `".LDAP_LOCAL_USER_QUERY_FIELD."` = ".$db->qstr($user_query_field_value);
 										$local_result = $db->GetRow($query);
 										if ($local_result) {
+                                            /**
+                                             * Check to see if password requires re-hashing.
+                                             */
+                                            if (!$local_result["salt"]) {
+                                                $salt = hash("sha256", (uniqid(rand(), 1) . time() . $local_result["id"]));
+
+                                                /**
+                                                 * If their local password is their LDAP password, continue to use it otherwise generate them a new local password.
+                                                 */
+                                                $query = "UPDATE `user_data` SET `password` = ".$db->qstr(sha1(($local_result["password"] != md5($user_password) ? uniqid(rand(), 1) : $user_password) . $salt)).", `salt` = ".$db->qstr($salt)." WHERE `id` = ".$db->qstr($local_result["id"]);
+                                                if ($db->Execute($query)) {
+                                                    application_log("auth_success", "Successfully updated password salt for user [".$local_result["id"]."] via LDAP auth method.");
+                                                } else {
+                                                    application_log("auth_error", "Failed to update password salt for user [".$local_result["id"]."] via LDAP auth method. Database said: ".$db->ErrorMsg());
+                                                }
+                                            }
+
 											/**
 											 * The provided user credentials are considered valid.
 											 */
@@ -439,6 +460,12 @@ if (!$ERROR) {
 						case "email_alt" :
 							echo "\t\t<".$value.">".encrypt($user_data["email_alt"], $auth_password)."</".$value.">\n";
 						break;
+						case "email_updated" :
+							echo "\t\t<".$value.">".encrypt($user_data["email_updated"], $auth_password)."</".$value.">\n";
+						break;
+						case "google_id" :
+							echo "\t\t<".$value.">".encrypt($user_data["google_id"], $auth_password)."</".$value.">\n";
+						break;
 						case "telephone" :
 							echo "\t\t<".$value.">".encrypt($user_data["telephone"], $auth_password)."</".$value.">\n";
 						break;
@@ -462,6 +489,9 @@ if (!$ERROR) {
 						break;
 						case "privacy_level" :
 							echo "\t\t<".$value.">".encrypt($user_data["privacy_level"], $auth_password)."</".$value.">\n";
+						break;
+						case "notifications" :
+							echo "\t\t<".$value.">".encrypt($user_data["notifications"], $auth_password)."</".$value.">\n";
 						break;
 						case "access_id" :
 							echo "\t\t<".$value.">".encrypt($user_access["id"], $auth_password)."</".$value.">\n";

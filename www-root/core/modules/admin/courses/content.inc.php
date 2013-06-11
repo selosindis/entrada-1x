@@ -390,8 +390,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				?>
 				<a name="course-details-section"></a>
 				<h2 title="Course Details Section"><?php echo $module_singular_name; ?> Details</h2>
-				<div id="course-details-section" class="clearfix">					
-					<form class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">											
+				<div id="course-details-section" class="clearfix">
+					<form class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?<?php echo replace_query(); ?>" method="post">
 						<input type="hidden" name="type" value="text" />
 						<div class="control-group">
 							<label for="course_url" class="form-nrequired control-label">External Website URL</label>
@@ -405,13 +405,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									</p>
 									<?php
 								} else { ?>
-									<a href="<?php echo ENTRADA_URL."/community" . $course_community["community_url"];?>"> 
+									<a href="<?php echo ENTRADA_URL."/community" . $course_community["community_url"];?>">
 										<?php echo ENTRADA_URL."/community" . $course_community["community_url"];?>
 									</a>
 								<?php
 								} ?>
 							</div>
-						</div>			
+						</div>
 
 						<div class="control-group">
 							<label for="course_directors" class="form-nrequired control-label"><?php echo $module_singular_name . " Directors";?></label>
@@ -432,10 +432,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										}
 									} else {
 										echo "To Be Announced";
-									} 
-								?>							
+									}
+								?>
 							</div>
-						</div>		
+						</div>
 
 						<div class="control-group">
 							<label for="curriculum_coordinators" class="form-nrequired control-label">Curriculum Coordinators</label>
@@ -456,10 +456,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										}
 									} else {
 										echo "To Be Announced";
-									}			
-								?>				
+									}
+								?>
 							</div>
-						</div>		
+						</div>
 
 						<?php
 						if (isset($course_details["pcoord_id"]) && (int)$course_details["pcoord_id"]) { ?>
@@ -471,8 +471,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</a>
 							</div>
 						</div>
-						<?php 
-						} 
+						<?php
+						}
 
 						if (isset($course_details["evalrep_id"]) && (int)$course_details["evalrep_id"]) { ?>
 						<div class="control-group">
@@ -483,7 +483,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</a>
 							</div>
 						</div>
-						<?php 
+						<?php
 						}
 
 						if (isset($course_details["studrep_id"]) && (int)$course_details["studrep_id"]) { ?>
@@ -495,7 +495,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</a>
 							</div>
 						</div>
-						<?php 
+						<?php
 						} ?>
 
 						<div class="control-group">
@@ -503,14 +503,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<div class="controls">
 								<textarea id="course_description" name="course_description" cols="70" rows="10"><?php echo ((isset($PROCESSED["course_description"])) ? html_encode(trim(strip_selected_tags($PROCESSED["course_description"], array("font")))) : "");?></textarea>
 							</div>
-						</div>			
-								
+						</div>
+
 						<div class="control-group">
 							<label for="course_message" class="form-nrequired control-label">Director's Message</label>
 							<div class="controls">
 								<textarea id="course_message" name="course_message" cols="70" rows="10"><?php echo ((isset($PROCESSED["course_message"])) ? html_encode(trim(strip_selected_tags($PROCESSED["course_message"], array("font")))) : "");?></textarea>
 							</div>
-						</div>							
+						</div>
 						<div class="pull-right clearfix">
 							<input type="submit" value="Save" class="btn"/>
 						</div>
@@ -567,9 +567,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 						} ?>
 						</ul>
-				
 
-					<?php 
+
+					<?php
 					} ?>
 
 						<div id="objectives_list">
@@ -604,7 +604,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')" class="btn btn-primary">Add A File</a>
 							</div>
 						</div>
-						
+
 						<?php
 						$query		= "SELECT * FROM `course_files` WHERE `course_id`=".$db->qstr($COURSE_ID)." ORDER BY `file_category` ASC, `file_title` ASC";
 						$results	= ((USE_CACHE) ? $db->CacheGetAll(CACHE_TIMEOUT, $query) : $db->GetAll($query));
@@ -652,11 +652,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										<td class="modified wide">
 											<input type="checkbox" name="delete[]" value="<?php echo $result["id"];?>"/>
 											<a href="<?php echo ENTRADA_URL;?>/file-course.php?id=<?php echo $result["id"];?>">
-												<img 	src="<?php echo ENTRADA_URL;?>/images/btn_save.gif" 
-														width="16" 
-														height="16" 
-														alt="Download <?php echo html_encode($result["file_name"]);?> to your computer." 
-														title="Download <?php echo html_encode($result["file_name"]);?> to your computer." 
+												<img 	src="<?php echo ENTRADA_URL;?>/images/btn_save.gif"
+														width="16"
+														height="16"
+														alt="Download <?php echo html_encode($result["file_name"]);?> to your computer."
+														title="Download <?php echo html_encode($result["file_name"]);?> to your computer."
 														border="0" />
 											</a>
 										</td>
@@ -664,13 +664,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											<?php echo ((isset($RESOURCE_CATEGORIES["course"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["course"][$result["file_category"]]) : "Unknown Category");?>
 										</td>
 										<td class="title">
-											<img 	src="<?php echo ENTRADA_URL;?>/serve-icon.php?ext=<?php echo $ext;?>" 
-													width="16" 
-													height="16" 
-													alt="<?php echo strtoupper($ext);?> Document" 
+											<img 	src="<?php echo ENTRADA_URL;?>/serve-icon.php?ext=<?php echo $ext;?>"
+													width="16"
+													height="16"
+													alt="<?php echo strtoupper($ext);?> Document"
 													title="<?php echo strtoupper($ext);?> Document"/>
-											<a 	href="#" 
-												onclick="openDialog('<?php echo ENTRADA_URL;?>/api/file-wizard-course.api.php?action=edit&id=<?php echo $COURSE_ID."&fid=".$result["id"];?>')" 
+											<a 	href="#"
+												onclick="openDialog('<?php echo ENTRADA_URL;?>/api/file-wizard-course.api.php?action=edit&id=<?php echo $COURSE_ID."&fid=".$result["id"];?>')"
 												title="Click to edit <?php echo html_encode($result["file_title"]);?>">
 												<strong>
 												<?php echo html_encode($result["file_title"]);?>
@@ -689,7 +689,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										</td>
 										<td class="accesses text-center"><?php echo $result["accesses"];?></td>
 									</tr>
-							<?php 
+							<?php
 							}
 						} else { ?>
 									<tr>
@@ -699,7 +699,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											</div>
 										</td>
 									</tr>
-						<?php 
+						<?php
 						} ?>
 								</tbody>
 							</table>
@@ -712,8 +712,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<h3>Attached Links</h3>
 						</div>
 						<div class="pull-right space-below">
-							<a 	href="#page-top" 
-								onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')" 
+							<a 	href="#page-top"
+								onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-course.api.php?action=add&id=<?php echo $COURSE_ID; ?>')"
 								class="btn btn-primary">
 								Add A Link
 							</a>
@@ -746,31 +746,31 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									<tr>
 										<td>&nbsp;</td>
 										<td colspan="4">
-											<?php 
+											<?php
 											echo (($results) ? "<input type=\"button\" class=\"button\" value=\"Delete Selected\" onclick=\"confirmLinkDelete()\" />" : "&nbsp;")."\n";
 											?>
 										</td>
 									</tr>
 								</tfoot>
 								<tbody>
-							<?php 
+							<?php
 							if($results) {
 								foreach($results as $result) { ?>
 									<tr>
 										<td class="modified wide">
 											<input type="checkbox" name="delete[]" value="<?php echo $result["id"];?>"/>
 											<a href="<?php echo ENTRADA_URL;?>/link-course.php?id=<?php echo $result["id"];?>" target="_blank">
-												<img 	src="<?php echo ENTRADA_URL;?>/images/url-visit.gif" 
-														width="16" 
-														height="16" 
-														alt="Visit <?php echo html_encode($result["link"]);?>" 
-														title="Visit <?php echo html_encode($result["link"]);?>" 
+												<img 	src="<?php echo ENTRADA_URL;?>/images/url-visit.gif"
+														width="16"
+														height="16"
+														alt="Visit <?php echo html_encode($result["link"]);?>"
+														title="Visit <?php echo html_encode($result["link"]);?>"
 														border="0" />
 											</a>
 										</td>
 										<td class="title">
-											<a 	href="#" 
-												onclick="openDialog('<?php echo ENTRADA_URL;?>/api/link-wizard-course.api.php?action=edit&id=<?php echo $COURSE_ID."&lid=".$result["id"];?>')" 
+											<a 	href="#"
+												onclick="openDialog('<?php echo ENTRADA_URL;?>/api/link-wizard-course.api.php?action=edit&id=<?php echo $COURSE_ID."&lid=".$result["id"];?>')"
 												title="Click to edit <?php echo html_encode($result["link"]);?>">
 												<strong>
 												<?php echo (($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"]);?>
@@ -791,7 +791,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											<?php echo $result["accesses"];?>
 										</td>
 									</tr>
-								<?php 
+								<?php
 								}
 							} else { ?>
 									<tr>
@@ -801,7 +801,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 											</div>
 										</td>
 									</tr>
-							<?php 
+							<?php
 							} ?>
 								</tbody>
 							</table>

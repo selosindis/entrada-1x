@@ -102,7 +102,7 @@ header#main-header .banner{
 }
 .navbar-inner {
   background:#1b3842;
-  /*border-top:1px solid #FFF;*/
+  border: 0;
   border-top:1px solid rgba(255,255,255,0.1);
   border-bottom:4px solid #d1ceb1;
   -moz-box-shadow:0 -4px 7px rgba(0, 0, 0, 0.075);
@@ -121,7 +121,7 @@ header#main-header .banner{
   padding:7px 16px 9px;
   text-shadow:1px 1px 0 rgba(0,0,0,0.1);
 }
-.navbar .nav > li.current > a{
+.navbar .nav > li.current > a {
   background:#162d35;
   color:#FFF;
   -moz-box-shadow:0 0 8px rgba(0,0,0,0.5) inset;
@@ -129,7 +129,7 @@ header#main-header .banner{
   box-shadow:0 0 8px rgba(0,0,0,0.5) inset;
   position:relative;
 }
-.navbar .nav > li.current > a:after{
+.navbar .nav > li.current > a:after {
   content:"";
   border-left:8px solid transparent;
   border-right:8px solid transparent;
@@ -140,6 +140,16 @@ header#main-header .banner{
   height:0;
   left:45%;
 }
+
+.navbar .nav > li > a:focus, .navbar .nav > li > a:hover {
+  color: #eff0eb;
+}
+
+.navbar .nav > li > a:focus .caret, .navbar .nav > li > a:hover .caret {
+  border-top-color: #eff0eb;
+  border-bottom-color: #d1ceb1;
+}
+
 a.log-out{
   border-radius:20px;
   background:#18323b;

@@ -132,8 +132,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				$PROCESSED["template"] = $tmp_input;
 			} else {
 				//Default to the default template if no template selected.
-				if (DEFAULT_TEMPLATE) {
-					$PROCESSED["template"] = DEFAULT_TEMPLATE;
+				if ($ENTRADA_TEMPLATE->defaultTemplate()) {
+					$PROCESSED["template"] = $ENTRADA_TEMPLATE->defaultTemplate();
 				} else {
 					add_error("You must select an interface template.");
 				}
@@ -510,7 +510,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					<input type="submit" class="btn btn-primary" value="Save" />
 				</div>
 			</div>
-			
+
 			</form>
 			<?php
 		break;

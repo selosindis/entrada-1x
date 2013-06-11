@@ -2,19 +2,19 @@
 /**
  * Entrada Tools
  * Tools: Tools Config File
- * 
+ *
  * This is the distribution's configuration file for the Entrada developer
  * tools. I would recommend that you simply copy your
  * entrada/www-root/includes/config.inc.php file to this directory as these
  * tools require much of the same data.
- * 
+ *
  * The reason this is a separate file and not just a symlink is that this allows
  * you to test with different databases in your production environment before
  * actually running the tools.
- * 
+ *
  * No matter which tool you are using, we highly recommend that you backup your
  * database and perhaps even your filesystem before running anything.
- * 
+ *
  * @author Unit: Medical Education Technology Unit
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
@@ -26,7 +26,7 @@
  * DEVELOPMENT_MODE - Whether or not you want to run in development mode.
  * When in development mode only IP's that exist in the $DEVELOPER_IPS
  * array will be allowed to access the application. Others are directed to
- * the notavailable.html file.
+ * the maintenance.html file.
  *
  */
 define("DEVELOPMENT_MODE",		true);
@@ -526,10 +526,6 @@ $EXTERNAL_HTML .= "%BODY%\n";
 $EXTERNAL_HTML .= "</div>\n";
 $EXTERNAL_HTML .= "</body>\n";
 $EXTERNAL_HTML .= "</html>\n";
-
-define("TEMPLATE_URL",			ENTRADA_URL."/templates/".DEFAULT_TEMPLATE);
-define("TEMPLATE_ABSOLUTE",		ENTRADA_ABSOLUTE."/templates/".DEFAULT_TEMPLATE);
-define("TEMPLATE_RELATIVE",		ENTRADA_RELATIVE."/templates/".DEFAULT_TEMPLATE);
 
 $CLERKSHIP_FIELD_STATUS						= array();
 $CLERKSHIP_FIELD_STATUS["published"]		= array("name" => "Published", "visible" => true);

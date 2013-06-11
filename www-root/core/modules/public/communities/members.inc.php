@@ -126,7 +126,7 @@ if ($COMMUNITY_ID) {
 								$ERROR++;
 								$ERRORSTR[] = "The primary e-mail address is a required field.";
 							}
-							
+
 							if (!$ERROR) {
 							//Check to see if this user is already in the system.
 
@@ -142,7 +142,7 @@ if ($COMMUNITY_ID) {
 									$username = $result["username"];
 								} else {
 									$pieces = explode("@", $PROCESSED["email"]);
-									
+
 									$original = "guest.".substr(clean_input($pieces[0], "credentials"), 0, 16);
 									$username = $original;
 									$i = "";
@@ -217,10 +217,10 @@ if ($COMMUNITY_ID) {
 
 									require_once("Models/utility/Template.class.php");
 									require_once("Models/utility/TemplateMailer.class.php");
-									
+
 									if ($GUEST_ACCESS) {
 										$hash = get_hash();
-										
+
 										if ($GUEST_NEW_ACCESS) {
 											$PROCESSED_EMAIL = array();
 											$PROCESSED_EMAIL["ip"] = $_SERVER["REMOTE_ADDR"];
@@ -230,16 +230,16 @@ if ($COMMUNITY_ID) {
 											$PROCESSED_EMAIL["complete"] = 0;
 
 											if ($db->AutoExecute("`".AUTH_DATABASE."`.`password_reset`", $PROCESSED_EMAIL, "INSERT")) {
-												$xml_file = TEMPLATE_ABSOLUTE."/email/community-new-user.xml";
+												$xml_file = $ENTRADA_TEMPLATE->absolute()."/email/community-new-user.xml";
 											} else {
 												$xml_file = "";
 
 												application_log("error", "Error inserting new password_reset into database from Communities > Manage Members. Database said: ".$db->ErrorMsg());
 											}
 										} else {
-											$xml_file = TEMPLATE_ABSOLUTE."/email/community-new-access.xml";
+											$xml_file = $ENTRADA_TEMPLATE->absolute()."/email/community-new-access.xml";
 										}
-										
+
 										try {
 											$template = new Template($xml_file);
 											$mail = new TemplateMailer(new Zend_Mail());
@@ -263,12 +263,12 @@ if ($COMMUNITY_ID) {
 												}
 											} else {
 												add_error("We were unable to send an invitation e-mail to the guest at this time.<br /><br />A system administrator was notified of this issue, but you may wish to contact this individual manually and let them know they have been added.");
-												
+
 												application_log("error", "Unable to send community guest notification to [".$to["email"]."]. Zend_Mail said: ".$mail->ErrorInfo);
 											}
 										} catch (Exception $e) {
 											add_error("We were unable to send an invitation e-mail to the guest at this time.<br /><br />A system administrator was notified of this issue, but you may wish to contact this individual manually and let them know they have been added.");
-											
+
 											application_log("error", "Unable to load the XML file [".$xml_file."] or the XML file did not contain the language requested [".DEFAULT_LANGUAGE."], when attempting to send a community guest notification.");
 										}
 
@@ -322,7 +322,7 @@ if ($COMMUNITY_ID) {
 											} else {
 												$SUCCESSSTR[] = "You have successfully given a guest access to this community.<br /><br />You will now be redirected back to the user manager; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 											}
-											
+
 											$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 											communities_log_history($COMMUNITY_ID, 0, $member_add_success, "community_history_add_members", 1);
 											application_log("success", "Gave [".$PROCESSED_ACCESS["group"]." / ".$PROCESSED_ACCESS["role"]."] permissions to user id [".$PROCESSED_ACCESS["user_id"]."] as a guest for community $COMMUNITY_ID.");
@@ -732,9 +732,9 @@ if ($COMMUNITY_ID) {
 
 							$query		= sprintf($query, $SORT_BY);
 							$results	= $db->GetAll($query);
-							
+
 							if ($results) {
-								
+
 								$HEAD[] = "
 								<script type=\"text/javascript\">
 								jQuery(document).ready(function() {
@@ -869,16 +869,16 @@ if ($COMMUNITY_ID) {
 										AND a.`member_acl` = '1'
 										ORDER BY %s
 										LIMIT %s, %s";
-							
+
 							// If the user has sorted on Member Type in the members tab and has moved to the administrators tab
 							// the member type sort is removed and the results are sorted on name as member type is not shown in the results since all
 							// are of the administrator type.
 							if ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") {
 								$SORT_BY	= "CONCAT_WS(', ', b.`lastname`, b.`firstname`) ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 							}
-							
+
 							$SORT_BY = str_replace("CASE c.`group` WHEN 'guest' THEN 1 WHEN '%' THEN 2 END ASC", "a.`member_joined`", $SORT_BY);
-							
+
 							$query		= sprintf($query, $SORT_BY, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
 							$results	= $db->GetAll($query);
 							if ($results) {
@@ -1213,7 +1213,7 @@ if ($COMMUNITY_ID) {
 	$('community_members_category_select').observe('change', function(event) {
 		if ($('community_members_category_select').selectedIndex != 0) {
 			$('community_members_scroll').update(new Element('div', {'style':'width: 100%; height: 100%; background: transparent url(<?php echo ENTRADA_URL;?>/images/loading.gif) no-repeat center'}));
-	
+
 			//Grab the new contents
 			var updater = new Ajax.Updater('community_members_scroll', '<?php echo ENTRADA_URL."/communities?section=membersapi&action=memberlist";?>',{
 				method:'post',

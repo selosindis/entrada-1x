@@ -5,7 +5,7 @@
  *
  * Cron job responsible for emailing apartment contacts once a month with the
  * scheduled occupants for the month.
- * 
+ *
  * Setup to run the first of each month in CRON.
  *
  * @author Organisation: Queen's University
@@ -27,7 +27,6 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-global $ENTRADA_ACTIVE_TEMPLATE;
 
 $search = array("%CONTACT_NAME%", "%APARTMENT_TITLE%", "%OCCUPANTS_AND_DATES%", "%REGIONALED_CONTACT%", "%REGIONALED_EMAIL%", "%APPLICATION_NAME%");
 $date = time();
@@ -42,11 +41,11 @@ $mail->addHeader("X-Section", "Regional Education Notification System", true);
 $mail->setFrom($AGENT_CONTACTS["agent-regionaled"]["email"], $AGENT_CONTACTS["agent-regionaled"]["name"]);
 
 // fetch the apartments
-$query = "	SELECT `apartment_id`, 
-					`apartment_title`, 
-					CONCAT_WS(' ',super_firstname, super_lastname) AS `super_full`, 
-					`super_email`, 
-					CONCAT_WS(' ',keys_firstname,keys_lastname) AS `keys_full`, 
+$query = "	SELECT `apartment_id`,
+					`apartment_title`,
+					CONCAT_WS(' ',super_firstname, super_lastname) AS `super_full`,
+					`super_email`,
+					CONCAT_WS(' ',keys_firstname,keys_lastname) AS `keys_full`,
 					`keys_email`,
 					b.`region_name`
 				FROM `".CLERKSHIP_DATABASE."`.`apartments`
@@ -65,31 +64,31 @@ foreach ($apartments as $apartment) {
 		$messages[$contact_id]["contact_name"] = $previous_contact;
 		$messages[$contact_id]["contact_email"] = $previous_email;
 		$messages[$contact_id]["region"] = $previous_region;
-		
+
 		$msg_body .= $no_occupants;
 		$messages[$contact_id]["body"] = $msg_body;
-		
+
 		$msg_body = "";
 		$no_occupants = "";
 		$contact_id ++;
 	}
-	
+
 	// fetch the apartment occupants
-	$query = "	SELECT CONCAT_WS(' ', b.firstname, b.lastname) as occupant_full, 
-					b.`email` as occupant_email, 
-					a.`occupant_title`, 
-					FROM_UNIXTIME(a.inhabiting_start) AS inhabiting_start, 
-					FROM_UNIXTIME(a.inhabiting_finish) AS inhabiting_finish 
-				FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` as a 
-				LEFT JOIN `".AUTH_DATABASE."`.`user_data` as b 
-				ON a.`proxy_id` = b.`id` 
+	$query = "	SELECT CONCAT_WS(' ', b.firstname, b.lastname) as occupant_full,
+					b.`email` as occupant_email,
+					a.`occupant_title`,
+					FROM_UNIXTIME(a.inhabiting_start) AS inhabiting_start,
+					FROM_UNIXTIME(a.inhabiting_finish) AS inhabiting_finish
+				FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` as a
+				LEFT JOIN `".AUTH_DATABASE."`.`user_data` as b
+				ON a.`proxy_id` = b.`id`
 				WHERE a.`apartment_id` = ".$apartment['apartment_id']."
 				AND MONTH(FROM_UNIXTIME(a.`inhabiting_finish`)) IN (MONTH(FROM_UNIXTIME('".implode("')), MONTH(FROM_UNIXTIME('", $months)."')))
 				AND YEAR(FROM_UNIXTIME(a.`inhabiting_finish`)) IN (YEAR(FROM_UNIXTIME('".implode("')), YEAR(FROM_UNIXTIME('", $months)."')))
 				ORDER BY a.`inhabiting_start` ASC;";
-	
+
 	$occupants = $db->GetAll($query);
-	
+
 	if ($occupants) {
 		$msg_body .= "The following learners are scheduled to stay in <strong>".$apartment["apartment_title"]."</strong>.<br /><br />";
 		$occupants_list = "<table width=\"100%\" cellpadding=\"0\" border=\"1\">\n";
@@ -116,9 +115,9 @@ foreach ($apartments as $apartment) {
 	} else {
 		$no_occupants .= "There are currently no learners are scheduled to stay in <strong>".$apartment["apartment_title"]."</strong>.<br /><br />";
 	}
-	
 
-	
+
+
 	$previous_contact = $current_contact;
 	$previous_email = $current_email;
 	$previous_region = $apartment["region_name"];
@@ -129,10 +128,10 @@ $messages[$contact_id]["contact_name"] =  $previous_contact;
 $messages[$contact_id]["contact_email"] =  $previous_email;
 $messages[$contact_id]["region"] =  $previous_region;
 $messages[$contact_id]["body"] = $msg_body;
-		
+
 foreach ($messages as $message_id => $message) {
 	if (!isset($occupants_email)) {
-		$occupants_email = nl2br(file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . $ENTRADA_ACTIVE_TEMPLATE . "/email/regionaled-apartment-occupants-monthly-notification.txt"));
+		$occupants_email = nl2br(file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . $ENTRADA_TEMPLATE->activeTemplate() . "/email/regionaled-apartment-occupants-monthly-notification.txt"));
 	}
 	$replace = array($message["contact_name"], $message["region"], $message["body"], $AGENT_CONTACTS["agent-regionaled"]["name"], $AGENT_CONTACTS["agent-regionaled"]["email"], "Entrada");
 	$mail->clearSubject();

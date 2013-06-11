@@ -11,7 +11,7 @@
  * @copyright Copyright 2011 Queen's University. All Rights Reserved.
  *
 */
- 
+
 @set_time_limit(0);
 @set_include_path(implode(PATH_SEPARATOR, array(
     dirname(__FILE__) . "/../core",
@@ -57,14 +57,14 @@ if ($results) {
 			foreach ($history_timestamps as $history_timestamp) {
 				//of the two timestamps returned check which is most recent
 				if ($history_timestamp["history_timestamp"] > $history_timestamp["timestamp"]) {
-					$timestamp = $history_timestamp["history_timestamp"]; 
+					$timestamp = $history_timestamp["history_timestamp"];
 				} else if ($history_timestamp["history_timestamp"] < $history_timestamp["timestamp"]) {
 					$timestamp = $history_timestamp["timestamp"];
 				} else if ($history_timestamp["history_timestamp"] == $history_timestamp["timestamp"]) {
 					$timestamp = $history_timestamp["history_timestamp"];
 				}
-				
-				$query = "  SELECT a.`community_id`, a.`proxy_id`, a.`member_acl`, b.`id`, b.`firstname`, b.`lastname`, b.`email` 
+
+				$query = "  SELECT a.`community_id`, a.`proxy_id`, a.`member_acl`, b.`id`, b.`firstname`, b.`lastname`, b.`email`
 							FROM `community_members` AS a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 							ON a.`proxy_id` = b.`id`
@@ -73,7 +73,7 @@ if ($results) {
 				if (($timestamp >= strtotime("-6 months 00:00:00") && $timestamp <= strtotime("-6 months 23:59:59")))  {
 					$admin_info_results = $db->GetAll($query);
 					if ($admin_info_results) {
-						$xml_file = TEMPLATE_ABSOLUTE."/email/community-cleanup.xml";
+						$xml_file = $ENTRADA_TEMPLATE->absolute()."/email/community-cleanup.xml";
 						$template = new Template($xml_file);
 						foreach ($admin_info_results as $admin_info) {
 							$keywords = array (
@@ -86,7 +86,7 @@ if ($results) {
 							);
 
 							$from = array("email" => $AGENT_CONTACTS["administrator"]["email"], "firstname" => $AGENT_CONTACTS["administrator"]["firstname"], "lastname" => $AGENT_CONTACTS["administrator"]["lastname"]);
-							$to = array("email" => $admin_info["email"], "firstname" => $admin_info["firstname"], "lastname" => $admin_info["lastname"]);							
+							$to = array("email" => $admin_info["email"], "firstname" => $admin_info["firstname"], "lastname" => $admin_info["lastname"]);
 							if ($SEND_EMAIL_NOTIFICATIONS) {
 								if ($mail->send($template, $to, $from, DEFAULT_LANGUAGE, $keywords)) {
 									application_log("cron", "Sent 6 month community inactivity e-mail to admin: [" . $admin_info["email"]. "]" . " community " . $admin_info["community_id"]);
@@ -96,12 +96,12 @@ if ($results) {
 							} else {
 								application_log("cron", "Action: Send 6 month community inactivity e-mail to admin [". $admin_info["email"]. "]" . " community " . $admin_info["community_id"]);
 							}
-						}						
+						}
 					}
 				} elseif (($timestamp >= strtotime("-12 months 00:00:00") && $timestamp <= strtotime("-12 months 23:59:59"))) {
 					$admin_info_results = $db->GetAll($query);
 					if ($admin_info_results) {
-						$xml_file = TEMPLATE_ABSOLUTE."/email/community-cleanup.xml";
+						$xml_file = $ENTRADA_TEMPLATE->absolute()."/email/community-cleanup.xml";
 						$template = new Template($xml_file);
 						foreach ($admin_info_results as $admin_info) {
 							$keywords = array (
@@ -114,7 +114,7 @@ if ($results) {
 							);
 							$from = array("email" => $AGENT_CONTACTS["administrator"]["email"], "firstname" => $AGENT_CONTACTS["administrator"]["firstname"], "lastname" => $AGENT_CONTACTS["administrator"]["lastname"]);
 							$to = array("email" => $admin_info["email"], "firstname" => $admin_info["firstname"], "lastname" => $admin_info["lastname"]);
-						
+
 							if ($SEND_EMAIL_NOTIFICATIONS) {
 								if ($mail->send($template, $to, $from, DEFAULT_LANGUAGE, $keywords)) {
 									application_log("cron", "Sent 12 month community inactivity e-mail to admin: [" . $admin_info["email"]. "]" . " community " . $admin_info["community_id"]);
@@ -140,7 +140,7 @@ if ($results) {
 									application_log("cron", "Community ". $history_timestamp["community_id"]. " inactive for 12 months 7 days. Set to inactive.");
 								} else {
 									application_log("error", "Unable to deactivate community ". $history_timestamp["community_id"]);
-								}	
+								}
 							}
 							else {
 								application_log("cron", "Action: Community ". $history_timestamp["community_id"]. " inactive for 12 months 7 days. Set to inactive.");
@@ -149,7 +149,7 @@ if ($results) {
 					}
 				} elseif (($timestamp < strtotime("-12 months -7 days 00:00:00"))) {
 					$query = "  SELECT * FROM `communities`
-								WHERE `community_id` = " . $db->qstr($history_timestamp["community_id"]);		
+								WHERE `community_id` = " . $db->qstr($history_timestamp["community_id"]);
 					$inactive_community_results = $db->GetAll($query);
 					if ($inactive_community_results) {
 						foreach($inactive_community_results as $inactive_community) {
@@ -164,16 +164,16 @@ if ($results) {
 									application_log("cron", "Community ". $history_timestamp["community_id"]. " inactive for more than 12 months 7 days. Set to inactive.");
 								} else {
 									application_log("error", "Unable to deactivate community ". $history_timestamp["community_id"]);
-								}	
+								}
 							}
 							else {
 								application_log("cron", "Action: Community ". $history_timestamp["community_id"]. " " . $history_timestamp["history_timestamp"]. " " ."inactive for more than 12 months 7 days. Set to inactive.");
 							}
-						}							
+						}
 					}
 				}
 			}
 		}
-	} 
+	}
 }
 ?>

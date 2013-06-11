@@ -38,7 +38,7 @@ require_once("init.inc.php");
 
 ob_start("on_checkout");
 
-$PROCEED_TO = rtrim(((isset($_GET["url"])) ? clean_input($_GET["url"], "trim") : ((isset($_SERVER["REQUEST_URI"])) ? clean_input($_SERVER["REQUEST_URI"], "trim") : false)), "/");
+$PROCEED_TO = rtrim(((isset($_GET["url"])) ? clean_input($_GET["url"], "trim") : (isset($_SERVER["REQUEST_URI"]) ? clean_input($_SERVER["REQUEST_URI"], "trim") : false)), "/");
 
 $PATH_INFO = ((isset($_SERVER["PATH_INFO"])) ? clean_input($_SERVER["PATH_INFO"], array("url", "lowercase")) : "");
 $PATH_SEPARATED = explode("/", $PATH_INFO);
@@ -46,9 +46,9 @@ $PATH_SEPARATED = explode("/", $PATH_INFO);
 /**
  * Process CAS authentication
  */
-if ((defined("AUTH_ALLOW_CAS")) && (AUTH_ALLOW_CAS == true)) {
-	if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
-		if (($ACTION == "cas") || (isset($_COOKIE[AUTH_CAS_COOKIE]))) {
+if (defined("AUTH_ALLOW_CAS") && (AUTH_ALLOW_CAS == true)) {
+	if (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
+		if (($ACTION == "cas") || isset($_COOKIE[AUTH_CAS_COOKIE])) {
 			phpCAS::forceAuthentication();
 		}
 
@@ -58,21 +58,20 @@ if ((defined("AUTH_ALLOW_CAS")) && (AUTH_ALLOW_CAS == true)) {
 				if ($result) {
 					$CAS_AUTHENTICATED = true;
 
-					$username	= $result["username"];
-					$password	= $result["password"];
+					$username = $result["username"];
+					$password = $result["password"];
 
-					$ACTION		= "login";
+					$ACTION = "login";
 				}
 			} else {
 				phpCAS::logout(ENTRADA_URL."?action=cas&state=failed");
 			}
 		}
 
-		if (($ACTION == "cas") && (isset($_GET["state"])) && ($_GET["state"] == "failed")) {
-			$ERROR++;
-			$ERRORSTR[]	= "Your login credentials are not recognized.<br /><br />Please contact a system administrator for further information.";
+		if (($ACTION == "cas") && isset($_GET["state"]) && ($_GET["state"] == "failed")) {
+			add_error("Your login credentials are not recognized.<br /><br />Please contact a system administrator for further information.");
 
-			$ACTION		= "login";
+			$ACTION = "login";
 		}
 	}
 }
@@ -81,12 +80,12 @@ if ($ACTION == "login") {
 	require_once("Entrada/xoft/xoft.class.php");
 	require_once("Entrada/authentication/authentication.class.php");
 
-	if ((!defined("AUTH_ALLOW_CAS")) || (!AUTH_ALLOW_CAS) || (!$CAS_AUTHENTICATED)) {
+	if (!defined("AUTH_ALLOW_CAS") || !AUTH_ALLOW_CAS || !$CAS_AUTHENTICATED) {
 		$username = clean_input($_POST["username"], "credentials");
 		$password = clean_input($_POST["password"], "trim");
 
 		// Check for locked-out-edness before doing anything else
-		$lockout_query	= "	SELECT a.`id`, a.`login_attempts`, a.`locked_out_until`
+		$lockout_query = "SELECT a.`id`, a.`login_attempts`, a.`locked_out_until`
 							FROM `".AUTH_DATABASE."`.`user_access` as a
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` as b
 							ON b.`id` = a.`user_id`
@@ -104,31 +103,31 @@ if ($ACTION == "login") {
 						application_log("error", "The system was unable to reset the lockout time for user [".$username."] after it expired.");
 					}
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "Your access to this system has been locked due to too many failed login attempts. You may try again at " . date("g:iA ", $lockout_result["locked_out_until"]);
+					add_error("Your access to this system has been locked due to too many failed login attempts. You may try again at " . date("g:iA ", $lockout_result["locked_out_until"]));
+
 					application_log("error", "User[".$username."] tried to access account after being locked out.");
 				}
 			}
 		}
 
 		// Check for SESSION lockout also
-		if ((isset($_SESSION["auth"])) && (isset($_SESSION["auth"]["locked_out_until"]))) {
+		if (isset($_SESSION["auth"]) && isset($_SESSION["auth"]["locked_out_until"])) {
 			if ($_SESSION["auth"]["locked_out_until"] < time()) {
 				unset($_SESSION["auth"]["locked_out_until"]);
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "Your access to this system has been locked due to too many failed login attempts. You may try again at " . date("g:iA ", $lockout_result["locked_out_until"]);
+				add_error("Your access to this system has been locked due to too many failed login attempts. You may try again at " . date("g:iA ", $lockout_result["locked_out_until"]));
+
 				application_log("error", "User[".$username."] tried to access account after being SESSION locked out.");
 			}
 		}
 
-		if (isset($_SESSION["auth"]["login_attempts"]) && $_SESSION["auth"]["login_attempts"] > $LOGIN_ATTEMPTS) {
+		if (isset($_SESSION["auth"]["login_attempts"]) && ($_SESSION["auth"]["login_attempts"] > $LOGIN_ATTEMPTS)) {
 			$LOGIN_ATTEMPTS = $_SESSION["auth"]["login_attempts"];
 		}
 	}
 
 	// Only even try to authorized if not locked out
-	if ($ERROR == 0) {
+	if ($ERROR === 0) {
 		$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 		$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
 		$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
@@ -141,6 +140,9 @@ if ($ACTION == "login") {
 				"firstname",
 				"lastname",
 				"email",
+                "email_alt",
+                "email_updated",
+                "google_id",
 				"telephone",
 				"role",
 				"group",
@@ -156,7 +158,7 @@ if ($ACTION == "login") {
 		);
 	}
 
-	if ($ERROR == 0 && $result["STATUS"] == "success") {
+	if (($ERROR === 0) && ($result["STATUS"] == "success")) {
 		if (isset($USER_ACCESS_ID)) {
 			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_access` SET `login_attempts` = NULL WHERE `id` = ".(int) $USER_ACCESS_ID." AND `app_id` = ".$db->qstr(AUTH_APP_ID))) {
 				application_log("error", "Unable to incrememnt the login attempt counter for user [".$username."]. Database said ".$db->ErrorMsg());
@@ -164,31 +166,30 @@ if ($ACTION == "login") {
 		}
 
 		$GUEST_ERROR = false;
+
 		if ($result["GROUP"] == "guest") {
-			$query				= "	SELECT COUNT(*) AS total
-									FROM `community_members`
-									WHERE `proxy_id` = ".$db->qstr($result["ID"])."
-									AND `member_active` = 1";
-			$community_result	= $db->GetRow($query);
-			if ((!$community_result) || ($community_result["total"] == 0)) {
+			$query = "SELECT COUNT(*) AS total
+                        FROM `community_members`
+                        WHERE `proxy_id` = ".$db->qstr($result["ID"])."
+                        AND `member_active` = 1";
+			$community_result = $db->GetRow($query);
+			if (!$community_result || ($community_result["total"] == 0)) {
 				// This guest user doesn't belong to any communities, don't let them log in.
 				$GUEST_ERROR = true;
 			}
 		}
 
-		if (($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
-			$ERROR++;
-			$ERRORSTR[] = "Your access to this system does not start until ".date("r", $result["ACCESS_STARTS"]);
+		if ($result["ACCESS_STARTS"] && ($result["ACCESS_STARTS"] > time())) {
+			add_error("Your access to this system does not start until ".date("r", $result["ACCESS_STARTS"]));
 
 			application_log("error", "User[".$username."] tried to access account prior to activation date.");
 		} elseif (($result["ACCESS_EXPIRES"]) && ($result["ACCESS_EXPIRES"] < time())) {
-			$ERROR++;
-			$ERRORSTR[] = "Your access to this system expired on ".date("r", $result["ACCESS_EXPIRES"]);
+			add_error("Your access to this system expired on ".date("r", $result["ACCESS_EXPIRES"]));
 
 			application_log("error", "User[".$username."] tried to access account after expiration date.");
 		} elseif ($GUEST_ERROR) {
-			$ERROR++;
-			$ERRORSTR[] = "To log in using guest credentials you must be a member of at least one community.";
+			add_error("To log in using guest credentials you must be a member of at least one community.");
+
 			application_log("error", "Guest user[".$username."] tried to log in and isn't a member of any communities.");
 		} else {
 			if (function_exists("adodb_session_regenerate_id")) {
@@ -197,8 +198,7 @@ if ($ACTION == "login") {
 				session_regenerate_id();
 			}
 
-			application_log("access", "User[".$username."] successfully logged in.");
-
+			application_log("access", "User [".$username."] successfully logged in.");
 
 			// If $ENTRADA_USER was previously initialized in init.inc.php before the
 			// session was authorized it is set to false and needs to be re-initialized.
@@ -216,6 +216,9 @@ if ($ACTION == "login") {
 			$_SESSION["details"]["firstname"] = $result["FIRSTNAME"];
 			$_SESSION["details"]["lastname"] = $result["LASTNAME"];
 			$_SESSION["details"]["email"] = $result["EMAIL"];
+			$_SESSION["details"]["email_alt"] = $result["EMAIL_ALT"];
+			$_SESSION["details"]["email_updated"] = (int) $result["EMAIL_UPDATED"];
+			$_SESSION["details"]["google_id"] = $result["GOOGLE_ID"];
 			$_SESSION["details"]["telephone"] = $result["TELEPHONE"];
 			$_SESSION["details"]["role"] = $result["ROLE"];
 			$_SESSION["details"]["group"] = $result["GROUP"];
@@ -223,10 +226,11 @@ if ($ACTION == "login") {
 			$_SESSION["details"]["expires"] = $result["ACCESS_EXPIRES"];
 			$_SESSION["details"]["lastlogin"] = $result["LAST_LOGIN"];
 			$_SESSION["details"]["privacy_level"] = $result["PRIVACY_LEVEL"];
+			$_SESSION["details"]["notifications"] = $result["NOTIFICATIONS"];
 			$_SESSION["details"]["private_hash"] = $result["PRIVATE_HASH"];
 			$_SESSION["details"]["allow_podcasting"] = false;
 
-			if ((isset($ENTRADA_CACHE)) && (!DEVELOPMENT_MODE)) {
+			if (isset($ENTRADA_CACHE) && !DEVELOPMENT_MODE) {
 				if (!($ENTRADA_CACHE->test("acl_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID()))) {
 					$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
 					$ENTRADA_CACHE->save($ENTRADA_ACL, "acl_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
@@ -248,12 +252,12 @@ if ($ACTION == "login") {
 			/**
 			 * Any custom session information that needs to be set on a per-group basis.
 			 */
-			switch ($_SESSION["details"]["group"]) {
+			switch ($ENTRADA_USER->getActiveGroup()) {
 				case "student" :
-					if ((!isset($result["ROLE"])) || (!clean_input($result["ROLE"], "alphanumeric"))) {
+					if (!$ENTRADA_USER->getGradYear()) {
 						$_SESSION["details"]["grad_year"] = fetch_first_year();
 					} else {
-						$_SESSION["details"]["grad_year"] = $result["ROLE"];
+						$_SESSION["details"]["grad_year"] = $ENTRADA_USER->getGradYear();
 					}
 				break;
 				case "medtech" :
@@ -270,27 +274,21 @@ if ($ACTION == "login") {
 				break;
 			}
 
-			$_SESSION["permissions"] = permissions_load();
-
-			$auth->updateLastLogin();
+            /**
+             * Set the active organisation profile for the user.
+             */
+            load_active_organisation();
 		}
 
-		$query = "SELECT `email_updated`, `google_id`, `notifications` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getID());
-		$result	= $db->GetRow($query);
-		if (($result) && ($result["google_id"])) {
-			$_SESSION["details"]["google_id"] = $result["google_id"];
-		} else {
-			$_SESSION["details"]["google_id"] = false;
-		}
-
-		if ($result) {
-			$_SESSION["details"]["notifications"] = $result["notifications"];
-			if (!isset($result["email_updated"]) || $result["email_updated"] == "" || (($result["email_updated"] - mktime()) / 86400 >= 365)) {
-				$_SESSION["details"]["email_updated"] = false;
-			} else {
-				$_SESSION["details"]["email_updated"] = true;
-			}
-		}
+        /**
+         * If the users e-mail address hasn't been verified in the last 365 days,
+         * set a flag that indicates this should be done.
+         */
+        if (!$_SESSION["details"]["email_updated"] || (($_SESSION["details"]["email_updated"] - mktime()) / 86400 >= 365)) {
+            $_SESSION["details"]["email_updated"] = false;
+        } else {
+            $_SESSION["details"]["email_updated"] = true;
+        }
 
 		if ((!(int) $_SESSION["details"]["privacy_level"]) || (((bool) $GOOGLE_APPS["active"]) && (in_array($_SESSION["details"]["group"], $GOOGLE_APPS["groups"])) && (!$_SESSION["details"]["google_id"]))) {
 			/**
@@ -352,7 +350,6 @@ if ($ACTION == "login") {
 	}
 
 	unset($result, $username, $password);
-
 } elseif ($ACTION == "logout") {
 	users_online("logout");
 
@@ -374,17 +371,14 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"] && isse
 	}
 }
 
-if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
+if (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
 	if (isset($PATH_SEPARATED[1])) {
 		switch ($PATH_SEPARATED[1]) {
 			case "confirm_observership" :
-				$MODULE = "confirm_observership";
-			break;
+			case "password_reset" :
 			case "privacy_policy" :
-				$MODULE = "privacy_policy";
-			break;
 			case "help" :
-				$MODULE = "help";
+				$MODULE = $PATH_SEPARATED[1];
 			break;
 			default :
 				$MODULE = "login";
@@ -410,7 +404,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) 
 	/**
 	 * This section of code sets the $MODULE variable.
 	 */
-	if ((isset($PATH_SEPARATED[1])) && (trim($PATH_SEPARATED[1]) != "")) {
+	if (isset($PATH_SEPARATED[1]) && (trim($PATH_SEPARATED[1]) != "")) {
 		$MODULE = $PATH_SEPARATED[1]; // This is sanitized when $PATH_SEPARATED is created.
 	} else {
 		$MODULE = "dashboard"; // This is the default file that will be launched upon successful login.
@@ -419,7 +413,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) 
 	/**
 	 * This section of code sets the $SUBMODULE variable.
 	 */
-	if ((isset($PATH_SEPARATED[2])) && (trim($PATH_SEPARATED[2]) != "")) {
+	if (isset($PATH_SEPARATED[2]) && (trim($PATH_SEPARATED[2]) != "")) {
 		$SUBMODULE = $PATH_SEPARATED[2]; // This is sanitized when $PATH_SEPARATED is created.
 	} else {
 		$SUBMODULE = false; // This is the default file that will be launched upon successful login.
@@ -436,7 +430,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) 
 	/**
 	 * This sends guests on their way to their communities and prevents them from seeing any other part of the site.
 	 */
-	if ((($MODULE !== "communities") || ((!isset($_GET["section"])) || ($_GET["section"] != "leave"))) && ($_SESSION["details"]["group"] == "guest") && ($_SESSION["details"]["role"] == "communityinvite")) {
+	if ((($MODULE != "communities") || (!isset($_GET["section"]) || ($_GET["section"] != "leave"))) && ($_SESSION["details"]["group"] == "guest") && ($_SESSION["details"]["role"] == "communityinvite")) {
 		$query	= "	SELECT a.`community_id`, b.`community_url`
 					FROM `community_members`AS a
 					LEFT JOIN `communities` AS b
@@ -462,7 +456,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) 
 	 * The real work is actually done in modules/public/profile.inc.php; however, I need the
 	 * session data to be properly set so the page tabs display the correct information.
 	 */
-	if ((isset($_POST["privacy_level"])) && ($privacy_level = (int) trim($_POST["privacy_level"]))) {
+	if (isset($_POST["privacy_level"]) && ($privacy_level = (int) trim($_POST["privacy_level"]))) {
 		if ($privacy_level > MAX_PRIVACY_LEVEL) {
 			$privacy_level = MAX_PRIVACY_LEVEL;
 		}
@@ -475,27 +469,22 @@ if ((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) 
  * Make sure that the login page is accessed via SSL if either the AUTH_FORCE_SSL is not defined in
  * the settings.inc.php file or it's set to true.
  */
-if (($MODULE == "login") && (!isset($_SERVER["HTTPS"])) && ((!defined("AUTH_FORCE_SSL")) || (AUTH_FORCE_SSL))) {
+if (($MODULE == "login") && !isset($_SERVER["HTTPS"]) && (!defined("AUTH_FORCE_SSL") || AUTH_FORCE_SSL)) {
 	header("Location: ".str_replace("http://", "https://", strtolower(ENTRADA_URL)."/?url=".rawurlencode($PROCEED_TO)));
 	exit;
 }
 
 define("PARENT_INCLUDED", true);
 
-require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/public/header.tpl.php");
+require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/layouts/public/header.tpl.php");
 
 switch ($MODULE) {
 	case "confirm_observership" :
-		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR."confirm_observership.inc.php");
-	break;
+	case "password_reset" :
 	case "privacy_policy" :
-		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR."privacy_policy.inc.php");
-	break;
 	case "help" :
-		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR."help.inc.php");
-	break;
 	case "login" :
-		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR."login.inc.php");
+		require_once(ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."default-pages".DIRECTORY_SEPARATOR.$MODULE.".inc.php");
 	break;
 	default :
 		/*
@@ -545,60 +534,53 @@ switch ($MODULE) {
 		$router->setBasePath(ENTRADA_CORE.DIRECTORY_SEPARATOR."modules".DIRECTORY_SEPARATOR."public");
 		$router->setSection($SECTION);
 
-		if (($router) && ($route = $router->initRoute($MODULE))) {
-			/**
-			 * Responsible for displaying the permission masks sidebar item
-			 * if they have more than their own permission set available.
-			 */
-			if ((isset($_SESSION["permissions"])) && (is_array($_SESSION["permissions"])) && (count($_SESSION["permissions"]) > 1)) {
-				$sidebar_html  = "<form id=\"masquerade-form\" action=\"".ENTRADA_URL."\" method=\"get\">\n";
-				$sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label><br />";
-				$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 100%\" onchange=\"window.location='".ENTRADA_URL."/".$MODULE."/?".str_replace("&#039;", "'", replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
-				$display_masks = false;
-				$added_users = array();
-				foreach ($_SESSION["permissions"] as $access_id => $result) {
-					if (is_int($access_id) && ((isset($result["mask"]) && $result["mask"]) || $access_id == $ENTRADA_USER->getDefaultAccessId()) && array_search($result["id"], $added_users) === false) {
-						if (isset($result["mask"]) && $result["mask"]) {
-							$display_masks = true;
-						}
-						$added_users[] = $result["id"];
-						$sidebar_html .= "<option value=\"".(($access_id == $ENTRADA_USER->getDefaultAccessId()) ? "close" : $result["permission_id"])."\"".(($result["id"] == $ENTRADA_USER->getActiveId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"]) . "</option>\n";
-					}
-				}
-				$sidebar_html .= "</select>\n";
-				$sidebar_html .= "</form>\n";
-				if ($display_masks) {
-					new_sidebar_item("Permission Masks", $sidebar_html, "permission-masks", "open");
-				}
-				unset($query);
-			}
+		if ($router && ($route = $router->initRoute($MODULE))) {
+            /**
+             * Responsible for displaying the permission masks sidebar item
+             * if they have more than their own permission set available.
+             */
+            if (isset($_SESSION["permissions"]) && is_array($_SESSION["permissions"]) && (count($_SESSION["permissions"]) > 1)) {
+                $sidebar_html  = "<form id=\"masquerade-form\" action=\"".ENTRADA_URL."\" method=\"get\">\n";
+                $sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label><br />";
+                $sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 100%\" onchange=\"window.location='".ENTRADA_URL."/".$MODULE."/?".str_replace("&#039;", "'", replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
+                $display_masks = false;
+                $added_users = array();
+                foreach ($_SESSION["permissions"] as $access_id => $result) {
+                    if (is_int($access_id) && ((isset($result["mask"]) && $result["mask"]) || $access_id == $ENTRADA_USER->getDefaultAccessId()) && array_search($result["id"], $added_users) === false) {
+                        if (isset($result["mask"]) && $result["mask"]) {
+                            $display_masks = true;
+                        }
+                        $added_users[] = $result["id"];
+                        $sidebar_html .= "<option value=\"".(($access_id == $ENTRADA_USER->getDefaultAccessId()) ? "close" : $result["permission_id"])."\"".(($result["id"] == $ENTRADA_USER->getActiveId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"]) . "</option>\n";
+                    }
+                }
+                $sidebar_html .= "</select>\n";
+                $sidebar_html .= "</form>\n";
+                if ($display_masks) {
+                    new_sidebar_item("Permission Masks", $sidebar_html, "permission-masks", "open");
+                }
+            }
 
 			$module_file = $router->getRoute();
 			if ($module_file) {
 				require_once($module_file);
 			}
 		} else {
-			$url = ENTRADA_URL;
-			application_log("error", "The Entrada_Router failed to load a request. The user was redirected to [".$url."].");
+			application_log("error", "The Entrada_Router failed to load a request. The user was redirected to [".ENTRADA_URL."].");
 
-			header("Location: ".$url);
+			header("Location: ".ENTRADA_URL);
 			exit;
 		}
 	break;
 }
 
-require_once(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/public/footer.tpl.php");
+require_once(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/layouts/public/footer.tpl.php");
 
 /**
  * Add the Feedback Sidebar Window.
- * @todo Change this to be on the right hand side of every page in the bottom
- * right corner, even as you scroll, like many other sites & applications.
- *
  */
-if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
+if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 	add_task_sidebar();
-
-	add_feedback_sidebar($ENTRADA_USER->getGroup());
-
+	add_feedback_sidebar($ENTRADA_USER->getActiveGroup());
 	add_organisation_sidebar();
 }

@@ -1568,12 +1568,14 @@ function startof($type, $timestamp = 0) {
  * @return string
  */
 function fetch_template($template_file = "", $fetch_style = "filesystem") {
-	if (($template_file) && ($template_file = clean_input($template_file, "dir"))) {
-		$template_file = TEMPLATE_ABSOLUTE."/".$template_file.".tpl.php";
+    global $ENTRADA_TEMPLATE;
+
+	if ($template_file && ($template_file = clean_input($template_file, "dir"))) {
+		$template_file = $ENTRADA_TEMPLATE->absolute()."/".$template_file.".tpl.php";
 		if (@file_exists($template_file)) {
 			switch ($fetch_style) {
 				case "url" :
-					return @file_get_contents(TEMPLATE_URL."/".$template_file.".tpl.php");
+					return @file_get_contents($ENTRADA_TEMPLATE->url()."/".$template_file.".tpl.php");
 				break;
 				case "filesystem" :
 				default :
@@ -2512,7 +2514,7 @@ function permissions_load() {
 				"permission_id" => $result["permission_id"],
 				"group" => $result["group"],
 				"role" => $result["role"],
-				"organisation_id"=>$result['organisation_id'],
+				"organisation_id"=>$result["organisation_id"],
 				"starts" => $result["valid_from"],
 				"expires" => $result["valid_until"],
 				"fullname" => $result["fullname"],
@@ -2689,7 +2691,6 @@ function permissions_mask() {
 	if(isset($_GET["mask"])) {
 		if(trim($_GET["mask"]) == "close") {
 			$ENTRADA_USER->setAccessId($ENTRADA_USER->getDefaultAccessId());
-			$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $ENTRADA_USER->getAccessId();
 		} elseif((int) trim($_GET["mask"])) {
 			$query	= "SELECT * FROM `permissions` WHERE `permission_id` = ".$db->qstr((int) trim($_GET["mask"]));
 			$result	= $db->GetRow($query);
@@ -2707,7 +2708,6 @@ function permissions_mask() {
 							$access_id = $db->getOne($query);
 							if ($access_id) {
 								$ENTRADA_USER->setAccessId($access_id);
-								$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $access_id;
 								$ENTRADA_USER->setClinical(getClinicalFromProxy($ENTRADA_USER->getActiveId()));
 							} else {
 								$query = "SELECT `id` FROM `".AUTH_DATABASE."`.`user_access`
@@ -2719,7 +2719,6 @@ function permissions_mask() {
 								$access_id = $db->getOne($query);
 								if ($access_id) {
 									$ENTRADA_USER->setAccessId($access_id);
-									$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"] = $access_id;
 									$ENTRADA_USER->setClinical(getClinicalFromProxy($ENTRADA_USER->getActiveId()));
 								}
 							}
@@ -8816,7 +8815,7 @@ function numeric_suffix($number = 0) {
  * @return array
  */
 function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $objective_progress) {
-	global $db, $AGENT_CONTACTS, $ENTRADA_ACTIVE_TEMPLATE;
+	global $db, $AGENT_CONTACTS, $ENTRADA_TEMPLATE;
 	if (defined("CLERKSHIP_EMAIL_NOTIFICATIONS") && CLERKSHIP_EMAIL_NOTIFICATIONS) {
 		$mail = new Zend_Mail();
 		$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
@@ -8838,15 +8837,15 @@ function clerkship_notify_clerk($rotation_period_index, $clerk, $rotation, $obje
 
 		switch ($rotation_period_index) {
 			case CLERKSHIP_SIX_WEEKS_PAST :
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-deficiency-clerk-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/email/clerkship-deficiency-clerk-notification.txt");
 				break;
 			case CLERKSHIP_ROTATION_ENDED :
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-rotation-incomplete-clerk-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/email/clerkship-rotation-incomplete-clerk-notification.txt");
 				break;
 			case CLERKSHIP_ONE_WEEK_PRIOR :
 			case CLERKSHIP_ROTATION_PERIOD :
 			default :
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-delinquency-clerk-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/email/clerkship-delinquency-clerk-notification.txt");
 				break;
 		}
 
@@ -8995,7 +8994,7 @@ function clerkship_add_queued_notification($rotation_period_index, $clerk, $rota
  * @return boolean
  */
 function clerkship_send_queued_notifications($rotation_id, $rotation_title, $proxy_id) {
-	global $db, $AGENT_CONTACTS, $ENTRADA_ACTIVE_TEMPLATE;
+	global $db, $AGENT_CONTACTS, $ENTRADA_TEMPLATE;
 	$query 	= "SELECT * FROM `".CLERKSHIP_DATABASE."`.`clerkship_queued_notifications`
 			WHERE `rotation_id` = ".$db->qstr($rotation_id)."
 			AND `clerk_id` NOT IN (
@@ -9027,8 +9026,8 @@ function clerkship_send_queued_notifications($rotation_id, $rotation_title, $pro
 				$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], APPLICATION_NAME.' Clerkship System');
 				$mail->setSubject("Clerkship Logbook Progress Notification");
 
-				$NOTIFICATION_MESSAGE		 	 = array();
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerkship-coordinator-notification.txt");
+				$NOTIFICATION_MESSAGE = array();
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/email/clerkship-coordinator-notification.txt");
 
 
 				$search		= array(
@@ -9257,7 +9256,7 @@ function clerkship_rotation_tasks_progress($proxy_id, $rotation_id) {
 }
 
 function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administrator = false, $completed = false, $comments = false) {
-	global $AGENT_CONTACTS, $db, $ENTRADA_ACTIVE_TEMPLATE;
+	global $AGENT_CONTACTS, $db, $ENTRADA_TEMPLATE;
 	if (defined("CLERKSHIP_EMAIL_NOTIFICATIONS") && CLERKSHIP_EMAIL_NOTIFICATIONS) {
 		$mail = new Zend_Mail();
 		$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
@@ -9305,9 +9304,9 @@ function clerkship_deficiency_notifications($clerk_id, $rotation_id, $administra
 								ENTRADA_URL
 							);
 			if ($administrator) {
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerk-deficiency-plan-admin-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/email/clerk-deficiency-plan-admin-notification.txt");
 			} else {
-				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/clerk-deficiency-plan-reviewed-".($completed ? "complete" : "incomplete")."-notification.txt");
+				$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/email/clerk-deficiency-plan-reviewed-".($completed ? "complete" : "incomplete")."-notification.txt");
 			}
 			$mail->setBodyText(clean_input(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]), array("postclean")));
 
@@ -10713,6 +10712,40 @@ function tracking_output_calendar_controls($module_type = "") {
  * Function used by public events and admin events index to output the HTML for the calendar controls.
  */
 function events_output_calendar_controls($module_type = "") {
+	global $learning_events;
+
+	/**
+	 * Determine whether or not this is being called from the admin section.
+	 */
+	if ($module_type == "admin") {
+		$module_type = "/admin";
+	} else {
+		$module_type = "";
+	}
+	?>
+    <div class="row-fluid">
+        <div class="span6">
+            <div class="btn-group">
+                <button class="btn"><i class="icon-chevron-left"></i></button>
+                <button class="btn">Day</button>
+                <button class="btn active">Week</button>
+                <button class="btn">Month</button>
+                <button class="btn">Year</button>
+                <button class="btn"><i class="icon-chevron-right"></i></button>
+            </div>
+        </div>
+        <div class="span6">
+            <button class="btn"><i class="icon-refresh"></i></button>
+        </div>
+    </div>
+
+	<?php
+}
+
+/**
+ * Function used by public events and admin events index to output the HTML for the calendar controls.
+ */
+function events_output_calendar_controls_old($module_type = "") {
 	global $learning_events;
 
 	/**
@@ -13159,7 +13192,7 @@ function regionaled_apartment_check($event_id = 0, $proxy_id = 0) {
 }
 
 function regionaled_apartment_notification($type, $to = array(), $keywords = array()) {
-	global $ERROR, $NOTICE, $SUCCESS, $ERRORSTR, $NOTICESTR, $SUCCESSSTR, $AGENT_CONTACTS;
+	global $ERROR, $NOTICE, $SUCCESS, $ERRORSTR, $NOTICESTR, $SUCCESSSTR, $AGENT_CONTACTS, $ENTRADA_TEMPLATE;
 
 	if (!is_array($to) || !isset($to["email"]) || !valid_address($to["email"]) || !isset($to["firstname"]) || !isset($to["lastname"])) {
 		application_log("error", "Attempting to send a regionaled_apartment_notification() how the recipient information was not complete.");
@@ -13173,7 +13206,7 @@ function regionaled_apartment_notification($type, $to = array(), $keywords = arr
 		return false;
 	}
 
-	$xml_file = TEMPLATE_ABSOLUTE."/email/regionaled-learner-accommodation-".$type.".xml";
+	$xml_file = $ENTRADA_TEMPLATE->absolute()."/email/regionaled-learner-accommodation-".$type.".xml";
 	$xml = @simplexml_load_file($xml_file);
 	if ($xml && isset($xml->lang->{DEFAULT_LANGUAGE})) {
 		$subject = trim($xml->lang->{DEFAULT_LANGUAGE}->subject);
@@ -17098,9 +17131,9 @@ function fetch_department_fields($proxy_id = NULL) {
 	 * Fetch the departments this use is a part of.
 	 */
 	$departments = get_user_departments($user->getID());
-	
+
 	if ($departments) {
-		
+
 		foreach ($departments as $department) {
 			$department_list[] = (int) $department["department_id"];
 		}
@@ -17124,9 +17157,110 @@ function fetch_department_fields($proxy_id = NULL) {
 			   $custom_fields[$field["department_id"]][$field["id"]] = $field;
 		   }
 		}
-		
+
 	}
-	
+
 	return $custom_fields;
-	
+}
+
+/**
+ * Load the active organisation for the user including their permissions,
+ * template, system groups, etc.
+ *
+ * @global type $ENTRADA_USER
+ * @global type $ENTRADA_TEMPLATE
+ * @global type $SYSTEM_GROUPS
+ * @global object $db
+ * @param type $organisation_id
+ * @param type $user_access_id
+ */
+function load_active_organisation($organisation_id = 0, $user_access_id = 0) {
+    global $ENTRADA_USER, $ENTRADA_TEMPLATE, $SYSTEM_GROUPS, $db;
+
+    $allow_organisation_id_set = false;
+    $allow_access_id_set = false;
+
+    $change_organisations = true;
+
+    $organisation_id = (int) $organisation_id;
+    $user_access_id = (int) $user_access_id;
+
+    if ($ENTRADA_USER && $ENTRADA_TEMPLATE) {
+        $_SESSION["permissions"] = permissions_load();
+
+        /**
+         * Load active organisation from preferences if one exists.
+         */
+        $active_organisation = preferences_load("organisation_switcher");
+
+        /**
+         * Check whether we are trying to set a new org and access_id or use one
+         * from user preferences, or the default.
+         */
+        if (!$organisation_id || !$user_access_id) {
+            if (isset($active_organisation["organisation_id"]) && isset($active_organisation["access_id"])) {
+                $organisation_id = (int) $active_organisation["organisation_id"];
+                $user_access_id = (int) $active_organisation["access_id"];
+            } else {
+                $organisation_id = $ENTRADA_USER->getOrganisationId();
+                $user_access_id = $ENTRADA_USER->getAccessId();
+            }
+        }
+
+        /**
+         * Interate through existing permissions to ensure
+         */
+        foreach ($_SESSION["permissions"] as $access_id => $permission) {
+            if ($permission["organisation_id"] == $organisation_id) {
+                $allow_organisation_id_set = true;
+
+                if ($access_id == $user_access_id) {
+                    $allow_access_id_set = true;
+                }
+            }
+        }
+
+        if ($allow_organisation_id_set && $allow_access_id_set) {
+            $ENTRADA_USER->setActiveOrganisation($organisation_id);
+            $ENTRADA_USER->setAccessId($user_access_id);
+
+            $_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["organisation_id"] = $organisation_id;
+            $_SESSION[APPLICATION_IDENTIFIER]["organisation_switcher"]["access_id"] = $user_access_id;
+
+            application_log("success", "User [".$ENTRADA_USER->getId()."] loaded organisation [".$organisation_id."] and access_id [".$user_access_id."] successfully.");
+        } else {
+            application_log("error", "User [".$ENTRADA_USER->getId()."] attempted to change to organisation [".$organisation_id."] and access_id [".$user_access_id."] but was unsuccessful.");
+        }
+
+        /**
+         * Returns all of the system groups and roles associated with this user
+         * within the active organisation.
+         */
+        $query = "SELECT a.*
+                  FROM `" . AUTH_DATABASE . "`.`system_groups` AS a,
+                  `" . AUTH_DATABASE . "`.`system_group_organisation` AS c
+                  WHERE a.`id` = c.`groups_id`
+                  AND c.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
+                  ORDER BY a.`group_name` ASC";
+        $results = $db->GetAll($query);
+        if ($results) {
+            foreach ($results as $result) {
+                $SYSTEM_GROUPS[$result["group_name"]] = array();
+                $query = "SELECT a.*
+                            FROM `" . AUTH_DATABASE . "`.`system_roles` a
+                            WHERE a.`groups_id` = " . $result["id"] . "
+                            ORDER BY a.`role_name` ASC";
+                $roles = $db->GetAll($query);
+                if ($roles) {
+                    foreach ($roles as $role) {
+                        $SYSTEM_GROUPS[$result["group_name"]][] = $role["role_name"];
+                    }
+                }
+            }
+        }
+
+        preferences_update("organisation_switcher", $active_organisation);
+
+        $ENTRADA_TEMPLATE->setActiveTemplate($ENTRADA_USER->getActiveOrganisation());
+    }
 }

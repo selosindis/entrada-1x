@@ -35,32 +35,31 @@ $mail->addHeader("X-Section", "Regional Education Notification System", true);
 $mail->setFrom($AGENT_CONTACTS["agent-regionaled"]["email"], $AGENT_CONTACTS["agent-regionaled"]["name"]);
 
 
-$query = "	SELECT c.`username`, 
-				CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `fullname`, 
-				c.`email`, 
-				a.`apartment_title`, 
-				a.`apartment_number`, 
-				a.`apartment_address`, 
-				d.`region_name`, 
+$query = "	SELECT c.`username`,
+				CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `fullname`,
+				c.`email`,
+				a.`apartment_title`,
+				a.`apartment_number`,
+				a.`apartment_address`,
+				d.`region_name`,
 				a.`apartment_province`,
 				b.`aschedule_id`,
 				FROM_UNIXTIME(b.inhabiting_start) AS inhabiting_start,
 				FROM_UNIXTIME(b.inhabiting_finish) AS inhabiting_finish
-			FROM `".CLERKSHIP_DATABASE."`.`apartments` AS a 
-			LEFT JOIN `".CLERKSHIP_DATABASE."`.`apartment_schedule` AS b 
-			ON a.`apartment_id` = b.`apartment_id` 
-			LEFT JOIN `".AUTH_DATABASE."`.`user_data` as c 
-			ON b.`proxy_id` = c.`id` 
-			LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` as d 
-			ON a.`region_id` = d.`region_id` 
-			WHERE b.`occupant_title` = '' 
+			FROM `".CLERKSHIP_DATABASE."`.`apartments` AS a
+			LEFT JOIN `".CLERKSHIP_DATABASE."`.`apartment_schedule` AS b
+			ON a.`apartment_id` = b.`apartment_id`
+			LEFT JOIN `".AUTH_DATABASE."`.`user_data` as c
+			ON b.`proxy_id` = c.`id`
+			LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` as d
+			ON a.`region_id` = d.`region_id`
+			WHERE b.`occupant_title` = ''
 			AND DATEDIFF(FROM_UNIXTIME(b.`inhabiting_start`), FROM_UNIXTIME('".time()."')) = 30";
 $occupants = $db->GetAll($query);
 
 if ($occupants) {
-	global $ENTRADA_ACTIVE_TEMPLATE;
-	$email_body = file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . $ENTRADA_ACTIVE_TEMPLATE . "/email/regionaled-learner-accommodation-notification.txt");
-	
+	$email_body = file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . $ENTRADA_TEMPLATE->activeTemplate() . "/email/regionaled-learner-accommodation-notification.txt");
+
 	foreach ($occupants as $occupant) {
 		$mail->clearSubject();
 		$mail->setSubject("Regional Accomodation: ".$message["region"]);

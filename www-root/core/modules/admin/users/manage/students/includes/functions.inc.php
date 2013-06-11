@@ -2,22 +2,22 @@
 require_once("Entrada/mspr/functions.inc.php");
 
 class MSPRAdminController {
-	
+
 	private $_translator;
-	
+
 	private $_user;
-	
+
 	private $type;
-	
+
 	function __construct($translator, User $forUser) {
 		$this->_translator = $translator;
 		$this->_user = $forUser;
 		$this->type="admin";
 	}
-	
+
 	public function process() {
 		global $ENTRADA_USER;
-		
+
 		$user = $this->_user;
 		$translator = $this->_translator;
 		$type = $this->type;
@@ -35,9 +35,9 @@ class MSPRAdminController {
 								"community_based_project" => array("approve","unapprove","reject", "add", "edit"),
 								"research_citations" => array("approve","unapprove","reject", "add", "edit", "resequence")
 								);
-								
+
 		$section = filter_input(INPUT_GET, 'mspr-section', FILTER_CALLBACK, array('options'=>'strtolower'));
-		
+
 		if ($section) {
 			$params = array(
 				'entity_id'	=> FILTER_VALIDATE_INT,
@@ -45,33 +45,33 @@ class MSPRAdminController {
 				'comment'	=> FILTER_SANITIZE_STRING,
 				'user_id'	=> FILTER_VALIDATE_INT
 			);
-			
+
 			$inputs = filter_input_array(INPUT_POST,$params);
 			extract($inputs);
-			
+
 			if (!$action) {
 				add_error($translator->translate("mspr_no_action"));
 			}
 			if (!array_key_exists($section, $valid)) {
-				add_error($translator->translate("mspr_invalid_section"));	
+				add_error($translator->translate("mspr_invalid_section"));
 			} else {
 				if (!in_array($action, $valid[$section])){
 					add_error($translator->translate("mspr_invalid_action"));
 				}
 			}
-			
+
 			if (($action == "reject") && (MSPR_REJECTION_REASON_REQUIRED)) {
 				if (!$comment) {
 					add_error($translator->translate("mspr_no_reject_reason"));
 				}
 			}
-			
+
 			if (!has_error() && (in_array($action, array("add","edit","resequence")))) {
 				$inputs = get_mspr_inputs($section);
 				process_mspr_inputs($section, $inputs, $translator); //modifies inputs/adds errors
 			}
-			
-			
+
+
 			if (!has_error()) {
 				$inputs['user_id'] = $user_id;
 				if ($action == "add") {
@@ -105,14 +105,14 @@ class MSPRAdminController {
 							break;
 						case 'critical_enquiry':
 							if (CriticalEnquiry::get($user_id)) {
-								add_error($translator->translate("mspr_too_many_critical_enquiry"));  
+								add_error($translator->translate("mspr_too_many_critical_enquiry"));
 							} else {
 								CriticalEnquiry::create($inputs);
 							}
 							break;
 						case 'community_based_project':
 							if (CommunityBasedProject::get($user_id)) {
-								add_error($translator->translate("mspr_too_many_community_based_project"));  
+								add_error($translator->translate("mspr_too_many_community_based_project"));
 							} else {
 								CommunityBasedProject::create($inputs);
 							}
@@ -125,7 +125,7 @@ class MSPRAdminController {
 					switch($section) {
 						case 'research_citations':
 							ResearchCitations::setSequence($user_id, $inputs['research_citations']);
-							break; 
+							break;
 					}
 				} else { //everything else requires an entity
 					if ($entity_id) {
@@ -150,7 +150,7 @@ class MSPRAdminController {
 											$inputs['comment'] = $entity->getComment();
 											$inputs['status'] = $entity->getStatus();
 										}
-									} 
+									}
 									$entity->update($inputs);//inputs processed above
 									break;
 								case "reject":
@@ -159,7 +159,7 @@ class MSPRAdminController {
 										$reason_type = ((!$comment) ?  "noreason" : "reason");
 										$active_user = User::get($ENTRADA_USER->getID());
 										if ($active_user && $type) {
-				
+
 											submission_rejection_notification(	$reason_type,
 																			array(
 																				"firstname" => $user->getFirstname(),
@@ -182,74 +182,74 @@ class MSPRAdminController {
 							}
 						} else {
 							add_error($translator->translate("mspr_invalid_entity"));
-						} 
+						}
 					} else {
 						add_error($translator->translate("mspr_no_entity"));
 					}
 				}
 			}
-			
+
 			switch($section) {
 				case 'studentships':
 					$studentships = Studentships::get($user);
 					display_status_messages();
 					echo display_studentships($studentships, $type);
 				break;
-				
+
 				case 'clineval':
 					$clinical_evaluation_comments = ClinicalPerformanceEvaluations::get($user);
 					display_status_messages();
 					echo display_clineval($clinical_evaluation_comments, $type);
 				break;
-				
+
 				case 'internal_awards':
 					$internal_awards = InternalAwardReceipts::get($user);
 					display_status_messages();
 					echo display_internal_awards($internal_awards, $type);
 				break;
-				
+
 				case 'external_awards':
 					$external_awards = ExternalAwardReceipts::get($user);
 					display_status_messages();
 					echo display_external_awards($external_awards, $type);
 				break;
-				
+
 				case 'contributions':
 					$contributions = Contributions::get($user);
 					display_status_messages();
 					echo display_contributions($contributions, $type);
 				break;
-				
+
 				case 'student_run_electives':
 					$student_run_electives = StudentRunElectives::get($user);
 					display_status_messages();
 					echo display_student_run_electives($student_run_electives, $type);
 				break;
-				
+
 				case 'observerships':
 					$observerships = Observerships::get($user);
 					display_status_messages();
 					echo display_observerships($observerships, $type);
 				break;
-				
+
 				case 'int_acts':
 					$int_acts = InternationalActivities::get($user);
 					display_status_messages();
 					echo display_international_activities($int_acts, $type);
 				break;
-				
+
 				case 'critical_enquiry':
 					$critical_enquiry = CriticalEnquiry::get($user);
 					display_status_messages();
 					echo display_critical_enquiry($critical_enquiry, $type);
 				break;
-	
+
 				case 'community_based_project':
 					$community_based_project = CommunityBasedProject::get($user);
 					display_status_messages();
 					echo display_community_based_project($community_based_project, $type);
 				break;
-	
+
 				case 'research_citations':
 					$research_citations = ResearchCitations::get($user);
 					display_status_messages();
@@ -289,8 +289,8 @@ function get_submission_information($entity) {
 			$output .= "Title: " . $award->getTitle() ."\nTerms: ".$award->getTerms() . "\nAwarding Body: ".$award->getAwardingBody()."\nYear Awarded: " . $entity->getAwardYear() . "\n";
 			break;
 		default:
-			$output = "Unknown"; 
-			
+			$output = "Unknown";
+
 	}
 	return $output;
 }
@@ -350,39 +350,39 @@ function process_mspr_details($translator,$section) {
 			}
 			break;
 	}
-	
+
 }
 
 /**
- * Sends email based on the specified type using templates from TEMPLATE_ABSOLUTE/email directory
+ * Sends email based on the specified type using templates from $ENTRADA_TEMPLATE->absolute()/email directory
  * @param string $type One of "reason", "noreason"
  * @param array $to associative array consisting of firstname, lastname, and email
  * @param array $keywords Associative array of keywords mapped to the replacement contents
  */
 function submission_rejection_notification($type, $to = array(), $keywords = array()) {
-	global $AGENT_CONTACTS;
+	global $AGENT_CONTACTS, $ENTRADA_TEMPLATE;
 	if (!is_array($to) || !isset($to["email"]) || !valid_address($to["email"]) || !isset($to["firstname"]) || !isset($to["lastname"])) {
 		application_log("error", "Attempting to send a submission_rejection_notification() however the recipient information was not complete.");
-		
+
 		return false;
 	}
-	
+
 	if (!in_array($type, array("reason", "noreason"))) {
 		application_log("error", "Encountered an unrecognized notification type [".$type."] when attempting to send a submission_rejection_notification().");
 
 		return false;
 	}
-	
-	
-	$xml_file = TEMPLATE_ABSOLUTE."/email/mspr-rejection-".$type.".xml";
-	
+
+
+	$xml_file = $ENTRADA_TEMPLATE->absolute()."/email/mspr-rejection-".$type.".xml";
+
 	try {
 		require_once("Models/utility/Template.class.php");
 		require_once("Models/utility/TemplateMailer.class.php");
 		$template = new Template($xml_file);
 		$mail = new TemplateMailer(new Zend_Mail());
 		$mail->addHeader("X-Section", "MSPR Module", true);
-		
+
 		$from = array("email"=>$AGENT_CONTACTS["agent-notifications"]["email"], "firstname"=> "MSPR System","lastname"=>"");
 		if ($mail->send($template,$to,$from,DEFAULT_LANGUAGE,$keywords)) {
 			return true;
@@ -390,7 +390,7 @@ function submission_rejection_notification($type, $to = array(), $keywords = arr
 			add_notice("We were unable to e-mail a task notification <strong>".$to["email"]."</strong>.<br /><br />A system administrator was notified of this issue, but you may wish to contact this individual manually and let them know their task verification status.");
 			application_log("error", "Unable to send task verification notification to [".$to["email"]."] / type [".$type."]. Zend_Mail said: ".$mail->ErrorInfo);
 		}
-					
+
 	} catch (Exception $e) {
 		application_log("error", "Unable to load the XML file [".$xml_file."] or the XML file did not contain the language requested [".DEFAULT_LANGUAGE."], when attempting to send a regional education notification.");
 	}

@@ -574,7 +574,7 @@ foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
 				$curriculum_objectives["objectives"][$objective_id]["tertiary"] = true;
 			}
 		}
-		}		
+		}
 		$show_curriculum_objectives = true;
 	}
 }
@@ -1129,20 +1129,11 @@ if ($topic_results) { ?>
 				?>
 			</div>
 			<table class="tableList" cellspacing="0" cellpadding="1" summary="List of Learning Events">
-				<colgroup>
-					<col class="modified" />
-					<col class="date" />
-					<col class="course-code" />
-					<col class="title" />
-					<col class="attachment" />
-				</colgroup>
 				<thead>
 					<tr>
-						<td class="modified">&nbsp;</td>
 						<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) : ""); ?>"><?php echo public_order_link("date", "Date &amp; Time"); ?></td>
 						<td class="course-code<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"] == "course") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) : ""); ?>"><?php echo public_order_link("course", "Course"); ?></td>
 						<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) : ""); ?>"><?php echo public_order_link("title", "Event Title"); ?></td>
-						<td class="attachment">&nbsp;</td>
 					</tr>
 				</thead>
 				<tbody>
@@ -1162,18 +1153,13 @@ if ($topic_results) { ?>
                             $count_modified++;
                         }
 
-                        echo "<tr id=\"event-".$result["event_id"]."\" class=\"event".(($is_modified) ? " modified" : "")."\">\n";
-                        echo "	<td class=\"modified\">";
                         if ($is_modified) {
-                            echo "<img src=\"".ENTRADA_RELATIVE."/images/event-modified.gif\" width=\"16\" height=\"16\" alt=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" title=\"This event has been modified since your last visit on ".date(DEFAULT_DATE_FORMAT, $result["last_visited"]).".\" style=\"vertical-align: middle\" />";
-                        } else {
-                            echo "<img src=\"".ENTRADA_RELATIVE."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
                         }
-                        echo "	</td>\n";
-                        echo "	<td class=\"date\"><a href=\"".$url."\" title=\"Event Date\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
-                        echo "	<td class=\"course-code\"><a href=\"".$url."\" title=\"Course: ".html_encode($result["course_name"])."\">".html_encode($result["course_code"])."</a></td>\n";
-                        echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\">".html_encode($result["event_title"])."</a></td>\n";
-                        echo "	<td class=\"attachment\">".(($attachments) ? "<img src=\"".ENTRADA_RELATIVE."/images/attachment.gif\" width=\"16\" height=\"16\" alt=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" title=\"Contains ".$attachments." attachment".(($attachments != 1) ? "s" : "")."\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />")."</td>\n";
+
+                        echo "<tr id=\"event-".$result["event_id"]."\" class=\"event".(($is_modified) ? " modified" : "")."\">\n";
+                        echo "	<td><a href=\"".$url."\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
+                        echo "	<td><a href=\"".$url."\">".html_encode($result["course_code"])."</a></td>\n";
+                        echo "	<td><a href=\"".$url."\">".html_encode($result["event_title"])."</a></td>\n";
                         echo "</tr>\n";
 					}
 					?>

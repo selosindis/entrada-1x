@@ -43,7 +43,7 @@ if(!defined("PARENT_INCLUDED")) {
 	$module_title = $translate->_("courses");
 	$module_singular_name = $translate->_("course");
 
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/".$MODULE, "title" => $module_title);
+	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE, "title" => $module_title);
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
@@ -53,7 +53,7 @@ if(!defined("PARENT_INCLUDED")) {
 		} else {
 			$COURSE_ID = 0;
 		}
-		
+
 		if(isset($_GET["org_id"])){
 			$ORGANISATION_ID = $_GET["org_id"];
 		}

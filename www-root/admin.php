@@ -139,59 +139,53 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"] && isse
 	}
 }
 
-require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/admin/header.tpl.php");
-if (($router) && ($route = $router->initRoute($MODULE))) {
-	/**
-	 * Responsible for displaying the permission masks sidebar item
-	 * if they have more than their own permission set available.
-	 */
-	if ((isset($_SESSION["permissions"])) && (is_array($_SESSION["permissions"])) && (count($_SESSION["permissions"]) > 1)) {
-		$sidebar_html  = "<form id=\"masquerade-form\" action=\"".ENTRADA_URL."/admin/\" method=\"get\">\n";
-		$sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label>";
-		$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 100%\" onchange=\"window.location='".ENTRADA_URL."/admin/".$MODULE."/?".html_decode(replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
-		$display_masks = false;
-		$added_users = array();
-		foreach($_SESSION["permissions"] as $access_id => $result) {
-			if (is_int($access_id) && ((isset($result["mask"]) && $result["mask"]) || $access_id == $ENTRADA_USER->getDefaultAccessId()) && array_search($result["id"], $added_users) === false) {
-				if (isset($result["mask"]) && $result["mask"]) {
-					$display_masks = true;
-				}
-				$added_users[] = $result["id"];
-				$sidebar_html .= "<option value=\"".(($access_id == $ENTRADA_USER->getDefaultAccessId()) ? "close" : $result["permission_id"])."\"".(($result["id"] == $ENTRADA_USER->getActiveId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
-			}
-		}
-		$sidebar_html .= "</select>\n";
-		$sidebar_html .= "</form>\n";
-		if ($display_masks) {
-			new_sidebar_item("Permission Masks", $sidebar_html, "permission-masks", "open");
-		}
-	}
+require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/layouts/admin/header.tpl.php");
+
+if ($router && ($route = $router->initRoute($MODULE))) {
+    /**
+     * Responsible for displaying the permission masks sidebar item
+     * if they have more than their own permission set available.
+     */
+    if (isset($_SESSION["permissions"]) && is_array($_SESSION["permissions"]) && (count($_SESSION["permissions"]) > 1)) {
+        $sidebar_html  = "<form id=\"masquerade-form\" action=\"".ENTRADA_URL."/admin\" method=\"get\">\n";
+        $sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label><br />";
+        $sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 100%\" onchange=\"window.location='".ENTRADA_URL."/".$MODULE."/?".str_replace("&#039;", "'", replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
+        $display_masks = false;
+        $added_users = array();
+        foreach ($_SESSION["permissions"] as $access_id => $result) {
+            if (is_int($access_id) && ((isset($result["mask"]) && $result["mask"]) || $access_id == $ENTRADA_USER->getDefaultAccessId()) && array_search($result["id"], $added_users) === false) {
+                if (isset($result["mask"]) && $result["mask"]) {
+                    $display_masks = true;
+                }
+                $added_users[] = $result["id"];
+                $sidebar_html .= "<option value=\"".(($access_id == $ENTRADA_USER->getDefaultAccessId()) ? "close" : $result["permission_id"])."\"".(($result["id"] == $ENTRADA_USER->getActiveId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"]) . "</option>\n";
+            }
+        }
+        $sidebar_html .= "</select>\n";
+        $sidebar_html .= "</form>\n";
+        if ($display_masks) {
+            new_sidebar_item("Permission Masks", $sidebar_html, "permission-masks", "open");
+        }
+    }
 
 	$module_file = $router->getRoute();
 	if ($module_file) {
 		require_once($module_file);
 	}
 } else {
-	$url = ENTRADA_URL."/admin";
-	application_log("error", "The Entrada_Router failed to load a request. The user was redirected to [".$url."].");
+	application_log("error", "The Entrada_Router failed to load a request. The user was redirected to [".ENTRADA_URL."].");
 
-	header("Location: ".$url);
+	header("Location: ".ENTRADA_URL);
 	exit;
 }
 
-require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/layouts/admin/footer.tpl.php");
+require_once (ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/layouts/admin/footer.tpl.php");
 
 /**
  * Add the Feedback Sidebar Window.
- * @todo Change this to be on the right hand side of every page in the bottom
- * right corner, even as you scroll, like many other sites & applications.
- *
  */
-if((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) {
-
+if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
 	add_task_sidebar();
-
-	add_feedback_sidebar($ENTRADA_USER->getGroup());
-
+	add_feedback_sidebar($ENTRADA_USER->getActiveGroup());
 	add_organisation_sidebar();
 }

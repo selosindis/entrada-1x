@@ -1,7 +1,7 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
- * 
+ *
  * Entrada is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
@@ -16,12 +16,12 @@
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
  * This file is loaded when someone opens the Anonymous Feedback Agent.
- * 
+ *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
- * 
+ *
 */
 
 @set_include_path(implode(PATH_SEPARATOR, array(
@@ -55,9 +55,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	echo "</html>\n";
 	exit;
 } else {
-	
+
 	global $translate;
-	
+
 	$ENCODED_INFORMATION = "";
 
 	if((isset($_GET["step"])) && ((int) trim($_GET["step"]))) {
@@ -69,7 +69,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	} elseif(isset($_POST["action"])) {
 		$ENCODED_INFORMATION = trim($_POST["enc"]);
 	}
-	
+
 	if (isset($_POST["who"])) {
 		$WHO = clean_input($_POST["who"], array("trim", "striptags"));
 	} else {
@@ -78,10 +78,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		 */
 		$WHO = "system";
 		?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd"> 
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en"> 
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 	<head lang="en-US" dir="ltr">
-		<meta http-equiv="Content-Type" content="text/html; charset=<?php echo DEFAULT_CHARSET; ?>" /> 
+		<meta http-equiv="Content-Type" content="text/html; charset=<?php echo DEFAULT_CHARSET; ?>" />
 		<title>Feedback for MEdTech Central</title>
 		<meta name="description" content="%DESCRIPTION%" />
 		<meta name="keywords" content="%KEYWORDS%" />
@@ -89,27 +89,27 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		<meta name="copyright" content="Copyright (c) 2010 Queen's University. All Rights Reserved." />
 		<meta name="robots" content="index,follow" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<link rel="shortcut icon" href="<?php echo TEMPLATE_RELATIVE; ?>/images/favicon.ico" />
-		<link rel="icon" href="<?php echo TEMPLATE_RELATIVE; ?>/images/favicon.ico" type="image/x-icon" />
+		<link rel="shortcut icon" href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/favicon.ico" />
+		<link rel="icon" href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/favicon.ico" type="image/x-icon" />
 		<link href="<?php echo ENTRADA_RELATIVE; ?>/css/common.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
-<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
-<script type="text/javascript">
-jQuery(function(){
-	jQuery("input[value=Close]").live("click", function() {
-		window.close();
-	});
-	jQuery("#feedback-form input[value=Submit]").live("click", function() {
-		jQuery("#feedback-form").submit();
-	});
-});
-</script>
+        <script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
+        <script type="text/javascript">
+        jQuery(function(){
+            jQuery("input[value=Close]").live("click", function() {
+                window.close();
+            });
+            jQuery("#feedback-form input[value=Submit]").live("click", function() {
+                jQuery("#feedback-form").submit();
+            });
+        });
+        </script>
 	</head>
 	<body style="<?php if ($STEP == 2) { echo "padding:20px;"; } ?>">
 		<?php
 	}
 
 	$feedback_form = $translate->_("global_feedback_widget");
-	
+
 	if ($feedback_form["global"][$WHO]["form"]) {
 		$form_content = $feedback_form["global"][$WHO]["form"];
 	} else if ($feedback_form[$ENTRADA_USER->getGroup()][$WHO]["form"]) {
@@ -117,7 +117,7 @@ jQuery(function(){
 	} else {
 		add_error("There was a problem loading the feedback form for the contact you selected. A system administrator has been informed, please try again later.");
 	}
-	
+
 	if (!$ERROR) {
 
 		switch($STEP) {
@@ -262,12 +262,12 @@ jQuery(function(){
 		echo display_error();
 		echo "<input type=\"button\" value=\"Submit\" />";
 	}
-	
+
 	if (!isset($_POST["who"])) {
 		?>
 	</body>
 </html>
 		<?php
 	}
-	
+
 }

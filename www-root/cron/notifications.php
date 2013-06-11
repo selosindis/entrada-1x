@@ -35,8 +35,8 @@ $NOTIFICATION_BLACKLIST = array();
 $NOTIFICATION_MESSAGE		 	 = array();
 $NOTIFICATION_MESSAGE["subject"] = "Teaching Reminder Notice: %EVENT_DATE%";
 
-$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/teaching-notification.txt");
-$NOTIFICATION_MESSAGE["htmlbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/email/teaching-notification.html");
+$NOTIFICATION_MESSAGE["textbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/email/teaching-notification.txt");
+$NOTIFICATION_MESSAGE["htmlbody"] = file_get_contents(ENTRADA_ABSOLUTE."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/email/teaching-notification.html");
 
 $NOTIFICATION_REMINDERS = array();
 
@@ -68,17 +68,17 @@ function fetch_event_resources_text($event_id = 0) {
 	global $db;
 
 	$output = array();
-	
+
 	if ($event_id = (int) $event_id) {
 		$query		= "SELECT * FROM `event_files` WHERE `event_id` = ".$db->qstr($event_id);
 		$results	= $db->GetAll($query);
 		if ($results) {
 			$output["html"] = "";
 			$output["text"] = "";
-			
+
 			$output["html"] .= "<table style=\"margin-top: 20px; width: 100%\" cellspacing=\"0\" cellpadding=\"3\" border=\"0\">\n";
 			$output["html"] .= "<thead>\n";
-			$output["html"] .= "	<tr>\n";				
+			$output["html"] .= "	<tr>\n";
 			$output["html"] .= "		<td style=\"background-color: #EEEEEE; border: 1px #666666 solid; font-weight: bold\">File Title</td>\n";
 			$output["html"] .= "		<td style=\"background-color: #EEEEEE; border: 1px #666666 solid; border-left: none; font-weight: bold\">Last Updated</td>\n";
 			$output["html"] .= "	</tr>\n";
@@ -95,7 +95,7 @@ function fetch_event_resources_text($event_id = 0) {
 			}
 			$output["html"] .= "</tbody>\n";
 			$output["html"] .= "</table>\n";
-			
+
 			foreach ($results as $key => $result) {
 				$output["text"] .= "   - ".$result["file_title"]." (".readable_size($result["file_size"]).")\n";
 				$output["text"] .= "     Last Updated: ".(((int) $result["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $result["updated_date"]) : "Over two years ago")."\n\n";
@@ -106,13 +106,13 @@ function fetch_event_resources_text($event_id = 0) {
 			$output["html"] .= "<br /><br />\n";
 			$output["html"] .= "Please take a moment to upload any relevant documents by <a href=\"".ENTRADA_URL."/admin/events?section=content&id=".$event_id."\" style=\"font-weight: bold\">clicking here</a>.\n";
 			$output["html"] .= "</div>\n";
-			
+
 			$output["text"] .= "   *There are no resources available for download.*\n\n";
 			$output["text"] .= "   Please take a moment to upload any relevant documents at the following URL:\n";
 			$output["text"] .= "   ".ENTRADA_URL."/admin/events?section=content&id=".$event_id."\n\n";
 		}
 	}
-	
+
 	return $output;
 }
 
@@ -125,7 +125,7 @@ function fetch_event_resources_text($event_id = 0) {
  * @return bool
  */
 function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = array()) {
-	global $db, $mail, $NOTIFICATION_MESSAGE, $NOTIFICATION_BLACKLIST, $AGENT_CONTACTS, $ENTRADA_ACTIVE_TEMPLATE;
+	global $db, $mail, $NOTIFICATION_MESSAGE, $NOTIFICATION_BLACKLIST, $AGENT_CONTACTS;
 
 	if ((!$timestamp_start = (int) $timestamp_start) || (!$timestamp_end = (int) $timestamp_end)) {
 		return false;
@@ -142,7 +142,7 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 	$events	= $db->GetAll($query);
 	if ($events) {
 		foreach ($events as $event) {
-			
+
 			/**
 			 * If you have configured the Curricular Coordinators in the $AGENT_CONTACTS array,
 			 * then they are set here if available.
@@ -154,7 +154,7 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 				$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], $AGENT_CONTACTS["agent-notifications"]["name"]);
 				$mail->setReplyTo($AGENT_CONTACTS["agent-notifications"]["email"], $AGENT_CONTACTS["agent-notifications"]["name"]);
 			}
-			
+
 			$query			= "	SELECT a.`proxy_id`, b.`firstname`, b.`lastname`, b.`email`
 								FROM `event_contacts` AS a
 								JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -166,12 +166,12 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 			$event_contacts	= $db->GetAll($query);
 			if ($event_contacts) {
 				$to_address_is_set		= false;
-				
+
 				$primary_contact		= array();
 				$cc_contacts			= array();
 				$cc_contacts_names		= array();
 				$associated_faculty		= array();
-				
+
 				foreach ($event_contacts as $key => $event_contact) {
 					$associated_faculty[$event_contact["proxy_id"]]	= $event_contact["firstname"]." ".$event_contact["lastname"];
 
@@ -181,7 +181,7 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 						$cc_contacts[$event_contact["proxy_id"]]		= array("proxy_id" => $event_contact["proxy_id"], "firstname" => $event_contact["firstname"], "lastname" => $event_contact["lastname"], "email" => $event_contact["email"]);
 						$cc_contacts_names[$event_contact["proxy_id"]]	= $event_contact["firstname"]." ".$event_contact["lastname"];
 					}
-					
+
 					$query		= "	SELECT a.`assigned_to` AS `proxy_id`, b.`firstname`, b.`lastname`, b.`email`
 									FROM `permissions` AS a
 									JOIN `".AUTH_DATABASE."`.`user_data` AS b
@@ -195,7 +195,7 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 						foreach ($assistants as $assistant) {
 							$cc_contacts[$assistant["proxy_id"]]		= array("proxy_id" => $assistant["proxy_id"], "firstname" => $assistant["firstname"], "lastname" => $assistant["lastname"], "email" => $assistant["email"]);
 							$cc_contacts_names[$assistant["proxy_id"]]	= $assistant["firstname"]." ".$assistant["lastname"];
-						}	
+						}
 					}
 				}
 
@@ -217,7 +217,7 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 								"%RESOURCES_TEXT%",
 								"%IMAGES_DIRECTORY%"
 							);
-				
+
 				$replace	= array(
 								$primary_contact["firstname"],
 								$primary_contact["lastname"],
@@ -233,10 +233,10 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 								((count($associated_faculty) > 0) ? "   - ".implode("\n   - ", $associated_faculty)."\n" : ""),
 								$event_resources["html"],
 								$event_resources["text"],
-								ENTRADA_URL."/templates/".$ENTRADA_ACTIVE_TEMPLATE."/images"
+								ENTRADA_URL."/templates/".$ENTRADA_TEMPLATE->activeTemplate()."/images"
 							);
-				
-				
+
+
                                 $mail->setSubject(str_replace(array("%EVENT_DATE%", "%SUBJECT_SUFFIX%"), array(date("Y-m-d", $event["event_start"]), (($notice["subject_suffix"] != "") ? " ".$notice["subject_suffix"] : "")), $NOTIFICATION_MESSAGE["subject"]));
                                 $mail->setBodyText(str_replace($search, $replace, $NOTIFICATION_MESSAGE["textbody"]));
                                 $mail->setBodyHtml(str_replace($search, $replace, $NOTIFICATION_MESSAGE["htmlbody"]));
@@ -247,10 +247,10 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 					$to_address_is_set	= false;
 				} else {
                                         $mail->addTo($primary_contact["email"], $primary_contact["firstname"]." ".$primary_contact["lastname"]);
-                                        				
+
 					$to_address_is_set	= true;
 				}
-	
+
 				if ((is_array($cc_contacts)) && (count($cc_contacts))) {
 					foreach ($cc_contacts as $cc_contact) {
 // FOR TESTING:	$cc_contact["email"] = "simpson@qmed.ca";
@@ -258,7 +258,7 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 						if (!in_array($cc_contact["email"], $NOTIFICATION_BLACKLIST)) {
 							if (!$to_address_is_set) {
 								$mail->addTo($cc_contact["email"], $cc_contact["firstname"]." ".$cc_contact["lastname"]);
-								
+
 								$to_address_is_set = true;
 							} else {
 								$mail->addCc($cc_contact["email"], $cc_contact["firstname"]." ".$cc_contact["lastname"]);
@@ -266,7 +266,7 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 						}
 					}
 				}
-				
+
 				if ($to_address_is_set) {
                                     try{
                                         $mail->send();
@@ -277,12 +277,12 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 				} else {
 					application_log("reminder", "SKIPPED: Did not send [".$notice["subject_suffix"]."] reminder to event_id [".$event["event_id"]."] contacts.");
 				}
-	
+
 				$mail->clearRecipients();
 			}
 		}
 	}
-	
+
 	return true;
 }
 
@@ -290,9 +290,9 @@ if (is_array($NOTIFICATION_REMINDERS)) {
 	foreach ($NOTIFICATION_REMINDERS as $key => $interval) {
 		$events_starting	= strtotime($interval["strtotime_string"], $START_OF_TODAY);
 		$events_ending		= strtotime("+1 day", $events_starting) - 1;
-		
+
 		application_log("reminder", "Sending notifications between ".date("r", $events_starting)." and ".date("r", $events_ending));
-		
+
 		notifications_send($events_starting, $events_ending, $interval);
 	}
 }

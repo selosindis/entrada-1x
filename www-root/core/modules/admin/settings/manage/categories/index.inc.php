@@ -43,14 +43,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/scriptaculous/sortable_tree.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 
 	echo "<h1>Manage Clerkship Categories</h1>";
-	if($ENTRADA_ACL->amIAllowed('categories', 'create', false)) {
+	if ($ENTRADA_ACL->amIAllowed("categories", "create", false)) {
 		?>
-		<div class="clearfix">
-			<div class="pull-right">
-				<a href="<?php echo ENTRADA_URL."/admin/settings/manage/categories?section=add&amp;step=1&org=".$ORGANISATION_ID; ?>" class="btn btn-primary">Add New Category</a>
-			</div>
-		</div>
-		<div style="clear: both"></div>
+        <a href="<?php echo ENTRADA_URL."/admin/settings/manage/categories?section=add&amp;step=1&org=".$ORGANISATION_ID; ?>" class="btn btn-primary pull-right" style="margin-bottom: 15px">Add New Category</a>
+        <div class="clearfix"></div>
 		<?php
 	}
 
@@ -60,7 +56,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 				AND (`organisation_id` = ".$db->qstr($ORGANISATION_ID)." OR `organisation_id` IS NULL)
 				ORDER BY `category_order` ASC";
 	$result = $db->GetAll($query);
-	if(isset($result) && count($result)>0){
+	if ($result) {
 		?>
 		<form action="<?php echo ENTRADA_URL."/admin/settings/manage/categories?".replace_query(array("section" => "delete", "step" => 1)); ?>" method="post">
 			<table class="tableList" cellspacing="0" summary="List of Categories">
@@ -73,7 +69,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 			</table>
 			<ul class="categories-list">
 			<?php
-//			echo categories_inlists_conf(0, 0, array('id'=>'pagelists'));
 			foreach ($result as $category) {
 				echo "<li><div class=\"category-container\"><span class=\"delete\" style=\"width:27px;display:inline-block;\"><input type=\"checkbox\" id=\"delete_".$category["category_id"]."\" name=\"delete[".$category["category_id"]."][category_id]\" value=\"".$category["category_id"]."\" onclick=\"$$('#".$category["category_id"]."-children input[type=checkbox]').each(function(e){e.checked = $('delete_".$category["category_id"]."').checked; if (e.checked) e.disable(); else e.enable();});\"/></span>\n";
 				echo "<a href=\"" . ENTRADA_URL . "/admin/settings/manage/categories?" . replace_query(array("section" => "edit", "id" => $category["category_id"])) . "\">".$category["category_name"]."</a></div></li>";
@@ -84,8 +79,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 		</form>
 		<?php
 	} else {
-		$NOTICE++;
-		$NOTICESTR[] = "There are currently no Categories assigned to this Organisation";
+		add_notice("There are currently no Clerkship categories created in this organisation.");
 		echo display_notice();
 	}
 }

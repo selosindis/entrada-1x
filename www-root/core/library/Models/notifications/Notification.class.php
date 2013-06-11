@@ -28,7 +28,7 @@ require_once("Models/utility/SimpleCache.class.php");
 
 /**
  * Class to model Notification instances including basic data and relationships to users/content
- * 
+ *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: James Ellis <james.ellis@queensu.ca>
@@ -42,7 +42,7 @@ class Notification {
 	private $sent;
 	private $digest;
 	private $sent_date;
-	
+
 	function __construct(	$notification_id,
 							$nuser_id,
 							$notification_body,
@@ -50,7 +50,7 @@ class Notification {
 							$sent,
 							$digest,
 							$sent_date) {
-		
+
 		$this->notification_id = $notification_id;
 		$this->nuser_id = $nuser_id;
 		$this->notification_body = $notification_body;
@@ -58,12 +58,12 @@ class Notification {
 		$this->sent = $sent;
 		$this->digest = $digest;
 		$this->sent_date = $sent_date;
-		
+
 		//be sure to cache this whenever created.
 		$cache = SimpleCache::getCache();
 		$cache->set($this,"Notification",$this->notification_id);
 	}
-	
+
 	/**
 	 * Returns the id of the notification
 	 * @return int
@@ -71,7 +71,7 @@ class Notification {
 	public function getID() {
 		return $this->notification_id;
 	}
-	
+
 	/**
 	 * Returns the nuser_id of the `notification_user` record for the user who was/will be sent the notification
 	 * @return int
@@ -79,7 +79,7 @@ class Notification {
 	public function getNotificationUserID() {
 		return $this->nuser_id;
 	}
-		
+
 	/**
 	 * Returns the body of the notification email
 	 * @return string
@@ -87,7 +87,7 @@ class Notification {
 	public function getNotificationBody() {
 		return $this->notification_body;
 	}
-	
+
 	/**
 	 * Returns the proxy of the person who made the change/comment which the notification is regarding
 	 * @return int
@@ -95,7 +95,7 @@ class Notification {
 	public function getProxyID() {
 		return $this->proxy_id;
 	}
-	
+
 	/**
 	 * Returns a boolean value which represents whether the notification has been emailed to the recipient or not.
 	 * @return bool
@@ -103,7 +103,7 @@ class Notification {
 	public function getSentStatus() {
 		return (bool) $this->sent;
 	}
-	
+
 	/**
 	 * Returns a unix timestamp which represents when the notification was emailed to the recipient .
 	 * @return bool
@@ -111,7 +111,7 @@ class Notification {
 	public function getDigest() {
 		return $this->digest;
 	}
-	
+
 	/**
 	 * Returns a unix timestamp which represents when the notification was emailed to the recipient .
 	 * @return bool
@@ -119,9 +119,9 @@ class Notification {
 	public function getSentDate() {
 		return $this->sent_date;
 	}
-		
+
 	/**
-	 * Returns an Notification specified by the provided ID 
+	 * Returns an Notification specified by the provided ID
 	 * @param int $notification_id
 	 * @return Notification
 	 */
@@ -134,19 +134,19 @@ class Notification {
 			$result = $db->getRow($query);
 			if ($result) {
 				$notification = self::fromArray($result);
-			}		
-		} 
+			}
+		}
 		return $notification;
 	}
-		
+
 	/**
-	 * Returns an Notification specified by the provided ID 
+	 * Returns an Notification specified by the provided ID
 	 * @param int $notification_id
 	 * @return Notification
 	 */
 	public static function getAllPending($nuser_id, $digest = false) {
 		global $db;
-		$query = "SELECT * FROM `notifications` 
+		$query = "SELECT * FROM `notifications`
 					WHERE `nuser_id` = ".$db->qstr($nuser_id)."
 					AND `sent` = 0
 					".($digest ? "AND `digest` = 1" : "");
@@ -160,26 +160,24 @@ class Notification {
 		}
 		return false;
 	}
-		
+
 	/**
 	 * Creates a new notification and returns its id.
-	 * 
+	 *
 	 * @param int $nuser_id
 	 * @param int $proxy_id
 	 * @param int $record_id
 	 * @return int $notification_id
 	 */
-	public static function add(	$nuser_id,
-								$proxy_id,
-								$record_id,
-                                $subcontent_id = 0) {
-		global $db;
+	public static function add($nuser_id, $proxy_id, $record_id, $subcontent_id = 0) {
+		global $db, $ENTRADA_TEMPLATE;
+
 		$notification_user = NotificationUser::getByID($nuser_id);
 		if ($notification_user) {
 			if ($notification_user->getDigestMode()) {
 				$notification_body = $notification_user->getContentBody($record_id);
 				$sent = false;
-				
+
 				$new_notification = array(	"nuser_id" => $nuser_id,
 											"notification_body" => $notification_body,
 											"proxy_id" => $proxy_id,
@@ -214,7 +212,7 @@ class Notification {
 										html_encode(ENTRADA_URL."/profile?section=notifications&id=".$nuser_id."&action=unsubscribe"),
 										html_encode(APPLICATION_NAME),
 										html_encode(ENTRADA_URL));
-						$notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-logbook-rotation-".($notification_user->getProxyID() == $notification_user->getRecordProxyID() ? "student" : "admin").".xml");
+						$notification_body = file_get_contents($ENTRADA_TEMPLATE->absolute()."/email/notification-logbook-rotation-".($notification_user->getProxyID() == $notification_user->getRecordProxyID() ? "student" : "admin").".xml");
 						$notification_body = str_replace($search, $replace, $notification_body);
 					break;
 					case "evaluation" :
@@ -287,11 +285,11 @@ class Notification {
                                                 html_encode(APPLICATION_NAME),
                                                 html_encode(ENTRADA_URL));
                             if ($evaluation["target_shortname"] == "rotation_core") {
-                                $notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-rotation-core-evaluation-".($evaluation["evaluation_finish"] >= time() || $evaluation["evaluation_start"] >= strtotime("-1 day") ? "release" : "overdue").".xml");
+                                $notification_body = file_get_contents($ENTRADA_TEMPLATE->absolute()."/email/notification-rotation-core-evaluation-".($evaluation["evaluation_finish"] >= time() || $evaluation["evaluation_start"] >= strtotime("-1 day") ? "release" : "overdue").".xml");
                             } elseif ($evaluation["target_shortname"] == "preceptor") {
-                                $notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-preceptor-evaluation-".($evaluation["evaluation_finish"] >= time() || $evaluation["evaluation_start"] >= strtotime("-1 day") ? "release" : "overdue").".xml");
+                                $notification_body = file_get_contents($ENTRADA_TEMPLATE->absolute()."/email/notification-preceptor-evaluation-".($evaluation["evaluation_finish"] >= time() || $evaluation["evaluation_start"] >= strtotime("-1 day") ? "release" : "overdue").".xml");
                             } else {
-                                $notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-evaluation-".($evaluation["evaluation_finish"] >= time() || $evaluation["evaluation_start"] >= strtotime("-1 day") ? "release" : "overdue").".xml");
+                                $notification_body = file_get_contents($ENTRADA_TEMPLATE->absolute()."/email/notification-evaluation-".($evaluation["evaluation_finish"] >= time() || $evaluation["evaluation_start"] >= strtotime("-1 day") ? "release" : "overdue").".xml");
                             }
                             $notification_body = str_replace($search, $replace, $notification_body);
                         }
@@ -321,7 +319,7 @@ class Notification {
 											html_encode($notification_user->getContentURL()."&pid=".$record_id),
 											html_encode(APPLICATION_NAME),
 											html_encode(ENTRADA_URL));
-						$notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-evaluation-threshold.xml");
+						$notification_body = file_get_contents($ENTRADA_TEMPLATE->absolute()."/email/notification-evaluation-threshold.xml");
 						$notification_body = str_replace($search, $replace, $notification_body);
 					break;
 					case "evaluation_request" :
@@ -351,7 +349,7 @@ class Notification {
 											html_encode($notification_user->getContentURL()."&proxy_id=".$proxy_id),
 											html_encode(APPLICATION_NAME),
 											html_encode(ENTRADA_URL));
-						$notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-evaluation-request.xml");
+						$notification_body = file_get_contents($ENTRADA_TEMPLATE->absolute()."/email/notification-evaluation-request.xml");
 						$notification_body = str_replace($search, $replace, $notification_body);
 					break;
 					default :
@@ -365,7 +363,7 @@ class Notification {
 										"%DIGEST_URL%",
 										"%APPLICATION_NAME%",
 										"%ENTRADA_URL%");
-										
+
 						$replace = array(	html_encode(ucwords($notification_user->getContentTypeName())),
 											html_encode($notification_user->getContentTypeName()),
 											html_encode(get_account_data("wholename", $proxy_id)),
@@ -376,10 +374,10 @@ class Notification {
 											html_encode(ENTRADA_URL."/profile?section=notifications&id=".$nuser_id."&action=digest-mode"),
 											html_encode(APPLICATION_NAME),
 											html_encode(ENTRADA_URL));
-						$notification_body = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-default.xml");
+						$notification_body = file_get_contents($ENTRADA_TEMPLATE->absolute()."/email/notification-default.xml");
 						$notification_body = str_replace($search, $replace, $notification_body);
 					break;
-				}				
+				}
 				$new_notification = array(	"nuser_id" => $nuser_id,
 											"notification_body" => $notification_body,
 											"proxy_id" => $proxy_id,
@@ -401,19 +399,21 @@ class Notification {
 	}
 	/**
 	 * Creates a new notification and returns its id.
-	 * 
+	 *
 	 * @param int $nuser_id
 	 * @return Notification
 	 */
 	public static function addDigest($nuser_id) {
-		global $db;
+		global $db, $ENTRADA_TEMPLATE;
+
 		require_once("Models/utility/Template.class.php");
+
 		$notification_user = NotificationUser::getByID($nuser_id);
 		if ($notification_user) {
 			$notifications = self::getAllPending($nuser_id, 1);
 			$activity_count = count($notifications);
 			if ($notifications && $activity_count) {
-				$notification_template = file_get_contents(TEMPLATE_ABSOLUTE."/email/notification-default-digest.xml");
+				$notification_template = file_get_contents($ENTRADA_TEMPLATE->absolute()."/email/notification-default-digest.xml");
 				$search = array(	"%UC_CONTENT_TYPE_NAME%",
 									"%CONTENT_TYPE_NAME%",
 									"%COMMENTS_NUMBER_STRING%",
@@ -453,11 +453,11 @@ class Notification {
 		}
 		return false;
 	}
-	
+
 	static public function fromArray($array) {
 		return new Notification($array["notification_id"], $array["nuser_id"], $array["notification_body"], $array["proxy_id"], $array["sent"], $array["digest"], $array["sent_date"]);
 	}
-	
+
 	private function setSentStatus($sent) {
 		global $db;
 		if ($sent == $this->sent) {
@@ -470,7 +470,7 @@ class Notification {
 		}
 		return true;
 	}
-	
+
 	/**
 	 * This function sends an email out to the user referenced by the notification_user record,
 	 * and returns whether sending the email was successful or not.
@@ -489,10 +489,10 @@ class Notification {
 			$template->loadString($this->notification_body);
 			$mail = new TemplateMailer(new Zend_Mail());
 			$mail->addHeader("X-Section", APPLICATION_NAME." Notifications System", true);
-			
+
 			$from = array("email"=>$AGENT_CONTACTS["agent-notifications"]["email"], "firstname"=> APPLICATION_NAME." Notification System","lastname"=>"");
 			$to = array("email"=>$user["email"], "firstname"=> $user["firstname"],"lastname"=> $user["lastname"]);
-			
+
                         try{
                             $mail->send($template,$to,$from,DEFAULT_LANGUAGE);
                             if ($this->setSentStatus(true)) {
@@ -503,7 +503,7 @@ class Notification {
                             system_log_data("error", "Unable to send [".$user["content_type"]."] notification to user [".$user["proxy_id"]."]. Template Mailer said: ".$e->getMessage());
                         }
 		}
-		
+
 		return false;
 	}
 }

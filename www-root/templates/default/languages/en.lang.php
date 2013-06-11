@@ -144,7 +144,7 @@ return array (
 	 */
     "public_dashboard_feeds" => array (
 		"global" => array (
-			array ("title" => "Entrada Announcement Feed", "url" => "http://www.entrada-project.org/news/feed", "removable" => false),
+			array ("title" => "Entrada Project", "url" => "http://www.entrada-project.org/feed/", "removable" => false),
 			array ("title" => "Zend DevZone", "url" => "http://feeds.feedburner.com/PHPDevZone", "removable" => true),
 			array ("title" => "Insider Medicine", "url" => "http://insidermedicine.ca/xml/Patient/insidermedicine_English.xml", "removable" => true),
 			array ("title" => "Google News Top Stories", "url" => "https://news.google.ca/news/feeds?pz=1&cf=all&ned=ca&hl=en&output=rss", "removable" => true)

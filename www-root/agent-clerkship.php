@@ -16,12 +16,12 @@
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
  * This file is loaded when someone opens the Feedback Agent.
- * 
+ *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
- * 
+ *
 */
 
 @set_include_path(implode(PATH_SEPARATOR, array(
@@ -60,7 +60,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	if((isset($_GET["step"])) && ((int) trim($_GET["step"]))) {
 		$STEP = (int) trim($_GET["step"]);
 	}
-    
+
 	$ENCODED_INFORMATION = "";
 
 	if((isset($_GET["step"])) && ((int) trim($_GET["step"]))) {
@@ -96,7 +96,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		<link href="<?php echo ENTRADA_URL; ?>/w3c/p3p.xml" rel="P3Pv1" type="text/xml" />
 		<link href="<?php echo ENTRADA_RELATIVE; ?>/css/common.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
 		<link href="<?php echo ENTRADA_RELATIVE; ?>/css/print.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="print" />
-		<link href="<?php echo TEMPLATE_RELATIVE; ?>/css/common.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
+		<link href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/css/common.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
 		<link href="<?php echo ENTRADA_RELATIVE; ?>/css/jquery/jquery-ui.css" media="screen" rel="stylesheet" type="text/css" />
 		<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.min.js"></script>
 		<script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery-ui.min.js"></script>
@@ -130,7 +130,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			});
 			return false;
 		}
-		
+
 		function newCorrection() {
 			jQuery("#wizard-body, #wizard-footer").remove();
 			jQuery.ajax({
@@ -144,7 +144,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			});
 			return false;
 		}
-		
+
 		function closeWindow() {
 			window.close();
 		}
@@ -167,9 +167,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			$message .= "-------------------------------------------------------\n";
 			$message .= clean_input($_SERVER["HTTP_USER_AGENT"], array("trim", "emailcontent"))."\n\n";
 			$message .= "=======================================================";
-                        
+
 			$mail = new Zend_Mail("iso-8859-1");
-                        
+
 			$mail->addHeader("X-Priority", "3");
 			$mail->addHeader('Content-Transfer-Encoding', '8bit');
 			$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);

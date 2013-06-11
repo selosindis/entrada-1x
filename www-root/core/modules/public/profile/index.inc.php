@@ -25,9 +25,9 @@ if (!defined("IN_PROFILE")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	
+
 	$ajax_action = clean_input($_POST["ajax_action"], "alpha");
-	
+
 	if (!empty($ajax_action)) {
 		ob_clear_open_buffers();
 
@@ -87,10 +87,11 @@ if (!defined("IN_PROFILE")) {
 			default:
 			break;
 		}
-		
+
 		exit;
-		
+
 	}
+
 	$PAGE_META["title"]			= "My Profile";
 	$PAGE_META["description"]	= "";
 	$PAGE_META["keywords"]		= "";
@@ -118,9 +119,6 @@ if (!defined("IN_PROFILE")) {
 		new_sidebar_item("Delegated Permissions", $sidebar_html, "delegated-permissions", "open");
 	}
 
-//	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/tabpane/tabpane.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-//	$HEAD[] = "<link href=\"".ENTRADA_URL."/css/tabpane.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-	$HEAD[] = "<style type=\"text/css\"> .dynamic-tab-pane-control .tab-page {height:auto;}</style>\n";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/profile.js\"></script>";
 
 	if (file_exists(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload")) {
@@ -129,7 +127,7 @@ if (!defined("IN_PROFILE")) {
 	if (file_exists(STORAGE_USER_PHOTOS."/".$PROXY_ID."-official")) {
 		$size_official = getimagesize(STORAGE_USER_PHOTOS."/".$PROXY_ID."-official");
 	}
-	
+
 	if ($ERROR) {
 		fade_element("out", "display-error-box");
 		echo display_error();
@@ -144,13 +142,12 @@ if (!defined("IN_PROFILE")) {
 		fade_element("out", "display-notice-box");
 		echo display_notice();
 	}
-	
+
 	$ONLOAD[] = "provStateFunction(\$F($('profile-update')['country_id']))";
-	
+
 	$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `".AUTH_DATABASE."`.`user_data`.`id`=".$db->qstr($ENTRADA_USER->getID());
 	$result	= $db->GetRow($query);
 	if ($result) {
-		
 		/*
 		 * Get the user departments and the custom fields for the departments.
 		 */
@@ -158,9 +155,9 @@ if (!defined("IN_PROFILE")) {
 		foreach ($user_departments as $department) {
 			$departments[$department["department_id"]] = $department["department_title"];
 		}
-	
+
 		$custom_fields = fetch_department_fields();
-		
+
 		?>
 		<script type="text/javascript">
 		function provStateFunction(country_id) {
@@ -286,9 +283,9 @@ if (!defined("IN_PROFILE")) {
 				jQuery("#coordinates").attr("value", w_offset + "," + h_offset + "," + (w_offset + 153) + "," + (h_offset + 200));
 				jQuery("#dimensions").attr("value", image_width + "," + image_height)
 
-				image.imgAreaSelect({ 
-					aspectRatio: '75:98', 
-					handles: true, 
+				image.imgAreaSelect({
+					aspectRatio: '75:98',
+					handles: true,
 					x1: w_offset, y1: h_offset, x2: w_offset + 153, y2: h_offset + 200,
 					instance: true,
 					persistent: true,
@@ -385,7 +382,7 @@ if (!defined("IN_PROFILE")) {
 				xhr.send(fd);
 
 				xhr.onreadystatechange = function() {
-					if (xhr.readyState == 4 && xhr.status == 200) {                
+					if (xhr.readyState == 4 && xhr.status == 200) {
 						var jsonResponse = JSON.parse(xhr.responseText);
 						if (jsonResponse.status == "success") {
 							jQuery("#profile-image-container .thumbnail img.img-polaroid").attr("src", jsonResponse.data);
@@ -422,7 +419,7 @@ if (!defined("IN_PROFILE")) {
 
 			jQuery("#profile-image-container").hover(function(){
 				jQuery("#profile-image-container .btn, #btn-toggle").fadeIn("fast");
-			}, 
+			},
 			function() {
 				jQuery("#profile-image-container .btn").fadeOut("fast");
 			});
@@ -449,7 +446,7 @@ if (!defined("IN_PROFILE")) {
 				<button id="upload-image-button" class="btn btn-primary">Upload</button>
 			</div>
 		</div>
-		
+
 
 		<div id="profile-image-container">
 			<a href="#upload-image" id="upload-image-modal-btn" data-toggle="modal" class="btn btn-primary" id="upload-profile-image">Upload Photo</a>
@@ -491,7 +488,7 @@ if (!defined("IN_PROFILE")) {
 					<div class="input-append">
 						<span class="input-large uneditable-input" id="hash-value"><?php echo $_SESSION["details"]["private_hash"]; ?></span><span class="add-on" id="reset-hash"><i class="icon-repeat"></i></span>
 					</div>
-					
+
 				</div>
 			</div>
 			<div class="control-group">
@@ -562,7 +559,7 @@ if (!defined("IN_PROFILE")) {
 			<div class="control-group">
 				<label class="control-label">Google Account:</label>
 				<div class="controls">
-					
+
 						<?php
 						if (($result["google_id"] == "") || ($result["google_id"] == "opt-out") || ($result["google_id"] == "opt-in") || ($_SESSION["details"]["google_id"] == "opt-in")) {
 							?>
@@ -581,7 +578,7 @@ if (!defined("IN_PROFILE")) {
 							<?php
 						}
 						?>
-					
+
 				</div>
 			</div>
 			<?php if ($google_address) { ?>
@@ -653,15 +650,15 @@ if (!defined("IN_PROFILE")) {
 					<input class="input-xlarge" name="postcode" id="postcode" type="text" placeholder="Example: K7L 3N6" value="<?php echo html_encode($result["postcode"]); ?>" />
 				</div>
 			</div>
-			<?php if ($_SESSION["details"]["group"] != "student") { ?>
+			<?php if ($ENTRADA_USER->getGroup() != "student") { ?>
 			<div class="control-group">
 				<label class="control-label" for="hours">Office Hours:</label>
 				<div class="controls">
-					<textarea id="office_hours" name="office_hours" maxlength="100"><?php echo html_encode($result["office_hours"]); ?></textarea>
+					<textarea id="office_hours" name="office_hours" class="expandable input-xlarge" maxlength="100"><?php echo html_encode($result["office_hours"]); ?></textarea>
 				</div>
 			</div>
 			<?php } ?>
-			
+
 			<?php
 			load_rte();
 			if ($custom_fields) {
@@ -730,11 +727,11 @@ if (!defined("IN_PROFILE")) {
 							</div>
 						</div>
 					<?php }
-					
+
 					echo "<h3>Publications on ".$department." Website</h3>";
-					
+
 					foreach ($pub_types as $type_table => $data) {
-						$query = "	SELECT a.`".$data["id_field"]."` AS `id`, a.`".$data["title"]."` AS `title`, a.`year_reported`, b.`id` AS `dep_pub_id`
+						$query = "SELECT a.`".$data["id_field"]."` AS `id`, a.`".$data["title"]."` AS `title`, a.`year_reported`, b.`id` AS `dep_pub_id`
 									FROM `".$type_table."` AS a
 									LEFT JOIN `profile_publications` AS b
 									ON a.`proxy_id` = b.`proxy_id`
@@ -742,7 +739,8 @@ if (!defined("IN_PROFILE")) {
 									AND (b.`dep_id` = ".$db->qstr($department_id). " || b.`dep_id` IS NULL)
 									WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 						$pubs = $db->GetAll($query);
-						if ($pubs) { ?>
+						if ($pubs) {
+                            ?>
 							<h4><?php echo ucwords(str_replace("ar ", "", str_replace("_", " ", $type_table))); ?></h4>
 							<table width="100%" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-hover table-bordered table-nowrap">
 								<thead>
@@ -753,19 +751,22 @@ if (!defined("IN_PROFILE")) {
 									</tr>
 								</thead>
 								<tbody>
-								<?php foreach ($pubs as $publication) { ?>
+								<?php foreach ($pubs as $publication) {
+                                    ?>
 									<tr data-id="<?php echo $publication["id"]; ?>">
 										<td><?php echo $publication["title"]; ?></td>
 										<td><?php echo $publication["year_reported"]; ?></td>
 										<td><input type="checkbox" name="publications[<?php echo str_replace("ar_", "", $type_table); ?>][<?php echo $department_id; ?>][<?php echo $publication["id"]; ?>]" <?php echo ($publication["dep_pub_id"] != NULL ? "checked=\"checked\"" : ""); ?> /></td>
 									</tr>
-								<?php } ?>
+                                    <?php
+                                }
+                                ?>
 								</tbody>
 							</table>
 							<?php
 						}
 					}
-						
+
 					echo "</div>";
 					$i++;
 					}
@@ -776,10 +777,9 @@ if (!defined("IN_PROFILE")) {
 			?>
 			<div>
 				<div class="pull-right">
-					<input type="submit" class="btn btn-primary right" value="Save" />
+					<input type="submit" class="btn btn-primary right" value="Save Profile" />
 				</div>
 			</div>
-			
 		</form>
 		</div>
 		<?php
@@ -827,20 +827,20 @@ if (!defined("IN_PROFILE")) {
 			$('reset-google-password-close').observe('click', function() {
 				$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
 				$('reset-google-password-success', 'reset-google-password-waiting').invoke('hide');
-	
+
 				$('google_password_1').setValue('');
 				$('google_password_2').setValue('');
 				Control.Modal.close();
 			});
-	
+
 			$('reset-google-password-submit').observe('click', function() {
 				$('reset-google-password-submit', 'reset-google-password-form').invoke('hide');
 				$('reset-google-password-waiting').show();
-	
+
 				if ($('google_password_1') && $('google_password_2')) {
 					var new_password = $F('google_password_1');
 					var test_password = $F('google_password_2');
-	
+
 					if (new_password && test_password) {
 						if (new_password == test_password) {
 							new Ajax.Request('<?php echo ENTRADA_URL; ?>/profile', {
@@ -877,12 +877,11 @@ if (!defined("IN_PROFILE")) {
 					$('reset-google-password-submit', 'reset-google-password-form').invoke('show');
 				}
 			});
-
 			</script>
-			<?php }
+			<?php
+        }
 	} else {
-		$NOTICE++;
-		$NOTICESTR[]	= "Unfortunately your ".APPLICATION_NAME." profile is not accessible at this time, please try again later.";
+		add_notice("Unfortunately your ".APPLICATION_NAME." profile is not accessible at this time, please try again later.");
 
 		echo display_notice();
 

@@ -77,14 +77,14 @@ if ($COMMUNITY_ID) {
 				</div>
 				<?php echo communities_pages_inlists(0, 0, array('id'=>'pagelists'), (isset($COMMUNITY_LOCKED_PAGE_IDS) && $COMMUNITY_LOCKED_PAGE_IDS) ? $COMMUNITY_LOCKED_PAGE_IDS : array()); ?>
 
-				<input type="submit" id="delete_pages_button" class="button" value="Delete Selected" />
-				<input type="button" id="reorder_pages_button" class="button" onclick="toggleSorting();" value="Reorder Pages">
+				<input type="submit" id="delete_pages_button" class="btn btn-danger" value="Delete Selected" />
+				<input type="button" id="reorder_pages_button" class="btn" onclick="toggleSorting();" value="Reorder Pages">
 				</form>
 				<form action="<?php echo COMMUNITY_URL.$community_details["community_url"].":pages?".replace_query(array("action" => "reorder", "step" => 1)); ?>" method="post">
 					<div id="reorder-info" style="display: none;">
 						<textarea id="pageorder" name="pageorder" style="display: none;"></textarea>
 						<p class="content-small">Rearrange the pages in the table above by dragging them, and then press the <strong>Save Ordering</strong> button.</p>
-						<input type="submit" id="save_pages_order_button" class="button" value="Save Ordering" style="display:none;"/>
+						<input type="submit" id="save_pages_order_button" class="btn btn-primary" value="Save Ordering" style="display:none;"/>
 					</div>
 				</form>
 				<script type="text/javascript">

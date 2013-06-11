@@ -284,8 +284,8 @@ if (!defined("IN_MANAGE")) {
 						<tr>
 							<td colspan="3" style="padding-top: 10px; text-align: right">
 								<span id="check-results"></span>
-								<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/regionaled/apartments/manage?id=<?php echo $APARTMENT_ID; ?>'" />
-								<input type="button" class="button" id="proceed-button" value="Proceed" />
+								<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/regionaled/apartments/manage?id=<?php echo $APARTMENT_ID; ?>'" />
+								<input type="button" class="btn btn-primary" id="proceed-button" value="Proceed" />
 							</td>
 						</tr>
 					</tfoot>

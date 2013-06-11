@@ -991,7 +991,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                 </table>
                 <div class="form-actions">
                     <input type="submit" class="btn btn-primary" value="Create" /> <span class="or">or</span>
-                    <a class="button" onclick="window.location='<?php echo ENTRADA_URL."/".$MODULE; ?>'" />Cancel</a>
+                    <a class="btn" onclick="window.location='<?php echo ENTRADA_URL."/".$MODULE; ?>'" />Cancel</a>
                 </div>
             </form>
             <br /><br />

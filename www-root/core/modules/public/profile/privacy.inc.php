@@ -90,7 +90,7 @@ if (!defined("IN_PROFILE")) {
 			<tfoot>
 				<tr>
 					<td colspan="2" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Update Privacy" />
+						<input type="submit" class="btn btn-primary" value="Update Privacy" />
 					</td>
 				</tr>
 			</tfoot>

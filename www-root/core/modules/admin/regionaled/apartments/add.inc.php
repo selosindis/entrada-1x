@@ -512,8 +512,8 @@ if (!defined("IN_APARTMENTS")) {
 					<tfoot>
 						<tr>
 							<td colspan="4" style="padding-top: 25px; text-align: right">
-								<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/regionaled/apartments'" />
-								<input type="submit" class="button" value="Save" />
+								<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/regionaled/apartments'" />
+								<input type="submit" class="btn btn-primary" value="Save" />
 							</td>
 						</tr>
 					</tfoot>

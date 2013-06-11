@@ -224,7 +224,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                     <tr>
                         <td></td>
                         <td style="padding-top: 10px" colspan="2">
-                            <input type="submit" class="button" value="Delete Selected" />
+                            <input type="submit" class="btn btn-danger" value="Delete Selected" />
                         </td>
                     </tr>
                 </tfoot>

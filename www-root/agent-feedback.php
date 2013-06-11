@@ -92,6 +92,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		<link rel="shortcut icon" href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/favicon.ico" />
 		<link rel="icon" href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/favicon.ico" type="image/x-icon" />
 		<link href="<?php echo ENTRADA_RELATIVE; ?>/css/common.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
+		<link href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/css/bootstrap.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
         <script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>
         <script type="text/javascript">
         jQuery(function(){
@@ -104,7 +105,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
         });
         </script>
 	</head>
-	<body style="<?php if ($STEP == 2) { echo "padding:20px;"; } ?>">
+	<body>
 		<?php
 	}
 
@@ -181,9 +182,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					$mail->setBodyText($message);
 
 					if($mail->Send()) {
+						echo "<h4>Feedback Submission Successful</h4>";
 						add_success("Thank-you for providing us with your valuable feedback.<br /><br />Once again, thank-you for using our automated anonymous feedback system and feel free to submit comments any time.");
 						echo display_success();
-						echo "<div style=\"text-align:right;\"><input type=\"button\" value=\"Close\" /></a>";
+						echo "<div style=\"text-align:right;\"><input type=\"button\" class=\"btn\" value=\"Close\" /></a>";
 					} else {
 						add_error("We apologize however, we are unable to submit your feedback at this time due to a problem with the mail server.<br /><br />The system administrator has been informed of this error, please try again later.");
 						echo display_error();
@@ -197,70 +199,46 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			break;
 			case "1" :
 			default :
-				?>
-				<form id="feedback-form" action="<?php echo ENTRADA_URL; ?>/agent-feedback.php?step=2" method="post" style="display: inline">
+				?> 
+		<style type="text/css">
+		#feedback-form {padding:20px;margin:0px;}	
+		#feedback-form h4 {margin-top:0px;}
+		.feedback-title {margin:-5px;border-radius:0px;}
+		#feedback {width:434px;}
+		</style>
+
+				<div class="panel-head feedback-title"><h3 class=""><?php echo $form_content["title"]; ?></h3></div>
+
+				<form id="feedback-form" clsas="form form-horizontal" action="<?php echo ENTRADA_URL; ?>/agent-feedback.php?step=2" method="post">
 				<?php if (isset($_POST["who"])) { ?><input type="hidden" name="who" value="<?php echo $WHO; ?>" /><?php } ?>
 				<?php if (isset($_POST["enc"])) { ?><input type="hidden" name="enc" value="<?php echo $ENCODED_INFORMATION; ?>" /><?php } ?>
-				<div id="form-processing" style="display: block; position: absolute; top: 0px; left: 0px; width: 485px; height: 515px">
-					<div id="wizard-header" style="position: absolute; top: 0px; left: 0px; width: 100%; height: 25px; background-color: #003366; padding: 4px 4px 4px 10px">
-						<span class="content-heading" style="color: #FFFFFF"><?php echo $form_content["title"]; ?></span>
+					
+					<h4>Your Feedback is Important</h4>
+
+					<?php echo $form_content["description"]; ?>
+
+					<?php if ($form_content["anon"]) { ?>
+					<div class="control-group">
+						<label for="hide_identity" class="form-nrequired control-label"><?php echo $form_content["anon-text"]; ?></label>
+						<div class="controls"><input type="checkbox" value="1" id="hide_identity" name="hide_identity" checked="checked" /></div>
 					</div>
-					<div id="wizard-body" style="position: absolute; top: 35px; left: 0px; width: 452px; height: 380px; padding-left: 15px; overflow: auto">
-						<h2>Your Feedback is Important</h2>
-						<table style="width: 100%" cellspacing="1" cellpadding="1" border="0">
-						<colgroup>
-							<col style="width: 25%" />
-							<col style="width: 75%" />
-						</colgroup>
-						<thead>
-							<tr>
-								<td colspan="2" style="padding-bottom: 15px">
-									<?php echo $form_content["description"]; ?>
-								</td>
-							</tr>
-						</thead>
-						<tbody>
-						<?php if ($form_content["anon"]) { ?>
-						<tr>
-							<td colspan="2">
-								<input type="checkbox" value="1" id="hide_identity" name="hide_identity" checked="checked" />
-								<label style="text-align: left;" for="hide_identity" class="form-nrequired"><?php echo $form_content["anon-text"]; ?></label>
-							</td>
-						</tr>
-						<?php } ?>
-						<tr>
-							<td colspan="2" style="padding-top: 15px">
-								<label for="feedback" class="form-required">Feedback or Comments:</label>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="2">
-								<textarea id="feedback" name="feedback" style="width: 98%; height: 115px" maxlength="750"></textarea>
-							</td>
-						</tr>
-						</tbody>
-						</table>
+					<?php } ?>
+					<br /><br />
+					<div class="control-group">
+						<label for="feedback" class="form-required control-label">Feedback or Comments:</label>
+						<div class="controls"><textarea id="feedback" name="feedback" maxlength="750"></textarea></div>
 					</div>
-					<div id="wizard-footer" style="position: absolute; top: 415px; left: 0px; width: 100%; height: 40px; border-top: 2px #CCCCCC solid; padding: 4px 4px 4px 10px">
-						<table style="width: 100" cellspacing="0" cellpadding="0" border="0">
-						<tr>
-							<td style="width: 180px; text-align: left">
-								<input type="button" class="button" value="Close" />
-							</td>
-							<td style="width: 272px; text-align: right">
-								<input type="button" class="button" value="Submit" />
-							</td>
-						</tr>
-						</table>
+					<div class="row-fluid">
+						<input type="button" class="btn" value="Close" />
+						<input type="button" class="btn btn-primary pull-right" value="Submit" />
 					</div>
-				</div
 				</form>
 				<?php
 			break;
 		}
 	} else {
 		echo display_error();
-		echo "<input type=\"button\" value=\"Submit\" />";
+		echo "<input type=\"button\" class=\"btn btn-primary\" value=\"Submit\" />";
 	}
 
 	if (!isset($_POST["who"])) {

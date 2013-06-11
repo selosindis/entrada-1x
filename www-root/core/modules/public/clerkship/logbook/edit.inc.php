@@ -694,7 +694,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                                     } 
                                     ?>
                                 </div>
-                                <input type="button" class="btn" value="Remove Selected" onclick="removeObjectives()"/>
+                                <input type="button" class="btn btn-danger" value="Remove Selected" onclick="removeObjectives()"/>
                             </span>
                         </div>
                         <div class="control-group row-fluid">
@@ -829,7 +829,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                                     } 
                                     ?>
                                 </div>
-                                <input type="button" class="btn" value="Remove Selected" onclick="removeProcedures()"/>
+                                <input type="button" class="btn btn-danger" value="Remove Selected" onclick="removeProcedures()"/>
                             </span>
                         </div>
                         <br />

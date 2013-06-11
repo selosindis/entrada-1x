@@ -228,7 +228,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						?>
 						<div class="autocomplete" id="author_name_auto_complete"></div>
 						<input type="hidden" id="associated_author" name="associated_proxy_ids" value="" />
-						<input type="button" class="button-sm" id="add_associated_author" value="Add" style="vertical-align: middle" />
+						<input type="button" class="btn" id="add_associated_author" value="Add" style="vertical-align: middle" />
 						<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 						<ul id="author_list" class="menu" style="margin-top: 15px">
 							<?php

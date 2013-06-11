@@ -400,7 +400,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				</tr>
 				<tr>
 					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Show" />
+						<input type="submit" class="btn" value="Show" />
 					</td>
 				</tr>
 			</tfoot>
@@ -437,7 +437,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				</tr>
 				<tr>
 					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Search" />
+						<input type="submit" class="btn" value="Search" />
 					</td>
 				</tr>
 			</tfoot>
@@ -487,7 +487,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				</tr>
 				<tr>
 					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Browse" />
+						<input type="submit" class="btn" value="Browse" />
 					</td>
 				</tr>
 			</tfoot>
@@ -526,7 +526,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				</tr>
 				<tr>
 					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Browse" />
+						<input type="submit" class="btn" value="Browse" />
 					</td>
 				</tr>
 			</tfoot>
@@ -627,7 +627,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				<tr>
 					<td></td>
 					<td colspan="4" style="padding-top: 10px">
-						<input type="submit" class="button" value="Delete Selected" />
+						<input type="submit" class="btn btn-danger" value="Delete Selected" />
 					</td>
 				</tr>
 			</tfoot>

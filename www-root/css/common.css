@@ -3966,8 +3966,7 @@ td.incorrect-setting {
 	border:1px solid #999999;
 	background:#fff;
 	width: 489px;
-	height: 455px;
-	top:-27px;
+	top:-61px;
 }
 .cornerarrow {
 	width:8px;
@@ -3975,7 +3974,7 @@ td.incorrect-setting {
 	background-image:url("../images/corner-arrow.png");
 	position:absolute;
 	left:-8px;
-	top:8px;
+	top:14px;
 }
 
 /*!

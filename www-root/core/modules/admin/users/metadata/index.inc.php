@@ -153,7 +153,7 @@ function page_init() {
 <div id="errModal" class="modal-description">
 	<div id="errModal_content" class="status"></div>
 	<div class="footer">
-		<button class="right modal-close">Close</button>
+		<button class="btn pull-right modal-close">Close</button>
 	</div>
 </div>
 <div id="loadingModal" class="modal-description">

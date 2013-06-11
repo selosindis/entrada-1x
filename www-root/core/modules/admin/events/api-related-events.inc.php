@@ -132,7 +132,7 @@ if (!defined("IN_EVENTS")) {
 				</div>
 				<div style="width: 72%; float: left;">
 					<input autocomplete="off" type="text" name="related_event_id" id="related_event_id" />
-					<input class="button-sm" type="button" value="Add" onclick="addRelatedEvent($('related_event_id').value)" />
+					<input class="btn" type="button" value="Add" onclick="addRelatedEvent($('related_event_id').value)" />
 					<script type="text/javascript">
 						$('related_event_id').observe('keypress', function(event){
 							if(event.keyCode == Event.KEY_RETURN) {

@@ -281,7 +281,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                 </div>
                             </div>
                             <div class="row-fluid">
-                                <button href="#delete-quiz-confirmation-box" id="quiz-control-delete" class="btn btn-">Delete Quiz</button>
+                                <button href="#delete-quiz-confirmation-box" id="quiz-control-delete" class="btn btn-danger">Delete Quiz</button>
                                 <button href="#copy-quiz-confirmation-box" id="quiz-control-copy" class="btn">Copy Quiz</button>
                                 <div class="pull-right">
                                     <input type="submit" class="btn btn-primary" value="Save Changes" />
@@ -371,8 +371,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                     </div>
                                     If you confirm this action, the question will be permanently removed.
                                     <div class="footer">
-                                        <input type="button" class="button" value="Close" onclick="Control.Modal.close()" style="float: left; margin: 8px 0px 4px 10px" />
-                                        <input type="button" class="button" value="Confirm" onclick="deleteQuizQuestion(deleteQuestion_id)" style="float: right; margin: 8px 10px 4px 0px" />
+                                        <input type="button" class="btn" value="Close" onclick="Control.Modal.close()" style="float: left; margin: 8px 0px 4px 10px" />
+                                        <input type="button" class="btn btn-primary" value="Confirm" onclick="deleteQuizQuestion(deleteQuestion_id)" style="float: right; margin: 8px 10px 4px 0px" />
                                     </div>
                                 </div>
                                 <script type="text/javascript" defer="defer">

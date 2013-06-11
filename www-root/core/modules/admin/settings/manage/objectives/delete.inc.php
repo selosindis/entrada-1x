@@ -280,7 +280,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					<tr>
 						<td>&nbsp;</td>
 						<td style="padding-top: 10px">
-							<input type="submit" class="button" value="Delete Selected" />
+							<input type="submit" class="btn btn-danger" value="Delete Selected" />
 						</td>
 					</tr>
 				</tfoot>

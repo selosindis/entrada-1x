@@ -635,7 +635,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										<td>&nbsp;</td>
 										<td colspan="5">
 										<?php
-										echo (($results) ? "<input type=\"button\" class=\"button\" value=\"Delete Selected\" onclick=\"confirmFileDelete()\" />" : "&nbsp;");
+										echo (($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Delete Selected\" onclick=\"confirmFileDelete()\" />" : "&nbsp;");
 										?>
 										</td>
 									</tr>
@@ -747,7 +747,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										<td>&nbsp;</td>
 										<td colspan="4">
 											<?php
-											echo (($results) ? "<input type=\"button\" class=\"button\" value=\"Delete Selected\" onclick=\"confirmLinkDelete()\" />" : "&nbsp;")."\n";
+											echo (($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Delete Selected\" onclick=\"confirmLinkDelete()\" />" : "&nbsp;")."\n";
 											?>
 										</td>
 									</tr>

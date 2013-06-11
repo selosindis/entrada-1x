@@ -275,7 +275,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 									<tr>
 										<td colspan="2" />
 										<td style="padding-top: 10px">
-											<input type="submit" class="button" value="Rename" />
+											<input type="submit" class="btn" value="Rename" />
 										</td>
 									</tr>
 								</tfoot>
@@ -336,13 +336,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 										<tr>
 											<td />
 											<td style="padding-top: 10px">
-												<input type="submit" class="button" value="Deactivate" />
+												<input type="submit" class="btn" value="Deactivate" />
 											</td>
 											<td style="padding-top: 10px">
-												<input type="submit" class="button" value="Activate" onClick="$('coa').value='activate'" />
+												<input type="submit" class="btn btn-primary" value="Activate" onClick="$('coa').value='activate'" />
 											</td>
 											<td colspan="2" style="padding-top: 10px">
-												<input type="submit" class="button" value="Delete Confirm" onClick="$('coa').value='delete'" />
+												<input type="submit" class="btn-danger" value="Delete Confirm" onClick="$('coa').value='delete'" />
 											</td>
 										</tr>
 									</tfoot>
@@ -402,12 +402,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 										<tfoot>
 											<tr>
 												<td style="padding-top: 10px" colspan="2">
-													<input type="submit" class="button" value="Deactivate" />
+													<input type="submit" class="btn" value="Deactivate" />
 												</td>
 												<td style="padding-top: 10px" align="right" colspan="2">
-													<input type="submit" class="button" value="Activate" onClick="$('coa').value='activate'" />
+													<input type="submit" class="btn btn-primary" value="Activate" onClick="$('coa').value='activate'" />
 
-													<input type="submit" class="button" value="Delete Confirm" onClick="$('coa').value='delete'" />
+													<input type="submit" class="btn btn-danger" value="Delete Confirm" onClick="$('coa').value='delete'" />
 												</td>
 											</tr>
 										</tfoot>

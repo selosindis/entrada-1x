@@ -424,10 +424,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 									<tr>
 										<td style="width: 25%; text-align: left">
-											<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>'" />
+											<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>'" />
 										</td>
 										<td style="width: 75%; text-align: right; vertical-align: middle">
-											<input type="submit" class="button" value="Proceed" />
+											<input type="submit" class="btn btn-primary" value="Proceed" />
 										</td>
 									</tr>
 									</table>
@@ -783,7 +783,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								<tr>
 									<td></td>
 									<td colspan="3" style="padding-top: 10px">
-										<input type="submit" class="button" value="Attach Selected" />
+										<input type="submit" class="btn btn-primary" value="Attach Selected" />
 									</td>
 								</tr>
 							</tfoot>
@@ -1228,10 +1228,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 									<tr>
 										<td style="width: 25%; text-align: left">
-											<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>'" />
+											<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>'" />
 										</td>
 										<td style="width: 75%; text-align: right; vertical-align: middle">
-											<input type="submit" class="button" value="Proceed" />
+											<input type="submit" class="btn btn-primary" value="Proceed" />
 										</td>
 									</tr>
 									</table>
@@ -1494,7 +1494,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								<tr>
 									<td></td>
 									<td style="padding-top: 10px">
-										<input type="submit" class="button" value="Attach Selected" />
+										<input type="submit" class="btn btn-primary" value="Attach Selected" />
 									</td>
 								</tr>
 							</tfoot>

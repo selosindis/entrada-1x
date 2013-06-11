@@ -523,8 +523,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						<tfoot>
 							<tr>
 								<td colspan="2" style="padding-top: 15px; text-align: right">
-									<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/objectives?org=<?php echo $ORGANISATION_ID;?>'" />
-									<input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+									<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/objectives?org=<?php echo $ORGANISATION_ID;?>'" />
+									<input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
 								</td>
 							</tr>
 						</tfoot>
@@ -570,11 +570,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 											}
 									echo "</select>\n";
 									echo "<div style=\"float: left; display: inline\">\n";
-									echo "	<input type=\"button\" id=\"courses_list_state_btn\" class=\"button\" value=\"Show List\" onclick=\"toggle_list('courses_list')\" />\n";
+									echo "	<input type=\"button\" id=\"courses_list_state_btn\" class=\"btn\" value=\"Show List\" onclick=\"toggle_list('courses_list')\" />\n";
 									echo "</div>\n";
 									echo "<div style=\"float: right; display: inline\">\n";
-									echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"button-remove\" onclick=\"delIt()\" value=\"Remove\" />\n";
-									echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"button-add\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
+									echo "	<input type=\"button\" id=\"courses_list_remove_btn\" class=\"btn btn-danger\" onclick=\"delIt()\" value=\"Remove\" />\n";
+									echo "	<input type=\"button\" id=\"courses_list_add_btn\" class=\"btn btn-primary\" onclick=\"addIt()\" style=\"display: none\" value=\"Add\" />\n";
 									echo "</div>\n";
 									echo "<div id=\"courses_list\" style=\"clear: both; padding-top: 3px; display: none\">\n";
 									echo "	<h2>Available Courses</h2>\n";

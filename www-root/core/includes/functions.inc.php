@@ -2268,7 +2268,7 @@ function clerkship_display_available_evaluations() {
 			<tfoot>
 				<tr>
 					<td colspan="2" style="text-align: right; padding-right: 15px">
-						<input type="submit" class="button" value="Remove From List" />
+						<input type="submit" class="btn btn-danger" value="Remove From List" />
 					</td>
 				</tr>
 			</tfoot>
@@ -3626,7 +3626,7 @@ function poll_display($poll_id = 0) {
 				}
 				$output .= "	</div>\n";
 				$output .= "	<input type=\"hidden\" id=\"poll_id\" name=\"poll_id\" value=\"".$poll_id."\" />\n";
-				$output .= "	<div style=\"text-align: right\"><input type=\"submit\" class=\"button-sm\" name=\"vote\" value=\"Vote\" /></div>\n";
+				$output .= "	<div style=\"text-align: right\"><input type=\"submit\" class=\"btn btn-primary\" name=\"vote\" value=\"Vote\" /></div>\n";
 				$output .= "</form>\n";
 				$output .= "</div>\n";
 			}
@@ -8134,8 +8134,8 @@ function lp_multiple_select_popup($id, $checkboxes, $options) {
 		$return .= '<div class="select_multiple_filter"><input id="'.$id.'_select_filter" type="text" value="Search..."><span class="select_filter_clear" onclick="$(\''.$id.'_select_filter\').value = \'\'; $$(\'.filter-hidden\').invoke(\'show\');"></span></div>';
 	}
 
-	$return .= ($options['cancel'] == true ? '<input type="button" class="button-sm" value="'.$options['cancel_text'].'" id="'.$id.'_cancel"/>&nbsp;' : '');
-	$return .= ($options['submit'] == true ? '<input type="button" class="button-sm" value="'.$options['submit_text'].'" id="'.$id.'_close"/>' : '').'</div></div>';
+	$return .= ($options['cancel'] == true ? '<input type="button" class="btn" value="'.$options['cancel_text'].'" id="'.$id.'_cancel"/>&nbsp;' : '');
+	$return .= ($options['submit'] == true ? '<input type="button" class="btn btn-primary" value="'.$options['submit_text'].'" id="'.$id.'_close"/>' : '').'</div></div>';
 	return $return;
 }
 
@@ -13410,8 +13410,8 @@ function course_objectives_multiple_select_options_checked($id, $checkboxes, $op
 	$output .= "		</div>\n";
 	$output .= "						<div class=\"select_multiple_submit\">\n";
 	$output .= "							<div class=\"select_multiple_filter\"></div>\n";
-	$output .=								(($options['cancel'] == true) ? "<input type=\"button\" class=\"button-sm\" value=\"".$options["cancel_text"]."\" id=\"".$id."_cancel\" />" : "");
-	$output .=								(($options['submit'] == true) ? "<input type=\"button\" class=\"button-sm\" value=\"".$options["submit_text"]."\" id=\"".$id."_submit\" />" : "");
+	$output .=								(($options['cancel'] == true) ? "<input type=\"button\" class=\"btn\" value=\"".$options["cancel_text"]."\" id=\"".$id."_cancel\" />" : "");
+	$output .=								(($options['submit'] == true) ? "<input type=\"button\" class=\"btn btn-primary\" value=\"".$options["submit_text"]."\" id=\"".$id."_submit\" />" : "");
 	$output .= "						</div>\n";
 	$output .= "	</div>";
 	$output .= "</div>";

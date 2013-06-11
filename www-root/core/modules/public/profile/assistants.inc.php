@@ -140,7 +140,7 @@ if (!defined("IN_PROFILE")) {
 					<tfoot>
 						<tr>
 							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="button" class="button" value="Add Assistant" onclick="addAssistant()" />
+								<input type="button" class="btn btn-primary" value="Add Assistant" onclick="addAssistant()" />
 							</td>
 						</tr>
 					</tfoot>
@@ -192,7 +192,7 @@ if (!defined("IN_PROFILE")) {
 						<tfoot>
 							<tr>
 								<td colspan="4" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-									<input type="button" class="button" value="Remove Assistant" onclick="confirmRemoval()" />
+									<input type="button" class="btn btn-danger" value="Remove Assistant" onclick="confirmRemoval()" />
 								</td>
 							</tr>
 						</tfoot>

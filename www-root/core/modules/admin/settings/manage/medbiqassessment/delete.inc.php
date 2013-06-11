@@ -104,7 +104,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQASSESSMENT"))) {
 						</tbody>
 					</table>
 					<br/>
-					<input type="submit" value="Deactivate" class="button" />
+					<input type="submit" value="Deactivate" class="btn btn-danger" />
 				</form>
 				<?php
 					break;				

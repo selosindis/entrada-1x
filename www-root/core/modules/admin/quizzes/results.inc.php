@@ -604,7 +604,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								<tr>
 									<td>&nbsp;</td>
 									<td colspan="6" style="padding-top: 10px">
-										<button onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("download" => "csv")); ?>'">Download CSV</button>
+										<button class="btn" onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("download" => "csv")); ?>'">Download CSV</button>
 									</td>
 								</tr>
 							</tfoot>
@@ -681,7 +681,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								<tr>
 									<td>&nbsp;</td>
 									<td colspan="6" style="padding-top: 10px">
-										<button onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("download" => "csv", "noattempts" => "true")); ?>'">Download CSV</button>
+										<button class="btn" onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("download" => "csv", "noattempts" => "true")); ?>'">Download CSV</button>
 									</td>
 								</tr>
 							</tfoot>

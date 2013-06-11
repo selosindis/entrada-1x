@@ -147,7 +147,7 @@ if (!defined("PARENT_INCLUDED")) {
 						okLabel:		'Yes',
 						cancelLabel:	'No',
 						closable:		'true',
-						buttonClass:	'button small',
+						buttonClass:	'btn',
 						ok:				function(win) {
 											window.location = '<?php echo ENTRADA_RELATIVE; ?>/quizzes?section=attempt&id='+id;
 											return true;
@@ -954,7 +954,7 @@ if ($topic_results) { ?>
 									okLabel:		'Yes',
 									cancelLabel:	'No',
 									closable:		'true',
-									buttonClass:	'button small',
+									buttonClass:	'btn',
 									destroyOnClose:	true,
 									ok:				function(win) {
 														new Window(	{
@@ -964,7 +964,7 @@ if ($topic_results) { ?>
 																		title:			'Notification Result',
 																		className:		'medtech',
 																		okLabel:		'close',
-																		buttonClass:	'button small',
+																		buttonClass:	'btn',
 																		resizable:		false,
 																		draggable:		false,
 																		minimizable:	false,
@@ -1025,7 +1025,7 @@ if ($topic_results) { ?>
 					echo "		<label for=\"discussion_comment\" class=\"content-subheading\">Leave a Comment</label>\n";
 					echo "		<div class=\"content-small\">Posting comment as <strong>".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]."</strong></div>\n";
 					echo "		<textarea id=\"discussion_comment\" name=\"discussion_comment\" cols=\"85\" rows=\"10\" style=\"width: 100%; height: 135px\"></textarea>\n";
-					echo "		<div style=\"text-align: right; padding-top: 8px\"><input type=\"submit\" class=\"button\" value=\"Submit\" /></div>\n";
+					echo "		<div style=\"text-align: right; padding-top: 8px\"><input type=\"submit\" class=\"btn btn-primary\" value=\"Submit\" /></div>\n";
 					echo "	</form>\n";
 					echo "</div>\n";
 

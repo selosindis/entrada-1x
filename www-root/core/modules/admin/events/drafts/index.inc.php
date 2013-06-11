@@ -33,32 +33,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events/drafts", "title" => "My Draft Learning Event Schedules");
-	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	?>
 	<style type="text/css">
 		#draft-list_length {padding:5px 4px 0 0;}
 		#draft-list_filter {-moz-border-radius:10px 10px 0px 0px; border: 1px solid #9D9D9D;border-bottom:none;background-color:#FAFAFA;font-size: 0.9em;padding:3px;}
 		#draft-list_paginate a {margin:2px 5px;}
 	</style>
-	<script type="text/javascript">
-		jQuery(function(){
-			jQuery(".noLink").live("click", function(){
-				return false;
-			});
-
-			jQuery('#draft-list').dataTable({
-				"aaSorting": [[ 2, "asc" ]],
-                'bAutoWidth': false
-			});
-		});
-	</script>
 	<h1>My Draft Learning Event Schedules</h1>
-	<div style="float: right">
-		<ul class="page-action">
-			<li class="last"><a class="strong-green" href="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=create-draft">Create New Draft</a></li>
-		</ul>
-	</div>
-	<div style="clear: both"></div>
+	<div  class="row-fluid"><a class="btn btn-primary pull-right" href="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=create-draft">Create New Draft</a></div>
+	<br />
 	<?php
 	// fetch the list of draft ids for the user
 	$query = "	SELECT a.*
@@ -73,19 +56,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		echo display_notice();
 		?>
 			<form name="frmSelect" id="frmSelect" action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=delete" method="post">
-			<table class="tableList" id="draft-list" cellspacing="0" cellpadding="1" summary="List of Events">
-				<colgroup>
-					<col class="modified" />
-					<col class="title" />
-					<col class="date" />
-					<col class="status" />
-				</colgroup>
+			<table class="table table-striped table-bordered" id="draft-list" cellspacing="0" cellpadding="1" summary="List of Events">
 				<thead>
 					<tr>
-						<td class="modified">&nbsp;</td>
-						<td class="title"><a href="#" class="noLink">Draft Name</a></td>
-						<td class="date"><a href="#" class="noLink">Created</a></td>
-						<td class="status"><a href="#" class="noLink">Status</a></td>
+						<th class="modified" width="5%">&nbsp;</th>
+						<th class="title">Draft Name</th>
+						<th class="date">Created</th>
+						<th class="status">Status</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -113,7 +90,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<?php
 							if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 								?>
-								<input type="submit" class="button" value="Delete Selected" />
+								<input type="submit" class="btn btn-danger" value="Delete Selected" />
 								<?php
 							} ?>
 						</td>
@@ -121,8 +98,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<?php
 							if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 								?>
-								<input type="submit" class="button" value="Reopen Drafts" onclick="jQuery('#frmSelect').attr('action', '<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&action=reopen')" />
-								<input type="submit" class="button" value="Publish Drafts" onclick="jQuery('#frmSelect').attr('action', '<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&action=approve')" />
+								<input type="submit" class="btn" value="Reopen Drafts" onclick="jQuery('#frmSelect').attr('action', '<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&action=reopen')" />
+								<input type="submit" class="btn btn-primary" value="Publish Drafts" onclick="jQuery('#frmSelect').attr('action', '<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&action=approve')" />
 								<?php
 							}
 							?>

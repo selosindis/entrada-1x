@@ -297,11 +297,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 								<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 								<tr>
 									<td style="width: 25%; text-align: left">
-										<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/annualreport/education'" />
+										<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/annualreport/education'" />
 									</td>
 									<td style="width: 75%; text-align: right; vertical-align: middle">
 										<span class="content-small">&nbsp;</span>
-										<input type="submit" class="button" value="Save" />
+										<input type="submit" class="btn btn-primary" value="Save" />
 									</td>
 								</tr>
 								</table>

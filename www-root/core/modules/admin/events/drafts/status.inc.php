@@ -206,8 +206,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					<table width="100%">
 						<tfoot>
 							<tr>
-								<td><input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events/drafts/';" /></td>
-								<td align="right" style="padding-top: 10px"><input type="submit" class="button" value="Confirm" /></td>
+								<td><input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events/drafts/';" /></td>
+								<td align="right" style="padding-top: 10px"><input type="submit" class="btn btn-primary" value="Confirm" /></td>
 							</tr>
 						</tfoot>
 					</table>

@@ -137,7 +137,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 					</tr>
 					<tr>
 						<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-							<input type="submit" class="button" name="confirm" value="Continue" />
+							<input type="submit" class="btn btn-primary" name="confirm" value="Continue" />
 						</td>
 					</tr>
 				</tfoot>
@@ -181,7 +181,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 				</tr>
 				<tr>
 					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" name="action" value="Update Options" />
+						<input type="submit" class="btn btn-primary" name="action" value="Update Options" />
 					</td>
 				</tr>
 			</tfoot>

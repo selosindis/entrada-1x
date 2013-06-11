@@ -96,7 +96,7 @@ XMLEND;
 	</div>
 
 	<div style="text-align: right; margin-top: 5px;">
-		<button>Send XML</button>
+		<button class="btn">Send XML</button>
 	</div>
 	<?php
 }

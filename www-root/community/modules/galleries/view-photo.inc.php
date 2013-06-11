@@ -119,7 +119,7 @@ if ($RECORD_ID) {
 								okLabel:		'Yes',
 								cancelLabel:	'No',
 								closable:		'true',
-								buttonClass:	'button small',
+								buttonClass:	'btn',
 								ok:				function(win) {
 													window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=delete-photo&id='+id;
 													return true;
@@ -140,7 +140,7 @@ if ($RECORD_ID) {
 								okLabel:		'Yes',
 								cancelLabel:	'No',
 								closable:		'true',
-								buttonClass:	'button small',
+								buttonClass:	'btn',
 								ok:				function(win) {
 													window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=move-photo&id='+id+'&gallery_id='+$F('gallery_id');
 													return true;
@@ -161,7 +161,7 @@ if ($RECORD_ID) {
 								okLabel:		'Yes',
 								cancelLabel:	'No',
 								closable:		'true',
-								buttonClass:	'button small',
+								buttonClass:	'btn',
 								ok:				function(win) {
 													window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=delete-comment&id='+id;
 													return true;

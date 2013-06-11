@@ -70,6 +70,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	// Error Checking
 	switch ($STEP) {
 		case 2 :
+			
+			$i = 0;
+			foreach ($_POST["options"] as $option => $value) {
+				$PROCESSED["options"][$i]["option"] = clean_input($option, "alpha");
+				$PROCESSED["options"][$i]["value"] = 1;
+				$i++;
+			}
+			
 			/**
 			* Required field "draft_name" / Draft Title.
 			*/
@@ -134,7 +142,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							}
 						}
 					}
-
+					
+					if ($PROCESSED["options"]) {
+						$query = "DELETE FROM `draft_options` WHERE `draft_id` = ".$db->qstr($draft_id);
+						$db->Execute($query);
+						foreach ($PROCESSED["options"] as $option) {
+							$option["draft_id"] = $draft_id;
+							if (!$db->AutoExecute("draft_options", $option, "INSERT")) {
+								application_log("error", "Error when saving draft [".$draft_id."] options, DB said: ".$db->ErrorMsg());
+							}
+						}
+					}
+					
 					$SUCCESS++;
 					$SUCCESSSTR[] = "The <strong>Draft Information</strong> section has been successfully updated.";
 
@@ -176,6 +195,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	$draft_information = $db->GetRow($query);
 
 	if ($draft_information && $draft_information["status"] == "open") {
+
+	$query = "	SELECT `option`, `value`
+				FROM `draft_options` 
+				WHERE `draft_id` = ".$db->qstr($draft_id);
+	$draft_options = $db->GetAssoc($query);
 
 	$query = "	SELECT a.`proxy_id`, CONCAT(b.`lastname`, ', ', b.`firstname`) AS `fullname`
 				FROM `draft_creators` AS a
@@ -255,7 +279,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							?>
 							<div class="autocomplete" id="author_name_auto_complete"></div>
 							<input type="hidden" id="associated_author" name="associated_proxy_ids" value="" />
-							<input type="button" class="button-sm" id="add_associated_author" value="Add" style="vertical-align: middle" />
+							<input type="button" class="btn" id="add_associated_author" value="Add" style="vertical-align: middle" />
 							<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
 							<ul id="author_list" class="menu" style="margin-top: 15px">
 								<?php
@@ -291,9 +315,58 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</td>
 					</tr>
 					<tr>
-						<td colspan="3" style="padding: 25px 0px 25px 0px">
+						<td>&nbsp;</td>
+						<td colspan="2">
+							<div class="content-small" style="margin-top: 15px">
+								<strong>Copy Resources:</strong><br />
+								<span class="content-small">Selecting the following options will copy the content from the previous instance of the event.</span>
+							</div>
+						</td>
+					</tr>
+					<tr>
+						<td>&nbsp;</td>
+						<td style="vertical-align: top" colspan="2">
+							<table width="100%" cellpadding="0" cellspacing="0">
+								<colgroup>
+									<col style="width: 3%" />
+									<col style="width: 3%" />
+									<col style="width: 94%" />
+								</colgroup>
+								<tr>
+									<td>&nbsp;</td>
+									<td><input type="checkbox" <?php echo ($draft_options["files"] ? "checked=\"checked\"" : ""); ?> name="options[files]" /></td>
+									<td>Copy files <span class="content-small">- Excluding podcasts</span></td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><input type="checkbox" <?php echo ($draft_options["links"] ? "checked=\"checked\"" : ""); ?> name="options[links]" /></td>
+									<td>Copy links</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><input type="checkbox" <?php echo ($draft_options["objectives"] ? "checked=\"checked\"" : ""); ?> name="options[objectives]" /></td>
+									<td>Copy objectives</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><input type="checkbox" <?php echo ($draft_options["topics"] ? "checked=\"checked\"" : ""); ?> name="options[topics]" /></td>
+									<td>Copy hot topics</td>
+								</tr>
+								<tr>
+									<td>&nbsp;</td>
+									<td><input type="checkbox" <?php echo ($draft_options["quizzes"] ? "checked=\"checked\"" : ""); ?> name="options[quizzes]" /></td>
+									<td>Copy quizzes</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					
+					
+					
+					<tr>
+						<td colspan="3">
 							<div style="float: right; text-align: right">
-								<input type="submit" class="button" value="Save Changes" />
+								<input type="submit" class="btn btn-primary" value="Save Changes" />
 							</div>
 							<div class="clear"></div>
 						</td>
@@ -301,7 +374,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				</tbody>
 			</table>
 		</form>
-		</div>
 		<?php
 		$query = "	SELECT a.*, CONCAT(c.`prefix`, ' ', c.`lastname`, ', ', c.`firstname` ) AS `fullname`, f.`curriculum_type_name` AS `event_term`
 					FROM `draft_events` AS a
@@ -500,17 +572,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
-							<input type="button" class="button" onclick="document.frmSelect.submit()" value="Delete Selected" />
+							<input type="button" class="btn btn-danger" onclick="document.frmSelect.submit()" value="Delete Selected" />
 							<?php
 						}
 						?>
 					</td>
 					<td style="padding-top: 10px; text-align: right">
-						<input type="button" value="Calendar Preview" id="calendar_preview" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/drafts?section=preview&draft_id=".$draft_id; ?>';" />
+						<input class="btn" type="button" value="Calendar Preview" id="calendar_preview" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/drafts?section=preview&draft_id=".$draft_id; ?>';" />
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
-							<input type="button" value="Publish Draft" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/drafts?section=status&action=approve&draft_id=".$draft_id; ?>';" />
+							<input class="btn btn-primary" type="button" value="Publish Draft" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/drafts?section=status&action=approve&draft_id=".$draft_id; ?>';" />
 							<?php
 						}
 						?>

@@ -56,7 +56,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 			</tr>
 			<?php echo generate_calendars("reporting", "Reporting Date", true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_start"], true, true, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["reporting_finish"]);?>
 			<tr>
-				<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="button" value="Create Report" /></td>
+				<td colspan="3" style="text-align: right; padding-top: 10px"><input type="submit" class="btn btn-primary" value="Create Report" /></td>
 			</tr>
 		</tbody>
 		</table>
@@ -97,7 +97,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 	<tfoot>
 		<tr>
 			<td colspan="3" style="padding-top: 10px">
-				<input style="no-printing" type="button" class="button" value="Refresh" onclick="window.location.href = window.location" />
+				<input style="no-printing" type="button" class="btn" value="Refresh" onclick="window.location.href = window.location" />
 			</td>
 		</tr>
 	</tfoot>

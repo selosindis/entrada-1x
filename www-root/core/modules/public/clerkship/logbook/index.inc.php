@@ -259,12 +259,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			}
 			if ((isset($allow_view) && $allow_view) && (!isset($student) || !$student)) {
 				?>
-				<input style="margin-left: 20px;" type="button" class="btn" value="Deactivate Entry" onclick="if ($('current-entry').value != '0') {window.location = '<?php echo ENTRADA_URL."/clerkship/logbook?section=flag&entry_id="?>'+$('current-entry').value;} else {alert('You must select an active entry before selecting the Deactivate Entry button.');}" />
+				<input style="margin-left: 20px;" type="button" class="btn btn-danger" value="Deactivate Entry" onclick="if ($('current-entry').value != '0') {window.location = '<?php echo ENTRADA_URL."/clerkship/logbook?section=flag&entry_id="?>'+$('current-entry').value;} else {alert('You must select an active entry before selecting the Deactivate Entry button.');}" />
 				<?php 
 			}
 			if ($student) {
 				?>
-				<input style="margin-left: 20px;" type="button" class="btn" value="Edit Entry" onclick="if ($('current-entry').value != '0') {window.location = '<?php echo ENTRADA_URL."/clerkship/logbook?section=edit&id="?>'+$('current-entry').value;} else {alert('You must select an active entry before selecting the Edit Entry button.');}" />
+				<input style="margin-left: 20px;" type="button" class="btn btn-primary" value="Edit Entry" onclick="if ($('current-entry').value != '0') {window.location = '<?php echo ENTRADA_URL."/clerkship/logbook?section=edit&id="?>'+$('current-entry').value;} else {alert('You must select an active entry before selecting the Edit Entry button.');}" />
 				<?php 
 			}
 			?>

@@ -216,10 +216,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				<table style="width: 452px" cellspacing="0" cellpadding="0" border="0">
 				<tr>
 					<td style="width: 180px; text-align: left">
-						<input type="button" class="button" value="Close" onclick="closeWindow()" />
+						<input type="button" class="btn" value="Close" onclick="closeWindow()" />
 					</td>
 					<td style="width: 272px; text-align: right">
-						<input type="button" class="button" value="Report More Teaching" onclick="window.location='<?php echo ENTRADA_URL; ?>/agent-undergrad-teaching.php?enc=<?php echo $ENCODED_INFORMATION; ?>'" />
+						<input type="button" class="btn btn-primary" value="Report More Teaching" onclick="window.location='<?php echo ENTRADA_URL; ?>/agent-undergrad-teaching.php?enc=<?php echo $ENCODED_INFORMATION; ?>'" />
 					</td>
 				</tr>
 				</table>
@@ -273,10 +273,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					<table style="width: 100" cellspacing="0" cellpadding="0" border="0">
 					<tr>
 						<td style="width: 180px; text-align: left">
-							<input type="button" class="button" value="Close" onclick="closeWindow()" />
+							<input type="button" class="btn" value="Close" onclick="closeWindow()" />
 						</td>
 						<td style="width: 272px; text-align: right">
-							<input type="button" class="button" value="Submit" onclick="submitFeedback()" />
+							<input type="button" class="btn btn-primary" value="Submit" onclick="submitFeedback()" />
 						</td>
 					</tr>
 					</table>

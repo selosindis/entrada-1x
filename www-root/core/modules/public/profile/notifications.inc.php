@@ -119,7 +119,7 @@ if (!defined("IN_PROFILE")) {
 					okLabel:		'Yes',
 					cancelLabel:	'No',
 					closable:		'true',
-					buttonClass:	'button small',
+					buttonClass:	'btn',
 					destroyOnClose:	true,
 					ok:				function(win) {
 										new Window(	{
@@ -129,7 +129,7 @@ if (!defined("IN_PROFILE")) {
 														title:			'Notification Result',
 														className:		'medtech',
 														okLabel:		'close',
-														buttonClass:	'button small',
+														buttonClass:	'btn',
 														resizable:		false,
 														draggable:		false,
 														minimizable:	false,
@@ -159,7 +159,7 @@ if (!defined("IN_PROFILE")) {
 					okLabel:		'Yes',
 					cancelLabel:	'No',
 					closable:		'true',
-					buttonClass:	'button small',
+					buttonClass:	'btn',
 					destroyOnClose:	true,
 					ok:				function(win) {
 										new Window(	{
@@ -169,7 +169,7 @@ if (!defined("IN_PROFILE")) {
 														title:			'Digest Mode Result',
 														className:		'medtech',
 														okLabel:		'close',
-														buttonClass:	'button small',
+														buttonClass:	'btn',
 														resizable:		false,
 														draggable:		false,
 														minimizable:	false,
@@ -266,7 +266,7 @@ if (!defined("IN_PROFILE")) {
 			<tfoot>
 				<tr>
 					<td style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="button" value="Save Changes" />
+						<input type="submit" class="btn btn-primary" value="Save Changes" />
 					</td>
 				</tr>
 			</tfoot>

@@ -228,8 +228,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			<tfoot>
 				<tr>
 					<td colspan="2" style="padding-top: 15px; text-align: right">
-						<input type="button" class="button" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/curriculumtypes?org=<?php echo $ORGANISATION_ID;?>'" />
-                        <input type="submit" class="button" value="<?php echo $translate->_("global_button_save"); ?>" />
+						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/curriculumtypes?org=<?php echo $ORGANISATION_ID;?>'" />
+                        <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />
 					</td>
 				</tr>
 			</tfoot>
@@ -295,7 +295,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 								<tfoot>
 									<tr id="delete_btn_row">
 										<td colspan="3" style="padding-top: 15px; text-align: left">
-											<input type="button" class="button" id="delete_selected" value="Remove Selected" />
+											<input type="button" class="btn btn-danger" id="delete_selected" value="Remove Selected" />
 										</td>
 									</tr>
 								</tfoot>

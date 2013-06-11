@@ -286,8 +286,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						</table>
 					</form>
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
 				</div>
 				
@@ -365,8 +365,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						</table>
 					</form>
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 				</div>
 				
@@ -425,8 +425,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 					
 				</div>
@@ -466,8 +466,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close">Close</button>
-						<button class="right modal-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
 					
 				</div>
@@ -524,8 +524,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 					
 				</div>
@@ -565,8 +565,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close">Close</button>
-						<button class="right modal-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
 					
 				</div>
@@ -608,8 +608,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
 					
 				</div>
@@ -633,8 +633,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 					
 				</div>
@@ -702,8 +702,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						</table>
 					</form>
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
 					
 				</div>
@@ -751,8 +751,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						</table>
 					</form>
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 				</div>
 				<div id="external_awards"><?php echo display_external_awards($external_awards,"admin"); ?></div>
@@ -846,8 +846,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm" id="edit-submission-confirm">Update</button>
 					</div>
 					
 				</div>
@@ -931,8 +931,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 					
 				</div>
@@ -981,8 +981,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm" id="edit-submission-confirm">Update</button>
 					</div>
 					
 				</div>
@@ -1013,8 +1013,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 					
 				</div>
@@ -1034,7 +1034,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						</tr>
 						<tr>
 							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-								<input type="submit" class="button" name="action" value="Add" />
+								<input type="submit" class="btn btn-primary" name="action" value="Add" />
 								<div id="hide_clineval_link" style="display:inline-block;">
 									<ul class="page-action-cancel">
 										<li><a id="hide_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="strong-green">[ Cancel Adding Comment ]</a></li>
@@ -1113,8 +1113,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm" id="edit-submission-confirm">Update</button>
 					</div>
 					
 				</div>
@@ -1155,8 +1155,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 					
 				</div>
@@ -1216,8 +1216,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm" id="edit-submission-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm" id="edit-submission-confirm">Update</button>
 					</div>
 					
 				</div>
@@ -1264,8 +1264,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 					
 				</div>
@@ -1367,8 +1367,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 					
 				</div>
@@ -1453,8 +1453,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
 					
 				</div>
@@ -1524,8 +1524,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Submit</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Submit</button>
 					</div>
 					
 				</div>
@@ -1577,8 +1577,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 					</form>
 					
 					<div class="footer">
-						<button class="left modal-close"">Close</button>
-						<button class="right modal-confirm">Update</button>
+						<button class="btn modal-close">Close</button>
+						<button class="btn btn-primary pull-right modal-confirm">Update</button>
 					</div>
 					
 				</div>
@@ -1649,8 +1649,8 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		<textarea id="reject-submission-details" name="reject_verify_details" style="width: 99%; height: 75px" cols="45" rows="5"></textarea>
 	</p>
 	<div class="footer">
-		<button class="left modal-close"">Close</button>
-		<button class="right modal-confirm" id="reject-submission-confirm">Reject</button>
+		<button class="btn modal-close">Close</button>
+		<button class="btn btn-primary pull-right modal-confirm" id="reject-submission-confirm">Reject</button>
 	</div>
 </div>
 

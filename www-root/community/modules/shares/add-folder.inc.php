@@ -224,7 +224,7 @@ switch($STEP) {
 		<tfoot>
 			<tr>
 				<td colspan="3" style="padding-top: 15px; text-align: right">
-					<input type="submit" class="button" value="Save" />
+					<input type="submit" class="btn btn-primary" value="Save" />
 				</td>
 			</tr>
 		</tfoot>

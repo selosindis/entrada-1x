@@ -168,7 +168,7 @@ if ($RECORD_ID) {
 								okLabel:		'Yes',
 								cancelLabel:	'No',
 								closable:		'true',
-								buttonClass:	'button small',
+								buttonClass:	'btn',
 								destroyOnClose:	true,
 								ok:				function(win) {
 													new Window(	{
@@ -178,7 +178,7 @@ if ($RECORD_ID) {
 																	title:			'Notification Result',
 																	className:		'medtech',
 																	okLabel:		'close',
-																	buttonClass:	'button small',
+																	buttonClass:	'btn',
 																	resizable:		false,
 																	draggable:		false,
 																	minimizable:	false,

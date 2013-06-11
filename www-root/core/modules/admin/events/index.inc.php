@@ -137,9 +137,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		?>
 		<div class="row-fluid">
 			<div class="pull-right">
-				<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Add New Event</a>
+				<div class="btn-group">
+					<a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Add New Event <span class="caret"></span></a>
+					<ul class="dropdown-menu">
+						<li><a href="<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts">Draft Schedules</a></li>
+					</ul>
+				</div>
 			</div>
 		</div>
+		<br />
 		<?php
 	}
 
@@ -199,12 +205,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
-							<input type="submit" class="button" value="Delete Selected" />
+							<input type="submit" class="btn btn-danger" value="Delete Selected" />
 							<?php
 						}
 						if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
 							?>
-							<input type="submit" class="button" value="Copy Selected"  onClick="document.frmSelect.action ='<?php echo ENTRADA_URL; ?>/admin/events?section=copy'" />
+							<input type="submit" class="btn" value="Copy Selected"  onClick="document.frmSelect.action ='<?php echo ENTRADA_URL; ?>/admin/events?section=copy'" />
 							<?php
 						}
 						?>
@@ -213,7 +219,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
-							<input type="button" value="Export Results" />
+							<input type="btn" value="Export Results" />
 							<?php
 						}
 						?>

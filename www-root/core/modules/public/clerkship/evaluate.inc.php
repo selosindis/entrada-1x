@@ -302,7 +302,7 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 							echo "			<input type=\"button\" class=\"btn\" value=\"Close\" onclick=\"window.location='".ENTRADA_URL."/clerkship'\" />\n";
 							echo "		</td>\n";
 							echo "		<td style=\"width: 50%; text-align: right\">\n";
-							echo "			<input type=\"button\" class=\"btn\" value=\"Proceed\" onclick=\"window.location='".ENTRADA_URL."/clerkship?section=evaluate&amp;nid=".$NOTIFICATION_ID."'\" />\n";
+							echo "			<input type=\"button\" class=\"btn btn-primary\" value=\"Proceed\" onclick=\"window.location='".ENTRADA_URL."/clerkship?section=evaluate&amp;nid=".$NOTIFICATION_ID."'\" />\n";
 							echo "		</td>\n";
 							echo "	</tr>\n";
 							echo "	</table>\n";

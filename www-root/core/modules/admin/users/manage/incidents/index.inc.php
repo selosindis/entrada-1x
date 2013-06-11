@@ -68,7 +68,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												<tr>
 													<td>&nbsp;</td>
 													<td colspan="4">
-														<input type="submit" class="button" value="Close Selected" />
+														<input type="submit" class="btn" value="Close Selected" />
 													</td>
 												</tr>
 											</tfoot>

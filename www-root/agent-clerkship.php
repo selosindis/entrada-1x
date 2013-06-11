@@ -210,10 +210,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				<table style="width: 452px" cellspacing="0" cellpadding="0" border="0">
 				<tr>
 					<td style="width: 180px; text-align: left">
-						<input type="button" class="button" value="Close" onclick="closeWindow()" />
+						<input type="button" class="btn" value="Close" onclick="closeWindow()" />
 					</td>
 					<td style="width: 272px; text-align: right">
-						<input type="button" class="button" value="New Correction" onclick="newCorrection();" />
+						<input type="button" class="btn btn-primary" value="New Correction" onclick="newCorrection();" />
 					</td>
 				</tr>
 				</table>
@@ -269,10 +269,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					<table style="width: 100" cellspacing="0" cellpadding="0" border="0">
 					<tr>
 						<td style="width: 180px; text-align: left">
-							<input type="button" class="button" value="Close" onclick="closeWindow()" />
+							<input type="button" class="btn" value="Close" onclick="closeWindow()" />
 						</td>
 						<td style="width: 272px; text-align: right">
-							<input type="button" class="button" value="Submit" onclick="submitCorrection()" />
+							<input type="button" class="btn btn-primary" value="Submit" onclick="submitCorrection()" />
 						</td>
 					</tr>
 					</table>

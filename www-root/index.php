@@ -151,6 +151,7 @@ if ($ACTION == "login") {
 				"access_expires",
 				"last_login",
 				"privacy_level",
+				"notifications",
 				"private_hash",
 				"private-allow_podcasting",
 				"acl"
@@ -205,7 +206,6 @@ if ($ACTION == "login") {
 			if ($ENTRADA_USER == false) {
 				$ENTRADA_USER = User::get($result["ID"]);
 			}
-
 			$_SESSION["isAuthorized"] = true;
 			$_SESSION["details"] = array();
 			$_SESSION["details"]["app_id"] = (int) AUTH_APP_ID;

@@ -166,7 +166,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	<div id="draftCalendar"></div>
 	<br />
 	<form>
-		<input style="float:right;" type="button" value="Return" onclick="window.location = '<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts?section=edit&draft_id=<?php echo $draft_id; ?>';" />
+		<input class="btn" style="float:right;" type="button" value="Return" onclick="window.location = '<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts?section=edit&draft_id=<?php echo $draft_id; ?>';" />
 	</form>
 	<?php
 

@@ -34,7 +34,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 					okLabel:		'Yes',
 					cancelLabel:	'No',
 					closable:		'true',
-					buttonClass:	'button small',
+					buttonClass:	'btn',
 					ok:				function(win) {
 										window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=delete-poll&id='+id;
 										return true;
@@ -64,7 +64,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 					okLabel:		'Yes',
 					cancelLabel:	'No',
 					closable:		'true',
-					buttonClass:	'button small',
+					buttonClass:	'btn',
 					destroyOnClose:	true,
 					ok:				function(win) {
 										new Window(	{
@@ -74,7 +74,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 														title:			'Notification Result',
 														className:		'medtech',
 														okLabel:		'close',
-														buttonClass:	'button small',
+														buttonClass:	'btn',
 														resizable:		false,
 														draggable:		false,
 														minimizable:	false,

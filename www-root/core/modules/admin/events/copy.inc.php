@@ -497,10 +497,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<tr id="tSubmit" style="visibility: hidden"  >
 							<td></td>
 							<td colspan="3" style="padding-top: 10px">
-								<input type="button" name="Cancel" value="Cancel" onclick="history.go(-1)" />
+								<input class="btn" type="button" name="Cancel" value="Cancel" onclick="history.go(-1)" />
 							</td>
 							<td style="padding-top: 10px; text-align: right">
-								<input type="submit" value="Copy Events" />
+								<input class="btn btn-primary" type="submit" value="Copy Events" />
 							</td>
 						</tr>
 					</tfoot>
@@ -508,7 +508,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<?php
 						echo "<tr id=\"dateRow\" style=\"background-color:#ffd;display:none\">";
 						echo "<td /><td colspan=5><table><tr><td style=\"border: 0\"><table>" . generate_calendar("cEvent", "Set Copy's Date & Time", true) . "</table></td>";
-						echo "<td style=\"border: 0\"><input type=\"button\" class=\"button-sm\" onclick=\"javascript:acceptEvent()\" value=\"Add\" style=\"vertical-align: middle\" /></td>";
+						echo "<td style=\"border: 0\"><input type=\"button\" class=\"btn\" onclick=\"javascript:acceptEvent()\" value=\"Add\" style=\"vertical-align: middle\" /></td>";
 						echo "</tr></table></td></tr>";
 						foreach ($results as $result) {
 							$url = "";

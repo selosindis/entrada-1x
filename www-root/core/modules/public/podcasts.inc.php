@@ -72,7 +72,7 @@ Click the image above to launch iTunes, then enter your MEdTech username and pas
 				<br /><br />
 				<form>
 					<div>
-						<input type="button" class="button" onclick="window.location='<?php echo str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL); ?>/podcasts/feed'" value="Launch iTunes" />
+						<input type="button" class="btn btn-primary" onclick="window.location='<?php echo str_replace(array("https://", "http://"), "itpc://", ENTRADA_URL); ?>/podcasts/feed'" value="Launch iTunes" />
 					</div>
 				</form>
 

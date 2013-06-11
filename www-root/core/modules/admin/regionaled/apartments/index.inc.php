@@ -82,7 +82,7 @@ if (!defined("IN_APARTMENTS")) {
 						<tr>
 							<td></td>
 							<td colspan="3" style="padding-top: 10px">
-								<input type="submit" class="button" value="Expire Selected" />
+								<input type="submit" class="btn btn-danger" value="Expire Selected" />
 							</td>
 						</tr>
 					</tfoot>

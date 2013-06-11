@@ -159,7 +159,7 @@ if ($RECORD_ID) {
 							okLabel:		'Yes',
 							cancelLabel:	'No',
 							closable:		'true',
-							buttonClass:	'button small',
+							buttonClass:	'btn',
 							ok:				function(win) {
 												window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=delete-file&id='+id;
 												return true;
@@ -180,7 +180,7 @@ if ($RECORD_ID) {
 							okLabel:		'Yes',
 							cancelLabel:	'No',
 							closable:		'true',
-							buttonClass:	'button small',
+							buttonClass:	'btn',
 							ok:				function(win) {
 												window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=move-file&id='+id+'&share_id='+$F('share_id');
 												return true;
@@ -218,7 +218,7 @@ if ($RECORD_ID) {
 								okLabel:		'Yes',
 								cancelLabel:	'No',
 								closable:		'true',
-								buttonClass:	'button small',
+								buttonClass:	'btn',
 								destroyOnClose:	true,
 								ok:				function(win) {
 													new Window(	{
@@ -228,7 +228,7 @@ if ($RECORD_ID) {
 																	title:			'Notification Result',
 																	className:		'medtech',
 																	okLabel:		'close',
-																	buttonClass:	'button small',
+																	buttonClass:	'btn',
 																	resizable:		false,
 																	draggable:		false,
 																	minimizable:	false,

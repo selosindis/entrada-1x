@@ -76,8 +76,9 @@ if (!defined("IN_PROFILE")) {
 			break;
 			case "generatehash" :
 				$new_private_hash = generate_hash();
-				$query = "UPDATE `".AUTH_DATABASE."`.`user_access` SET `private_hash` = ".$db->qstr($new_private_hash)." WHERE `user_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
-				if ($db->Execute($query)) {
+				$query = "UPDATE IGNORE `".AUTH_DATABASE."`.`user_access` SET `private_hash` = ".$db->qstr($new_private_hash)." WHERE `user_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+				$result = $db->Execute($query);
+				if ($result) {
 					echo json_encode(array("status" => "success", "data" => $new_private_hash));
 					$_SESSION["details"]["private_hash"] = $new_private_hash;
 				} else {
@@ -218,7 +219,7 @@ if (!defined("IN_PROFILE")) {
 			#btn-toggle .btn {outline:none;}
 			.profile-image-preview {text-align:center;max-width:250px;margin:auto;}
 			.modal-body {max-height:none;}
-			#reset-hash {cursor:pointer;}
+
 		</style>
 		<?php $profile_image = ENTRADA_ABSOLUTE . '/../public/images/' . $ENTRADA_USER->getID() . '/' . $ENTRADA_USER->getID() . '-large.png'; ?>
 		<script type="text/javascript">
@@ -245,7 +246,7 @@ if (!defined("IN_PROFILE")) {
 						jQuery("#hash-value").html(jsonResponse.data);
 					}
 				});
-				return false;
+				jQuery("#reset-hash-modal").modal("hide");
 			});
 
 			jQuery("#btn-toggle .btn").live("click", function() {
@@ -454,7 +455,7 @@ if (!defined("IN_PROFILE")) {
 			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($result["id"]);
 			$uploaded_photo = $db->GetRow($query);
 			?>
-			<span class="thumbnail"><img src="<?php echo webservice_url("photo", array($ENTRADA_USER->getID(), $uploaded_photo ? "upload" : "official"))."/".time(); ?>" width="192" height="250" class="img-polaroid" /></span>
+			<span><img src="<?php echo webservice_url("photo", array($ENTRADA_USER->getID(), $uploaded_photo ? "upload" : "official"))."/".time(); ?>" width="192" height="250" class="img-polaroid" /></span>
 			<div class="btn-group" id="btn-toggle" class=" <?php echo $uploaded_photo ? "uploaded" : "official"; ?>">
 				<a href="#" class="btn btn-small <?php echo $uploaded_photo["photo_active"] == "0" ? "active" : ""; ?>" id="image-nav-left">Official</a>
 				<?php if ($uploaded_photo) { ?><a href="#" class="btn btn-small <?php echo $uploaded_photo["photo_active"] == "1" ? "active" : ""; ?>" id="image-nav-right">Uploaded</a><?php } ?>
@@ -486,7 +487,7 @@ if (!defined("IN_PROFILE")) {
 				<label class="control-label">Private Hash:</label>
 				<div class="controls">
 					<div class="input-append">
-						<span class="input-large uneditable-input" id="hash-value"><?php echo $_SESSION["details"]["private_hash"]; ?></span><span class="add-on" id="reset-hash"><i class="icon-repeat"></i></span>
+						<span class="input-large uneditable-input" id="hash-value"><?php echo $_SESSION["details"]["private_hash"]; ?></span><a class="add-on" href="#reset-hash-modal" data-toggle="modal"><i class="icon-repeat"></i></a>
 					</div>
 
 				</div>
@@ -690,7 +691,7 @@ if (!defined("IN_PROFILE")) {
 				foreach ($departments as $department_id => $department) {
 					if (count($custom_fields[$department_id]) >= 1) {
 					echo "<div class=\"tab-pane ".($i == 0 ? "active" : "")."\" id=\"dep-".$department_id."\">";
-					echo "<h3>".$department."</h3>";
+					echo "<h4>".$department."</h4>";
 					foreach ($custom_fields[$department_id] as $field) { ?>
 						<div class="control-group">
 							<label class="control-label <?php echo $field["required"] == "1" ? " form-required" : ""; ?>" for="<?php echo $field["name"]; ?>"><?php echo $field["title"]; ?></label>
@@ -727,9 +728,6 @@ if (!defined("IN_PROFILE")) {
 							</div>
 						</div>
 					<?php }
-
-					echo "<h3>Publications on ".$department." Website</h3>";
-
 					foreach ($pub_types as $type_table => $data) {
 						$query = "SELECT a.`".$data["id_field"]."` AS `id`, a.`".$data["title"]."` AS `title`, a.`year_reported`, b.`id` AS `dep_pub_id`
 									FROM `".$type_table."` AS a
@@ -740,6 +738,7 @@ if (!defined("IN_PROFILE")) {
 									WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 						$pubs = $db->GetAll($query);
 						if ($pubs) {
+							echo "<h4>Publications on ".$department." Website</h4>";
                             ?>
 							<h4><?php echo ucwords(str_replace("ar ", "", str_replace("_", " ", $type_table))); ?></h4>
 							<table width="100%" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-hover table-bordered table-nowrap">
@@ -781,6 +780,21 @@ if (!defined("IN_PROFILE")) {
 				</div>
 			</div>
 		</form>
+		</div>
+		<div class="modal hide fade" id="reset-hash-modal">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h3>Private Hash Reset</h3>
+			</div>
+			<div class="modal-body">
+				<div class="alert alert-info">
+					<strong>Please note:</strong> You are about to reset your private hash. Please confirm below that you would like to proceed with the reset.
+				</div>
+			</div>
+			<div class="modal-footer">
+				<a href="#" class="btn pull-left" data-dismiss="modal">Cancel</a>
+				<a href="#" class="btn btn-primary" id="reset-hash">Reset Hash</a>
+			</div>
 		</div>
 		<?php
 		if (((bool) $GOOGLE_APPS["active"]) && $result["google_id"] && !in_array($result["google_id"], array("opt-out", "opt-in"))) {

@@ -896,6 +896,9 @@ function new_sidebar_item($title = "", $html = "", $id = "", $state = "open", $p
 function add_organisation_sidebar() {
     global $translate, $ENTRADA_USER;
 
+    $temp_router = new Entrada_Router();
+    $temp_router->setBasePath(ENTRADA_CORE.DIRECTORY_SEPARATOR."modules".(defined("IN_ADMIN") && IN_ADMIN ? DIRECTORY_SEPARATOR."admin" : ""));
+    $temp_router->initRoute();
     /**
 	 * Create the Organisation side bar.
 	 * If the org request attribute is set then change the current org id for this user.
@@ -908,7 +911,7 @@ function add_organisation_sidebar() {
             $sidebar_html .= "<li class=\"nav-header\">" . html_encode($organisation_title) . "</li>\n";
             if ($org_group_role && !empty($org_group_role)) {
                 foreach ($org_group_role[$key] as $group_role) {
-                    $sidebar_html .= "<li><a href=\"" . ENTRADA_RELATIVE . "/" . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $group_role["access_id"])) . "\"".(($group_role["access_id"] == $ENTRADA_USER->getAccessId()) ? " style=\"font-weight: bold\"" : "").">" . html_encode(ucfirst($group_role["group"]) . " / " . ucfirst($group_role["role"])) . "</a></li>\n";
+                    $sidebar_html .= "<li><a href=\"" . ENTRADA_RELATIVE . "/" . (defined("IN_ADMIN") && IN_ADMIN ? "admin/" : "").(isset($temp_router) && $temp_router ? implode("/", $temp_router->getModules()) : "") . "?" . replace_query(array("organisation_id" => $key, "ua_id" => $group_role["access_id"])) . "\"".(($group_role["access_id"] == $ENTRADA_USER->getAccessId()) ? " style=\"font-weight: bold\"" : "").">" . html_encode(ucfirst($group_role["group"]) . " / " . ucfirst($group_role["role"])) . "</a></li>\n";
                 }
             }
 		}

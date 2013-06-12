@@ -10726,19 +10726,42 @@ function events_output_calendar_controls($module_type = "") {
     <div class="row-fluid">
         <div class="span6">
             <div class="btn-group">
-                <button class="btn"><i class="icon-chevron-left"></i></button>
-                <button class="btn">Day</button>
-                <button class="btn active">Week</button>
-                <button class="btn">Month</button>
-                <button class="btn">Year</button>
-                <button class="btn"><i class="icon-chevron-right"></i></button>
+                <a class="btn" href="<?php echo ENTRADA_RELATIVE . $module_type . "/events?" . replace_query(array("dstamp" => ($learning_events["duration_start"] - 2))); ?>"><i class="icon-chevron-left"></i></a>
+                <a class="btn<?php echo ($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "day" ? " active" : ""); ?>" href="<?php echo ENTRADA_RELATIVE . $module_type . "/events?" . replace_query(array("dtype" => "day")); ?>">Day</a>
+                <a class="btn<?php echo ($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "week" ? " active" : ""); ?>" href="<?php echo ENTRADA_RELATIVE . $module_type . "/events?" . replace_query(array("dtype" => "week")); ?>">Week</a>
+                <a class="btn<?php echo ($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "month" ? " active" : ""); ?>" href="<?php echo ENTRADA_RELATIVE . $module_type . "/events?" . replace_query(array("dtype" => "month")); ?>">Month</a>
+                <a class="btn<?php echo ($_SESSION[APPLICATION_IDENTIFIER]["events"]["dtype"] == "year" ? " active" : ""); ?>" href="<?php echo ENTRADA_RELATIVE . $module_type . "/events?" . replace_query(array("dtype" => "year")); ?>">Year</a>
+                <a class="btn" href="<?php echo ENTRADA_RELATIVE . $module_type . "/events?" . replace_query(array("dstamp" => ($learning_events["duration_end"] + 1))); ?>"><i class="icon-chevron-right"></i></a>
             </div>
         </div>
-        <div class="span6">
-            <button class="btn"><i class="icon-refresh"></i></button>
+        <div class="span2">
+            <a class="btn" href="<?php echo ENTRADA_RELATIVE . $module_type . "/events?" . replace_query(array("dstamp" => time())); ?>"><i class="icon-refresh"></i></a>
+            <a class="btn" href="javascript:showCalendar('', document.getElementById('dstamp'), document.getElementById('dstamp'), '<?php echo html_encode($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["dstamp"]); ?>', 'calendar-holder', 8, 8, 1);" id="calendar-holder"><i class="icon-calendar"></i></a>
+        </div>
+        <div class="span4">
+            <?php
+            if ($learning_events["total_pages"] > 1) {
+                echo "<form class=\"form-horizontal\" action=\"".ENTRADA_RELATIVE . $module_type . "/events\" method=\"GET\" id=\"pageSelector\">\n";
+                if ($learning_events["page_previous"]) {
+                    echo "<a href=\"".ENTRADA_RELATIVE . $module_type . "/events?" . replace_query(array("pv" => $learning_events["page_previous"]))."\"><i class=\"icon-chevron-left\"></i></a>\n";
+                } else {
+                    echo "<i class=\"icon-chevron-left\" style=\"opacity: 0.25\"></i>\n";
+                }
+                echo "<select class=\"input-medium\" name=\"pv\" onchange=\"$('pageSelector').submit();\"".(($learning_events["total_pages"] <= 1) ? " disabled=\"disabled\"" : "").">\n";
+                for ($i = 1; $i <= $learning_events["total_pages"]; $i++) {
+                    echo "<option value=\"".$i."\"".(($i == $learning_events["page_current"]) ? " selected=\"selected\"" : "").">".(($i == $learning_events["page_current"]) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
+                }
+                echo "</select>\n";
+                if ($learning_events["page_current"] < $learning_events["total_pages"]) {
+                    echo "<a href=\"".ENTRADA_RELATIVE . $module_type . "/events?" . replace_query(array("pv" => $learning_events["page_next"]))."\"><i class=\"icon-chevron-right\"></i></a>\n";
+                } else {
+                    echo "<i class=\"icon-chevron-right\" style=\"opacity: 0.25\"></i>\n";
+                }
+                echo "</form>\n";
+            }
+            ?>
         </div>
     </div>
-
 	<?php
 }
 

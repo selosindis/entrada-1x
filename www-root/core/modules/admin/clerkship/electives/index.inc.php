@@ -340,7 +340,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						?>
 						</select>
 					</td>
-					<td style="padding-left: 10px"><input type="submit" value="Proceed" class="btn" /></td>
+					<td style="padding-left: 10px"><input type="submit" value="Proceed" class="btn btn-primary" /></td>
 				</tr>
 				<tr>
 					<td colspan="3">
@@ -357,7 +357,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 					<td style="padding-left: 10px">
 						<input type="text" name="name" value="" style="width: 200px" />
 					</td>
-					<td style="padding-left: 10px"><input type="submit" value="Search" class="btn" /></td>
+					<td style="padding-left: 10px"><input type="submit" value="Search" class="btn btn-primary" /></td>
 				</tr>
 				<tr>
 				</table>

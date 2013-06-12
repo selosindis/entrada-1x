@@ -337,7 +337,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 						</tbody>
 					</table>
 					<br />
-					<input type="submit" name="generate" value="Generate Report" />
+					<input type="submit" class="btn btn-primary" name="generate" value="Generate Report" />
 				</form><br /><br />
 				<div class="instructions">Note: Only MSPRs closed to submissions will be generated.</div>
 				
@@ -380,7 +380,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MSPR_ADMIN"))) {
 											?>
 											</select>
 								</div>
-									<input type="submit"  class="btn" value="Go"></input>
+									<input type="submit" class="btn btn-primary" value="Go"></input>
 										
 								</form>
 						</div>

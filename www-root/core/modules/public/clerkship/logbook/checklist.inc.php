@@ -183,7 +183,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 		    }
 		    echo "<input type=\"hidden\" name=\"rotation_id\" value=\"$rotation_id\">";
 	    ?>
-		    <tr><td colspan="5">&nbsp;</td></tr><tr><td colspan="4">&nbsp;</td><td><input type="submit" NAME="hidinp" VALUE="Save"></td></tr>
+		    <tr><td colspan="5">&nbsp;</td></tr><tr><td colspan="4">&nbsp;</td><td><input class="btn btn-primary" type="submit" name="hidinp" value="Save"></td></tr>
 		    </table></form>
 	    <?php
 		break;

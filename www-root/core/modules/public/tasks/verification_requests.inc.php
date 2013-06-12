@@ -111,7 +111,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 				<tfoot>
 					<tr>
 					<td colspan="5">
-					<input type="submit" value="<?php echo $BULK_COMPLETE; ?>" name="action" />
+					<input class="btn btn-primary" type="submit" value="<?php echo $BULK_COMPLETE; ?>" name="action" />
 					</td>
 					</tr>
 				</tfoot>

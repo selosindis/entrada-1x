@@ -308,7 +308,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 						<tfoot>
 							<tr>
 								<td colspan="3">
-									<input type="submit" name="action" value="Submit" />
+									<input class="btn btn-primary" type="submit" name="action" value="Submit" />
 								</td>
 							</tr>
 						</tfoot>

@@ -165,7 +165,7 @@ if(!defined("PARENT_INCLUDED")) {
 		$sidebar_html .= "<label for=\"name\" class=\"form-nrequired\">Student Search:</label><br />";
 		$sidebar_html .= "<input type=\"text\" id=\"name\" name=\"name\" value=\"\" style=\"width: 95%\" /><br />\n";
 		$sidebar_html .= "<input type=\"hidden\" name=\"action\" value=\"results\" />";
-		$sidebar_html .= "<span style=\"float: right; padding-top: 4px;\"><input type=\"submit\" class=\"btn\" value=\"Search\" /></span>\n";
+		$sidebar_html .= "<span style=\"float: right; padding-top: 4px;\"><input type=\"submit\" class=\"btn btn-primary\" value=\"Search\" /></span>\n";
 		$sidebar_html .= "</form>\n";
 	
 		new_sidebar_item("View Schedule", $sidebar_html, "search", "open");

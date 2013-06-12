@@ -173,7 +173,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 		<div class="control-group" style="margin-bottom:5px">
 			<label class="control-label">Boolean Search Term:</label>
 			<div class="controls">
-				<input type="text" style="width:300px" id="q" name="q" value="<?php echo html_encode($SEARCH_QUERY); ?>" /> <input type="submit" class="btn" value="Search" />
+				<input type="text" style="width:300px" id="q" name="q" value="<?php echo html_encode($SEARCH_QUERY); ?>" /> <input type="submit" class="btn btn-primary" value="Search" />
 			</div>
 		</div>
 		<div class="control-group">

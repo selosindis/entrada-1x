@@ -105,7 +105,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_TASKS"))) {
 					<tr>
 						<td>&nbsp;</td>
 						<td colspan="4" style="padding-top: 10px">
-							<input type="submit" name="delete" value="Confirm Delete" />
+							<input class="btn btn-danger" type="submit" name="delete" value="Confirm Delete" />
 						</td>
 					</tr>
 				</tfoot>

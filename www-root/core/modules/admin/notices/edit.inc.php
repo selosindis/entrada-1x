@@ -243,7 +243,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 						}
 						?>
 						<div class="row-fluid">	
-							<a href="<?php echo ENTRADA_URL; ?>/admin/notices?section=report&amp;notice_id=<?php echo $NOTICE_ID;?>" class="pull-right btn btn-info btn-large"><i class="icon-flag icon-white"></i> View Notice Statistics</a>
+							<a href="<?php echo ENTRADA_URL; ?>/admin/notices?section=report&amp;notice_id=<?php echo $NOTICE_ID;?>" class="pull-right btn btn-primary btn-large"><i class="icon-flag icon-white"></i> View Notice Statistics</a>
 						</div>
 						
 						<form action="<?php echo ENTRADA_URL; ?>/admin/notices?section=edit&amp;id=<?php echo $NOTICE_ID; ?>&amp;step=2" method="post" class="form-horizontal">

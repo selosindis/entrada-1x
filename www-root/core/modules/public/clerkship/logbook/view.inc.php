@@ -953,7 +953,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				echo "			<label for=\"discussion_comment\" class=\"content-subheading\">Leave a Comment</label>\n";
 				echo "			<div class=\"content-small\">Posting comment as <strong>".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]."</strong></div>\n";
 				echo "			<textarea id=\"discussion_comment\" name=\"discussion_comment\" cols=\"85\" rows=\"10\" style=\"width: 100%; height: 135px\"></textarea>\n";
-				echo "			<div style=\"text-align: right; padding-top: 8px\"><input type=\"submit\" class=\"btn\" value=\"Submit\" /></div>\n";
+				echo "			<div style=\"text-align: right; padding-top: 8px\"><input type=\"submit\" class=\"btn btn-primary\" value=\"Submit\" /></div>\n";
 				echo "		</form>\n";
 				echo "	</div>\n";
 				echo "</div>\n";

@@ -145,7 +145,7 @@ if (!defined("IN_COMMUNITIES")) {
 					</table>
 					<div class="row-fluid mc-deactivate-footer">
 						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/communities'" />		
-						<input type="submit" class="btn btn-primary pull-right" value="Deactivate Now" />
+						<input type="submit" class="btn btn-danger pull-right" value="Deactivate Now" />
 					</div>
 				</form>
 			<?php

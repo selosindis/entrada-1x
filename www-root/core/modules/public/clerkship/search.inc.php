@@ -128,7 +128,7 @@ if ($DISPLAY) {
 					echo "<tr>\n";
 					echo "	<td colspan=\"3\" style=\"border-top: 1px #333333 dotted; padding-top: 5px\">\n";
 					echo "		<input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp;";
-					echo "		<input type=\"submit\" value=\"Add Mass Event\" class=\"btn\" />\n";
+					echo "		<input type=\"submit\" value=\"Add Mass Event\" class=\"btn btn-primary\" />\n";
 					echo "	</td>\n";
 					echo "</tr>\n";
 					echo "</table>\n";
@@ -176,7 +176,7 @@ if ($DISPLAY) {
 					echo "<tr>\n";
 					echo "	<td colspan=\"3\" style=\"border-top: 1px #333333 dotted; padding-top: 5px\">\n";
 					echo "		<input type=\"checkbox\" name=\"selectall\" value=\"1\" onClick=\"selection(this.form['ids[]'])\" />&nbsp;";
-					echo "		<input type=\"submit\" value=\"Add Mass Event\" class=\"btn\" />\n";
+					echo "		<input type=\"submit\" value=\"Add Mass Event\" class=\"btn btn-primary\" />\n";
 					echo "	</td>\n";
 					echo "</tr>\n";
 					echo "</table>\n";
@@ -220,7 +220,7 @@ if ($DISPLAY) {
 					?>
 					</select>
 				</td>
-				<td style="padding-left: 10px"><input type="submit" value="Proceed" /></td>
+				<td style="padding-left: 10px"><input class="btn btn-primary" type="submit" value="Proceed" /></td>
 			</tr>
 			<tr>
 				<td colspan="3">
@@ -237,7 +237,7 @@ if ($DISPLAY) {
 				<td style="padding-left: 10px">
 					<input type="text" name="name" value="" style="width: 200px" />
 				</td>
-				<td style="padding-left: 10px"><input type="submit" value="Search" /></td>
+				<td style="padding-left: 10px"><input class="btn btn-primary" type="submit" value="Search" /></td>
 			</tr>
 			</table>
 			</form>

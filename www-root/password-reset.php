@@ -401,8 +401,8 @@ switch($STEP) {
 												<tfoot>
 													<tr>
 														<td colspan="2" style="padding-top: 15px; text-align: right">
-															<input type="button" value="Cancel" class="button" onclick="window.location='<?php echo ENTRADA_RELATIVE; ?>'" />
-															<input type="submit" class="button" value="Change" />
+															<input type="button" value="Cancel" class="btn" onclick="window.location='<?php echo ENTRADA_RELATIVE; ?>'" />
+															<input type="submit" class="btn btn-primary" value="Change" />
 														</td>
 													</tr>
 												</tfoot>
@@ -494,7 +494,7 @@ switch($STEP) {
 									<td><label for="email_address" style="font-weight: bold">Official E-Mail Address:</label></td>
 									<td>
 										<input type="text" id="email_address" style="width: 275px; vertical-align: middle" name="email_address" value="<?php echo ((isset($_POST["email_address"])) ? html_encode($_POST["email_address"]) : ""); ?>" />
-										<input type="submit" class="button" value="Continue" style="vertical-align: middle; margin-left: 15px" />
+										<input type="submit" class="btn btn-primary" value="Continue" style="vertical-align: middle; margin-left: 15px" />
 									</td>
 								</tr>
 								<tr>

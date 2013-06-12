@@ -33,7 +33,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
                     echo "<option value=\"".$evaluator["proxy_id"]."\">".html_encode($evaluator["fullname"])."</option>";
                 }
                 echo "</select>";
-                echo "<br /><br /><input type=\"submit\" value=\"Make Request\" />";
+                echo "<br /><br /><input class=\"btn btn-primary btn-small\" type=\"submit\" value=\"Make Request\" />";
             }
         }
 } else {

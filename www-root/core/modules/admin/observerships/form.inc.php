@@ -370,7 +370,7 @@ if (!$OBSERVERSHIP){
 				<tr>
 					<td>&nbsp;</td>
 					<td colspan="2">
-						<input type="submit" value="Submit" style="margin-top:15px;" />
+						<input class="btn btn-primary" type="submit" value="Submit" style="margin-top:15px;" />
 					</td>
 				</tr>
 			</tfoot>

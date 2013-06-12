@@ -437,7 +437,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				</tr>
 				<tr>
 					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="btn" value="Search" />
+						<input type="submit" class="btn btn-primary" value="Search" />
 					</td>
 				</tr>
 			</tfoot>
@@ -487,7 +487,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				</tr>
 				<tr>
 					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="btn" value="Browse" />
+						<input type="submit" class="btn btn-primary" value="Browse" />
 					</td>
 				</tr>
 			</tfoot>
@@ -526,7 +526,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				</tr>
 				<tr>
 					<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="btn" value="Browse" />
+						<input type="submit" class="btn btn-primary" value="Browse" />
 					</td>
 				</tr>
 			</tfoot>

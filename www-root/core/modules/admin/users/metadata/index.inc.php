@@ -42,7 +42,7 @@ $ONLOAD[] = "api_url = \"".ENTRADA_URL."/admin/users/metadata?section=api-metada
 		</colgroup>
 		<tfoot>
 			<tr>
-				<td style="padding-top: 25px;" colspan="3"><input type="submit" name="show_table" id="show_table_btn" value="Show Table"/></td>
+				<td style="padding-top: 25px;" colspan="3"><input class="btn" type="submit" name="show_table" id="show_table_btn" value="Show Table"/></td>
 			</tr>
 		</tfoot>
 		<tbody>

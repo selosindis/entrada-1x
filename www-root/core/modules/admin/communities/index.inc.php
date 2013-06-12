@@ -341,7 +341,7 @@ if (!defined("IN_COMMUNITIES")) {
 				<tr>
 					<td></td>
 					<td colspan="5" style="padding-top: 10px">
-						<input type="submit" class="btn" value="Deactivate" />
+						<input type="submit" class="btn btn-danger" value="Deactivate" />
 					</td>
 				</tr>
 			</tfoot>

@@ -106,7 +106,7 @@ if ($unique_id) {
 	<form action="<?php echo ENTRADA_URL."/confirm_observership?unique_id=".$unique_id; ?>" method="POST">
 		<div class="row-fluid">
 			<input type="hidden" value="2" name="step" />
-			<input class="btn" type="submit" value="Deny" name="action" />
+			<input class="btn btn-danger" type="submit" value="Deny" name="action" />
 			<input class="btn btn-primary pull-right" type="submit" value="Confirm" name="action" />
 		</div>
 	</form>

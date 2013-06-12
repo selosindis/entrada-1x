@@ -259,7 +259,7 @@ if (!defined("IN_GROUPS")) {
 				</div>
 			</div>
 			<div class="form-actions">
-				<input type="submit" class="btn" value="Search" />
+				<input type="submit" class="btn btn-primary" value="Search" />
 				<input type="button" class="btn" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/groups'"/>
 			</div>
 			<input type="hidden" name="type" value="search" />

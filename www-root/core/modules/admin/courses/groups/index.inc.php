@@ -266,7 +266,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 				</tr>
 				<tr>
 					<td colspan="3" style="border-top: 1px #DDD solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="btn" value="Search" />
+						<input type="submit" class="btn btn-primary" value="Search" />
 						<input type="button" class="btn" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/courses/groups?id=<?php echo $COURSE_ID ?>'"/>
 					</td>
 				</tr>
@@ -349,14 +349,14 @@ if (!defined("IN_COURSE_GROUPS")) {
 						if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) {
 							$colspan--;
 							?>
-							<td style="padding-top: 10px"><input type="submit" class="button" value="Delete Selected"  onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=edit&action=delete&id=<?php echo $COURSE_ID; ?>'" /></td>
+							<td style="padding-top: 10px"><input type="submit" class="btn btn-danger" value="Delete Selected"  onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=edit&action=delete&id=<?php echo $COURSE_ID; ?>'" /></td>
 							<?php
 						}
 						if ($ENTRADA_ACL->amIAllowed("group", "update", false)) {
 							$colspan--;
 							?>
 							<td style="padding-top: 10px">
-								<input type="submit" class="button" value="Manage Selected" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=manage&id=<?php echo $COURSE_ID; ?>'" />
+								<input type="submit" class="btn btn-primary" value="Manage Selected" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=manage&id=<?php echo $COURSE_ID; ?>'" />
 							</td>
 							<?php
 						}

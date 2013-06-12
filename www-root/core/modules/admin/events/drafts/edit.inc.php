@@ -60,7 +60,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		exit;
 	}
 
-	$BREADCRUMB[]	= array("url" => "", "title" => "Edit Draft Schedule");
 	$draft_id = (int) $_GET["draft_id"];
 
 	/**
@@ -196,6 +195,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	if ($draft_information && $draft_information["status"] == "open") {
 
+	$BREADCRUMB[]	= array("url" => "", "title" => "Edit ".$draft_information["name"]);
+		
 	$query = "	SELECT `option`, `value`
 				FROM `draft_options` 
 				WHERE `draft_id` = ".$db->qstr($draft_id);
@@ -219,11 +220,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>/drafts/?section=edit&draft_id=<?php echo $draft_id; ?>" method="post" id="editDraftForm" onsubmit="picklist_select('proxy_id')">
 			<input type="hidden" name="step" value="2" />
 			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Draft">
-				<colgroup>
-					<col style="width: 3%" />
-					<col style="width: 20%" />
-					<col style="width: 77%" />
-				</colgroup>
 				<thead>
 					<tr>
 						<td colspan="3">
@@ -258,7 +254,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<label for="draft_description" class="form-nrequired">Draft Description</label>
 						</td>
 						<td>
-							<textarea id="draft_description" name="draft_description" style="width: 550px; height: 125px" cols="70" rows="10"><?php echo clean_input($draft_information["description"], array("trim", "encode")); ?></textarea>
+							<textarea id="draft_description" name="draft_description" class="expandable" style="width: 96%;"><?php echo clean_input($draft_information["description"], array("trim", "encode")); ?></textarea>
 						</td>
 					</tr>
 					<tr>
@@ -520,7 +516,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			</form>
 		</div>
 		<form name="frmSelect" action="<?php echo ENTRADA_URL; ?>/admin/events?section=delete&mode=draft&draft_id=<?php echo $draft_id; ?>" method="post">
-			<table class="tableList" id="draftEvents" cellspacing="0" cellpadding="1" summary="List of Events" style="margin-bottom:5px;">
+			<table class="table table-striped table-bordered" id="draftEvents" cellspacing="0" cellpadding="1" summary="List of Events" style="margin-bottom:5px;">
 				<colgroup>
 					<col class="modified" />
 					<col class="date-smallest" />
@@ -530,11 +526,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				</colgroup>
 				<thead>
 					<tr>
-						<td class="modified">&nbsp;</td>
-						<td class="date-smallest"><a href="#" class="noLink">Date</a></td>
-						<td class="accesses"><a href="#" class="noLink">Time</a></td>
-						<td class="general"><a href="#" class="noLink">Duration</a></td>
-						<td class="title"><a href="#" class="noLink">Event Title</a></td>
+						<th class="modified">&nbsp;</th>
+						<th class="date-smallest">Date</th>
+						<th class="accesses">Time</th>
+						<th class="general">Duration</th>
+						<th class="title">Event Title</th>
 					</tr>
 				</thead>
 				<?php if ($ENTRADA_ACL->amIAllowed("event", "delete", false) or $ENTRADA_ACL->amIAllowed("event", "create", false)) : ?>

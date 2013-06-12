@@ -67,8 +67,5 @@ $rotation		= clean_input($parameters[4], array("trim", "int"));
 $message		= rawurldecode(clean_input($parameters[5], array("trim", "notags")));
 $file_type		= clean_input($parameters[6], array("nows", "lower"));
 
-$text			= new Entrada_TextImage($message, $file_type, $width, $height);
-$text->font		= ENTRADA_ABSOLUTE."/core/fonts/Vera.ttf";
-$text->rotation	= $rotation;
-$text->padding	= $padding;
+$text			= new Entrada_TextImage($message, $file_type, $width, $height, ENTRADA_ABSOLUTE."/core/fonts/Vera.ttf", $rotation, $padding);
 $text->draw();

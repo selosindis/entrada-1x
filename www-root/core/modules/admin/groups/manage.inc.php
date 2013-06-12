@@ -28,7 +28,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif(!$ENTRADA_ACL->amIAllowed('group', 'delete', false)) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 1000)";
+	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 5000)";
 
 	$ERROR++;
 	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
@@ -98,7 +98,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 					if ($result) {
 						$ERROR++;
 						$ERRORSTR[] = "The group name already exists in system.";
-						$wait = 10000;
+						$wait = 5000;
 					} else {
 						$db->Execute("UPDATE `groups` SET `group_name`='".$group_name."' WHERE `group_id` = ".$db->qstr($GROUP_ID));
 					}
@@ -117,8 +117,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 							$db->Execute("DELETE FROM `group_members` WHERE `gmember_id` = ".$db->qstr($gmember_id));
 						break;
 					}
+                    add_success("Successfully ".$_POST["coa"]."d the selected group member.");
 				}
-				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/groups?section=edit&ids=".implode(",", $_SESSION["ids"])."\\'', 0)";
+				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/groups?section=edit&ids=".implode(",", $_SESSION["ids"])."\\'', 5000)";
 
 			} else { // Delete groups
 				$removed = array();
@@ -152,35 +153,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 								break;
 						}
 						$db->Execute($query);
+						add_success("Successfully ".$_POST["coa"]."d the selected group.");
 					}
 				}
-				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/groups\\'', 2000)";
-
-				if (!strcmp($_POST["coa"],"delete")) {
-					if($total_removed = @count($removed)) {
-						$SUCCESS++;
-						$SUCCESSSTR[$SUCCESS]  = "You have successfully removed ".$total_removed." group".(($total_removed != 1) ? "s" : "")." from the system:";
-						$SUCCESSSTR[$SUCCESS] .= "<div style=\"padding-left: 15px; padding-bottom: 15px; font-family: monospace\">\n";
-						foreach($removed as $result) {
-							$SUCCESSSTR[$SUCCESS] .= html_encode($result["group_name"])."<br />";
-						}
-						$SUCCESSSTR[$SUCCESS] .= "</div>\n";
-						$SUCCESSSTR[$SUCCESS] .= "You will be automatically redirected to the group index in 5 seconds, or you can <a href=\"".ENTRADA_URL."/admin/groups\">click here</a> if you do not wish to wait.";
-
-						echo display_success();
-
-						application_log("success", "Successfully removed group ids: ".implode(", ", $GROUP_IDS));
-					} else {
-						$ERROR++;
-						$ERRORSTR[] = "Unable to remove the requested groups from the system.<br /><br />The system administrator has been informed of this issue and will address it shortly; please try again later.";
-
-						application_log("error", "Failed to remove all groups from the remove request. Database said: ".$db->ErrorMsg());
-					}
-				}
+				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/groups\\'', 5000)";
 			}
 			if ($ERROR) {
 				echo display_error();
 			}
+            echo display_success();
 
 		break;
 		case 1 :
@@ -236,9 +217,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON a.`id` = b.`user_id`
+                                        AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
 										INNER JOIN `group_members` c ON a.`id` = c.`proxy_id`
 										INNER JOIN `groups` d ON c.`group_id` = d.`group_id`
 										WHERE c.`gmember_id`  IN (".implode(", ", $GROUP_IDS).")
+                                        GROUP BY a.`id`
 										ORDER by `grouprole`, `lastname`, `firstname`");
 				if($results) {
 					echo display_notice(array("Please review the following member".($MEMBERS>1?"s":"")." to ensure that you wish to, deactivate, activate or <strong>permanently delete</strong> them from the group"));
@@ -266,15 +249,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 							<tfoot>
 								<tr>
 									<td />
-									<td style="padding-top: 10px">
-										<input type="submit" class="btn btn-danger" value="Deactivate" />
-									</td>
-									<td style="padding-top: 10px">
-										<input type="submit" class="btn btn-primary" value="Activate" onClick="$('coa').value='activate'" />
-									</td>
-									<td colspan="2" style="padding-top: 10px">
-										<input type="submit" class="btn btn-danger" value="Delete Confirm" onClick="$('coa').value='delete'" />
-									</td>
+                                    <td style="padding-top: 10px" colspan="2">
+                                        <input type="submit" class="btn btn-primary" value="Activate" onClick="$('coa').value='activate'" />
+                                    </td>
+                                    <td style="padding-top: 10px" align="right" colspan="2">
+                                        <input type="submit" class="btn btn-warning" value="Deactivate" onClick="$('coa').value='deactivate'" />
+                                        <input type="submit" class="btn btn-danger" value="Delete" onClick="$('coa').value='delete'" />
+                                    </td>
 								</tr>
 							</tfoot>
 							<tbody>
@@ -336,15 +317,13 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 							<tfoot>
 								<tr>
 									<td />
-									<td style="padding-top: 10px">
-										<input type="submit" class="btn btn-danger" value="Deactivate" />
-									</td>
-									<td style="padding-top: 10px">
-										<input type="submit" class="btn btn-primary" value="Activate" onClick="$('coa').value='activate'" />
-									</td>
-									<td colspan="2" style="padding-top: 10px">
-										<input type="submit" class="btn btn-danger" value="Delete Confirm" onClick="$('coa').value='delete'" />
-									</td>
+                                    <td style="padding-top: 10px" colspan="2">
+                                        <input type="submit" class="btn btn-primary" value="Activate" onClick="$('coa').value='activate'" />
+                                    </td>
+                                    <td style="padding-top: 10px" align="right" colspan="2">
+                                        <input type="submit" class="btn btn-warning" value="Deactivate" onClick="$('coa').value='deactivate'" />
+                                        <input type="submit" class="btn btn-danger" value="Delete" onClick="$('coa').value='delete'" />
+                                    </td>
 								</tr>
 							</tfoot>
 							<tbody>

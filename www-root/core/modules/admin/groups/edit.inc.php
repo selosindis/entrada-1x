@@ -248,7 +248,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 					</tbody>
 				</table>
 
-				<div id="delbutton" style="padding-top: 15px; text-align: right; display:none">
+				<div id="delbutton" style="padding-top: 15px; text-align: right;">
 					<input type="submit" class="btn btn-danger" value="Delete/Activate" style="vertical-align: middle" />
 				</div>
 

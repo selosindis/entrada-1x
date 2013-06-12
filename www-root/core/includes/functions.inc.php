@@ -897,7 +897,7 @@ function add_organisation_sidebar() {
     global $translate, $ENTRADA_USER;
 
     $temp_router = new Entrada_Router();
-    $temp_router->setBasePath(ENTRADA_CORE.DIRECTORY_SEPARATOR."modules".(defined("IN_ADMIN") && IN_ADMIN ? DIRECTORY_SEPARATOR."admin" : ""));
+    $temp_router->setBasePath(ENTRADA_CORE.DIRECTORY_SEPARATOR."modules".(defined("IN_ADMIN") && IN_ADMIN ? DIRECTORY_SEPARATOR."admin" : DIRECTORY_SEPARATOR."public"));
     $temp_router->initRoute();
     /**
 	 * Create the Organisation side bar.

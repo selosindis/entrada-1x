@@ -274,3 +274,47 @@ input.numeric {
     border-spacing: 2px;
     border-bottom: 1px lightgray solid;
 }
+
+#page-feedback {
+	position:relative;
+	z-index:10;
+}
+#feedback-widget {
+	background:#fff;
+	position:relative;
+}
+#feedback-widget ul.menu {
+	position:relative;
+	background:#fff;
+}
+#feedback-widget ul.menu li {
+	padding-left:35px;
+}
+#feedback-widget ul.menu li.system {
+	background-image:url("../images/icon-feedback.gif");
+}
+#feedback-form-container {
+	border-radius:3px;
+  -moz-box-shadow:0 0 3px rgba(0,0,0,0.1);
+  -webkit-box-shadow:0 0 3px rgba(0,0,0,0.1);
+  box-shadow:0 0 3px rgba(0,0,0,0.1);
+	position:absolute;
+	left:0;
+	top:0;
+	padding:5px;
+	/*border:1px solid #999999;*/
+	background:#fff;
+	width: 489px;
+	top:-61px;
+}
+#feedback-form-container .panel-head {
+	border-radius: 3px 3px 0px 0px;
+}
+.cornerarrow {
+	width:8px;
+	height:16px;
+	background-image:url("../images/corner-arrow.png");
+	position:absolute;
+	left:-8px;
+	top:14px;
+}

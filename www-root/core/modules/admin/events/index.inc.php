@@ -59,7 +59,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			"staff_names" => "Teacher Names"
 		);
 
-	if ($_SESSION["my_export_options"]) {
+	if (isset($_SESSION["my_export_options"]) && $_SESSION["my_export_options"]) {
 		$diff = array_diff($default_csv_headings, $_SESSION["my_export_options"]);
 		$default_csv_headings = $_SESSION["my_export_options"];
 	}
@@ -122,7 +122,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	echo "<h1>".$MODULES[strtolower($MODULE)]["title"]."</h1>";
 
-	if ($_SESSION["export_error"]) {
+	if (isset($_SESSION["export_error"]) && $_SESSION["export_error"]) {
 		$ERROR++;
 		$ERRORSTR[] = $_SESSION["export_error"];
 		echo display_error();
@@ -138,9 +138,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		<div class="row-fluid">
 			<div class="pull-right">
 				<div class="btn-group">
-					<a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Add New Event <span class="caret"></span></a>
+					<a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" class="btn btn-primary">Add New Event <span class="caret"></span></a>
 					<ul class="dropdown-menu">
-						<li><a href="<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts">Draft Schedules</a></li>
+						<li><a  href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add">Add Event</a></li>
+						<li><a href="<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts">Manage Draft Schedules</a></li>
 					</ul>
 				</div>
 			</div>

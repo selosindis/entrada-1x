@@ -623,7 +623,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 			}
 			
-			if ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "copy") { 
+			if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "copy") { 
 				$PROCESSED = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["copy"]; 
 			} else {
 				if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["copy"])) { 
@@ -783,7 +783,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				<div class="row-fluid">
 					<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events'" />
 					<div class="pull-right">
-					<?php if ($is_draft) { 
+					<?php if (isset($is_draft) && $is_draft) { 
 												echo "<input type=\"hidden\" name=\"post_action\" id=\"post_action\" value=\"draft\" />";
 											} else { ?>
 											<span class="content-small">After saving:</span>

@@ -1722,7 +1722,7 @@ background-color:#FFB;
 div.autocomplete ul li {
 list-style-type:none;
 display:block;
-height:32px;
+min-height:32px;
 cursor:pointer;
 margin:0;
 padding:2px;
@@ -4366,4 +4366,15 @@ a.help {
 }
 .align-top{
   vertical-align: top;
+}
+.faculty_select{
+    float: right;
+    margin-right: 30px;
+    margin-top: -5px;
+    max-width: 100px;
+}
+#faculty_list li.user{
+    cursor: move;
+    margin-bottom: 10px;
+    width: 450px;
 }

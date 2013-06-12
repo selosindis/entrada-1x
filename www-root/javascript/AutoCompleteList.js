@@ -49,9 +49,9 @@ var AutoCompleteList = function() {
 				var li;
 
 				//li  = new Element('li', {'id':type+'_'+id, 'style':'cursor: move;margin-bottom:10px;width:350px;'}).update($(type+'_name').value+"<select name = \"faculty_role[]\" style=\"float:right;margin-right:30px;margin-top:-5px;\"><option value = \"teacher\">Teacher</option><option value = \"tutor\">Tutor</option><option value = \"ta\">Teacher's Assistant</option><option value = \"auditor\">Auditor</option></select>").addClassName('community');
-				li  = new Element('li', {'id':type+'_'+id, 'style':'cursor: move;'+((type=='faculty')?'margin-bottom:10px;width:350px;':'')}).update($(type+'_name').value).addClassName('user');
+				li  = new Element('li', {'id':type+'_'+id, 'style':'cursor: move;'}).update($(type+'_name').value).addClassName('user');
 				if(type=='faculty'){
-					var select = new Element('select',{name:'faculty_role[]',style:'float:right;margin-right:30px;margin-top:-5px;'});
+					var select = new Element('select',{name:'faculty_role[]', 'class':((type=='faculty')?'faculty_select':'')});
 					select.insert({bottom:new Element('option', { value: 'teacher'}).update('Teacher')});
 					select.insert({bottom:new Element('option', { value: 'tutor'}).update('Tutor')});
 					select.insert({bottom:new Element('option', { value: 'ta'}).update('Teacher\'s Assistant')});

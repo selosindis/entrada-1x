@@ -17160,7 +17160,8 @@ function fetch_department_fields($proxy_id = NULL) {
 	 * Fetch the departments this use is a part of.
 	 */
 	$departments = get_user_departments($user->getID());
-
+	$custom_fields = array();
+	
 	if ($departments) {
 
 		foreach ($departments as $department) {

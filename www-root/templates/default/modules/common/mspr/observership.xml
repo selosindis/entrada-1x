@@ -27,12 +27,6 @@
 				%SITE%
 			</span>
 			<span class="label">
-				Location: 
-			</span>
-			<span class="data">
-				%LOCATION%
-			</span>
-			<span class="label">
 				Preceptor: 
 			</span>
 			<span class="data">

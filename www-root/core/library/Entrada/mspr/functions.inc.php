@@ -147,7 +147,7 @@ function getStatus($entity) {
 		//student entered data
 		$status=($entity->isRejected() ? ($entity->getComment()?"rejected_reason":"rejected") : ($entity->isApproved()? "approved" : "unapproved"));
 	} else if ($entity instanceof Observership) {
-		$status = (($entity->getStatus() == "CONFIRMED") ? "approved" : (($entity->getStatus() == "REJECTED") ? "rejected" : "unapproved"));
+		$status = (($entity->getStatus() == "confirmed") ? "confirmed" : (($entity->getStatus() == "rejected") ? "rejected" : "unapproved"));
 	} else {
 		//staff entered data/extracted
 		$status="default";
@@ -505,7 +505,7 @@ function display_observerships(Observerships $observerships,$type, $hide_control
 				"preceptor_lastname" => $preceptor_lastname,
 				"preceptor_prefix" => $preceptor_prefix,
 				"preceptor_email" => $preceptor_email,
-				"status" => $entity->getStatus(),
+				"status" => $preceptor_status,
 				"start" => $start,
 				"end" => $end
 			);
@@ -522,6 +522,7 @@ function display_observerships(Observerships $observerships,$type, $hide_control
 }
 
 function display_international_activities(InternationalActivities $int_acts,$type, $hide_controls = false) {
+	global $ENTRADA_TEMPLATE;
 	$content_file = $ENTRADA_TEMPLATE->absolute()."/modules/common/mspr/international_activity.xml";
 	$content_template = new Template($content_file);
 

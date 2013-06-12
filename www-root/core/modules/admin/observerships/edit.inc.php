@@ -40,7 +40,7 @@ if (isset($_GET["id"]) && $tmp = clean_input($_GET["id"],array("int"))) {
 	return;
 }
 $OBSERVERSHIP = Observership::get($OBSERVERSHIP_ID);
-
+$student_id = $OBSERVERSHIP->getStudentID();
 if (!$OBSERVERSHIP) {
 	echo display_error("Invalid observership ID provided. Returning to your Observerships index.");
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/profile/observerships\\'', 5000)";

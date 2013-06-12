@@ -33,15 +33,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 }
 
 $student_id = clean_input($_GET["id"], "numeric");
-
-$student = User::get($student_id);
-
-$BREADCRUMB = array();
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users", "title" => "Manage Users");
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users/manage?id=".$student->getID(), "title" => $student->getFullname(false));
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users/manage/students?section=observerships&id=".$student->getID(), "title" => "Observerships");
-$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/observerships?section=add&id=".$student->getID(), "title" => "Create Observership");
-
+$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/observerships?section=add", "title" => "Add Observership");
 switch($STEP){
 	case 2:
 	
@@ -50,7 +42,7 @@ switch($STEP){
 	/*
 	 * Admins adding observerships are approved automatically. 
 	 */
-	$observership_array["status"] = "approved";
+	$observership_array["status"] = "confirmed";
 	$OBSERVERSHIP = Observership::fromArray($observership_array, "add", $student_id);
 	if (!$OBSERVERSHIP->isValid()){
 		add_error("<strong>Invalid data entered</strong>. Please confirm everything and try again.");

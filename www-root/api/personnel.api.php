@@ -30,6 +30,14 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	} else {
 		$fullname = "";
 	}
+	
+	if (isset($_POST["email"]) && ($tmp_input = clean_input($_POST["email"], array("trim", "notags")))) {
+		$email = $tmp_input;
+	} elseif (isset($_GET["email"]) && ($tmp_input = clean_input($_GET["email"], array("trim", "notags")))) {
+		$email = $tmp_input;
+	} else {
+		$email = "";
+	}
 
 	if (isset($_POST["type"]) && ($tmp_input = clean_input($_POST["type"], array("trim", "notags")))) {
 		$type = $tmp_input;
@@ -78,7 +86,8 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			case "evaluators" :
 				$evaluator_ids_string = "";
 				if (isset($_GET["id"]) && ($evaluation_id = clean_input($_GET["id"], "int"))) {
-					$evaluators = Models_Evaluation::getEvaluators($evaluation_id);
+					require_once("Models/evaluation/Evaluation.class.php");
+					$evaluators = Evaluation::getEvaluators($evaluation_id);
 					if ($evaluators) {
 						foreach ($evaluators as $evaluator) {
 							$evaluator_ids_string .= ($evaluator_ids_string ? ", " : "").$db->qstr($evaluator["proxy_id"]);
@@ -104,6 +113,21 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			echo "\t<li id=\"0\"><span class=\"informal\">&quot;<strong>".html_encode($fullname)."&quot;</strong> was not found</span></li>";
 		}
 		echo "</ul>";
+	}
+	
+	if ($email) {
+		$query = "	SELECT a.`id` AS `proxy_id`, a.`lastname`, a.`firstname`, a.`email`
+					FROM `".AUTH_DATABASE."`.`user_data` AS a
+					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
+					ON b.`user_id` = a.`id`
+					AND (b.`group` <> 'guest')
+					WHERE (a.`email` = ".$db->qstr($email)." OR a.`email_alt` = ".$db->qstr($email).")";
+		$result = $db->GetRow($query);
+		if ($result) {
+			echo json_encode(array("status" => "success", "data" => $result));
+		} else {
+			echo json_encode(array("status" => "error", "data" => array("msg" => "That email address is not registered in the system.")));
+		}
 	}
 } else {
 	application_log("error", "Personnel API accessed without valid session_id.");

@@ -17,7 +17,9 @@
 	<link href="{DEFAULT_PATH}../css/common.css" rel="stylesheet" type="text/css" media="all" />
 	<link href="{DEFAULT_PATH}../css/print.css" rel="stylesheet" type="text/css" media="print" />
 			
-	{EVENT_JS}
+    <script type="text/javascript">
+        {EVENT_JS}
+    </script>
 	
 	{CSS_IMAGES}
 </head>

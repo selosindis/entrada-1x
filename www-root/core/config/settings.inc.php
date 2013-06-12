@@ -20,7 +20,7 @@ if (!@file_exists("core/config/config.inc.php") && @file_exists("setup/index.php
 	exit;
 }
 
-$config = new Zend_Config(require "config.inc.php");
+$config = new Zend_Config(require "config/config.inc.php");
 
 /**
  * The default timezone based on PHP's supported timezones:

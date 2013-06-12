@@ -4,8 +4,21 @@
  *
  * Include the Entrada config file.
 */
-require_once(dirname(__FILE__)."/../core/config/settings.inc.php");
 
+@set_include_path(implode(PATH_SEPARATOR, array(
+    dirname(__FILE__) . "/../core",
+    dirname(__FILE__) . "/../core/includes",
+    dirname(__FILE__) . "/../core/library",
+    dirname(__FILE__) . "/../../www-root",
+    get_include_path(),
+)));
+
+require_once "Zend/Loader/Autoloader.php";
+$loader = Zend_Loader_Autoloader::getInstance();
+$loader->registerNamespace('Entrada_');
+$loader->registerNamespace('Models_');
+
+require_once("config/settings.inc.php");
 // Configuration file for PHP iCalendar 2.23rc1
 // To set values, change the text between the single quotes
 // Follow instructions to the right for detailed information
@@ -39,7 +52,7 @@ $month_event_lines 		= '1';				// Number of lines to wrap each event title in mo
 $tomorrows_events_lines = '1';				// Number of lines to wrap each event title in the 'Tommorrow's events' box, 0 means display all lines.
 $allday_week_lines 		= '1';				// Number of lines to wrap each event title in all-day events in week view, 0 means display all lines.
 $week_events_lines 		= '1';				// Number of lines to wrap each event title in the 'Tommorrow's events' box, 0 means display all lines.
-$timezone 				= DEFAULT_TIMEZONE; // Set timezone. Read TIMEZONES file for more information
+$timezone 				= 'America/Montreal'; // Set timezone. Read TIMEZONES file for more information
 $calendar_path 			= '';				// Leave this blank on most installs, place your full FILE SYSTEM PATH to calendars if they are outside the phpicalendar folder.
 $second_offset			= '';				// The time in seconds between your time and your server's time.
 $bleed_time				= '-1';				// This allows events past midnight to just be displayed on the starting date, only good up to 24 hours. Range from '0000' to '2359', or '-1' for no bleed time.

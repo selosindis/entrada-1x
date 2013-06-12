@@ -7,8 +7,10 @@
   	<link rel="stylesheet" type="text/css" href="{DEFAULT_PATH}templates/{TEMPLATE}/default.css" />
 	<!-- switch rss_available on -->
 	<link rel="alternate" type="application/rss+xml" title="RSS" href="{DEFAULT_PATH}/rss/rss.php?cal={CAL}&amp;rssview={CURRENT_VIEW}">
-	<!-- switch rss_available off -->		
-	{EVENT_JS}
+	<!-- switch rss_available off -->
+    <script type="text/javascript">
+{EVENT_JS}
+    </script>
 </head>
 <body>
 <form name="eventPopupForm" id="eventPopupForm" method="post" action="includes/event.php" style="display: none;">

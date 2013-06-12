@@ -323,6 +323,7 @@ CREATE TABLE IF NOT EXISTS `user_data` (
   `number` int(12) unsigned NOT NULL DEFAULT '0',
   `username` varchar(25) NOT NULL DEFAULT '',
   `password` varchar(255) NOT NULL DEFAULT '',
+  `salt` varchar(64) NULL DEFAULT NULL,
   `organisation_id` int(12) NOT NULL DEFAULT '1',
   `department` varchar(255) DEFAULT NULL,
   `prefix` varchar(10) NOT NULL DEFAULT '',

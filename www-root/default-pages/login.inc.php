@@ -72,6 +72,7 @@ if ($PROCEED_TO && (stristr($PROCEED_TO, "file-course.php") || stristr($PROCEED_
 			</div>
 			<div class="form-actions">
 				<input type="submit" class="btn btn-primary" value="Login">
+                <strong style="margin-left: 5px">or</strong> <a href="<?php echo ENTRADA_RELATIVE; ?>/password_reset">Forgot your password?</a>
 			</div>
 		</form>
 	</div>

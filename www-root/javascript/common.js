@@ -725,3 +725,78 @@ function capitalizeFirstLetter(word)
      return word;
    }
 }
+
+/*
+ * Displays a generic message
+ */
+function display_generic(err_array, target, location) {
+	display_msg("info", err_array, target, location);
+}
+
+/*
+ * Displays a notice
+ */
+function display_notice(err_array, target, location) {
+	display_msg("notice", err_array, target, location);
+}
+
+/*
+ * Displays a success message
+ */
+function display_success(err_array, target, location) {
+	display_msg("success", err_array, target, location);
+}
+
+/*
+ * Displays an error message
+ */
+function display_error(err_array, target, location) {
+	display_msg("error", err_array, target, location);
+}
+
+/*
+ * Called by other display_msg functions, or can be called directly with type.
+ */
+function display_msg(type, msg_array, target, location) {
+
+	location = location == "append" ? "append" : "prepend";
+
+	if (jQuery("div#display-" + type + "-box-modal").length > 0) {
+		var msg_container = jQuery(target + " .alert-" + type);
+		msg_container.children("ul").remove();
+	} else {
+
+		var msg_container = document.createElement("div");
+		jQuery(msg_container).addClass("alert").addClass("alert-block").addClass("alert-"+type);
+
+		var close_btn = document.createElement("button");
+		jQuery(close_btn).addClass("close").attr("onclick", "jQuery('div#display-" + type + "-box-modal').hide();").attr("type", "button").html("&times;");
+
+		jQuery(msg_container).append(close_btn);
+
+	}
+
+	jQuery(msg_container).attr("id", "display-" + type + "-box-modal");
+
+	var msg_list = document.createElement("ul");
+	for (var i = 0; i < msg_array.length; i++) {
+		var msg_li = document.createElement("li");
+		jQuery(msg_li).append(msg_array[i]);
+		jQuery(msg_list).append(msg_li);
+	}
+
+	jQuery(msg_container).append(msg_list);
+
+	if (jQuery("div#display-" + type + "-box-modal").length > 0) {
+		if (jQuery("div#display-" + type + "-box-modal").not("visible")) {
+			jQuery("div#display-" + type + "-box-modal").show("slow");
+		}
+	} else {
+		if (location == "append") {
+			jQuery(target).append(msg_container);
+		} else {
+			jQuery(target).prepend(msg_container);
+		}
+	}
+
+}

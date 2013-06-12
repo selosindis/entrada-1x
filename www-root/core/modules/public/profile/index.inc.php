@@ -85,6 +85,58 @@ if (!defined("IN_PROFILE")) {
 					echo json_encode(array("status" => "error"));
 				}
 			break;
+			case "resetpw" :
+				
+				if ($_POST["current_password"] && $tmp_input = clean_input($_POST["current_password"], array("trim", "striptags"))) {
+					$PROCESSED["current_password"] = $tmp_input;
+				}
+				
+				if ($_POST["new_password"] && $tmp_input = clean_input($_POST["new_password"], array("trim", "striptags"))) {
+					$PROCESSED["new_password"] = $tmp_input;
+				} else {
+					$err[] = "An invalid password was provided.";
+				}
+				
+				if ($_POST["new_password_confirm"] && $tmp_input = clean_input($_POST["new_password_confirm"], array("trim", "striptags"))) {
+					$PROCESSED["new_password_confirm"] = $tmp_input;
+				} else {
+					$err[] = "An invalid password was provided.";
+				}
+				
+				if ($PROCESSED["new_password"] !== $PROCESSED["new_password_confirm"]) {
+					$errs[] = "New password dosen't match!";
+				}
+				
+				$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->getID())." AND ((`salt` IS NULL AND `password` = MD5(".$db->qstr($PROCESSED["current_password"]).")) OR (`salt` IS NOT NULL AND `password` = SHA1(CONCAT(".$db->qstr($PROCESSED["current_password"]).", `salt`))))";
+				$result	= $db->GetRow($query);
+				if ($result) {
+					if (!$errs) {
+						$user_password = $PROCESSED["new_password"];
+						/**
+						 * Check to see if password requires some updating.
+						 */
+						if (!$result["salt"]) {
+							$salt = hash("sha256", (uniqid(rand(), 1) . time() . $result["id"]));
+						} else {
+							$salt = $result["salt"];
+						}
+
+						$query = "UPDATE `".AUTH_DATABASE."`.`user_data` SET `password` = ".$db->qstr(sha1($user_password.$salt)).", `salt` = ".$db->qstr($salt)." WHERE `id` = ".$db->qstr($result["id"]);
+						if ($db->Execute($query)) {
+							application_log("auth_success", "Successfully updated password salt for user [".$result["id"]."] via local auth method.");
+							echo json_encode(array("status" => "success", "data" => array("Your password has successfully been updated.")));
+						} else {
+							application_log("auth_error", "Failed to update password salt for user [".$result["id"]."] via local auth method. Database said: ".$db->ErrorMsg());
+							echo json_encode(array("status" => "error", "data" => array("An error ocurred while attempting to update your password. An administrator has been informed, please try again later.")));
+						}
+					} else {
+						echo json_encode(array("status" => "error", "data" => $errs));
+					}
+				} else {
+					echo json_encode(array("status" => "error", "data" => array("The current password did not match the password on file.")));
+				}
+				
+			break;
 			default:
 			break;
 		}
@@ -204,6 +256,9 @@ if (!defined("IN_PROFILE")) {
 		</script>
 
 		<h1 style="margin-top: 0px">Personal Information</h1>
+		<div id="msgs">
+			
+		</div>
 		This section allows you to update your <?php echo APPLICATION_NAME; ?> user profile information. Please note that this information does not necessarily reflect any information stored at the main University. <span style="background-color: #FFFFCC; padding-left: 5px; padding-right: 5px">This is not your official university contact information.</span>
 		<br /><br />
 		<div id="profile-wrapper">
@@ -235,6 +290,30 @@ if (!defined("IN_PROFILE")) {
 
 		jQuery(function(){
 
+			jQuery("#update-pw").on("click", function() {
+				jQuery.ajax({
+					url : "<?php echo ENTRADA_URL; ?>/profile",
+					data : "ajax_action=resetpw&" + jQuery("#update-pw-form").serialize(),
+					type : "post",
+					async : true,
+					success : function(data) {
+						var jsonResponse = JSON.parse(data);
+						if (jsonResponse.status == "success") {
+							jQuery("#password-change-modal").modal("hide");
+							display_success(jsonResponse.data, "#msgs");
+						} else {
+							display_error(jsonResponse.data, "#pw-change-msg");
+						}
+					}
+				});
+			});
+
+			jQuery("#password-change-modal").on("hide", function() {
+				jQuery("#msgs").html("");
+				jQuery("#pw-change-msg").html("");
+				jQuery("#current_password, #new_password, #new_password_confirm").attr("value", "");
+			});
+
 			jQuery("#reset-hash").live("click", function() {
 				jQuery.ajax({
 					url : "<?php echo ENTRADA_URL; ?>/profile",
@@ -248,7 +327,7 @@ if (!defined("IN_PROFILE")) {
 				});
 				jQuery("#reset-hash-modal").modal("hide");
 			});
-
+			
 			jQuery("#btn-toggle .btn").live("click", function() {
 				var clicked = jQuery(this);
 				if (!clicked.parent().hasClass(clicked.html().toLowerCase())) {
@@ -480,7 +559,7 @@ if (!defined("IN_PROFILE")) {
 			<div class="control-group">
 				<label class="control-label">Password:</label>
 				<div class="controls">
-					<a class="btn btn-link" href="<?php echo PASSWORD_CHANGE_URL; ?>">Click here to change password</a>
+					<a class="btn btn-link" href="#password-change-modal" data-toggle="modal">Click here to change password</a>
 				</div>
 			</div>
 			<div class="control-group">
@@ -794,6 +873,39 @@ if (!defined("IN_PROFILE")) {
 			<div class="modal-footer">
 				<a href="#" class="btn pull-left" data-dismiss="modal">Cancel</a>
 				<a href="#" class="btn btn-primary" id="reset-hash">Reset Hash</a>
+			</div>
+		</div>
+		<div class="modal hide fade" id="password-change-modal">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+				<h3>Update Password</h3>
+			</div>
+			<div class="modal-body">
+				<div id="pw-change-msg"></div>
+				<form action="" method="POST" class="form-horizontal" id="update-pw-form">
+					<div class="control-group">
+						<label for="current_password" class="control-label">Current Password:</label>
+						<div class="controls">
+							<input type="password" name="current_password" id="current_password" placeholder="Please enter your current password." />
+						</div>
+					</div>
+					<div class="control-group">
+						<label for="new_password" class="control-label">New Password:</label>
+						<div class="controls">
+							<input type="password" name="new_password" id="new_password" placeholder="Please enter your new password." />
+						</div>
+					</div>
+					<div class="control-group">
+						<label for="new_password_confirm" class="control-label">Confirm Password:</label>
+						<div class="controls">
+							<input type="password" name="new_password_confirm" id="new_password_confirm" placeholder="Please repeat your new password." />
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<a href="#" class="btn pull-left" data-dismiss="modal">Cancel</a>
+				<a href="#" class="btn btn-primary" id="update-pw">Update</a>
 			</div>
 		</div>
 		<?php

@@ -182,26 +182,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			<colgroup>
 				<col class="modified" />
 				<col class="date" />
-				<col class="term" />
-				<col class="teacher" />
+				<col class="course-code" />
 				<col class="title" />
 				<col class="attachment" />
 			</colgroup>
 			<thead>
 				<tr>
 					<td class="modified">&nbsp;</td>
-					<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("date", "Date &amp; Time"); ?></td>
-					<td class="term<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "term") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("term", "Term"); ?></td>
-					<td class="teacher<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "teacher") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("teacher", "Teacher"); ?></td>
-					<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("title", "Event Title"); ?></td>
+                    <td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"] == "date") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) : ""); ?>"><?php echo admin_order_link("date", "Date &amp; Time"); ?></td>
+                    <td class="course-code<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"] == "course") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) : ""); ?>"><?php echo admin_order_link("course", "Course"); ?></td>
+                    <td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) : ""); ?>"><?php echo admin_order_link("title", "Event Title"); ?></td>
 					<td class="attachment">&nbsp;</td>
 				</tr>
 			</thead>
 			<?php if ($ENTRADA_ACL->amIAllowed("event", "delete", false) or $ENTRADA_ACL->amIAllowed("event", "create", false)) : ?>
 			<tfoot>
 				<tr>
-					<td></td>
-					<td style="padding-top: 10px" colspan="3">
+                    <td>&nbsp;</td>
+					<td style="padding-top: 10px" colspan="2">
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
@@ -210,7 +208,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						}
 						if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
 							?>
-							<input type="submit" class="btn" value="Copy Selected"  onClick="document.frmSelect.action ='<?php echo ENTRADA_URL; ?>/admin/events?section=copy'" />
+							<input type="submit" class="btn" value="Copy Selected" onClick="document.frmSelect.action ='<?php echo ENTRADA_URL; ?>/admin/events?section=copy'" />
 							<?php
 						}
 						?>
@@ -219,7 +217,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<?php
 						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
 							?>
-							<input type="btn" value="Export Results" />
+							<input type="button" class="btn" id="export-results-button" value="Export Results" />
 							<?php
 						}
 						?>
@@ -249,12 +247,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 
 				echo "<tr id=\"event-".$result["event_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
-				echo "	<td class=\"modified\">".(($administrator) ? "<input type=\"checkbox\" name=\"checked[]\" value=\"".$result["event_id"]."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
+				echo "	<td class=\"modified".((!$url) ? " np" : "")."\">".(($administrator) ? "<input type=\"checkbox\" name=\"checked[]\" value=\"".$result["event_id"]."\" />" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" />")."</td>\n";
 				echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["event_start"]).(($url) ? "</a>" : "")."</td>\n";
-				echo "	<td class=\"term".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Intended For ".html_encode($result["event_term"])."\">" : "").html_encode($result["event_term"]).(($url) ? "</a>" : "")."</td>\n";
-				echo "	<td class=\"teacher".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Primary Teacher: ".html_encode($result["fullname"])."\">" : "").html_encode($result["fullname"]).(($url) ? "</a>" : "")."</td>\n";
+				echo "	<td class=\"course".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Intended For ".html_encode($result["course_code"])."\">" : "").html_encode($result["course_code"]).(($url) ? "</a>" : "")."</td>\n";
 				echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\">" : "").html_encode($result["event_title"]).(($url) ? "</a>" : "")."</td>\n";
-				echo "	<td class=\"attachment\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/events?section=content&amp;id=".$result["event_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Event Content\" title=\"Manage Event Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
+				echo "  <td class=\"attachment".((!$url) ? " np" : "")."\">";
+                if ($url) {
+                    echo "  <div class=\"btn-group\">\n";
+                    echo "      <button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\">\n";
+                    echo "          <i class=\"icon-pencil\"></i>\n";
+                    echo "      </button>";
+                    echo "      <ul class=\"dropdown-menu\">\n";
+                	if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'update')) {
+                        echo "      <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=details&amp;id=".$result["event_id"]."\">Event Details</a></li>";
+                    }
+                    echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=content&amp;id=".$result["event_id"]."\">Event Content</a></li>";
+                    echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=attendance&amp;id=".$result["event_id"]."\">Event Attendance</a></li>";
+                    echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=history&amp;id=".$result["event_id"]."\">Event History</a></li>";
+                    echo "      </ul>\n";
+                } else {
+                    echo "&nbsp;";
+                }
+                echo "  </td>\n";
 				echo "</tr>\n";
 			}
 			?>

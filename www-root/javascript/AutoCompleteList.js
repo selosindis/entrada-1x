@@ -1,7 +1,7 @@
 
 var AutoCompleteList = function() {
 	var sortables = new Array();
-	
+
 	return function (options) {
 		var type = options.type;
 		var url = options.url;
@@ -9,9 +9,9 @@ var AutoCompleteList = function() {
 		var limit = options.limit;
 		var onOverLimit = options.onOverLimit;
 		var onUnderLimit = options.onUnderLimit;
-		
+
 		var self = this;
-		
+
 		if (!onOverLimit) {
 			var onOverLimit = function() {
 				//hide the input box/add button
@@ -20,10 +20,10 @@ var AutoCompleteList = function() {
 				var example = $(type + "_example");
 				if (example)
 					example.hide();
-				
+
 			}
 		}
-		
+
 		if (!onUnderLimit) {
 			var onUnderLimit = function() {
 				//hide the input box/add button
@@ -34,24 +34,23 @@ var AutoCompleteList = function() {
 					example.show();
 			}
 		}
-		
+
 		function isOverLimit() {
 			return Sortable.sequence($(type+"_list")).length >= limit;
 		}
-		
+
 		function updateOrder() {
 			$('associated_'+type).value = Sortable.sequence(type+'_list');
 		}
-		
+
 		this.addItem = function () {
 			if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
 				var id = $(type+'_id').value;
 				var li;
 
-				//li  = new Element('li', {'id':type+'_'+id, 'style':'cursor: move;margin-bottom:10px;width:350px;'}).update($(type+'_name').value+"<select name = \"faculty_role[]\" style=\"float:right;margin-right:30px;margin-top:-5px;\"><option value = \"teacher\">Teacher</option><option value = \"tutor\">Tutor</option><option value = \"ta\">Teacher's Assistant</option><option value = \"auditor\">Auditor</option></select>").addClassName('community');
-				li  = new Element('li', {'id':type+'_'+id, 'style':'cursor: move;'+((type=='faculty')?'margin-bottom:10px;width:350px;':'')}).update($(type+'_name').value).addClassName('user');
+				li = new Element('li', {'id':type+'_'+id, 'style':'cursor: move;'+((type=='faculty')?'margin-bottom:10px;width:350px;':'')}).update($(type+'_name').value).addClassName('user');
 				if(type=='faculty'){
-					var select = new Element('select',{name:'faculty_role[]',style:'float:right;margin-right:30px;margin-top:-5px;'});
+					var select = new Element('select',{name:'faculty_role[]',class:'input-medium',style:'float:right;margin-right:30px;margin-top:-5px;'});
 					select.insert({bottom:new Element('option', { value: 'teacher'}).update('Teacher')});
 					select.insert({bottom:new Element('option', { value: 'tutor'}).update('Tutor')});
 					select.insert({bottom:new Element('option', { value: 'ta'}).update('Teacher\'s Assistant')});
@@ -74,7 +73,7 @@ var AutoCompleteList = function() {
 				$(type+'_name').value = '';
 			} else if ($(type+'_name').value != '' && $(type+'_name').value != null) {
 				alert('Important: When you see the correct name pop-up in the list as you type, make sure you select the name with your mouse, do not press the Enter button.');
-			} 
+			}
 			if (limit) {
 				if (isOverLimit()) {
 					document.fire(type+'_autocomplete:overlimit');
@@ -82,7 +81,7 @@ var AutoCompleteList = function() {
 					document.fire(type+'_autocomplete:underlimit');
 				}
 			}
-			
+
 			//fires the change event for the list holding the added elements
 			if ("fireEvent" in $(type+'_list'))
 				$(type+'_list').fireEvent("onchange");
@@ -93,13 +92,13 @@ var AutoCompleteList = function() {
 				$(type+'_list').dispatchEvent(evt);
 			}
 		}
-		
+
 		this.addItemNoError = function () {
 			if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
 				self.addItem();
 			}
 		}
-		
+
 		this.removeItem = function(id) {
 			if ($(type+'_'+id)) {
 				$(type+'_'+id).remove();
@@ -141,14 +140,14 @@ var AutoCompleteList = function() {
 
 			return true;
 		}
-		
-		var autocompleteObject = new Ajax.Autocompleter(	type + '_name', 
-				type + '_name_auto_complete', 
-				url, 
-				{	frequency: 0.2, 
-					minChars: 2, 
+
+		var autocompleteObject = new Ajax.Autocompleter(	type + '_name',
+				type + '_name_auto_complete',
+				url,
+				{	frequency: 0.2,
+					minChars: 2,
 					afterUpdateElement: function (text, li) {
-						selectInput(li.id); 
+						selectInput(li.id);
 						copyInput();
 					}
 				});
@@ -156,13 +155,13 @@ var AutoCompleteList = function() {
 		this.setUrl = function(newUrl) {
 			autocompleteObject.element = null;
 			autocompleteObject.update = null;
-			autocompleteObject = new Ajax.Autocompleter(	type + '_name', 
-				type + '_name_auto_complete', 
-				newUrl, 
-				{	frequency: 0.2, 
-					minChars: 2, 
+			autocompleteObject = new Ajax.Autocompleter(	type + '_name',
+				type + '_name_auto_complete',
+				newUrl,
+				{	frequency: 0.2,
+					minChars: 2,
 					afterUpdateElement: function (text, li) {
-						selectInput(li.id); 
+						selectInput(li.id);
 						copyInput();
 					}
 				});
@@ -182,10 +181,10 @@ var AutoCompleteList = function() {
 			document.observe(type+'_autocomplete:overlimit',onOverLimit);
 			document.observe(type+'_autocomplete:underlimit',onUnderLimit);
 		}
-		
+
 		Sortable.create(type + '_list', {onUpdate : updateOrder});
 		$('associated_'+type).value = Sortable.sequence($(type+'_list'));
-		
+
 		if (limit) {
 			if (!isOverLimit()) {
 				document.fire(type+'_autocomplete:underlimit');

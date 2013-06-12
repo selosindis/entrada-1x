@@ -1396,8 +1396,9 @@ border-left:none;
 
 table.tableList tr td.attachment {
 width:20px;
-text-align:center;
+/*text-align:center;*/
 border-left:none;
+overflow:visible;
 }
 
 div.person-result {
@@ -2559,8 +2560,7 @@ z-index:500;
 border:1px solid #EEE;
 background-color:#fafafa;
 /*padding:2%;*/
-width:96% !important;
-
+/*width:96% !important;*/
 }
 
 .select_multiple_container.inline {
@@ -3053,15 +3053,16 @@ margin:0px;
 ul.multiList, ol.multiList,
 ul.sortableList, ol.sortableList {
 padding-left:0;
+margin:10px 0 0 0;
 }
 .multiList li,
 .sortableList li {
 font-size:11px;
-padding:10px 0 5px 0;
+padding:10px 0 10px 0;
 height:16px;
 list-style-type:none;
 width:380px;
-border-bottom:1px #CCC solid;
+border-bottom:1px #EEE solid;
 }
 .sortableList li {
 cursor:move;

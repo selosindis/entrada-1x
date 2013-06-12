@@ -871,7 +871,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     <img src=\"".ENTRADA_URL."/images/action-delete.gif\">
                                                 </a>
                                                 <span class=\"duration_segment_container\">
-                                                    Duration: <input class=\"duration_segment\" name=\"duration_segment[]\" onchange=\"cleanupList();\" value=\"".(int) $eventtype["duration"]."\"> minutes
+                                                    Duration: <input type=\"text\" class=\"input-mini duration_segment\" name=\"duration_segment[]\" onchange=\"cleanupList();\" value=\"".(int) $eventtype["duration"]."\"> minutes
                                                 </span>
                                             </li>";
                                         }
@@ -903,7 +903,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				<div id="event-objectives-section">
                     <label for="event_objectives" class="form-nrequired">Free-Text Objectives</label><br />
                     <textarea id="event_objectives" name="event_objectives" style="width: 100%; height: 100px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_objectives"], array("font")))); ?></textarea>
-					
+
 					<?php
 					$query = "	SELECT a.* FROM `global_lu_objectives` a
 								JOIN `objective_audience` b

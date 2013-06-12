@@ -3812,21 +3812,21 @@ function generate_calendar($fieldname, $display_name = "", $required = false, $c
 	}
 	$output .= "	<td style=\"vertical-align: top; padding-top: 4px\"><label style=\"width:130px;text-align:right;margin-right:18px;\" id=\"".$fieldname."_text\" for=\"".$fieldname."\" class=\"".($required ? "form-required" : "form-nrequired")."\">".html_encode($display_name).":</label></td>\n";
 	$output .= "	<td style=\"vertical-align: top\" id=\"".$fieldname."_row\">\n";
-	$output .= "		<input type=\"text\" name=\"".$fieldname."_date\" id=\"".$fieldname."_date\" value=\"".$time_date."\" $readonly autocomplete=\"off\" ".(!$disabled ? "onfocus=\"showCalendar('', this, this, '', '".$fieldname."_date', 0, 20, 1)\"" : "")."style=\" vertical-align: middle\" />&nbsp;";
+	$output .= "		<input type=\"text\" class=\"input-small\" name=\"".$fieldname."_date\" id=\"".$fieldname."_date\" value=\"".$time_date."\" $readonly autocomplete=\"off\" ".(!$disabled ? "onfocus=\"showCalendar('', this, this, '', '".$fieldname."_date', 0, 20, 1)\"" : "")."style=\"vertical-align: middle\" />&nbsp;";
 
 	if (!$disabled) {
 		$output .= "	<a href=\"javascript: showCalendar('', document.getElementById('".$fieldname."_date'), document.getElementById('".$fieldname."_date'), '', '".$fieldname."_date', 0, 20, 1)\" title=\"Show Calendar\" onclick=\"if (!document.getElementById('".$fieldname."').checked) { return false; }\"><img src=\"".ENTRADA_URL."/images/cal-calendar.gif\" width=\"23\" height=\"23\" alt=\"Show Calendar\" title=\"Show Calendar\" border=\"0\" style=\"vertical-align: middle\" /></a>";
 	}
 	if ($use_times) {
 		$output .= "		&nbsp;@&nbsp;".(((bool) $add_line_break) ? "<br />" : "");
-		$output .= "		<select class=\"input-small\" name=\"".$fieldname."_hour\" id=\"".$fieldname."_hour\" onchange=\"updateTime('".$fieldname."')\" style=\"vertical-align: middle\">\n";
+		$output .= "		<select class=\"input-mini\" name=\"".$fieldname."_hour\" id=\"".$fieldname."_hour\" onchange=\"updateTime('".$fieldname."')\" style=\"vertical-align: middle\">\n";
 		foreach (range(0, 23) as $hour) {
 			$output .= "	<option value=\"".(($hour < 10) ? "0" : "").$hour."\"".(($hour == $time_hour) ? " selected=\"selected\"" : "").">".(($hour < 10) ? "0" : "").$hour."</option>\n";
 		}
 
 		$output .= "		</select>\n";
 		$output .= "		:";
-		$output .= "		<select class=\"input-small\" name=\"".$fieldname."_min\" id=\"".$fieldname."_min\" onchange=\"updateTime('".$fieldname."')\" style=\"vertical-align: middle\">\n";
+		$output .= "		<select class=\"input-mini\" name=\"".$fieldname."_min\" id=\"".$fieldname."_min\" onchange=\"updateTime('".$fieldname."')\" style=\"vertical-align: middle\">\n";
 		foreach (range(0, 59) as $minute) {
 			$output .= "	<option value=\"".(($minute < 10) ? "0" : "").$minute."\"".(($minute == $time_min) ? " selected=\"selected\"" : "").">".(($minute < 10) ? "0" : "").$minute."</option>\n";
 		}
@@ -10408,15 +10408,8 @@ function events_output_sidebar($module_type = "") {
 	$sidebar_html .= "<ul class=\"menu none\">\n";
 	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "date"))."\" title=\"Sort by Date &amp; Time\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "date") ? "on" : "off").".gif\" alt=\"\" /> <span>by date &amp; time</span></a></li>\n";
 	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "course"))."\" title=\"Sort by Course\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "course") ? "on" : "off").".gif\" alt=\"\" /> <span>by course</span></a></li>\n";
-//	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "term"))."\" title=\"Sort by Term\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "term") ? "on" : "off").".gif\" alt=\"\" /> <span>by term</span></a></li>\n";
-//	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "teacher"))."\" title=\"Sort by Teacher\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "teacher") ? "on" : "off").".gif\" alt=\"\" /> <span>by primary teacher</span></a></li>\n";
 	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "title"))."\" title=\"Sort by Event Title\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "title") ? "on" : "off").".gif\" alt=\"\" /> <span>by event title</span></a></li>\n";
 	$sidebar_html .= "</ul>\n";
-//	$sidebar_html .= "Order columns:\n";
-//	$sidebar_html .= "<ul class=\"menu none\">\n";
-//	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("so" => "asc"))."\" title=\"Ascending Order\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) == "asc") ? "on" : "off").".gif\" alt=\"\" /> <span>in ascending order</span></a></li>\n";
-//	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("so" => "desc"))."\" title=\"Descending Order\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) == "desc") ? "on" : "off").".gif\" alt=\"\" /> <span>in descending order</span></a></li>\n";
-//	$sidebar_html .= "</ul>\n";
 	$sidebar_html .= "Rows per page:\n";
 	$sidebar_html .= "<ul class=\"menu none\">\n";
 	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]) == "15") ? "on" : "off").".gif\" alt=\"\" /> <span>15 rows per page</span></a></li>\n";
@@ -10744,7 +10737,7 @@ function events_output_calendar_controls($module_type = "") {
         <div class="span4">
             <?php
             if ($learning_events["total_pages"] > 1) {
-                echo "<form class=\"form-horizontal\" action=\"".ENTRADA_RELATIVE . $module_type . "/events\" method=\"GET\" id=\"pageSelector\">\n";
+                echo "<form class=\"form-horizontal pull-right\" action=\"".ENTRADA_RELATIVE . $module_type . "/events\" method=\"GET\" id=\"pageSelector\">\n";
                 if ($learning_events["page_previous"]) {
                     echo "<a href=\"".ENTRADA_RELATIVE . $module_type . "/events?" . replace_query(array("pv" => $learning_events["page_previous"]))."\"><i class=\"icon-chevron-left\"></i></a>\n";
                 } else {
@@ -17161,7 +17154,7 @@ function fetch_department_fields($proxy_id = NULL) {
 	 */
 	$departments = get_user_departments($user->getID());
 	$custom_fields = array();
-	
+
 	if ($departments) {
 
 		foreach ($departments as $department) {

@@ -709,41 +709,41 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<label for="course_id" class="control-label form-required">Select Course:</label>
 							<div class="controls">
 								<?php
-											$query	= "	SELECT `course_id`, `course_name`, `course_code`, `course_active`
-														FROM `courses`
-														WHERE `organisation_id` = ".$db->qstr($event_info["organisation_id"])."
-														AND (`course_active` = '1' OR `course_id` = ".$db->qstr($event_info["course_id"]).")
-														ORDER BY `course_code`, `course_name` ASC";
-											$results	= $db->GetAll($query);
-											if ($results) {
-												?>
-												<select id="course_id" name="course_id" style="width: 97%">
-													<option value="0">-- Select the course this event belongs to --</option>
-													<?php
-													foreach($results as $result) {
-														if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $event_info["organisation_id"]), "create") || $ENTRADA_ACL->amIAllowed(new EventClosedResource($EVENT_ID, $result["course_id"], $event_info["organisation_id"]), "update")) {
-															echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode(($result["course_code"] ? $result["course_code"].": " : "").$result["course_name"])."</option>\n";
-                                                        }
-													}
-													?>
-												</select>
-												<script type="text/javascript">
-												jQuery('#course_id').change(function() {
-													var course_id = jQuery('#course_id option:selected').val();
+                                $query = "SELECT `course_id`, `course_name`, `course_code`, `course_active`
+                                            FROM `courses`
+                                            WHERE `organisation_id` = ".$db->qstr($event_info["organisation_id"])."
+                                            AND (`course_active` = '1' OR `course_id` = ".$db->qstr($event_info["course_id"]).")
+                                            ORDER BY `course_code`, `course_name` ASC";
+                                $results = $db->GetAll($query);
+                                if ($results) {
+                                    ?>
+                                    <select id="course_id" name="course_id" style="width: 97%">
+                                        <option value="0">-- Select the course this event belongs to --</option>
+                                        <?php
+                                        foreach($results as $result) {
+                                            if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $event_info["organisation_id"]), "create") || $ENTRADA_ACL->amIAllowed(new EventClosedResource($EVENT_ID, $result["course_id"], $event_info["organisation_id"]), "update")) {
+                                                echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode(($result["course_code"] ? $result["course_code"].": " : "").$result["course_name"])."</option>\n";
+                                            }
+                                        }
+                                        ?>
+                                    </select>
+                                    <script type="text/javascript">
+                                    jQuery('#course_id').change(function() {
+                                        var course_id = jQuery('#course_id option:selected').val();
 
-													if (course_id) {
-														jQuery('#course_id_path').load('<?php echo ENTRADA_RELATIVE; ?>/admin/events?section=api-course-path&id=' + course_id);
-													}
+                                        if (course_id) {
+                                            jQuery('#course_id_path').load('<?php echo ENTRADA_RELATIVE; ?>/admin/events?section=api-course-path&id=' + course_id);
+                                        }
 
-													updateAudienceOptions();
-													generateEventAutocomplete();
-												});
-												</script>
-												<?php
-											} else {
-												echo display_error("You do not have any courses availabe in the system at this time, please add a course prior to adding learning events.");
-											}
-											?>
+                                        updateAudienceOptions();
+                                        generateEventAutocomplete();
+                                    });
+                                    </script>
+                                    <?php
+                                } else {
+                                    echo display_error("You do not have any courses availabe in the system at this time, please add a course prior to adding learning events.");
+                                }
+                                ?>
 							</div>
 						</div>
 						<div class="control-group">
@@ -769,103 +769,105 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<div class="control-group">
 							<label for="eventtype_ids" class="control-label form-required">Event Types:</label>
 							<div class="controls">
-																			<?php
-											$query = "	SELECT a.* FROM `events_lu_eventtypes` AS a
-														LEFT JOIN `eventtype_organisation` AS b
-														ON a.`eventtype_id` = b.`eventtype_id`
-														LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
-														ON c.`organisation_id` = b.`organisation_id`
-														WHERE b.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
-														AND a.`eventtype_active` = '1'
-														ORDER BY a.`eventtype_order` ASC";
-											$results = $db->GetAll($query);
-											if ($results) {
-												?>
-												<select id="eventtype_ids" name="eventtype_ids" style="width: 270px">
-													<option value="-1">-- Add event segment --</option>
-													<?php
-													$event_types = array();
-													foreach($results as $result) {
-														$title = html_encode($result["eventtype_title"]);
-														echo "<option value=\"".$result["eventtype_id"]."\">".$title."</option>";
-													}
-												?>
-												</select>
-												<?php
-											} else {
-												echo display_error("No Event Types were found. You will need to add at least one Event Type before continuing.");
-											}
-											?>
-											<div id="duration_notice" class="content-small"><div style="margin: 5px 0 5px 0"><strong>Note:</strong> Select all of the different segments taking place within this learning event. When you select an event type it will appear below, and allow you to change the order and duration of each segment.</div></div>
-											<hr />
-											<ol id="duration_container" class="sortableList" style="display: none;">
-											<?php
-		                                    if (is_array($PROCESSED["event_types"])) {
-												foreach ($PROCESSED["event_types"] as $eventtype) {
-													echo "<li id=\"type_".$eventtype[0]."\" class=\"\">".$eventtype[2]."
-															<a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\"></a>
-															<span class=\"duration_segment_container\">Duration: <input class=\"duration_segment\" name=\"duration_segment[]\" onchange=\"cleanupList();\" value=\"".$eventtype[1]."\"> minutes</span>
-															</li>";
-	                                        	}
-											}
-											?>
-											</ol>
-											<div id="total_duration" class="content-small">Total time: 0 minutes.</div>
-											<input id="eventtype_duration_order" name="eventtype_duration_order" style="display: none;">
+								<?php
+                                $query = "	SELECT a.* FROM `events_lu_eventtypes` AS a
+                                            LEFT JOIN `eventtype_organisation` AS b
+                                            ON a.`eventtype_id` = b.`eventtype_id`
+                                            LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
+                                            ON c.`organisation_id` = b.`organisation_id`
+                                            WHERE b.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
+                                            AND a.`eventtype_active` = '1'
+                                            ORDER BY a.`eventtype_order` ASC";
+                                $results = $db->GetAll($query);
+                                if ($results) {
+                                    ?>
+                                    <select id="eventtype_ids" name="eventtype_ids">
+                                        <option value="-1">-- Add event segment --</option>
+                                        <?php
+                                        $event_types = array();
+                                        foreach($results as $result) {
+                                            $title = html_encode($result["eventtype_title"]);
+                                            echo "<option value=\"".$result["eventtype_id"]."\">".$title."</option>";
+                                        }
+                                    ?>
+                                    </select>
+                                    <?php
+                                } else {
+                                    echo display_error("No Event Types were found. You will need to add at least one Event Type before continuing.");
+                                }
+                                ?>
+                                <div id="duration_notice" style="margin-top: 5px">
+                                    <div class="alert alert-info">
+                                        <strong>Please Note:</strong> Select all of the different segments taking place within this learning event. When you select an event type it will appear below, and allow you to change the order and duration of each segment.
+                                    </div>
+                                </div>
+                                <ol id="duration_container" class="sortableList" style="display: none;">
+                                <?php
+                                if (is_array($PROCESSED["event_types"])) {
+                                    foreach ($PROCESSED["event_types"] as $eventtype) {
+                                        echo "<li id=\"type_".$eventtype[0]."\" class=\"\">".$eventtype[2]."
+                                                <a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\"></a>
+                                                <span class=\"duration_segment_container\">Duration: <input type=\"text\" class=\"input-mini duration_segment\" name=\"duration_segment[]\" onchange=\"cleanupList();\" value=\"".$eventtype[1]."\"> minutes</span>
+                                                </li>";
+                                    }
+                                }
+                                ?>
+                                </ol>
+                                <div id="total_duration" class="content-small">Total time: 0 minutes.</div>
+                                <input id="eventtype_duration_order" name="eventtype_duration_order" style="display: none;">
 							</div>
 						</div>
 						<div class="control-group">
 							<label for="faculty_name" class="control-label form-nrequired">Associated Faculty:</label>
 							<div class="controls">
-								<input type="text" id="faculty_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" />
-											<?php
-											$ONLOAD[] = "faculty_list = new AutoCompleteList({ type: 'faculty', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
-											?>
-											<div class="autocomplete" id="faculty_name_auto_complete"></div>
-											<input type="hidden" id="associated_faculty" name="associated_faculty" />
-											<input type="button" class="btn" id="add_associated_faculty" value="Add" style="vertical-align: middle" />
-											<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
-											<script type="text/javascript">
-											jQuery(function(){
-												jQuery("#faculty_list img.list-cancel-image").live("click", function(){
-													var proxy_id = jQuery(this).attr("rel");
-													if ($('faculty_'+proxy_id)) {
-														var associated_faculty = jQuery("#associated_faculty").val().split(",");
-														var remove_index = associated_faculty.indexOf(proxy_id);
+								<input type="text" id="faculty_name" name="fullname" autocomplete="off" placeholder="Example: <?php echo html_encode($ENTRADA_USER->getLastname().", ".$ENTRADA_USER->getFirstname()); ?>" />
+                                <?php
+                                $ONLOAD[] = "faculty_list = new AutoCompleteList({ type: 'faculty', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=faculty', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
+                                ?>
+                                <div class="autocomplete" id="faculty_name_auto_complete"></div>
+                                <input type="hidden" id="associated_faculty" name="associated_faculty" />
+                                <input type="button" class="btn" id="add_associated_faculty" value="Add" />
+                                <script type="text/javascript">
+                                jQuery(function(){
+                                    jQuery("#faculty_list img.list-cancel-image").live("click", function(){
+                                        var proxy_id = jQuery(this).attr("rel");
+                                        if ($('faculty_'+proxy_id)) {
+                                            var associated_faculty = jQuery("#associated_faculty").val().split(",");
+                                            var remove_index = associated_faculty.indexOf(proxy_id);
 
-														associated_faculty.splice(remove_index, 1);
+                                            associated_faculty.splice(remove_index, 1);
 
-														jQuery("#associated_faculty").val(associated_faculty.join());
+                                            jQuery("#associated_faculty").val(associated_faculty.join());
 
-														$('faculty_'+proxy_id).remove();
-													}
-												});
-											});
-											</script>
-											<ul id="faculty_list" class="menu" style="margin-top: 15px">
-												<?php
-												if (is_array($PROCESSED["associated_faculty"]) && count($PROCESSED["associated_faculty"])) {
-													foreach ($PROCESSED["associated_faculty"] as $faculty) {
-														if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
-															?>
-															<li class="user" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name ="faculty_role[]" style="float:right;margin-right:30px;margin-top:-5px;"><option value="teacher" <?php if($PROCESSED["display_role"][$faculty] == "teacher") echo "SELECTED";?>>Teacher</option><option value="tutor" <?php if($PROCESSED["display_role"][$faculty] == "tutor") echo "SELECTED";?>>Tutor</option><option value="ta" <?php if($PROCESSED["display_role"][$faculty] == "ta") echo "SELECTED";?>>Teacher's Assistant</option><option value="auditor" <?php if($PROCESSED["display_role"][$faculty] == "auditor") echo "SELECTED";?>>Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" rel="<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" class="list-cancel-image" /></li>
-															<?php
-														}
-													}
-												}
-												?>
-											</ul>
-											<input type="hidden" id="faculty_ref" name="faculty_ref" value="" />
-											<input type="hidden" id="faculty_id" name="faculty_id" value="" />
+                                            $('faculty_'+proxy_id).remove();
+                                        }
+                                    });
+                                });
+                                </script>
+                                <ul id="faculty_list" class="menu" style="margin-top: 15px">
+                                    <?php
+                                    if (is_array($PROCESSED["associated_faculty"]) && count($PROCESSED["associated_faculty"])) {
+                                        foreach ($PROCESSED["associated_faculty"] as $faculty) {
+                                            if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
+                                                ?>
+                                                <li class="user" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name ="faculty_role[]" class="input-medium" style="float:right;margin-right:30px;margin-top:-5px;"><option value="teacher" <?php if($PROCESSED["display_role"][$faculty] == "teacher") echo "SELECTED";?>>Teacher</option><option value="tutor" <?php if($PROCESSED["display_role"][$faculty] == "tutor") echo "SELECTED";?>>Tutor</option><option value="ta" <?php if($PROCESSED["display_role"][$faculty] == "ta") echo "SELECTED";?>>Teacher's Assistant</option><option value="auditor" <?php if($PROCESSED["display_role"][$faculty] == "auditor") echo "SELECTED";?>>Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" rel="<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" class="list-cancel-image" /></li>
+                                                <?php
+                                            }
+                                        }
+                                    }
+                                    ?>
+                                </ul>
+                                <input type="hidden" id="faculty_ref" name="faculty_ref" value="" />
+                                <input type="hidden" id="faculty_id" name="faculty_id" value="" />
 							</div>
 						</div>
-						<div class="control-group">
-							<?php
-								if ($PROCESSED["course_id"]) {
-									require_once(ENTRADA_ABSOLUTE."/core/modules/admin/events/api-audience-options.inc.php");
-								}
-								?>
-						</div>
+
+                        <?php
+                        if ($PROCESSED["course_id"]) {
+                            require_once(ENTRADA_ABSOLUTE."/core/modules/admin/events/api-audience-options.inc.php");
+                        }
+                        ?>
+
 						<div class="control-group">
 							<?php if (!$is_draft) { ?>
 								<tbody>
@@ -934,9 +936,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 														<input type="hidden" id="post_action" name="post_action" value="draft" />
 														<?php } ?>
 														<input type="submit" class="btn btn-primary" value="Save" />
-							</div>						
+							</div>
 						</div>
-							
+
 						</form>
 
 						<script type="text/javascript">

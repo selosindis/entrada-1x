@@ -4,17 +4,17 @@ jQuery(document).ready(function($){
 			revert:"invalid"
 		});
 	}
-	
+
 	function makeSortable () {
 		$("#selected_export_options > li").sortable();
 	}
-	
+
 	makeDraggable();
-	
+
 	$("#selected_export_options_container").droppable({
 		accept: "ul#available_export_options > li",
 		activeClass: "ui-state-hover",
-		drop: function( event, ui ) {	
+		drop: function( event, ui ) {
 			var item = $( "<li></li>" ).text( ui.draggable.text() ).addClass("ui-widget-content ui-state-default draggable");
 			var span = $("<span></span>").addClass("ui-icon ui-icon-arrowthick-2-n-s");
 			item.prepend(span);
@@ -38,23 +38,23 @@ jQuery(document).ready(function($){
 			$('input[name=my_export_options]').val(JSON.stringify(my_export_options));
 		}
 	});
-	
+
 	makeSortable();
-	
+
 	$("#available_export_options_container").droppable({
 		accept: "ul#selected_export_options > li",
 		activeClass: "ui-state-hover",
-		drop: function( event, ui ) {	
+		drop: function( event, ui ) {
 			var item = $( "<li></li>" ).text( ui.draggable.text() ).addClass("ui-widget-content ui-state-default draggable");
 			ui.draggable.remove();
 			item.appendTo( $(this).find("ul") );
 			makeDraggable();
 		}
 	});
-	
-	$("input[value='Export Results']").live("click", function() {
+
+	$("#export-results-button").live("click", function() {
 		var modal_container = $("#modal_export_container");
-		
+
 		modal_container.dialog({
 			title: "Export Events",
 			modal: true,
@@ -65,7 +65,6 @@ jQuery(document).ready(function($){
 			maxHeight: 700,
 			buttons: {
 				Cancel : function() {
-					
 					$(this).dialog( "close" );
 				},
 				Export : function() {
@@ -74,7 +73,7 @@ jQuery(document).ready(function($){
 						my_export_options[$(this).attr("data-field")] = $(this).text();
 					});
 					$('input[name=my_export_options]').val(JSON.stringify(my_export_options));
-					
+
 					if ($('#display-error-box').length > 0) {
 						$('#display-error-box').remove();
 					}

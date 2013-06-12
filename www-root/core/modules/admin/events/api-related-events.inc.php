@@ -15,8 +15,8 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * This API file returns a selectbox containing all the events under the 
- * given course id, discluding those which are listed below as having 
+ * This API file returns a selectbox containing all the events under the
+ * given course id, discluding those which are listed below as having
  * their parent_id set to the current event.
  *
  * @author Organisation: Queen's University
@@ -64,12 +64,17 @@ if (!defined("IN_EVENTS")) {
 			$related_event_error_message = "There is currently no <strong>Course</strong> associated with this event. Please select one now to view a list of events which may be related to this one.";
 		}
 		if (isset($_POST["add_id"]) && ($tmp_input = $_POST["add_id"])) {
-			$PROCESSED["add_id"] = $tmp_input;
-			$query = "SELECT * FROM `events` WHERE `event_id` = ".$db->qstr($PROCESSED["add_id"])." AND `course_id` = ".$db->qstr($PROCESSED["course_id"]);
-			if (!$event_exists = $db->GetRow($query)) {
-				$related_event_error = true;
-				$related_event_error_message = "The event ID which you supplied was not related to the same course as this event. Please try again with an event ID which exists within the course.";
-			}
+            if ($tmp_input != $PROCESSED["event_id"]) {
+                $PROCESSED["add_id"] = $tmp_input;
+                $query = "SELECT * FROM `events` WHERE `event_id` = ".$db->qstr($PROCESSED["add_id"])." AND `course_id` = ".$db->qstr($PROCESSED["course_id"]);
+                if (!$event_exists = $db->GetRow($query)) {
+                    $related_event_error = true;
+                    $related_event_error_message = "The event ID which you supplied was not related to the same course as this event. Please try again with an event ID which exists within the course.";
+                }
+            } else {
+                $related_event_error = true;
+                $related_event_error_message = "You cannot add this event id as a child event, it would create a paradox.";
+            }
 		}
 		if (isset($_POST["remove_id"]) && ($tmp_input = $_POST["remove_id"])) {
 			$PROCESSED["remove_id"] = $tmp_input;
@@ -105,33 +110,30 @@ if (!defined("IN_EVENTS")) {
 			} else {
 				$related_events = $db->GetAll($query);
 			}
+
 			if ($related_events) {
 				foreach ($related_events as $related_event) {
 					$related_event_ids .= ($related_event_ids ? ", ".$db->qstr($related_event["event_id"]) : $db->qstr($related_event["event_id"]));
 					$related_event_ids_clean .= ($related_event_ids_clean ? ", ".$related_event["event_id"] : $related_event["event_id"]);
 				}
 			}
-			if ($related_event_error) {
-				echo "<div id=\"display-error-box\" class=\"display-error\">\n";
-				echo "<ul><li>".$related_event_error_message."</li></ul>";
-				echo "</div>\n";
-			}
 			?>
-			<div style="width: 100%;">
+            <div class="control-group">
 				<input type="hidden" id="parent_id" name="parent_id" value="<?php echo ($event["parent_id"] ? $event["parent_id"] : $PROCESSED["event_id"]); ?>" />
 				<input id="related_event_ids_clean" name="related_event_ids_clean" type="hidden" value="<?php echo $related_event_ids_clean; ?>">
 				<?php
-				foreach ($related_events as $related_event) {
-					?>
-					<input id="related_event_ids" name="related_event_ids[]" type="hidden" value="<?php echo $related_event["event_id"]; ?>">
-					<?php	
-				}
+
+                if ($related_events) {
+                    foreach ($related_events as $related_event) {
+                        ?>
+                        <input id="related_event_ids" name="related_event_ids[]" type="hidden" value="<?php echo $related_event["event_id"]; ?>">
+                        <?php
+                    }
+                }
 				?>
-				<div style="width: 21%; position: relative; float: left;">
-					<label for="related_events_select" class="form-nrequired">Child Events</label>
-				</div>
-				<div style="width: 72%; float: left;">
-					<input autocomplete="off" type="text" name="related_event_id" id="related_event_id" />
+                <label for="related_events_select" class="control-label form-nrequired">Child Events:</label>
+                <div class="controls">
+                    <input type="text" id="related_event_id" name="related_event_id" class="input-large" autocomplete="off" placeholder="Enter the event id of the child event." />
 					<input class="btn" type="button" value="Add" onclick="addRelatedEvent($('related_event_id').value)" />
 					<script type="text/javascript">
 						$('related_event_id').observe('keypress', function(event){
@@ -142,43 +144,32 @@ if (!defined("IN_EVENTS")) {
 						});
 					</script>
 					<?php
+                    if ($related_event_error) {
+                        echo "<div id=\"display-error-box\" class=\"alert alert-error space-above\">\n";
+                        echo "<ul><li>".$related_event_error_message."</li></ul>";
+                        echo "</div>\n";
+                    }
 					$ONLOAD[] = "generateEventAutocomplete()";
 					?>
 					<div class="autocomplete" id="events_autocomplete"></div>
-				</div>
-				<div style="clear: both; padding-top: 5px;" class="content-small">
-					Please select an <strong>Event ID</strong> to be added as a child of this event.
-				</div>
-				<div style="width: 21%; position: relative; float: left;">
-					&nbsp;
-				</div>
-				<div style="width: 72%; float: left;" id="related_events_list">
-					<ul class="menu" style="margin-top: 15px">
-						<?php
-						if (is_array($related_events) && count($related_events)) {
-							foreach ($related_events as $related_event) {
-								?>
-								<li class="community" id="related_event_<?php echo $related_event["event_id"]; ?>" style="margin-bottom: 5px; width: 550px; height: 1.5em;">
-									<a href="<?php echo ENTRADA_URL; ?>/admin/events?id=<?php echo $related_event["event_id"] ?>&section=edit">
-										<div style="width: 300px; position: relative; float:left; margin-left: 15px;">
-											<?php echo $related_event["event_title"]; ?>
-										</div>
-										<div style="float: left;">
-											<?php
-												echo date(DEFAULT_DATE_FORMAT, $related_event["event_start"]);
-											?>
-										</div>
-									</a>
-									<div  style="float: right;">
-										<img style="position: relative;" src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeRelatedEvent('<?php echo $related_event["event_id"]; ?>');" class="list-cancel-image" />
-									</div>
-								</li>
-								<?php
-							}
-						}
-						?>
-					</ul>
-				</div>
+                    <div id="related_events_list">
+                        <ul class="unstyled" style="margin-top: 15px">
+                            <?php
+                            if (is_array($related_events) && !empty($related_events)) {
+                                foreach ($related_events as $related_event) {
+                                    ?>
+                                    <li id="related_event_<?php echo $related_event["event_id"]; ?>">
+                                        <a href="<?php echo ENTRADA_URL; ?>/admin/events?id=<?php echo $related_event["event_id"] ?>&section=edit"><?php echo $related_event["event_title"]; ?></a>
+                                        <img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeRelatedEvent('<?php echo $related_event["event_id"]; ?>');" class="pull-right" style="cursor:pointer;" />
+                                        <span class="content-small">Event on <?php echo date(DEFAULT_DATE_FORMAT, $related_event["event_start"]); ?></span>
+                                    </li>
+                                    <?php
+                                }
+                            }
+                            ?>
+                        </ul>
+                    </div>
+                </div>
 			</div>
 			<?php
 			if ((($related_events && $related_event_ids) || $PROCESSED["remove_id"]) && !$related_event_error) {

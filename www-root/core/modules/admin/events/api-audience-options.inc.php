@@ -78,10 +78,9 @@ if (!defined("IN_EVENTS")) {
 
 			$ONLOAD[] = "selectEventAudienceOption('".(isset($PROCESSED["event_audience_type"]) && $PROCESSED["event_audience_type"] && ($course_list || $permission == "closed") ? $PROCESSED["event_audience_type"] : "custom")."')";
 			?>
-			<tr>
-				<td>&nbsp;</td>
-				<td style="vertical-align: top"><label for="faculty_name" class="form-nrequired">Associated Learners</label></td>
-				<td>
+            <div class="control-group">
+                <label for="learner_name" class="control-label form-nrequired">Associated Learners:</label>
+                <div class="controls">
 					<table>
 						<tbody>
 							<?php
@@ -369,8 +368,8 @@ if (!defined("IN_EVENTS")) {
                             </tr>
 						</tbody>
 					</table>
-				</td>
-			</tr>
+                </div>
+			</div>
 			<?php
 		}
 	}

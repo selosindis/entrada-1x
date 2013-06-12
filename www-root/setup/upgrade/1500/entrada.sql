@@ -151,5 +151,11 @@ UPDATE `medbiq_assessment_methods` SET `code` = "AM016" WHERE `assessment_method
 UPDATE `medbiq_assessment_methods` SET `code` = "AM017" WHERE `assessment_method_id` = '17';
 UPDATE `medbiq_assessment_methods` SET `code` = "AM018" WHERE `assessment_method_id` = '18';
 
+CREATE TABLE IF NOT EXISTS `draft_options` (
+  `draft_id` int(11) NOT NULL,
+  `option` varchar(255) NOT NULL DEFAULT '',
+  `value` varchar(30) NOT NULL DEFAULT ''
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 UPDATE `settings` SET `value` = '1500' WHERE `shortname` = 'version_db';
 UPDATE `settings` SET `value` = '1.5.0' WHERE `shortname` = 'version_entrada';

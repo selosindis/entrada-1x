@@ -39,9 +39,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	?>
 	<h1>Manage Evaluation Forms</h1>
 
-	<ul class="page-action fright">
-		<li><a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/forms?section=add">Create New Evaluation Form</a></li>
-	</ul>
+    <div style="float: right">
+        <a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/forms?section=add"  class="btn btn-small btn-success pull-right cursor-pointer space-below"><i class="icon-plus icon-white"></i> Create New Evaluation Form</a>
+    </div>
 	<div class="clear"></div>
 	<?php
 	$results = Models_Evaluation::getAuthorEvaluationForms();

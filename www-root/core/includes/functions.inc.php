@@ -3100,6 +3100,45 @@ function display_success($success_messages = array()) {
 }
 
 /**
+ * Function to properly format the generic messages for consistency.
+ *
+ * @param array $generic_messages
+ * @return string containing the HTML of the message or false if there is no HTML.
+ */
+function display_generic($generic_messages = array()) {
+	global $GENERIC, $GENERICSTR;
+
+	$output_html = "";
+
+	if (is_scalar($generic_messages)) {
+		if (trim($generic_messages) != "") {
+			$generic_messages = array($generic_messages);
+		} else {
+			$generic_messages = array();
+		}
+	}
+
+	if (!$num_generic = (int) @count($generic_messages)) {
+		if ($num_generic = (int) @count($GENERICSTR)) {
+			$generic_messages = $GENERICSTR;
+		}
+	}
+
+	if ($num_generic) {
+		$output_html .= "<div id=\"display-generic-box\" class=\"alert alert-block alert-generic\">\n";
+        $output_html .= "   <button type=\"button\" class=\"close\" data-dismiss=\"alert\">&times;</button>\n";
+		$output_html .= "	<ul>\n";
+		foreach ($generic_messages as $generic_message) {
+			$output_html .= "	<li>".$generic_message."</li>\n";
+		}
+		$output_html .= "	</ul>\n";
+		$output_html .= "</div>\n";
+	}
+
+	return (($output_html) ? $output_html : false);
+}
+
+/**
  * Function to properly format the error messages for consistency.
  *
  * @param array $notice_messages
@@ -14969,8 +15008,8 @@ function get_user_departments($user_id) {
 
 	$query = "	SELECT c.`department_title`, c.`department_id`
 				FROM `".AUTH_DATABASE."`.`user_departments` AS a
-				JOIN `".AUTH_DATABASE."`.`user_data` AS b
-				ON a.`user_id` = b.`id`
+				JOIN `".AUTH_DATABASE."`.`user_access` AS b
+				ON a.`user_id` = b.`user_id`
 				JOIN `".AUTH_DATABASE."`.`departments` AS c
 				ON a.`dep_id` = c.`department_id`
 				AND b.`organisation_id` = c.`organisation_id`
@@ -15520,6 +15559,14 @@ function add_notice($message) {
  */
 function add_success($message) {
 	add_message("success",$message);
+}
+
+/**
+ * Adds a generic message
+ * @param string $message
+ */
+function add_generic($message) {
+	add_message("generic",$message);
 }
 
 /**

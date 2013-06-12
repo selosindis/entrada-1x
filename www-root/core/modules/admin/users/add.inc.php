@@ -1147,13 +1147,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                 <div class="control-group">
                     <label for="office_hours" class="control-label form-nrequired">Office Hours:</label>
                     <div class="controls">
-                        <textarea id="office_hours" name="office_hours" style="height: 40px;" maxlength="100"><?php echo (isset($PROCESSED["office_hours"]) && $PROCESSED["office_hours"] ? html_encode($PROCESSED["office_hours"]) : ""); ?></textarea>
+                        <textarea id="office_hours" class="expandable" name="office_hours"><?php echo (isset($PROCESSED["office_hours"]) && $PROCESSED["office_hours"] ? html_encode($PROCESSED["office_hours"]) : ""); ?></textarea>
                     </div>
                 </div>
                 <div class="control-group">
                     <label for="notes" class="control-label form-nrequired">General Comments</label>
                     <div class="controls">
-                        <textarea id="notes" class="expandable" name="notes" height: 75px"><?php echo ((isset($PROCESSED["notes"])) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
+                        <textarea id="notes" class="expandable" name="notes"><?php echo ((isset($PROCESSED["notes"]) && $PROCESSED["notes"]) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
                     </div>
                 </div>
                 <!--- End control-group ---->
@@ -1239,7 +1239,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                                             foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
                                                 if ($result["organisation_id"] == $organisation_id){
                                                     foreach($dlist as $d){
-                                                        echo build_option($d["department_id"], $d["department_title"], $selected);
+                                                        echo build_option($d["department_id"], $d["department_title"]);
                                                     }
                                                 }
                                             }
@@ -1331,6 +1331,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					display: block;
 					float: right;
 				}
+				
+				textarea.expandable {
+					width: 75%;
+				}
 			</style>
 			<script type="text/javascript">
 				jQuery(document).ready(function($) {
@@ -1341,7 +1345,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						var dept_id = $(this).val();
 						var org_id = $(this).attr("id").split("_")[2];
 						var remove_link = "<a class=\"remove_dept\" href=\"\"><img src=\"" + "<?php echo ENTRADA_URL; ?>" + "/images/action-delete.gif\"></a>";
-						var content = "<li id=\"dept_" + dept_id + "\"><img src=\"" + "<?php echo ENTRADA_URL; ?>" + "/images/icon-apartment.gif\">" + $(this).find(":selected").text() + remove_link + "</li>";
+						var content = "<li id=\"dept_" + dept_id + "\"><i class=\"icon-home\"></i>&nbsp;&nbsp;&nbsp;" + $(this).find(":selected").text() + remove_link + "</li>";
 						$('#departments_container_' + org_id).append(content);
 						$('#departments_notice_' + org_id).hide();
 						$('#departments_container_' + org_id).show();

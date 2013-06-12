@@ -48,10 +48,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 	$observership = Observership::get($observership_id);
 	
 	if ($observership) {
-	
-		
+			
 		$student = User::get($observership->getStudentID());
-		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users/manage/students?section=observerships&id=".$student->getID(), "title" => $student->getFullname(false)." Observerships");
+
+		$BREADCRUMB = array();
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users", "title" => "Manage Users");
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users/manage?id=".$student->getID(), "title" => $student->getFullname(false));
+		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/users/manage/students?section=observerships&id=".$student->getID(), "title" => "Observerships");
 		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/observerships?section=review&id=".$observership_id, "title" => "Review ".$observership->getTitle());
 		
 		echo "<h1>" . $observership->getTitle() . "</h1>";
@@ -170,8 +173,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 					<div class="span1">
 						<input type="button" class="btn" value="Back" onclick="window.location = '<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=observerships&id=<?php echo $observership->getStudentID(); ?>'" />
 					</div>
+					<?php if ($ENTRADA_USER->getGroup() == "medtech" || $ENTRADA_USER->getGroup() == "staff") { ?>
+					<div class="span1">
+						<input type="button" class="btn" value="Edit" onclick="window.location = '<?php echo ENTRADA_URL; ?>/admin/observerships?section=edit&id=<?php echo $observership->getID(); ?>'" />
+					</div>
+					<?php } ?>
 					<?php if ($observership->getStatus() == "pending") { ?>
-					<div class="span3 offset8">
+					<div class="span3 pull-right">
 					<input type="submit" class="btn btn-danger" name="status" value="Reject" />
 					<input type="submit" class="btn btn-primary" name="status" value="Approve" />&nbsp;
 					</div>

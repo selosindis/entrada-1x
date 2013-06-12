@@ -83,11 +83,17 @@ class Observership extends ModelBase implements Editable, Validation {
 			if(!$res->start){
 				add_error("<strong>Observership Start</strong> is a required field. Please ensure you've provided a value.");
 				$res->VALID = false;				
-			} else if ($res->start < time()) {
-				add_error("<strong>Observership Start</strong> is before current date. Entry of historical observerships is not available.");
+			}
+			
+			if (($ENTRADA_USER->getGroup() != "staff" && $ENTRADA_USER->getGroup() != "medtech") && $res->start < time() + 86400) {
+				add_error("Entry of historical observerships is not available, any entered observership must start tomorrow or later.");
 				$res->VALID = false;
 			}
 
+			if ($ENTRADA_USER->getGroup() == "staff" || $ENTRADA_USER->getGroup() == "medtech") {
+				$res->status = "confirmed";
+			}
+			
 			if(!$res->end){
 				$res->end = $res->start;
 			}
@@ -417,7 +423,9 @@ class Observership extends ModelBase implements Editable, Validation {
 	public function create() {
 		global $db;
 		
-		$this->status = 'pending';
+		if (!isset($this->status)) {
+			$this->status = 'pending';	
+		}
 		$this->unique_id = hash("sha256", uniqid("obs-", true));
 		$this->notice_id = 0;
 		

@@ -1,5 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <templates>
+	<template lang="en" status="confirmed">
+		<![CDATA[
+		<li class="entry approved" %ID%>
+			%CONTENT%
+			<div class="item-status">
+				<span class="label">
+					Status:
+				</span>
+				<span class="heading">
+					Confirmed
+				</span>
+			</div>
+			%CONTROLS%
+		</li>
+		]]>
+	</template>
 	<template lang="en" status="approved">
 		<![CDATA[
 		<li class="entry approved" %ID%>

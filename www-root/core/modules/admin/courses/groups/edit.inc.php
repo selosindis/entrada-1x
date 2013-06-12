@@ -28,7 +28,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 	header("Location: ".ENTRADA_URL);
 	exit;
 } elseif(!$ENTRADA_ACL->amIAllowed(new CourseResource($COURSE_ID, $ENTRADA_USER->getActiveOrganisation()), 'update', false)) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 1000)";
+	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 5000)";
 
 	$ERROR++;
     $ERRORSTR[]    = "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
@@ -130,7 +130,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 							add_success("Successfully renamed course group.");
 						}
 					}
-					$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&gid=".$GROUP_ID."\\'', 2000)";
+					$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&gid=".$GROUP_ID."\\'', 5000)";
 				} 
 				break;
 			case 'delmember':
@@ -150,7 +150,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						add_success("Successfully ".$_POST["coa"]."d the selected group member.");
 					}
 				} 
-					$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&gid=".$GROUP_ID."\\'', 2000)";				
+					$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&gid=".$GROUP_ID."\\'', 5000)";				
 				break;
 			case 'managetutors':
 				$query = "DELETE FROM `course_group_contacts` WHERE `cgroup_id` = ".$db->qstr($GROUP_ID);
@@ -179,7 +179,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 
 					application_log("error", "Unable to remove a course_group_contact record while managing a course group. Database said: ".$db->ErrorMsg());
 				}
-				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&gid=".$GROUP_ID."\\'', 2000)";				
+				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/courses/groups?section=manage&id=".$COURSE_ID."&gid=".$GROUP_ID."\\'', 5000)";				
 				break;
 			case 'delete':
 				$removed = array();
@@ -217,7 +217,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 						}
 					}
 				}
-				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/courses/groups?id=".$COURSE_ID."\\'', 2000)";
+				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/courses/groups?id=".$COURSE_ID."\\'', 5000)";
 
 
 				if (!strcmp($_POST["coa"],"delete")) {
@@ -335,15 +335,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 									<tfoot>
 										<tr>
 											<td />
-											<td style="padding-top: 10px">
-												<input type="submit" class="btn btn-warning" value="Deactivate" />
-											</td>
-											<td style="padding-top: 10px">
-												<input type="submit" class="btn btn-primary" value="Activate" onClick="$('coa').value='activate'" />
-											</td>
-											<td colspan="2" style="padding-top: 10px">
-												<input type="submit" class="btn-danger" value="Delete Confirm" onClick="$('coa').value='delete'" />
-											</td>
+                                            <td style="padding-top: 10px" colspan="2">
+                                                <input type="submit" class="btn btn-primary" value="Activate" onClick="$('coa').value='activate'" />
+                                            </td>
+                                            <td style="padding-top: 10px" align="right" colspan="2">
+                                                <input type="submit" class="btn btn-warning" value="Deactivate" />
+                                                <input type="submit" class="btn btn-danger" value="Delete" onClick="$('coa').value='delete'" />
+                                            </td>
 										</tr>
 									</tfoot>
 									<tbody>
@@ -402,12 +400,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 										<tfoot>
 											<tr>
 												<td style="padding-top: 10px" colspan="2">
-													<input type="submit" class="btn btn-warning" value="Deactivate" />
+													<input type="submit" class="btn btn-primary" value="Activate" onClick="$('coa').value='activate'" />
 												</td>
 												<td style="padding-top: 10px" align="right" colspan="2">
-													<input type="submit" class="btn btn-primary" value="Activate" onClick="$('coa').value='activate'" />
-
-													<input type="submit" class="btn btn-danger" value="Delete Confirm" onClick="$('coa').value='delete'" />
+													<input type="submit" class="btn btn-warning" value="Deactivate" />
+													<input type="submit" class="btn btn-danger" value="Delete" onClick="$('coa').value='delete'" />
 												</td>
 											</tr>
 										</tfoot>

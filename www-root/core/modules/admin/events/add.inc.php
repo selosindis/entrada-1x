@@ -623,7 +623,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 			}
 			
-			if ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "copy") { 
+			if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "copy") { 
 				$PROCESSED = $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["copy"]; 
 			} else {
 				if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["copy"])) { 
@@ -755,7 +755,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										foreach ($PROCESSED["associated_faculty"] as $faculty) {
 											if ((array_key_exists($faculty, $FACULTY_LIST)) && is_array($FACULTY_LIST[$faculty])) {
 												?>
-												<li class="user" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>" style="cursor: move;margin-bottom:10px;width:350px;"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name ="faculty_role[]" style="float:right;margin-right:30px;margin-top:-5px;"><option value="teacher" <?php if($PROCESSED["display_role"][$faculty] == "teacher") echo "SELECTED";?>>Teacher</option><option value="tutor" <?php if($PROCESSED["display_role"][$faculty] == "tutor") echo "SELECTED";?>>Tutor</option><option value="ta" <?php if($PROCESSED["display_role"][$faculty] == "ta") echo "SELECTED";?>>Teacher's Assistant</option><option value="auditor" <?php if($PROCESSED["display_role"][$faculty] == "auditor") echo "SELECTED";?>>Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
+												<li class="user" id="faculty_<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>"><?php echo $FACULTY_LIST[$faculty]["fullname"]; ?><select name="faculty_role[]" class="faculty_select"><option value="teacher" <?php if($PROCESSED["display_role"][$faculty] == "teacher") echo "SELECTED";?>>Teacher</option><option value="tutor" <?php if($PROCESSED["display_role"][$faculty] == "tutor") echo "SELECTED";?>>Tutor</option><option value="ta" <?php if($PROCESSED["display_role"][$faculty] == "ta") echo "SELECTED";?>>Teacher's Assistant</option><option value="auditor" <?php if($PROCESSED["display_role"][$faculty] == "auditor") echo "SELECTED";?>>Auditor</option></select><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="faculty_list.removeItem('<?php echo $FACULTY_LIST[$faculty]["proxy_id"]; ?>');" class="list-cancel-image" /></li>
 												<?php
 											}
 										}
@@ -783,7 +783,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				<div class="row-fluid">
 					<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events'" />
 					<div class="pull-right">
-					<?php if ($is_draft) { 
+					<?php if (isset($is_draft) && $is_draft) { 
 												echo "<input type=\"hidden\" name=\"post_action\" id=\"post_action\" value=\"draft\" />";
 											} else { ?>
 											<span class="content-small">After saving:</span>

@@ -37,10 +37,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 } else {
 	?>
 	<h1>Manage Evaluation Questions</h1>
-	
-	<ul class="page-action fright">
-		<li><a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/questions?section=add">Create New Evaluation Question</a></li>
-	</ul>
+    <div style="float: right">
+        <a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/questions?section=add"  class="btn btn-small btn-success pull-right cursor-pointer space-below"><i class="icon-plus icon-white"></i> Create New Evaluation Question</a>
+    </div>
 	<div class="clear"></div>
 	<a id="false-link" href="#placeholder"></a>
 	<div id="placeholder" style="display: none"></div>

@@ -742,25 +742,20 @@ if (!defined("IN_PROFILE")) {
 			<?php
 			load_rte();
 			if ($custom_fields) {
-				$pub_types = array (
-					"ar_poster_reports"				=> array("id_field" => "poster_reports_id", "title" => "title"),
-					"ar_peer_reviewed_papers"		=> array("id_field" => "peer_reviewed_papers_id", "title" => "title"),
-					"ar_non_peer_reviewed_papers"	=> array("id_field" => "non_peer_reviewed_papers_id", "title" => "title"),
-					"ar_book_chapter_mono"			=> array("id_field" => "book_chapter_mono_id", "title" => "title"),
-					"ar_conference_papers"			=> array("id_field" => "conference_papers_id", "title" => "lectures_papers_list")
-				);
 				echo "<h2>Department Specific Information</h2>";
 				add_notice("The information below has been requested by departments the user is a member of. This information is considered public and may be published on department websites.");
 				echo display_notice();
 				echo "<div class=\"tabbable departments\">";
 				echo "<ul class=\"nav nav-tabs\">";
 				$i = 0;
-				foreach ($departments as $department_id => $department) {
-					if (count($custom_fields[$department_id]) >= 1) {
-						?>
-						<li class="<?php echo $i == 0 ? "active" : ""; ?>"><a data-toggle="tab" href="#dep-<?php echo $department_id; ?>"><?php echo strlen($department) > 15 ? substr($department, 0, 15)."..." : $department; ?></a></li>
-						<?php
-						$i++;
+				if (isset($departments)) {
+					foreach ($departments as $department_id => $department) {
+						if (count($custom_fields[$department_id]) >= 1) {
+							?>
+							<li class="<?php echo $i == 0 ? "active" : ""; ?>"><a data-toggle="tab" href="#dep-<?php echo $department_id; ?>"><?php echo strlen($department) > 15 ? substr($department, 0, 15)."..." : $department; ?></a></li>
+							<?php
+							$i++;
+						}
 					}
 				}
 				echo "</ul>";
@@ -769,84 +764,94 @@ if (!defined("IN_PROFILE")) {
 				$i = 0;
 				foreach ($departments as $department_id => $department) {
 					if (count($custom_fields[$department_id]) >= 1) {
-					echo "<div class=\"tab-pane ".($i == 0 ? "active" : "")."\" id=\"dep-".$department_id."\">";
-					echo "<h4>".$department."</h4>";
-					foreach ($custom_fields[$department_id] as $field) { ?>
-						<div class="control-group">
-							<label class="control-label <?php echo $field["required"] == "1" ? " form-required" : ""; ?>" for="<?php echo $field["name"]; ?>"><?php echo $field["title"]; ?></label>
-							<div class="controls">
-								<?php
-									$field["type"] = strtolower($field["type"]);
-									switch ($field["type"]) {
-										case "textarea" :
-											?>
-											<textarea id="<?php echo $field["name"]; ?>" class="input-xlarge expandable expanded" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>"><?php echo $field["value"]; ?></textarea>
-											<?php
-										break;
-										case "textinput" :
-										case "twitter" :
-										case "link" :
-											?>
-											<input type="text" id="<?php echo $field["name"]; ?>" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>" value="<?php echo $field["value"]; ?>" />
-											<?php
-										break;
-										case "richtext" :
-											?>
-											<textarea id="<?php echo $field["name"]; ?>" class="input-xlarge" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>"><?php echo $field["value"]; ?></textarea>
-											<?php
-										break;
-										case "checkbox" :
-											?>
-											<label class="checkbox"><input type="checkbox" id="<?php echo $field["name"]; ?>" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" value="<?php echo $field["value"]; ?>" <?php echo $field["value"] == "1" ? " checked=\"checked\"" : ""; ?> />
-											<?php echo $field["helptext"] ? $field["helptext"] : ""; ?></label>
-											<?php
-										break;
-									}
-								?>
+						echo "<div class=\"tab-pane ".($i == 0 ? "active" : "")."\" id=\"dep-".$department_id."\">";
+						echo "<h4>".$department."</h4>";
+						foreach ($custom_fields[$department_id] as $field) { ?>
+							<div class="control-group">
+								<label class="control-label <?php echo $field["required"] == "1" ? " form-required" : ""; ?>" for="<?php echo $field["name"]; ?>"><?php echo $field["title"]; ?></label>
+								<div class="controls">
+									<?php
+										$field["type"] = strtolower($field["type"]);
+										switch ($field["type"]) {
+											case "textarea" :
+												?>
+												<textarea id="<?php echo $field["name"]; ?>" class="input-xlarge expandable expanded" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>"><?php echo $field["value"]; ?></textarea>
+												<?php
+											break;
+											case "textinput" :
+											case "twitter" :
+											case "link" :
+												?>
+												<input type="text" id="<?php echo $field["name"]; ?>" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>" value="<?php echo $field["value"]; ?>" />
+												<?php
+											break;
+											case "richtext" :
+												?>
+												<textarea id="<?php echo $field["name"]; ?>" class="input-xlarge" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>"><?php echo $field["value"]; ?></textarea>
+												<?php
+											break;
+											case "checkbox" :
+												?>
+												<label class="checkbox"><input type="checkbox" id="<?php echo $field["name"]; ?>" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" value="<?php echo $field["value"]; ?>" <?php echo $field["value"] == "1" ? " checked=\"checked\"" : ""; ?> />
+												<?php echo $field["helptext"] ? $field["helptext"] : ""; ?></label>
+												<?php
+											break;
+										}
+									?>
 
+								</div>
 							</div>
-						</div>
-					<?php }
-					foreach ($pub_types as $type_table => $data) {
-						$query = "SELECT a.`".$data["id_field"]."` AS `id`, a.`".$data["title"]."` AS `title`, a.`year_reported`, b.`id` AS `dep_pub_id`
-									FROM `".$type_table."` AS a
-									LEFT JOIN `profile_publications` AS b
-									ON a.`proxy_id` = b.`proxy_id`
-									AND b.`pub_id` = a.`".$data["id_field"]."`
-									AND (b.`dep_id` = ".$db->qstr($department_id). " || b.`dep_id` IS NULL)
-									WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
-						$pubs = $db->GetAll($query);
-						if ($pubs) {
-							echo "<h4>Publications on ".$department." Website</h4>";
-                            ?>
-							<h4><?php echo ucwords(str_replace("ar ", "", str_replace("_", " ", $type_table))); ?></h4>
-							<table width="100%" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-hover table-bordered table-nowrap">
-								<thead>
-									<tr>
-										<th>Title</th>
-										<th width="10%">Date</th>
-										<th width="8%">Visible</th>
-									</tr>
-								</thead>
-								<tbody>
-								<?php foreach ($pubs as $publication) {
-                                    ?>
-									<tr data-id="<?php echo $publication["id"]; ?>">
-										<td><?php echo $publication["title"]; ?></td>
-										<td><?php echo $publication["year_reported"]; ?></td>
-										<td><input type="checkbox" name="publications[<?php echo str_replace("ar_", "", $type_table); ?>][<?php echo $department_id; ?>][<?php echo $publication["id"]; ?>]" <?php echo ($publication["dep_pub_id"] != NULL ? "checked=\"checked\"" : ""); ?> /></td>
-									</tr>
-                                    <?php
-                                }
-                                ?>
-								</tbody>
-							</table>
-							<?php
-						}
-					}
+						<?php }
 
-					echo "</div>";
-					$i++;
+						$pub_types = array (
+							"ar_poster_reports"				=> array("id_field" => "poster_reports_id",				"title" => "title"),
+							"ar_peer_reviewed_papers"		=> array("id_field" => "peer_reviewed_papers_id",		"title" => "title"),
+							"ar_non_peer_reviewed_papers"	=> array("id_field" => "non_peer_reviewed_papers_id",	"title" => "title"),
+							"ar_book_chapter_mono"			=> array("id_field" => "book_chapter_mono_id",			"title" => "title"),
+							"ar_conference_papers"			=> array("id_field" => "conference_papers_id",			"title" => "lectures_papers_list")
+						);
+						if (isset($pub_types)) {
+							foreach ($pub_types as $type_table => $data) {
+								$query = "	SELECT a.`".$data["id_field"]."` AS `id`, a.`".$data["title"]."` AS `title`, a.`year_reported`, b.`id` AS `dep_pub_id`
+											FROM `".$type_table."` AS a
+											LEFT JOIN `profile_publications` AS b
+											ON a.`proxy_id` = b.`proxy_id`
+											AND b.`pub_id` = a.`".$data["id_field"]."`
+											AND (b.`dep_id` = ".$db->qstr($department_id). " || b.`dep_id` IS NULL)
+											WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+								$pubs = $db->GetAll($query);
+								if ($pubs) {
+									echo "<h4>Publications on ".$department." Website</h4>";
+									?>
+									<h4><?php echo ucwords(str_replace("ar ", "", str_replace("_", " ", $type_table))); ?></h4>
+									<table width="100%" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-hover table-bordered table-nowrap">
+										<thead>
+											<tr>
+												<th>Title</th>
+												<th width="10%">Date</th>
+												<th width="8%">Visible</th>
+											</tr>
+										</thead>
+										<tbody>
+										<?php foreach ($pubs as $publication) {
+											?>
+											<tr data-id="<?php echo $publication["id"]; ?>">
+												<td><?php echo $publication["title"]; ?></td>
+												<td><?php echo $publication["year_reported"]; ?></td>
+												<td><input type="checkbox" name="publications[<?php echo str_replace("ar_", "", $type_table); ?>][<?php echo $department_id; ?>][<?php echo $publication["id"]; ?>]" <?php echo ($publication["dep_pub_id"] != NULL ? "checked=\"checked\"" : ""); ?> /></td>
+											</tr>
+											<?php
+										}
+										?>
+										</tbody>
+									</table>
+									<?php
+								}
+							}
+						}
+
+						echo "</div>";
+						$i++;
 					}
 				}
 				echo "</div>";

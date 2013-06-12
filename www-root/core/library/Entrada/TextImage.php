@@ -41,11 +41,11 @@ class Entrada_TextImage {
 	 * @param int $height
 	 * @return TextImage
 	 */
-	function TextImage($message = "", $format = "", $width = 0, $height = 0) {
+	public function __construct($message = "", $format = "", $width = 0, $height = 0, $font = "", $rotation = 0, $padding = 0) {
 		if($message != "") {
 			$this->message = $message;
 		}
-
+        
 		if($format = strtolower(trim($format)) != "") {
 			if(@in_array($format, $this->_getSupportedImageTypes())) {
 				$this->image_format = $format;
@@ -59,13 +59,25 @@ class Entrada_TextImage {
 		if($height = (int) trim($height)) {
 			$this->height = $height;
 		}
+
+		if($rotation = (int) trim($rotation)) {
+			$this->rotation = $rotation;
+		}
+
+		if($padding = (int) trim($padding)) {
+			$this->padding = $padding;
+		}
+        
+        if ($font) {
+            $this->font = $font;
+        }
 	}
 
 	/**
 	 * Draw function will actually draw the image.
 	 * @return Draw's image.
 	 */
-	function draw() {
+	public function draw() {
 		$offset_x	= 0;
 		$offset_y	= 0;
 
@@ -125,7 +137,7 @@ class Entrada_TextImage {
 			case "jpg" :
 				if(imagetypes() & IMG_JPG) {
 					header("Content-type: image/jpg");
-					imagejpeg($image, "", 60);
+					imagejpeg($image, NULL, 60);
 				} else {
 					echo "Failure: JPEG format not supported by your PHP installation.";
 					exit;

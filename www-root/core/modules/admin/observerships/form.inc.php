@@ -106,26 +106,29 @@ if (!$OBSERVERSHIP){
 				jQuery(this).trigger('change');
 			});
 
-			jQuery('.preceptor_manual').hide();
-			jQuery('.preceptor_auto').show();
-
-			jQuery('.manual_toggle').click(function(){
-				var vis = jQuery(this).attr('data-visibility');
-				if(vis == 'show'){
-					jQuery('.preceptor_auto').slideUp(400,function(){
-						jQuery('.preceptor_manual').slideDown();
-					});					
-				}else{
-					jQuery('.preceptor_manual').slideUp(400,function(){
-						jQuery('.preceptor_auto').slideDown();
-					});					
-				}
-			});
 			jQuery("#countries_id").live("change", function() {
 				jQuery("#country").attr("value", jQuery(this).children("option[value="+jQuery(this).val()+"]").html());
 			});
 			jQuery("#prov_state").live("change", function() {
 				jQuery("#prov").attr("value", jQuery(this).val());
+			});
+			
+			jQuery("#preceptor_email").live("blur", function() {
+				jQuery.ajax({
+					url: "<?php echo ENTRADA_URL; ?>/api/personnel.api.php",
+					data: "email=" + jQuery(this).val() + "",
+					type: "POST",
+					success: function(data) {
+						if (data) {
+							var jsonResponse = JSON.parse(data);
+							if (jsonResponse.status == "success") {
+								jQuery("#preceptor_proxy_id").attr("value", jsonResponse.data.proxy_id);
+								jQuery("#preceptor_firstname").attr("value", jsonResponse.data.firstname);
+								jQuery("#preceptor_lastname").attr("value", jsonResponse.data.lastname);
+							}
+						}
+					}
+				});
 			});
 		});
 	</script>
@@ -147,10 +150,8 @@ if (!$OBSERVERSHIP){
 		vertical-align: top!important;
 	}
 	#observership_form td {padding:4px 0px;}
-	
-	.observership_details {min-height:100px!important;width:491px;}
 	</style>
-	<form action="<?php echo ENTRADA_URL; ?>/profile/observerships?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="observership_form">
+	<form action="<?php echo ENTRADA_URL; ?>/admin/observerships?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="observership_form">
 		<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Course Details">
 			<colgroup>
 				<col style="width: 3%" />
@@ -172,7 +173,7 @@ if (!$OBSERVERSHIP){
 					<td>&nbsp;</td>
 					<td style="vertical-align:top;"><label for="activity_type" class="form-required">IP Observership Details:</label></td>
 					<td>
-						<textarea class="expandable observership_details" name="observership_details"><?php echo $OBSERVERSHIP->getObservershipDetails();?></textarea>
+						<textarea class="expandable" name="observership_details"><?php echo $OBSERVERSHIP->getObservershipDetails();?></textarea>
 					</td>
 				</tr>
 				<tr>
@@ -185,8 +186,10 @@ if (!$OBSERVERSHIP){
 						<select name="clinical_discipline" id="clinical_discipline" data-init="<?php echo $OBSERVERSHIP->getClinicalDiscipline();?>">
 						  <option value="">-- Select discipline --</option>
 						  <option value="Adolescent Medicine">Adolescent Medicine</option>
+						  <option value="Allergy and Immunology">Allergy and Immunology</option>
 						  <option value="Anatomical Pathology">Anatomical Pathology</option><option value="Anesthesiology">Anesthesiology</option>
 						  <option value="Cardiac Surgery">Cardiac Surgery</option>
+						  <option value="Cardiology">Cardiology</option>
 						  <option value="Child &amp; Adolescent Psychiatry">Child &amp; Adolescent Psychiatry</option>
 						  <option value="Clinical Immunology and Allergy">Clinical Immunology and Allergy</option>
 						  <option value="Clinical Pharmacology">Clinical Pharmacology</option>
@@ -203,6 +206,7 @@ if (!$OBSERVERSHIP){
 						  <option value="Forensic Psychiatry">Forensic Psychiatry</option>
 						  <option value="Gastroenterology">Gastroenterology</option>
 						  <option value="General Pathology">General Pathology</option>
+						  <option value="General Pediatrics">General Pediatrics</option>
 						  <option value="General Surgery">General Surgery</option>
 						  <option value="General Surgical Oncology">General Surgical Oncology</option>
 						  <option value="Geriatric Medicine">Geriatric Medicine</option>
@@ -233,10 +237,12 @@ if (!$OBSERVERSHIP){
 						  <option value="Otolaryngology-Head and Neck Surgery">Otolaryngology-Head and Neck Surgery</option>
 						  <option value="Other">Other</option>
 						  <option value="Palliative Medicine">Palliative Medicine</option>
+						  <option value="Pediatric Cardiology">Pediatric Cardiology</option>
 						  <option value="Pediatric Emergency Medicine">Pediatric Emergency Medicine</option>
 						  <option value="Pediatric General Surgery">Pediatric General Surgery</option>
 						  <option value="Pediatric Hemotology/Oncology">Pediatric Hemotology/Oncology</option>
 						  <option value="Pediatric Neurology">Pediatric Neurology</option>
+						  <option value="Pediatric Ophthalmology">Pediatric Ophthalmology</option>
 						  <option value="Pediatric Radiology">Pediatric Radiology</option>
 						  <option value="Physical Medicine and Rehabilitation">Physical Medicine and Rehabilitation</option>
 						  <option value="Plastic Surgery">Plastic Surgery</option>
@@ -317,12 +323,12 @@ if (!$OBSERVERSHIP){
 //								echo "<option value=\"0\"".((!$OBSERVERSHIP->getCountry()) ? " selected=\"selected\"" : "").">-- Country --</option>\n";
 								echo $country_options;
 								echo "</select>\n";
-								} else {
-									echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
-									echo "Country Information Not Available\n";
-								}
+							} else {
+								echo "<input type=\"hidden\" id=\"countries_id\" name=\"countries_id\" value=\"0\" />\n";
+								echo "Country Information Not Available\n";
+							}
 						?>
-						<input id="country" name="country" type="hidden" value="<?php echo $OBSERVERSHIP->getCountry();?>">
+						<input id="country" name="country" type="hidden" value="<?php echo $OBSERVERSHIP->getCountry() ? $OBSERVERSHIP->getCountry() : "Canada";?>">
 					</td>
 					<td>&nbsp;</td>
 				    <td><label for="city" class="form-required">City:</label></td>
@@ -355,7 +361,7 @@ if (!$OBSERVERSHIP){
 					<td>&nbsp;</td>
 					<td colspan="2">
 						<div class="display-generic">
-						By sending this approval form I certify that the above information has been filled out to the best of my knowledge. <strike>I am aware that in order for this activity to be recognized by the UGME office as completed, I must submit an Attendance Certificate within three (3) weeks from the date of completion of this activity.</strike> I understand that if this is an International activity it is my responsibility to follow the International process guidelines located on the UGME website.
+						By sending this approval form I certify that the above information has been completed to the best of my knowledge. I am aware that in order for this activity to be recognized by the UGME office as completed, I am responsible to ensure that my Supervisor electronically submits my confirmation of attendance within one week of the observership end date. I understand that if this is an International activity it is my responsibility to follow the International process and guidelines located on the UGME website.
 						</div>
 					</td>
 				</tr>
@@ -370,52 +376,18 @@ if (!$OBSERVERSHIP){
 				<tr>
 					<td>&nbsp;</td>
 					<td colspan="2">
-						<input class="btn btn-primary" type="submit" value="Submit" style="margin-top:15px;" />
+						<input type="submit" value="Submit" style="margin-top:15px;" />
 					</td>
 				</tr>
 			</tfoot>
 			<tbody>
-		       	<tr class="preceptor_auto">
-		       		<td>&nbsp;</td>
-				    <td style="vertical-align:top;"><label for="preceptor_proxy_id" class="form-required">Preceptor:</label></td>
-				    <td>
-				    	<input 
-				    			type="text" 
-				    			class="user_name"
-				    			id="preceptor_director_name" 
-				    			data-type="director"
-				    			data-prefix="preceptor_"
-				    			data-multiple="off"
-				    			name="fullname" 
-				    			size="30" 
-				    			autocomplete="off" 
-				    			style="width: 203px; vertical-align: middle"/>
-						<ul id="preceptor_director_list" class="menu">
-							<?php if ($OBSERVERSHIP->preceptorAutocompleted()) { ?>
-							<li class="community" id="preceptor_director_<?php echo $OBSERVERSHIP->preceptorAutocompleted();?>" style="cursor:move;">
-								<?php echo $OBSERVERSHIP->getPreceptorLastname().", ".$OBSERVERSHIP->getPreceptorFirstname();?>
-								<img src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
-										class="list-cancel-image user_remove"
-										data-id="<?php echo $OBSERVERSHIP->preceptorAutocompleted();?>"
-										data-prefix="preceptor_"
-										data-type="director"/>
-							</li>
-							<?php } ?>
-						</ul>						    										    			
-				    	 <input id="preceptor_proxy_id" name="preceptor_proxy_id" value="" type="hidden" /> 
-				    	<p class="display-generic">
-				    		Not seeing your preceptor listed? <a href="javascript:void(0)" class="manual_toggle" data-visibility="show">Click here</a>.
-				    	</p>
-				    </td>
-		       	</tr>
-				<tr class="preceptor_manual">
-		       		<td colspan="2">&nbsp;</td>
-				    <td><a href="javascript:void(0)" class="manual_toggle" data-visibility="hide">Click to return to autocomplete mode.</a></td>
-		       	</tr>
-				<tr class="preceptor_manual">
+		       	<tr class="preceptor_manual">
 		       		<td>&nbsp;</td>
 				    <td><label for="preceptor_email" class="form-required">Preceptor Email:</label></td>
-				    <td><input id="preceptor_email" name="preceptor_email" value="<?php echo $OBSERVERSHIP->getPreceptorEmail();?>" style="width:50%;"></td>
+				    <td>
+						<input id="preceptor_proxy_id" name="preceptor_proxy_id" type="hidden" value="" />
+						<input id="preceptor_email" name="preceptor_email" value="<?php echo $OBSERVERSHIP->getPreceptorEmail();?>" style="width:50%;">
+					</td>
 		       	</tr>
 				<tr class="preceptor_manual">
 		       		<td>&nbsp;</td>

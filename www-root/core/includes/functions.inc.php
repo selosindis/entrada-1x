@@ -10862,7 +10862,10 @@ function events_filters_defaults($proxy_id = 0, $group = "", $role = "", $organi
 		case "medtech" :
 		case "staff" :
 		default :
-			$filters["group"][0] = (int) fetch_first_cohort();
+            $first_cohort = ((int) fetch_first_cohort());
+            if ($first_cohort) {
+                $filters["group"][0] = $first_cohort;
+            }
 		break;
 	}
 
@@ -10998,8 +11001,8 @@ function events_process_filters($action = "", $module_type = "") {
 
 			$_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"] = events_filters_defaults(
 				$ENTRADA_USER->getActiveId(),
-				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"],
-				$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]
+				$ENTRADA_USER->getActiveGroup(),
+				$ENTRADA_USER->getActiveRole()
 			);
 
 			$_SERVER["QUERY_STRING"] = replace_query(array("action" => false, "filter" => false));

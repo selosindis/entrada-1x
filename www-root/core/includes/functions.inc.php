@@ -14976,8 +14976,8 @@ function get_user_departments($user_id) {
 
 	$query = "	SELECT c.`department_title`, c.`department_id`
 				FROM `".AUTH_DATABASE."`.`user_departments` AS a
-				JOIN `".AUTH_DATABASE."`.`user_data` AS b
-				ON a.`user_id` = b.`id`
+				JOIN `".AUTH_DATABASE."`.`user_access` AS b
+				ON a.`user_id` = b.`user_id`
 				JOIN `".AUTH_DATABASE."`.`departments` AS c
 				ON a.`dep_id` = c.`department_id`
 				AND b.`organisation_id` = c.`organisation_id`

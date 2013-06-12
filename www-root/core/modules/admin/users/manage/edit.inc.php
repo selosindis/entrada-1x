@@ -945,13 +945,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						<div class="control-group">
 							<label class="control-label" for="office_hours">Office Hours:</label>
 							<div class="controls">
-								<textarea id="office_hours" class="input-large" name="office_hours" maxlength="100"><?php echo ((isset($PROCESSED["office_hours"])) ? html_encode($PROCESSED["office_hours"]) : ""); ?></textarea>
+								<textarea id="office_hours" class="input-large expandable" name="office_hours" maxlength="100"><?php echo ((isset($PROCESSED["office_hours"])) ? html_encode($PROCESSED["office_hours"]) : ""); ?></textarea>
 							</div>
 						</div>
 						<div class="control-group">
 							<label class="control-label" for="notes">General Comments:</label>
 							<div class="controls">
-								<textarea id="notes" class="input-large" name="notes"><?php echo ((isset($PROCESSED["notes"])) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
+								<textarea id="notes" class="input-large expandable" name="notes"><?php echo ((isset($PROCESSED["notes"])) ? html_encode($PROCESSED["notes"]) : ""); ?></textarea>
 							</div>
 						</div>
 						<h2>Permissions</h2>
@@ -1291,6 +1291,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 				li a.remove_dept {
 					display: block;
 					float: right;
+				}
+				
+				textarea.expandable {
+					width: 75%;
 				}
 			</style>
 			<script type="text/javascript">

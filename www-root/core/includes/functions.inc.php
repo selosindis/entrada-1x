@@ -8131,7 +8131,7 @@ function lp_multiple_select_popup($id, $checkboxes, $options) {
 
 	$class_string = implode($classes, ' ');
 
-	$return = '<div id="'.$id.'_options" class="'.$class_string.'" style="'.($options['hidden'] ? 'display:none; ' : '').'width: '.$options['width'].';"><div class="select_multiple_header">'.$options['title'].'</div><div id="'.$id.'_scroll" class="select_multiple_scroll"><table cellspacing="0" cellpadding="0" class="select_multiple_table" width="100%">';
+	$return = '<div id="'.$id.'_options" class="'.$class_string.'" style="'.($options['hidden'] ? 'display:none; ' : '').'width: '.$options['width'].';"><div class="panel-head"><h3>'.$options['title'].'</h3></div><div id="'.$id.'_scroll" class="select_multiple_scroll"><table cellspacing="0" cellpadding="0" class="select_multiple_table" width="100%">';
 	$return .= lp_multiple_select_table($checkboxes, 0, 0).'</table><div style="clear: both;"></div></div><div class="select_multiple_submit">';
 	if($options['filter']) {
 		$return .= '<div class="select_multiple_filter"><input id="'.$id.'_select_filter" type="text" value="Search..."><span class="select_filter_clear" onclick="$(\''.$id.'_select_filter\').value = \'\'; $$(\'.filter-hidden\').invoke(\'show\');"></span></div>';
@@ -10408,21 +10408,21 @@ function events_output_sidebar($module_type = "") {
 	$sidebar_html .= "<ul class=\"menu none\">\n";
 	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "date"))."\" title=\"Sort by Date &amp; Time\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "date") ? "on" : "off").".gif\" alt=\"\" /> <span>by date &amp; time</span></a></li>\n";
 	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "course"))."\" title=\"Sort by Course\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "course") ? "on" : "off").".gif\" alt=\"\" /> <span>by course</span></a></li>\n";
-	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "term"))."\" title=\"Sort by Term\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "term") ? "on" : "off").".gif\" alt=\"\" /> <span>by term</span></a></li>\n";
-	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "teacher"))."\" title=\"Sort by Teacher\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "teacher") ? "on" : "off").".gif\" alt=\"\" /> <span>by primary teacher</span></a></li>\n";
+//	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "term"))."\" title=\"Sort by Term\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "term") ? "on" : "off").".gif\" alt=\"\" /> <span>by term</span></a></li>\n";
+//	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "teacher"))."\" title=\"Sort by Teacher\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "teacher") ? "on" : "off").".gif\" alt=\"\" /> <span>by primary teacher</span></a></li>\n";
 	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("sb" => "title"))."\" title=\"Sort by Event Title\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["sb"]) == "title") ? "on" : "off").".gif\" alt=\"\" /> <span>by event title</span></a></li>\n";
 	$sidebar_html .= "</ul>\n";
-	$sidebar_html .= "Order columns:\n";
-	$sidebar_html .= "<ul class=\"menu none\">\n";
-	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("so" => "asc"))."\" title=\"Ascending Order\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) == "asc") ? "on" : "off").".gif\" alt=\"\" /> <span>in ascending order</span></a></li>\n";
-	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("so" => "desc"))."\" title=\"Descending Order\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) == "desc") ? "on" : "off").".gif\" alt=\"\" /> <span>in descending order</span></a></li>\n";
-	$sidebar_html .= "</ul>\n";
+//	$sidebar_html .= "Order columns:\n";
+//	$sidebar_html .= "<ul class=\"menu none\">\n";
+//	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("so" => "asc"))."\" title=\"Ascending Order\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) == "asc") ? "on" : "off").".gif\" alt=\"\" /> <span>in ascending order</span></a></li>\n";
+//	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("so" => "desc"))."\" title=\"Descending Order\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["so"]) == "desc") ? "on" : "off").".gif\" alt=\"\" /> <span>in descending order</span></a></li>\n";
+//	$sidebar_html .= "</ul>\n";
 	$sidebar_html .= "Rows per page:\n";
 	$sidebar_html .= "<ul class=\"menu none\">\n";
-	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("pp" => "5"))."\" title=\"Display 5 Rows Per Page\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]) == "5") ? "on" : "off").".gif\" alt=\"\" /> <span>5 rows per page</span></a></li>\n";
 	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("pp" => "15"))."\" title=\"Display 15 Rows Per Page\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]) == "15") ? "on" : "off").".gif\" alt=\"\" /> <span>15 rows per page</span></a></li>\n";
 	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("pp" => "25"))."\" title=\"Display 25 Rows Per Page\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]) == "25") ? "on" : "off").".gif\" alt=\"\" /> <span>25 rows per page</span></a></li>\n";
 	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("pp" => "50"))."\" title=\"Display 50 Rows Per Page\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]) == "50") ? "on" : "off").".gif\" alt=\"\" /> <span>50 rows per page</span></a></li>\n";
+	$sidebar_html .= "	<li><a href=\"".ENTRADA_RELATIVE.$module_type."/events?".replace_query(array("pp" => "100"))."\" title=\"Display 50 Rows Per Page\"><img src=\"".ENTRADA_RELATIVE."/images/checkbox-".((strtolower($_SESSION[APPLICATION_IDENTIFIER]["events"]["pp"]) == "50") ? "on" : "off").".gif\" alt=\"\" /> <span>100 rows per page</span></a></li>\n";
 	$sidebar_html .= "</ul>\n";
 	$sidebar_html .= "&quot;Show Only&quot; settings:\n";
 	$sidebar_html .= "<ul class=\"menu\">\n";

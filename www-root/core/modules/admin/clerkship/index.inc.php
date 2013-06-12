@@ -321,53 +321,55 @@ if (!defined("IN_CLERKSHIP")) {
 						<h3 class="tab">Student Search</h3>
 						<span class="content-subheading">Graduating Year</span>
 						<form action="<?php echo ENTRADA_URL; ?>/admin/clerkship" method="post">
-						<input type="hidden" name="action" value="results" />
-						<div class="control-group">
-							<label class="control-label">Select an elective qualifier:</label>
-							<div class="controls">
-								<select name="qualifier" style="width: 205px">
-									<option value="*">All</option>
-									<option value="deficient">Deficient</option>
-									<option value="attained">Attained</option>
-								</select>
-							</div>
-						</div>
-						<?php
-						$student_classes = array();
-						$active_cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
-						if (isset($active_cohorts) && !empty($active_cohorts)) {
-							foreach ($active_cohorts as $cohort) {
-								$student_classes[$cohort["group_id"]] = $cohort["group_name"];
-							}
-						}
-						?>
-						<div class="control-group">
-							<label class="control-label">Select the graduating year you wish to view students in:</label>
-							<div class="controls">
-								<select name="year" style="width: 205px">
-								<option value="">-- Select Graduating Year --</option>
-								<?php
-								if (isset($student_classes) && !empty($student_classes)) {
-									foreach ($student_classes as $group_id => $class) {
-										echo "<option value=\"".$group_id."\">Class of ".html_encode($class)."</option>\n";
-									}
-								}
-								?>
-								</select>
-							</div>
-						</div>
-						
-						<input type="submit" value="Proceed" class="button"/>
-						<hr/>
-						<span class="content-subheading">Student Finder</span>
-						<div class="control-group">
-							<label class="control-label">Enter the first or lastname of the student:</label>
-							<div class="controls">
-								<input type="text" name="name" value="" style="margin-bottom:0"/>
-							</div>
-						</div>
-						<input type="submit" value="Search" class="button" />
-						
+                            <input type="hidden" name="action" value="results" />
+                            <div class="control-group">
+                                <label class="control-label">Select an elective qualifier:</label>
+                                <div class="controls">
+                                    <select name="qualifier" style="width: 205px">
+                                        <option value="*">All</option>
+                                        <option value="deficient">Deficient</option>
+                                        <option value="attained">Attained</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <?php
+                            $student_classes = array();
+                            $active_cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
+                            if (isset($active_cohorts) && !empty($active_cohorts)) {
+                                foreach ($active_cohorts as $cohort) {
+                                    $student_classes[$cohort["group_id"]] = $cohort["group_name"];
+                                }
+                            }
+                            ?>
+                            <div class="control-group">
+                                <label class="control-label">Select the graduating year you wish to view students in:</label>
+                                <div class="controls">
+                                    <select name="year" style="width: 205px">
+                                    <option value="">-- Select Graduating Year --</option>
+                                    <?php
+                                    if (isset($student_classes) && !empty($student_classes)) {
+                                        foreach ($student_classes as $group_id => $class) {
+                                            echo "<option value=\"".$group_id."\">Class of ".html_encode($class)."</option>\n";
+                                        }
+                                    }
+                                    ?>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <input type="submit" value="Proceed" class="btn btn-primary"/>
+                            <hr/>
+                        </form>
+						<form action="<?php echo ENTRADA_URL; ?>/admin/clerkship" method="post">
+                            <input type="hidden" name="action" value="results" />
+                            <span class="content-subheading">Student Finder</span>
+                            <div class="control-group">
+                                <label class="control-label">Enter the first or lastname of the student:</label>
+                                <div class="controls">
+                                    <input type="text" name="name" value="" style="margin-bottom:0"/>
+                                </div>
+                            </div>
+                            <input type="submit" value="Search" class="btn btn-primary" />
 						</form>
 					</div>
 						<?php

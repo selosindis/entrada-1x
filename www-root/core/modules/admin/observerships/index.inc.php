@@ -116,7 +116,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 						</tbody>
 					</table>
 					<div class="row-fluid">
-						<input class="btn"  type="submit" value="Reject" name="action" />
+						<input class="btn btn-danger"  type="submit" value="Reject" name="action" />
 						<input class="btn btn-primary pull-right" type="submit" value="Approve" name="action" />
 					</div>
 				</form>

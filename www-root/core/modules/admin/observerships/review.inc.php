@@ -172,7 +172,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 					</div>
 					<?php if ($observership->getStatus() == "pending") { ?>
 					<div class="span3 offset8">
-					<input type="submit" class="btn" name="status" value="Reject" />
+					<input type="submit" class="btn btn-danger" name="status" value="Reject" />
 					<input type="submit" class="btn btn-primary" name="status" value="Approve" />&nbsp;
 					</div>
 					<?php } ?>

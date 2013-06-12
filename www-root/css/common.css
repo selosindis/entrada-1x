@@ -3944,44 +3944,6 @@ td.incorrect-setting {
 	background-color:#FFD9D0;
 }
 
-
-#page-feedback {
-	position:relative;
-	z-index:10;
-}
-#feedback-widget {
-	background:#fff;
-	position:relative;
-}
-#feedback-widget ul.menu {
-	position:relative;
-	background:#fff;
-}
-#feedback-widget ul.menu li {
-	padding-left:35px;
-}
-#feedback-widget ul.menu li.system {
-	background-image:url("../images/icon-feedback.gif");
-}
-#feedback-form-container {
-	position:absolute;
-	left:0;
-	top:0;
-	padding:5px;
-	border:1px solid #999999;
-	background:#fff;
-	width: 489px;
-	top:-61px;
-}
-.cornerarrow {
-	width:8px;
-	height:16px;
-	background-image:url("../images/corner-arrow.png");
-	position:absolute;
-	left:-8px;
-	top:14px;
-}
-
 /*!
  * Bootstrap v2.0.2
  *

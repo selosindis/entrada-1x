@@ -576,7 +576,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						</div>
 						<form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $assignment["assessment_id"])); ?>" method="POST">
 							<input type="file" name ="file"/><br /><br />
-							<input type="submit" value ="Import CSV"/>
+							<input type="submit" class="btn btn-primary" value ="Import CSV"/>
 						</form>
 					</div>
 					<script type="text/javascript">

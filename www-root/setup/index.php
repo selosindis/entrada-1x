@@ -1024,9 +1024,9 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 			?>
 
 			<div style="margin: 15px 25px 10px 0; padding-right: 40px; text-align: right">
-				<input type="submit" value="Continue" id="continue-button" name="continue"<?php echo ($STEP > 5 ? " style=\"display: none;\"" : "");?> />
-				<input type="button" value="View Site" onclick="window.location= '<?php echo (isset($PROCESSED["entrada_url"]) && $PROCESSED["entrada_url"] ? $PROCESSED["entrada_url"] : "../.."); ?>';" name="view"<?php echo ($STEP != 6 || $ERROR ? " style=\"display: none;\"" : ""); ?> />
-				<input type="submit" value="Refresh" name="refresh"<?php echo ($STEP != 6 || !$ERROR ? " style=\"display: none;\"" : "");?> />
+				<input class="btn btn-primary" type="submit" value="Continue" id="continue-button" name="continue"<?php echo ($STEP > 5 ? " style=\"display: none;\"" : "");?> />
+				<input class="btn" type="button" value="View Site" onclick="window.location= '<?php echo (isset($PROCESSED["entrada_url"]) && $PROCESSED["entrada_url"] ? $PROCESSED["entrada_url"] : "../.."); ?>';" name="view"<?php echo ($STEP != 6 || $ERROR ? " style=\"display: none;\"" : ""); ?> />
+				<input class="btn" type="submit" value="Refresh" name="refresh"<?php echo ($STEP != 6 || !$ERROR ? " style=\"display: none;\"" : "");?> />
 			</div>
 		</form>
 	</div>

@@ -1414,7 +1414,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<tr>
 							<td colspan="3" style="text-align: right">
 								<input type="button" value="Cancel" class="btn" onClick="window.location='<?php echo ENTRADA_URL; ?>/admin/clerkship/clerk?ids=<?php echo $user_ids[0]; ?>'" />
-								<input type="submit" value="Save" class="btn" />
+								<input type="submit" value="Save" class="btn btn-primary" />
 							</td>
 						</tr>
 						</table>

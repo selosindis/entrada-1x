@@ -32,7 +32,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events/drafts", "title" => "My Draft Learning Event Schedules");
 	?>
 	<style type="text/css">
 		#draft-list_length {padding:5px 4px 0 0;}

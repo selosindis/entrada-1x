@@ -86,7 +86,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 									<td style="width: 75%; text-align: right; vertical-align: middle">
 										<form action="<?php echo ENTRADA_URL ?>/admin/clerkship/flag?<?php echo replace_query(array ("step" => 2)); ?>" method="POST">
 											<input type="hidden" value="<?php echo $RECORD_ID; ?>" name="entry_id" />
-											<input type="submit" class="btn" value="Confirm Flag" />
+											<input type="submit" class="btn btn-primary" value="Confirm Flag" />
 										</form>
 									</td>
 								</tr>

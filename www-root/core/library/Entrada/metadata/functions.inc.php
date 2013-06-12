@@ -215,7 +215,7 @@ function editMetaDataTable($contents, $prepend=null) {
 			<tr>
 				<td></td>
 				<td colspan="5" class="control">
-					<input type="submit" value="Save" id="save_btn" />
+					<input class="btn btn-primary" type="submit" value="Save" id="save_btn" />
 				</td>
 			</tr>
 		</tfoot>

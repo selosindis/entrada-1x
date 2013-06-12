@@ -607,7 +607,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		$sidebar_html .= "<label for=\"q\" class=\"form-nrequired\">Search the curriculum:</label><br />";
 		$sidebar_html .= "<input type=\"text\" id=\"q\" name=\"q\" value=\"\" style=\"width: 95%\" /><br />\n";
 		$sidebar_html .= "<span style=\"float: left; padding-top: 7px;\"><a href=\"".ENTRADA_RELATIVE."/curriculum/search\" style=\"font-size: 11px\">Advanced Search</a></span>\n";
-		$sidebar_html .= "<span style=\"float: right; padding-top: 4px;\"><input type=\"submit\" class=\"btn\" value=\"Search\" /></span>\n";
+		$sidebar_html .= "<span style=\"float: right; padding-top: 4px;\"><input type=\"submit\" class=\"btn btn-primary\" value=\"Search\" /></span>\n";
 		$sidebar_html .= "</form></div>\n";
 		$sidebar_html .= "<br /><br /><hr style=\"clear: both;\"/>\n";
 		$sidebar_html .= "<a href=\"".ENTRADA_RELATIVE."/courses/objectives\">View <strong>Curriculum Map</strong></a>\n";

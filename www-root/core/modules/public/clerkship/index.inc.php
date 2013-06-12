@@ -479,7 +479,7 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
                                 </div>
                         </div> <!--/control-group -->
                         <div class="form-actions" style="padding-left:335px;padding-top:0">
-                            <input type="submit" value="Proceed" class="btn"/
+                            <input type="submit" value="Proceed" class="btn"/>
                         </div>
                     </fieldset>
                     <hr />
@@ -492,7 +492,7 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
                             </div>
                         </div> <!--/control-group -->
                         <div class="form-actions" style="padding-left:335px;padding-top:0">
-                            <input type="submit" value="Search" class="btn"/>
+                            <input type="submit" value="Search" class="btn btn-primary"/>
                         </div>
 
                     </fieldset>

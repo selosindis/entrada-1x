@@ -93,7 +93,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 						<form method="post">
 						<input type="hidden" name="action" value="save" />
 						<textarea id="edit-html" name="edit-html" style="width: 100%; height: 300px;" cols="65" rows="20"><?php echo html_encode(trim($html_file)); ?></textarea>
-						<input type="submit" value="Save Changes" />
+						<input class="btn btn-primary" type="submit" value="Save Changes" />
 						</form>
 						<?php
 					}

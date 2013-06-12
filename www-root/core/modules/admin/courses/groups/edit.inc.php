@@ -336,7 +336,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 										<tr>
 											<td />
 											<td style="padding-top: 10px">
-												<input type="submit" class="btn" value="Deactivate" />
+												<input type="submit" class="btn btn-warning" value="Deactivate" />
 											</td>
 											<td style="padding-top: 10px">
 												<input type="submit" class="btn btn-primary" value="Activate" onClick="$('coa').value='activate'" />
@@ -402,7 +402,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 										<tfoot>
 											<tr>
 												<td style="padding-top: 10px" colspan="2">
-													<input type="submit" class="btn" value="Deactivate" />
+													<input type="submit" class="btn btn-warning" value="Deactivate" />
 												</td>
 												<td style="padding-top: 10px" align="right" colspan="2">
 													<input type="submit" class="btn btn-primary" value="Activate" onClick="$('coa').value='activate'" />

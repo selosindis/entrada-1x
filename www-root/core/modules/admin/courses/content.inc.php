@@ -512,7 +512,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							</div>
 						</div>
 						<div class="pull-right clearfix">
-							<input type="submit" value="Save" class="btn"/>
+							<input type="submit" value="Save" class="btn btn-primary"/>
 						</div>
 					</form>
 				</div>
@@ -578,7 +578,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<?php echo event_objectives_in_list($course_objectives, $top_level_id, $top_level_id, true, false, 1, true, true, "primary", false, $COURSE_ID); ?>
 						</div>
 						<div class="clearfix pull-right">
-							<input type="submit" value="Save" class="btn" />
+							<input type="submit" value="Save" class="btn btn-primary" />
 						</div>
 					</form>
 				</div>

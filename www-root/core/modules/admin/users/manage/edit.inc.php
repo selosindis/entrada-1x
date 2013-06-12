@@ -945,7 +945,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						<div class="control-group">
 							<label class="control-label" for="office_hours">Office Hours:</label>
 							<div class="controls">
-								<textarea id="office_hours" class="input-large expandable" name="office_hours" maxlength="100"><?php echo ((isset($PROCESSED["office_hours"])) ? html_encode($PROCESSED["office_hours"]) : ""); ?></textarea>
+								<textarea id="office_hours" class="input-large expandable" name="office_hours"><?php echo ((isset($PROCESSED["office_hours"])) ? html_encode($PROCESSED["office_hours"]) : ""); ?></textarea>
 							</div>
 						</div>
 						<div class="control-group">
@@ -1003,12 +1003,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 								foreach($all_orgs as $org) {
 
-							?>
-							<h2><?php echo $org["organisation_title"]; ?></h2>
+							?>							
 							<div class="row-fluid">
 								<div class="span12">
 									<table style="width: 100%;" id="<?php echo "perm_organisation_" . $org["organisation_id"]; ?>" >
 										<tbody>
+											<tr>
+												<td colspan="3"><h2 class="org_title"><?php echo $org["organisation_title"]; ?></h2></td>
+											</tr>
 											<tr>
 												<td colspan="3"><h3>Profiles</h3></td>
 											</tr>
@@ -1060,7 +1062,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											echo "<tr id=\"" . $result["organisation_id"] . "_" . $group_id . "_" . $role_id . "\">\n";
 											echo "	<td valign=\"top\"><label><strong>" . ucfirst($result["group"]) . " / " . ucfirst($result["role"]) . "</strong></label></td>\n";
 											echo "	<td valign=\"top\">" . $options . "</td>\n";
-											echo "	<td valign=\"top\"><a class=\"remove_perm\" href=\"#\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\"></a></td>\n";
+											echo "	<td valign=\"top\"><a class=\"remove_perm pull-left\" href=\"#\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\"></a></td>\n";
 											echo "</tr>";
 
 											}
@@ -1074,16 +1076,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											<tr>
 												<td colspan="3" class="departments-list">
 													<div class="control-group">
-														<label class="control-label" for="<?php echo "in_departments_" . $result["organisation_id"]; ?>">Departments</label>
+														<label class="control-label" for="<?php echo "in_departments_" . $org["organisation_id"]; ?>">Departments</label>
 														<div class="controls">
-															<select id="<?php echo "in_departments_" . $result["organisation_id"]; ?>" name="<?php echo "in_departments_" . $result["organisation_id"]; ?>" style="">
+															<select id="<?php echo "in_departments_" . $org["organisation_id"]; ?>" name="<?php echo "in_departments_" . $org["organisation_id"]; ?>" style="">
 																<option value="0">-- Select Departments --</option>
 															<?php
 																foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
 																	if ($org["organisation_id"] == $organisation_id){
 																		foreach($dlist as $d){
 																			if (!array_key_exists($d["department_id"], $PROCESSED_DEPARTMENTS)) {
-																				echo build_option($d["department_id"], $d["department_title"], $selected);
+																				echo build_option($d["department_id"], $d["department_title"], false);
+																			} else {
+																				echo build_option($d["department_id"], $d["department_title"], true);
 																			}
 																		}
 																	}
@@ -1093,7 +1097,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 															<div class="help-inline"><strong>Note:</strong> Selected departments will appear here.</div>
 														</div>
 													</div>
-													<ol id="departments_container_<?php echo $result["organisation_id"]; ?>" class="sortableList" style="display: block;">
+													<ol id="departments_container_<?php echo $org["organisation_id"]; ?>" class="sortableList" style="display: block;">
 													<?php
 													if (is_array($PROCESSED_DEPARTMENTS)) {
 														foreach($PROCESSED_DEPARTMENTS as $department_id => $department_title) {
@@ -1103,7 +1107,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 																		AND d.`organisation_id` = " . $db->qstr($org["organisation_id"]);
 															$result = $db->GetRow($query);
 															if ($result) {
-																echo "<li id=\"dept_" . $department_id . "\"><img src=\"" . ENTRADA_URL . "/images/icon-apartment.gif\" alt=\"Department Icon\" title=\"\" width=\"16\" height=\"16\" />" . $department_title . " <a class=\"remove_dept\" href=\"\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\" alt=\"Delete\"></a></li>";
+																echo "<li id=\"dept_" . $department_id . "\"><i class=\"icon-home\" id=\"dept_" . $department_id . "\"></i>&nbsp;&nbsp;&nbsp;" . $department_title . " <a class=\"remove_dept\" href=\"\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\" alt=\"Delete\"></a></li>";
 															}
 														}
 													}
@@ -1346,7 +1350,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							var dept_text = $(this).find(":selected").text();
 							var org_id = $(this).attr("id").split("_")[2];
 							var remove_link = "<a class=\"remove_dept\" href=\"\"><img src=\"" + "<?php echo ENTRADA_URL; ?>" + "/images/action-delete.gif\"></a>";
-							var content = "<li id=\"dept_" + dept_id + "\"><img src=\"" + "<?php echo ENTRADA_URL; ?>" + "/images/icon-apartment.gif\">" + dept_text + remove_link + "</li>";
+							var content = "<li id=\"dept_" + dept_id + "\"><i class=\"icon-home\"></i>&nbsp;&nbsp;&nbsp;" + dept_text + remove_link + "</li>";
 							$('#departments_container_' + org_id).append(content);
 							$('#departments_notice_' + org_id).hide();
 							$('#departments_container_' + org_id).show();
@@ -1548,7 +1552,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						});
 
 						$('table[id^=perm_organisation_]').each(function(index) {
-							if ($(this).find('tbody tr').length <= 1) {
+							if ($(this).find('tbody tr').length <= 2) {								
 								$(this).hide();
 							}
 						});

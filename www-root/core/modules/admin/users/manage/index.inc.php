@@ -168,6 +168,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 							$organisation_names_diff = array_diff($organisation_names, array($default_organisation["organisation_title"]));
 							if (count($organisation_names_diff) > 0) {
+								echo "<br />";
 								echo implode("<br />", $organisation_names_diff);
 							}
 							?>

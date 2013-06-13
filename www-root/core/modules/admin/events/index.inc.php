@@ -25,19 +25,18 @@
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	exit;
 } else if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
-		header("Location: ".ENTRADA_URL);
-		exit;
-} else if (!$ENTRADA_ACL->amIAllowed('eventcontent', 'update', false)) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	header("Location: ".ENTRADA_URL);
+	exit;
+} else if (!$ENTRADA_ACL->amIAllowed("eventcontent", "update", false)) {
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/calendar/script/xc2_timestamp.js\"></script>\n";
-	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/events_exporter.js\"></script>\n";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_timestamp.js\"></script>\n";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/elementresizer.js\"></script>\n";
+	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/events_exporter.js\"></script>\n";
 
 	$default_csv_headings = array(
 			"event_id" => "Original Event",
@@ -57,7 +56,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			"audience_students" => "Audience (Students)",
 			"staff_numbers" => "Teacher Numbers",
 			"staff_names" => "Teacher Names"
-		);
+	);
 
 	if (isset($_SESSION["my_export_options"]) && $_SESSION["my_export_options"]) {
 		$diff = array_diff($default_csv_headings, $_SESSION["my_export_options"]);
@@ -123,8 +122,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	echo "<h1>".$MODULES[strtolower($MODULE)]["title"]."</h1>";
 
 	if (isset($_SESSION["export_error"]) && $_SESSION["export_error"]) {
-		$ERROR++;
-		$ERRORSTR[] = $_SESSION["export_error"];
+		add_error($_SESSION["export_error"]);
+
 		echo display_error();
 	}
 
@@ -229,7 +228,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			<tbody>
 
 			<?php
-
 			$count_modified = 0;
 
 			foreach ($learning_events["events"] as $result) {
@@ -260,7 +258,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     echo "      </button>";
                     echo "      <ul class=\"dropdown-menu\">\n";
                 	if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'update')) {
-                        echo "      <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=details&amp;id=".$result["event_id"]."\">Event Details</a></li>";
+                        echo "      <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=edit&amp;id=".$result["event_id"]."\">Event Details</a></li>";
                     }
                     echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=content&amp;id=".$result["event_id"]."\">Event Content</a></li>";
                     echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=attendance&amp;id=".$result["event_id"]."\">Event Attendance</a></li>";

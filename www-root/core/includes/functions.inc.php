@@ -671,7 +671,7 @@ function navigator_tabs() {
 					}
 
 					$tab_children .= "<li".($child_active ? " class=\"current\"" : "").">";
-					$tab_children .= "	<a href=\"".((isset($child_item["url"])) ? $child_item["url"] : ENTRADA_RELATIVE."/".$child_shortname)."\"".((isset($child_item["target"])) ? " target=\"".$child_item["target"]."\"" : "")."\"><span>".$child_item["title"]."</span></a>";
+					$tab_children .= "	<a href=\"".((isset($child_item["url"])) ? $child_item["url"] : ENTRADA_RELATIVE."/".$child_shortname)."\"".((isset($child_item["target"])) ? " target=\"".$child_item["target"]."\"" : "")."><span>".$child_item["title"]."</span></a>";
 					$tab_children .= "</li>";
 				}
 
@@ -3851,7 +3851,7 @@ function generate_calendar($fieldname, $display_name = "", $required = false, $c
 	}
 	$output .= "	<td style=\"vertical-align: top; padding-top: 4px\"><label style=\"width:130px;text-align:right;margin-right:18px;\" id=\"".$fieldname."_text\" for=\"".$fieldname."\" class=\"".($required ? "form-required" : "form-nrequired")."\">".html_encode($display_name).":</label></td>\n";
 	$output .= "	<td style=\"vertical-align: top\" id=\"".$fieldname."_row\">\n";
-	$output .= "		<input type=\"text\" class=\"input-small\" name=\"".$fieldname."_date\" id=\"".$fieldname."_date\" value=\"".$time_date."\" $readonly autocomplete=\"off\" ".(!$disabled ? "onfocus=\"showCalendar('', this, this, '', '".$fieldname."_date', 0, 20, 1)\"" : "")."style=\"vertical-align: middle\" />&nbsp;";
+	$output .= "		<input type=\"text\" class=\"input-small\" name=\"".$fieldname."_date\" id=\"".$fieldname."_date\" value=\"".$time_date."\" $readonly autocomplete=\"off\" ".(!$disabled ? "onfocus=\"showCalendar('', this, this, '', '".$fieldname."_date', 0, 20, 1)\"" : "")." style=\"vertical-align: middle\" />&nbsp;";
 
 	if (!$disabled) {
 		$output .= "	<a href=\"javascript: showCalendar('', document.getElementById('".$fieldname."_date'), document.getElementById('".$fieldname."_date'), '', '".$fieldname."_date', 0, 20, 1)\" title=\"Show Calendar\" onclick=\"if (!document.getElementById('".$fieldname."').checked) { return false; }\"><img src=\"".ENTRADA_URL."/images/cal-calendar.gif\" width=\"23\" height=\"23\" alt=\"Show Calendar\" title=\"Show Calendar\" border=\"0\" style=\"vertical-align: middle\" /></a>";
@@ -10758,7 +10758,7 @@ function events_output_calendar_controls($module_type = "") {
 		$module_type = "";
 	}
 	?>
-    <div class="row-fluid">
+    <div class="row-fluid<?php echo ($learning_events["total_pages"] <= 1 ? " space-below medium" : ""); ?>">
         <div class="span6">
             <div class="btn-group">
                 <a class="btn" href="<?php echo ENTRADA_RELATIVE . $module_type . "/events?" . replace_query(array("dstamp" => ($learning_events["duration_start"] - 2))); ?>"><i class="icon-chevron-left"></i></a>

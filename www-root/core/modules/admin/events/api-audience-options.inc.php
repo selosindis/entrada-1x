@@ -77,7 +77,7 @@ if (!defined("IN_EVENTS")) {
 			$custom_audience = $db->GetAll($query);
 
 			$ONLOAD[] = "selectEventAudienceOption('".(isset($PROCESSED["event_audience_type"]) && $PROCESSED["event_audience_type"] && ($course_list || $permission == "closed") ? $PROCESSED["event_audience_type"] : "custom")."')";
-			?>
+            ?>
             <div class="control-group">
                 <label for="learner_name" class="control-label form-nrequired">Associated Learners:</label>
                 <div class="controls">

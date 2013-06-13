@@ -11,23 +11,23 @@
 		// });
 
 		// jQuery('.droppable').droppable({
-		// 	drop: function(event,ui){										
+		// 	drop: function(event,ui){
 		// 		var id = jQuery(ui.draggable[0]).attr('data-id');
 		// 		var ismapped = jQuery.inArray(id,mapped);
 		// 		if(ismapped == -1){
 		// 			var title = jQuery('#objective_title_'+id).attr('data-title');
-		// 			var description = jQuery('#objective_'+id).attr('data-description');										
+		// 			var description = jQuery('#objective_'+id).attr('data-description');
 		// 			var list = jQuery('#objective_'+id).parents('.objective-set').attr('data-list');
 		// 			jQuery('#check_objective_'+id).attr('checked','checked');
 		// 			mapObjective(id,title,description,list,true);
 		// 		}
-		// 		jQuery(this).removeClass('hover');											
+		// 		jQuery(this).removeClass('hover');
 		// 	},
 		// 	over:function(event,ui){
 		// 		jQuery(this).addClass('hover');
 		// 	},
 		// 	out: function(event,ui){
-		// 		jQuery(this).removeClass('hover');	
+		// 		jQuery(this).removeClass('hover');
 		// 	}
 		// });
 
@@ -37,9 +37,9 @@
 			var importance = 'checked';
 			if(list == "flat"){
 				importance = 'clinical';
-			}			
-			unmapObjective(id,list,importance);	
-			return false;						
+			}
+			unmapObjective(id,list,importance);
+			return false;
 		});
 
 		jQuery('.checked-objective').live('change',function(){
@@ -57,10 +57,10 @@
 				var importance = 'checked';
 				if(list == "flat"){
 					importance = 'clinical';
-				}							
+				}
 				unmapObjective(id,list,importance);
 			}
-			
+
 		});
 
 		jQuery('.checked-mapped').live('change',function(){
@@ -74,18 +74,18 @@
 			var description = jQuery('#mapped_objective_'+id).attr('data-description');
 			if (jQuery(this).is(':checked')) {
 				mapObjective(id,title,description,list,false);
-			} else {			
+			} else {
 				var importance = 'checked';
 				if(list == "flat"){
 					importance = 'clinical';
-				}					
+				}
 				if(jQuery('#mapped_objective_'+id).is(':checked')){
 					mapObjective(id,title,description,list,false);
 				}else{
 					unmapObjective(id,list,importance);
-				}				
+				}
 			}
-		});		
+		});
 
 		jQuery('.mapping-toggle').click(function(){
 			var state = $(this).attr('data-toggle');
@@ -93,18 +93,18 @@
 				$(this).attr('data-toggle','hide');
 				$(this).html('Hide Additional Objectives');
 				jQuery('.mapped_objectives').animate({width:'60%'},400,'swing',function(){
-					//jQuery('.objectives').animate({display:'block'},400,'swing');											
+					//jQuery('.objectives').animate({display:'block'},400,'swing');
 					jQuery('.objectives').css({width:'0%'});
 					jQuery('.objectives').show();
 					jQuery('.objectives').animate({width:'38%'},400,'linear');
-				});										
+				});
 			}else{
 				$(this).attr('data-toggle','show');
 				$(this).html('Map Additional Objectives');
 				jQuery('.objectives').animate({width:'0%'},400,'linear',function(){
 					jQuery('.objectives').hide();
 					jQuery('.mapped_objectives').animate({width:'100%'},400,'swing');
-				});																				
+				});
 			}
 		});
 
@@ -114,12 +114,12 @@
 
 		jQuery('#event-topics-toggle').trigger('click');
 
-		if(jQuery('#mapped_primary_objectives').children('li').length == 0 && 
+		if(jQuery('#mapped_primary_objectives').children('li').length == 0 &&
 			jQuery('#mapped_secondary_objectives').children('li').length == 0 &&
 			jQuery('#mapped_tertiary_objectives').children('li').length == 0 &&
 			jQuery('#mapped_flat_objectives').children('li').length == 0){
 			jQuery('#toggle_sets').trigger('click');
-		}			
+		}
 
 		//load mapped array on page load
 		jQuery('#checked_objectives_select').children('option').each(function(){
@@ -127,7 +127,7 @@
 		});
 		jQuery('#clinical_objectives_select').children('option').each(function(){
 			mapped.push($(this).val());
-		});		
+		});
 
 		jQuery('#mapped_primary_objectives').children('li').each(function(){
 			if(jQuery(this).attr('data-id') !== undefined && jQuery(this).attr('data-id')){
@@ -138,18 +138,18 @@
 			if(jQuery(this).attr('data-id') !== undefined && jQuery(this).attr('data-id')){
 				listed.push(jQuery(this).attr('data-id'));
 			}
-		});		
+		});
 		jQuery('#mapped_tertiary_objectives').children('li').each(function(){
 			if(jQuery(this).attr('data-id') !== undefined && jQuery(this).attr('data-id')){
 				listed.push(jQuery(this).attr('data-id'));
 			}
-		});		
+		});
 
-		jQuery('#mapped_flat_objectives').children('li').each(function(){			
+		jQuery('#mapped_flat_objectives').children('li').each(function(){
 			if(jQuery(this).attr('data-id') !== undefined && jQuery(this).attr('data-id')){
 				listed.push(jQuery(this).attr('data-id'));
 			}
-		});		
+		});
 
 	});
 
@@ -163,10 +163,10 @@
 			importance = 'checked';
 		}
 
-		jQuery("#"+importance+"_objectives_select option[value='"+id+"']").remove();				
+		jQuery("#"+importance+"_objectives_select option[value='"+id+"']").remove();
 		jQuery('#check_objective_'+id).prop('checked',false);
 		jQuery('#check_mapped_'+id).prop('checked',false);
-		jQuery('#text_container_'+id).remove();		
+		jQuery('#text_container_'+id).remove();
 		if(lkey === -1){
 			jQuery('#mapped_objective_'+id).remove();
 		}
@@ -177,9 +177,9 @@
 				jQuery('#'+list+'-toggle').addClass('collapsed');
 				var d = jQuery('#'+list+'-toggle').next();
 				jQuery(d).slideUp();
-			}				
+			}
 		}
-		var mapped_siblings = false;		
+		var mapped_siblings = false;
 		jQuery('#objective_'+id).siblings('li.objective-container').each(function(){
 			var oid = jQuery(this).attr('data-id');
 			if(jQuery('#check_objective_'+oid).prop('checked')){
@@ -197,22 +197,22 @@
 					}
 				});
 				if(mapped_cousins == false){
-					jQuery('#check_objective_'+pid).prop('checked',false);				
+					jQuery('#check_objective_'+pid).prop('checked',false);
 					jQuery('#check_objective_'+pid).prop('disabled',false);
 				}
-			}								
-		});		
+			}
+		});
 
 	}
 
 	function mapObjective(id,title,description,list,create){
-		var key = jQuery.inArray(id,mapped);	
-		var lkey = jQuery.inArray(id,listed);		
-		if(key != -1) return;	
-		var importance = 'checked';	
-		if(list === undefined || !list){			
+		var key = jQuery.inArray(id,mapped);
+		var lkey = jQuery.inArray(id,listed);
+		if(key != -1) return;
+		var importance = 'checked';
+		if(list === undefined || !list){
 			list = 'flat';
-		}								
+		}
 		if(list == 'flat'){
 			importance = 'clinical';
 		}
@@ -220,7 +220,7 @@
 		if(description === undefined || !description || description == null || description == 'null'){
 			description = '';
 		}
-		
+
 		if(create && lkey == -1 && key == -1){
 			var li = jQuery(document.createElement('li'))
 							.attr('class','mapped-objective')
@@ -238,31 +238,31 @@
 				jQuery(desc).html("From the Objective Set: <strong>"+set_name+"</strong><br/>");
 			}
 			jQuery(desc).append(description);
-			
+
 			jQuery(li).append(desc);
 			var controls = 	jQuery(document.createElement('div'))
-								.attr('class','event-objective-controls');			
+								.attr('class','event-objective-controls');
 			var check = jQuery(document.createElement('input'))
 							.attr('type','checkbox')
 							.attr('class','checked-mapped')
 							.attr('id','check_mapped_'+id)
-							.prop('checked',true);	
+							.prop('checked',true);
 			var rm = jQuery(document.createElement('img'))
 							.attr('src',SITE_URL+'/images/action-delete.gif')
 							.attr('data-id',id)
 							.attr('class','objective-remove list-cancel-image')
 							.attr('id','objective_remove_'+id);
-			
+
 			jQuery(controls).append(rm);
 			jQuery(li).append(controls);
-			//jQuery(li).append(rm);			
+			//jQuery(li).append(rm);
 			jQuery('#mapped_event_objectives').append(li);
 			jQuery('#mapped_event_objectives .display-notice').remove();
 			jQuery('#objective_'+id).parents('.objective-list').each(function(){
 				var id = jQuery(this).attr('data-id');
 				jQuery('#check_objective_'+id).prop('checked',true);
 				jQuery('#check_objective_'+id).prop('disabled',true);
-			});		
+			});
 			if(jQuery('#event-toggle').hasClass('collapsed')){
 				jQuery('#event-toggle').removeClass('collapsed');
 				jQuery('#event-toggle').addClass('expanded');
@@ -272,7 +272,7 @@
 			if(!jQuery('#event-list-wrapper').is(':visible')){
 				jQuery('#event-list-wrapper').show();
 			}
-			importance = 'checked';			
+			importance = 'checked';
 			list = 'event';
 		}
 
@@ -291,21 +291,23 @@
 			var text = jQuery(document.createElement('textarea'))
 							.attr('name','objective_text['+id+']')
 							.attr('id',"objective_text_"+id)
-							.attr('data-id',id) 
+							.attr('data-id',id)
 							.attr('class',"expandable")
 							.attr('style',"height: 28px; overflow: hidden;");
 			jQuery(text_div).append(text_label).append(text);
-			jQuery('#mapped_objective_'+id).append(text_div);	
+			jQuery('#mapped_objective_'+id).append(text_div);
+            
+            new ExpandableTextarea($('objective_text_'+id));
 		}
 
-		
+
 		jQuery('#check_objective_'+id).prop('checked',true);
 		jQuery('#check_mapped_'+id).prop('checked',true);
 		if(jQuery("#"+importance+"_objectives_select option[value='"+id+"']").length == 0){
-			var option = jQuery(document.createElement('option'))				
+			var option = jQuery(document.createElement('option'))
 							.val(id)
 							.attr('selected','selected')
-							.html(title);														
+							.html(title);
 			jQuery('#'+importance+'_objectives_select').append(option);
 		}
 
@@ -313,7 +315,7 @@
 			var id = jQuery(this).attr('data-id');
 			jQuery('#check_objective_'+id).prop('checked',true);
 			jQuery('#check_objective_'+id).prop('disabled',true);
-		});			
+		});
 
-		mapped.push(id);								
+		mapped.push(id);
 	}

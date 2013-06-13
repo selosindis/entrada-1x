@@ -821,7 +821,7 @@ if (!defined("PARENT_INCLUDED")) {
 					echo "		<a id=\"zoomin_photo_".$result["id"]."\" class=\"zoomin\" onclick=\"growPic($('official_photo_".$result["id"]."'), $('uploaded_photo_".$result["id"]."'), $('official_link_".$result["id"]."'), $('uploaded_link_".$result["id"]."'), $('zoomout_photo_".$result["id"]."'));\">+</a>";	
 					echo "		<a id=\"zoomout_photo_".$result["id"]."\" class=\"zoomout\" onclick=\"shrinkPic($('official_photo_".$result["id"]."'), $('uploaded_photo_".$result["id"]."'), $('official_link_".$result["id"]."'), $('uploaded_link_".$result["id"]."'), $('zoomout_photo_".$result["id"]."'));\"></a>";
 				} else {
-					echo "		<img class=\"media-object\" src=\"".ENTRADA_URL."/images/headshot-male.gif\" data-src=\"holder.js/72x100\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
+					echo "		<img class=\"media-object\" src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"72\" height=\"100\" style=\"width: 72px; height: 100px;\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
 				}
 				
 				if (($offical_file_active) && ($uploaded_file_active)) {

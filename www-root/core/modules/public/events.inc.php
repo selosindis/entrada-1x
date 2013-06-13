@@ -284,33 +284,34 @@ if (!defined("PARENT_INCLUDED")) {
 						$transversal_ids = events_fetch_transversal_ids($EVENT_ID, (isset($community_id) && $community_id ? $community_id : false));
 					}
 					echo "<div class=\"no-printing\">\n";
-					if (($transverse) && count($transversal_ids)) {
+					if ($transverse && is_array($transversal_ids) && !empty($transversal_ids)) {
 						$back_click = "";
 						$next_click = "";
+                        ?>
+                        <div class="btn-toolbar clearfix">
+                            <div class="btn-group span10">
+                                <?php
+                                if (isset($transversal_ids["prev"])) {
+                                    $back_click = ENTRADA_RELATIVE . "/events?" . replace_query(array((isset($_GET["drid"]) ? "drid" : "rid") => $transversal_ids["prev"]));
 
-						echo "<table style=\"width: 100%; height: 23px\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
-						echo "<tr>\n";
-						echo "	<td style=\"width: 22px; height: 23px\">";
-						if (isset($transversal_ids["prev"])) {
-							$back_click = ENTRADA_URL."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($transversal_ids["prev"])));
+                                    echo "<a class=\"btn\" id=\"back_event\" href=\"".$back_click."\" title=\"Previous Event\"><i class=\"icon-chevron-left\"></i></a>";
+                                } else {
+                                    echo "<a class=\"btn disabled\" id=\"back_event\" href=\"#\" title=\"Previous Event\"><i class=\"icon-chevron-left\"></i></a>";
+                                }
+                                ?>
+                                <div id="swipe-location" class="event-navbar-middle"><?php echo html_encode($event_info["event_title"]); ?></div>
+                                <?php
+                                if (isset($transversal_ids["next"])) {
+                                    $next_click = ENTRADA_RELATIVE . "/events?" . replace_query(array((isset($_GET["drid"]) ? "drid" : "rid") => $transversal_ids["next"]));
 
-							echo "<a id=\"back_event\" href=\"".$back_click."\" title=\"Previous Event\"><img src=\"".ENTRADA_RELATIVE."/images/cal-back.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Previous Event\" title=\"Previous Event\" /></a>";
-						} else {
-							echo "<img src=\"".ENTRADA_RELATIVE."/images/cal-back-off.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"\" title=\"\" />";
-						}
-						echo "	</td>\n";
-						echo "	<td id=\"swipe-location\" style=\"width: 100%; height: 23px; background: url('".ENTRADA_RELATIVE."/images/cal-table-bg.gif') #FFFFFF repeat-x; text-align: center; font-size: 10px; color: #666666; white-space: nowrap; overflow: hidden\">".html_encode($event_info["event_title"])."</td>\n";
-						echo "	<td style=\"width: 22px; height: 23px\">";
-						if (isset($transversal_ids["next"])) {
-							$next_click = ENTRADA_URL."/events?".replace_query(array(((isset($_GET["drid"])) ? "drid" : "rid") => ($transversal_ids["next"])));
-
-							echo "<a id=\"next_event\" href=\"".$next_click."\" title=\"Next Event\"><img src=\"".ENTRADA_RELATIVE."/images/cal-next.gif\" border=\"0\" width=\"22\" height=\"23\" alt=\"Next Event\" title=\"Next Event\" /></a>";
-						} else {
-							echo "<img src=\"".ENTRADA_RELATIVE."/images/cal-next-off.gif\" width=\"22\" height=\"23\" alt=\"\" title=\"\" />";
-						}
-						echo "	</td>\n";
-						echo "</tr>\n";
-						echo "</table>\n";
+                                    echo "<a class=\"btn\" id=\"next_event\" href=\"".$next_click."\" title=\"Next Event\"><i class=\"icon-chevron-right\"></i></a>";
+                                } else {
+                                    echo "<a class=\"btn disabled\" id=\"next_event\" href=\"#\" title=\"Next Event\"><i class=\"icon-chevron-right\"></i></a>";
+                                }
+                                ?>
+                            </div>
+                        </div>
+                        <?php
 
 						/**
 						 * Add swipe functionality if swipe is supported.
@@ -328,707 +329,708 @@ if (!defined("PARENT_INCLUDED")) {
 					echo "<div class=\"content-small\">".fetch_course_path($event_info["course_id"])."</div>\n";
 					echo "<h1 id=\"page-top\" class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
 
-					echo "<div id=\"event-sidebar\">\n";
 					?>
-					<table>
-						<tbody>
-							<tr>
-								<th>Date &amp; Time</th>
-								<td><?php echo date(DEFAULT_DATE_FORMAT, $event_info["event_start"]); ?></td>
-							</tr>
-							<tr class="spacer">
-								<td colspan="2"><hr></td>
-							</tr>
-							<tr>
-								<th>Location</th>
-								<td><?php echo (($event_info["event_location"]) ? $event_info["event_location"] : "To Be Announced"); ?></td>
-							</tr>
-							<tr class="spacer">
-								<td colspan="2"><hr></td>
-							</tr>
-							<tr>
-								<th>Duration</th>
-								<td>
-									<?php
-									echo (((int) $event_info["event_duration"]) ? $event_info["event_duration"]." Minutes" : "To Be Announced");
+                    <div class="row-fluid">
+                        <div class="span7">
+                            <?php
+                            if (clean_input($event_info["event_description"], array("notags", "nows")) != "") {
+                                echo "<div class=\"event-description\">";
+                                echo trim(strip_selected_tags($event_info["event_description"], array("font")));
+                                echo "</div>";
+                            }
 
-									if ($event_types) {
-										echo "<br /><br />";
-										echo "<div class=\"content-small\">\n";
-										echo "<strong>Breakdown</strong><br />";
-										foreach($event_types as $type) {
-											echo "".$type["duration"]." minutes of ".strtolower($type["eventtype_title"])."<br />";
-										}
-										echo "</div>";
-									}
-									?>
-								</td>
-							</tr>
-							<?php
-							if ($event_contacts) {
-								if (isset($event_contacts["teacher"]) && ($count = count($event_contacts["teacher"]))) {
-									?>
-									<tr class="spacer">
-										<td colspan="2"><hr></td>
-									</tr>
-									<tr>
-										<th>Teacher<?php echo (($count != 1) ? "s" : ""); ?></th>
-										<td>
-											<ul class="menu">
-											<?php
-											foreach ($event_contacts["teacher"] as $contact) {
-												echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
-											}
-											?>
-											</ul>
-										</td>
-									</tr>
-									<?php
-								}
-								if (isset($event_contacts["tutor"]) && ($count = count($event_contacts["tutor"]))) {
-									?>
-									<tr class="spacer">
-										<td colspan="2"><hr></td>
-									</tr>
-									<tr>
-										<th>Tutor<?php echo (($count != 1) ? "s" : ""); ?></th>
-										<td>
-											<ul class="menu">
-											<?php
-											foreach ($event_contacts["tutor"] as $contact) {
-												echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
-											}
-											?>
-											</ul>
-										</td>
-									</tr>
-									<?php
-								}
-								if (isset($event_contacts["ta"]) && ($count = count($event_contacts["ta"]))) {
-									?>
-									<tr class="spacer">
-										<td colspan="2"><hr></td>
-									</tr>
-									<tr>
-										<th>TA<?php echo (($count != 1) ? "s" : ""); ?></th>
-										<td>
-											<ul class="menu">
-											<?php
-											foreach ($event_contacts["ta"] as $contact) {
-												echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
-											}
-											?>
-											</ul>
-										</td>
-									</tr>
-									<?php
-								}
-								if (isset($event_contacts["auditor"]) && ($count = count($event_contacts["auditor"]))) {
-									?>
-									<tr class="spacer">
-										<td colspan="2"><hr></td>
-									</tr>
-									<tr>
-										<th>Auditor<?php echo (($count != 1) ? "s" : ""); ?></th>
-										<td>
-											<ul class="menu">
-											<?php
-											foreach ($event_contacts["auditor"] as $contact) {
-												echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
-											}
-											?>
-											</ul>
-										</td>
-									</tr>
-									<?php
-								}
-							}
-							?>
-							<tr class="spacer">
-								<td colspan="2"><hr></td>
-							</tr>
-							<tr>
-								<th>Audience</th>
-								<td>
-									<?php
-									if ($event_audience) {
-										?>
-										<ul class="menu">
-										<?php
-										foreach ($event_audience as $audience_type => $results) {
-											if ($audience_type == "proxy_id") {
-												$css_class = "user";
-											} else {
-												$css_class = "group";
-											}
+                            if (clean_input($event_info["event_message"], array("notags", "nows")) != "") {
+                                echo "<div class=\"event-message\">\n";
+                                echo "	<h3>Teacher's Message</h3>\n";
+                                echo	trim(strip_selected_tags($event_info["event_message"], array("font")));
+                                echo "</div>\n";
+                            }
+                            ?>
+                        </div>
+                        <div class="span5">
+                            <table class="event-details">
+                                <tbody>
+                                    <tr>
+                                        <th>Date &amp; Time</th>
+                                        <td><?php echo date(DEFAULT_DATE_FORMAT, $event_info["event_start"]); ?></td>
+                                    </tr>
+                                    <tr class="spacer">
+                                        <td colspan="2"><hr></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Location</th>
+                                        <td><?php echo (($event_info["event_location"]) ? $event_info["event_location"] : "To Be Announced"); ?></td>
+                                    </tr>
+                                    <tr class="spacer">
+                                        <td colspan="2"><hr></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Duration</th>
+                                        <td>
+                                            <?php
+                                            echo (((int) $event_info["event_duration"]) ? $event_info["event_duration"]." Minutes" : "To Be Announced");
 
-											if (is_array($results)) {
-												foreach ($results as $audience) {
-													echo "<li class=\"".$css_class."\">".($audience["link"] ? "<a href=\"".$audience["link"]."\">" : "").$audience["title"].($audience["link"] ? "</a>" : "")."</li>";
-												}
-											} elseif (isset($results["title"])) {
-												echo "<li class=\"".$css_class."\">".($results["link"] ? "<a href=\"".$results["link"]."\">" : "").$results["title"].($results["link"] ? "</a>" : "")."</li>";
-											}
-										}
-										?>
-										</ul>
-										<?php
-									}
-									?>
-								</td>
-							</tr>
-							<tr class="spacer">
-								<td colspan="2"><hr></td>
-							</tr>
-						</tbody>
-					</table>
-					<?php
-/**
- * @todo simpson This needs to be fixed as $event_audience_type is no longer for grad_year.
- */
-if ($event_audience_type == "cohort") {
-	$query = "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_cohort`
-				FROM `events` AS a
-				LEFT JOIN `event_audience` AS b
-				ON b.`event_id` = a.`event_id`
-				LEFT JOIN `courses` AS c
-				ON a.`course_id` = c.`course_id`
-				AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
-				WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
-				AND c.`course_active` = '1'
-				AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
-				AND b.`audience_type` = 'cohort'
-				AND b.`audience_value` IN (".$associated_cohorts_string.")
-				ORDER BY `event_title` ASC";
-	$results = $db->GetAll($query);
-	if ($results) {
-		echo "	<tr>\n";
-		echo "		<td colspan=\"2\">&nbsp;</td>\n";
-		echo "	</tr>\n";
-		echo "	<tr>\n";
-		echo "		<td style=\"vertical-align: top\">Overlapping Event".((count($results) != 1) ? "s" : "")."</td>\n";
-		echo "		<td>\n";
-		foreach ($results as $result) {
-			echo "		<a href=\"".ENTRADA_RELATIVE."/events?id=".$result["event_id"]."\">".html_encode($result["event_title"])."</a><br />\n";
-		}
-		echo "		</td>\n";
-		echo "	</tr>\n";
-	}
-}
-					echo "</div>\n";
+                                            if ($event_types) {
+                                                echo "<br /><br />";
+                                                echo "<div class=\"content-small\">\n";
+                                                echo "<strong>Breakdown</strong><br />";
+                                                foreach($event_types as $type) {
+                                                    echo "".$type["duration"]." minutes of ".strtolower($type["eventtype_title"])."<br />";
+                                                }
+                                                echo "</div>";
+                                            }
+                                            ?>
+                                        </td>
+                                    </tr>
+                                    <?php
+                                    if ($event_contacts) {
+                                        if (isset($event_contacts["teacher"]) && ($count = count($event_contacts["teacher"]))) {
+                                            ?>
+                                            <tr class="spacer">
+                                                <td colspan="2"><hr></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Teacher<?php echo (($count != 1) ? "s" : ""); ?></th>
+                                                <td>
+                                                    <ul class="menu">
+                                                    <?php
+                                                    foreach ($event_contacts["teacher"] as $contact) {
+                                                        echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
+                                                    }
+                                                    ?>
+                                                    </ul>
+                                                </td>
+                                            </tr>
+                                            <?php
+                                        }
+                                        if (isset($event_contacts["tutor"]) && ($count = count($event_contacts["tutor"]))) {
+                                            ?>
+                                            <tr class="spacer">
+                                                <td colspan="2"><hr></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Tutor<?php echo (($count != 1) ? "s" : ""); ?></th>
+                                                <td>
+                                                    <ul class="menu">
+                                                    <?php
+                                                    foreach ($event_contacts["tutor"] as $contact) {
+                                                        echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
+                                                    }
+                                                    ?>
+                                                    </ul>
+                                                </td>
+                                            </tr>
+                                            <?php
+                                        }
+                                        if (isset($event_contacts["ta"]) && ($count = count($event_contacts["ta"]))) {
+                                            ?>
+                                            <tr class="spacer">
+                                                <td colspan="2"><hr></td>
+                                            </tr>
+                                            <tr>
+                                                <th>TA<?php echo (($count != 1) ? "s" : ""); ?></th>
+                                                <td>
+                                                    <ul class="menu">
+                                                    <?php
+                                                    foreach ($event_contacts["ta"] as $contact) {
+                                                        echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
+                                                    }
+                                                    ?>
+                                                    </ul>
+                                                </td>
+                                            </tr>
+                                            <?php
+                                        }
+                                        if (isset($event_contacts["auditor"]) && ($count = count($event_contacts["auditor"]))) {
+                                            ?>
+                                            <tr class="spacer">
+                                                <td colspan="2"><hr></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Auditor<?php echo (($count != 1) ? "s" : ""); ?></th>
+                                                <td>
+                                                    <ul class="menu">
+                                                    <?php
+                                                    foreach ($event_contacts["auditor"] as $contact) {
+                                                        echo "<li class=\"user\"><a href=\"".ENTRADA_RELATIVE."/people?id=".$contact["proxy_id"]."\">".html_encode($contact["fullname"])."</a></li>\n";
+                                                    }
+                                                    ?>
+                                                    </ul>
+                                                </td>
+                                            </tr>
+                                            <?php
+                                        }
+                                    }
+                                    ?>
+                                    <tr class="spacer">
+                                        <td colspan="2"><hr></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Audience</th>
+                                        <td>
+                                            <?php
+                                            if ($event_audience) {
+                                                ?>
+                                                <ul class="menu">
+                                                <?php
+                                                foreach ($event_audience as $audience_type => $results) {
+                                                    if ($audience_type == "proxy_id") {
+                                                        $css_class = "user";
+                                                    } else {
+                                                        $css_class = "group";
+                                                    }
 
-					echo "<div class=\"event-body\">\n";
+                                                    if (is_array($results)) {
+                                                        foreach ($results as $audience) {
+                                                            echo "<li class=\"".$css_class."\">".($audience["link"] ? "<a href=\"".$audience["link"]."\">" : "").$audience["title"].($audience["link"] ? "</a>" : "")."</li>";
+                                                        }
+                                                    } elseif (isset($results["title"])) {
+                                                        echo "<li class=\"".$css_class."\">".($results["link"] ? "<a href=\"".$results["link"]."\">" : "").$results["title"].($results["link"] ? "</a>" : "")."</li>";
+                                                    }
+                                                }
+                                                ?>
+                                                </ul>
+                                                <?php
+                                            }
+                                            ?>
+                                        </td>
+                                    </tr>
+                                    <tr class="spacer">
+                                        <td colspan="2"><hr></td>
+                                    </tr>
+                                    <?php
+                                    /**
+                                     * @todo simpson This needs to be fixed as $event_audience_type is no longer for grad_year.
+                                     */
+                                    if ($event_audience_type == "cohort") {
+                                        $query = "	SELECT a.`event_id`, a.`event_title`, b.`audience_value` AS `event_cohort`
+                                                    FROM `events` AS a
+                                                    LEFT JOIN `event_audience` AS b
+                                                    ON b.`event_id` = a.`event_id`
+                                                    LEFT JOIN `courses` AS c
+                                                    ON a.`course_id` = c.`course_id`
+                                                    AND c.`organisation_id` = ".$db->qstr($event_info["organisation_id"])."
+                                                    WHERE (a.`event_start` BETWEEN ".$db->qstr($event_info["event_start"])." AND ".$db->qstr(($event_info["event_finish"] - 1)).")
+                                                    AND c.`course_active` = '1'
+                                                    AND a.`event_id` <> ".$db->qstr($event_info["event_id"])."
+                                                    AND b.`audience_type` = 'cohort'
+                                                    AND b.`audience_value` IN (".$associated_cohorts_string.")
+                                                    ORDER BY `event_title` ASC";
+                                        $results = $db->GetAll($query);
+                                        if ($results) {
+                                            echo "	<tr>\n";
+                                            echo "		<td colspan=\"2\">&nbsp;</td>\n";
+                                            echo "	</tr>\n";
+                                            echo "	<tr>\n";
+                                            echo "		<th>Overlapping Event".((count($results) != 1) ? "s" : "")."</th>\n";
+                                            echo "		<td>\n";
+                                            echo "          <ul class=\"menu\">\n";
+                                            foreach ($results as $result) {
+                                                echo "          <li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/events?id=".$result["event_id"]."\">".html_encode($result["event_title"])."</a></li>\n";
+                                            }
+                                            echo "          </ul>\n";
+                                            echo "		</td>\n";
+                                            echo "	</tr>\n";
+                                        }
+                                    }
+                                    ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div>
+                        <?php
+                        $query = "SELECT b.`objective_id`, b.`objective_name`
+                                    FROM `event_objectives` AS a
+                                    LEFT JOIN `global_lu_objectives` AS b
+                                    ON b.`objective_id` = a.`objective_id`
+                                    JOIN `objective_organisation` AS c
+                                    ON b.`objective_id` = c.`objective_id`
+                                    AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+                                    WHERE a.`objective_type` = 'event'
+                                    AND b.`objective_active` = '1'
+                                    AND a.`event_id` = ".$db->qstr($EVENT_ID)."
+                                    ORDER BY b.`objective_name` ASC;";
+                        $clinical_presentations	= $db->GetAll($query);
 
-					if (clean_input($event_info["event_description"], array("notags", "nows")) != "") {
-						echo "<div class=\"event-description\">";
-						echo trim(strip_selected_tags($event_info["event_description"], array("font")));
-						echo "</div>";
-					}
+                        $show_event_objectives	= ((clean_input($event_info["event_objectives"], array("notags", "nows")) != "") ? true : false);
+                        $show_clinical_presentations = (($clinical_presentations) ? true : false);
 
-					if (clean_input($event_info["event_message"], array("notags", "nows")) != "") {
-						echo "<div class=\"event-message\">\n";
-						echo "	<h3>Teacher's Message:</h3>\n";
-						echo	trim(strip_selected_tags($event_info["event_message"], array("font")));
-						echo "</div>\n";
-					}
+                        $show_curriculum_objectives = false;
+                        list($curriculum_objectives,$top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(),array($event_info["course_id"]),-1, 1, false, false, $EVENT_ID, true);
 
-					echo "</div>\n";
+                        $temp_objectives = $curriculum_objectives["objectives"];
+                        foreach ($temp_objectives as $objective_id => $objective) {
+                            unset($curriculum_objectives["used_ids"][$objective_id]);
+                            $curriculum_objectives["objectives"][$objective_id]["objective_primary_children"] = 0;
+                            $curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"] = 0;
+                            $curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"] = 0;
+                        }
+                        foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
+                            if (isset($objective["event_objective"]) && $objective["event_objective"]) {
+                                foreach ($objective["parent_ids"] as $parent_id) {
+                                    if ($objective["primary"] || $objective["secondary"] || $objective["tertiary"] || $curriculum_objectives["objectives"][$parent_id]["primary"] || $curriculum_objectives["objectives"][$parent_id]["secondary"] || $curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
+                                        $curriculum_objectives["objectives"][$parent_id]["objective_".($objective["primary"] || ($curriculum_objectives["objectives"][$parent_id]["primary"] && !$objective["secondary"] && !$objective["tertiary"]) ? "primary" : ($objective["secondary"] || ($curriculum_objectives["objectives"][$parent_id]["secondary"] && !$objective["primary"] && !$objective["tertiary"]) ? "secondary" : "tertiary"))."_children"]++;
+                                    if ($curriculum_objectives["objectives"][$parent_id]["primary"]) {
+                                        $curriculum_objectives["objectives"][$objective_id]["primary"] = true;
+                                    } elseif ($curriculum_objectives["objectives"][$parent_id]["secondary"]) {
+                                        $curriculum_objectives["objectives"][$objective_id]["secondary"] = true;
+                                    } elseif ($curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
+                                        $curriculum_objectives["objectives"][$objective_id]["tertiary"] = true;
+                                    }
+                                }
+                                }
+                                $show_curriculum_objectives = true;
+                            }
+                        }
+                        foreach ($temp_objectives as $objective_id => $objective) {
+                            if (!isset($objective["event_objective"]) || !$objective["event_objective"]) {
+                                if (isset($objective["primary"]) && $objective["primary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"]) {
+                                    $curriculum_objectives["objectives"][$objective_id]["primary"] = false;
+                                } elseif (isset($objective["secondary"]) && $objective["secondary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"]) {
+                                    $curriculum_objectives["objectives"][$objective_id]["secondary"] = false;
+                                } elseif (isset($objective["tertiary"]) && $objective["tertiary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"]) {
+                                    $curriculum_objectives["objectives"][$objective_id]["tertiary"] = false;
+                                }
+                            }
+                        }
+                        if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_objectives) {
+                            $include_objectives = true;
 
-					echo "<div style=\"clear: both\" />\n";
-$query = "	SELECT b.`objective_id`, b.`objective_name`
-			FROM `event_objectives` AS a
-			LEFT JOIN `global_lu_objectives` AS b
-			ON b.`objective_id` = a.`objective_id`
-			JOIN `objective_organisation` AS c
-			ON b.`objective_id` = c.`objective_id`
-			AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-			WHERE a.`objective_type` = 'event'
-			AND b.`objective_active` = '1'
-			AND a.`event_id` = ".$db->qstr($EVENT_ID)."
-			ORDER BY b.`objective_name` ASC;";
-$clinical_presentations	= $db->GetAll($query);
+                            echo "<a name=\"event-objectives-section\"></a>\n";
+                            echo "<h2 title=\"Event Objectives Section\">Event Objectives</h2>\n";
+                            echo "<div id=\"event-objectives-section\">\n";
 
-$show_event_objectives	= ((clean_input($event_info["event_objectives"], array("notags", "nows")) != "") ? true : false);
-$show_clinical_presentations = (($clinical_presentations) ? true : false);
+                            if ($show_event_objectives) {
+                                echo "	<div class=\"section-holder\">\n";
+                                echo "		<h3>Free-Text Objectives</h3>\n";
+                                echo		trim(strip_selected_tags($event_info["event_objectives"], array("font")));
+                                echo "	</div>\n";
+                            }
 
-$show_curriculum_objectives = false;
-list($curriculum_objectives,$top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(),array($event_info["course_id"]),-1, 1, false, false, $EVENT_ID, true);
+                            if ($show_clinical_presentations) {
+                                echo "	<div class=\"section-holder\">\n";
+                                echo "		<h3>Clinical Presentations</h3>\n";
+                                foreach ($clinical_presentations as $key => $result) {
+                                    echo (($key) ? ", " : "").$result["objective_name"];
+                                }
+                                echo "	</div>\n";
+                            }
 
-$temp_objectives = $curriculum_objectives["objectives"];
-foreach ($temp_objectives as $objective_id => $objective) {
-	unset($curriculum_objectives["used_ids"][$objective_id]);
-	$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"] = 0;
-	$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"] = 0;
-	$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"] = 0;
-}
-foreach ($curriculum_objectives["objectives"] as $objective_id => $objective) {
-	if (isset($objective["event_objective"]) && $objective["event_objective"]) {
-		foreach ($objective["parent_ids"] as $parent_id) {
-			if ($objective["primary"] || $objective["secondary"] || $objective["tertiary"] || $curriculum_objectives["objectives"][$parent_id]["primary"] || $curriculum_objectives["objectives"][$parent_id]["secondary"] || $curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
-				$curriculum_objectives["objectives"][$parent_id]["objective_".($objective["primary"] || ($curriculum_objectives["objectives"][$parent_id]["primary"] && !$objective["secondary"] && !$objective["tertiary"]) ? "primary" : ($objective["secondary"] || ($curriculum_objectives["objectives"][$parent_id]["secondary"] && !$objective["primary"] && !$objective["tertiary"]) ? "secondary" : "tertiary"))."_children"]++;
-			if ($curriculum_objectives["objectives"][$parent_id]["primary"]) {
-				$curriculum_objectives["objectives"][$objective_id]["primary"] = true;
-			} elseif ($curriculum_objectives["objectives"][$parent_id]["secondary"]) {
-				$curriculum_objectives["objectives"][$objective_id]["secondary"] = true;
-			} elseif ($curriculum_objectives["objectives"][$parent_id]["tertiary"]) {
-				$curriculum_objectives["objectives"][$objective_id]["tertiary"] = true;
-			}
-		}
-		}
-		$show_curriculum_objectives = true;
-	}
-}
-foreach ($temp_objectives as $objective_id => $objective) {
-	if (!isset($objective["event_objective"]) || !$objective["event_objective"]) {
-		if (isset($objective["primary"]) && $objective["primary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_primary_children"]) {
-			$curriculum_objectives["objectives"][$objective_id]["primary"] = false;
-		} elseif (isset($objective["secondary"]) && $objective["secondary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_secondary_children"]) {
-			$curriculum_objectives["objectives"][$objective_id]["secondary"] = false;
-		} elseif (isset($objective["tertiary"]) && $objective["tertiary"] && !$curriculum_objectives["objectives"][$objective_id]["objective_tertiary_children"]) {
-			$curriculum_objectives["objectives"][$objective_id]["tertiary"] = false;
-		}
-	}
-}
-if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_objectives) {
-	$include_objectives = true;
+                            if ($show_curriculum_objectives) {
+                                ?>
+                                <script type="text/javascript">
+                                function renewList (hierarchy) {
+                                    if (hierarchy != null && hierarchy) {
+                                        hierarchy = 1;
+                                    } else {
+                                        hierarchy = 0;
+                                    }
+                                    new Ajax.Updater('objectives_list', '<?php echo ENTRADA_RELATIVE; ?>/api/objectives.api.php',
+                                        {
+                                            method:	'post',
+                                            parameters: 'course_ids=<?php echo $event_info["course_id"] ?>&hierarchy='+hierarchy+'&event_id=<?php echo $EVENT_ID; ?>'
+                                        }
+                                    );
+                                }
+                                </script>
+                                <?php
+                                echo "<div class=\"section-holder\">\n";
+                                echo "	<h3>Curriculum Objectives</h3>\n";
+                                echo "	<strong>The learner will be able to:</strong>";
+                                echo	course_objectives_in_list($curriculum_objectives, $top_level_id,$top_level_id, false, false, 1, true)."\n";
+                                echo "</div>\n";
+                            }
+                            echo "</div>\n";
+                        }
 
-	echo "<a name=\"event-objectives-section\"></a>\n";
-	echo "<h2 title=\"Event Objectives Section\">Event Objectives</h2>\n";
-	echo "<div id=\"event-objectives-section\">\n";
+                        $query = "SELECT a.`topic_id`,a.`topic_name`, e.`topic_coverage`, e.`topic_time`
+                                    FROM `events_lu_topics` AS a
+                                    LEFT JOIN `topic_organisation` AS b
+                                    ON a.`topic_id` = b.`topic_id`
+                                    LEFT JOIN `courses` AS c
+                                    ON b.`organisation_id` = c.`organisation_id`
+                                    LEFT JOIN `events` AS d
+                                    ON c.`course_id` = d.`course_id`
+                                    JOIN `event_topics` AS e
+                                    ON d.`event_id` = e.`event_id`
+                                    AND a.`topic_id` = e.`topic_id`
+                                    WHERE d.`event_id` = ".$db->qstr($EVENT_ID);
+                        $topic_results = $db->GetAll($query);
+                        if ($topic_results) {
+                            ?>
+                            <table style="width: 100%" cellspacing="0">
+                                <colgroup>
+                                    <col style="width: 70%" />
+                                    <col style="width: 10%" />
+                                    <col style="width: 10%" />
+                                    <col style="width: 10%" />
+                                </colgroup>
+                                <tr>
+                                    <td colspan="4">
+                                        <h2>Event Topics</h2>
+                                        <div class="content-small" style="padding-bottom: 10px">These topics will be covered in this learning event.</div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
+                                    <td><span style="font-weight: bold; color: #003366;">Major</span></td>
+                                    <td><span style="font-weight: bold; color: #003366;">Minor</span></td>
+                                    <td><span style="font-weight: bold; color: #003366;">Time</span></td>
+                                </tr>
+                                <?php
+                                    foreach ($topic_results as $topic_result) {
+                                        echo "<tr>\n";
+                                        echo "	<td>".html_encode($topic_result["topic_name"])."</td>\n";
+                                        echo "	<td>".(($topic_result["topic_coverage"] == "major") ? "<img src=\"".ENTRADA_URL."/images/question-correct.gif"."\" />" : "" )."</td>\n";
+                                        echo "	<td>".(($topic_result["topic_coverage"] == "minor") ? "<img src=\"".ENTRADA_URL."/images/question-correct.gif"."\" />": "" )."</td>\n";
+                                        echo "	<td>".$topic_result["topic_time"]."</td>\n";
+                                        echo "</tr>\n";
+                                    }
+                                    echo "<tr><td colspan=\"2\">&nbsp;</td></tr>";
+                                ?>
+                            </table>
+                            <?php
+                        }
 
-	if ($show_event_objectives) {
-		echo "	<div class=\"section-holder\">\n";
-		echo "		<h3>Free-Text Objectives</h3>\n";
-		echo		trim(strip_selected_tags($event_info["event_objectives"], array("font")));
-		echo "	</div>\n";
-	}
+                        echo "<a name=\"event-resources-section\"></a>";
+                        echo "<h2 title=\"Event Resources Section\">Event Resources</h2>\n";
+                        echo "<div id=\"event-resources-section\">\n";
+                        echo "	<div class=\"section-holder\">\n";
+                        echo "		<h3>Attached Files</h3><a name=\"event-resources-files\"></a>\n";
+                        echo "		<table class=\"tableList\" cellspacing=\"0\" summary=\"List of File Attachments\">\n";
+                        echo "		<colgroup>\n";
+                        echo "			<col class=\"modified\" />\n";
+                        echo "			<col class=\"file-category\" />\n";
+                        echo "			<col class=\"title\" />\n";
+                        echo "			<col class=\"date\" />\n";
+                        echo "		</colgroup>\n";
+                        echo "		<thead>\n";
+                        echo "			<tr>\n";
+                        echo "				<td class=\"modified\">&nbsp;</td>\n";
+                        echo "				<td class=\"file-category sortedASC\"><div class=\"noLink\">File Category</div></td>\n";
+                        echo "				<td class=\"title\"><div class=\"noLink\">File Title</div></td>\n";
+                        echo "				<td class=\"date\">Last Updated</td>\n";
+                        echo "			</tr>\n";
+                        echo "		</thead>\n";
+                        echo "		<tbody>\n";
+                        if ($event_files) {
+                            foreach ($event_files as $result) {
+                                $filename	= $result["file_name"];
+                                $parts		= pathinfo($filename);
+                                $ext		= $parts["extension"];
 
-	if ($show_clinical_presentations) {
-		echo "	<div class=\"section-holder\">\n";
-		echo "		<h3>Clinical Presentations</h3>\n";
-		foreach ($clinical_presentations as $key => $result) {
-			echo (($key) ? ", " : "").$result["objective_name"];
-		}
-		echo "	</div>\n";
-	}
+                                echo "	<tr id=\"file-".$result["efile_id"]."\">\n";
+                                echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $result["last_visited"]) ? (((int) $result["last_visited"] >= (int) $result["updated_date"]) ? "<img src=\"".ENTRADA_RELATIVE."/images/accept.png\" width=\"16\" height=\"16\" alt=\"You have already downloaded the latest version.\" title=\"You have already downloaded the latest version.\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/exclamation.png\" width=\"16\" height=\"16\" alt=\"This file has been updated since you have last downloaded it.\" title=\"This file has been updated since you have last downloaded it.\" />") : "")."</td>\n";
+                                echo "		<td class=\"file-category\" style=\"vertical-align: top\">".((isset($RESOURCE_CATEGORIES["event"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["event"][$result["file_category"]]) : "Unknown Category")."</td>\n";
+                                echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
+                                echo "			<img src=\"".ENTRADA_RELATIVE."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />\n";
+                                if (((!(int) $result["release_date"]) || ($result["release_date"] <= time())) && ((!(int) $result["release_until"]) || ($result["release_until"] >= time()))) {
+                                    echo "		<a href=\"".ENTRADA_RELATIVE."/file-event.php?id=".$result["efile_id"]."\" title=\"Click to download ".html_encode($result["file_title"])."\" style=\"font-weight: bold\"".(((int) $result["access_method"]) ? " target=\"_blank\"" : "").">".html_encode($result["file_title"])."</a>";
+                                } else {
+                                    echo "		<span style=\"color: #666666; font-weight: bold\">".html_encode($result["file_title"])."</span>";
+                                }
+                                echo "			<span class=\"content-small\">(".readable_size($result["file_size"]).")</span>";
+                                echo "			<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">\n";
+                                if (((int) $result["release_date"]) && ($result["release_date"] > time())) {
+                                    echo "		This file will be available for downloading <strong>".date(DEFAULT_DATE_FORMAT, $result["release_date"])."</strong>.<br /><br />";
+                                } elseif (((int) $result["release_until"]) && ($result["release_until"] < time())) {
+                                    echo "		This file was only available for download until <strong>".date(DEFAULT_DATE_FORMAT, $result["release_until"])."</strong>. Please contact the primary teacher for assistance if required.<br /><br />";
+                                }
+                                if (clean_input($result["file_notes"], array("notags", "nows")) != "") {
+                                    echo "		".trim(strip_selected_tags($result["file_notes"], array("font")))."\n";
+                                }
+                                echo "			</div>\n";
+                                echo "		</td>\n";
+                                echo "		<td class=\"date\" style=\"vertical-align: top\">".(((int) $result["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $result["updated_date"]) : "Unknown")."</td>\n";
+                                echo "	</tr>\n";
+                            }
+                        } else {
+                            echo "		<tr>\n";
+                            echo "			<td colspan=\"4\">\n";
+                            echo "				<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no file downloads added to this event.</div>\n";
+                            echo "			</td>\n";
+                            echo "		</tr>\n";
+                        }
+                        echo "		</tbody>\n";
+                        echo "		</table>\n";
+                        echo "	</div>\n";
 
-	if ($show_curriculum_objectives) {
-		?>
-		<script type="text/javascript">
-		function renewList (hierarchy) {
-			if (hierarchy != null && hierarchy) {
-				hierarchy = 1;
-			} else {
-				hierarchy = 0;
-			}
-			new Ajax.Updater('objectives_list', '<?php echo ENTRADA_RELATIVE; ?>/api/objectives.api.php',
-				{
-					method:	'post',
-					parameters: 'course_ids=<?php echo $event_info["course_id"] ?>&hierarchy='+hierarchy+'&event_id=<?php echo $EVENT_ID; ?>'
-				}
-			);
-		}
-		</script>
-		<?php
-		echo "<div class=\"section-holder\">\n";
-		echo "	<h3>Curriculum Objectives</h3>\n";
-		echo "	<strong>The learner will be able to:</strong>";
-		echo	course_objectives_in_list($curriculum_objectives, $top_level_id,$top_level_id, false, false, 1, true)."\n";
-		echo "</div>\n";
-	}
-	echo "</div>\n";
-}
+                        echo "	<div class=\"section-holder\">\n";
+                        echo "		<h3>Attached Links</h3><a name=\"event-resources-links\"></a>\n";
+                        echo "		<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Linked Resources\">\n";
+                        echo "		<colgroup>\n";
+                        echo "			<col class=\"modified\" />\n";
+                        echo "			<col class=\"title\" />\n";
+                        echo "			<col class=\"date\" />\n";
+                        echo "		</colgroup>\n";
+                        echo "		<thead>\n";
+                        echo "			<tr>\n";
+                        echo "				<td class=\"modified\">&nbsp;</td>\n";
+                        echo "				<td class=\"title sortedASC\"><div class=\"noLink\">Linked Resource</div></td>\n";
+                        echo "				<td class=\"date\">Last Updated</td>\n";
+                        echo "			</tr>\n";
+                        echo "		</thead>\n";
+                        echo "		<tbody>\n";
+                        if ($event_links) {
+                            foreach ($event_links as $result) {
+                                echo "	<tr>\n";
+                                echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $result["last_visited"]) ? (((int) $result["last_visited"] >= (int) $result["updated_date"]) ? "<img src=\"".ENTRADA_RELATIVE."/images/accept.png\" width=\"16\" height=\"16\" alt=\"You have previously visited this link.\" title=\"You have previously visited this link.\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/exclamation.png\" width=\"16\" height=\"16\" alt=\"An update to this link has been made, please re-visit it.\" title=\"An update to this link has been made, please re-visit it.\" />") : "")."</td>\n";
+                                echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
+                                if (((!(int) $result["release_date"]) || ($result["release_date"] <= time())) && ((!(int) $result["release_until"]) || ($result["release_until"] >= time()))) {
+                                    echo "		<a href=\"".ENTRADA_RELATIVE."/link-event.php?id=".$result["elink_id"]."\" title=\"Click to visit ".$result["link"]."\" style=\"font-weight:  bold\" target=\"_blank\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
+                                } else {
+                                    echo "		<span style=\"color: #666666; font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : "Untitled Link")."</span>";
+                                }
+                                echo "			<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">\n";
+                                if (((int) $result["release_date"]) && ($result["release_date"] > time())) {
+                                    echo "		This link will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $result["release_date"])."</strong>.<br /><br />";
+                                } elseif (((int) $result["release_until"]) && ($result["release_until"] < time())) {
+                                    echo "		This link was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $result["release_until"])."</strong>. Please contact the primary teacher for assistance if required.<br /><br />";
+                                }
+                                if (clean_input($result["link_notes"], array("notags", "nows")) != "") {
+                                    echo "		".trim(strip_selected_tags($result["link_notes"], array("font")))."\n";
+                                }
+                                echo "			</div>\n";
+                                echo "		</td>\n";
+                                echo "		<td class=\"date\" style=\"vertical-align: top\">".(((int) $result["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $result["updated_date"]) : "Unknown")."</td>\n";
+                                echo "	</tr>\n";
+                            }
+                        } else {
+                            echo "		<tr>\n";
+                            echo "			<td colspan=\"3\">\n";
+                            echo "				<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no linked resources added to this event.</div>\n";
+                            echo "			</td>\n";
+                            echo "		</tr>\n";
+                        }
+                        echo "		</tbody>\n";
+                        echo "		</table>\n";
+                        echo "	</div>\n";
 
-$query			= "	SELECT a.`topic_id`,a.`topic_name`, e.`topic_coverage`, e.`topic_time`
-					FROM `events_lu_topics` AS a
-					LEFT JOIN `topic_organisation` AS b
-					ON a.`topic_id` = b.`topic_id`
-					LEFT JOIN `courses` AS c
-					ON b.`organisation_id` = c.`organisation_id`
-					LEFT JOIN `events` AS d
-					ON c.`course_id` = d.`course_id`
-					JOIN `event_topics` AS e
-					ON d.`event_id` = e.`event_id`
-					AND a.`topic_id` = e.`topic_id`
-					WHERE d.`event_id` = ".$db->qstr($EVENT_ID);
+                        echo "	<div class=\"section-holder\">\n";
+                        echo "		<h3>Attached Quizzes</h3><a name=\"event-resources-quizzes\"></a>\n";
+                        echo "		<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Attached Quizzes\">\n";
+                        echo "		<colgroup>\n";
+                        echo "			<col class=\"modified\" />\n";
+                        echo "			<col class=\"title\" />\n";
+                        echo "			<col class=\"date\" />\n";
+                        echo "		</colgroup>\n";
+                        echo "		<thead>\n";
+                        echo "			<tr>\n";
+                        echo "				<td class=\"modified\">&nbsp;</td>\n";
+                        echo "				<td class=\"title sortedASC\"><div class=\"noLink\">Quiz Title</div></td>\n";
+                        echo "				<td class=\"date\">Quiz Expires</td>\n";
+                        echo "			</tr>\n";
+                        echo "		</thead>\n";
+                        echo "		<tbody>\n";
 
-$topic_results	= $db->GetAll($query);
+                        if ($event_quizzes) {
+                            foreach ($event_quizzes as $quiz_record) {
+                                $quiz_attempts		= 0;
+                                $total_questions	= quiz_count_questions($quiz_record["quiz_id"]);
 
-if ($topic_results) { ?>
+                                $query				= "	SELECT *
+                                                FROM `quiz_progress`
+                                                WHERE `aquiz_id` = ".$db->qstr($quiz_record["aquiz_id"])."
+                                                AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+                                $progress_record	= $db->GetAll($query);
+                                if ($progress_record) {
+                                    $quiz_attempts = count($progress_record);
+                                }
 
-	<table style="width: 100%" cellspacing="0">
-		<colgroup>
-			<col style="width: 70%" />
-			<col style="width: 10%" />
-			<col style="width: 10%" />
-			<col style="width: 10%" />
-		</colgroup>
-		<tr>
-			<td colspan="4">
-				<h2>Event Topics</h2>
-				<div class="content-small" style="padding-bottom: 10px">These topics will be covered in this learning event.</div>
-			</td>
-		</tr>
-		<tr>
-			<td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
-			<td><span style="font-weight: bold; color: #003366;">Major</span></td>
-			<td><span style="font-weight: bold; color: #003366;">Minor</span></td>
-			<td><span style="font-weight: bold; color: #003366;">Time</span></td>
-		</tr>
-		<?php
-			foreach ($topic_results as $topic_result) {
-				echo "<tr>\n";
-				echo "	<td>".html_encode($topic_result["topic_name"])."</td>\n";
-				echo "	<td>".(($topic_result["topic_coverage"] == "major") ? "<img src=\"".ENTRADA_URL."/images/question-correct.gif"."\" />" : "" )."</td>\n";
-				echo "	<td>".(($topic_result["topic_coverage"] == "minor") ? "<img src=\"".ENTRADA_URL."/images/question-correct.gif"."\" />": "" )."</td>\n";
-				echo "	<td>".$topic_result["topic_time"]."</td>\n";
-				echo "</tr>\n";
-			}
-			echo "<tr><td colspan=\"2\">&nbsp;</td></tr>";
-		?>
-	</table>
+                                $exceeded_attempts	= ((((int) $quiz_record["quiz_attempts"] === 0) || ($quiz_attempts < $quiz_record["quiz_attempts"])) ? false : true);
 
-				<?php
+                                if (isset($quiz_record["require_attendance"]) && $quiz_record["require_attendance"] && !events_fetch_event_attendance_for_user($EVENT_ID,$ENTRADA_USER->getID())) {
+                                    $allow_attempt = false;
+                                } elseif (((!(int) $quiz_record["release_date"]) || ($quiz_record["release_date"] <= time())) && ((!(int) $quiz_record["release_until"]) || ($quiz_record["release_until"] >= time())) && (!$exceeded_attempts)) {
+                                    $allow_attempt = true;
+                                } else {
+                                    $allow_attempt = false;
+                                }
 
-}
+                                echo "	<tr id=\"quiz-".$quiz_record["aquiz_id"]."\">\n";
+                                echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $quiz_record["last_visited"]) ? (((int) $quiz_record["last_visited"] >= (int) $quiz_record["updated_date"]) ? "<img src=\"".ENTRADA_RELATIVE."/images/checkmark.gif\" width=\"20\" height=\"20\" alt=\"You have previously completed this quiz.\" title=\"You have previously completed this quiz.\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/exclamation.gif\" width=\"20\" height=\"20\" alt=\"This attached quiz has been updated since you last completed it.\" title=\"This attached quiz has been updated since you last completed it.\" style=\"vertical-align: middle\" />") : "")."</td>\n";
+                                echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
+                                if ($allow_attempt) {
+                                    echo "		<a href=\"javascript: beginQuiz(".$quiz_record["aquiz_id"].")\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";
+                                } else {
+                                    echo "		<span style=\"color: #666666; font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</span>";
+                                }
 
-					echo "<a name=\"event-resources-section\"></a>";
-					echo "<h2 title=\"Event Resources Section\">Event Resources</h2>\n";
-					echo "<div id=\"event-resources-section\">\n";
-					echo "	<div class=\"section-holder\">\n";
-					echo "		<h3>Attached Files</h3><a name=\"event-resources-files\"></a>\n";
-					echo "		<table class=\"tableList\" cellspacing=\"0\" summary=\"List of File Attachments\">\n";
-					echo "		<colgroup>\n";
-					echo "			<col class=\"modified\" />\n";
-					echo "			<col class=\"file-category\" />\n";
-					echo "			<col class=\"title\" />\n";
-					echo "			<col class=\"date\" />\n";
-					echo "		</colgroup>\n";
-					echo "		<thead>\n";
-					echo "			<tr>\n";
-					echo "				<td class=\"modified\">&nbsp;</td>\n";
-					echo "				<td class=\"file-category sortedASC\"><div class=\"noLink\">File Category</div></td>\n";
-					echo "				<td class=\"title\"><div class=\"noLink\">File Title</div></td>\n";
-					echo "				<td class=\"date\">Last Updated</td>\n";
-					echo "			</tr>\n";
-					echo "		</thead>\n";
-					echo "		<tbody>\n";
+                                echo "			<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">\n";
+                                if (((int) $quiz_record["release_date"]) && ($quiz_record["release_date"] > time())) {
+                                    echo "You will be able to attempt this quiz starting <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_date"])."</strong>.<br /><br />";
+                                } elseif (((int) $quiz_record["release_until"]) && ($quiz_record["release_until"] < time())) {
+                                    echo "This quiz was only available until <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>. Please contact a teacher for assistance if required.<br /><br />";
+                                }
 
-					if ($event_files) {
-						foreach ($event_files as $result) {
-							$filename	= $result["file_name"];
-							$parts		= pathinfo($filename);
-							$ext		= $parts["extension"];
+                                echo quiz_generate_description($quiz_record["required"], $quiz_record["quiztype_code"], $quiz_record["quiz_timeout"], $total_questions, $quiz_record["quiz_attempts"], $quiz_record["timeframe"], $quiz_record["require_attendance"], $event_info["course_id"]);
+                                echo "			</div>\n";
 
-							echo "	<tr id=\"file-".$result["efile_id"]."\">\n";
-							echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $result["last_visited"]) ? (((int) $result["last_visited"] >= (int) $result["updated_date"]) ? "<img src=\"".ENTRADA_RELATIVE."/images/accept.png\" width=\"16\" height=\"16\" alt=\"You have already downloaded the latest version.\" title=\"You have already downloaded the latest version.\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/exclamation.png\" width=\"16\" height=\"16\" alt=\"This file has been updated since you have last downloaded it.\" title=\"This file has been updated since you have last downloaded it.\" />") : "")."</td>\n";
-							echo "		<td class=\"file-category\" style=\"vertical-align: top\">".((isset($RESOURCE_CATEGORIES["event"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["event"][$result["file_category"]]) : "Unknown Category")."</td>\n";
-							echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
-							echo "			<img src=\"".ENTRADA_RELATIVE."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />\n";
-							if (((!(int) $result["release_date"]) || ($result["release_date"] <= time())) && ((!(int) $result["release_until"]) || ($result["release_until"] >= time()))) {
-								echo "		<a href=\"".ENTRADA_RELATIVE."/file-event.php?id=".$result["efile_id"]."\" title=\"Click to download ".html_encode($result["file_title"])."\" style=\"font-weight: bold\"".(((int) $result["access_method"]) ? " target=\"_blank\"" : "").">".html_encode($result["file_title"])."</a>";
-							} else {
-								echo "		<span style=\"color: #666666; font-weight: bold\">".html_encode($result["file_title"])."</span>";
-							}
-							echo "			<span class=\"content-small\">(".readable_size($result["file_size"]).")</span>";
-							echo "			<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">\n";
-							if (((int) $result["release_date"]) && ($result["release_date"] > time())) {
-								echo "		This file will be available for downloading <strong>".date(DEFAULT_DATE_FORMAT, $result["release_date"])."</strong>.<br /><br />";
-							} elseif (((int) $result["release_until"]) && ($result["release_until"] < time())) {
-								echo "		This file was only available for download until <strong>".date(DEFAULT_DATE_FORMAT, $result["release_until"])."</strong>. Please contact the primary teacher for assistance if required.<br /><br />";
-							}
-							if (clean_input($result["file_notes"], array("notags", "nows")) != "") {
-								echo "		".trim(strip_selected_tags($result["file_notes"], array("font")))."\n";
-							}
-							echo "			</div>\n";
-							echo "		</td>\n";
-							echo "		<td class=\"date\" style=\"vertical-align: top\">".(((int) $result["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $result["updated_date"]) : "Unknown")."</td>\n";
-							echo "	</tr>\n";
-						}
-					} else {
-						echo "		<tr>\n";
-						echo "			<td colspan=\"4\">\n";
-						echo "				<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no file downloads added to this event.</div>\n";
-						echo "			</td>\n";
-						echo "		</tr>\n";
-					}
-					echo "		</tbody>\n";
-					echo "		</table>\n";
-					echo "	</div>\n";
+                                if ($progress_record) {
+                                    echo "<strong>Your Attempts</strong>";
+                                    echo "<ul class=\"menu\">";
+                                    foreach ($progress_record as $entry) {
+                                        $quiz_start_time	= $entry["updated_date"];
+                                        $quiz_end_time		= (((int) $quiz_record["quiz_timeout"]) ? ($quiz_start_time + ($quiz_record["quiz_timeout"] * 60)) : 0);
 
-					echo "	<div class=\"section-holder\">\n";
-					echo "		<h3>Attached Links</h3><a name=\"event-resources-links\"></a>\n";
-					echo "		<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Linked Resources\">\n";
-					echo "		<colgroup>\n";
-					echo "			<col class=\"modified\" />\n";
-					echo "			<col class=\"title\" />\n";
-					echo "			<col class=\"date\" />\n";
-					echo "		</colgroup>\n";
-					echo "		<thead>\n";
-					echo "			<tr>\n";
-					echo "				<td class=\"modified\">&nbsp;</td>\n";
-					echo "				<td class=\"title sortedASC\"><div class=\"noLink\">Linked Resource</div></td>\n";
-					echo "				<td class=\"date\">Last Updated</td>\n";
-					echo "			</tr>\n";
-					echo "		</thead>\n";
-					echo "		<tbody>\n";
-					if ($event_links) {
-						foreach ($event_links as $result) {
-							echo "	<tr>\n";
-							echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $result["last_visited"]) ? (((int) $result["last_visited"] >= (int) $result["updated_date"]) ? "<img src=\"".ENTRADA_RELATIVE."/images/accept.png\" width=\"16\" height=\"16\" alt=\"You have previously visited this link.\" title=\"You have previously visited this link.\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/exclamation.png\" width=\"16\" height=\"16\" alt=\"An update to this link has been made, please re-visit it.\" title=\"An update to this link has been made, please re-visit it.\" />") : "")."</td>\n";
-							echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
-							if (((!(int) $result["release_date"]) || ($result["release_date"] <= time())) && ((!(int) $result["release_until"]) || ($result["release_until"] >= time()))) {
-								echo "		<a href=\"".ENTRADA_RELATIVE."/link-event.php?id=".$result["elink_id"]."\" title=\"Click to visit ".$result["link"]."\" style=\"font-weight:  bold\" target=\"_blank\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
-							} else {
-								echo "		<span style=\"color: #666666; font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : "Untitled Link")."</span>";
-							}
-							echo "			<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">\n";
-							if (((int) $result["release_date"]) && ($result["release_date"] > time())) {
-								echo "		This link will become accessible <strong>".date(DEFAULT_DATE_FORMAT, $result["release_date"])."</strong>.<br /><br />";
-							} elseif (((int) $result["release_until"]) && ($result["release_until"] < time())) {
-								echo "		This link was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $result["release_until"])."</strong>. Please contact the primary teacher for assistance if required.<br /><br />";
-							}
-							if (clean_input($result["link_notes"], array("notags", "nows")) != "") {
-								echo "		".trim(strip_selected_tags($result["link_notes"], array("font")))."\n";
-							}
-							echo "			</div>\n";
-							echo "		</td>\n";
-							echo "		<td class=\"date\" style=\"vertical-align: top\">".(((int) $result["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $result["updated_date"]) : "Unknown")."</td>\n";
-							echo "	</tr>\n";
-						}
-					} else {
-						echo "		<tr>\n";
-						echo "			<td colspan=\"3\">\n";
-						echo "				<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no linked resources added to this event.</div>\n";
-						echo "			</td>\n";
-						echo "		</tr>\n";
-					}
-					echo "		</tbody>\n";
-					echo "		</table>\n";
-					echo "	</div>\n";
+                                        /**
+                                         * Checking for quizzes that are expired, but still in progress.
+                                         */
+                                        if (($entry["progress_value"] == "inprogress") && ((((int) $quiz_record["release_until"]) && ($quiz_record["release_until"] < time())) || (($quiz_end_time) && (time() > ($quiz_end_time + 30))))) {
+                                            $quiz_progress_array	= array (
+                                                "progress_value" => "expired",
+                                                "quiz_score" => "0",
+                                                "quiz_value" => "0",
+                                                "updated_date" => time(),
+                                                "updated_by" => $ENTRADA_USER->getID()
+                                            );
+                                            if (!$db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "qprogress_id = ".$db->qstr($entry["qprogress_id"]))) {
+                                                application_log("error", "Unable to update the qprogress_id [".$qprogress_id."] to expired. Database said: ".$db->ErrorMsg());
+                                            }
+                                            $entry["progress_value"] = "expired";
+                                        }
 
-					echo "	<div class=\"section-holder\">\n";
-					echo "		<h3>Attached Quizzes</h3><a name=\"event-resources-quizzes\"></a>\n";
-					echo "		<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Attached Quizzes\">\n";
-					echo "		<colgroup>\n";
-					echo "			<col class=\"modified\" />\n";
-					echo "			<col class=\"title\" />\n";
-					echo "			<col class=\"date\" />\n";
-					echo "		</colgroup>\n";
-					echo "		<thead>\n";
-					echo "			<tr>\n";
-					echo "				<td class=\"modified\">&nbsp;</td>\n";
-					echo "				<td class=\"title sortedASC\"><div class=\"noLink\">Quiz Title</div></td>\n";
-					echo "				<td class=\"date\">Quiz Expires</td>\n";
-					echo "			</tr>\n";
-					echo "		</thead>\n";
-					echo "		<tbody>\n";
+                                        switch ($entry["progress_value"]) {
+                                            case "complete" :
+                                                if (($quiz_record["quiztype_code"] == "delayed" && $quiz_record["release_until"] <= time()) || ($quiz_record["quiztype_code"] == "immediate")) {
+                                                    $percentage = ((round(($entry["quiz_score"] / $entry["quiz_value"]), 2)) * 100);
+                                                    echo "<li class=\"".(($percentage >= 60) ? "correct" : "incorrect")."\">";
+                                                    echo	date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> ".$entry["quiz_score"]."/".$entry["quiz_value"]." (".$percentage."%)";
+                                                    echo "	( <a href=\"".ENTRADA_RELATIVE."/quizzes?section=results&amp;id=".$entry["qprogress_id"]."\">review quiz</a> )";
+                                                    echo "</li>";
+                                                } elseif ($quiz_record["quiztype_code"] == "hide") {
+                                                    echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." - <strong>Completed</strong></li>";
+                                                } else {
+                                                    echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> To Be Released ".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</li>";
+                                                }
+                                            break;
+                                            case "expired" :
+                                                echo "<li class=\"incorrect\">".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Expired Attempt</strong>: not completed.</li>";
+                                            break;
+                                            case "inprogress" :
+                                                echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Attempt In Progress</strong> ( <a href=\"".ENTRADA_RELATIVE."/quizzes?section=attempt&amp;id=".$quiz_record["aquiz_id"]."\">continue quiz</a> )</li>";
+                                            break;
+                                            default :
+                                                continue;
+                                            break;
+                                        }
+                                    }
+                                    echo "</ul>";
+                                }
 
-					if ($event_quizzes) {
-						foreach ($event_quizzes as $quiz_record) {
-							$quiz_attempts		= 0;
-							$total_questions	= quiz_count_questions($quiz_record["quiz_id"]);
+                                echo "		</td>\n";
+                                echo "		<td class=\"date\" style=\"vertical-align: top\">".(((int) $quiz_record["release_until"]) ? date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"]) : "No Expiration")."</td>\n";
+                                echo "	</tr>\n";
+                            }
+                        } else {
+                            echo "		<tr>\n";
+                            echo "			<td colspan=\"3\">\n";
+                            echo "				<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There are no online quizzes currently attached to this learning event.</div>\n";
+                            echo "			</td>\n";
+                            echo "		</tr>\n";
+                        }
+                        echo "		</tbody>\n";
+                        echo "		</table>\n";
+                        echo "	</div>\n";
+                        echo "</div>\n";
 
-							$query				= "	SELECT *
-											FROM `quiz_progress`
-											WHERE `aquiz_id` = ".$db->qstr($quiz_record["aquiz_id"])."
-											AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
-							$progress_record	= $db->GetAll($query);
-							if ($progress_record) {
-								$quiz_attempts = count($progress_record);
-							}
+                        echo "<a name=\"event-comments-section\"></a>\n";
+                        echo "<h2 title=\"Event Comments Section\">Discussions &amp; Comments</h2>\n";
+                        echo "<div id=\"event-comments-section\" class=\"section-holder\">\n";
+                        if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
+                            ?>
+                            <div id="notifications-toggle" style="display: inline; padding-top: 4px; width: 100%; text-align: right;"></div>
+                            <br /><br />
+                            <script type="text/javascript">
+                            function promptNotifications(enabled) {
+                                Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications when new comments are made on this event?',
+                                    {
+                                        id:				'requestDialog',
+                                        width:			350,
+                                        height:			75,
+                                        title:			'Notification Confirmation',
+                                        className:		'medtech',
+                                        okLabel:		'Yes',
+                                        cancelLabel:	'No',
+                                        closable:		'true',
+                                        buttonClass:	'btn',
+                                        destroyOnClose:	true,
+                                        ok:				function(win) {
+                                                            new Window(	{
+                                                                            id:				'resultDialog',
+                                                                            width:			350,
+                                                                            height:			75,
+                                                                            title:			'Notification Result',
+                                                                            className:		'medtech',
+                                                                            okLabel:		'close',
+                                                                            buttonClass:	'btn',
+                                                                            resizable:		false,
+                                                                            draggable:		false,
+                                                                            minimizable:	false,
+                                                                            maximizable:	false,
+                                                                            recenterAuto:	true,
+                                                                            destroyOnClose:	true,
+                                                                            url:			'<?php echo ENTRADA_URL."/api/notifications.api.php?record_id=".$EVENT_ID; ?>&content_type=event_discussion&action=edit&active='+(enabled == 1 ? '0' : '1'),
+                                                                            onClose:			function () {
+                                                                                                new Ajax.Updater('notifications-toggle', '<?php echo ENTRADA_URL."/api/notifications.api.php?record_id=".$EVENT_ID; ?>&content_type=event_discussion&action=view');
+                                                                                            }
+                                                                        }
+                                                            ).showCenter();
+                                                            return true;
+                                                        }
+                                    }
+                                );
+                            }
+                            </script>
+                            <?php
+                            $ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?record_id=".$EVENT_ID."&content_type=event_discussion&action=view')";
+                        }
+                        $editable	= false;
+                        $edit_ajax	= array();
+                        if ($event_discussions) {
+                            $i = 0;
+                            foreach ($event_discussions as $result) {
+                                if ($result["proxy_id"] == $ENTRADA_USER->getID()) {
+                                    $editable		= true;
+                                    $edit_ajax[]	= $result["ediscussion_id"];
+                                } else {
+                                    $editable		= false;
+                                }
 
-							$exceeded_attempts	= ((((int) $quiz_record["quiz_attempts"] === 0) || ($quiz_attempts < $quiz_record["quiz_attempts"])) ? false : true);
+                                $poster_name = get_account_data("firstlast", $result["proxy_id"]);
 
-							if (isset($quiz_record["require_attendance"]) && $quiz_record["require_attendance"] && !events_fetch_event_attendance_for_user($EVENT_ID,$ENTRADA_USER->getID())) {
-								$allow_attempt = false;
-							} elseif (((!(int) $quiz_record["release_date"]) || ($quiz_record["release_date"] <= time())) && ((!(int) $quiz_record["release_until"]) || ($quiz_record["release_until"] >= time())) && (!$exceeded_attempts)) {
-								$allow_attempt = true;
-							} else {
-								$allow_attempt = false;
-							}
+                                echo "<div id=\"event_comment_".$result["ediscussion_id"]."\" class=\"discussion\"".(($i % 2) ? " style=\"background-color: #F3F3F3\"" : "").">\n";
+                                echo "	<span class=\"discussion-title\">".html_encode($result["discussion_title"])."</span>".(($editable) ? " ( <span id=\"edit_mode_".$result["ediscussion_id"]."\" style=\"cursor: pointer\">edit</span> )" : "")."<br />\n";
+                                echo "	<div class=\"content-small\"><strong>".get_account_data("firstlast", $result["proxy_id"])."</strong>, ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</div>\n";
+                                echo "	<div class=\"discussion-comment\" id=\"discussion_comment_".$result["ediscussion_id"]."\">".nl2br(html_encode($result["discussion_comment"]))."</div>\n";
+                                echo "</div>\n";
 
-							echo "	<tr id=\"quiz-".$quiz_record["aquiz_id"]."\">\n";
-							echo "		<td class=\"modified\" style=\"vertical-align: top\">".(((int) $quiz_record["last_visited"]) ? (((int) $quiz_record["last_visited"] >= (int) $quiz_record["updated_date"]) ? "<img src=\"".ENTRADA_RELATIVE."/images/checkmark.gif\" width=\"20\" height=\"20\" alt=\"You have previously completed this quiz.\" title=\"You have previously completed this quiz.\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_RELATIVE."/images/exclamation.gif\" width=\"20\" height=\"20\" alt=\"This attached quiz has been updated since you last completed it.\" title=\"This attached quiz has been updated since you last completed it.\" style=\"vertical-align: middle\" />") : "")."</td>\n";
-							echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
-							if ($allow_attempt) {
-								echo "		<a href=\"javascript: beginQuiz(".$quiz_record["aquiz_id"].")\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";
-							} else {
-								echo "		<span style=\"color: #666666; font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</span>";
-							}
+                                $i++;
+                            }
 
-							echo "			<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">\n";
-							if (((int) $quiz_record["release_date"]) && ($quiz_record["release_date"] > time())) {
-								echo "You will be able to attempt this quiz starting <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_date"])."</strong>.<br /><br />";
-							} elseif (((int) $quiz_record["release_until"]) && ($quiz_record["release_until"] < time())) {
-								echo "This quiz was only available until <strong>".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</strong>. Please contact a teacher for assistance if required.<br /><br />";
-							}
-
-							echo quiz_generate_description($quiz_record["required"], $quiz_record["quiztype_code"], $quiz_record["quiz_timeout"], $total_questions, $quiz_record["quiz_attempts"], $quiz_record["timeframe"], $quiz_record["require_attendance"], $event_info["course_id"]);
-							echo "			</div>\n";
-
-							if ($progress_record) {
-								echo "<strong>Your Attempts</strong>";
-								echo "<ul class=\"menu\">";
-								foreach ($progress_record as $entry) {
-									$quiz_start_time	= $entry["updated_date"];
-									$quiz_end_time		= (((int) $quiz_record["quiz_timeout"]) ? ($quiz_start_time + ($quiz_record["quiz_timeout"] * 60)) : 0);
-
-									/**
-									 * Checking for quizzes that are expired, but still in progress.
-									 */
-									if (($entry["progress_value"] == "inprogress") && ((((int) $quiz_record["release_until"]) && ($quiz_record["release_until"] < time())) || (($quiz_end_time) && (time() > ($quiz_end_time + 30))))) {
-										$quiz_progress_array	= array (
-											"progress_value" => "expired",
-											"quiz_score" => "0",
-											"quiz_value" => "0",
-											"updated_date" => time(),
-											"updated_by" => $ENTRADA_USER->getID()
-										);
-										if (!$db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "qprogress_id = ".$db->qstr($entry["qprogress_id"]))) {
-											application_log("error", "Unable to update the qprogress_id [".$qprogress_id."] to expired. Database said: ".$db->ErrorMsg());
-										}
-										$entry["progress_value"] = "expired";
-									}
-
-									switch ($entry["progress_value"]) {
-										case "complete" :
-											if (($quiz_record["quiztype_code"] == "delayed" && $quiz_record["release_until"] <= time()) || ($quiz_record["quiztype_code"] == "immediate")) {
-												$percentage = ((round(($entry["quiz_score"] / $entry["quiz_value"]), 2)) * 100);
-												echo "<li class=\"".(($percentage >= 60) ? "correct" : "incorrect")."\">";
-												echo	date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> ".$entry["quiz_score"]."/".$entry["quiz_value"]." (".$percentage."%)";
-												echo "	( <a href=\"".ENTRADA_RELATIVE."/quizzes?section=results&amp;id=".$entry["qprogress_id"]."\">review quiz</a> )";
-												echo "</li>";
-											} elseif ($quiz_record["quiztype_code"] == "hide") {
-												echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." - <strong>Completed</strong></li>";
-											} else {
-												echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Score:</strong> To Be Released ".date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"])."</li>";
-											}
-										break;
-										case "expired" :
-											echo "<li class=\"incorrect\">".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Expired Attempt</strong>: not completed.</li>";
-										break;
-										case "inprogress" :
-											echo "<li>".date(DEFAULT_DATE_FORMAT, $entry["updated_date"])." <strong>Attempt In Progress</strong> ( <a href=\"".ENTRADA_RELATIVE."/quizzes?section=attempt&amp;id=".$quiz_record["aquiz_id"]."\">continue quiz</a> )</li>";
-										break;
-										default :
-											continue;
-										break;
-									}
-								}
-								echo "</ul>";
-							}
-
-							echo "		</td>\n";
-							echo "		<td class=\"date\" style=\"vertical-align: top\">".(((int) $quiz_record["release_until"]) ? date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"]) : "No Expiration")."</td>\n";
-							echo "	</tr>\n";
-						}
-					} else {
-						echo "		<tr>\n";
-						echo "			<td colspan=\"3\">\n";
-						echo "				<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There are no online quizzes currently attached to this learning event.</div>\n";
-						echo "			</td>\n";
-						echo "		</tr>\n";
-					}
-					echo "		</tbody>\n";
-					echo "		</table>\n";
-					echo "	</div>\n";
-					echo "</div>\n";
-
-					echo "<a name=\"event-comments-section\"></a>\n";
-					echo "<h2 title=\"Event Comments Section\">Discussions &amp; Comments</h2>\n";
-					echo "<div id=\"event-comments-section\" class=\"section-holder\">\n";
-					if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
-						?>
-						<div id="notifications-toggle" style="display: inline; padding-top: 4px; width: 100%; text-align: right;"></div>
-						<br /><br />
-						<script type="text/javascript">
-						function promptNotifications(enabled) {
-							Dialog.confirm('Do you really wish to '+ (enabled == 1 ? "stop" : "begin") +' receiving notifications when new comments are made on this event?',
-								{
-									id:				'requestDialog',
-									width:			350,
-									height:			75,
-									title:			'Notification Confirmation',
-									className:		'medtech',
-									okLabel:		'Yes',
-									cancelLabel:	'No',
-									closable:		'true',
-									buttonClass:	'btn',
-									destroyOnClose:	true,
-									ok:				function(win) {
-														new Window(	{
-																		id:				'resultDialog',
-																		width:			350,
-																		height:			75,
-																		title:			'Notification Result',
-																		className:		'medtech',
-																		okLabel:		'close',
-																		buttonClass:	'btn',
-																		resizable:		false,
-																		draggable:		false,
-																		minimizable:	false,
-																		maximizable:	false,
-																		recenterAuto:	true,
-																		destroyOnClose:	true,
-																		url:			'<?php echo ENTRADA_URL."/api/notifications.api.php?record_id=".$EVENT_ID; ?>&content_type=event_discussion&action=edit&active='+(enabled == 1 ? '0' : '1'),
-																		onClose:			function () {
-																							new Ajax.Updater('notifications-toggle', '<?php echo ENTRADA_URL."/api/notifications.api.php?record_id=".$EVENT_ID; ?>&content_type=event_discussion&action=view');
-																						}
-																	}
-														).showCenter();
-														return true;
-													}
-								}
-							);
-						}
-						</script>
-						<?php
-						$ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?record_id=".$EVENT_ID."&content_type=event_discussion&action=view')";
-					}
-					$editable	= false;
-					$edit_ajax	= array();
-					if ($event_discussions) {
-						$i = 0;
-						foreach ($event_discussions as $result) {
-							if ($result["proxy_id"] == $ENTRADA_USER->getID()) {
-								$editable		= true;
-								$edit_ajax[]	= $result["ediscussion_id"];
-							} else {
-								$editable		= false;
-							}
-
-							$poster_name = get_account_data("firstlast", $result["proxy_id"]);
-
-							echo "<div id=\"event_comment_".$result["ediscussion_id"]."\" class=\"discussion\"".(($i % 2) ? " style=\"background-color: #F3F3F3\"" : "").">\n";
-							echo "	<span class=\"discussion-title\">".html_encode($result["discussion_title"])."</span>".(($editable) ? " ( <span id=\"edit_mode_".$result["ediscussion_id"]."\" style=\"cursor: pointer\">edit</span> )" : "")."<br />\n";
-							echo "	<div class=\"content-small\"><strong>".get_account_data("firstlast", $result["proxy_id"])."</strong>, ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</div>\n";
-							echo "	<div class=\"discussion-comment\" id=\"discussion_comment_".$result["ediscussion_id"]."\">".nl2br(html_encode($result["discussion_comment"]))."</div>\n";
-							echo "</div>\n";
-
-							$i++;
-						}
-
-						if ((@is_array($edit_ajax)) && (@count($edit_ajax))) {
-							echo "<script type=\"text/javascript\">\n";
-							foreach ($edit_ajax as $discussion_id) {
-								echo "var editor_".$discussion_id." = new Ajax.InPlaceEditor('discussion_comment_".$discussion_id."', '".ENTRADA_RELATIVE."/api/discussions.api.php', { rows: 7, cols: 75, okText: \"Save Changes\", cancelText: \"Cancel Changes\", externalControl: \"edit_mode_".$discussion_id."\", callback: function(form, value) { return 'action=edit&sid=".session_id()."&id=".$discussion_id."&discussion_comment='+escape(value) } });\n";
-							}
-							echo "</script>\n";
-						}
-					} else {
-						echo "<div class=\"content-small\">There are no comments or discussions on this event. <strong>Start a conversation</strong>, leave your comment below.</div>\n";
-					}
-					echo "	<br /><br />";
-					echo "	<form action=\"".ENTRADA_RELATIVE."/discussions?action=add".(($USE_QUERY) ? "&amp;".((isset($_GET["drid"])) ? "drid" : "rid")."=".$EVENT_ID : "")."\" method=\"post\">\n";
-					echo "		<input type=\"hidden\" name=\"event_id\" value=\"".$EVENT_ID."\" />\n";
-					echo "		<label for=\"discussion_comment\" class=\"content-subheading\">Leave a Comment</label>\n";
-					echo "		<div class=\"content-small\">Posting comment as <strong>".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]."</strong></div>\n";
-					echo "		<textarea id=\"discussion_comment\" name=\"discussion_comment\" cols=\"85\" rows=\"10\" style=\"width: 100%; height: 135px\"></textarea>\n";
-					echo "		<div style=\"text-align: right; padding-top: 8px\"><input type=\"submit\" class=\"btn btn-primary\" value=\"Submit\" /></div>\n";
-					echo "	</form>\n";
-					echo "</div>\n";
-
+                            if ((@is_array($edit_ajax)) && (@count($edit_ajax))) {
+                                echo "<script type=\"text/javascript\">\n";
+                                foreach ($edit_ajax as $discussion_id) {
+                                    echo "var editor_".$discussion_id." = new Ajax.InPlaceEditor('discussion_comment_".$discussion_id."', '".ENTRADA_RELATIVE."/api/discussions.api.php', { rows: 7, cols: 75, okText: \"Save Changes\", cancelText: \"Cancel Changes\", externalControl: \"edit_mode_".$discussion_id."\", callback: function(form, value) { return 'action=edit&sid=".session_id()."&id=".$discussion_id."&discussion_comment='+escape(value) } });\n";
+                                }
+                                echo "</script>\n";
+                            }
+                        } else {
+                            echo "<div class=\"content-small\">There are no comments or discussions on this event. <strong>Start a conversation</strong>, leave your comment below.</div>\n";
+                        }
+                        echo "	<br /><br />";
+                        echo "	<form action=\"".ENTRADA_RELATIVE."/discussions?action=add".(($USE_QUERY) ? "&amp;".((isset($_GET["drid"])) ? "drid" : "rid")."=".$EVENT_ID : "")."\" method=\"post\">\n";
+                        echo "		<input type=\"hidden\" name=\"event_id\" value=\"".$EVENT_ID."\" />\n";
+                        echo "		<label for=\"discussion_comment\" class=\"content-subheading\">Leave a Comment</label>\n";
+                        echo "		<div class=\"content-small\">Posting comment as <strong>".$_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]."</strong></div>\n";
+                        echo "		<textarea id=\"discussion_comment\" name=\"discussion_comment\" class=\"expandable span12\"></textarea>\n";
+                        echo "		<div style=\"text-align: right; padding-top: 8px\"><input type=\"submit\" class=\"btn btn-primary\" value=\"Post Comment\" /></div>\n";
+                        echo "	</form>\n";
+                        echo "</div>\n";
+                        ?>
+                    </div>
+                    <?php
 					/**
 					 * Sidebar item that will provide the links to the different sections within this page.
 					 */
@@ -1051,7 +1053,6 @@ if ($topic_results) { ?>
 					$sidebar_html .= "</ul>\n";
 
 					new_sidebar_item("Page Anchors", $sidebar_html, "page-anchors", "open", "1.9");
-
 				} else {
 					$ERROR++;
 					$ERRORSTR[] = "You are not permitted to access this event. This error has been logged.";

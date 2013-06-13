@@ -244,9 +244,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										?>
 										<div class="modal-dialog" id="link-edit-wizard-<?php echo $ELINK_ID; ?>">
 											<div id="wizard">
-												<div id="header">
-													<span class="content-heading" style="color: #FFFFFF">Link Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Editing</strong> <?php echo html_encode($PROCESSED["link_title"]); ?></span>
-												</div>
+												<h3 class="border-below">Link Wizard <span class="content-small space-left large"><strong>Editing</strong> <?php echo html_encode($PROCESSED["link_title"]); ?></span></h3>
 												<div id="body">
 													<h2>Link Updated Successfully</h2>
 		
@@ -278,9 +276,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										<div class="modal-dialog" id="link-edit-wizard-<?php echo $ELINK_ID; ?>">
 											<div id="wizard">
 												<form id="wizard-form" target="upload-frame" action="<?php echo ENTRADA_URL; ?>/api/link-wizard-event.api.php?action=edit&amp;id=<?php echo $EVENT_ID; ?>&amp;lid=<?php echo $ELINK_ID; ?>&amp;step=2" method="post" style="display: inline">
-												<div id="header">
-													<span class="content-heading" style="color: #FFFFFF">Link Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Editing</strong> <?php echo html_encode($PROCESSED["link_title"]); ?></span>
-												</div>
+												<h3 class="border-below">Link Wizard <span class="content-small space-left large"><strong>Editing</strong> <?php echo html_encode($PROCESSED["link_title"]); ?></span></h3>
 												<div id="body">
 													<h2 id="step-title"></h2>
 													<div id="step1" style="display: none">
@@ -521,9 +517,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								?>
 								<div class="modal-dialog" id="link-add-wizard">
 									<div id="wizard">
-										<div id="header">
-											<span class="content-heading" style="color: #FFFFFF">Link Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Adding</strong> new event link</span>
-										</div>
+                                        <h3 class="border-below">Link Wizard <span class="content-small space-left large"><strong>Adding</strong> new event link</span></h3>
 										<div id="body">
 											<h2>Link Added Successfully</h2>
 		
@@ -555,9 +549,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								<div class="modal-dialog" id="link-add-wizard">
 									<div id="wizard">
 										<form id="wizard-form" target="upload-frame" action="<?php echo ENTRADA_URL; ?>/api/link-wizard-event.api.php?action=add&amp;id=<?php echo $EVENT_ID; ?>&amp;step=2" method="post" style="display: inline">
-										<div id="header">
-											<span class="content-heading" style="color: #FFFFFF">Link Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Adding</strong> new event link</span>
-										</div>
+										<h3 class="border-below">Link Wizard <span class="content-small space-left large"><strong>Adding</strong> new event link</span></h3>
 										<div id="body">
 											<h2 id="step-title"></h2>
 											<div id="step1" style="display: none">

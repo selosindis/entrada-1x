@@ -316,9 +316,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
 						?>
 						<div class="modal-dialog" id="file-add-wizard">
 							<div id="wizard">
-								<div id="header">
-									<span class="content-heading" style="color: #FFFFFF">Podcast Upload Wizard</span>
-								</div>
+                                <h3 class="border-below">Podcast Upload Wizard</h3>
 								<div id="body">
 									<h2>Podcast Added Successfully</h2>
 		
@@ -346,9 +344,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!(bool) $_SESSION["isAuthorized"])) {
 							<div id="wizard">
 								<form target="upload-frame" id="wizard-form" action="<?php echo ENTRADA_URL; ?>/api/file-wizard-podcast.api.php?id=<?php echo $EVENT_ID; ?>&amp;step=2" method="post" enctype="multipart/form-data" style="display: inline">
 								<input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo MAX_UPLOAD_FILESIZE; ?>" />
-								<div id="header">
-									<span class="content-heading" style="color: #FFFFFF">Podcast Upload Wizard</span>
-								</div>
+                                <h3 class="border-below">Podcast Upload Wizard</h3>
 								<div id="body">
 									<h2 id="step-title">Adding new podcast file</h2>
 									<div id="step1">

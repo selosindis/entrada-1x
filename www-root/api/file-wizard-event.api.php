@@ -408,9 +408,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										?>
 										<div class="modal-dialog" id="file-edit-wizard-<?php echo $EFILE_ID; ?>">
 											<div id="wizard">
-												<div id="header">
-													<span class="content-heading" style="color: #FFFFFF">File Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Editing</strong> <?php echo html_encode($PROCESSED["file_title"]); ?></span>
-												</div>
+												<h3 class="border-below">File Wizard <span class="content-small space-left large"><strong>Editing</strong> <?php echo html_encode($PROCESSED["file_title"]); ?></span></h3>
 												<div id="body">
 													<h2>File Updated Successfully</h2>
 		
@@ -454,9 +452,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											<div id="wizard">
 												<form id="wizard-form" target="upload-frame" action="<?php echo ENTRADA_URL; ?>/api/file-wizard-event.api.php?action=edit&amp;id=<?php echo $EVENT_ID; ?>&amp;fid=<?php echo $EFILE_ID; ?>&amp;step=2" method="post" enctype="multipart/form-data" style="display: inline">
 												<input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo MAX_UPLOAD_FILESIZE; ?>" />
-												<div id="header">
-													<span class="content-heading" style="color: #FFFFFF">File Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Editing</strong> <?php echo html_encode($PROCESSED["file_title"]); ?></span>
-												</div>
+												<h3 class="border-below">File Wizard <span class="content-small space-left large"><strong>Editing</strong> <?php echo html_encode($PROCESSED["file_title"]); ?></span></h3>
 												<div id="body">
 													<h2 id="step-title"></h2>
 													<div id="step1" style="display: none">
@@ -891,9 +887,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 								?>
 								<div class="modal-dialog" id="file-add-wizard">
 									<div id="wizard">
-										<div id="header">
-											<span class="content-heading" style="color: #FFFFFF">File Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Adding</strong> new event file</span>
-										</div>
+										<h3 class="border-below">File Wizard <span class="content-small space-left large"><strong>Adding</strong> new event file</span></h3>
 										<div id="body">
 											<h2>File Added Successfully</h2>
 		
@@ -937,9 +931,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 									<div id="wizard">
 										<form id="wizard-form" target="upload-frame" action="<?php echo ENTRADA_URL; ?>/api/file-wizard-event.api.php?action=add&amp;id=<?php echo $EVENT_ID; ?>&amp;step=2" method="post" enctype="multipart/form-data" style="display: inline">
 										<input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo MAX_UPLOAD_FILESIZE; ?>" />
-										<div id="header">
-											<span class="content-heading" style="color: #FFFFFF">File Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Adding</strong> new event file</span>
-										</div>
+										<h3 class="border-below">File Wizard <span class="content-small space-left large"><strong>Adding</strong> new event file</span></h3>
 										<div id="body">
 											<h2 id="step-title"></h2>
 											<div id="step1" style="display: none">

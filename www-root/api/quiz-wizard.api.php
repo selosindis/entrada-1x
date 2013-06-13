@@ -414,9 +414,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												?>
 												<div class="modal-dialog" id="quiz-wizard">
 													<div id="wizard">
-														<div id="header">
-															<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Updating</strong> attached event quiz</span>
-														</div>
+                                                        <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Updating</strong> attached event quiz</span></h3>
 														<div id="body">
 															<h2>Quiz Updated Successfully</h2>
 
@@ -449,9 +447,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													}
 													?>
 													<div id="wizard">
-														<div id="header">
-															<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Updating</strong> attached event quiz</span>
-														</div>
+                                                        <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Updating</strong> attached event quiz</span></h3>
 														<div id="body">
 															<h2>Failed To Update Attached Quiz</h2>
 															<?php
@@ -501,9 +497,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												}
 												?>
 												<div id="wizard">
-													<div id="header">
-														<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Updating</strong> attached event quiz</span>
-													</div>
+                                                    <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Updating</strong> attached event quiz</span></h3>
 													<div id="body">
 														<h2>Step 3: Quiz Availability</h2>
 														<?php
@@ -580,9 +574,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												}
 												?>
 												<div id="wizard">
-													<div id="header">
-														<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Updating</strong> attached event quiz</span>
-													</div>
+                                                    <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Updating</strong> attached event quiz</span></h3>
 													<div id="body">
 														<h2>Step 2: Choose Quiz Options</h2>
 														<?php
@@ -668,9 +660,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												}
 												?>
 												<div id="wizard">
-													<div id="header">
-														<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Updating</strong> attached event quiz</span>
-													</div>
+                                                    <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Updating</strong> attached event quiz</span></h3>
 													<div id="body">
 														<h2>Step 1: Basic Quiz Information</h2>
 														<?php
@@ -987,9 +977,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										?>
 										<div class="modal-dialog" id="quiz-wizard">
 											<div id="wizard">
-												<div id="header">
-													<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Attaching</strong> new event quiz</span>
-												</div>
+                                                <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Attaching</strong> new event quiz</span></h3>
 												<div id="body">
 													<h2>Quiz Attached Successfully</h2>
 
@@ -1022,9 +1010,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											}
 											?>
 											<div id="wizard">
-												<div id="header">
-													<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Attaching</strong> new event quiz</span>
-												</div>
+                                                <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Attaching</strong> new event quiz</span></h3>
 												<div id="body">
 													<h2>Failed To Attach Quiz</h2>
 													<?php
@@ -1074,9 +1060,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 										?>
 										<div id="wizard">
-											<div id="header">
-												<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Attaching</strong> new event quiz</span>
-											</div>
+                                            <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Attaching</strong> new event quiz</span></h3>
 											<div id="body">
 												<h2>Step 4: Quiz Availability</h2>
 												<?php
@@ -1157,9 +1141,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 										?>
 										<div id="wizard">
-											<div id="header">
-												<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Attaching</strong> new event quiz</span>
-											</div>
+                                            <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Attaching</strong> new event quiz</span></h3>
 											<div id="body">
 												<h2>Step 3: Choose Quiz Options</h2>
 												<?php
@@ -1243,9 +1225,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 										?>
 										<div id="wizard">
-											<div id="header">
-												<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Attaching</strong> new event quiz</span>
-											</div>
+                                            <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Attaching</strong> new event quiz</span></h3>
 											<div id="body">
 												<h2>Step 2: Basic Quiz Information</h2>
 												<?php
@@ -1308,9 +1288,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											}
 											?>
 											<div id="wizard">
-												<div id="header">
-													<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Attaching</strong> new event quiz</span>
-												</div>
+                                                <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Attaching</strong> new event quiz</span></h3>
 												<div id="body">
 													<h2>Step 1: Select Quiz</h2>
 													<?php
@@ -1370,9 +1348,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										?>
 										<div class="modal-dialog" id="quiz-wizard">
 											<div id="wizard">
-												<div id="header">
-													<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Attaching</strong> new event quiz</span>
-												</div>
+                                                <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Attaching</strong> new event quiz</span></h3>
 												<div id="body" style="margin-top: 25px">
 													<?php
 													$NOTICE++;
@@ -1779,9 +1755,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												?>
 												<div class="modal-dialog" id="quiz-wizard">
 													<div id="wizard">
-														<div id="header">
-															<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Updating</strong> attached community page quiz</span>
-														</div>
+                                                        <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Updating</strong> attached community page quiz</span></h3>
 														<div id="body">
 															<h2>Quiz Updated Successfully</h2>
 
@@ -1814,9 +1788,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 													}
 													?>
 													<div id="wizard">
-														<div id="header">
-															<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Updating</strong> attached community page quiz</span>
-														</div>
+                                                        <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Updating</strong> attached community page quiz</span></h3>
 														<div id="body">
 															<h2>Failed To Update Attached Quiz</h2>
 															<?php
@@ -1866,9 +1838,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												}
 												?>
 												<div id="wizard">
-													<div id="header">
-														<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Updating</strong> attached community page quiz</span>
-													</div>
+                                                    <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Updating</strong> attached community page quiz</span></h3>
 													<div id="body">
 														<h2>Step 3: Quiz Availability</h2>
 														<?php
@@ -1924,9 +1894,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												}
 												?>
 												<div id="wizard">
-													<div id="header">
-														<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Updating</strong> attached community page quiz</span>
-													</div>
+                                                    <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Updating</strong> attached community page quiz</span></h3>
 													<div id="body">
 														<h2>Step 2: Choose Quiz Options</h2>
 														<?php
@@ -2011,9 +1979,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 												}
 												?>
 												<div id="wizard">
-													<div id="header">
-														<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Updating</strong> attached community page quiz</span>
-													</div>
+                                                    <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Updating</strong> attached community page quiz</span></h3>
 													<div id="body">
 														<h2>Step 1: Basic Quiz Information</h2>
 														<?php
@@ -2321,9 +2287,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										?>
 										<div class="modal-dialog" id="quiz-wizard">
 											<div id="wizard">
-												<div id="header">
-													<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Attaching</strong> new community page quiz</span>
-												</div>
+                                                <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Attaching</strong> new community page quiz</span></h3>
 												<div id="body">
 													<h2>Quiz Attached Successfully</h2>
 
@@ -2356,9 +2320,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											}
 											?>
 											<div id="wizard">
-												<div id="header">
-													<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Attaching</strong> new community page quiz</span>
-												</div>
+                                                <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Attaching</strong> new community page quiz</span></h3>
 												<div id="body">
 													<h2>Failed To Attach Quiz</h2>
 													<?php
@@ -2408,9 +2370,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 										?>
 										<div id="wizard">
-											<div id="header">
-												<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Attaching</strong> new community page quiz</span>
-											</div>
+                                            <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Attaching</strong> new community page quiz</span></h3>
 											<div id="body">
 												<h2>Step 4: Quiz Availability</h2>
 												<?php
@@ -2466,9 +2426,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 										?>
 										<div id="wizard">
-											<div id="header">
-												<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Attaching</strong> new community page quiz</span>
-											</div>
+                                            <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Attaching</strong> new community page quiz</span></h3>
 											<div id="body">
 												<h2>Step 3: Choose Quiz Options</h2>
 												<?php
@@ -2552,9 +2510,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										}
 										?>
 										<div id="wizard">
-											<div id="header">
-												<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Attaching</strong> new community page quiz</span>
-											</div>
+                                            <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Attaching</strong> new community page quiz</span></h3>
 											<div id="body">
 												<h2>Step 2: Basic Quiz Information</h2>
 												<?php
@@ -2617,9 +2573,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 											}
 											?>
 											<div id="wizard">
-												<div id="header">
-													<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Attaching</strong> new community page quiz</span>
-												</div>
+                                                <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Attaching</strong> new community page quiz</span></h3>
 												<div id="body">
 													<h2>Step 1: Select Quiz</h2>
 													<?php
@@ -2679,9 +2633,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 										?>
 										<div class="modal-dialog" id="quiz-wizard">
 											<div id="wizard">
-												<div id="header">
-													<span class="content-heading" style="color: #FFFFFF">Quiz Wizard</span> <span style="font-size: 11px; color: #FFFFFF"><strong>Attaching</strong> new community page quiz</span>
-												</div>
+                                                <h3 class="border-below">Quiz Wizard <span class="content-small space-left large"><strong>Attaching</strong> new community page quiz</span></h3>
 												<div id="body" style="margin-top: 25px">
 													<?php
 													$NOTICE++;

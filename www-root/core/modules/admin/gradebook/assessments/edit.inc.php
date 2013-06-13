@@ -686,7 +686,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                  LEFT JOIN `assessment_quiz_questions` AS d
                                                  ON a.`assessment_id` = d.`assessment_id`
                                                  AND c.`qquestion_id` = d.`qquestion_id`
-                                                 AND aq.`aquiz_id` = d.`aquiz_id`
                                                  WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
                                                  GROUP BY aq.`aquiz_id`";
                                     $attached_quizzes = $db->GetAll($query);
@@ -1111,7 +1110,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                             //echo $objective["objective_name"].' is '.$objective["mapped"].' and '.$objective["mapped_to_course"]."<br/>";
                                             if ($objective["mapped"] && !$objective["mapped_to_course"]) {
                                                 //may not belong in assessment specific objective list if parent objective is mapped to course
-                                                $response = assessment_objective_parent_mapped_course($objective["objective_id"],$ASSESSMENT_ID);
+                                                $response = assessment_objective_parent_mapped_course($objective["objective_id"], $ASSESSMENT_ID);
                                                 if (!$response) {
                                                     $explicit_assessment_objectives[] = $objective;
                                                 } else {
@@ -1202,7 +1201,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         }
                                         ?>
 
-                                        <div id="assessment-list-wrapper" <?php echo ($explicit_assessment_objectives)?'':' style="display:none;"';?>>
+                                        <div id="assessment-list-wrapper"<?php echo ($explicit_assessment_objectives)? "" : " style=\"display:none;\"";?>>
                                             <a name="assessment-objective-list"></a>
                                             <h2 id="assessment-toggle"  title="Assessment Objective List" class="collapsed list-heading">Assessment Specific Objectives</h2>
                                             <div id="assessment-objective-list">
@@ -1271,10 +1270,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         ?>
                                         </select>
 
-                                    </div>
-                                    <div style="clear:both;"></div>
-                                    <div style="float:right;margin-top:10px;">
-                                        <input type="submit" value="Save"/>
                                     </div>
                                     <div style="clear:both;"></div>
                                 </div>		

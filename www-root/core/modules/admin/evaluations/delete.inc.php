@@ -86,7 +86,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                     $rlt_detail	= $db->GetAll($query);
                                     if (($rlt_detail) && (count($rlt_detail) <= 0)) {
                                             $ERROR++;
-                                            $ERRORSTR[] = "You cannot delete <a href=\"".ENTRADA_URL."/admin/evaluations?section=content&amp;id=".$evaluation_id."\" style=\"font-weight: bold\">".html_encode($result["evaluation_title"])."</a> at this time because there are no evaluation.";
+                                            $ERRORSTR[] = "You cannot delete <a href=\"".ENTRADA_URL."/admin/evaluations?section=edit&amp;id=".$evaluation_id."\" style=\"font-weight: bold\">".html_encode($result["evaluation_title"])."</a> at this time because there are no evaluation.";
                                     } else {
 
 
@@ -182,25 +182,23 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					<form action="<?php echo ENTRADA_URL; ?>/admin/evaluations?section=delete&amp;step=2" method="post">
 					<table class="tableList" cellspacing="0" summary="List of Events">
 					<colgroup>
-                                                <col class="modified" />
-                                                <col class="title" />
-                                                <col class="start" />
-                                                <col class="finish" />
-						<col class="attachment" />
+                        <col class="modified" />
+                        <col class="title" />
+                        <col class="start" />
+                        <col class="finish" />
 					</colgroup>
 					<thead>
 						<tr>
-                                                        <td class="modified">&nbsp;</td>
-                                                        <td>Title</td>
-                                                        <td>Start</td>
-                                                        <td>Finish</td>
-							<td class="attachment" style="font-size: 12px">&nbsp;</td>
+                            <td class="modified">&nbsp;</td>
+                            <td>Title</td>
+                            <td>Start</td>
+                            <td>Finish</td>
 						</tr>
 					</thead>
 					<tfoot>
 						<tr>
 							<td></td>
-							<td colspan="5" style="padding-top: 10px">
+							<td colspan="3" style="padding-top: 10px">
 								<input type="submit" class="btn btn-danger" value="Confirm Removal" />
 							</td>
 						</tr>
@@ -225,12 +223,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							if($administrator) {
 								$url 	= ENTRADA_URL."/admin/evaluations?section=edit&amp;id=".$result["evaluation_id"];
 
-                                                                echo "<tr id=\"evaluation-".$result["evaluation_id"]."\" class=\"evaluation".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
-                                                                echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["evaluation_id"]."\" checked=\"checked\" /></td>\n";
-                                                                echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Title: ".html_encode($result["evaluation_title"])."\">" : "").html_encode($result["evaluation_title"]).(($url) ? "</a>" : "")."</td>\n";
-                                                                echo "	<td class=\"start".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["evaluation_start"]).(($url) ? "</a>" : "")."</td>\n";
-                                                                echo "	<td class=\"finish".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Intended For Phase ".html_encode($result["evaluation_finish"])."\">" : "").date(DEFAULT_DATE_FORMAT, html_encode($result["evaluation_finish"])).(($url) ? "</a>" : "")."</td>\n";
-                                                                echo "	<td class=\"attachment\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/evaluations?section=members&evaluation=".$result["evaluation_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage Event Content\" title=\"Manage Event Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />")."</td>\n";
+                                echo "<tr id=\"evaluation-".$result["evaluation_id"]."\" class=\"evaluation".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
+                                echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["evaluation_id"]."\" checked=\"checked\" /></td>\n";
+                                echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Title: ".html_encode($result["evaluation_title"])."\">" : "").html_encode($result["evaluation_title"]).(($url) ? "</a>" : "")."</td>\n";
+                                echo "	<td class=\"start".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Evaluation Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["evaluation_start"]).(($url) ? "</a>" : "")."</td>\n";
+                                echo "	<td class=\"finish".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Intended For Phase ".html_encode($result["evaluation_finish"])."\">" : "").date(DEFAULT_DATE_FORMAT, html_encode($result["evaluation_finish"])).(($url) ? "</a>" : "")."</td>\n";
 								echo "</tr>\n";
 							}
 						}

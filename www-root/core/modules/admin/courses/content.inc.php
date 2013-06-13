@@ -55,7 +55,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 
 		list($course_objectives,$top_level_id) = courses_fetch_objectives($ORGANISATION_ID,array($COURSE_ID),-1, 1, false, false, 0, true);
-
 		$query			= "	SELECT * FROM `courses`
 							WHERE `course_id` = ".$db->qstr($COURSE_ID)."
 							AND `course_active` = '1'";
@@ -592,6 +591,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
 				}
 				?>
+                <div class="clearfix"></div>
 				<a name="course-resources-section"></a>
 				<h2 title="Course Resources Section"><?php echo $module_singular_name; ?> Resources</h2>
 				<div id="course-resources-section">

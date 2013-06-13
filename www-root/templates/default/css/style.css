@@ -105,6 +105,8 @@ header#main-header .banner{
   border: 0;
   border-top:1px solid rgba(255,255,255,0.1);
   border-bottom:4px solid #d1ceb1;
+  border-left:none;
+  border-right:none;
   -moz-box-shadow:0 -4px 7px rgba(0, 0, 0, 0.075);
   -webkit-box-shadow:0 -4px 7px rgba(0, 0, 0, 0.075);
   box-shadow:0 -4px 7px rgba(0, 0, 0, 0.075);

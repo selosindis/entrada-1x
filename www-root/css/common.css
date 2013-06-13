@@ -1321,7 +1321,7 @@ width:100px;
 border-left:none;
 }
 
-table.tableList tr td.notices,table.tableList tr td.accesses,table.tableList tr td.term{
+table.tableList tr td.notices,table.tableList tr td.accesses,table.tableList tr td.term,table.tableList tr td.grade{
 width:50px;
 border-left:none;
 }
@@ -1372,7 +1372,7 @@ padding-left:5px;
 table.tableList tr td.report-hours.large {
 width:150px;
 }
-table.tableList tr td.region-large {
+table.tableList tr td.region-large, table.tableList tr td.assessment-type {
 width:90px;
 border-left:none;
 overflow:hidden;

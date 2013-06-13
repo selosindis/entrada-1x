@@ -39,7 +39,7 @@ if ($COURSE_ID) {
 	$group_ids = groups_get_enrolled_group_ids($ENTRADA_USER->getId());
 
 	$group_ids_string = implode(', ',$group_ids);
-	$query = "	SELECT b.*, c.*, d.`handler`
+	$query = "	SELECT b.*, c.*, d.`handler`, AVG(e.`value`) as `mean`
 				FROM `courses` AS a
 				JOIN `assessments` AS b
 				ON a.`course_id` = b.`course_id`
@@ -49,10 +49,13 @@ if ($COURSE_ID) {
 				AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 				JOIN `assessment_marking_schemes` AS d
 				ON b.`marking_scheme_id` = d.`id`
+                JOIN `assessment_grades` AS e
+                ON b.`assessment_id` = e.`assessment_id`
 				WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
 				AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
 				AND (b.`release_until` = '0' OR b.`release_until` >= ".$db->qstr(time()).")
 				AND b.`show_learner` = '1'
+                GROUP BY e.`assessment_id`
 				ORDER BY `order` ASC";
 	$results = $db->GetAll($query);
 	if ($results) {
@@ -61,23 +64,40 @@ if ($COURSE_ID) {
 		<table class="tableList" cellspacing="0" summary="List of Assessments">
 			<colgroup>
 				<col class="title" />
-				<col class="general" />
-				<col class="date-small" />
-				<col class="gradebook" />
+				<col class="assessment-type" />
+				<col class="grade" />
+                <?php
+				if (defined("GRADEBOOK_DISPLAY_MEAN_GRADE") && GRADEBOOK_DISPLAY_MEAN_GRADE) {
+                    ?>
+    				<col class="grade" />
+                    <?php
+                }
+                if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
+                    ?>
+                    <col class="grade" />
+                    <?php
+                }
+                ?>
+				<col class="grade" />
 			</colgroup>
 			<thead>
 				<tr>
 					<td class="title borderl<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("title", "Assessment Title", ENTRADA_RELATIVE."/profile/gradebook"); ?></td>
-					<td class="general<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("type", "Assessment Type", ENTRADA_RELATIVE."/profile/gradebook"); ?></td>
-					<td class="date-small">Assessment Mark</td>
-					<?php
-					if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
+					<td class="assessment-type<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("type", "Assessment Type", ENTRADA_RELATIVE."/profile/gradebook"); ?></td>
+					<td class="grade">Mark</td>
+                    <?php
+                    if (defined("GRADEBOOK_DISPLAY_MEAN_GRADE") && GRADEBOOK_DISPLAY_MEAN_GRADE) {
+                        ?>
+                        <td class="grade">Mean Mark</td>
+                        <?php
+                    }
+                    if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
 						?>
-						<td class="date-small">Weighted Mark</td>
+						<td class="grade">Weighted Mark</td>
 						<?php
 					}
 					?>
-					<td class="gradebook">Percent Mark</td>
+					<td class="grade">Percent</td>
 				</tr>
 			</thead>
 			<tbody>
@@ -88,10 +108,18 @@ if ($COURSE_ID) {
 				} else {
 					$grade_value = "-";
 				}
+				if (isset($result["mean"])) {
+					$mean_value = format_retrieved_grade(round($result["mean"], 1), $result);
+				} else {
+					$mean_value = "-";
+				}
 				echo "<tr id=\"gradebook-".$result["course_id"]."\">\n";
 				echo "	<td>".html_encode($result["name"])."</td>\n";
 				echo "	<td>".($result["type"])."</td>\n";
 				echo "	<td>".trim($grade_value).assessment_suffix($result)."</td>\n";
+				if (defined("GRADEBOOK_DISPLAY_MEAN_GRADE") && GRADEBOOK_DISPLAY_MEAN_GRADE) {
+                    echo "	<td>".trim($mean_value).assessment_suffix($result)."</td>\n";
+                }
 				if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
 					$gradebook = gradebook_get_weighted_grades($result["course_id"], $_SESSION["details"]["role"], $ENTRADA_USER->getID(), $result["assessment_id"]);
 					echo "	<td>".trim($gradebook["grade"])." / ".trim($gradebook["total"])."</td>\n";

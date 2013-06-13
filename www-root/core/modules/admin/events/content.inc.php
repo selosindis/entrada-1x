@@ -30,17 +30,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed('eventcontent', 'update', false)) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
+} elseif (!$ENTRADA_ACL->amIAllowed("eventcontent", "update", false)) {
+	$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/eventtypes_list.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	?>
 	<script type="text/javascript">
@@ -732,7 +730,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						}
 						textarea.className = "expandable objective";
 						$('objective_'+id+"_append").insert({after: textarea});
-						setTimeout('new ExpandableTextarea($("objective_text_'+id+'"));', 100);
+                        setTimeout('new ExpandableTextarea($("objective_text_'+id+'"));', 100);
 					} else {
 						if ($('objective_text_'+id)) {
 							text[id] = $('objective_text_'+id).value;
@@ -1025,51 +1023,52 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<p class="well well-small content-small">
 							<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left and it will be mapped to the event.
 						</p>
-					<?php
+                        <?php
 						if ($hierarchical_objectives) {
-							//function loads bottom leaves and displays them
+							// function loads bottom leaves and displays them
 							event_objectives_display_leafs($hierarchical_objectives,$COURSE_ID,$EVENT_ID);
 				 		}
-				 		if($flat_objectives){
-				 		?>
-				 		<div id="clinical-list-wrapper">
-							<a name="clinical-objective-list"></a>
-							<h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed list-heading">Other Objectives</h2>
-							<div id="clinical-objective-list">
-								<ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
-								<?php
-									if ($flat_objectives) {
-										foreach($flat_objectives as $objective){
-												$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
-											?>
-									<li class = "mapped-objective"
-										id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-										data-id = "<?php echo $objective["objective_id"]; ?>"
-										data-title="<?php echo $title;?>"
-										data-description="<?php echo htmlentities($objective["objective_description"]);?>">
-										<strong><?php echo $title; ?></strong>
-										<div class="objective-description">
-											<?php
-											$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
-											if ($set) {
-												echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
-											}
-											?>
-											<?php echo $objective["objective_description"];?>
-										</div>
+				 		if ($flat_objectives) {
+                            ?>
+                            <div id="clinical-list-wrapper">
+                                <a name="clinical-objective-list"></a>
+                                <h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed list-heading">Other Objectives</h2>
+                                <div id="clinical-objective-list">
+                                    <ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
+                                        <?php
+                                        if ($flat_objectives) {
+                                            foreach ($flat_objectives as $objective) {
+                                                $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+                                                ?>
+                                                <li class = "mapped-objective"
+                                                    id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+                                                    data-id = "<?php echo $objective["objective_id"]; ?>"
+                                                    data-title="<?php echo $title;?>"
+                                                    data-description="<?php echo htmlentities($objective["objective_description"]);?>">
+                                                    <strong><?php echo $title; ?></strong>
+                                                    <div class="objective-description">
+                                                        <?php
+                                                        $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+                                                        if ($set) {
+                                                            echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                                                        }
 
-										<div class="event-objective-controls">
-											<input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>
-										</div>
-									</li>
+                                                        echo $objective["objective_description"];
+                                                        ?>
+                                                    </div>
 
-								<?php
-										}
-							 		} ?>
-								</ul>
-							</div>
-						</div>
-						<?php
+                                                    <div class="event-objective-controls">
+                                                        <input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>
+                                                    </div>
+                                                </li>
+                                                <?php
+                                            }
+                                        }
+                                        ?>
+                                    </ul>
+                                </div>
+                            </div>
+                            <?php
 						}
 						?>
 
@@ -1078,69 +1077,70 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<h2 id="event-toggle"  title="Event Objective List" class="collapsed list-heading">Event Specific Objectives</h2>
 							<div id="event-objective-list">
 								<ul class="objective-list mapped-list" id="mapped_event_objectives" data-importance="event">
-								<?php
+                                    <?php
 									if ($explicit_event_objectives) {
-										foreach($explicit_event_objectives as $objective){
-												$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+										foreach ($explicit_event_objectives as $objective) {
+											$title = ($objective["objective_code"] ? $objective["objective_code"] . ': ' . $objective["objective_name"] : $objective["objective_name"]);
 											?>
-									<li class = "mapped-objective"
-										id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-										data-id = "<?php echo $objective["objective_id"]; ?>"
-										data-title="<?php echo $title;?>"
-										data-description="<?php echo htmlentities($objective["objective_description"]);?>"
-										data-mapped="<?php echo $objective["mapped_to_course"]?1:0;?>">
-										<strong><?php echo $title; ?></strong>
-										<div class="objective-description">
-											<?php
-											$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
-											if ($set) {
-												echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
-											}
-											?>
-											<?php echo $objective["objective_description"];?>
-										</div>
+                                            <li class = "mapped-objective"
+                                                id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+                                                data-id = "<?php echo $objective["objective_id"]; ?>"
+                                                data-title="<?php echo $title;?>"
+                                                data-description="<?php echo htmlentities($objective["objective_description"]);?>"
+                                                data-mapped="<?php echo $objective["mapped_to_course"]?1:0;?>">
+                                                <strong><?php echo $title; ?></strong>
+                                                <div class="objective-description">
+                                                    <?php
+                                                    $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+                                                    if ($set) {
+                                                        echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                                                    }
 
-										<div class="event-objective-controls">
-											<img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
-													class="objective-remove list-cancel-image"
-													id="objective_remove_<?php echo $objective["objective_id"];?>"
-													data-id="<?php echo $objective["objective_id"];?>">
-										</div>
-									</li>
+                                                    echo $objective["objective_description"];
+                                                    ?>
+                                                </div>
 
-								<?php
+                                                <div class="event-objective-controls">
+                                                    <img 	src="<?php echo ENTRADA_URL;?>/images/action-delete.gif"
+                                                            class="objective-remove list-cancel-image"
+                                                            id="objective_remove_<?php echo $objective["objective_id"];?>"
+                                                            data-id="<?php echo $objective["objective_id"];?>">
+                                                </div>
+                                            </li>
+                                            <?php
 										}
-							 		} ?>
+							 		}
+                                    ?>
 								</ul>
 							</div>
 						</div>
 						<select id="checked_objectives_select" name="checked_objectives[]" multiple="multiple" style="display:none;">
-						<?php
+                            <?php
 							if ($mapped_event_objectives) {
-								foreach($mapped_event_objectives as $objective){
-									if($objective["objective_type"] == "course") {
-									?>
-									<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-									<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
-								<?php
+								foreach ($mapped_event_objectives as $objective) {
+									if ($objective["objective_type"] == "course") {
+                                        $title = ($objective["objective_code"] ? $objective["objective_code"] . ': ' . $objective["objective_name"] : $objective["objective_name"]);
+                                        ?>
+                                        <option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+                                        <?php
 									}
 								}
 							}
-						?>
+                            ?>
 						</select>
 						<select id="clinical_objectives_select" name="clinical_presentations[]" multiple="multiple" style="display:none;">
-						<?php
+                            <?php
 							if ($mapped_event_objectives) {
 								foreach($mapped_event_objectives as $objective){
 									if($objective["objective_type"] == "event") {
-									?>
-									<?php $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]); ?>
-									<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
-								<?php
+    									$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+                                        ?>
+            							<option value = "<?php echo $objective["objective_id"]; ?>" selected="selected"><?php echo $title; ?></option>
+                                        <?php
 									}
 								}
 							}
-						?>
+                            ?>
 						</select>
 
 					</div>

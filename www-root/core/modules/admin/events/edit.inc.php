@@ -698,8 +698,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						if ($organisation_results) {
 							$organisations = array();
 							foreach ($organisation_results as $result) {
-								if ($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'create')) {
-									$organisation_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
+                                if ($ENTRADA_ACL->amIAllowed("resourceorganisation".$result["organisation_id"], "create")) {
+									$organisation_categories[$result["organisation_id"]] = array("text" => $result["organisation_title"], "value" => "organisation_".$result["organisation_id"], "category"=>true);
 								}
 							}
 						}
@@ -755,9 +755,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</div>
 						<div class="control-group">
 							<table>
-								<tr>
-									<?php echo generate_calendars("event", "Event Date & Time", true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
-								</tr>
+								<?php echo generate_calendars("event", "Event Date & Time", true, true, ((isset($PROCESSED["event_start"])) ? $PROCESSED["event_start"] : 0)); ?>
 							</table>
 						</div>
 						<div class="control-group">
@@ -917,28 +915,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<h2>Time Release Options</h2>
 						<div class="control-group">
 							<table>
-								<tr>
-									<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-								</tr>
+								<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
 							</table>
 						</div>
 						<div class="control-group">
-							<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events<?php echo (($is_draft) ? "/drafts?section=edit&draft_id=".$event_info["draft_id"] : "" ); ?>'" />
-							<?php if (!$is_draft) { ?>
-							<div class="pull-right">
-								<span class="content-small">After saving:</span>
-														<select id="post_action" name="post_action">
-															<option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Add content to event</option>
-															<option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another event</option>
-															<option value="copy"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "copy") ? " selected=\"selected\"" : ""); ?>>Add a copy of this event</option>
-															<option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to event list</option>
-														</select><?php } else { ?>
-														<input type="hidden" id="post_action" name="post_action" value="draft" />
-														<?php } ?>
-														<input type="submit" class="btn btn-primary" value="Save" />
+                            <a class="btn" href="<?php echo ENTRADA_RELATIVE; ?>/admin/events<?php echo (($is_draft) ? "/drafts?section=edit&draft_id=".$event_info["draft_id"] : "" ); ?>">Cancel</a>
+                            <div class="pull-right">
+                                <?php
+                                if (!$is_draft) {
+                                    ?>
+                                    <span class="content-small">After saving:</span>
+                                    <select id="post_action" name="post_action">
+                                        <option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Add content to this event</option>
+                                        <option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add a new event</option>
+                                        <option value="copy"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "copy") ? " selected=\"selected\"" : ""); ?>>Duplicate this event</option>
+                                        <option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to Manage Events</option>
+                                    </select>
+                                    <?php
+                                } else {
+                                    ?>
+                                    <input type="hidden" id="post_action" name="post_action" value="draft" />
+                                    <?php
+                                }
+                                ?>
+                                <input type="submit" class="btn btn-primary" value="Save" />
 							</div>
 						</div>
-
 						</form>
 
 						<script type="text/javascript">

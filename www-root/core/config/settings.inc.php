@@ -491,7 +491,7 @@ $MODULES["clerkship"] = array("title" => "Manage Clerkship", "resource" => "cler
 $MODULES["courses"] = array("title" => "Manage Courses", "resource"=> "coursecontent", "permission" => "update");
 $MODULES["evaluations"] = array("title" => "Manage Evaluations", "resource" => "evaluation", "permission" => "update");
 $MODULES["communities"] = array("title" => "Manage Communities", "resource" => "communityadmin", "permission" => "read");
-$MODULES["groups"] = array("title" => "Manage Groups", "resource" => "group", "permission" => "update");
+$MODULES["groups"] = array("title" => "Manage Cohorts", "resource" => "group", "permission" => "update");
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
 $MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
@@ -652,5 +652,5 @@ define("PDF_PASSWORD", "MyPassword");                   // Used to set the owner
 /**
  * Gradebook Settings
  */
-define("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL", 0);          // Used to determine whether or not to include final grade calculations in Grade Export.
-define("GRADEBOOK_DISPLAY_MEAN_GRADE", 0);              // Used to determine whether or not to include mean (average) grade calculations in student gradebook.
+define("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL", 1);          // Used to determine whether or not to include final grade calculations in Grade Export.
+define("GRADEBOOK_DISPLAY_MEAN_GRADE", 1);              // Used to determine whether or not to include mean (average) grade calculations in student gradebook.

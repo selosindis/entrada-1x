@@ -40,7 +40,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 	<h1>Manage Evaluation Forms</h1>
 
     <div style="float: right">
-        <a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/forms?section=add"  class="btn btn-small btn-success pull-right cursor-pointer space-below"><i class="icon-plus icon-white"></i> Create New Evaluation Form</a>
+        <a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/forms?section=add"  class="btn btn-small btn-success pull-right cursor-pointer space-below"><i class="icon-plus-sign icon-white"></i> Create New Evaluation Form</a>
     </div>
 	<div class="clear"></div>
 	<?php

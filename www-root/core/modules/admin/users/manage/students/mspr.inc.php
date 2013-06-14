@@ -192,7 +192,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<h3 title="Contributions to Medical School" class="collapsable<?php echo ($contributions->isAttentionRequired()) ? "" : " collapsed"; ?>">Contributions to Medical School/Student Life</h3>
 			<div id="contributions-to-medical-school">
 				<div id="add_contribution_link" style="float: right;">
-					<a id="add_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=contributions_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add Contribution</a>
+					<a id="add_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=contributions_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Contribution</a>
 				</div>
 				<div class="instructions">
 					<ul>
@@ -378,7 +378,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<h3 title="Critical Enquiry" class="collapsable<?php echo ($critical_enquiry && $critical_enquiry->isAttentionRequired()) ? "" : " collapsed"; ?>">Critical Enquiry</h3>
 			<div id="critical-enquiry">
 				<div id="add_critical_enquiry_link" style="float: right;">
-					<a id="add_critical_enquiry" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>"  class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add Critical Enquiry</a>
+					<a id="add_critical_enquiry" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>"  class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Critical Enquiry</a>
 				</div>
 				<div class="clear">&nbsp;</div>
 				
@@ -474,7 +474,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<h3 title="Community-Based Project" class="collapsable<?php echo ($community_based_project && $community_based_project->isAttentionRequired()) ? "" : " collapsed"; ?>">Community-Based Project</h3>
 			<div id="community-based-project">
 				<div id="add_community_based_project_link" style="float: right;">
-					<a id="add_community_based_project" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=community_based_project_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add Community-Based Project</a>
+					<a id="add_community_based_project" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=community_based_project_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Community-Based Project</a>
 				</div>
 				<div class="clear">&nbsp;</div>
 				
@@ -571,7 +571,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<h3 title="Research" class="collapsable<?php echo ($research_citations->isAttentionRequired()) ? "" : " collapsed"; ?>">Research</h3>
 			<div id="research">
 				<div id="add_research_citation_link" style="float: right;">
-					<a id="add_research_citation" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add Research Citation</a>
+					<a id="add_research_citation" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Research Citation</a>
 				</div>
 				<div class="instructions">
 					<ul>
@@ -639,7 +639,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<h3 title="External Awards" class="collapsable<?php echo ($external_awards->isAttentionRequired()) ? "" : " collapsed"; ?>">External Awards</h3>
 			<div id="external-awards">
 				<div id="add_external_award_link" style="float: right;">
-					<a id="add_external_award" href="#external-awards-section" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add External Award</a>
+					<a id="add_external_award" href="#external-awards-section" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add External Award</a>
 				</div>
 				<div class="instructions">
 					<ul>
@@ -761,7 +761,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<h3 title="Clinical Performance Evaluation Comments Section" class="collapsable collapsed">Clinical Performance Evaluation Comments</h3>
 			<div id="clinical-performance-evaluation-comments-section">
 				<div id="add_clineval_link" style="float: right;">
-					<a id="add_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add Clinical Performance Evaluation Comment</a>
+					<a id="add_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Clinical Performance Evaluation Comment</a>
 				</div>
 				<div class="instructions">
 					<p>Comments should be copied in whole or in part from Clinical Performance Evaluations from the student's clerkship rotations and electives.</p>
@@ -846,7 +846,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 							<td colspan="3" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
 								<input type="submit" class="btn btn-primary" name="action" value="Add" />
 								<div id="hide_clineval_link" style="display:inline-block;">
-									<a id="hide_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Cancel Adding Comment</a>
+									<a id="hide_clineval" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Cancel Adding Comment</a>
 								</div>
 							</td>
 						</tr>
@@ -879,7 +879,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<div id="summer-studentships">
 			
 				<div id="add_studentship_link" style="float: right;">
-					<a id="add_studentship" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=studentship_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add Studentship</a>
+					<a id="add_studentship" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=studentship_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Studentship</a>
 				</div>
 				<div class="clear">&nbsp;</div>
 			
@@ -976,7 +976,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<h3 title="International Activities" class="collapsable collapsed">International Activities</h3>
 			<div id="international-activities">
 				<div id="add_int_act_link" style="float: right;">
-					<a id="add_int_act" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=int_act_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add Activity</a>
+					<a id="add_int_act" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&show=int_act_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Activity</a>
 				</div>
 				<div class="clear">&nbsp;</div>
 				
@@ -1084,7 +1084,7 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<div id="student-run-electives">
 	
 				<div id="add_student_run_elective_link" style="float: right;">
-					<a id="add_student_run_elective" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add Student Run Elective</a>
+					<a id="add_student_run_elective" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Student Run Elective</a>
 				</div>
 				
 				<div class="clear">&nbsp;</div>
@@ -1271,11 +1271,10 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 			<div id="internal-awards">
 		
 				<div id="add_internal_award_link" style="float: right;">
-					<a id="add_internal_award" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add Internal Award</a>
+					<a id="add_internal_award" href="<?php echo ENTRADA_URL; ?>/admin/users/manage/students?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Internal Award</a>
 				</div>
 			
 				<div class="clear">&nbsp;</div>
-				
 				
 				<div id="add-internal-award-box" class="modal-confirmation">
 					<h1>Add Internal Award</h1>

@@ -58,6 +58,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			}
 		}
 
+		if (!$ENTRADA_ACL->amIAllowed("configuration", "create")) {
+			if (count($results) == 1) {
+				$url = ENTRADA_URL."/admin/settings/manage?org=".(int) $results[0]["organisation_id"];
+				header("Location: ".$url);
+				exit;
+			}		
+		}
+
 		if (!empty($organisations)) {
 				?>
 				<div id="organisations-section">

@@ -272,7 +272,7 @@ if (!defined("IN_PROFILE")) {
 			#upload-image-modal-btn {position:absolute;right:7px;top:7px;display:none;outline:none;}
 			#btn-toggle {position:absolute;right:7px;bottom:7px;display:none;outline:none;}
 			#btn-toggle .btn {outline:none;}
-			.profile-image-preview {text-align:center;max-width:250px;margin:auto;}
+			.profile-image-preview {text-align:center;max-width:530px;margin:auto;}
 			.modal-body {max-height:none;}
 
 		</style>
@@ -465,7 +465,7 @@ if (!defined("IN_PROFILE")) {
 					if (xhr.readyState == 4 && xhr.status == 200) {
 						var jsonResponse = JSON.parse(xhr.responseText);
 						if (jsonResponse.status == "success") {
-							jQuery("#profile-image-container .thumbnail img.img-polaroid").attr("src", jsonResponse.data);
+							jQuery("#profile-image-container img.img-polaroid").attr("src", jsonResponse.data);
 							if (jQuery("#image-nav-right").length <= 0) {
 								jQuery("#btn-toggle").append("<a href=\"#\" class=\"btn active\" id=\"image-nav-right\" style=\"display:none;\">Uploaded</a>");
 								jQuery("#image-nav-right").removeClass("active");

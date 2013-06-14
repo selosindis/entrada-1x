@@ -61,7 +61,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($PROXY_ID);
 		$user_record = $db->GetRow($query);
 		if ($user_record) {
-			
+
 			$BREADCRUMB[] = array("url" => "", "title" => "Edit Profile");
 
 			$PROCESSED_ACCESS = array();
@@ -70,7 +70,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			// Error Checking
 			switch ($STEP) {
 				case 2 :
-					
+
 					if (isset($_POST["custom"]) && $_POST["custom"]) {
 						/*
 						* Fetch the custom fields
@@ -104,7 +104,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							}
 						}
 					}
-					
+
 					if (isset($_POST["publications"]) && $_POST["publications"]) {
 						foreach ($_POST["publications"] as $pub_type => $ppublications) {
 							foreach ($ppublications as $department_id => $publications) {
@@ -114,7 +114,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							}
 						}
 					}
-					
+
 					$permissions = json_decode($_POST["permissions"], true);
 					$permissions = json_decode($permissions["acl"], true);
 
@@ -603,17 +603,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                                     $db->AutoExecute("group_members", $gmember, "INSERT");
                                 }
                             }
-							
+
 							if (isset($PROCESSED["custom"])) {
 								foreach ($PROCESSED["custom"] as $field_id => $value) {
 									$query = "DELETE FROM `profile_custom_responses` WHERE `field_id` = ".$db->qstr($field_id)." AND `proxy_id` = ".$db->qstr($PROXY_ID);
 									$db->Execute($query);
-									
-									$query = "INSERT INTO `profile_custom_responses` (`field_id`, `proxy_id`, `value`) VALUES (".$db->qstr($field_id).", ".$db->qstr($PROXY_ID).", ".$db->qstr($value).")"; 
+
+									$query = "INSERT INTO `profile_custom_responses` (`field_id`, `proxy_id`, `value`) VALUES (".$db->qstr($field_id).", ".$db->qstr($PROXY_ID).", ".$db->qstr($value).")";
 									$db->Execute($query);
 								}
 							}
-							
+
 							if (isset($PROCESSED["publications"])) {
 								$query = "DELETE FROM `profile_publications` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 								if ($db->Execute($query)) {
@@ -664,7 +664,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					}
 					ksort($PROCESSED_DEPARTMENTS);
 					$custom_fields = fetch_department_fields($PROXY_ID);
-					
+
 					//Initialize Organisation ID array for initial page display
 					$organisation_ids = array();
 					$query = "SELECT `organisation_id` FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($PROXY_ID);
@@ -823,9 +823,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								<?php echo generate_calendars("access", "Access", true, true, ((isset($PROCESSED_ACCESS["access_starts"])) ? $PROCESSED_ACCESS["access_starts"] : time()), true, false, ((isset($PROCESSED_ACCESS["access_expires"])) ? $PROCESSED_ACCESS["access_expires"] : 0)); ?>
 							</table>
 						</div>
-						
+
 						<h2>Personal Information</h2>
-						
+
 						<?php
 						$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type`='1' AND `proxy_id` = ".$db->qstr($PROXY_ID);
 						$uploaded_photo = $db->GetRow($query);
@@ -834,7 +834,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							<?php echo "<img src=\"".webservice_url("photo", array($user_record["id"], "upload"))."\" width=\"72\" height=\"100\" alt=\"".$user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]."\" title=\"".$user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]."\" class=\"current-".$user_record["id"]."\" id=\"uploaded_profile_pic_".$user_record["id"]."\" name=\"uploaded_profile_pic_".$user_record["id"]."\" />\n"; ?>
 						</div>
 						<?php } ?>
-						
+
 						<div class="control-group">
 							<label class="control-label" for="prefix">First Name:</label>
 							<div class="controls">
@@ -886,7 +886,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								<input type="text" id="email_alt" class="input-medium" name="email_alt" value="<?php echo ((isset($PROCESSED["email_alt"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" maxlength="128" />
 							</div>
 						</div>
-						
+
 						<div class="control-group">
 							<label class="control-label" for="telephone">Telephone Number:</label>
 							<div class="controls">
@@ -955,7 +955,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							</div>
 						</div>
 						<h2>Permissions</h2>
-						
+
 						<?php
 						if (strtolower($ENTRADA_USER->getActiveGroup()) == "medtech" && strtolower($ENTRADA_USER->getActiveRole()) == "admin") {
 							$query		= "	SELECT DISTINCT o.`organisation_id`, o.`organisation_title`
@@ -969,180 +969,179 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
 						}
 
-						$all_orgs	= $db->GetAll($query);
-						if ($all_orgs) { ?>
-						<div class="row-fluid">
-							<div class="span4">
-								<label for="organisations"><strong>Organisation</strong></label><br />
-								<select id="organisations" name="organisations" style="width:200px">
-								<?php
-									foreach($all_orgs as $a_org) {
-										echo build_option($a_org["organisation_id"], ucfirst($a_org["organisation_title"]), $selected);
-									}
-								?>
-								</select>
-							</div>
-							<div class="span4">		
-								<label for="groups"><strong>Groups</strong></label><br />
-								<select id="groups" name="groups" style="width:200px">
-									<option value="0">Select a Group</option>
-								</select>
-							</div>
-							<div class="span4">				
-								<label for="roles"><strong>Role</strong></label><br />
-								<select id="roles" name="roles" style="width:200px">
-									<option value="0">Select a Role</option>
-								</select>			
-							</div>
-						</div>
-						<br />
-						<div class="row-fluid"><input id="add_permissions" name="add_permissions" type="button" value="Add" class="btn pull-right" /></div>
-						
-							<?php
-								$initial_permissions = array();
+						$all_orgs = $db->GetAll($query);
+						if ($all_orgs) {
+                            ?>
+                            <div class="row-fluid">
+                                <div class="span4">
+                                    <label for="organisations"><strong>Organisation</strong></label><br />
+                                    <select id="organisations" name="organisations" style="width:200px">
+                                        <?php
+                                        foreach($all_orgs as $a_org) {
+                                            echo build_option($a_org["organisation_id"], ucfirst($a_org["organisation_title"]), $selected);
+                                        }
+                                        ?>
+                                    </select>
+                                </div>
+                                <div class="span4">
+                                    <label for="groups"><strong>Groups</strong></label><br />
+                                    <select id="groups" name="groups" style="width:200px">
+                                        <option value="0">Select a Group</option>
+                                    </select>
+                                </div>
+                                <div class="span4">
+                                    <label for="roles"><strong>Role</strong></label><br />
+                                    <select id="roles" name="roles" style="width:200px">
+                                        <option value="0">Select a Role</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <br />
+                            <div class="row-fluid"><input id="add_permissions" name="add_permissions" type="button" value="Add" class="btn pull-right" /></div>
+                            <hr />
+                            <?php
+                            $initial_permissions = array();
 
-								foreach($all_orgs as $org) {
+                            foreach ($all_orgs as $org) {
+                                ?>
+                                <div class="row-fluid" id="<?php echo "perm_organisation_" . $org["organisation_id"]; ?>_holder">
+                                    <div class="span12">
+                                        <table id="<?php echo "perm_organisation_" . $org["organisation_id"]; ?>" class="table table-bordered table-condensed">
+                                            <tbody>
+                                                <tr>
+                                                    <th colspan="3"><h2 class="org_title"><?php echo $org["organisation_title"]; ?></h2></th>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="3"><h3>Profiles</h3></td>
+                                                </tr>
+                                                <?php
+                                                $query = "	SELECT ua.*, o.`organisation_id`, o.`organisation_title`, ud.`clinical`, ud.`entry_year`, ud.`grad_year`
+                                                            FROM `".AUTH_DATABASE."`.`user_access` ua
+                                                            JOIN `" . AUTH_DATABASE . "`.`organisations` o
+                                                            ON ua.`organisation_id` = o.`organisation_id`
+                                                            JOIN `".AUTH_DATABASE."`.`user_data` ud
+                                                            ON ua.`user_id` = ud.`id`
+                                                            AND ua.`organisation_id` = " . $db->qstr($org["organisation_id"]) . "
+                                                            WHERE ua.`user_id` = " . $db->qstr($PROXY_ID) ."
+                                                            AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
 
-							?>							
-							<div class="row-fluid">
-								<div class="span12">
-									<table style="width: 100%;" id="<?php echo "perm_organisation_" . $org["organisation_id"]; ?>" >
-										<tbody>
-											<tr>
-												<td colspan="3"><h2 class="org_title"><?php echo $org["organisation_title"]; ?></h2></td>
-											</tr>
-											<tr>
-												<td colspan="3"><h3>Profiles</h3></td>
-											</tr>
-									<?php
-									$query = "	SELECT ua.*, o.`organisation_id`, o.`organisation_title`, ud.`clinical`, ud.`entry_year`, ud.`grad_year`
-												FROM `".AUTH_DATABASE."`.`user_access` ua
-												JOIN `" . AUTH_DATABASE . "`.`organisations` o
-												ON ua.`organisation_id` = o.`organisation_id`
-												JOIN `".AUTH_DATABASE."`.`user_data` ud
-												ON ua.`user_id` = ud.`id`
-												AND ua.`organisation_id` = " . $db->qstr($org["organisation_id"]) . "
-												WHERE ua.`user_id` = " . $db->qstr($PROXY_ID) ."
-												AND ua.`app_id` = " . $db->qstr(AUTH_APP_ID);
+                                                $results = $db->GetAll($query);
+                                                if ($results) {
+                                                    foreach ($results as $result) {
+                                                        switch (strtolower($result["group"])) {
+                                                            case "faculty":
+                                                                $checked = ($result["clinical"] ? "checked" : "");
+                                                                $options = "<input id=\"clinical_" . $result["organisation_id"] . "\" name=\"clinical_"  . $result["organisation_id"] . "\" type=\"checkbox\" " . $checked . " /><label for=\"clincal" . $result["organisation_id"] . "\">This new user is a <strong>clinical</strong> faculty member.</label>";
+                                                            break;
+                                                            case "student":
+                                                                $options = build_entry_grad_year_container($result["entry_year"], $result["grad_year"]);
+                                                            break;
+                                                            default:
+                                                                $options = "";
+                                                            break;
+                                                        }
+                                                        $query = "SELECT sg.`id`
+                                                                  FROM " . AUTH_DATABASE . ".`system_groups` sg
+                                                                  WHERE sg.`group_name` = " . $db->qstr(strtolower($result["group"]));
+                                                        $group_id = $db->GetOne($query);
 
-									$results = $db->GetAll($query);
-									if ($results) {
-										foreach ($results as $result) {
-											switch (strtolower($result["group"])) {
-												case "faculty":
-													$checked = ($result["clinical"] ? "checked" : "");
-													$options = "<input id=\"clinical_" . $result["organisation_id"] . "\" name=\"clinical_"  . $result["organisation_id"] . "\" type=\"checkbox\" " . $checked . " /><label for=\"clincal" . $result["organisation_id"] . "\">This new user is a <strong>clinical</strong> faculty member.</label>";
-												break;
-												case "student":
-													$options = build_entry_grad_year_container($result["entry_year"], $result["grad_year"]);
-												break;
-												default:
-													$options = "";
-												break;
-											}
-											$query = "SELECT sg.`id`
-													  FROM " . AUTH_DATABASE . ".`system_groups` sg
-													  WHERE sg.`group_name` = " . $db->qstr(strtolower($result["group"]));
-											$group_id = $db->GetOne($query);
+                                                        $query = "SELECT sr.`id`
+                                                                  FROM " . AUTH_DATABASE . ".`system_roles` sr
+                                                                  WHERE sr.`role_name` = " . $db->qstr(strtolower($result["role"]));
+                                                        $role_id = $db->GetOne($query);
 
-											$query = "SELECT sr.`id`
-													  FROM " . AUTH_DATABASE . ".`system_roles` sr
-													  WHERE sr.`role_name` = " . $db->qstr(strtolower($result["role"]));
-											$role_id = $db->GetOne($query);
+                                                        $initial_acl["access_id"] = $result["id"];
+                                                        $initial_acl["org_id"] = $result["organisation_id"];
+                                                        $initial_acl["group_id"] = $group_id;
+                                                        $initial_acl["role_id"] = $role_id;
+                                                        $initial_acl["clinical"] = $result["clinical"];
+                                                        $initial_acl["entry_year"] = $result["entry_year"];
+                                                        $initial_acl["grad_year"] = $result["grad_year"];
+                                                        $initial_permissions[] = $initial_acl;
 
-											$initial_acl["access_id"] = $result["id"];
-											$initial_acl["org_id"] = $result["organisation_id"];
-											$initial_acl["group_id"] = $group_id;
-											$initial_acl["role_id"] = $role_id;
-											$initial_acl["clinical"] = $result["clinical"];
-											$initial_acl["entry_year"] = $result["entry_year"];
-											$initial_acl["grad_year"] = $result["grad_year"];
-											$initial_permissions[] = $initial_acl;
+                                                        echo "<tr id=\"" . $result["organisation_id"] . "_" . $group_id . "_" . $role_id . "\">\n";
+                                                        echo "	<td valign=\"top\"><label><strong>" . ucfirst($result["group"]) . " / " . ucfirst($result["role"]) . "</strong></label></td>\n";
+                                                        echo "	<td valign=\"top\">" . $options . "</td>\n";
+                                                        echo "	<td valign=\"top\"><a class=\"remove_perm pull-left\" href=\"#\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\"></a></td>\n";
+                                                        echo "</tr>";
+                                                    }
+                                                }
+                                                ?>
+                                            </tbody>
+                                            <tfoot>
+                                                <tr>
+                                                    <td colspan="3"><h3>Options</h3></td>
+                                                </tr>
+                                                <tr>
+                                                    <td colspan="3" class="departments-list">
+                                                        <div class="control-group">
+                                                            <label class="control-label" for="<?php echo "in_departments_" . $org["organisation_id"]; ?>">Departments</label>
+                                                            <div class="controls">
+                                                                <select id="<?php echo "in_departments_" . $org["organisation_id"]; ?>" name="<?php echo "in_departments_" . $org["organisation_id"]; ?>" style="">
+                                                                    <option value="0">-- Select Departments --</option>
+                                                                    <?php
+                                                                    foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
+                                                                        if ($org["organisation_id"] == $organisation_id){
+                                                                            foreach($dlist as $d){
+                                                                                if (!array_key_exists($d["department_id"], $PROCESSED_DEPARTMENTS)) {
+                                                                                    echo build_option($d["department_id"], $d["department_title"], false);
+                                                                                } else {
+                                                                                    echo build_option($d["department_id"], $d["department_title"], true);
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                    ?>
+                                                                </select>
+                                                                <div class="help-inline"><strong>Note:</strong> Selected departments will appear here.</div>
+                                                            </div>
+                                                        </div>
+                                                        <ol id="departments_container_<?php echo $org["organisation_id"]; ?>" class="sortableList" style="display: block;">
+                                                            <?php
+                                                            if (is_array($PROCESSED_DEPARTMENTS)) {
+                                                                foreach($PROCESSED_DEPARTMENTS as $department_id => $department_title) {
+                                                                    $query = "	SELECT d.`department_id`, d.`department_title`
+                                                                                FROM `".AUTH_DATABASE."`.`departments` d
+                                                                                WHERE d.`department_id` = " . $db->qstr($department_id) . "
+                                                                                AND d.`organisation_id` = " . $db->qstr($org["organisation_id"]);
+                                                                    $result = $db->GetRow($query);
+                                                                    if ($result) {
+                                                                        echo "<li id=\"dept_" . $department_id . "\"><i class=\"icon-home\" id=\"dept_" . $department_id . "\"></i>&nbsp;&nbsp;&nbsp;" . $department_title . " <a class=\"remove_dept\" href=\"\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\" alt=\"Delete\"></a></li>";
+                                                                    }
+                                                                }
+                                                            }
+                                                            ?>
+                                                        </ol>
+                                                    </td>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                </div>
+                                <?php
+                            }
+                            //create final JSON object
+                            $initial_permissions = array("acl" => $initial_permissions);
+                            $initial_permissions = json_encode((object) $initial_permissions);
 
-											echo "<tr id=\"" . $result["organisation_id"] . "_" . $group_id . "_" . $role_id . "\">\n";
-											echo "	<td valign=\"top\"><label><strong>" . ucfirst($result["group"]) . " / " . ucfirst($result["role"]) . "</strong></label></td>\n";
-											echo "	<td valign=\"top\">" . $options . "</td>\n";
-											echo "	<td valign=\"top\"><a class=\"remove_perm pull-left\" href=\"#\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\"></a></td>\n";
-											echo "</tr>";
-
-											}
-										}
-										?>
-										</tbody>
-										<tfoot>
-											<tr>
-												<td colspan="3"><h3>Options</h3></td>
-											</tr>
-											<tr>
-												<td colspan="3" class="departments-list">
-													<div class="control-group">
-														<label class="control-label" for="<?php echo "in_departments_" . $org["organisation_id"]; ?>">Departments</label>
-														<div class="controls">
-															<select id="<?php echo "in_departments_" . $org["organisation_id"]; ?>" name="<?php echo "in_departments_" . $org["organisation_id"]; ?>" style="">
-																<option value="0">-- Select Departments --</option>
-															<?php
-																foreach($DEPARTMENT_LIST as $organisation_id => $dlist) {
-																	if ($org["organisation_id"] == $organisation_id){
-																		foreach($dlist as $d){
-																			if (!array_key_exists($d["department_id"], $PROCESSED_DEPARTMENTS)) {
-																				echo build_option($d["department_id"], $d["department_title"], false);
-																			} else {
-																				echo build_option($d["department_id"], $d["department_title"], true);
-																			}
-																		}
-																	}
-																}
-															?>
-															</select>
-															<div class="help-inline"><strong>Note:</strong> Selected departments will appear here.</div>
-														</div>
-													</div>
-													<ol id="departments_container_<?php echo $org["organisation_id"]; ?>" class="sortableList" style="display: block;">
-													<?php
-													if (is_array($PROCESSED_DEPARTMENTS)) {
-														foreach($PROCESSED_DEPARTMENTS as $department_id => $department_title) {
-															$query = "	SELECT d.`department_id`, d.`department_title`
-																		FROM `".AUTH_DATABASE."`.`departments` d
-																		WHERE d.`department_id` = " . $db->qstr($department_id) . "
-																		AND d.`organisation_id` = " . $db->qstr($org["organisation_id"]);
-															$result = $db->GetRow($query);
-															if ($result) {
-																echo "<li id=\"dept_" . $department_id . "\"><i class=\"icon-home\" id=\"dept_" . $department_id . "\"></i>&nbsp;&nbsp;&nbsp;" . $department_title . " <a class=\"remove_dept\" href=\"\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\" alt=\"Delete\"></a></li>";
-															}
-														}
-													}
-													?>
-													</ol>
-												</td>
-											</tr>
-										</tfoot>
-									</table>
-								</div>
-							</div>
-								<br />
-							<?php
-
-								}
-								//create final JSON object
-								$initial_permissions = array("acl" => $initial_permissions);
-								$initial_permissions = json_encode((object) $initial_permissions);
-
-								$initial_departments = array();
-								if (is_array($PROCESSED_DEPARTMENTS)) {
-									echo "<br />";
-									foreach($PROCESSED_DEPARTMENTS as $department_id => $department_title) {
-										$department_accum = array();
-										$department_accum["department_id"] = $department_id;
-										$department_accum["department_title"] = $department_title;
-										echo "<br />";
-										$initial_departments[] = $department_accum;
-									}
-								}
-								$initial_departments = array("dept_list" => $initial_departments);
-								$initial_departments = json_encode((object) $initial_departments);
-							?>
-							<input id="my_departments" name="my_departments" type="hidden" value="0" />
-						<?php } ?>
+                            $initial_departments = array();
+                            if (is_array($PROCESSED_DEPARTMENTS)) {
+                                echo "<br />";
+                                foreach($PROCESSED_DEPARTMENTS as $department_id => $department_title) {
+                                    $department_accum = array();
+                                    $department_accum["department_id"] = $department_id;
+                                    $department_accum["department_title"] = $department_title;
+                                    echo "<br />";
+                                    $initial_departments[] = $department_accum;
+                                }
+                            }
+                            $initial_departments = array("dept_list" => $initial_departments);
+                            $initial_departments = json_encode((object) $initial_departments);
+                            ?>
+                            <input id="my_departments" name="my_departments" type="hidden" value="0" />
+                            <?php
+                        }
+                        ?>
 						<h2>Notification Options</h2>
 						<div class="row-fluid">
 							<input type="checkbox" id="send_notification" name="send_notification" value="1"<?php echo (((isset($_POST["send_notification"])) && ((int) $_POST["send_notification"])) ? " checked=\"checked\"" : ""); ?> onclick="toggle_visibility_checkbox(this, 'send_notification_msg')" />
@@ -1154,7 +1153,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								<span class="content-small"><strong>Available Variables:</strong> %firstname%, %lastname%, %username%, %password_reset_url%, %application_url%, %application_name%</span>
 							</div>
 						</div>
-						<?php 
+						<?php
 						load_rte();
 						if ($custom_fields) {
 							$pub_types = array (
@@ -1179,7 +1178,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								}
 							}
 							echo "</ul>";
-							
+
 							echo "<div class=\"tab-content\">";
 							$i = 0;
 							foreach ($PROCESSED_DEPARTMENTS as $department_id => $department) {
@@ -1221,8 +1220,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 										</div>
 									</div>
-								<?php } 
-								
+								<?php }
+
 								echo "<h3>Publications on ".$department." Website</h3>";
 
 								foreach ($pub_types as $type_table => $data) {
@@ -1257,7 +1256,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										<?php
 									}
 								}
-								
+
 								echo "</div>";
 								$i++;
 								}
@@ -1266,7 +1265,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							echo "</div>";
 						}
 						?>
-							
+
 						<br />
 						<div class="pull-left"><input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_RELATIVE; ?>/admin/users/manage?id=<?php echo $PROXY_ID; ?>'" /></div>
 						<div class="pull-right"><input type="submit" class="btn btn-primary" value="Save" /></div>
@@ -1296,7 +1295,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					display: block;
 					float: right;
 				}
-				
+
 				textarea.expandable {
 					width: 75%;
 				}
@@ -1463,7 +1462,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									grad_year = $('#grad_year').val();
 								}
 								$('#perm_organisation_' + $('#organisations').val() + ' > tbody:last').append('<tr id=\"' + org_id + '_' + group_id + '_' + role_id + '\"><td valign="top"><strong>' + group_text + ' / ' + role_text + '</strong></td><td>' + options + '</td><td><a class=\"remove_perm\" href=\"\"><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif"></a></td></tr>');
-								$('#perm_organisation_' + $('#organisations').val()).show();
+								$('#perm_organisation_' + $('#organisations').val() + '_holder').show();
 
 								var temp_permissions = {"org_id" : org_id, "group_id" : group_id, "role_id" : role_id, "clinical" : clinical, "entry_year" : entry_year, "grad_year" : grad_year};
 								permissions.acl.push(temp_permissions);
@@ -1552,8 +1551,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						});
 
 						$('table[id^=perm_organisation_]').each(function(index) {
-							if ($(this).find('tbody tr').length <= 2) {								
-								$(this).hide();
+							if ($(this).find('tbody tr').length <= 2) {
+								$('#' + this.id + '_holder').hide();
 							}
 						});
 						function filterGroups() {

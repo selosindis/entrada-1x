@@ -142,7 +142,7 @@ class Models_Evaluation {
 				<tr>
 					<td colspan="2">
 						<h2>Categories</h2>
-						<a class="btn btn-small btn-success pull-right" style="cursor: pointer; margin-top: -40px;" onclick="loadCategories($('columns_count').options[$('columns_count').selectedIndex].value, (parseInt($('categories_count').value) + 1), 0)"><i class="icon-plus icon-white"></i> Add Additional Category</a>
+						<a class="btn btn-small btn-success pull-right" style="cursor: pointer; margin-top: -40px;" onclick="loadCategories($('columns_count').options[$('columns_count').selectedIndex].value, (parseInt($('categories_count').value) + 1), 0)"><i class="icon-plus-sign icon-white"></i> Add Additional Category</a>
 					</td>
 				</tr>
 				<tr>

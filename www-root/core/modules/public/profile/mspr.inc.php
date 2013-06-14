@@ -195,7 +195,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			<h3 title="Critical Enquiry" class="collapsable collapsed">Critical Enquiry Project</h3>
 			<div id="critical-enquiry">
 				<div id="add_critical_enquiry_link" style="float: right;">
-					<a id="add_critical_enquiry" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add Critical Enquiry Project</a>
+					<a id="add_critical_enquiry" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Critical Enquiry Project</a>
 				</div>
 				<div class="clear">&nbsp;</div>
 
@@ -291,7 +291,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			<h3 title="Community-Based Project" class="collapsable collapsed">Community Based Project</h3>
 			<div id="community-based-project">
 				<div id="add_community_based_project_link" style="float: right;">
-					<a id="add_community_based_project" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=community_based_project_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add Community Based Project</a>
+					<a id="add_community_based_project" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=community_based_project_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Community Based Project</a>
 				</div>
 				<div class="clear">&nbsp;</div>
 
@@ -386,7 +386,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			<h3 title="Research" class="collapsable collapsed">Publications</h3>
 			<div id="research">
 				<div id="add_research_citation_link" style="float: right;">
-					<a id="add_research_citation" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add Publication Citation</a>
+					<a id="add_research_citation" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Publication Citation</a>
 				</div>
 				<div class="clear"></div>
 				<div class="instructions">
@@ -447,7 +447,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 			<h3 class="collapsable collapsed" title="External Awards Section">External Awards</h3>
 			<div id="external-awards-section">
 				<div id="add_external_award_link" style="float: right;">
-					<a id="add_external_award" href="#external-awards-section" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add External Award</a>
+					<a id="add_external_award" href="#external-awards-section" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add External Award</a>
 				</div>
 				<div class="clear"></div>
 				<div class="instructions">
@@ -570,7 +570,7 @@ The deadline for student submissions to this MSPR is <?php echo date("F j, Y \a\
 					</ul>
 				</div>
 				<div id="add_contribution_link" style="float: right;">
-					<a id="add_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=contributions_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i> Add Contribution</a>
+					<a id="add_contribution" href="<?php echo ENTRADA_URL; ?>/profile?section=mspr&show=contributions_form&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add Contribution</a>
 				</div>
 
 				<div id="update-contribution-box" class="modal-confirmation">

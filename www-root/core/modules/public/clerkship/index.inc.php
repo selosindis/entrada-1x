@@ -106,8 +106,8 @@ switch($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 		}
         ?>
 		<div class="row pull-right margin-bottom">
-            <a href="<?php echo ENTRADA_URL."/clerkship/electives?section=add";?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i>Add Elective</a>
-            <a href="<?php echo ENTRADA_URL."/clerkship/logbook?section=add";?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i>Log Encounter</a>
+            <a href="<?php echo ENTRADA_URL."/clerkship/electives?section=add";?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i>Add Elective</a>
+            <a href="<?php echo ENTRADA_URL."/clerkship/logbook?section=add";?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i>Log Encounter</a>
         </div>
 		<div class="clearfix"></div>
 

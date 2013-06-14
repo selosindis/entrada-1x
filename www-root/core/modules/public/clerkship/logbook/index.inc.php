@@ -197,7 +197,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 			if ($student) {
 				?>
 				<div class="pull-right space-below">
-								<a href="<?php echo ENTRADA_URL."/clerkship/logbook?section=add";?>" class="btn btn-small btn-success"><i class="icon-plus icon-white"></i>Log Encounter</a>
+								<a href="<?php echo ENTRADA_URL."/clerkship/logbook?section=add";?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i>Log Encounter</a>
 				</div>
 				<?php 
 			}

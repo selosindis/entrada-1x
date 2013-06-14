@@ -87,10 +87,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				<div class="row-fluid space-below">
                     <span class="span6 pull-right">
                         <span id="module-content" class="offset2 span5">
-                            <a href="<?php echo ENTRADA_URL."/admin/clerkship/electives?section=add_elective&ids=".$PROXY_ID;?>" class="btn btn-success"><i class="icon-plus icon-white"></i> Add Elective</a>
+                            <a href="<?php echo ENTRADA_URL."/admin/clerkship/electives?section=add_elective&ids=".$PROXY_ID;?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Elective</a>
                         </span>
                         <span id="module-content" class="span4">
-                            <a href="<?php echo ENTRADA_URL."/admin/clerkship/electives?section=add_core&ids=".$PROXY_ID;?>" class="btn btn-success pull-right"><i class="icon-plus icon-white"></i> Add Core</a>
+                            <a href="<?php echo ENTRADA_URL."/admin/clerkship/electives?section=add_core&ids=".$PROXY_ID;?>" class="btn btn-success pull-right"><i class="icon-plus-sign icon-white"></i> Add Core</a>
                         </span>
                     </span>
 				</div>

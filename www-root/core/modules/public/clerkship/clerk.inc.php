@@ -93,14 +93,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                             if ($ENTRADA_ACL->amIAllowed('electives', 'create'))  {
                             ?>
                             <span id="module-content" class="offset2 span5">
-                                <a href="<?php echo ENTRADA_URL."/admin/clerkship/electives?section=add_elective&ids=".$PROXY_ID;?>" class="btn btn-success"><i class="icon-plus icon-white"></i> Add Elective</a>
+                                <a href="<?php echo ENTRADA_URL."/admin/clerkship/electives?section=add_elective&ids=".$PROXY_ID;?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Elective</a>
                             </span>
                             <?php
                             }
                             if ($ENTRADA_ACL->amIAllowed('clerkship', 'update')) {
                             ?>
                             <span id="module-content" class="span4">
-                                <a href="<?php echo ENTRADA_URL."/admin/clerkship/electives?section=add_core&ids=".$PROXY_ID;?>" class="btn btn-success pull-right"><i class="icon-plus icon-white"></i> Add Core</a>
+                                <a href="<?php echo ENTRADA_URL."/admin/clerkship/electives?section=add_core&ids=".$PROXY_ID;?>" class="btn btn-success pull-right"><i class="icon-plus-sign icon-white"></i> Add Core</a>
                             </span>
                             <?php
                             }

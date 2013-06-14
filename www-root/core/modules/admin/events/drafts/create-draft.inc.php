@@ -36,6 +36,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	echo "<h1>Create New Draft Schedule</h1>";
 	switch ($STEP) {
 		case 2 :
+			$PROCESSED["options"] = array();
+			
+			$i = 0;
+			if (isset($_POST["options"]) && is_array($_POST["options"]) && !empty($_POST["options"])) {
+			    foreach ($_POST["options"] as $option => $value) {
+				    $PROCESSED["options"][$i]["option"] = clean_input($option, "alpha");
+				    $PROCESSED["options"][$i]["value"] = 1;
+				    $i++;
+				}
+			}
+			
 			// error checking / sanitization
 			if (isset($_POST["draft_name"]) && !empty($_POST["draft_name"])) {
 				$PROCESSED["draft_name"] = clean_input($_POST["draft_name"], array("trim"));
@@ -90,6 +101,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$query = "	INSERT INTO `draft_creators` (`draft_id`, `proxy_id`) 
 							VALUES (".$db->qstr($draft_id).", ".$db->qstr($ENTRADA_USER->getActiveId()).")";
 				$result = $db->Execute($query);
+				
+				if ($PROCESSED["options"]) {
+					$query = "DELETE FROM `draft_options` WHERE `draft_id` = ".$db->qstr($draft_id);
+					$db->Execute($query);
+					foreach ($PROCESSED["options"] as $option) {
+						$option["draft_id"] = $draft_id;
+						if (!$db->AutoExecute("draft_options", $option, "INSERT")) {
+							application_log("error", "Error when saving draft [".$draft_id."] options, DB said: ".$db->ErrorMsg());
+						}
+					}
+				}
 				
 				if ($PROCESSED["course_ids"]) {
 					foreach ($PROCESSED["course_ids"] as $course_id) {
@@ -243,6 +265,48 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								<td></td>
 								<td style="vertical-align: top;"><label class="form-nrequired">Description</label></td>
 								<td style="vertical-align: top;"><textarea type="text" style="width: 95%; padding: 3px; height:60px;" value="" name="draft_description" id="draft_description"></textarea></td>
+							</tr>
+							<tr>
+								<td>&nbsp;</td>
+								<td>
+									
+										<label class="form-nrequired">Copy Resources:</label><br />
+										<span class="content-small">Selecting the following options will copy the content from the previous instance of the event.</span>
+								</td>
+								<td>
+									<table width="100%" cellpadding="0" cellspacing="0">
+										<colgroup>
+											<col style="width: 3%" />
+											<col style="width: 3%" />
+											<col style="width: 94%" />
+										</colgroup>
+										<tr>
+											<td>&nbsp;</td>
+											<td><input type="checkbox" checked="checked" name="options[files]" /></td>
+											<td>Copy files <span class="content-small">- Excluding podcasts</span></td>
+										</tr>
+										<tr>
+											<td>&nbsp;</td>
+											<td><input type="checkbox" checked="checked" name="options[links]" /></td>
+											<td>Copy links</td>
+										</tr>
+										<tr>
+											<td>&nbsp;</td>
+											<td><input type="checkbox" checked="checked" name="options[objectives]" /></td>
+											<td>Copy objectives</td>
+										</tr>
+										<tr>
+											<td>&nbsp;</td>
+											<td><input type="checkbox" checked="checked" name="options[topics]" /></td>
+											<td>Copy hot topics</td>
+										</tr>
+										<tr>
+											<td>&nbsp;</td>
+											<td><input type="checkbox" checked="checked" name="options[quizzes]" /></td>
+											<td>Copy quizzes</td>
+										</tr>
+									</table>
+								</td>
 							</tr>
 						</tbody>
 					</table>

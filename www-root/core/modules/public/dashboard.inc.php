@@ -268,8 +268,8 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 							</div>
 							<h2>Remaining Clerkship Rotations</h2>
 							<div class="pull-right space-below">
-								<a href="<?php echo ENTRADA_RELATIVE."/clerkship/electives?section=add";?>" class="btn btn-success btn-small"><i class="icon-plus icon-white"></i>Add Elective</a>
-								<a href="<?php echo ENTRADA_RELATIVE."/clerkship/logbook?section=add&event=".$clerkship_schedule[0]["event_id"];?>" class="btn btn-success btn-small"><i class="icon-plus icon-white"></i>Log Encounter</a>
+								<a href="<?php echo ENTRADA_RELATIVE."/clerkship/electives?section=add";?>" class="btn btn-success btn-small"><i class="icon-plus-sign icon-white"></i>Add Elective</a>
+								<a href="<?php echo ENTRADA_RELATIVE."/clerkship/logbook?section=add&event=".$clerkship_schedule[0]["event_id"];?>" class="btn btn-success btn-small"><i class="icon-plus-sign icon-white"></i>Log Encounter</a>
 							</div>
 							<?php
 							$query = "	SELECT `rotation_id`

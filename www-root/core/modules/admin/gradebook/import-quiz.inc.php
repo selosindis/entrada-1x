@@ -200,7 +200,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         HAVING a.`quiz_score` = MAX(a.`quiz_score`)";
                         break;
                     }
-                    echo $query; exit;
                     $responses = $db->GetAll($query);
                     if ($responses) {
                         $total_value = 0;

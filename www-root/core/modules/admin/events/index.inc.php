@@ -135,15 +135,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
 		?>
 		<div class="row-fluid">
-			<div class="pull-right">
-				<div class="btn-group">
-					<a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" class="btn btn-primary">Add New Event <span class="caret"></span></a>
-					<ul class="dropdown-menu">
-						<li><a  href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add">Add Event</a></li>
-						<li><a href="<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts">Manage Draft Schedules</a></li>
-					</ul>
-				</div>
-			</div>
+			<span class="pull-right">
+				<a class="btn space-right" href="<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts"><i class="icon-file"></i> Manage My Drafts</a>
+				<a class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add New Event</a>
+			</span>
 		</div>
 		<br />
 		<?php

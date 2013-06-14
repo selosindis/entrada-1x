@@ -498,13 +498,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 		if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
 			?>
-			<div style="float: right">
-				<ul class="page-action">
-					<li><a href="#" class="import-csv">Import CSV</a></li>
-					<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add&mode=draft&draft_id=<?php echo $draft_id; ?>" class="strong-green">Add New Event</a></li>
-				</ul>
+			<div class="row-fluid space-below">
+				<div class="pull-right">
+					<a href="#" class="btn btn-small btn-success import-csv"><i class="icon-plus-sign icon-white"></i> Import CSV</a>
+					<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add&mode=draft&draft_id=<?php echo $draft_id; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add New Event</a>
+				</div>
 			</div>
-			<div style="clear: both"></div>
 			<?php
 		}
 		?>

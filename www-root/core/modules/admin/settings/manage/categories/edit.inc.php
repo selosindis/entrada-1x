@@ -576,7 +576,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CATEGORIES"))) {
 							</style>
 							<h2 class="collapsable" title="Child Categories Section">Child Categories</h2>
 							<div id="child-categories-section">
-                                <a href="#" class="category-add-control btn btn-success pull-right" data-id="<?php echo $CATEGORY_ID; ?>"><i class="icon-plus icon-white"></i>Add New Category</a>
+                                <a href="#" class="category-add-control btn btn-success pull-right" data-id="<?php echo $CATEGORY_ID; ?>"><i class="icon-plus-sign icon-white"></i>Add New Category</a>
 								<div style="clear: both"></div>
 								<div data-description="" data-id="<?php echo $CATEGORY_ID; ?>" data-title="" id="category_title_<?php echo $CATEGORY_ID; ?>" class="category-title draggable ui-draggable" style="display:none;"></div>
 								<div class="half left" id="children_<?php echo $CATEGORY_ID; ?>">

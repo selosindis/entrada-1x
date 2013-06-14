@@ -345,22 +345,21 @@ if (!defined("IN_COURSE_GROUPS")) {
 				<tr>
 					<td />
 						<?php
-						$colspan = 3;
+						echo "<td colspan=\"3\">\n";
 						if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) {
 							$colspan--;
 							?>
-							<td style="padding-top: 10px"><input type="submit" class="btn btn-danger" value="Delete Selected"  onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=edit&action=delete&id=<?php echo $COURSE_ID; ?>'" /></td>
+							<input type="submit" class="btn btn-danger" value="Delete Selected"  onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=edit&action=delete&id=<?php echo $COURSE_ID; ?>'" />
 							<?php
 						}
+						echo "<span class=\"pull-right\">\n";
+						echo "<input type=\"submit\" class=\"btn space-right\" value=\"Export Selected\" onClick=\"$('frmSelect').action ='".ENTRADA_URL."/admin/courses/groups?section=export&id=".$COURSE_ID."'\" />";
 						if ($ENTRADA_ACL->amIAllowed("group", "update", false)) {
-							$colspan--;
 							?>
-							<td style="padding-top: 10px">
 								<input type="submit" class="btn btn-primary" value="Manage Selected" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=manage&id=<?php echo $COURSE_ID; ?>'" />
-							</td>
 							<?php
 						}
-						echo "<td colspan=\"$colspan\" />";
+						echo "</span></td>";
 						?>
 				</tr>
 			</tfoot>

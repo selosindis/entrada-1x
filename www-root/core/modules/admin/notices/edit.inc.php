@@ -101,11 +101,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 							}
 
 							/**
-							 * Non-required field "associated_students" / Associated Students (array of proxy ids).
+							 * Non-required field "associated_student" / Associated Students (array of proxy ids).
 							 * This is actually accomplished after the event is inserted below.
 							 */
-							if ((isset($_POST["associated_students"]))) {
-								$associated_students = explode(",", $_POST["associated_students"]);
+							if ((isset($_POST["associated_student"]))) {
+								$associated_students = explode(",", $_POST["associated_student"]);
 								foreach($associated_students as $contact_order => $proxy_id) {
 									$id = explode("_",$proxy_id);
 									$id = $id[1];
@@ -131,11 +131,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 							}
 
 							/**
-							 * Non-required field "associated_cohorts" / Associated Cohorts (array of proxy ids).
+							 * Non-required field "associated_cohort" / Associated Cohorts (array of proxy ids).
 							 * This is actually accomplished after the event is inserted below.
 							 */
-							if ((isset($_POST["associated_cohorts"]))) {
-								$associated_cohorts = explode(",", $_POST["associated_cohorts"]);
+							if ((isset($_POST["associated_cohort"]))) {
+								$associated_cohorts = explode(",", $_POST["associated_cohort"]);
 								foreach($associated_cohorts as $contact_order => $group_id) {
 									$id = explode("_",$group_id);
 									$id = $id[1];
@@ -298,8 +298,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 											parameters: {
 												'options_for' : audience_type,
 												'org_id' : org_id,
-												'associated_cohorts' : $('associated_cohorts').value,
-												'associated_students' : $('associated_students').value
+												'associated_cohort' : $('associated_cohort').value,
+												'associated_student' : $('associated_student').value
 											},
 											method: 'post',
 											onLoading: function() {
@@ -415,8 +415,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 										parameters : {
 											ajax : 1,
 											org_id : $F('org_id'),
-											event_audience_students: ($('associated_students') ? $('associated_students').getValue() : ''),
-											event_audience_cohort: ($('associated_cohorts') ? $('associated_cohorts').getValue() : '')
+											event_audience_students: ($('associated_student') ? $('associated_student').getValue() : ''),
+											event_audience_cohort: ($('associated_cohort') ? $('associated_cohort').getValue() : '')
 										},
 										onSuccess : function (response) {
 											if (response.responseText == "") {

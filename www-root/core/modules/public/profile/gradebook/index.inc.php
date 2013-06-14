@@ -125,8 +125,8 @@ if ($results) {
 			echo "	<td".((!$result["course_active"]) ? " class=\"disabled\"" : "")."><a href=\"".ENTRADA_URL."/".$MODULE."/gradebook?section=view&amp;id=".$result["course_id"]."\">".html_encode($result["course_name"])."</a></td>\n";
 			echo "	<td".((!$result["course_active"]) ? " class=\"disabled\"" : "")."><a href=\"".ENTRADA_URL."/".$MODULE."/gradebook?section=view&amp;id=".$result["course_id"]."\">".($result["assessments"])."</a></td>\n";
 			if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
-				$gradebook = gradebook_get_weighted_grades($result["course_id"], $_SESSION["details"]["role"], $ENTRADA_USER->getID());
-				echo "	<td>".trim($gradebook["grade"])." / ".trim($gradebook["total"])."</td>\n";
+				$gradebook = gradebook_get_weighted_grades($result["course_id"], $ENTRADA_USER->getCohort(), $ENTRADA_USER->getID());
+				echo "	<td>".round(trim($gradebook["grade"]), 2)." / ".trim($gradebook["total"])."</td>\n";
 			}
 			echo "</tr>\n";
 		}

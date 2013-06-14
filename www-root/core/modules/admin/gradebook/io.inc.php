@@ -119,8 +119,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$weight_heading  = " [Weighting: ".$assessment["grade_weighting"]."%]";
 					}					
 					echo ",\"".trim($assessment["name"]).$weight_heading." (".trim($assessment["type"]).")\"";					
-				}	
-				$assessment_string = implode(",",$assessment_ids);
+				}
+                $assessment_ids_string = "";
+                foreach ($assessment_ids as $assessment_id) {
+                    $assessment_ids_string .= ($assessment_ids_string ? "," : "").$db->qstr($assessment_id);
+                }
 				// foreach ($assessments as $key => $assessment) {
 				// 	$query .= " LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS assessment_$key ON b.`id` = assessment_$key.`proxy_id` AND assessment_$key.`assessment_id` IN (".$db->qstr($assessment["assessment_id"]).")";
 				// }
@@ -139,15 +142,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$cols = array();
 						$cols[]	= trim((($student["group"] == "student") ? $student["number"] : 0));
 						$cols[]	= trim($student["fullname"]);
-						if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
-							$weighted_total = 0;
-							$weighted_total_max = 0;
-						}
 						$query = "SELECT *, a.`assessment_id` as `assessment_id` FROM `assessment_grades` a
 									LEFT JOIN `assessment_exceptions` b
 									ON a.`assessment_id` = b.`assessment_id`
 									AND a.`proxy_id` = b.`proxy_id`
-									WHERE a.`assessment_id` IN (".$assessment_string.")
+									WHERE a.`assessment_id` IN (".$assessment_ids_string.")
 									AND a.`proxy_id` = ".$db->qstr($student["proxy_id"]);
 						$student_assessments = $db->GetAll($query);
 						$s_assessments = array();
@@ -163,28 +162,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								$cols[] = trim(format_retrieved_grade(0, $indexed_assessments[$assessment_id]) . assessment_suffix($indexed_assessments[$assessment_id]));
 								continue;
 							}
-							$cols[] = trim(format_retrieved_grade($s_assessments[$assessment_id]["grade"], $s_assessments[$assessment_id]) . assessment_suffix($s_assessments[$assessment_id]));
-							if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
-								$weighted_total_max += $s_assessments[$assessment_id]["grade_weighting"];
-								$weighted_total += (
-														($s_assessments[$assessment_id]["handler"] == "Numeric" ? 
-															(float)$s_assessments[$assessment_id]["grade"] : 
-															(
-																(
-																	$s_assessments[$assessment_id]["handler"] == "Percentage" ? 
-																	((float)$s_assessments[$assessment_id]["grade"]) : 
-																	$s_assessments[$assessment_id]["grade"] 
-																)
-															)
-														) 
-														* ($s_assessments[$assessment_id]["grade_weighting"]/100)
-													);
-							}							
+							$cols[] = trim(format_retrieved_grade($s_assessments[$assessment_id]["grade"], $s_assessments[$assessment_id]) . assessment_suffix($s_assessments[$assessment_id]));							
 						}
 						if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL && isset($COHORT)) {
-							$total = $weighted_total * ($weighted_total_max/100);
-							$cols[] = number_format($total, 2);
-							if($weighted_total_max != 100){							
+                            $weight = gradebook_get_weighted_grades($COURSE_ID, $COHORT, $student["proxy_id"], false, $assessment_ids_string);
+							$cols[] = round($weight["grade"], 2);
+							if($weight["total"] != 100){							
 								$cols[] = "[WARNING]: Your weighting totals do not equal 100% or this student is missing a weighted assessment. Current weighted total worth ".$weighted_total_max."% of total course mark.";
 							}
 						}

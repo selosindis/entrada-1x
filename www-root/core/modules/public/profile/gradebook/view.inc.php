@@ -121,8 +121,8 @@ if ($COURSE_ID) {
                     echo "	<td>".trim($mean_value).assessment_suffix($result)."</td>\n";
                 }
 				if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
-					$gradebook = gradebook_get_weighted_grades($result["course_id"], $_SESSION["details"]["role"], $ENTRADA_USER->getID(), $result["assessment_id"]);
-					echo "	<td>".trim($gradebook["grade"])." / ".trim($gradebook["total"])."</td>\n";
+					$gradebook = gradebook_get_weighted_grades($result["course_id"], $ENTRADA_USER->getCohort(), $ENTRADA_USER->getID(), $result["assessment_id"]);
+					echo "	<td>".round(trim($gradebook["grade"]), 2)." / ".trim($gradebook["total"])."</td>\n";
 				}
 				echo "	<td style=\"text-align: right;\">".(($grade_value === "-") ? "-" : (($result["handler"] == "Numeric" ? ($result["value"] === "0" ? "0" : trim(trim(number_format(($grade_value / $result["numeric_grade_points_total"] * 100), 2), "0"), "."))."%" : (($result["handler"] == "Percentage" ? ("N/A") : $grade_value)))))."</td>\n";
 				echo "</tr>\n";

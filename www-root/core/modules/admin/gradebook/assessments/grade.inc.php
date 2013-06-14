@@ -141,22 +141,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                 <tbody>
                                     <?php
                                     foreach ($students as $key => &$student) {
-                                        $query = "SELECT a.`grade_id`, a.`value` AS `grade_value`, b.`grade_weighting` FROM `assessment_grades` AS a 
-                                                    LEFT JOIN `assessment_exceptions` AS b
-                                                    ON b.`proxy_id` = a.`proxy_id`
-                                                    AND b.`assessment_id` = a.`assessment_id`
-                                                    WHERE a.`proxy_id` = ".$db->qstr($student["proxy_id"])."
-                                                    AND a.`assessment_id` = ".$db->qstr($assessment["assessment_id"]);
+                                        $query = "SELECT `grade_id`, `value` AS `grade_value` FROM `assessment_grades`
+                                                    WHERE `proxy_id` = ".$db->qstr($student["proxy_id"])."
+                                                    AND `assessment_id` = ".$db->qstr($assessment["assessment_id"]);
                                         $grade = $db->GetRow($query);
-                                        if ($grade) {
-                                            $student["grade_id"] = $grade["grade_id"];
-                                            $student["grade_value"] = $grade["grade_value"];
-                                            $student["grade_weighting"] = $grade["grade_weighting"];
-                                        } else {
-                                            $student["grade_id"] = NULL;
-                                            $student["grade_value"] = NULL;
-                                            $student["grade_weighting"] = NULL;
-                                        }
+                                        
+                                        $student["grade_id"] = (isset($grade["grade_id"]) ? $grade["grade_id"] : NULL);
+                                        $student["grade_value"] = (isset($grade["grade_value"]) ? $grade["grade_value"] : NULL);
+                                        
+                                        $query = "SELECT `grade_weighting` FROM `assessment_exceptions`
+                                                    WHERE `proxy_id` = ".$db->qstr($student["proxy_id"])."
+                                                    AND `assessment_id` = ".$db->qstr($assessment["assessment_id"]);
+                                        $weight = $db->GetOne($query);
+                                        
+                                        $student["grade_weighting"] = (isset($weight) ? $weight : NULL);
 
                                         if (isset($student["grade_id"])) {
                                             $grade_id = $student["grade_id"];

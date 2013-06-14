@@ -48,10 +48,12 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	}
 
 	if ($fullname) {
-		$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`email`
+		$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`email`, c.`organisation_title`
 					FROM `".AUTH_DATABASE."`.`user_data` AS a
 					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 					ON b.`user_id` = a.`id`
+					LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
+					ON c.`organisation_id` = b.`organisation_id`
 					WHERE CONCAT_WS(', ', a.`lastname`, a.`firstname`) LIKE ".$db->qstr("%".$fullname."%")."
 					AND (b.`group` <> 'guest')";
 		switch ($type) {
@@ -67,8 +69,6 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			break;
 			case "resident" :
 			case "postgrad" :
-				$query .= "	AND b.`group` = 'resident'";
-			break;
 			case "undergrad" :
 			case "student" :
 			case "clerk" :
@@ -107,7 +107,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		$results = $db->GetAll($query);
 		if ($results) {
 			foreach($results as $result) {
-				echo "\t<li id=\"".(int) $result["proxy_id"]."\">".html_encode($result["fullname"])."<span class=\"informal content-small\"><br />".html_encode($result["email"])."</span></li>\n";
+				echo "\t<li id=\"".(int) $result["proxy_id"]."\">".html_encode($result["fullname"])."<span class=\"informal content-small\"><br />".html_encode($result["organisation_title"])."</span></li>\n";
 			}
 		} else {
 			echo "\t<li id=\"0\"><span class=\"informal\">&quot;<strong>".html_encode($fullname)."&quot;</strong> was not found</span></li>";

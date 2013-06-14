@@ -85,7 +85,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				if (!$db->Execute($query)) {
 					application_log("error", "An error was encountered while attempting to delete an assessment [".$assessment_id."] exception for user [".$proxy_id."]. Database said: ".$db->ErrorMsg());
 				}
-			} elseif (isset($grade_weighting) && (($grade_weighting != $result["grade_weighting"] && $grade_weighting != $result["custom_weighting"]) || $grade_weighting === 0)) {
+			} elseif (isset($grade_weighting) && (($grade_weighting !== $result["grade_weighting"] && $grade_weighting !== $result["custom_weighting"]) || $grade_weighting === 0)) {
 				if (isset($result["custom_weighting"]) && ($result["custom_weighting"] === "0" || $result["custom_weighting"])) {
 					$query = "	UPDATE `assessment_exceptions` 
 								SET `grade_weighting` = ".$db->qstr($grade_weighting)."

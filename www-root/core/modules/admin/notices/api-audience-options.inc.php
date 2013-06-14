@@ -170,7 +170,7 @@ if (!defined("IN_NOTICES")) {
 				/**
 				 * Process cohorts.
 				 */
-				if ((isset($_POST["associated_cohorts"]) && $use_ajax)) {
+				if ((isset($_POST["associated_cohort"]) && $use_ajax)) {
 					$associated_audience = explode(',', $_POST["event_audience_cohorts"]);
 					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
 						foreach($associated_audience as $audience_id) {
@@ -186,7 +186,7 @@ if (!defined("IN_NOTICES")) {
 												AND b.`organisation_id` = ".$db->qstr($PROCESSED["organisation_id"]);
 									$result	= $db->GetRow($query);
 									if ($result) {
-										$PROCESSED["associated_cohorts"][] = $group_id;
+										$PROCESSED["associated_cohort"][] = $group_id;
 									}
 								}
 							}
@@ -197,7 +197,7 @@ if (!defined("IN_NOTICES")) {
 				/**
 				 * Process students.
 				 */
-				if ((isset($_POST["associated_students"]) && $use_ajax)) {
+				if ((isset($_POST["associated_student"]) && $use_ajax)) {
 					$associated_audience = explode(',', $_POST["event_audience_students"]);
 					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
 						foreach($associated_audience as $audience_id) {
@@ -214,7 +214,7 @@ if (!defined("IN_NOTICES")) {
 												AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")";
 									$result	= $db->GetRow($query);
 									if ($result) {
-										$PROCESSED["associated_students"][] = $proxy_id;
+										$PROCESSED["associated_student"][] = $proxy_id;
 									}
 								}
 							}
@@ -223,7 +223,7 @@ if (!defined("IN_NOTICES")) {
 				}
 
 				$target_audience = false;
-				if (!isset($PROCESSED["associated_cohorts"]) && !isset($PROCESSED["associated_students"]) && !isset($_POST["associated_cohorts"]) && !isset($_POST["associated_students"]) && isset($PROCESSED["organisation_id"])) {
+				if (!isset($PROCESSED["associated_cohort"]) && !isset($PROCESSED["associated_student"]) && !isset($_POST["associated_cohort"]) && !isset($_POST["associated_student"]) && isset($PROCESSED["organisation_id"])) {
 
 					$query = "SELECT * FROM `notice_audience` WHERE `notice_id` = ".$db->qstr($NOTICE_ID);
 					$audience = $db->GetAll($query);
@@ -249,8 +249,8 @@ if (!defined("IN_NOTICES")) {
 					$course_audience_included = false;
 				}
 
-				if (isset($PROCESSED["associated_cohorts"]) && is_array($PROCESSED["associated_cohorts"])) {
-					foreach ($PROCESSED["associated_cohorts"] as $group_id) {
+				if (isset($PROCESSED["associated_cohort"]) && is_array($PROCESSED["associated_cohort"])) {
+					foreach ($PROCESSED["associated_cohort"] as $group_id) {
 						if ($cohort_ids_string) {
 							$cohort_ids_string .= ",group_".$group_id;
 						} else {
@@ -269,8 +269,8 @@ if (!defined("IN_NOTICES")) {
 					}
 				}
 
-				if (isset($PROCESSED["associated_students"]) && is_array($PROCESSED["associated_students"])) {
-					foreach ($PROCESSED["associated_students"] as $proxy_id) {
+				if (isset($PROCESSED["associated_student"]) && is_array($PROCESSED["associated_student"])) {
+					foreach ($PROCESSED["associated_student"] as $proxy_id) {
 						if(array_key_exists($proxy_id, $STUDENT_LIST)){
 
 							if ($student_ids_string) {
@@ -310,7 +310,7 @@ if (!defined("IN_NOTICES")) {
 					<option value="">-- Select an audience type --</option>
 					<option value="public"<?php echo ($target_audience == "public" ? "selected=\"selected\"" : ""); ?>>Public announcement visible on login page.</option>
 					<option value="all"<?php echo ($target_audience=="all:users"?"selected=\"selected\"":"");?>>Everyone should receive this notice.</option>
-					<option value="all:student"<?php echo ($target_audience=="all:students"?"selected=\"selected\"":"");?>>All students should receive this notice.</option>
+					<option value="all:student"<?php echo ($target_audience=="all:student"?"selected=\"selected\"":"");?>>All students should receive this notice.</option>
 					<option value="all:faculty"<?php echo ($target_audience=="all:faculty"?"selected=\"selected\"":"");?>>All faculty should receive this notice.</option>
 					<option value="all:staff"<?php echo ($target_audience=="all:staff"?"selected=\"selected\"":"");?>>All staff should receive this notice.</option>
 					<option value="cohort">Selected cohorts of students should receive this notice.</option>
@@ -323,17 +323,17 @@ if (!defined("IN_NOTICES")) {
 				<span id="options_loading" style="display:none; vertical-align: middle"><img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif" width="16" height="16" alt="Please Wait" title="" style="vertical-align: middle" /> Loading ... </span>
 				<span id="options_container"></span>
 
-				<input type="hidden" id="associated_cohorts" name="associated_cohorts" value="<?php echo $cohort_ids_string; ?>" />
+				<input type="hidden" id="associated_cohort" name="associated_cohort" value="<?php echo $cohort_ids_string; ?>" />
 				<input type="hidden" id="associated_course_list" name="associated_course_list" value="<?php echo $clist_ids_string; ?>" />
-				<input type="hidden" id="associated_students" name="associated_students" value="<?php echo $student_ids_string; ?>" />
+				<input type="hidden" id="associated_student" name="associated_student" value="<?php echo $student_ids_string; ?>" />
 				<input type="hidden" id="associated_faculty" name="associated_faculty" value="<?php echo $faculty_ids_string; ?>" />
 				<input type="hidden" id="associated_staff" name="associated_staff" value="<?php echo $staff_ids_string; ?>" />
 				<input type="hidden" id="associated_course" name="associated_course" value="<?php echo $course_audience_included ? "1" : "0"; ?>" />
 
 				<ul class="menu multiselect" id="audience_list" style="margin-top: 5px<?php echo ($target_audience ? "; display: none;" : "");?>">
 					<?php
-					if (is_array($PROCESSED["associated_cohorts"]) && count($PROCESSED["associated_cohorts"])) {
-						foreach ($PROCESSED["associated_cohorts"] as $group) {
+					if (is_array($PROCESSED["associated_cohort"]) && count($PROCESSED["associated_cohort"])) {
+						foreach ($PROCESSED["associated_cohort"] as $group) {
 							if ((array_key_exists($group, $COHORT_LIST)) && is_array($COHORT_LIST[$group])) {
 								?>
 								<li class="group" id="audience_group_<?php echo $COHORT_LIST[$group]["group_id"]; ?>" style="cursor: move;"><?php echo $COHORT_LIST[$group]["group_name"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('group_<?php echo $COHORT_LIST[$group]["group_id"]; ?>', 'cohort');" class="list-cancel-image" /></li>
@@ -352,11 +352,11 @@ if (!defined("IN_NOTICES")) {
 						}
 					}
 
-					if (is_array($PROCESSED["associated_students"]) && count($PROCESSED["associated_students"])) {
-						foreach ($PROCESSED["associated_students"] as $student) {
+					if (is_array($PROCESSED["associated_student"]) && count($PROCESSED["associated_student"])) {
+						foreach ($PROCESSED["associated_student"] as $student) {
 							if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
 								?>
-								<li class="user" id="audience_student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>', 'students');" class="list-cancel-image" /></li>
+								<li class="user" id="audience_student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>" style="cursor: move;"><?php echo $STUDENT_LIST[$student]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="removeAudience('student_<?php echo $STUDENT_LIST[$student]["proxy_id"]; ?>', 'student');" class="list-cancel-image" /></li>
 								<?php
 							}
 						}

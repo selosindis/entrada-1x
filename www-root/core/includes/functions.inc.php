@@ -15906,7 +15906,7 @@ function evaluation_generate_description($min_submittable = 0, $evaluation_quest
 	return sprintf($output, $string_1, $string_2, $string_3, $string_4);
 }
 
-function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessment_id = false) {
+function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessment_id = false, $assessment_ids_string = false) {
 	global $db;
 	$weighted_grade = 0;
 	$weighted_total = 0;
@@ -15917,7 +15917,8 @@ function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessme
 				ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
 				WHERE `assessments`.`course_id` = ".$db->qstr($course_id)."
 				AND `assessments`.`cohort` = ".$db->qstr($cohort).
-				($assessment_id ? " AND `assessments`.`assessment_id` = ".$db->qstr($assessment_id) : "");
+				($assessment_id ? " AND `assessments`.`assessment_id` = ".$db->qstr($assessment_id) : ($assessment_ids_string ? " AND `assessments`.`assessment_id` IN (".$assessment_ids_string.")" : ""));
+				
 	$assessments = $db->GetAll($query);
 	if($assessments) {
 		$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, c.`role`";
@@ -15937,7 +15938,6 @@ function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessme
 
 		$query .= 	" WHERE b.`id` = ".$db->qstr($proxy_id);
 		$query .=	" GROUP BY b.`id`";
-
 		$student = $db->GetRow($query);
 
 		if ($student) {

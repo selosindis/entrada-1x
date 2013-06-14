@@ -537,7 +537,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								JOIN `group_organisations` AS b
 								ON a.`group_id`=b.`group_id`
 								WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-								AND a.`group_active` = 1";
+								AND a.`group_active` = 1
+                                ORDER BY a.`group_name` ASC";
 					if ($groups = $db->GetAll($query)) {
 						echo "var is_groups=true;";
 						echo "var group_ids = new Array();";
@@ -779,7 +780,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										}
 									}
 									?>
-								</select>								
+								</select>
 							</div>
 						</div>
 
@@ -805,11 +806,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								   Send e-mail notifications to faculty for events under this <?php echo strtolower($module_singular_name); ?>.
 								</label>
 								<label for="notification_off" class="radio">
-								  <input type="radio" name="notifications" id="notification_off" value="0"<?php echo (((isset($PROCESSED["notifications"])) && (!(int) $PROCESSED["notifications"])) ? " checked=\"checked\"" : ""); ?> /> 
+								  <input type="radio" name="notifications" id="notification_off" value="0"<?php echo (((isset($PROCESSED["notifications"])) && (!(int) $PROCESSED["notifications"])) ? " checked=\"checked\"" : ""); ?> />
 								  <strong>Do not</strong> send e-mail notifications to faculty for events under this <?php echo strtolower($module_singular_name); ?>.
-								</label>								
+								</label>
 							</div>
-						</div>	
+						</div>
 
 						<div class="control-group">
 							<label class="form-nrequired control-label"><?php echo $module_singular_name; ?> Permissions</label>
@@ -819,11 +820,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									This <?php echo strtolower($module_singular_name); ?> is <strong>open</strong> and visible to all logged in users.
 								</label><br />
 								<label for="visibility_off" class="radio">
-									<input type="radio" name="permission" id="visibility_off" value="closed"<?php echo (((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "closed")) ? " checked=\"checked\"" : ""); ?> /> 
+									<input type="radio" name="permission" id="visibility_off" value="closed"<?php echo (((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "closed")) ? " checked=\"checked\"" : ""); ?> />
 									This <?php echo strtolower($module_singular_name); ?> is <strong>private</strong> and only visible to logged in users enrolled in the <?php echo strtolower($module_singular_name); ?>.
-								</label>							
+								</label>
 							</div>
-						</div>	
+						</div>
 
 						<div class="control-group">
 							<label class="form-nrequired control-label">Audience Sync</label>
@@ -833,11 +834,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</label><br />
 								<label for="sync_on" class="radio">
 									<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> This course <strong>should</strong> have its audience synced with the LDAP server.
-								</label>		
-								<div class="well well-small content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>				
+								</label>
+								<div class="well well-small content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>
 							</div>
 						</div>
-					</div>							
+					</div>
 
 					<script type="text/javascript">
 					var sortables = new Array();
@@ -918,7 +919,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 						});
 					}
-					</script>								
+					</script>
 
 					<h2 title="Course Contacts Section"><?php echo $module_singular_name; ?> Contacts</h2>
 					<div id="course-contacts-section">
@@ -944,7 +945,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									?>
 								</ul>
 								<input type="hidden" id="director_ref" name="director_ref" value="" />
-								<input type="hidden" id="director_id" name="director_id" value="" />								
+								<input type="hidden" id="director_id" name="director_id" value="" />
 							</div>
 						</div>
 
@@ -970,9 +971,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									?>
 								</ul>
 								<input type="hidden" id="coordinator_ref" name="coordinator_ref" value="" />
-								<input type="hidden" id="coordinator_id" name="coordinator_id" value="" />								
+								<input type="hidden" id="coordinator_id" name="coordinator_id" value="" />
 							</div>
-						</div>		
+						</div>
 
 						<div class="control-group">
 							<label for="programcoodinator_id" class="form-nrequired control-label">Program Coordinator</label>
@@ -989,12 +990,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									echo "<input type=\"hidden\" id=\"pcoord_id\" name=\"pcoord_id\" value=\"0\" />\n";
 									echo "Program Coordinator Information Not Available\n";
 								}
-								?>	
+								?>
 								<div class="well well-small content-small space-above">
 									<strong>Important:</strong> Program Coordinators will be able to add, edit or remove learning events in this <?php echo strtolower($module_singular_name); ?>.
-								</div>							
+								</div>
 							</div>
-						</div>				
+						</div>
 						<div class="control-group">
 							<label for="evaluationrep_id" class="form-nrequired control-label">Evaluation Rep.</label>
 							<div class="controls">
@@ -1010,7 +1011,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									echo "<input type=\"hidden\" id=\"evalrep_id\" name=\"evalrep_id\" value=\"0\" />\n";
 									echo "Evaluation Representative Information Not Available\n";
 								}
-								?>								
+								?>
 							</div>
 						</div>
 
@@ -1029,22 +1030,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									echo "<input type=\"hidden\" id=\"studrep_id\" name=\"studrep_id\" value=\"0\" />\n";
 									echo "Student Representative Information Not Available\n";
 								}
-								?>								
+								?>
 							</div>
-						</div>						
+						</div>
 					</div>
 
 					<script type="text/javascript">
 
 						new Ajax.Autocompleter('director_name', 'director_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=director', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'director'); copyItem('director');}});
 						new Ajax.Autocompleter('coordinator_name', 'coordinator_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=coordinator', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'coordinator'); copyItem('coordinator');}});
-						
+
 						$('director_name').observe('keypress', function(event){
 						    if (event.keyCode == Event.KEY_RETURN) {
 						        addItem('director');
 						        Event.stop(event);
 						    }
-						});					
+						});
 						$('coordinator_name').observe('keypress', function(event){
 						    if (event.keyCode == Event.KEY_RETURN) {
 						        addItem('coordinator');
@@ -1054,11 +1055,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					</script>
 					<?php
 						$ONLOAD[] = "Sortable.create('director_list', {onUpdate : function() {updateOrder('director')}})";
-						$ONLOAD[] = "$('associated_director').value = Sortable.sequence('director_list')";					
+						$ONLOAD[] = "$('associated_director').value = Sortable.sequence('director_list')";
 						$ONLOAD[] = "Sortable.create('coordinator_list', {onUpdate : function() {updateOrder('coordinator')}})";
-						$ONLOAD[] = "$('associated_coordinator').value = Sortable.sequence('coordinator_list')";					
+						$ONLOAD[] = "$('associated_coordinator').value = Sortable.sequence('coordinator_list')";
 
-					
+
 						require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
 							$query = "	SELECT a.* FROM `global_lu_objectives` a
@@ -1286,9 +1287,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						</div>
 						<div style="clear:both;"></div>
 					</div>
-					<?php 	} 	?>					
+					<?php 	} 	?>
 
-					<!-- Course Audience-->	
+					<!-- Course Audience-->
 					<h2 title="Course Enrolment Section"><?php echo $module_singular_name; ?> Enrolment</h2>
 					<div id="course-enrolment-section">
 						<table>

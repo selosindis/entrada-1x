@@ -117,13 +117,6 @@ if (!defined("IN_COURSE_GROUPS")) {
 	courses_subnavigation($course_details,"groups");
 	?>
 	<h1>Manage <?php echo $module_singular_name; ?> Groups</h1>
-		<div style="float: right">
-			
-				<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : ""); ?>?section=add&id=<?php echo $COURSE_ID; ?>" class="btn btn-primary">Add Group</a>
-			
-		</div>
-		<div style="clear: both"></div>
-
 	<?php
 	/**
 	 * Update requested order to sort by.
@@ -248,49 +241,47 @@ if (!defined("IN_COURSE_GROUPS")) {
 		height: 120px;
 	}
 	</style>
-	<div class="tab-pane" id="user-tabs">
-		<div class="tab-page">
-			<h3 class="tab">Group Search</h3>
-			<form action="<?php echo ENTRADA_URL; ?>/admin/courses/groups" method="get">
-			<input type="hidden" name="id" value="<?php echo $COURSE_ID;?>"/>
-			<input type="hidden" name="type" value="search" />
-			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="Search for Groups">
-			<colgroup>
-				<col style="width: 3%" />
-				<col style="width: 25%" />
-				<col style="width: 72%" />
-			</colgroup>
-			<tfoot>
-				<tr>
-					<td colspan="3">&nbsp;</td>
-				</tr>
-				<tr>
-					<td colspan="3" style="border-top: 1px #DDD solid; padding-top: 5px; text-align: right">
-						<input type="submit" class="btn btn-primary" value="Search" />
-						<input type="button" class="btn" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/courses/groups?id=<?php echo $COURSE_ID ?>'"/>
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td>&nbsp;</td>
-					<td style="vertical-align: top"><label for="q" class="form-required">Group Search:</label></td>
-					<td>
-						<input type="text" id="q" name="q" value="<?php echo html_encode($search_query); ?>" style="width: 350px" />
-						<div class="content-small" style="margin-top: 10px">
-							<strong>Note:</strong> You can search for Group name.
-						</div>
-					</td>
-				</tr>
-			</tbody>
-			</table>
-			</form>
-		</div>
-	</div>
-
-	<script type="text/javascript">setupAllTabs(false);</script>
+    <div>
+        <form action="<?php echo ENTRADA_URL; ?>/admin/courses/groups" method="get">
+            <input type="hidden" name="id" value="<?php echo $COURSE_ID;?>"/>
+            <input type="hidden" name="type" value="search" />
+            <table style="width: 100%" class="border-below" cellspacing="1" cellpadding="1" border="0" summary="Search for Groups">
+            <colgroup>
+                <col style="width: 3%" />
+                <col style="width: 25%" />
+                <col style="width: 72%" />
+            </colgroup>
+            <tfoot>
+                <tr>
+                    <td colspan="3">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td colspan="3" style="padding: 5px 0 20px 0; text-align: right;">
+                        <input type="button" class="btn" value="Show All"  onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/courses/groups?id=<?php echo $COURSE_ID ?>'"/>
+                        <input type="submit" class="btn btn-primary" value="Search" />
+                    </td>
+                </tr>
+            </tfoot>
+            <tbody>
+                <tr>
+                    <td>&nbsp;</td>
+                    <td style="vertical-align: top"><label for="q" class="form-required">Group Search:</label></td>
+                    <td>
+                        <input type="text" id="q" name="q" value="<?php echo html_encode($search_query); ?>" style="width: 350px" />
+                        <div class="content-small" style="margin-top: 10px">
+                            <strong>Note:</strong> You can search for Group name.
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+            </table>
+        </form>
+    </div>
+    <div class="pull-right space-below medium">
+        <a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE.(isset($SUBMODULE) && $SUBMODULE ? "/".$SUBMODULE : ""); ?>?section=add&id=<?php echo $COURSE_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Group</a>
+    </div>
+    <div style="clear: both"></div>
 	<?php
-	echo "<p />";
 	if ($scheduler_groups["total_pages"] > 1) {
 		echo "<div class=\"fright\" style=\"margin-bottom: 10px\">\n";
 		echo "<form action=\"".ENTRADA_URL."/admin/courses/groups\" method=\"get\" id=\"pageSelector\">\n";
@@ -345,7 +336,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 				<tr>
 					<td />
 						<?php
-						echo "<td colspan=\"3\">\n";
+						echo "<td colspan=\"3\" class=\"pad-above\">\n";
 						if ($ENTRADA_ACL->amIAllowed("group", "delete", false)) {
 							$colspan--;
 							?>
@@ -356,7 +347,7 @@ if (!defined("IN_COURSE_GROUPS")) {
 						echo "<input type=\"submit\" class=\"btn space-right\" value=\"Export Selected\" onClick=\"$('frmSelect').action ='".ENTRADA_URL."/admin/courses/groups?section=export&id=".$COURSE_ID."'\" />";
 						if ($ENTRADA_ACL->amIAllowed("group", "update", false)) {
 							?>
-								<input type="submit" class="btn btn-primary" value="Manage Selected" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=manage&id=<?php echo $COURSE_ID; ?>'" />
+							<input type="submit" class="btn btn-primary" value="Manage Selected" onClick="$('frmSelect').action ='<?php echo ENTRADA_URL; ?>/admin/courses/groups?section=manage&id=<?php echo $COURSE_ID; ?>'" />
 							<?php
 						}
 						echo "</span></td>";

@@ -606,7 +606,9 @@ class Models_Evaluation {
 								$criteria_width = floor(100 / (count($criteriae) + 1));
 								echo "		<td style=\"width: ".$criteria_width."%\">\n";
 								echo "			<div class=\"td-stretch\" style=\"position: relative; width: 100%; vertical-align: middle;\">\n";
-								echo "				<img onclick=\"openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" width=\"16\" height=\"16\" class=\"question-controls cursor-pointer pull-right\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" style=\"margin-top: -15px;\" />";
+                                if (!$attempt) {
+                                    echo "				<img onclick=\"openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" width=\"16\" height=\"16\" class=\"question-controls cursor-pointer pull-right\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" style=\"margin-top: -15px;\" />";
+                                }
 								echo "				<div style=\"position: relative; top: 50%;\">".$question["question_text"]."</div>\n";
 								echo "			</div>\n";
 								echo "		</td>\n";
@@ -649,7 +651,7 @@ class Models_Evaluation {
                                 echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/questions?form_id=".$form_id."&amp;section=edit&amp;id=".$question["equestion_id"]."&amp;efquestion_id=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
                                 echo "	<a id=\"question_delete_".$question["equestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["equestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
                             }
-                        if ($questiontype["questiontype_shortname"] == "free_text") {
+                        if ($questiontype["questiontype_shortname"] == "free_text" && !$attempt) {
                             echo "	<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" /></a>";
                         }
                         echo "</div>\n";
@@ -692,7 +694,9 @@ class Models_Evaluation {
 							echo "	<a href=\"".ENTRADA_URL."/admin/evaluations/questions?form_id=".$form_id."&amp;section=edit&amp;id=".$question["equestion_id"]."&amp;efquestion_id=".$question["efquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
 							echo "	<a id=\"question_delete_".$question["equestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["equestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
 						}
-                        echo "	<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" /></a>";
+                        if (!$attempt) {
+                            echo "	<a href=\"javascript: openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" class=\"question-controls-objectives\" title=\"".$question["efquestion_id"]."\"><img width=\"16\" height=\"16\" class=\"question-controls\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" /></a>";
+                        }
                         echo "</div>\n";
 						echo "	<div id=\"question_text_".$question["equestion_id"]."\" class=\"question".($allow_question_modifications ? " cursor-move" : "")."\">\n";
 						echo "		".clean_input($question["question_text"], "specialchars");
@@ -2855,8 +2859,10 @@ class Models_Evaluation {
 													".($evaluator_proxy_id && $available_only && $unavailable_proxy_ids_string ? "AND `id` NOT IN (".$unavailable_proxy_ids_string.")" : "")."
 													GROUP BY `id`";
 										$evaluation_target_user = $db->GetRow($query);
-										$evaluation_target_user = array_merge($user_data, $evaluation_target_record);
-										$evaluation_targets[] = $user_data;
+                                        if ($evaluation_target_user) {
+                                            $evaluation_target_user = array_merge($evaluation_target_user, $evaluation_target_record);
+                                            $evaluation_targets[] = $evaluation_target_user;
+                                        }
 									}
 								break;
 							}

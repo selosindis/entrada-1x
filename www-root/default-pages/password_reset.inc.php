@@ -47,11 +47,9 @@ if (!isset($_SESSION["reset_page_accesses"])) {
 $hash = (isset($_GET["hash"]) && ($tmp_input = clean_input($_GET["hash"], array("notags", "nows"))) ? $tmp_input : false);
 
 /**
- * Fetch the e-mail address from either the URL or the form post if it exists.
+ * Fetch the e-mail address from the form post if it exists.
  */
-if (isset($_GET["email_address"]) && valid_address($_GET["email_address"]) && ($tmp_input = clean_input($_GET["email_address"]))) {
-    $email_address = $tmp_input;
-} elseif (isset($_POST["email_address"]) && valid_address($_POST["email_address"]) && ($tmp_input = clean_input($_POST["email_address"]))) {
+if (isset($_POST["email_address"]) && valid_address($_POST["email_address"]) && ($tmp_input = clean_input($_POST["email_address"]))) {
     $email_address = $tmp_input;
 } else {
     $email_address = false;
@@ -61,13 +59,13 @@ if (isset($_GET["email_address"]) && valid_address($_GET["email_address"]) && ($
 <h1><?php echo APPLICATION_NAME; ?> Password Reset</h1>
 
 <?php
-if ($hash && $email_address) {
-    if (isset($_POST["npassword1"])) {
+if ($hash) {
+    if (isset($_POST["npassword1"]) && isset($_POST["npassword2"])) {
         $STEP = 4;
     } else {
         $STEP = 3;
     }
-} else if (!$hash && $email_address) {
+} else if ($email_address) {
     $STEP = 2;
 } else {
     $STEP = 1;

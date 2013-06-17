@@ -170,10 +170,10 @@ if ($evaluations && $view != "review") {
 	$evaluation_id = 0;
 	echo "<div class=\"no-printing\">\n";
     echo "    <ul class=\"nav nav-tabs\">\n";
-	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "available" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"available\" onclick=\"loadTab(this.id)\">Display Available</a></li>\n";
-	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "overdue" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"overdue\" onclick=\"loadTab(this.id)\">Display Overdue</a></li>\n";
-	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "complete" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"complete\" onclick=\"loadTab(this.id)\">Display Completed</a></li>\n";
-	echo "		<li".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "all" ? " class=\"active\"" : "")." style=\"width:25%;\"><a id=\"all\" onclick=\"loadTab(this.id)\">Display All</a></li>\n";
+	echo "		<li class=\"active\" style=\"width:25%;\"><a id=\"available\" onclick=\"loadTab(this.id)\">Display Available</a></li>\n";
+	echo "		<li style=\"width:25%;\"><a id=\"overdue\" onclick=\"loadTab(this.id)\">Display Overdue</a></li>\n";
+	echo "		<li style=\"width:25%;\"><a id=\"complete\" onclick=\"loadTab(this.id)\">Display Completed</a></li>\n";
+	echo "		<li style=\"width:25%;\"><a id=\"all\" onclick=\"loadTab(this.id)\">Display All</a></li>\n";
 	echo "	</ul>\n";
 	echo "</div>\n";
 	echo "<br />";
@@ -195,7 +195,7 @@ if ($evaluations && $view != "review") {
                 'bAutoWidth': false
 			}
 		);
-		eTable.fnFilter('".($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"] == "all" ? "" : $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["view_type"])."', 6);
+        eTable.fnFilter('available', 5);
 	});
 	
 	function loadTab (value) {

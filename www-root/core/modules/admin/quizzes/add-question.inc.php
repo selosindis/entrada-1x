@@ -74,6 +74,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				 */
 				load_rte("advanced");
 
+				if ($type == "3") {
+					$STEP = 2;
+					$_POST["question_text"] = "Page Break";
+				}
+
 				// Error Checking
 				switch ($STEP) {
 					case 2 :

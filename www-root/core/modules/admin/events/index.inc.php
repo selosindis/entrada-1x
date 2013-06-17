@@ -137,7 +137,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		<div class="row-fluid">
 			<span class="pull-right">
 				<a class="btn space-right" href="<?php echo ENTRADA_RELATIVE; ?>/admin/events/drafts"><i class="icon-file"></i> Manage My Drafts</a>
-				<a class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add New Event</a>
+				<a class="btn btn-success" href="<?php echo ENTRADA_RELATIVE; ?>/admin/events?section=add"><i class="icon-plus-sign icon-white"></i> Add New Event</a>
 			</span>
 		</div>
 		<br />

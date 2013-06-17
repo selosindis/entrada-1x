@@ -1236,7 +1236,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<h3>Attached Files</h3>
 						</div>
 						<div class="pull-right">
-							<a href="#page-top" class="btn" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A File</a>
+							<input type="button" class="btn" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/file-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')" value="Add A File" />
 						</div>
 						<div class="clear"></div>
 						<?php
@@ -1317,7 +1317,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</div>
 
 						<div class="pull-right">
-								<a href="#page-top" class="btn" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Add A Link</a>
+							<input type="button" class="btn" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/link-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')" value="Add A Link" />
 						</div>
 						<div class="clear"></div>
 						<?php
@@ -1390,8 +1390,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</div>
 
                         <div class="pull-right">
-								<a href="<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add" class="btn">Create New Quiz</a>
-								<a href="#page-top" class="btn" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?action=add&id=<?php echo $EVENT_ID; ?>')">Attach Existing Quiz</a>
+								<input type="button" class="btn" onclick="window.location = '<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add'" value="Create New Quiz" />
+								<input type="button" class="btn" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?action=add&id=<?php echo $EVENT_ID; ?>')" value="Attach Existing Quiz" />
 						</div>
 						<div class="clear"></div>
 						<?php

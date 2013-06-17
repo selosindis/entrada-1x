@@ -164,7 +164,7 @@ function get_event_data($event_id = 0) {
 	/**
 	 * If we pass this function an array of events, use the first one.
 	 */
-	if (is_array($event_id)) {
+	if (is_array($event_id) && count($event_id)) {
 		$event_id = $event_id[0];
 	}
 
@@ -232,7 +232,28 @@ function get_course_id($course_name = "") {
 	global $db;
 
 	if (trim($course_name) != "") {
-		$query = "SELECT `course_id` FROM `courses` WHERE `course_name` LIKE " . $db->qstr($course_name) . " AND `course_active` = '1'";
+		$query = "SELECT `course_id` FROM `courses` WHERE `course_name` LIKE " . $db->qstr($course_name);
+		$result = $db->GetRow($query);
+		if ($result) {
+			return $result["course_id"];
+		}
+	}
+
+	return 0;
+}
+
+/**
+ * This function attempts to get the course_id of a course based on the course code.
+ * 
+ * @param string $course_name
+ * 
+ * @return int
+ */
+function get_course_id_by_code($course_code = "") {
+	global $db;
+
+	if (trim($course_code) != "") {
+		$query = "SELECT `course_id` FROM `courses` WHERE `course_code` LIKE " . $db->qstr($course_code);
 		$result = $db->GetRow($query);
 		if ($result) {
 			return $result["course_id"];
@@ -261,6 +282,24 @@ function fetch_course($course_code = "") {
 	}
 
 	return false;
+}
+
+function fetch_course_group_id($course_id, $group_name = "") {
+	global $db;
+
+	if ($group_name) {
+	 	$query = "	SELECT `cgroup_id`
+					FROM `course_groups`
+					WHERE `group_name` LIKE ".$db->qstr($group_name)."
+					AND `course_id` = ".$db->qstr($course_id)."
+					AND `active` = '1'";
+		$result = $db->GetRow($query);
+		if ($result) {
+			return $result["cgroup_id"];
+		}
+	}
+
+	return 0;
 }
 
 function fetch_cohort_group_id($organisation_id = 0, $cohort_name = "") {
@@ -296,6 +335,27 @@ function get_eventtype_id($eventtype_title = "") {
 
 	if (trim($eventtype_title) != "") {
 		$query = "SELECT `eventtype_id` FROM `events_lu_eventtypes` WHERE `eventtype_title` LIKE " . $db->qstr($eventtype_title);
+		$result = $db->GetRow($query);
+		if ($result) {
+			return $result["eventtype_id"];
+		}
+	}
+
+	return 0;
+}
+
+/**
+ * This function attempts to get the eventtype_id of a event based on the event type title provided.
+ *
+ * @param string $eventtype_title
+ *
+ * @return int
+ */
+function get_eventtype_id_for_org($eventtype_title = "",$org = 1) {
+	global $db;
+
+	if (trim($eventtype_title) != "") {
+		$query = "SELECT a.`eventtype_id` FROM `events_lu_eventtypes` a JOIN `eventtype_organisation` b ON a.`eventtype_id` = b.`eventtype_id` AND b.`organisation_id` = ".$db->qstr($org)." WHERE a.`eventtype_title` LIKE ".$db->qstr($eventtype_title);
 		$result = $db->GetRow($query);
 		if ($result) {
 			return $result["eventtype_id"];

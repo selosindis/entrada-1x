@@ -151,7 +151,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 	<h1><?php echo $MODULES[strtolower($MODULE)]["title"]; ?></h1>
 
     <div class="pull-right">
-		<a href="<?php echo ENTRADA_RELATIVE; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary">Create New Quiz</a>
+		<a href="<?php echo ENTRADA_RELATIVE; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary space-below">Create New Quiz</a>
     </div>
     <?php
     if ($total_pages > 1) {
@@ -185,7 +185,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
     echo "<div class=\"clear\"></div>";
 
-	$query = "  SELECT a.*, COUNT(c.`quiz_id`) AS `question_total`, IF(a.`quiz_active` = '1', 'Active', 'Disabled') AS `quiz_status`
+	$query = "  SELECT a.*, COUNT(DISTINCT c.`qquestion_id`) AS `question_total`, IF(a.`quiz_active` = '1', 'Active', 'Disabled') AS `quiz_status`
 				FROM `quizzes` AS a
 				LEFT JOIN `quiz_contacts` AS b
 				ON a.`quiz_id` = b.`quiz_id`

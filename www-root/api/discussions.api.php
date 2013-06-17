@@ -59,7 +59,7 @@ if((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 						}
 
 						if($PROCESSED["discussion_active"]) {
-							echo $discussion_comment;
+							echo nl2br($discussion_comment);
 						} else {
 							echo "<script type=\"text/javascript\">$('event_comment_".$EDISCUSSION_ID."').fade();</script>";
 						}

@@ -64,6 +64,34 @@ $CSV_FILE	= (((isset($_SERVER["argv"][2])) && (trim($_SERVER["argv"][2]) != ""))
 $SKIP_EMAIL_NOTIFICATION	= false;
 $SEND_ADMIN_NOTIFICATION	= false;
 
+/**
+ * This is the default notification message that is used in the Manage Users
+ * module when someone is adding a new user to the system. It can be changed
+ * by the admin that is adding the user via a textarea when the new user
+ * is created.
+ */
+$NEW_GUEST_NOTIFICATION = <<<USERNOTIFICATION
+Dear %firstname% %lastname%,
+
+A new guest account has just been created for you in %application_name%, which gives you access to the %community_name% community.
+
+Before logging in for the first time you will need to create a password for your account. You can do this by clicking the following link:
+
+%password_reset_url%
+
+Once your password has been set you can log into the %community_name% community by visiting the following link:
+
+%community_url%
+
+Username: %username%
+
+If you require any assistance with this system, please do not hesitate to contact us:
+
+Sincerely,
+
+%application_name% Team
+USERNOTIFICATION;
+
 switch($ACTION) {
 	case "-validate" :
 		$handle = fopen($CSV_FILE, "r");
@@ -211,7 +239,7 @@ switch($ACTION) {
 														$notification_search	= array("%firstname%", "%lastname%", "%username%", "%password_reset_url%", "%application_url%", "%application_name%", "%community_name%", "%community_url%");
 														$notification_replace	= array(stripslashes($user["firstname"]), stripslashes($user["lastname"]), stripslashes($user["username"]), PASSWORD_RESET_URL."?hash=".rawurlencode($proxy_id.":".$hash), ENTRADA_URL, APPLICATION_NAME, $community_info["community_title"], COMMUNITY_URL.$community_info["community_url"]);
 
-														$message = str_ireplace($notification_search, $notification_replace, $DEFAULT_NEW_GUEST_NOTIFICATION);
+														$message = str_ireplace($notification_search, $notification_replace, $NEW_GUEST_NOTIFICATION);
 
 														if($SEND_ADMIN_NOTIFICATION) {
 															$user["email"] = $AGENT_CONTACTS["administrator"]["email"];

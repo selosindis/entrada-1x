@@ -221,9 +221,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 				$STATISTICS["results"]		= array();
 				?>				
 				<div style="text-align: center">
-					<canvas id="graph_1_<?php echo $course_id; ?>" width="750" height="450"></canvas>
+					<canvas id="graph_1_<?php echo $course_id; ?>" width="675" height="450"></canvas>
 				</div>
-				<table id="data_table_<?php echo $course_id; ?>" class="tableList" style="width: 750px" cellspacing="0" summary="Event Types of <?php echo html_encode($courses_included[$course_id]); ?>">
+				<table id="data_table_<?php echo $course_id; ?>" class="tableList" cellspacing="0" summary="Event Types of <?php echo html_encode($courses_included[$course_id]); ?>">
 				<colgroup>
 					<col class="modified" />
 					<col class="title" />

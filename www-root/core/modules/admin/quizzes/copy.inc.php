@@ -76,36 +76,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									$new_qquestion_ids = array();
 
 									foreach ($questions as $question) {
-										$query = "	INSERT INTO `quiz_questions` VALUES (
-														NULL,
-														'".$new_quiz_id."',
-														".$db->qstr($question["questiontype_id"]).",
-														".$db->qstr($question["question_text"]).",
-														".$db->qstr($question["question_points"]).",
-														".$db->qstr($question["question_order"]).",
-														'1',
-														".$db->qstr($question["randomize_responses"])."
-													)";
-										if (($db->Execute($query)) && ($new_qquestion_id = $db->Insert_Id())) {
-											$query = "	INSERT INTO `quiz_question_responses`
-														SELECT NULL, '".$new_qquestion_id."', `response_text`, `response_order`, `response_correct`, `response_is_html`, `response_feedback`, `response_active`
-														FROM `quiz_question_responses`
-														WHERE `qquestion_id` = ".$db->qstr($question["qquestion_id"]);
-											if (($db->Execute($query)) && ($db->Affected_Rows() > 0)) {
-												/**
-												 * Add this new qquestion_id to the $new_qquestion_ids array.
-												 */
-												$new_qquestion_ids[] = $new_qquestion_id;
-											} else {
-												$ERROR++;
+										$old_qquestion_id = $question["qquestion_id"];
+										unset($question["qquestion_id"]);
+										$question["quiz_id"] = $new_quiz_id;
+										if ($db->AutoExecute("quiz_questions", $question, "INSERT")) {
+											$new_qquestion_id = $db->Insert_Id();
+											if ($question["questiontype_id"] == "1") {
+												$query = "	INSERT INTO `quiz_question_responses`
+															SELECT NULL, '".$new_qquestion_id."', `response_text`, `response_order`, `response_correct`, `response_is_html`, `response_feedback`, `response_active`
+															FROM `quiz_question_responses`
+															WHERE `qquestion_id` = ".$db->qstr($old_qquestion_id);
+												if (($db->Execute($query)) && ($db->Affected_Rows() > 0)) {
+													/**
+													 * Add this new qquestion_id to the $new_qquestion_ids array.
+													 */
+													$new_qquestion_ids[] = $new_qquestion_id;
+												} else {
+													$ERROR++;
 
-												application_log("error", "Unable to insert new quiz_question_responses record when attempting to copy responses for qquestion_id [".$question["qquestion_id"]."] from quiz_id [".$RECORD_ID."]. Database said: ".$db->ErrorMsg());
+													application_log("error", "Unable to insert new quiz_question_responses record when attempting to copy responses for qquestion_id [".$question["qquestion_id"]."] from quiz_id [".$RECORD_ID."]. Database said: ".$db->ErrorMsg());
+												}
 											}
 										} else {
 											$ERROR++;
 
 											application_log("error", "Unable to insert new quiz_questions record when attempting to copy quiz_id [".$RECORD_ID."]. Database said: ".$db->ErrorMsg());
-										}
+										}	
 									}
 
 									if ($ERROR) {

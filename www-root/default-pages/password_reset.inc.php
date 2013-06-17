@@ -116,10 +116,10 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             /**
                              * If the user is changing the password, then proceed.
                              */
-                            if (isset($_POST["npassword1"]) || ($tmp_input = clean_input($_POST["npassword1"]))) {
+                            if (isset($_POST["npassword1"]) && ($tmp_input = clean_input($_POST["npassword1"]))) {
                                 $password = $tmp_input;
 
-                                if (isset($_POST["npassword2"]) || ($tmp_input = clean_input($_POST["npassword2"]))) {
+                                if (isset($_POST["npassword2"]) && ($tmp_input = clean_input($_POST["npassword2"]))) {
                                     $password2 = $tmp_input;
 
                                     if ($password == $password2) {
@@ -136,9 +136,10 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                                 add_error("Please be sure to enter the new password for your account.");
                             }
 
-                            if (!$ERROR) {
+                            if ($ERROR) {
+                                $STEP = 3;
+                            } else {
                                 $salt = hash("sha256", (uniqid(rand(), 1) . time() . $result["id"]));
-
                                 $query = "UPDATE `".AUTH_DATABASE."`.`user_data`
                                             SET `password` = ".$db->qstr(sha1($password.$salt)).", `salt` = ".$db->qstr($salt)."
                                             WHERE `id` = ".$db->qstr($proxy_id)."
@@ -193,38 +194,44 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                                     $_SESSION = array();
                                     @session_destroy();
 
-                                    add_success("<strong>Your ".APPLICATION_NAME." password has been reset.</strong><br /><br />A notification e-mail with the result of this process has also been sent to <a href=\"mailto:".html_encode($email_address)."\">".html_encode($email_address)."</a>.");
+                                    add_success("<strong>Your ".APPLICATION_NAME." password has been reset.</strong><br /><br />A notification e-mail with the result of this process has also been sent to <a href=\"mailto:".html_encode($email_address)."\">".html_encode($email_address)."</a>. You can now <a href=\"".ENTRADA_URL."\"><strong>return to the login page</strong></a> to log into ".APPLICATION_NAME.".");
 
                                     application_log("success", "Username: [".$username." / ".$proxy_id."] reset their password.");
                                 } else {
+                                    $STEP = 1;
+
                                     add_error("We were unable to complete your password reset request at this time, please try again later.<br /><br />The administrator has been informed of this error and will investigate promptly.");
 
                                     application_log("error", "Unable to reset the password because of an update failure. Database said: ".$db->ErrorMsg());
                                 }
                             }
                         } else {
+                            $STEP = 1;
+
                             add_error("Unfortunately we were unable to proceed with resetting this password, please submit a new <a href=\"".ENTRADA_URL."/password_reset\">password reset request</a>.");
 
                             application_log("error", "There was a problem with a password reset entry. Proxy ID: [".$proxy_id."], Hash: [".$hash."]");
                         }
                     } else {
+                        $STEP = 1;
+
                         add_error("<strong>Your password has already been reset.</strong><br /><br />If you have forgotten your password again, please submit a new <a href=\"".ENTRADA_URL."/password_reset\">password reset request</a>.");
 
                         application_log("error", "Password has already been reset but is hitting step 4 still. Hash: ".$hash);
                     }
                 } else {
+                    $STEP = 1;
+
                     add_error("<strong>There is a problem with the provided hash code.</strong><br /><br />If you are trying to reset your ".APPLICATION_NAME." password, copy and paste the entire link from the e-mail you have received into the browsers' location bar. Sometimes if you click the link from your e-mail client it may not include the entire address.");
 
                     application_log("error", "A bad hash code is hitting step 4. Hash: ".$hash);
                 }
             } else {
+                $STEP = 1;
+
                 add_error("<strong>There is a problem with the provided hash code.</strong><br /><br />If you are trying to reset your ".APPLICATION_NAME." password, copy and paste the entire link from the e-mail you have received into the browser location bar. Sometimes if you click the link from your e-mail client it may not include the entire address.");
 
                 application_log("error", "A bad hash code is hitting step 4. Hash: ".$hash);
-            }
-
-            if ($ERROR) {
-                $STEP = 1;
             }
         break;
         case 3 :
@@ -233,10 +240,12 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                 $proxy_id = clean_input($pieces[0], "int");
                 $hash = clean_input($pieces[1], "alphanumeric");
 
-                $query = "SELECT *
-                            FROM `".AUTH_DATABASE."`.`password_reset`
-                            WHERE `user_id` = ".$db->qstr($proxy_id)."
-                            AND `hash` = ".$db->qstr($hash);
+                $query = "SELECT b.`username`, b.`firstname`, b.`lastname`, a.*
+                            FROM `".AUTH_DATABASE."`.`password_reset` AS a
+                            JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                            ON b.`id` = a.`user_id`
+                            WHERE a.`user_id` = ".$db->qstr($proxy_id)."
+                            AND a.`hash` = ".$db->qstr($hash);
                 $result = $db->GetRow($query);
                 if ($result) {
                     if (!(int) $result["complete"]) {
@@ -262,10 +271,10 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
             }
         break;
         case 2 :
-            $query	= "SELECT `id`, `username`, `email`, `firstname`, `lastname`
+            $query  = "SELECT `id`, `username`, `email`, `firstname`, `lastname`
                         FROM `".AUTH_DATABASE."`.`user_data`
                         WHERE `email` = ".$db->qstr($email_address);
-            $result	= $db->GetRow($query);
+            $result = $db->GetRow($query);
             if ($result) {
                 $proxy_id = (int) $result["id"];
                 $username = $result["username"];
@@ -316,9 +325,11 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                         $mail->setBodyText($message);
 
                         if ($mail->send()) {
-                            add_success("Hello <strong>".html_encode($firstname." ".$lastname).",</strong><br />A password reset authorisation e-mail has just been sent to <strong>".html_encode($email_address)."</strong>. This e-mail contains further instructions on resetting your password, so please check your e-mail in a few minutes.");
+                            add_success("An e-mail has just been sent to <strong>".html_encode($email_address)."</strong> that contains further instructions on resetting your ".APPLICATION_NAME." password. Please check your e-mail in a few minutes to proceed.");
 
                             application_log("notice", "A password reset e-mail has just been sent for ".$username." [".$proxy_id."].");
+
+                            $email_address = "";
                         } else {
                             add_error("We were unable to send you a password reset authorization e-mail at this time due to an unrecoverable error. The administrator has been notified of this error and will investigate the issue shortly.<br /><br />Please try again later, we apologize for any inconvenience this may have caused.");
 
@@ -367,12 +378,21 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
             }
         break;
         case 3 :
+            if ($ERROR) {
+                echo display_error();
+            }
+            if ($NOTICE) {
+                echo display_error();
+            }
+            if ($SUCCESS) {
+                echo display_success();
+            }
             ?>
             <div class="display-generic">
                 Welcome to the password reset program <strong><?php echo html_encode($firstname); ?></strong>. Using the form below enter the new password that you would like to use for <?php echo APPLICATION_NAME; ?>. Please be aware that your password must be between 6 and 48 characters in length.
             </div>
 
-            <form class="form-horizontal" action="<?php echo ENTRADA_RELATIVE; ?>/password_reset" method="POST">
+            <form class="form-horizontal" action="<?php echo ENTRADA_RELATIVE; ?>/password_reset?hash=<?php echo rawurlencode($proxy_id.":".$hash); ?>" method="POST">
                 <div class="control-group">
                     <label class="control-label">Username:</label>
                     <div class="controls">

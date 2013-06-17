@@ -699,7 +699,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									</tr>
 									<tr>
 										<td colspan="3">
-											<label class="form-nrequired radio" for="show_quiz_option_0">
+											<label class="form-nrequired radio" for="show_quiz_option_1">
 												<input type="radio" name="show_quiz_option" value="1" onclick="jQuery('#quiz_options').toggle(true)" id="show_quiz_option_1" <?php echo ($attached_quizzes ? " checked=\"checked\"" : ""); ?> style="margin-right: 5px;" />Link existing online quizzes to this assessment
 											</label>
 										</td>

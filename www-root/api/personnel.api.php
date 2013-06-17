@@ -48,7 +48,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	}
 
 	if ($fullname) {
-		$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`email`, c.`organisation_title`
+		$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`email`, c.`organisation_title`, b.`group`
 					FROM `".AUTH_DATABASE."`.`user_data` AS a
 					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 					ON b.`user_id` = a.`id`
@@ -107,7 +107,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		$results = $db->GetAll($query);
 		if ($results) {
 			foreach($results as $result) {
-				echo "\t<li id=\"".(int) $result["proxy_id"]."\">".html_encode($result["fullname"])."<span class=\"informal content-small\"><br />".html_encode($result["organisation_title"])."</span></li>\n";
+				echo "\t<li id=\"".(int) $result["proxy_id"]."\">".html_encode($result["fullname"])."<span class=\"informal content-small\"><br />".html_encode($result["organisation_title"])." - ".html_encode(ucfirst($result["group"]))."</span></li>\n";
 			}
 		} else {
 			echo "\t<li id=\"0\"><span class=\"informal\">&quot;<strong>".html_encode($fullname)."&quot;</strong> was not found</span></li>";

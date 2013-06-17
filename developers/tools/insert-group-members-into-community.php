@@ -1,4 +1,4 @@
-#!/export/home/ccs/qlib/apps/php/bin/php
+#!/usr/bin/php
 <?php
 /**
  * Entrada Tools [ http://www.entrada-project.org ]

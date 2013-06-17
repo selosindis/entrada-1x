@@ -98,8 +98,8 @@ while (!$community) {
 	$community = $db->GetRow("SELECT * FROM " . DATABASE_NAME . ".`communities` WHERE `community_id` = " . $db->qstr($COMMUNITY_ID));
 }
 
-//Create sites for non-programs
-$site_names = array("Family Medicine-Belleville-Quinte");
+//Community Name(s)
+$site_names = array("Fellowship in General Internal Medicine");
 
 $site_name_prefix = "pgme";
 $template = $community["community_template"];

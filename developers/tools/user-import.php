@@ -200,8 +200,11 @@ switch($ACTION) {
 					}
 
 					if (($user["email"] != "") && ($pieces = explode("@", $user["email"])) && (is_array($pieces))) {
+                        $salt = hash("sha256", (uniqid(rand(), 1) . time() . $user["number"]));
+
 						$user["password_plain"]	= generate_password();
-						$user["password"]		= md5($user["password_plain"]);
+						$user["password"] = sha1($user["password_plain"].$salt);
+						$user["salt"] = $salt;
 
 						$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `number` = ".$db->qstr($user["number"])." OR `username` = ".$db->qstr($user["username"]);
 						$result	= $db->GetRow($query);
@@ -212,6 +215,7 @@ switch($ACTION) {
 								$access						= array();
 								$access["user_id"]			= $proxy_id;
 								$access["app_id"]			= AUTH_APP_ID;
+								$access["organisation_id"]	= $user["organisation"];
 								$access["account_active"]	= "true";
 								$access["access_starts"]	= time();
 								$access["access_expires"]	= 0;

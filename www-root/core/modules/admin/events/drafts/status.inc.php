@@ -166,14 +166,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								return false;
 							});
 
-							jQuery('#draft-list').dataTable({
-								"aaSorting": [[ 1, "asc" ]],
-                                'bAutoWidth': false
-							});
 						});
 					</script>
 					<form action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&step=2&action=<?php echo $action; ?>" method="post">
-					<table class="tableList" id="draft-list" widht="100%" cellspacing="0" summary="List of Events">
+					<table class="table table-bordered table-striped" id="draft-list" widht="100%" cellspacing="0" summary="List of Events">
 					<colgroup>
 						<col class="modified" />
 						<col class="date" />
@@ -182,10 +178,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					</colgroup>
 					<thead>
 						<tr>
-							<td class="modified" style="font-size: 12px">&nbsp;</td>
-							<td class="date" style="font-size: 12px"><a href="#" class="noLink">Creation Date &amp; Time</a></div></td>
-							<td class="title" style="font-size: 12px"><a href="#" class="noLink">Draft Title</a></td>
-							<td class="description" style="font-size: 12px"><a href="#" class="noLink">Description</a></td>
+							<th class="modified">&nbsp;</th>
+							<th class="date">Creation Date &amp; Time</th>
+							<th class="title">Draft Title</th>
+							<th class="description">Description</th>
 						</tr>
 					</thead>
 					<tbody>

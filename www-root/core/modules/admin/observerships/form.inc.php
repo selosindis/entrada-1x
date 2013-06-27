@@ -30,64 +30,70 @@ if((!defined("PARENT_INCLUDED")) || (!defined("ADMIN_OBSERVERSHIP_FORM"))) {
 } elseif((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-}
+} elseif (!$ENTRADA_ACL->amIAllowed("user", "update", false)) {
+	$ERROR++;
+	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 
+	echo display_error();
 
-function makeSelection($val1,$val2){
-	echo $val1==$val2?' selected="selected"':'';
-}
+	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
+} else {
 
-function makeChecked($val1,$val2){
-	echo $val1==$val2?' checked="checked"':'';
-}
-
-$user = User::get($student_id);
-
-?>
-<h1>
-	<?php echo $ACTION; ?> Observership for <?php echo $user->getFullname(false); ?>
-</h1>
-
-
-<?php 
-	if ($ERROR) {
-		echo display_error();
+	function makeSelection($val1,$val2){
+		echo $val1==$val2?' selected="selected"':'';
 	}
 
-	if ($NOTICE) {
-		echo display_notice();		
+	function makeChecked($val1,$val2){
+		echo $val1==$val2?' checked="checked"':'';
 	}
 
-	if ($SUCCESS) {
-		echo display_success();		
-	}
-$HEAD[] = "<script type=\"text/javascript\"> var SITE_URL = '".ENTRADA_URL."';</script>";
-$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/users.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-$HEAD[]	= "<script type=\"text/javascript\">
-			function provStateFunction(countries_id) {	
-				var url='".webservice_url("clerkship_prov")."';
-				url=url+'?countries_id='+countries_id+'&prov_state=".rawurlencode($OBSERVERSHIP->getProv() ? clean_input($OBSERVERSHIP->getProv(), array("notags", "trim")) : $PROCESSED["prov_state"])."';
-				new Ajax.Updater($('prov_state_div'), url, 
-					{ 
-						method:'get',
-						onComplete: function () {
-							generateAutocomplete();
-							if ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0) {
-								$('prov_state_label').removeClassName('form-nrequired');
-								$('prov_state_label').addClassName('form-required');
-							} else {
-								$('prov_state_label').removeClassName('form-required');
-								$('prov_state_label').addClassName('form-nrequired');
+	$user = User::get($student_id);
+
+	?>
+	<h1>
+		<?php echo $ACTION; ?> Observership for <?php echo $user->getFullname(false); ?>
+	</h1>
+
+
+	<?php 
+		if ($ERROR) {
+			echo display_error();
+		}
+
+		if ($NOTICE) {
+			echo display_notice();		
+		}
+
+		if ($SUCCESS) {
+			echo display_success();		
+		}
+	$HEAD[] = "<script type=\"text/javascript\"> var SITE_URL = '".ENTRADA_URL."';</script>";
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/users.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+	$HEAD[]	= "<script type=\"text/javascript\">
+				function provStateFunction(countries_id) {	
+					var url='".webservice_url("clerkship_prov")."';
+					url=url+'?countries_id='+countries_id+'&prov_state=".rawurlencode($OBSERVERSHIP->getProv() ? clean_input($OBSERVERSHIP->getProv(), array("notags", "trim")) : $PROCESSED["prov_state"])."';
+					new Ajax.Updater($('prov_state_div'), url, 
+						{ 
+							method:'get',
+							onComplete: function () {
+								generateAutocomplete();
+								if ($('prov_state').selectedIndex || $('prov_state').selectedIndex === 0) {
+									$('prov_state_label').removeClassName('form-nrequired');
+									$('prov_state_label').addClassName('form-required');
+								} else {
+									$('prov_state_label').removeClassName('form-required');
+									$('prov_state_label').addClassName('form-nrequired');
+								}
 							}
-						}
-					});
-			}
-			</script>\n";
-$ONLOAD[]		= "provStateFunction(\$F($('observership_form')['countries_id']))";
-if (!$OBSERVERSHIP){
-	$OBSERVERSHIP = new Observership();
-}
-?>
+						});
+				}
+				</script>\n";
+	$ONLOAD[]		= "provStateFunction(\$F($('observership_form')['countries_id']))";
+	if (!$OBSERVERSHIP){
+		$OBSERVERSHIP = new Observership();
+	}
+	?>
 
 	<script type="text/javascript">
 		jQuery(document).ready(function(){		
@@ -408,3 +414,5 @@ if (!$OBSERVERSHIP){
 			</tbody>
 		</table>
 	</form>	
+	<?php
+}

@@ -39,7 +39,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	
-	require_once("Models/utility/Editable.interface.php");
 	require_once("Models/mspr/Observership.class.php");
 	require_once("Models/mspr/Observerships.class.php");
 	echo "<h1>Pending Observerships</h1>";

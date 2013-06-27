@@ -98,7 +98,8 @@ if (!defined("PARENT_INCLUDED")) {
  * 
  */
 function add_profile_sidebar () {
-	global $ENTRADA_ACL;
+	global $ENTRADA_ACL, $ENTRADA_USER, $db;
+
 	$sidebar_html  = "<ul class=\"menu\">";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile\">Personal Information</a></li>\n";
 	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=privacy\">Privacy Settings</a></li>\n";

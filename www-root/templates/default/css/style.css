@@ -112,6 +112,7 @@ header#main-header .banner{
   box-shadow:0 -4px 7px rgba(0, 0, 0, 0.075);
   min-height:34px;
   border-radius:0;
+  filter: 0;
 }
 .navbar .nav > li {
   background:url("../images/nav-separator.png") right bottom no-repeat transparent;

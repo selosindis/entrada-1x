@@ -85,7 +85,7 @@ class Observership extends ModelBase implements Editable, Validation {
 				$res->VALID = false;				
 			}
 			
-			if (($ENTRADA_USER->getGroup() != "staff" && $ENTRADA_USER->getGroup() != "medtech") && $res->start < time() + 86400) {
+			if (($ENTRADA_USER->getGroup() != "staff" && $ENTRADA_USER->getGroup() != "medtech") && date("z", $res->start) < date("z", time())) {
 				add_error("Entry of historical observerships is not available, any entered observership must start tomorrow or later.");
 				$res->VALID = false;
 			}
@@ -442,7 +442,11 @@ class Observership extends ModelBase implements Editable, Validation {
 		if ($order) {
 			$this->order = $order;
 		}
-		$this->title = $this->clinical_discipline . " " . $this->activity_type;
+		if ($this->activity_type == "ipobservership") {
+			$this->title = $this->clinical_discipline . " " . $this->observership_details;
+		} else {
+		    $this->title = $this->clinical_discipline . " " . $this->activity_type;
+		}
 		$data = $this->toArray();
 		
 		if(!$db->AutoExecute("student_observerships", $data, "INSERT")) {
@@ -481,6 +485,12 @@ class Observership extends ModelBase implements Editable, Validation {
 			if ($proxy_id) {
 				$this->preceptor_proxy_id = $proxy_id;
 			}
+		}
+		
+		if ($this->activity_type == "ipobservership") {
+			$this->title = $this->clinical_discipline . " " . $this->observership_details;
+		} else {
+			$this->title = $this->clinical_discipline . " " . $this->activity_type;
 		}
 		
 		$data = $this->toArray();

@@ -117,7 +117,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                 FROM `".AUTH_DATABASE."`.`user_data` AS b
                                 JOIN `".AUTH_DATABASE."`.`user_access` AS c
                                 ON c.`user_id` = b.`id` 
-                                AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
+                                AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
                                 AND c.`account_active` = 'true'
                                 AND (c.`access_starts` = '0' OR c.`access_starts`<=".$db->qstr(time()).")
                                 AND (c.`access_expires` = '0' OR c.`access_expires`>=".$db->qstr(time()).")

@@ -328,6 +328,7 @@ $AGENT_CONTACTS["agent-clerkship"] = array("name" => "Clerkship Administrator", 
 $AGENT_CONTACTS["agent-clerkship-international"] = array("name" => "International Clerkship Administrator", "email" => $config->admin->email);
 $AGENT_CONTACTS["agent-regionaled"] = array("name" => "Apartment Administrator", "email" => $config->admin->email);
 $AGENT_CONTACTS["community-notifications"] = array("name" => "Communities Administrator", "email" => $config->admin->email);
+$AGENT_CONTACTS["observership"] = array("name" => "Undergraduate Education", "email" => $config->admin->email);
 
 /**
  * A list of reserved names of community pages (in lower case). If a new community page matches
@@ -374,6 +375,9 @@ $PROFILE_NAME_PREFIX[] = "Dr.";
 $PROFILE_NAME_PREFIX[] = "Mr.";
 $PROFILE_NAME_PREFIX[] = "Mrs.";
 $PROFILE_NAME_PREFIX[] = "Ms.";
+$PROFILE_NAME_PREFIX[] = "Prof.";
+$PROFILE_NAME_PREFIX[] = "Assoc. Prof.";
+$PROFILE_NAME_PREFIX[] = "Asst. Prof.";
 
 /**
  * Would you like to add the ability to web-proxy links? If not you can leave

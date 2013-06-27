@@ -102,7 +102,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
             $event_date = validate_calendar("Elective", "event", false);
             if ((isset($event_date)) && ((int) $event_date)) {
                 $PROCESSED["event_start"]   = (int) $event_date;
-                $PROCESSED["event_finish"]  = $PROCESSED["event_start"] + (clean_input($_POST["event_finish_name"], array("int")) * ONE_WEEK);
+                $PROCESSED["event_finish"]  = $PROCESSED["event_start"] + (clean_input($_POST["event_finish_name"], array("int")) * ONE_WEEK) - 10800;
                 $start_stamp                = $PROCESSED["event_start"];
                 $end_stamp                  = $PROCESSED["event_finish"];
                 $dateCheckQuery = "SELECT `event_title`, `event_start`, `event_finish`   
@@ -131,6 +131,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                         $ERRORSTR[] = "This elective conflicts with the following elective:<br />".$dateError;
                     }  else {
                         $ERRORSTR[] = "This elective conflicts with the following electives:<br />".$dateError;
+                    }
+                } else {
+                    $weekTotals = clerkship_get_elective_weeks($ENTRADA_USER->getID());
+                    $totalWeeks = $weekTotals["approval"] + $weekTotals["approved"];
+
+                    if ($totalWeeks + clean_input($_POST["event_finish_name"], array("int")) > $CLERKSHIP_REQUIRED_WEEKS) {
+                        $ERROR++;
+                        $ERRORSTR[] = "The <strong>Weeks</strong> field contains too large a number as this combined with the other electives you have in the system
+                        (both approved and awaiting approval) exceeds the maximum number of weeks allowed (".$CLERKSHIP_REQUIRED_WEEKS."). Please use the Page Feedback link to 
+                        contact the undergraduate office if you need help resolving this issue.";
                     }
                 }
             }
@@ -437,16 +447,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 
 				switch (\$F('event_finish')) {
 					case '2':
-						var days = 14;
+						var days = 13;
 						break;
 					case '3':
-						var days = 21;
+						var days = 20;
 						break;
 					case '4':
-						var days = 28;
+						var days = 27;
 						break;
 					default:
-						var days = 14;
+						var days = 13;
 						break;
 				}
 				newDate.setDate(newDate.getDate() + days);
@@ -459,16 +469,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 				newDate = toJSDate(date);
 				switch (\$F('event_finish')) {
 					case '2':
-						var days = 14;
+						var days = 13;
 						break;
 					case '3':
-						var days = 21;
+						var days = 20;
 						break;
 					case '4':
-						var days = 28;
+						var days = 27;
 						break;
 					default:
-						var days = 14;
+						var days = 13;
 						break;
 				}
 				newDate.setDate(newDate.getDate()+days);

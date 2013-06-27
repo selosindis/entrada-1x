@@ -4398,4 +4398,246 @@ class Models_Evaluation {
 
 		return $presentations;
 	}
+	
+	public static function getMobileQuestionAnswerControls($questions, $form_id, $eprogress_id = 0) {
+		global $db;
+		$output = "";
+		$output .= "<div data-role=\"content\" id=\"form-content-questions-holder\">\n";
+		$output .= "	<ol id=\"form-questions-list\">\n";
+        if ($eprogress_id) {
+            $current_progress_record = Models_Evaluation::loadProgress($eprogress_id);
+        } else {
+            $current_progress_record = false;
+        }
+        $rubric_id = 0;
+        $show_rubric_headers = false;
+        $show_rubric_footers = false;
+        $rubric_table_open = false;
+        $original_question_id = 0;
+        $comments_enabled = false;
+        $modified_count = 0;
+        $desctext_count = 0;
+        foreach ($questions as $key => $question) {
+            if (isset($question["questiontype_id"]) && $question["questiontype_id"]) {
+                $query = "SELECT * FROM `evaluations_lu_questiontypes`
+                            WHERE `questiontype_id` = ".$db->qstr($question["questiontype_id"]);
+                $questiontype = $db->GetRow($query);
+            } else {
+                $questiontype = array("questiontype_shortname" => "matrix_single");
+            }
+            switch ($questiontype["questiontype_shortname"]) {
+                case "rubric" :
+                    $query = "SELECT * FROM `evaluation_rubric_questions` AS a 
+                                JOIN `evaluations_lu_rubrics` AS b
+                                ON a.`erubric_id` = b.`erubric_id`
+                                WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"]);
+                    $rubric = $db->GetRow($query);
+                    if ($rubric) {
+                        if ($rubric["erubric_id"] != $rubric_id) {
+                            if ($rubric_id) {
+                                $show_rubric_footers = true;
+                            }
+                            $rubric_id = $rubric["erubric_id"];
+                            $show_rubric_headers = true;
+                            $original_question_id = $question["equestion_id"];
+                            $comments_enabled = $question["allow_comments"];
+                        }
+                        if ($show_rubric_footers) {
+                            $show_rubric_footers = false;
+                            $rubric_table_open = false;
+                            $output .= "</table></div>";
+                            if ($comments_enabled) {
+                                $output .= "	<div class=\"clear\"></div>\n";
+                                $output .= "	<div class=\"comments\">\n";
+                                $output .= "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
+                                $output .= "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
+                                $output .= "	</div>\n";
+                            } else {
+                                $output .= "<input data-theme=\"b\" type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+                            }
+                            $original_question_id = $question["equestion_id"];
+                            $comments_enabled = $question["allow_comments"];
+                            $output .= "</li>";
+                        }
+                        if ($show_rubric_headers) {
+                            $rubric_table_open = true;
+                            $output .= "<li id=\"question_".$question["equestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">\n";
+                            $output .= "<span id=\"question_text_".$question["equestion_id"]."\" style=\"display: none;\">".$rubric["rubric_title"].(stripos($rubric["rubric_title"], "rubric") === false ? " Rubric" : "")."</span>";
+                            $output .= (isset($rubric["rubric_title"]) && $rubric["rubric_title"] ? "<h2>".$rubric["rubric_title"] : "")."<span style=\"font-weight: normal; margin-left: 10px; padding-right: 30px;\" class=\"content-small\">".$rubric["rubric_description"]."</span>".(isset($rubric["rubric_title"]) && $rubric["rubric_title"] ? "</h2>\n" : "\n");
+                            $modified_count++;
+                            $output .= "<br /><div class=\"question\"><table class=\"rubric\">\n";
+                            $output .= "	<tr>\n";
+                            $columns = 0;
+                            $query = "	SELECT a.*
+                                        FROM `evaluations_lu_question_responses` AS a
+                                        WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"])."
+                                        ORDER BY a.`response_order` ASC";
+                            $responses = $db->GetAll($query);
+                            if ($responses) {
+                                $response_width = floor(100 / (count($responses) + 1));
+                                $output .= "		<th style=\"width: ".$response_width."%; text-align: left; border-bottom: \">\n";
+                                $output .= "			Categories";
+                                $output .= "		</th>\n";
+                                foreach ($responses as $response) {
+                                    $columns++;
+                                    $output .= "<th style=\"width: ".$response_width."%; text-align: left;\">\n";
+                                    $output .= clean_input($response["response_text"], "specialchars");
+                                    $output .= "</th>\n";
+                                }
+                            }
+                            $output .= "	</tr>\n";
+                            $show_rubric_headers = false;
+                        }
+
+                        $question_number = ($key + 1);
+
+                        $output .= "<tr id=\"question_".$question["equestion_id"]."\">";
+
+                        $query = "	SELECT b.*, a.`equestion_id`, a.`minimum_passing_level`
+                                    FROM `evaluations_lu_question_responses` AS a
+                                    LEFT JOIN `evaluations_lu_question_response_criteria` AS b
+                                    ON a.`eqresponse_id` = b.`eqresponse_id`
+                                    WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"])."
+                                    ORDER BY a.`response_order` ASC";
+                        $criteriae = $db->GetAll($query);
+                        if ($criteriae) {
+                            $criteria_width = floor(100 / (count($criteriae) + 1));
+                            $output .= "		<td style=\"width: ".$criteria_width."%\">\n";
+                            $output .= "			<div class=\"td-stretch\" style=\"position: relative; width: 100%; vertical-align: middle;\">\n";
+                            $output .= "				<div style=\"position: relative; top: 50%;\">".$question["question_text"]."</div>\n";
+                            $output .= "			</div>\n";
+                            $output .= "		</td>\n";
+                            $blank_lines = "\n";
+                            foreach ($criteriae as $criteria) {
+                                $new_blank_lines = preg_replace('/\S/', " ", $criteria["criteria_text"]);
+                                if (strlen($blank_lines) < strlen($new_blank_lines)) {
+                                    $blank_lines = $new_blank_lines;
+                                }
+                            }
+                            $output .= "	<fieldset data-role=\"controlgroup\">";
+                            foreach ($criteriae as $criteria) {
+                                $criteria_text = clean_input(nl2br($criteria["criteria_text"]), "allowedtags");
+                                if (!trim($criteria_text)) {
+                                    $criteria_text = nl2br($blank_lines);
+                                }
+                                $output .= "<td style=\"width: ".$criteria_width."%; vertical-align: top;\" >\n";
+                                $output .= "	<div style=\"width: 3em; margin: 0 auto;\">";
+                                $output .= "		<input data-theme=\"b\" type=\"radio\" id=\"".$form_id."_".$criteria["equestion_id"]."_".$criteria["eqresponse_id"]."\" name=\"responses[".$question["equestion_id"]."]\"".($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["eqresponse_id"]) && $current_progress_record[$question["equestion_id"]]["eqresponse_id"] == $criteria["eqresponse_id"] ? " checked=\"checked\"" : "")." value=\"".$criteria["eqresponse_id"]."\" />";
+                                $output .= "		<label for=\"".$form_id."_".$criteria["equestion_id"]."_".$criteria["eqresponse_id"]."\" >&nbsp;</label>";
+                                $output .= "	</div>\n";
+                                $output .= "	".$criteria_text;
+                                $output .= "</td>\n";
+                            }
+                            $output .= "	</fieldset>\n";
+                        }
+                        $output .= "</tr>";
+                    }
+                break;
+                case "descriptive_text" :
+                case "free_text" :
+                    if ($rubric_table_open) {
+                        $rubric_table_open = false;
+                        $rubric_id = 0;
+                        $output .= "</table></div>";
+                        if ($comments_enabled) {
+                            $output .= "	<div class=\"clear\"></div>\n";
+                            $output .= "	<div class=\"comments\">\n";
+                            $output .= "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
+                            $output .= "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
+                            $output .= "	</div>\n";
+                        } else {
+                            $output .= "<input data-theme=\"b\" type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+                        }
+                        $original_question_id = 0;
+                        $comments_enabled = false;
+                        $output .= "</li>";
+                    } 
+                    $question_number = ($key + 1);
+
+                    $output .= "<li id=\"question_".$question["equestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">";
+                    $output .= "	<div id=\"question_text_".$question["equestion_id"]."\" for=\"".$question["equestion_id"]."_comment\" class=\"question\">\n";
+                    $output .= "		".clean_input($question["question_text"], "specialchars");
+                    $output .= "	</div>\n";
+                    $output .= "	<div class=\"clear\"></div>";
+                    if ($questiontype["questiontype_shortname"] == "free_text") {
+                        $output .= "	<div class=\"comments\">";
+                        $output .= "	<textarea name=\"comments[".$question["equestion_id"]."]\" id=\"".$question["equestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["comments"]) ? $current_progress_record[$question["equestion_id"]]["comments"] : "")."</textarea>";
+                        $output .= "	</div>";
+                    }
+                    $output .= "</li>\n";
+                    $modified_count++;
+                break;
+                case "matrix_single" :
+                default :
+                    if ($rubric_table_open) {
+                        $rubric_table_open = false;
+                        $rubric_id = 0;
+                        $output .= "</table></div>";
+                        if ($comments_enabled) {
+                            $output .= "	<div class=\"clear\"></div>\n";
+                            $output .= "	<div class=\"comments\">\n";
+                            $output .= "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
+                            $output .= "	<textarea id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
+                            $output .= "	</div>\n";
+                        } else {
+                            $output .= "<input data-theme=\"b\" type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+                        }
+                        $original_question_id = 0;
+                        $comments_enabled = false;
+                        $output .= "</li>";
+                    } 
+                    $question_number = ($key + 1);
+
+                    $output .= "<li id=\"question_".$question["equestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">";
+                    $output .= "	<div id=\"question_text_".$question["equestion_id"]."\" class=\"question\">\n";
+                    $output .= "		".clean_input($question["question_text"], "specialchars");
+                    $output .= "	</div>\n";
+                    $output .= "	<div class=\"responses\">\n";
+                    $query = "	SELECT a.*
+                                FROM `evaluations_lu_question_responses` AS a
+                                WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"])."
+                                ORDER BY a.`response_order` ASC";
+                    $responses = $db->GetAll($query);
+                    if ($responses) {
+                        $response_width = floor(100 / count($responses)) - 1;
+                        $output .= "<fieldset data-role=\"controlgroup\">\n";
+                        foreach ($responses as $response) {
+                            $output .= "	<input type=\"radio\" id=\"response_".$question["equestion_id"]."_".$response["eqresponse_id"]."\" name=\"responses[".$response["equestion_id"]."]\"".($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["eqresponse_id"]) && $current_progress_record[$question["equestion_id"]]["eqresponse_id"] == $response["eqresponse_id"] ? " checked=\"checked\"" : "")." value=\"".$response["eqresponse_id"]."\" />";
+                            $output .= "	<label for=\"response_".$question["equestion_id"]."_".$response["eqresponse_id"]."\">".clean_input($response["response_text"], "specialchars")."</label>";
+                        }
+                        $output .= "</fieldset>\n";
+                    }
+                    $output .= "	</div>\n";
+                    if ($question["allow_comments"]) {
+                        $output .= "	<div class=\"clear\"></div>";
+                        $output .= "	<div class=\"comments\">";
+                        $output .= "	<label for=\"".$question["equestion_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
+                        $output .= "	<textarea name=\"comments[".$question["equestion_id"]."]\" id=\"".$question["equestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["comments"]) ? $current_progress_record[$question["equestion_id"]]["comments"] : "")."</textarea>";
+                        $output .= "	</div>";
+                    } else {
+                        $output .= "<input data-theme=\"b\" type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+                    }
+                    $output .= "</li>\n";
+                    $modified_count++;
+                break;
+            }
+        }
+        if ($rubric_table_open) {
+            $output .= "</table></div>";
+            if ($comments_enabled) {
+                $output .= "	<div class=\"clear\"></div>\n";
+                $output .= "	<div class=\"comments\">\n";
+                $output .= "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
+                $output .= "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
+                $output .= "	</div>\n";
+            } else {
+                $output .= "<input data-theme=\"b\" type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
+            }
+            $output .= "</li>";
+        } 
+
+        $output .= "    </ol>\n";
+        $output .= "</div>\n";
+        return $output;
+	}
 }

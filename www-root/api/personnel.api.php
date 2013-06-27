@@ -86,8 +86,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 			case "evaluators" :
 				$evaluator_ids_string = "";
 				if (isset($_GET["id"]) && ($evaluation_id = clean_input($_GET["id"], "int"))) {
-					require_once("Models/evaluation/Evaluation.class.php");
-					$evaluators = Evaluation::getEvaluators($evaluation_id);
+					$evaluators = Models_Evaluation::getEvaluators($evaluation_id);
 					if ($evaluators) {
 						foreach ($evaluators as $evaluator) {
 							$evaluator_ids_string .= ($evaluator_ids_string ? ", " : "").$db->qstr($evaluator["proxy_id"]);
@@ -107,7 +106,8 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		$results = $db->GetAll($query);
 		if ($results) {
 			foreach($results as $result) {
-				echo "\t<li id=\"".(int) $result["proxy_id"]."\">".html_encode($result["fullname"])."<span class=\"informal content-small\"><br />".html_encode($result["organisation_title"])." - ".html_encode(ucfirst($result["group"]))."</span></li>\n";
+				echo "\t<li id=\"".(int) $result["proxy_id"]."\">".html_encode($result["fullname"])."<span class=\"informal content-small\"><br />".html_encode($result["organisation_title"])." - ".html_encode(ucfirst($result["group"]))
+						."<br />".html_encode($result["email"])."</span></li>\n";
 			}
 		} else {
 			echo "\t<li id=\"0\"><span class=\"informal\">&quot;<strong>".html_encode($fullname)."&quot;</strong> was not found</span></li>";

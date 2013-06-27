@@ -214,8 +214,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         $PROCESSED["assessment_id"] = (int) $assessment_id;
                         $PROCESSED["proxy_id"]		= (int) $proxy_id;
                         
-                        echo $proxy_id.":".$PROCESSED["value"]."%\n<br/>";
-                        
                         if (!@count($questions_list) || $total_value) {
                             if ($PROCESSED["value"] < $assessment["grade_threshold"]) {
                                 $PROCESSED["threshold_notified"] = 0;

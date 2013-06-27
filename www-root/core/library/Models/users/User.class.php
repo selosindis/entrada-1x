@@ -615,7 +615,11 @@ class User {
      * @return int
      */
 	public function getAccessId() {
-		return $this->access_id;
+        if (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]) && $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"]) {
+            return $_SESSION[APPLICATION_IDENTIFIER]["tmp"]["access_id"];
+        } else {
+            return $this->access_id;
+        }
 	}
 
     /**
@@ -717,7 +721,7 @@ class User {
         if ($proxy_id) {
             if (!isset($ENTRADA_CACHE) || (bool) $reload_cache || !($user = $ENTRADA_CACHE->load("user_".AUTH_APP_ID."_".$proxy_id))) {
                 $user = new User();
-                $query = "SELECT a.*, b.`group`, b.`role`
+                $query = "SELECT a.*, b.`group`, b.`role`, b.`organisation_id`, b.`id` AS `access_id`
                             FROM `" . AUTH_DATABASE . "`.`user_data` AS a
                             JOIN `" . AUTH_DATABASE . "`.`user_access` AS b
                             ON a.`id` = b.`user_id`
@@ -889,6 +893,7 @@ class User {
 		$user->clinical = $arr["clinical"];
 		$user->group = $arr["group"];
 		$user->role = $arr["role"];
+		$user->access_id = $arr["access_id"];
 		$user->active_id = $arr["id"];
 
 		return $user;

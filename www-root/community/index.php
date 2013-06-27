@@ -1,16 +1,16 @@
 <?php
 /**
  * Entrada [ http://www.entrada-project.org ]
- * 
+ *
  * Controller file responsible for serving all communities and directing all
  * requests to the correct file.
- * 
+ *
  * @author Organisation: Queen's University
  * @author Unit: Medical Education Technology Unit
  * @author Developer: Matt Simpson <matt.simpson@queensu.ca>
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
- * 
+ *
  * $Id: index.php 1191 2010-05-13 17:11:26Z hbrundage $
 */
 
@@ -44,7 +44,7 @@ $COMMUNITY_THEME = "default";		// Optioanl default theme to load within a templa
 $COMMUNITY_PAGES = array();
 $COMMUNITY_MODULE = "default";		// Default module to load when a community starts.
 $HOME_PAGE = false;
-					
+
 $MODULE_ID = 0;
 $MODULE_TITLE = "";
 $MODULE_PERMISSIONS = array();
@@ -117,16 +117,16 @@ if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
 		http_authenticate();
 	} else {
 		require_once("Entrada/authentication/authentication.class.php");
-	
+
 		$username = clean_input($_SERVER["PHP_AUTH_USER"], "credentials");
 		$password = clean_input($_SERVER["PHP_AUTH_PW"], "trim");
-	
-		$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));	
+
+		$auth = new AuthSystem((((defined("AUTH_DEVELOPMENT")) && (AUTH_DEVELOPMENT != "")) ? AUTH_DEVELOPMENT : AUTH_PRODUCTION));
 		$auth->setAppAuthentication(AUTH_APP_ID, AUTH_USERNAME, AUTH_PASSWORD);
 		$auth->setEncryption(AUTH_ENCRYPTION_METHOD);
 		$auth->setUserAuthentication($username, $password, AUTH_METHOD);
 		$result = $auth->Authenticate(array("id", "firstname", "lastname", "email", "role", "group", "username", "prefix". "telephone", "expires", "lastlogin", "privacy_level"));
-	
+
 		$ERROR = 0;
 		if ($result["STATUS"] == "success") {
 			if (($result["ACCESS_STARTS"]) && ($result["ACCESS_STARTS"] > time())) {
@@ -136,7 +136,7 @@ if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
 				$ERROR++;
 				application_log("error", "User[".$username."] tried to access account after expiration date.");
 			} else {
-				// If $ENTRADA_USER was previously initialized in init.inc.php before the 
+				// If $ENTRADA_USER was previously initialized in init.inc.php before the
 				// session was authorized it is set to false and needs to be re-initialized.
 				if ($ENTRADA_USER == false) {
 					$ENTRADA_USER = User::get($result["ID"]);
@@ -173,7 +173,7 @@ if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
 			$ERROR++;
 			application_log("access", $result["MESSAGE"]);
 		}
-		
+
 		if ($ERROR) {
 			http_authenticate();
 		}
@@ -181,10 +181,14 @@ if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
 	}
 }
 
-
-//added because Smarty can't access these values from ENTRADA_USER object and they're required for course template
-$USER_PROXY_ID = $ENTRADA_USER->getID();
-$USER_FULLNAME = $ENTRADA_USER->getFirstname() . " " . $ENTRADA_USER->getLastname();
+if ($LOGGED_IN && $ENTRADA_USER) {
+    //added because Smarty can't access these values from ENTRADA_USER object and they're required for course template
+    $USER_PROXY_ID = $ENTRADA_USER->getID();
+    $USER_FULLNAME = $ENTRADA_USER->getFirstname() . " " . $ENTRADA_USER->getLastname();
+} else {
+    $USER_PROXY_ID = 0;
+    $USER_FULLNAME = "";
+}
 
 /**
  * Setup Smarty template engine.
@@ -233,7 +237,7 @@ if ($COMMUNITY_URL) {
 							$query = "SELECT * FROM `community_pages` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `page_type` = ".$db->qstr(($PAGE_URL == "calendar" ? "events" : $PAGE_URL))." ORDER BY `page_order` ASC";
 							$result	= $db->GetRow($query);
 							if ($result) {
-								if (((int)$result["page_active"]) == '1') { 
+								if (((int)$result["page_active"]) == '1') {
 									$PAGE_ACTIVE = true;
 									$PAGE_ID = $result["cpage_id"];
 									$COMMUNITY_MODULE = $result["page_type"];
@@ -265,8 +269,8 @@ if ($COMMUNITY_URL) {
 					}
 				}
 			}
-			
-			
+
+
 			$default_course_pages = array(	"teaching_strategies",
 											"prerequisites",
 											"course_aims",
@@ -299,7 +303,7 @@ if ($COMMUNITY_URL) {
 				header("Location: ".ENTRADA_URL."/?url=".rawurlencode($PROCEED_TO));
 				exit;
 			} else {
-				
+
 				/**
 				 * Check if they are currently authenticated, if they are lets see if they are a member and / or admin user.
 				 */
@@ -308,8 +312,8 @@ if ($COMMUNITY_URL) {
 					 * This initializes the $USER_ACCESS variable to 1; for the access of a "troll"
 					 */
 					$USER_ACCESS = 1;
-					
-					
+
+
 					/**
 					 * This function controls setting the permission masking feature.
 					 */
@@ -330,7 +334,7 @@ if ($COMMUNITY_URL) {
 							 * $USER_ACCESS variable to 3; for the access of a community administrator.
 							 */
 							$USER_ACCESS = 3;
-							
+
 							$COMMUNITY_ADMIN = true;
 						} else {
 							/**
@@ -358,7 +362,7 @@ if ($COMMUNITY_URL) {
                     $COMMUNITY_TYPE = $db->GetRow($query);
                     if ($COMMUNITY_TYPE) {
                         $COMMUNITY_TYPE_OPTIONS = json_decode($COMMUNITY_TYPE["community_type_options"], true);
-                        
+
                         $query = "SELECT b.`cpage_id` FROM `community_type_pages` AS a
                                     JOIN `community_pages` AS b
                                     ON a.`page_url` = b.`page_url`
@@ -376,9 +380,9 @@ if ($COMMUNITY_URL) {
 					if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && $COMMUNITY_TYPE_OPTIONS["sequential_navigation"] == "1" && $COMMUNITY_MODULE != "pages") {
 						$is_sequential_nav = true;
 						$smarty->assign("is_sequential_nav", $is_sequential_nav);
-						
+
 						$result = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER);
-						
+
 						$query = "	SELECT a.*, b.`page_url` AS `nav_url`
 									FROM `community_page_navigation` AS a
 									LEFT JOIN `community_pages` AS b
@@ -386,15 +390,15 @@ if ($COMMUNITY_URL) {
 									WHERE a.`community_id` = " . $db->qstr($COMMUNITY_ID) . "
 									AND a.`cpage_id` = " . $db->qstr($PAGE_ID) . "
 									AND `nav_type` = 'next'";
-						
+
 						$nav_result = $db->GetRow($query);
-						
+
 						if ($nav_result) {
 							$show_right_nav = $nav_result["show_nav"];
 						} else {
 							$show_right_nav = 1;
 						}
-						
+
 						if (($result || (isset($nav_result["nav_url"]) && $nav_result["nav_url"])) && $show_right_nav) {
 							if ($nav_result["nav_url"]) {
 								$url = $nav_result["nav_url"];
@@ -406,7 +410,7 @@ if ($COMMUNITY_URL) {
 							$next_page_url = "#";
 						}
 						$smarty->assign("next_page_url", $next_page_url);
-						
+
 						$query = "	SELECT a.*, b.`page_url` AS `nav_url`
 									FROM `community_page_navigation` AS a
 									LEFT JOIN `community_pages` AS b
@@ -415,13 +419,13 @@ if ($COMMUNITY_URL) {
 									AND a.`cpage_id` = " . $db->qstr($PAGE_ID) . "
 									AND `nav_type` = 'previous'";
 						$nav_result = $db->GetRow($query);
-					
+
 						if ($nav_result) {
 							$show_left_nav = $nav_result["show_nav"];
 						} else {
 							$show_left_nav = 1;
 						}
-						
+
 						$result = get_prev_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER);
 						if (($result || (isset($nav_result["nav_url"]) && $nav_result["nav_url"])) && $show_left_nav) {
 							if ($nav_result["nav_url"]) {
@@ -436,13 +440,13 @@ if ($COMMUNITY_URL) {
 						$smarty->assign("previous_page_url", $previous_page_url);
 					}
                 }
-                
+
 				/**
 				 * Get a list of modules which are enabled.
 				 */
 				$COMMUNITY_MODULES = communities_fetch_modules($COMMUNITY_ID);
 				$COMMUNITY_PAGES = communities_fetch_pages($COMMUNITY_ID, $USER_ACCESS);
-				
+
 				/**
 				 * Loading Prototype
 				 */
@@ -481,7 +485,7 @@ if ($COMMUNITY_URL) {
 										foreach ($community_members as $member_group) {
 											if ($member_group) {
 												$pieces = explode("_", $member_group);
-			
+
 												if ((isset($pieces[0])) && ($group = trim($pieces[0]))) {
 													if ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] == $group) {
 														if ((isset($pieces[1])) && ($role = trim($pieces[1]))) {
@@ -502,7 +506,7 @@ if ($COMMUNITY_URL) {
 							break;
 							case 3 :	// Selected Community Registration
 								$ALLOW_MEMBERSHIP = false;
-			
+
 								if (($community_details["community_members"] != "") && ($community_members = @unserialize($community_details["community_members"])) && (is_array($community_members)) && (count($community_members))) {
 									$query	= "SELECT * FROM `community_members` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())." AND `member_active` = '1' AND `community_id` IN ('".implode("', '", $community_members)."')";
 									$result	= $db->GetRow($query);
@@ -578,15 +582,15 @@ if ($COMMUNITY_URL) {
 						$sidebar_html .= "	<li class=\"nav\"><a href=\"".ENTRADA_URL."/library\">Library</a></li>\n";
 						$sidebar_html .= "	<li class=\"nav\" style=\"margin-top: 5px\"><a href=\"".ENTRADA_URL."/?action=logout\">Logout</a></li>\n";
 						$sidebar_html .= "</ul>\n";
-	
+
 						new_sidebar_item(APPLICATION_NAME, $sidebar_html, "entrada-navigation", "open");
 					}
-					
+
 					/**
 					 * Show a login back if the user is not logged in.
 					 */
 					if (!$LOGGED_IN) {
-						new_sidebar_item("Community Login", "Log in using your ".APPLICATION_NAME." account to access more community features.<div style=\"margin-top: 10px; text-align: center\"><a href=\"".ENTRADA_URL."/?url=".rawurlencode($PROCEED_TO)."\" style=\"font-weight: bold\">Click here to login</a></a>", "login-page-box", "open");
+						new_sidebar_item("Community Login", "Log in using your ".APPLICATION_NAME." account to access more community features.<div style=\"margin-top: 10px; text-align: center\"><a href=\"".ENTRADA_URL."/?url=".rawurlencode($PROCEED_TO)."\" style=\"font-weight: bold\">Click here to login</a></div>", "login-page-box", "open");
 					}
 
 					/**
@@ -626,10 +630,10 @@ if ($COMMUNITY_URL) {
 						}
 						new_sidebar_item("This Community", $sidebar_html, "community-my-membership", "open");
 					}
-					
+
 					if ((($PAGE_ACTIVE) && ((in_array($COMMUNITY_MODULE, array("default", "members", "pages", "course"))) || (array_key_exists($PAGE_URL, $COMMUNITY_PAGES["exists"])) && (array_key_exists($COMMUNITY_MODULE, $COMMUNITY_MODULES["enabled"])))) || $HOME_PAGE) {
 						define("COMMUNITY_INCLUDED", true);
-						
+
 						if ((array_key_exists($PAGE_URL, $COMMUNITY_PAGES["enabled"])) || ($HOME_PAGE) || ($COMMUNITY_MODULE == "members") || (($COMMUNITY_MODULE == "pages") && ($USER_ACCESS == 3))) {
 						    /**
 	                         * ID of the record which can be set in the URL and used to edit or delete a page, etc.
@@ -638,7 +642,7 @@ if ($COMMUNITY_URL) {
 	                        if ((isset($_GET["id"])) && ((int) trim($_GET["id"])) && !((int) $RECORD_ID)) {
 	                            $RECORD_ID = (int) trim($_GET["id"]);
 	                        }
-	
+
 							if (!in_array($COMMUNITY_MODULE, array("pages", "members", "default", "course"))) {
 								$query	= "SELECT `module_id` FROM `communities_modules` WHERE `module_shortname` = ".$db->qstr($COMMUNITY_MODULE);
 								$result	= $db->GetRow($query);
@@ -648,11 +652,11 @@ if ($COMMUNITY_URL) {
 									$ERROR++;
 									$ERRORSTR[]	= "We were unable to load the selected page at this time. The system administrator has been notified of the error, please try again later.";
 									$MODULE_ID	= 0;
-									
+
 									application_log("error", "Unable to locate and load a selected community module [".$COMMUNITY_PAGES["details"][$PAGE_URL]["page_type"]."] in community_id [".$COMMUNITY_ID."].");
 								}
 							}
-							
+
 							$MODULE_TITLE	= (isset($COMMUNITY_PAGES["details"][$PAGE_URL]) ? $COMMUNITY_PAGES["details"][$PAGE_URL]["menu_title"] : "Pages");
 
 							if ((@file_exists($module_file = COMMUNITY_ABSOLUTE.DIRECTORY_SEPARATOR."modules".DIRECTORY_SEPARATOR.$COMMUNITY_MODULE.".inc.php")) && (@is_readable($module_file))) {
@@ -661,28 +665,28 @@ if ($COMMUNITY_URL) {
 								$ONLOAD[]	= "setTimeout('window.location=\\'".COMMUNITY_URL.$COMMUNITY_URL."\\'', 5000)";
 								$ERROR++;
 								$ERRORSTR[] = "The module you are attempting to access is not currently available.<br /><br />You will be automatically redirected in 5 seconds or <a href=\"".COMMUNITY_URL.$COMMUNITY_URL."\" style=\"font-weight: bold\">click here</a> to proceed.";
-	
+
 								echo display_error();
-	
+
 								application_log("error", "Unable to load specified module: ".$COMMUNITY_MODULE);
 							}
 						} else {
 							$ONLOAD[]	= "setTimeout('window.location=\\'".COMMUNITY_URL.$COMMUNITY_URL."\\'', 5000)";
-	
+
 							$ERROR++;
 							$ERRORSTR[] = "You do not have access to this page. Please contact a community administrator for assistance.<br /><br />You will be automatically redirected in 5 seconds or <a href=\"".COMMUNITY_URL.$COMMUNITY_URL."\" style=\"font-weight: bold\">click here</a> to proceed.";
-	
+
 							echo display_error();
 						}
 					} else {
 						$url		= COMMUNITY_URL.$COMMUNITY_URL;
 						$ONLOAD[]	= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-					
+
 						$ERROR++;
 						$ERRORSTR[]	= "The page you have requested does not currently exist within this community.<br /><br />You will now be redirected to the index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-						
+
 						echo "<h1>Page Not Found: <strong>404 Error</strong></h1>\n";
-						
+
 						echo display_error();
 					}
 				}
@@ -695,14 +699,14 @@ if ($COMMUNITY_URL) {
 
 				if (($COMMUNITY_MODULE != "default") && ($COMMUNITY_MODULE != "pages") && ($COMMUNITY_MODULE != "members") && ($SECTION == "index") && (array_key_exists($COMMUNITY_MODULE, $COMMUNITY_MODULES["enabled"]))) {
 					$page_text	= "";
-					
+
 					$query	= "SELECT `cpage_id`, `page_title`, `page_content` FROM `community_pages` WHERE `page_url` = ".(isset($PAGE_URL) && $PAGE_URL ? $db->qstr($PAGE_URL) : "''")." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
 					$result	= $db->GetRow($query);
 					if ($result) {
 						if (trim($result["page_title"]) != "") {
 							$page_text .= "<h1>".html_encode($result["page_title"])."</h1>";
 						}
-						
+
 						if (trim($result["page_content"]) != "") {
 							$page_text .= $result["page_content"]."\n<br /><br />\n";
 						}
@@ -710,7 +714,7 @@ if ($COMMUNITY_URL) {
 					$PAGE_CONTENT	= $page_text.$PAGE_CONTENT;
 
 				}
-				
+
 				$PAGE_META["title"] = $community_details["community_title"];
 				$PAGE_META["description"] = trim(str_replace(array("\t", "\n", "\r"), " ", html_encode(strip_tags($community_details["community_description"]))));
 				$PAGE_META["keywords"] = trim(str_replace(array("\t", "\n", "\r"), " ", html_encode(strip_tags($community_details["community_keywords"]))));"";
@@ -721,17 +725,17 @@ if ($COMMUNITY_URL) {
 					$member_name = "Guest";
 				}
 				$date_joined = "Joined: ".date("Y-m-d", $COMMUNITY_MEMBER_SINCE);
-				
+
 				$smarty->assign("template_relative", COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE);
 				$smarty->assign("sys_community_relative", COMMUNITY_RELATIVE);
-				
+
 				$smarty->assign("sys_system_navigator", load_system_navigator());
 				$smarty->assign("sys_profile_url", ENTRADA_URL."/profile");
 				$smarty->assign("sys_website_url", ENTRADA_URL);
 
 				$smarty->assign("site_template", $COMMUNITY_TEMPLATE);
 				$smarty->assign("site_theme", ((isset($community_details["community_theme"])) ? $community_details["community_theme"] : ""));
-				
+
 				$smarty->assign("site_default_charset", DEFAULT_CHARSET);
 
 				$smarty->assign("site_community_url", COMMUNITY_URL.$COMMUNITY_URL);
@@ -766,7 +770,7 @@ if ($COMMUNITY_URL) {
 					if ($result) {
 						$smarty->assign("child_nav", communities_page_children_in_list($result["cpage_id"]));
 					} else {
-						$smarty->assign("child_nav", "");	
+						$smarty->assign("child_nav", "");
 					}
 				}
 
@@ -777,14 +781,14 @@ if ($COMMUNITY_URL) {
 				$smarty->assign("page_head", "%HEAD%");
 				$smarty->assign("page_sidebar", "%SIDEBAR%");
 				$smarty->assign("page_content", $PAGE_CONTENT);
-				
+
 				$smarty->assign("user_is_anonymous", (($LOGGED_IN) ? false : true));
 				$smarty->assign("is_logged_in", $LOGGED_IN);
 				$smarty->assign("user_is_member", $COMMUNITY_MEMBER);
 				$smarty->assign("user_is_admin", $COMMUNITY_ADMIN);
 				$smarty->assign("date_joined", $date_joined);
 				$smarty->assign("member_name", $member_name);
-				
+
 				$smarty->display("index.tpl");
 			}
 		} else {
@@ -796,15 +800,15 @@ if ($COMMUNITY_URL) {
 
 			$ERROR++;
 			$ERRORSTR[] = "<strong>The community that you are trying to access is no longer active.</strong><br /><br />Please use the <a href=\"".ENTRADA_URL."/communities\">Communities Search</a> feature to find the community that you are looking for.";
-	
+
 			$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/communities\\'', 10000)";
-	
+
 			$smarty->assign("template_relative", COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE);
 			$smarty->assign("page_title", "Community Not Active");
 			$smarty->assign("page_content", display_error());
-	
+
 			$smarty->display("error.tpl");
-	
+
 			application_log("notice", "Community [".$COMMUNITY_URL."] is no longer active.");
 		}
 	} else {

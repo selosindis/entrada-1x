@@ -25,6 +25,61 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($PROXY_ID) {
+		
+		$ajax_action = clean_input($_POST["ajax_action"], "alpha");
+
+		if (!empty($ajax_action)) {
+			ob_clear_open_buffers();
+
+			switch ($ajax_action) {
+				case "uploadimage" :
+					$filesize = moveImage($_FILES["image"]["tmp_name"], $PROXY_ID, $_POST["coordinates"], $_POST["dimensions"]);
+
+					if ($filesize) {
+						$PROCESSED_PHOTO["proxy_id"]			= $PROXY_ID;
+						$PROCESSED_PHOTO["photo_active"]		= 1;
+						$PROCESSED_PHOTO["photo_type"]			= 1;
+						$PROCESSED_PHOTO["updated_date"]		= time();
+						$PROCESSED_PHOTO["photo_filesize"]		= $filesize;
+
+						$query = "SELECT `photo_id` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($PROXY_ID);
+						$photo_id = $db->GetOne($query);
+
+						if ($photo_id) {
+							if ($db->AutoExecute(AUTH_DATABASE.".user_photos", $PROCESSED_PHOTO, "UPDATE", "`photo_id` = ".$db->qstr($photo_id))) {
+								echo json_encode(array("status" => "success", "data" => webservice_url("photo", array($PROXY_ID, "upload"))."/".time()));
+							}
+						} else {
+							if ($db->AutoExecute(AUTH_DATABASE.".user_photos", $PROCESSED_PHOTO, "INSERT")) {
+								echo json_encode(array("status" => "success", "data" => webservice_url("photo", array($PROXY_ID, "upload"))."/".time()));
+							} else {
+								echo json_encode(array("status" => "error"));
+							}
+						}
+					}
+				break;
+				case "togglephoto" :
+					$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($PROXY_ID);
+					$photo_record = $db->GetRow($query);
+					if ($photo_record) {
+						$photo_active = ($photo_record["photo_active"] == "1" ? "0" : "1");
+						$query = "UPDATE `".AUTH_DATABASE."`.`user_photos` SET `photo_active` = ".$db->qstr($photo_active)." WHERE `proxy_id` = ".$db->qstr($PROXY_ID);
+						if ($db->Execute($query)) {
+							echo json_encode(array("status" => "success", "data" => array("imgurl" => webservice_url("photo", array($PROXY_ID, $photo_active == "1" ? "upload" : "official" ))."/".time(), "imgtype" => $photo_active == "1" ? "uploaded" : "official")));
+						} else {
+							application_log("error", "An error occurred while attempting to update user photo active flag for user [".$PROXY_ID."], DB said: ".$db->ErrorMsg());
+							echo json_encode(array("status" => "error"));
+						}
+					} else {
+						echo json_encode(array("status" => "error", "data" => "No uploaded photo record on file. You must upload a photo before you can toggle photos."));
+					}
+				break;
+			}
+			
+			exit;
+			
+		}
+		
 		$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($PROXY_ID);
 		$user_record = $db->GetRow($query);
 		if ($user_record) {
@@ -86,63 +141,246 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 			<h1 title="User Profile Section">User Profile for <?php echo html_encode($user_record["firstname"]." ".$user_record["lastname"]); ?></h1>
 			<div class="row-fluid">
-				<div class="span4">
-					<?php
-										$uploaded_file_active = $db->GetOne("SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = 1 AND `proxy_id` = ".$db->qstr($user_record["id"]));
-										echo "<div style=\"position: relative; width: 74px; height: 102px;\" id=\"img-holder-".$user_record["id"]."\" class=\"img-holder\">\n";
+				<div class="span5">
+					<script src="<?php echo ENTRADA_URL; ?>/javascript/jquery/jquery.imgareaselect.min.js" type="text/javascript"></script>
+					<link href='<?php echo ENTRADA_URL; ?>/css/imgareaselect-default.css' rel='stylesheet' type='text/css' />
+					<style type="text/css">
+						.table-nowrap {white-space:nowrap;}
+						#profile-wrapper {position:relative;}
+						#upload_profile_image_form {margin:0px;float:left;}
+						#profile-image-container {position:absolute;}
+						#upload-image-modal-btn {position:absolute;right:7px;top:7px;display:none;outline:none;}
+						#btn-toggle {position:absolute;right:7px;bottom:7px;display:none;outline:none;}
+						#btn-toggle .btn {outline:none;}
+						.profile-image-preview {text-align:center;max-width:275px;margin:auto;}
+						.modal-body {max-height:none;}
+					</style>
+					<?php $profile_image = ENTRADA_ABSOLUTE . '/../public/images/' . $PROXY_ID . '/' . $PROXY_ID . '-large.png'; ?>
+					<script type="text/javascript">
+					function dataURItoBlob(dataURI, type) {
+						type = typeof a !== 'undefined' ? type : 'image/jpeg';
+						var binary = atob(dataURI.split(',')[1]);
+						var array = [];
+						for (var i = 0; i < binary.length; i++) {
+							array.push(binary.charCodeAt(i));
+						}
+						return new Blob([new Uint8Array(array)], {type: type});
+					}
 
-										$offical_file_active	= false;
-										$uploaded_file_active	= false;
+					jQuery(function(){
 
-										/**
-										 * If the photo file actually exists
-										 */
-										if (@file_exists(STORAGE_USER_PHOTOS."/".$user_record["id"]."-official")) {
-											$offical_file_active	= true;
-		
+						jQuery("#btn-toggle .btn").live("click", function() {
+							var clicked = jQuery(this);
+							if (!clicked.parent().hasClass(clicked.html().toLowerCase())) {
+								jQuery.ajax({
+									url : "<?php echo ENTRADA_URL; ?>/admin/users/manage?id=<?php echo $PROXY_ID; ?>",
+									data : "ajax_action=togglephoto",
+									type : "post",
+									async : true,
+									success : function(data) {
+										var jsonResponse = JSON.parse(data);
+										jQuery("#profile-image-container span img").attr("src", jsonResponse.data.imgurl);
+										jQuery("#btn-toggle .btn.active").removeClass("active");
+										clicked.addClass("active");
+										clicked.parent().removeClass((jsonResponse.data.imgtype == "uploaded" ? "official" : "uploaded")).addClass(jsonResponse.data.imgtype);
+									}
+								});
+							}
+							return false;
+						});
+
+						function selectImage(image){
+							jQuery(".description").hide();
+							var image_width;
+							var image_height;
+							var w_offset;
+							var h_offset
+
+							image_width = image.width();
+							image_height = image.height();
+							w_offset = parseInt((image_width - 153) / 2);
+							h_offset = parseInt((image_height - 200) / 2);
+
+							jQuery("#coordinates").attr("value", w_offset + "," + h_offset + "," + (w_offset + 153) + "," + (h_offset + 200));
+							jQuery("#dimensions").attr("value", image_width + "," + image_height)
+
+							image.imgAreaSelect({
+								aspectRatio: '75:98',
+								handles: true,
+								x1: w_offset, y1: h_offset, x2: w_offset + 153, y2: h_offset + 200,
+								instance: true,
+								persistent: true,
+								onSelectEnd: function (img, selection) {
+									jQuery("#coordinates").attr("value", selection.x1 + "," + selection.y1 + "," + selection.x2 + "," + selection.y2);
+								}
+							});
+						};
+
+						jQuery(".org-profile-image").hover(function(){
+							jQuery(this).find("#edit-button").animate({"opacity" : 100}, {queue: false}, 150).css("display", "block");
+						}, function() {
+							jQuery(this).find("#edit-button").animate({"opacity" : 0}, {queue: false}, 150);
+						});
+
+						/* file upload stuff starts here */
+
+						var reader = new FileReader();
+
+						reader.onload = function (e) {
+							jQuery(".preview-image").attr('src', e.target.result)
+							jQuery(".preview-image").load(function(){
+								selectImage(jQuery(".preview-image"));
+							});
+						};
+
+						// Required for drag and drop file access
+						jQuery.event.props.push('dataTransfer');
+
+						jQuery("#upload-image").on('drop', function(event) {
+
+							jQuery(".modal-body").css("background-color", "#FFF");
+
+							event.preventDefault();
+
+							var file = event.dataTransfer.files[0];
+
+							if (file.type.match('image.*')) {
+								jQuery("#image").html(file);
+								reader.readAsDataURL(file);
+							} else {
+								// However you want to handle error that dropped file wasn't an image
+							}
+						});
+
+						jQuery("#upload-image").on("dragover", function(event) {
+							jQuery(".modal-body").css("background-color", "#f3f3f3");
+							return false;
+						});
+
+						jQuery("#upload-image").on("dragleave", function(event) {
+							jQuery(".modal-body").css("background-color", "#FFF");
+						});
+
+						jQuery('#upload-image').on('hidden', function () {
+							if (jQuery(".profile-image-preview").length > 0) {
+								jQuery(".profile-image-preview").remove();
+								jQuery(".imgareaselect-selection").parent().remove();
+								jQuery(".imgareaselect-outer").remove();
+								jQuery("#image").val("");
+								jQuery(".description").show();
+							}
+						});
+
+						jQuery('#upload-image').on('shown', function() {
+							if (jQuery(".profile-image-preview").length <= 0) {
+								var preview = jQuery("<div />").addClass("profile-image-preview");
+								preview.append("<img />");
+								preview.children("img").addClass("preview-image");
+								jQuery(".preview-img").append(preview);
+							}
+						});
+
+						jQuery("#upload-image-button").live("click", function(){
+							if (typeof jQuery(".preview-image").attr("src") != "undefined") {
+								jQuery("#upload_profile_image_form").submit();
+								jQuery('#upload-image').modal("hide");
+							} else {
+								jQuery('#upload-image').modal("hide");
+							}
+						});
+
+						jQuery("#upload_profile_image_form").submit(function(){
+							var imageFile = dataURItoBlob(jQuery(".preview-image").attr("src"));
+
+							var xhr = new XMLHttpRequest();
+							var fd = new FormData();
+							fd.append('ajax_action', 'uploadimage');
+							fd.append('image', imageFile);
+							fd.append('coordinates', jQuery("#coordinates").val());
+							fd.append('dimensions', jQuery("#dimensions").val());
+
+							xhr.open('POST', "<?php echo ENTRADA_URL; ?>/admin/users/manage?id=<?php echo $PROXY_ID; ?>", true);
+							xhr.send(fd);
+
+							xhr.onreadystatechange = function() {
+								if (xhr.readyState == 4 && xhr.status == 200) {
+									var jsonResponse = JSON.parse(xhr.responseText);
+									if (jsonResponse.status == "success") {
+										jQuery("#profile-image-container img.img-polaroid").attr("src", jsonResponse.data);
+										if (jQuery("#image-nav-right").length <= 0) {
+											jQuery("#btn-toggle").append("<a href=\"#\" class=\"btn active\" id=\"image-nav-right\" style=\"display:none;\">Uploaded</a>");
+											jQuery("#image-nav-right").removeClass("active");
 										}
-									
-
-
-								$offical_file_active	= false;
-								$uploaded_file_active	= false;
-
-								/**
-								 * If the photo file actually exists
-								 */
-								if (@file_exists(STORAGE_USER_PHOTOS."/".$user_record["id"]."-official")) {
-									$offical_file_active	= true;
+									} else {
+										// Some kind of failure notification.
+									};
+								} else {
+									// another failure notification.
 								}
+							}
 
-								/**
-								 * If the photo file actually exists, and
-								 * If the uploaded file is active in the user_photos table, and
-								 * If the proxy_id has their privacy set to "Basic Information" or higher.
-								 */
-								if ((@file_exists(STORAGE_USER_PHOTOS."/".$user_record["id"]."-upload")) && ($db->GetOne("SELECT `photo_active` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type` = '1' AND `photo_active` = '1' AND `proxy_id` = ".$db->qstr($user_record["id"]))) && ((int) $user_record["privacy_level"] >= 2)) {
-									$uploaded_file_active = true;
-								}
+							if (jQuery(".profile-image-preview").length > 0) {
+								jQuery(".profile-image-preview").remove();
+								jQuery(".imgareaselect-selection").parent().remove();
+								jQuery(".imgareaselect-outer").remove();
+								jQuery("#image").val("");
+								jQuery(".description").show();
+							}
 
-								if ($offical_file_active) {
-									echo "		<img id=\"official_photo_".$user_record["id"]."\" class=\"official\" src=\"".webservice_url("photo", array($user_record["id"], "official"))."\" width=\"192\" height=\"250\" alt=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" title=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" />\n";
-								}
+							return false;
+						});
 
-								if ($uploaded_file_active) {
-									echo "		<img id=\"uploaded_photo_".$user_record["id"]."\" class=\"uploaded\" src=\"".webservice_url("photo", array($user_record["id"], "upload"))."\" width=\"192\" height=\"250\" alt=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" title=\"".html_encode($user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"])."\" />\n";
-								}
+						jQuery("#image").live("change", function(){
+							var files = jQuery(this).prop("files");
 
-								if ((!$offical_file_active) && (!$uploaded_file_active)) {
-									echo "		<img src=\"".ENTRADA_URL."/images/headshot-male.gif\" width=\"192\" height=\"250\" alt=\"No Photo Available\" title=\"No Photo Available\" />\n";
-								}
+							if (files && files[0]) {
+								reader.readAsDataURL(files[0]);
+							}
+						});
 
-								if (($offical_file_active) && ($uploaded_file_active)) {
-									echo "		<a id=\"official_link_".$user_record["id"]."\" class=\"img-selector one\" onclick=\"showOfficial($('official_photo_".$user_record["id"]."'), $('official_link_".$user_record["id"]."'), $('uploaded_link_".$user_record["id"]."'));\" href=\"javascript: void(0);\">1</a>";
-									echo "		<a id=\"uploaded_link_".$user_record["id"]."\" class=\"img-selector two\" onclick=\"hideOfficial($('official_photo_".$user_record["id"]."'), $('official_link_".$user_record["id"]."'), $('uploaded_link_".$user_record["id"]."'));\" href=\"javascript: void(0);\">2</a>";
-								}
-								echo "</div>\n";
-								?>
+						jQuery("#profile-image-container").hover(function(){
+							jQuery("#profile-image-container .btn, #btn-toggle").fadeIn("fast");
+						},
+						function() {
+							jQuery("#profile-image-container .btn").fadeOut("fast");
+						});
+					});
+					</script>
+					<div id="upload-image" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="label" aria-hidden="true">
+						<div class="modal-header">
+							<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+							<h3 id="label">Upload Photo</h3>
+						</div>
+						<div class="modal-body">
+							<div class="preview-img"></div>
+							<div class="description alert" style="height:264px;width:483px;padding:20px;">
+								To upload a new profile image you can drag and drop it on this area, or use the Browse button to select an image from your computer.
+							</div>
+						</div>
+						<div class="modal-footer">
+							<form name="upload_profile_image_form" id="upload_profile_image_form" action="<?php echo ENTRADA_URL; ?>/profile" method="post" enctype="multipart/form-data">
+								<input type="hidden" name="coordinates" id="coordinates" value="" />
+								<input type="hidden" name="dimensions" id="dimensions" value="" />
+								<input type="file" name="image" id="image" />
+							</form>
+							<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+							<button id="upload-image-button" class="btn btn-primary">Upload</button>
+						</div>
+					</div>
+					<div id="profile-image-container">
+						<a href="#upload-image" id="upload-image-modal-btn" data-toggle="modal" class="btn btn-primary" id="upload-profile-image">Upload Photo</a>
+						<?php
+						$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($PROXY_ID);
+						$uploaded_photo = $db->GetRow($query);
+						?>
+						<span><img src="<?php echo webservice_url("photo", array($PROXY_ID, $uploaded_photo ? "upload" : "official"))."/".time(); ?>" width="192" height="250" class="img-polaroid" /></span>
+						<div class="btn-group" id="btn-toggle" class=" <?php echo $uploaded_photo ? "uploaded" : "official"; ?>">
+							<a href="#" class="btn btn-small <?php echo $uploaded_photo["photo_active"] == "0" ? "active" : ""; ?>" id="image-nav-left">Official</a>
+							<?php if ($uploaded_photo) { ?><a href="#" class="btn btn-small <?php echo $uploaded_photo["photo_active"] == "1" ? "active" : ""; ?>" id="image-nav-right">Uploaded</a><?php } ?>
+						</div>
+					</div>
 				</div>
-				<div class="span8">
+				<div class="span7">
 					<div class="row">
 						<div class="span3"><strong>Full Name:</strong></div>
 						<div class="span9"><?php echo $user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]; ?></div>

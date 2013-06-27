@@ -1448,7 +1448,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								entry_year = $('#entry_year').val();
 								grad_year = $('#grad_year').val();
 							}
-							$('#perm_organisation_' + $('#organisations').val() + ' > tbody:last').append('<tr id=\"' + org_id + '_' + group_id + '_' + role_id + '\"><td></td><td>' + group_text + " / " + role_text + '</td><td>' + options + '</td><td><a class=\"remove_perm\" href=\"\"><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif"></a></td></tr>');
+							$('#perm_organisation_' + $('#organisations').val() + ' > tbody:last').append('<tr id=\"' + org_id + '_' + group_id + '_' + role_id + '\"><td></td><td>' + group_text + " / " + role_text + '</td><td>' + options + '</td><td><a class=\"remove_perm\" data-group=\"' + group_text + '\" href=\"\"><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif"></a></td></tr>');
 							$('#perm_organisation_' + $('#organisations').val()).show();
 
 							var temp_permissions = {"org_id" : org_id, "group_id" : group_id, "role_id" : role_id, "clinical" : clinical, "entry_year" : entry_year, "grad_year" : grad_year};
@@ -1513,7 +1513,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							//add the group back to the select list
 							var group_role = $(this).closest("tr").children()[1];
 							group_role = $(group_role).text();
-							var group_text = $.trim(group_role.split("/")[0]);
+                            var group_text = jQuery(this).data('group');
 							var option = $("<option></option>").text(group_text);
 							$(option).attr("value", group_id);
 							$('#groups').append(option);

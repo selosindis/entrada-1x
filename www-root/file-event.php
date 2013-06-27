@@ -56,7 +56,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					WHERE a.`efile_id` = ".$db->qstr($EFILE_ID);
 		$result	= ((USE_CACHE) ? $db->CacheGetRow(CACHE_TIMEOUT, $query) : $db->GetRow($query));
 		if($result) {
-			if ($ENTRADA_ACL->amIAllowed(new EventContentResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update")) {
+			if ($ENTRADA_ACL->amIAllowed(new EventContentResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "read")) {
 				$accesses		= $result["accesses"];
 				$access_method	= (int) $result["access_method"];
 				$filename		= $result["file_name"];

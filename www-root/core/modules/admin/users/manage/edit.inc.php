@@ -220,17 +220,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					}
 
 					/**
-					 * Required field "photo_active" / Uploaded Photo Active
-					 */
-					if (isset($_POST["photo_active"]) && $_POST["photo_active"] == 1) {
-						$PROCESSED_PHOTO = Array();
-						$PROCESSED_PHOTO["photo_active"] = 1;
-					} else {
-						$PROCESSED_PHOTO = Array();
-						$PROCESSED_PHOTO["photo_active"] = 0;
-					}
-
-					/**
 					 * Non-required field "prefix" / Prefix.
 					 */
 					if ((isset($_POST["prefix"])) && (@in_array($prefix = clean_input($_POST["prefix"], "trim"), $PROFILE_NAME_PREFIX))) {
@@ -516,18 +505,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								} //end if is_array
 							} //end if delete user_access records
 
-							if (is_array($PROCESSED_PHOTO)) {
-                                /**
-                                 * This section of code handles updating the user_photos table.
-                                 */
-								if (!$db->AutoExecute(AUTH_DATABASE.".user_photos", $PROCESSED_PHOTO, "UPDATE", "proxy_id = ".$db->qstr($PROXY_ID)." AND photo_type = '1'")) {
-									$ERROR++;
-									$ERRORSTR[] = "We were unable to properly update your <strong>User Photos</strong> settings. The system administrator has been informed of this error, please try again later.";
-
-									application_log("error", "Unable to update data in the user_photos table. Database said: ".$db->ErrorMsg());
-								}
-							}
-
 							/**
 							 * This section of code handles updating the users departmental data.
 							 */
@@ -772,20 +749,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 					display_status_messages();
 
-					if (@file_exists(STORAGE_USER_PHOTOS."/".$PROXY_ID."-official")) {
-						$size_official = getimagesize(STORAGE_USER_PHOTOS."/".$PROXY_ID."-official");
-					}
-
-					if (@file_exists(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload")) {
-						$size_upload = getimagesize(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload");
-					}
 					$ONLOAD[] = "provStateFunction('".$PROCESSED["country_id"]."', '".$PROCESSED["province_id"]."')";
 
 
 
 					?>
 					<h1>Edit Profile for <strong><?php echo html_encode($user_record["firstname"]." ".$user_record["lastname"]); ?></strong></h1>
-
 					<form name="user-edit" id="user-edit" class="form-horizontal" action="<?php echo ENTRADA_URL; ?>/admin/users/manage?section=edit&id=<?php echo $PROXY_ID; ?>&amp;step=2" method="post">
 						<h2>Account Details</h2>
 						<div class="control-group">
@@ -825,18 +794,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						</div>
 
 						<h2>Personal Information</h2>
-
-						<?php
-						$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `photo_type`='1' AND `proxy_id` = ".$db->qstr($PROXY_ID);
-						$uploaded_photo = $db->GetRow($query);
-						if ($uploaded_photo && @file_exists(STORAGE_USER_PHOTOS."/".$PROXY_ID."-upload")) { ?>
-						<div class="pull-right">
-							<?php echo "<img src=\"".webservice_url("photo", array($user_record["id"], "upload"))."\" width=\"72\" height=\"100\" alt=\"".$user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]."\" title=\"".$user_record["prefix"]." ".$user_record["firstname"]." ".$user_record["lastname"]."\" class=\"current-".$user_record["id"]."\" id=\"uploaded_profile_pic_".$user_record["id"]."\" name=\"uploaded_profile_pic_".$user_record["id"]."\" />\n"; ?>
-						</div>
-						<?php } ?>
-
 						<div class="control-group">
-							<label class="control-label" for="prefix">First Name:</label>
+							<label class="control-label" for="prefix">Prefix:</label>
 							<div class="controls">
 								<select id="prefix" name="prefix" class="input-medium">
 								<option value=""<?php echo ((!$result["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
@@ -1062,7 +1021,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                                                         echo "<tr id=\"" . $result["organisation_id"] . "_" . $group_id . "_" . $role_id . "\">\n";
                                                         echo "	<td valign=\"top\"><label><strong>" . ucfirst($result["group"]) . " / " . ucfirst($result["role"]) . "</strong></label></td>\n";
                                                         echo "	<td valign=\"top\">" . $options . "</td>\n";
-                                                        echo "	<td valign=\"top\"><a class=\"remove_perm pull-left\" href=\"#\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\"></a></td>\n";
+                                                        echo "	<td valign=\"top\"><a data-group=\"".ucfirst($result["group"]) ."\" class=\"remove_perm pull-left\" href=\"#\"><img src=\"" . ENTRADA_URL . "/images/action-delete.gif\"></a></td>\n";
                                                         echo "</tr>";
                                                     }
                                                 }
@@ -1461,8 +1420,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									entry_year = $('#entry_year').val();
 									grad_year = $('#grad_year').val();
 								}
-								$('#perm_organisation_' + $('#organisations').val() + ' > tbody:last').append('<tr id=\"' + org_id + '_' + group_id + '_' + role_id + '\"><td valign="top"><strong>' + group_text + ' / ' + role_text + '</strong></td><td>' + options + '</td><td><a class=\"remove_perm\" href=\"\"><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif"></a></td></tr>');
-								$('#perm_organisation_' + $('#organisations').val() + '_holder').show();
+								$('#perm_organisation_' + $('#organisations').val() + ' > tbody:last').append('<tr id=\"' + org_id + '_' + group_id + '_' + role_id + '\"><td valign="top"><strong>' + group_text + ' / ' + role_text + '</strong></td><td>' + options + '</td><td><a class=\"remove_perm\" data-group=\"' + group_text + '\" href=\"\"><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif"></a></td></tr>');
+								$('#perm_organisation_' + $('#organisations').val()).show();
 
 								var temp_permissions = {"org_id" : org_id, "group_id" : group_id, "role_id" : role_id, "clinical" : clinical, "entry_year" : entry_year, "grad_year" : grad_year};
 								permissions.acl.push(temp_permissions);
@@ -1525,7 +1484,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								//add the group back to the select list
 								var group_role = $(this).closest("tr").children()[1];
 								group_role = $(group_role).text();
-								var group_text = $.trim(group_role.split("/")[0]);
+								var group_text = jQuery(this).data('group');
 								var option = $("<option></option>").text(group_text);
 								$(option).attr("value", group_id);
 								$('#groups').append(option);

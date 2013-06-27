@@ -114,6 +114,7 @@ $end_date	 = (int) $_GET["end_date"];
 $course_id	 = (int) $_GET["course_id"];
 $course_code = (string) strip_tags($_GET["course_code"]);
 $pages = array_key_exists($course_id, $courses) ? $courses[$course_id]["included_pages"] : $courses["default"]["included_pages"] ;
+$grad_year	 = (int) $_GET["grad_year"];
 
 function course_objectives_formatted($objectives, $parent_id, $top_level_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = false, $full_objective_list = false, $org_id = 0) {
 	global $ENTRADA_USER;
@@ -219,7 +220,7 @@ function course_objectives_formatted($objectives, $parent_id, $top_level_id, $ed
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 
-	<title>Class of <?php echo "2015"; ?> / Term <?php echo $term; ?> / <?php echo $course_code; ?> Syllabus</title>
+	<title>Class of <?php echo $grad_year; ?> / Term <?php echo $term; ?> / <?php echo $course_code; ?> Syllabus</title>
 
 	<meta name="author" content="<?php echo $AGENT_CONTACTS["general-contact"]["name"]; ?>, &lt;<?php echo $AGENT_CONTACTS["general-contact"]["email"]; ?>&gt;">
 	<meta name="copyright" content="<?php echo COPYRIGHT_STRING; ?>">

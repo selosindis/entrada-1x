@@ -272,9 +272,8 @@ if (!defined("IN_PROFILE")) {
 			#upload-image-modal-btn {position:absolute;right:7px;top:7px;display:none;outline:none;}
 			#btn-toggle {position:absolute;right:7px;bottom:7px;display:none;outline:none;}
 			#btn-toggle .btn {outline:none;}
-			.profile-image-preview {text-align:center;max-width:530px;margin:auto;}
+			.profile-image-preview {text-align:center;max-width:275px;margin:auto;}
 			.modal-body {max-height:none;}
-
 		</style>
 		<?php $profile_image = ENTRADA_ABSOLUTE . '/../public/images/' . $ENTRADA_USER->getID() . '/' . $ENTRADA_USER->getID() . '-large.png'; ?>
 		<script type="text/javascript">
@@ -338,7 +337,7 @@ if (!defined("IN_PROFILE")) {
 						async : true,
 						success : function(data) {
 							var jsonResponse = JSON.parse(data);
-							jQuery("#profile-image-container .thumbnail img").attr("src", jsonResponse.data.imgurl);
+							jQuery("#profile-image-container span img").attr("src", jsonResponse.data.imgurl);
 							jQuery("#btn-toggle .btn.active").removeClass("active");
 							clicked.addClass("active");
 							clicked.parent().removeClass((jsonResponse.data.imgtype == "uploaded" ? "official" : "uploaded")).addClass(jsonResponse.data.imgtype);

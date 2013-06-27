@@ -60,7 +60,7 @@ if (!defined("IN_NOTICES")) {
 		$organisation[$org_id] = array("text" => fetch_organisation_title($org_id), "value" => "organisation_" . $org_id, "category" => true);
 
 		switch ($options_for) {
-			case "cohorts" : // Classes
+			case "cohort" : // Classes
 				/**
 				 * Cohorts.
 				 */
@@ -109,7 +109,7 @@ if (!defined("IN_NOTICES")) {
 						$groups[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $group["group_name"], "value" => "group_" . $group["group_id"], "checked" => $checked);
 					}
 
-					echo lp_multiple_select_popup("cohorts", $groups, array("title" => "Select Cohorts of Learners:", "submit_text" => "Close", "submit" => true));
+					echo lp_multiple_select_popup("cohort", $groups, array("title" => "Select Cohorts of Learners:", "submit_text" => "Close", "submit" => true));
 				} else {
 					echo display_notice("There are no cohorts of learners available.");
 				}
@@ -169,7 +169,7 @@ if (!defined("IN_NOTICES")) {
 					echo display_notice("There are no course lists in the course you have selected.");
 				}
 			break;
-			case "students" : // Students
+			case "student" : // Students
 				/**
 				 * Learners
 				 */
@@ -228,7 +228,7 @@ if (!defined("IN_NOTICES")) {
 						$students[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $student["fullname"], "value" => "student_".$student["proxy_id"], "checked" => $checked);
 					}
 
-					echo lp_multiple_select_popup("students", $students, array("title" => "Select Individual Learners:", "submit_text" => "Close", "submit" => true));
+					echo lp_multiple_select_popup("student", $students, array("title" => "Select Individual Learners:", "submit_text" => "Close", "submit" => true));
 				} else {
 					echo display_notice("There are no students available.");
 				}

@@ -125,7 +125,7 @@ function fetch_event_resources_text($event_id = 0) {
  * @return bool
  */
 function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = array()) {
-	global $db, $mail, $NOTIFICATION_MESSAGE, $NOTIFICATION_BLACKLIST, $AGENT_CONTACTS;
+	global $db, $mail, $NOTIFICATION_MESSAGE, $NOTIFICATION_BLACKLIST, $AGENT_CONTACTS, $ENTRADA_TEMPLATE;
 
 	if ((!$timestamp_start = (int) $timestamp_start) || (!$timestamp_end = (int) $timestamp_end)) {
 		return false;
@@ -148,9 +148,13 @@ function notifications_send($timestamp_start = 0, $timestamp_end = 0, $notice = 
 			 * then they are set here if available.
 			 */
 			if (($event["event_phase"]) && (isset($AGENT_CONTACTS["phase-".strtolower($event["event_phase"])])) && (is_array($AGENT_CONTACTS["phase-".strtolower($event["event_phase"])])) && ($AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["name"]) && ($AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["email"])) {
+				$mail->clearFrom();
+				$mail->clearReplyTo();
 				$mail->setFrom($AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["email"], $AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["name"]);
 				$mail->setReplyTo($AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["email"], $AGENT_CONTACTS["phase-".strtolower($event["event_phase"])]["name"]);
 			} else {
+				$mail->clearFrom();
+				$mail->clearReplyTo();
 				$mail->setFrom($AGENT_CONTACTS["agent-notifications"]["email"], $AGENT_CONTACTS["agent-notifications"]["name"]);
 				$mail->setReplyTo($AGENT_CONTACTS["agent-notifications"]["email"], $AGENT_CONTACTS["agent-notifications"]["name"]);
 			}

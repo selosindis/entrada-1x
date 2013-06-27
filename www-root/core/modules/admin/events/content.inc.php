@@ -166,8 +166,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     $clinical_presentations = array();
                 }
 
-                history_log($EVENT_ID, "updated clinical presentations.");
-
 				/**
 				 * Fetch the Curriculum Objective details.
 				 */
@@ -281,6 +279,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					switch ($_POST["type"]) {
 						case "content" :
 							if(!$ERROR) {
+								
 								$history_texts = " [";
 								/**
 								 * Event Description
@@ -385,6 +384,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												application_log("error", "Unable to insert a new clinical presentation to the database when adding a new event. Database said: ".$db->ErrorMsg());
 											}
 										}
+										history_log($EVENT_ID, "updated clinical presentations.");
 									}
 								}
 
@@ -440,7 +440,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 															application_log("error", "Unable to insert a new event_topic entry into the database while modifying event contents. Database said: ".$db->ErrorMsg());
 														}
 													} elseif ((isset($value["minor_topic"])) && ($value["minor_topic"] == "minor")) {
-														if (!$db->AutoExecute("event_topics", array("event_id" => $EVENT_ID, "topic_id" => $topic_id, "topic_coverage" => "minor", "topic_time" => ((isset($value["minor_desc"])) ? (int) trim($value["minor_desc"]) : ""), "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
+														if (!$db->AutoExecute("event_topics", array("event_id" => $EVENT_ID, "topic_id" => $topic_id, "topic_coverage" => "minor", "topic_time" => "0", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 															$ERROR++;
 															$ERRORSTR[] = "There was an error when trying to insert an Event Topic response into the system. System administrators have been informed of this error; please try again later.";
 
@@ -691,30 +691,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 
 				function updateEdChecks(obj) {
-					var element = obj.id;
-
-					if (obj.value == 'minor') {
-						var select_box = element + '_desc';
-
-						if ($(element).checked == true) {
-							$(select_box).disabled = false;
-							$(select_box).fade({ duration: 0.3, to: 1.0 });
-
-							$(element.replace(/minor/i, 'major')).checked = false;
-						} else {
-							$(select_box).value = '0';
-							$(select_box).disabled = true;
-							$(select_box).fade({ duration: 0.3, to: 0.25 });
-						}
-					} else {
-						var select_box = element.replace(/major/i, 'minor_desc');
-
-						$(select_box).value = '0';
-						$(select_box).disabled = true;
-						$(select_box).fade({ duration: 0.3, to: 0.25 });
-
-						$(element.replace(/major/i, 'minor')).checked = false;
-					}
+					return true;
 				}
 				var text = new Array();
 
@@ -1013,12 +990,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 					<div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="event" data-resource-id="<?php echo $EVENT_ID;?>">
 						<h3>Mapped Objectives</h3>
-						<div class="clearfix">
-							<ul class="page-action" style="float: right">
-								<li class="last">
-									<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Map Additional Objectives</a>
-								</li>
-							</ul>
+						<div class="row-fluid space-below">
+							<a href="javascript:void(0)" class="mapping-toggle btn btn-success btn-small pull-right" data-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Map Additional Objectives</a>
 						</div>
 						<p class="well well-small content-small">
 							<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left and it will be mapped to the event.
@@ -1164,14 +1137,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             LEFT JOIN `event_topics` AS e
                             ON d.`event_id` = e.`event_id`
                             AND a.`topic_id` = e.`topic_id`
-                            WHERE d.`event_id` = ".$db->qstr($EVENT_ID);
+                            WHERE d.`event_id` = ".$db->qstr($EVENT_ID)."
+							ORDER BY a.`topic_name`";
                 $topic_results = $db->GetAll($query);
                 if ($topic_results) {
                     ?>
                     <a name="event-topics-section"></a>
                     <h2 title="Event Topics Section">Event Topics</h2>
                     <div id="event-topics-section">
-                        <div class="content-small" style="padding-bottom: 10px">Please select the topics that will be covered in your learning event and indicate if the amount of time that will be devoted.</div>
+						<div class="content-small">
+							<p>Please check off a topic as <strong>MAJOR</strong> if it is encompassed in a learning objective of your session, or if you have taught enough about it that it would be reasonable to include an assessment item about the topic.</p>
+							<p>Please check off a topic as <strong>MINOR</strong> if you mentioned the topic but only briefly.</p>
+						</div>
                         <table style="width: 100%" cellspacing="0" summary="List of ED10">
                             <colgroup>
                                 <col style="width: 55%" />
@@ -1188,7 +1165,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 <td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
                                 <td><span style="font-weight: bold; color: #003366;">Major</span></td>
                                 <td><span style="font-weight: bold; color: #003366;">Minor</span></td>
-                                <td><span style="font-weight: bold; color: #003366;">Time</span></td>
                             </tr>
                             <?php
                             foreach ($topic_results as $topic_result) {
@@ -1198,28 +1174,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 echo "		<input type=\"checkbox\" id=\"topic_".$topic_result["topic_id"]."_major\" name=\"event_topic[".$topic_result["topic_id"]."][major_topic]\" value=\"major\" onclick=\"updateEdChecks(this)\"".(($topic_result["topic_coverage"] == "major") ? " checked=\"checked\"" : "")." />";
                                 echo "	</td>\n";
                                 echo "	<td>";
-                                echo "		<input type=\"checkbox\" id=\"topic_".$topic_result["topic_id"]."_minor\" name=\"event_topic[".$topic_result["topic_id"]."][minor_topic]\" value=\"minor\" onclick=\"updateEdChecks(this)\"".(($topic_result["topic_coverage"] == "minor") ? " checked=\"checked\"" : "")." />";
-                                echo "	</td>\n";
-                                echo "	<td>\n";
-                                echo "		<select id=\"topic_".$topic_result["topic_id"]."_minor_desc\" name=\"event_topic[".$topic_result["topic_id"]."][minor_desc]\" class=\"ed_select_".(($topic_result["topic_coverage"] == "minor") ? "on" : "off")."\">" ;
-                                echo "			<option value=\"0\"".((!(int) $topic_result["topic_time"]) ? " selected=\"selected\"" : "").">0</option>";
-                                echo "			<option value=\"5\"".(($topic_result["topic_time"] == "5") ? " selected=\"selected\"" : "").">5</option>";
-                                echo "			<option value=\"10\"".(($topic_result["topic_time"] == "10") ? " selected=\"selected\"" : "").">10</option>";
-                                echo "			<option value=\"15\"".(($topic_result["topic_time"] == "15") ? " selected=\"selected\"" : "").">15</option>";
-                                echo "			<option value=\"20\"".(($topic_result["topic_time"] == "20") ? " selected=\"selected\"" : "").">20</option>";
-                                echo "			<option value=\"25\"".(($topic_result["topic_time"] == "25") ? " selected=\"selected\"" : "").">25</option>";
-                                echo "			<option value=\"30\"".(($topic_result["topic_time"] == "30") ? " selected=\"selected\"" : "").">30</option>";
-                                echo "			<option value=\"35\"".(($topic_result["topic_time"] == "35") ? " selected=\"selected\"" : "").">35</option>";
-                                echo "			<option value=\"40\"".(($topic_result["topic_time"] == "40") ? " selected=\"selected\"" : "").">40</option>";
-                                echo "			<option value=\"45\"".(($topic_result["topic_time"] == "45") ? " selected=\"selected\"" : "").">45</option>";
-                                echo "			<option value=\"50\"".(($topic_result["topic_time"] == "50") ? " selected=\"selected\"" : "").">50</option>";
-                                echo "			<option value=\"55\"".(($topic_result["topic_time"] == "55") ? " selected=\"selected\"" : "").">55</option>";
-                                echo "			<option value=\"60\"".(($topic_result["topic_time"] == "60") ? " selected=\"selected\"" : "").">60</option>";
-                                echo "		</select>";
+                                echo "		<input type=\"checkbox\" id=\"topic_".$topic_result["topic_id"]."_minor\" name=\"event_topic[".$topic_result["topic_id"]."][minor_topic]\" value=\"minor\" ".(($topic_result["topic_coverage"] == "minor") ? " checked=\"checked\"" : "")."/>";
                                 echo "	</td>\n";
                                 echo "</tr>\n";
                             }
-                            echo "<tr><td colspan=\"2\">&nbsp;</td></tr>";
+                            echo "<tr><td colspan=\"3\">&nbsp;</td></tr>";
                             ?>
                         </table>
                     </div>

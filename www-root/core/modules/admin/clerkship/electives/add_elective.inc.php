@@ -133,7 +133,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
             $event_date = validate_calendar("Elective", "event", false);
             if ((isset($event_date)) && ((int) $event_date)) {
                 $PROCESSED["event_start"]   = (int) $event_date;
-				$PROCESSED["event_finish"]  = $PROCESSED["event_start"] + (clean_input($_POST["event_finish_name"], array("int")) * ONE_WEEK);
+				$PROCESSED["event_finish"]  = $PROCESSED["event_start"] + (clean_input($_POST["event_finish_name"], array("int")) * ONE_WEEK) - 10800;
 				$start_stamp                = $PROCESSED["event_start"];
 				$end_stamp                  = $PROCESSED["event_finish"];
 				foreach ($_SESSION["ids"] as $value) {
@@ -626,23 +626,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
                 newDate = toJSDate(value);
                 switch (\$F('event_finish')) {
                     case '1':
-                        var days = 7;
+                        var days = 6;
                         var weekText = ' week';
                         break;	
                     case '2':
-                        var days = 14;
+                        var days = 13;
                         var weekText = ' weeks';
                         break;
                     case '3':
-                        var days = 21;
+                        var days = 20;
                         var weekText = ' weeks';
                         break;
                     case '4':
-                        var days = 28;
+                        var days = 27;
                         var weekText = ' weeks';
                         break;
                     default:
-                        var days = 14;
+                        var days = 13;
                         var weekText = ' weeks';
                         break;
                 }
@@ -656,26 +656,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
                 newDate = toJSDate(date);
                 switch (\$F('event_finish')) {
                     case '1':
-                        var days = 7;
+                        var days = 6;
                         var weekText = ' weeks';
                         break;
                     case '2':
-                        var days = 14;
+                        var days = 13;
                         var weekText = ' weeks';
                         break;
                     case '3':
-                        var days = 21;
+                        var days = 20;
                         var weekText = ' weeks';
                         break;
                     case '4':
-                        var days = 28;
+                        var days = 27;
                         var weekText = ' weeks';
                         break;
                     default:
-                        var days = 14;
+                        var days = 13;
                         var weekText = ' weeks';
                         break;
                 }
+                
                 newDate.setDate(newDate.getDate()+days);
                 newDate = toCalendarDate(newDate);
                 $('auto_end_date').innerHTML = '&nbsp;&nbsp;&nbsp;Ending in '+\$F('event_finish')+weekText+' on ' +newDate;

@@ -152,7 +152,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                     $event_date = validate_calendar("Elective", "event", false);
                     if ((isset($event_date)) && ((int) $event_date)) {
                         $PROCESSED["event_start"]   = (int) $event_date;
-                        $PROCESSED["event_finish"]  = $PROCESSED["event_start"] + (clean_input($_POST["event_finish_name"], array("int")) * ONE_WEEK);
+                        $PROCESSED["event_finish"]  = $PROCESSED["event_start"] + (clean_input($_POST["event_finish_name"], array("int")) * ONE_WEEK) - 10800;
                         $start_stamp                = $PROCESSED["event_start"];
                         $end_stamp                  = $PROCESSED["event_finish"];
 						$dateCheckQuery = "SELECT `event_title`, `event_start`, `event_finish`
@@ -188,12 +188,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 							$weekTotals = clerkship_get_elective_weeks($ENTRADA_USER->getID(), $EVENT_ID);
 							$totalWeeks = $weekTotals["approval"] + $weekTotals["approved"];
 							
-							$temp_grad_year	= get_account_data("grad_year", $ENTRADA_USER->getID());
-							if ($temp_grad_year == 2014) {
-								$CLERKSHIP_REQUIRED_WEEKS = 18;
-							} elseif ($temp_grad_year == 2015) {
-                                $CLERKSHIP_REQUIRED_WEEKS = 15;
-                            }
 							if ($totalWeeks + clean_input($_POST["event_finish_name"], array("int")) > $CLERKSHIP_REQUIRED_WEEKS) {
 								$ERROR++;
 								$ERRORSTR[] = "The <strong>Weeks</strong> field contains too large a number as this combined with the other electives you have in the system
@@ -477,23 +471,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 
 						switch (\$F('event_finish')) {
 							case '1':
-								var days = 7;
+								var days = 6;
 								var weekText = ' week';
 								break;
 							case '2':
-								var days = 14;
+								var days = 13;
 								var weekText = ' weeks';
 								break;
 							case '3':
-								var days = 21;
+								var days = 20;
 								var weekText = ' weeks';
 								break;
 							case '4':
-								var days = 28;
+								var days = 27;
 								var weekText = ' weeks';
 								break;
 							default:
-								var days = 14;
+								var days = 13;
 								var weekText = ' weeks';
 								break;
 						}
@@ -508,23 +502,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						newDate = toJSDate(date);
 						switch (\$F('event_finish')) {
 							case '1':
-								var days = 7;
+								var days = 6;
 								var weekText = ' week';
 								break;
 							case '2':
-								var days = 14;
+								var days = 13;
 								var weekText = ' weeks';
 								break;
 							case '3':
-								var days = 21;
+								var days = 20;
 								var weekText = ' weeks';
 								break;
 							case '4':
-								var days = 28;
+								var days = 27;
 								var weekText = ' weeks';
 								break;
 							default:
-								var days = 14;
+								var days = 13;
 								var weekText = ' weeks';
 								break;
 						}

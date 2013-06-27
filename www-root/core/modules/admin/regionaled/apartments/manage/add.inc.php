@@ -295,7 +295,7 @@ if (!defined("IN_MANAGE")) {
 							<td style="vertical-align: top"><label for="occupant_name" class="form-required">Occupant Type</label></td>
 							<td>
 								<select id="occupant_type" name="occupant_type" style="width: 210px;">
-									<option value="undergrad"<?php echo ((!isset($PROCESSED["occupant_type"]) || $PROCESSED["occupant_type"] == "undergrad") ? " selected=\"selected\"" : ""); ?>><?php echo APPLICATION_NAME ?> Learner</option>
+									<option value="undergrad"<?php echo ((!isset($PROCESSED["occupant_type"]) || $PROCESSED["occupant_type"] == "undergrad") ? " selected=\"selected\"" : ""); ?>><?php echo APPLICATION_NAME; ?> Learner</option>
 									<option value="other"<?php echo ((isset($PROCESSED["occupant_type"]) && $PROCESSED["occupant_type"] == "other") ? " selected=\"selected\"" : ""); ?>>Other Occupancy</option>
 								</select>
 							</td>

@@ -137,7 +137,7 @@ if ($RECORD_ID) {
 											if ($questions) {
 												if ((count($_POST["responses"])) != (count($questions))) {
 													$ERROR++;
-													$ERRORSTR[] = "In order to submit your quiz for marking, you must first answer all of the questions.";
+													$ERRORSTR[] = "In order to submit your quiz for marking, you must first answer all of the questions. The unanswered questions will be highlighted, as well as the page selector for any page with an unanswered question on it.";
 												}
 
 												foreach ($questions as $question) {
@@ -238,7 +238,7 @@ if ($RECORD_ID) {
 													if (($quiz_record["quiztype_code"] == "immediate") || (($quiz_record["quiztype_code"] == "delayed") && (((int) $quiz_record["release_until"] === 0) || ($quiz_record["release_until"] <= time())))) {
 														header("Location: ".ENTRADA_URL."/quizzes?section=results".(isset($QUIZ_TYPE) && $QUIZ_TYPE == "community_page" ? "&community=true" : "")."&id=".$progress_record["qprogress_id"]);
 														exit;
-													} else {
+													} elseif ($quiz_record["quiztype_code"] == "delayed") {
 														if ($QUIZ_TYPE == "community_page") {
 															$url = ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"];
 															$SUCCESS++;
@@ -250,7 +250,19 @@ if ($RECORD_ID) {
 														}
 
 														$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 15000)";
-													}
+													} else {
+														if ($QUIZ_TYPE == "community_page") {
+															$url = ENTRADA_URL."/community".$quiz_record["community_url"].":".$quiz_record["page_url"];
+															$SUCCESS++;
+															$SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($quiz_record["quiz_title"])."</strong> quiz. Your responses have been successfully recorded.<br /><br />You will now be redirected back to the learning event; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+														} else {
+															$url = ENTRADA_URL."/events?id=".$quiz_record["content_id"];
+															$SUCCESS++;
+															$SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($quiz_record["quiz_title"])."</strong> quiz. Your responses have been successfully recorded.<br /><br />You will now be redirected back to the learning event; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+														}
+
+														$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 15000)";
+                                                    }
 												} else {
 													application_log("error", "Unable to record the final quiz results for aquiz_id [".$RECORD_ID."] in the quiz_progress table. Database said: ".$db->ErrorMsg());
 
@@ -475,6 +487,7 @@ if ($RECORD_ID) {
 											.page.inactive {display:none;}
 										</style>
 											<?php
+                                                $problem_pages = array();
 												$page_counter = 1;
 												$counter = 1;
 												$quiz_markup = "";
@@ -490,7 +503,10 @@ if ($RECORD_ID) {
 														$quiz_markup .= "<div class=\"display-generic\">".$question["question_text"]."</div>";
 														$quiz_markup .= "<ol class=\"questions\" start=\"".$counter."\">";
 													} else {
-														$quiz_markup .= "<li id=\"question_".$question["qquestion_id"]."\"".((in_array($question["qquestion_id"], $problem_questions)) ? " class=\"notice\"" : "").">";
+                                                        if (in_array($question["qquestion_id"], $problem_questions) && !key_exists($page_counter, $problem_pages)) {
+                                                            $problem_pages[$page_counter] = true;
+                                                        }
+														$quiz_markup .= "<li id=\"question_".$question["qquestion_id"]."\"".((in_array($question["qquestion_id"], $problem_questions)) ? " class=\"notice\"" : "")." data-page=\"".$page_counter."\">";
 														$quiz_markup .= "	<div class=\"question noneditable\">\n";
 														$quiz_markup .= "		<span id=\"question_text_".$question["qquestion_id"]."\" class=\"question\">".clean_input($question["question_text"], "trim")."</span>";
 														$quiz_markup .= "	</div>\n";
@@ -527,7 +543,7 @@ if ($RECORD_ID) {
 															<li><a href="#" class="prev">&laquo;</a></li>
 															<?php 
 															for ($i = 1; $i <= $page_counter; $i++) {
-																echo "<li".($i == 1 ? " class=\"active\"" : "")."><a href=\"#".$i."\" data-id=\"".$i."\">".$i."</a></li>";
+																echo "<li".($i == 1 ? " class=\"active\"" : "")."><a href=\"#".$i."\" id=\"page-selector-top-".$i."\" data-id=\"".$i."\"".((key_exists($i, $problem_pages)) && $problem_pages[$i] ? " class=\"notice\"" : "").">".$i."</a></li>";
 															} 
 															?>
 															<li><a href="#" class="next">&raquo;</a></li>
@@ -550,7 +566,7 @@ if ($RECORD_ID) {
 															<li><a href="#" class="prev">&laquo;</a></li>
 															<?php 
 															for ($i = 1; $i <= $page_counter; $i++) {
-																echo "<li".($i == 1 ? " class=\"active\"" : "")."><a href=\"#".$i."\" data-id=\"".$i."\">".$i."</a></li>";
+																echo "<li".($i == 1 ? " class=\"active\"" : "")."><a href=\"#".$i."\" id=\"page-selector-bottom-".$i."\" data-id=\"".$i."\"".((key_exists($i, $problem_pages)) && $problem_pages[$i] ? " class=\"notice\"" : "").">".$i."</a></li>";
 															} 
 															?>
 															<li><a href="#" class="next">&raquo;</a></li>
@@ -570,7 +586,7 @@ if ($RECORD_ID) {
 										?>
 										<div class="row-fluid border-above-medium space-above pad-top">
 											<input type="button" class="btn space-left" onclick="window.location = '<?php echo ENTRADA_URL; ?>/events?id=<?php echo $quiz_record["content_id"]; ?>'" value="Exit Quiz" />
-											<input id="submit-button" type="submit" class="btn btn-primary pull-right" style="display: none;" value="Submit Quiz" />
+											<input id="submit-button" type="submit" class="btn btn-primary pull-right"<?php echo ($page_counter > 1 ? " style=\"display: none;\"" : ""); ?> value="Submit Quiz" />
 										</div>
 										</form>
 										<script type="text/javascript">
@@ -623,6 +639,11 @@ if ($RECORD_ID) {
 												onSuccess: function(transport) {
 													if (transport.responseText.match(200)) {
 														$('question_' + qid).removeClassName('notice');
+                                                        var page_id = jQuery('#question_' + qid).data('page');
+                                                        if (jQuery('.page[data-id="'+ page_id +'"] .notice').length == 0) {
+                                                            $('page-selector-top-' + page_id).removeClassName('notice');
+                                                            $('page-selector-bottom-' + page_id).removeClassName('notice');
+                                                        }
 
 														if ($$('#quiz-questions-list li.notice').length <= 0) {
 															$('display-unsaved-warning').fade({ duration: 0.5 });

@@ -25,7 +25,7 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-require_once(ENTRADA_CORE."/library/Models/utility/Editable.interface.php");
+
 require_once(ENTRADA_CORE."/library/Models/mspr/Observership.class.php");
 
 /*

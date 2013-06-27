@@ -291,10 +291,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	                        return false;
 	                    });                          
 
-						jQuery('#fullscreen-edit').click(function(){
-							window.location = '<?php echo ENTRADA_URL . "/admin/".$MODULE."?" . replace_query(array("section" => "api-edit"));?>';
-	                    });
-
                         var reordering = false;
                         var orderChanged = false;
 
@@ -384,7 +380,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								<input type="button" class="btn btn-primary" id="saveorder" value="Save Order" />
 							</td>
 							<td style="padding-top: 10px; border-bottom: 0; text-align:right;" colspan="2">
-								<input type="button" id="fullscreen-edit" class="btn" value="Grade Spreadsheet"/>
+								<input type="button" id="fullscreen-edit" class="btn" data-href="<?php echo ENTRADA_URL . "/admin/gradebook?" . replace_query(array("section" => "api-edit")); ?>" value="Grade Spreadsheet" />
 								<input type="button" id="export-grades" class="btn" value="Export Grades"/>
 							</td>
 						</tr>

@@ -70,21 +70,21 @@ if (!defined("IN_REGIONALED")) {
 				<colgroup>
 					<col class="modified" />
 					<col class="teacher" />
-					<col class="type" />
+					<col class="actions" />
 					<col class="title" />
-					<col class="region" />
-					<col class="date-smallest" />
-					<col class="date-smallest" />
+					<col class="actions" />
+					<col class="actions" />
+					<col class="actions" />
 				</colgroup>
 				<thead>
 					<tr>
 						<td class="modified">&nbsp;</td>
 						<td class="teacher">Student</td>
-						<td class="type">Event Type</td>
+						<td class="actions">Event Type</td>
 						<td class="title">Rotation Name</td>
-						<td class="region">Region</td>
-						<td class="date-smallest">Start Date</td>
-						<td class="date-smallest">Finish Date</td>
+						<td class="actions">Region</td>
+						<td class="actions">Start Date</td>
+						<td class="actions">Finish Date</td>
 					</tr>
 				</thead>
 				<tfoot>
@@ -102,11 +102,11 @@ if (!defined("IN_REGIONALED")) {
 						echo "<tr>\n";
 						echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".(int) $result["event_id"]."\" /></td>\n";
 						echo "	<td class=\"teacher\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".html_encode($result["lastname"].", ".$result["firstname"] )."</a></td>\n";
-						echo "	<td class=\"type\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".(($result["event_type"] == "elective") ? "Elective (Approved)" : "Core Rotation")."</a></td>\n";
+						echo "	<td class=\"actions\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".(($result["event_type"] == "elective") ? "Elective (Approved)" : "Core Rotation")."</a></td>\n";
 						echo "	<td class=\"title\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".html_encode($result["rotation_title"])."</a></td>\n";
-						echo "	<td class=\"region\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".html_encode($result["region_name"])."</a></td>\n";
-						echo "	<td class=\"date-smallest\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".date("D M d/y", $result["event_start"])."</a></td>\n";
-						echo "	<td class=\"date-smallest\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".date("D M d/y", $result["event_finish"])."</a></td>\n";
+						echo "	<td class=\"actions\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".html_encode($result["region_name"])."</a></td>\n";
+						echo "	<td class=\"actions\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".date("M d/y", $result["event_start"])."</a></td>\n";
+						echo "	<td class=\"actions\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".date("M d/y", $result["event_finish"])."</a></td>\n";
 						echo "</tr>\n";
 					}
 					?>
@@ -156,21 +156,21 @@ if (!defined("IN_REGIONALED")) {
 					<colgroup>
 						<col class="modified" />
 						<col class="teacher" />
-						<col class="type" />
+						<col class="actions" />
 						<col class="title" />
-						<col class="region" />
-						<col class="date-smallest" />
-						<col class="date-smallest" />
+						<col class="actions" />
+						<col class="actions" />
+						<col class="actions" />
 					</colgroup>
 					<thead>
 						<tr>
 							<td class="modified">&nbsp;</td>
 							<td class="teacher">Student</td>
-							<td class="type">Learner Type</td>
+							<td class="actions">Learner Type</td>
 							<td class="title">Apartment Title</td>
-							<td class="region">Region</td>
-							<td class="date-smallest">Start Date</td>
-							<td class="date-smallest">Finish Date</td>
+							<td class="actions">Region</td>
+							<td class="actions">Start Date</td>
+							<td class="actions">Finish Date</td>
 						</tr>
 					</thead>
 					<tfoot>
@@ -188,11 +188,11 @@ if (!defined("IN_REGIONALED")) {
 							echo "<tr>\n";
 							echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"remind[]\" value=\"".(int) $result["aschedule_id"]."\" /></td>\n";
 							echo "	<td class=\"teacher\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".html_encode($result["lastname"].", ".$result["firstname"] )."</a></td>\n";
-							echo "	<td class=\"type\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".$result["learner_type"]."</a></td>\n";
+							echo "	<td class=\"actions\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".$result["learner_type"]."</a></td>\n";
 							echo "	<td class=\"title\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".html_encode($result["apartment_title"])."</a></td>\n";
-							echo "	<td class=\"region\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".html_encode($result["region_name"])."</a></td>\n";
-							echo "	<td class=\"date-smallest\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".date("D M d/y", $result["inhabiting_start"])."</a></td>\n";
-							echo "	<td class=\"date-smallest\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".date("D M d/y", $result["inhabiting_finish"])."</a></td>\n";
+							echo "	<td class=\"actions\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".html_encode($result["region_name"])."</a></td>\n";
+							echo "	<td class=\"actions\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".date("M d/y", $result["inhabiting_start"])."</a></td>\n";
+							echo "	<td class=\"actions\"><a href=\"".$click_url."\" style=\"font-size: 11px\">".date("M d/y", $result["inhabiting_finish"])."</a></td>\n";
 							echo "</tr>\n";
 						}
 						?>

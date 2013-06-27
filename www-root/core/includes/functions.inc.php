@@ -338,7 +338,7 @@ function check_sidebar($buffer) {
 	if(@count($SIDEBAR)) {
 		@ksort($SIDEBAR);
 
-		$output .= "<div class=\"inner-sidebar\">\n";
+		$output .= "<div class=\"inner-sidebar no-printing\">\n";
 		$output .= implode("\n\n", $SIDEBAR);
 		$output .= "</div>\n";
 	}
@@ -15078,6 +15078,25 @@ function is_department_head($user_id) {
 }
 
 /**
+ * This function determines if a user is a dean
+ * @param int $user_id
+ * @return bool true, bool returns false otherwise
+ */
+function is_dean($user_id) {
+	global $db;
+
+	$query = "	SELECT `user_id`
+				FROM `".AUTH_DATABASE."`.`deans`
+				WHERE `user_id`=".$db->qstr($user_id);
+
+	if($result = $db->GetRow($query)) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/**
  * This function generates a 2 dimensional array of the competencies
  * and the courses which they are associated with, used for building
  * a table to display the aforementioned matrix.
@@ -17273,7 +17292,7 @@ function load_active_organisation($organisation_id = 0, $user_access_id = 0) {
                 $organisation_id = (int) $active_organisation["organisation_id"];
                 $user_access_id = (int) $active_organisation["access_id"];
             } else {
-                $organisation_id = $ENTRADA_USER->getOrganisationId();
+                $organisation_id = $ENTRADA_USER->getActiveOrganisation();
                 $user_access_id = $ENTRADA_USER->getAccessId();
             }
         }

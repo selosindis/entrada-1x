@@ -133,7 +133,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
                     $event_date = validate_calendar("Elective", "event", false);
                     if ((isset($event_date)) && ((int) $event_date)) {
                         $PROCESSED["event_start"]   = (int) $event_date;
-                        $PROCESSED["event_finish"]  = $PROCESSED["event_start"] + (clean_input($_POST["event_finish_name"], array("int")) * ONE_WEEK);
+                        $PROCESSED["event_finish"]  = $PROCESSED["event_start"] + (clean_input($_POST["event_finish_name"], array("int")) * ONE_WEEK) - 10800;
                         $start_stamp                = $PROCESSED["event_start"];
                         $end_stamp                  = $PROCESSED["event_finish"];
                         $dateCheckQuery = "SELECT `event_title`, `event_start`, `event_finish` 
@@ -453,7 +453,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
 										$mail->addHeader("X-Section", "Electives Approval");
 
-										$mail->addTo($AGENT_CONTACTS["agent-clerkship-international"]["email"], $AGENT_CONTACTS["agent-clerkship-international"]["name"]);
+										$mail->addTo($student_email, $student_name);
 										$mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
 										$mail->setSubject("Electives Approval - ".APPLICATION_NAME);
 										$mail->setReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
@@ -529,7 +529,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 										$mail->addHeader('Content-Transfer-Encoding', '8bit');
 										$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
 										$mail->addHeader("X-Section", "Electives Approval");
-										$mail->addTo($PROCESSED["email"], (isset($PROCESSED["preceptor_prefix"]) && $PROCESSED["preceptor_prefix"] != "" ? $PROCESSED["preceptor_prefix"] . " " : "").(isset($PROCESSED["preceptor_first_name"]) && $PROCESSED["preceptor_first_name"] ? $PROCESSED["preceptor_first_name"] : "")." " . $PROCESSED["preceptor_last_name"]);
+										$mail->addTo($student_email, $student_name);
 										$mail->setFrom(($_SESSION["details"]["email"]) ? $_SESSION["details"]["email"] : "noreply@queensu.ca", $_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
 										$mail->setSubject("Electives Rejection - ".APPLICATION_NAME);
 										$mail->setReplyTo($AGENT_CONTACTS["agent-clerkship"]["email"], $AGENT_CONTACTS["agent-clerkship"]["name"]);
@@ -656,23 +656,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						newDate = toJSDate(value);
 						switch (\$F('event_finish')) {
 							case '1':
-								var days = 7;
+								var days = 6;
 								var weekText = ' week';
 								break;
 							case '2':
-								var days = 14;
+								var days = 13;
 								var weekText = ' weeks';
 								break;
 							case '3':
-								var days = 21;
+								var days = 20;
 								var weekText = ' weeks';
 								break;
 							case '4':
-								var days = 28;
+								var days = 27;
 								var weekText = ' weeks';
 								break;
 							default:
-								var days = 14;
+								var days = 13;
 								var weekText = ' weeks';
 								break;
 						}
@@ -686,23 +686,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						newDate = toJSDate(date);
 						switch (\$F('event_finish')) {
 							case '1':
-								var days = 7;
+								var days = 6;
 								var weekText = ' week';
 								break;
 							case '2':
-								var days = 14;
+								var days = 13;
 								var weekText = ' weeks';
 								break;
 							case '3':
-								var days = 21;
+								var days = 20;
 								var weekText = ' weeks';
 								break;
 							case '4':
-								var days = 28;
+								var days = 27;
 								var weekText = ' weeks';
 								break;
 							default:
-								var days = 14;
+								var days = 13;
 								var weekText = ' weeks';
 								break;
 						}
@@ -1207,6 +1207,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							} else {
 								$PROCESSED["event_desc"] = "";
 							}
+			
+							if ((isset($_POST["rotation_id"])) && ($rotation_id = (int) $_POST["rotation_id"])) {
+								$query = "SELECT `rotation_id` FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` WHERE `rotation_id` = ".$db->qstr($rotation_id);
+								$result	= $db->GetRow($query);
+								if ($result) {
+									$PROCESSED["rotation_id"] = (int) $result["rotation_id"];
+								} else {
+									$ERROR++;
+									$ERRORSTR[] = "We were unable to locate the rotation title you've selected.";
+								}
+							} else {
+								$ERROR++;
+								$ERRORSTR[] = "The <strong>Rotation ID</strong> field is required if this event is to be a part of a Core Rotation.";
+							}
 
 							$event_dates = validate_calendars("event", true, true);
 							if ((isset($event_dates["start"])) && ((int) $event_dates["start"])) {
@@ -1235,7 +1249,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 								}
 							}
 							if(!$ERROR) {
-								$PROCESSED["rotation_id"] = $db->GetOne("SELECT `rotation_id` FROM `".CLERKSHIP_DATABASE."`.`categories` WHERE `category_id` = ".$db->qstr($PROCESSED["category_id"]));
 								$PROCESSED["modified_last"]	= time();
 								$PROCESSED["modified_by"]	= $ENTRADA_USER->getID();
 								if(!$db->AutoExecute("`".CLERKSHIP_DATABASE."`.`events`", $PROCESSED, "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
@@ -1287,7 +1300,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 									<script type=\"text/javascript\">
 									function selectCategory(category_id) {
 										new Ajax.Updater('selectCategoryField', '".ENTRADA_URL."/api/category-in-select.api.php', {parameters: {'cid': category_id}});
-										new Ajax.Updater('hidden_event_title', '".ENTRADA_URL."/api/category-title.api.php', {parameters: {'cid': category_id}, onComplete: function(){ $('event_title').value = $('hidden_event_title').innerHTML.unescapeHTML(); }});
+										new Ajax.Updater('hidden_rotation_id', '".ENTRADA_URL."/api/category-rotation.api.php', 
+										{
+											parameters: 
+											{
+												'cid': category_id, 
+												'event_id': '".$EVENT_ID."'
+											}, 
+											onComplete: function()
+											{ 
+												jQuery(\"#rotation option[value=\'\"+$('hidden_rotation_id').innerHTML+\"\']\").attr('selected', 'selected');
+											}
+										});
 										return;
 									}
 									</script>";
@@ -1362,6 +1386,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						<tr>
 							<td colspan="2"><label for="event_title" class="form-required">Event Title:</label></td>
 							<td><input type="text" id="event_title" name="event_title" style="width: 75%" value="<?php echo html_decode($PROCESSED["event_title"]); ?>" /><div style="display: none;" id="hidden_event_title"><?php echo html_decode($PROCESSED["event_title"]) ?></div></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label for="rotation" class="form-required">Event Rotation:</label></td>
+							<td>
+								<select id="rotation" name="rotation_id" style="width: 75%" value="<?php echo html_decode($PROCESSED["event_title"]); ?>">
+								<option value="">-- Select Rotation --</option>
+								<?php
+									$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` WHERE `rotation_id` NOT IN (10, 11)";
+									$rotations = $db->GetAll($query);
+									if ($rotations) {
+										foreach ($rotations as $rotation) {
+											echo "<option value=\"".$rotation["rotation_id"]."\"".($rotation["rotation_id"] == $PROCESSED["rotation_id"] || (!$PROCESSED["rotation_id"] && $rotation["rotation_id"] == 1) ? " selected=\"selected\"" : "").">".$rotation["rotation_title"]."</option>";
+										}
+									}
+								?>
+								</select>
+								<div id="hidden_rotation_id" style="display: none;"><?php echo $PROCESSED["rotation_id"]; ?>"</div>
+							</td>
 						</tr>
 						<tr>
 							<td style="vertical-align: top; padding-top: 15px" colspan="2"><label for="category_id" class="form-required">Event Takes Place In:</label></td>

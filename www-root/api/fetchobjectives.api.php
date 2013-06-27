@@ -93,11 +93,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 			if ($course_id || $event_id || $assessment_id || $objective_ids_string){
 				$fields["mapped"] = $objective["mapped"];
 				if ($course_id) {
-					$fields["decendant_mapped"] = course_objective_has_child_mapped($objective["objective_id"],$course_id,true);
+					$fields["child_mapped"] = course_objective_has_child_mapped($objective["objective_id"],$course_id,true);
 				} else if ($event_id) {
-					$fields["decendant_mapped"] = event_objective_parent_mapped_course($objective["objective_id"],$event_id,true);
+					$fields["child_mapped"] = event_objective_parent_mapped_course($objective["objective_id"],$event_id,true);
 				} else if ($assessment_id) {
-					$fields["decendant_mapped"] = assessment_objective_parent_mapped_course($objective["objective_id"],$assessment_id,true);
+					$fields["child_mapped"] = assessment_objective_parent_mapped_course($objective["objective_id"],$assessment_id,true);
 				}												
 			}			
 			$query = "	SELECT * FROM `global_lu_objectives` 

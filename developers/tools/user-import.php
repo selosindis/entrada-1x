@@ -94,15 +94,15 @@ switch($ACTION) {
 					$user["email"] = clean_input($row[3], array("nows", "lowercase"));
 					$user["role"] = clean_input($row[4], array("nows", "lowercase"));
 					$user["group"] = clean_input($row[5], array("nows", "lowercase"));
-					$user["organisation"] = isset($row[6]) ? clean_input($row[6], array("nows", "int")) : 1;
+					$user["organisation_id"] = isset($row[6]) ? clean_input($row[6], array("nows", "int")) : 1;
 					$user["entry_year"] = isset($row[7]) ? clean_input($row[7], array("nows", "int")) : "";
-					$user["grad_year"] = isset($row[8]) ? clean_input($row[7], array("nows", "int")) : "";
+					$user["grad_year"] = isset($row[8]) ? clean_input($row[8], array("nows", "int")) : "";
 
 					if (($user["email"] != "") && ($pieces = explode("@", $user["email"])) && (is_array($pieces))) {
 						$user["username"] = trim($pieces[0]);
 					}
 
-					if (isset($row[8]) && ($tmp_input = clean_input($row[8], array("nows"))) && in_array($tmp_input, array("M", "F"))) {
+					if (isset($row[9]) && ($tmp_input = clean_input($row[9], array("nows"))) && in_array($tmp_input, array("M", "F"))) {
 						$user["gender"] = (($tmp_input == "F") ? 1 : 2);
 					} else {
 						$user["gender"] = 0;
@@ -185,15 +185,15 @@ switch($ACTION) {
 					$user["email"] = clean_input($row[3], array("nows", "lowercase"));
 					$user["role"] = clean_input($row[4], array("nows", "lowercase"));
 					$user["group"] = clean_input($row[5], array("nows", "lowercase"));
-					$user["organisation"] = isset($row[6]) ? clean_input($row[6], array("nows", "int")) : 1;
+					$user["organisation_id"] = isset($row[6]) ? clean_input($row[6], array("nows", "int")) : 1;
 					$user["entry_year"] = isset($row[7]) ? clean_input($row[7], array("nows", "int")) : "";
-					$user["grad_year"] = isset($row[8]) ? clean_input($row[7], array("nows", "int")) : "";
+					$user["grad_year"] = isset($row[8]) ? clean_input($row[8], array("nows", "int")) : "";
 
 					if (($user["email"] != "") && ($pieces = explode("@", $user["email"])) && (is_array($pieces))) {
 						$user["username"] = trim($pieces[0]);
 					}
 
-					if (isset($row[8]) && ($tmp_input = clean_input($row[8], array("nows"))) && in_array($tmp_input, array("M", "F"))) {
+					if (isset($row[9]) && ($tmp_input = clean_input($row[9], array("nows"))) && in_array($tmp_input, array("M", "F"))) {
 						$user["gender"] = (($tmp_input == "F") ? 1 : 2);
 					} else {
 						$user["gender"] = 0;
@@ -215,7 +215,7 @@ switch($ACTION) {
 								$access						= array();
 								$access["user_id"]			= $proxy_id;
 								$access["app_id"]			= AUTH_APP_ID;
-								$access["organisation_id"]	= $user["organisation"];
+								$access["organisation_id"]	= $user["organisation_id"];
 								$access["account_active"]	= "true";
 								$access["access_starts"]	= time();
 								$access["access_expires"]	= 0;

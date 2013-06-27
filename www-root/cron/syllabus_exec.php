@@ -13,7 +13,6 @@
  *
  * $Id: syllabus_exec.php 1103 2010-04-05 15:20:37Z simpson $
 */
-ini_set("display_errros",1);
 @set_time_limit(0);
 @set_include_path(implode(PATH_SEPARATOR, array(
     dirname(__FILE__) . "/../core",
@@ -127,7 +126,6 @@ if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@i
 	$output_file	= ENTRADA_ABSOLUTE."/syllabi/class-of-%GRADYEAR%_term-%TERM%_%COURSECODE%.pdf";
 	$exec_command	= $APPLICATION_PATH["htmldoc"]." \
 	--format pdf14 \
-	--charset ".DEFAULT_CHARSET." \
 	--size Letter \
 	--pagemode document \
 	--portrait \
@@ -144,15 +142,14 @@ if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@i
 	--headfootsize 10 \
 	--headfootfont Courier \
 	--firstpage p1 \
-	--titleimage ".ENTRADA_URL."/images/syllabus_logo.gif \
+	--titleimage ".str_replace("https","http",ENTRADA_URL)."/images/syllabus_logo.gif \
 	--quiet \
-	--book '".ENTRADA_URL."/cron/syllabus_gen.php?%PARAMS%' \
+	--book '".str_replace("https","http",ENTRADA_URL)."/cron/syllabus_gen.php?%PARAMS%' \
 	--outfile ".$output_file;
 	
-	$current_date = strtotime(date("M jS, Y"));
+	$current_date = time();
 	
 	foreach ($classes as $cohort_id => $cohort) {
-
 		foreach ($cohort["terms"] as $term_id => $term ) {
 			
 			if($current_date >= $term["start_date"] && $current_date <= $term["end_date"]) {
@@ -166,7 +163,7 @@ if((is_array($APPLICATION_PATH)) && (isset($APPLICATION_PATH["htmldoc"])) && (@i
 				$courses = $db->GetAssoc($query);
 
 				foreach ($courses as $course_id => $course_code) {
-					$params = "cohort=".$cohort_id."&term=".$term_id."&course_id=".$course_id."&start_date=".$term["start_date"]."&end_date=".$term["end_date"]."&course_code=".$course_code;
+					$params = "cohort=".$cohort_id."&term=".$term_id."&course_id=".$course_id."&start_date=".$term["start_date"]."&end_date=".$term["end_date"]."&course_code=".$course_code."&grad_year=".$cohort["grad_year"];
 					$filename	= str_replace(array("%GRADYEAR%", "%TERM%", "%COURSECODE%"), array($cohort["grad_year"], $term_id, strtolower($course_code)), $output_file);
 					$command	= str_replace("%PARAMS%", $params, str_replace(array("%GRADYEAR%", "%TERM%", "%COURSECODE%"), array($cohort["grad_year"], $term_id, strtolower($course_code)), $exec_command));
 					application_log("success", "Generated: ".$filename);

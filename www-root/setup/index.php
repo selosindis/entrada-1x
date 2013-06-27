@@ -379,8 +379,15 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 <html>
 <head>
 	<title>Entrada: Setup</title>
+	<link href="../templates/default/css/bootstrap.css" rel="stylesheet" type="text/css" media="all" />	
+
 	<script type="text/javascript" src="../javascript/scriptaculous/prototype.js"></script>
 	<script type="text/javascript" src="../javascript/scriptaculous/scriptaculous.js"></script>
+	<script type="text/javascript" src="../javascript/jquery/jquery.min.js"></script>
+	<script type="text/javascript">jQuery.noConflict();</script>
+	<script type="text/javascript" src="../templates/default/js/libs/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../templates/default/js/libs/modernizr-2.5.3.min.js"></script>
+
 	<style type="text/css">
 		html, body {
 			height: 100%;
@@ -388,15 +395,7 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 			padding: 0;
 			background-color: #F0F0EE;
 		}
-		button,form.inplaceeditor-form input[type=submit],input[type=button],input[type=submit],input.button-add,input.button-remove,input.button-red,input.button {
-			color:#000;
-			font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
-			font-size:12px;
-			width:115px;
-			height:22px;
-			border:none;
-			background:#EEE url(../images/btn_bg.gif);
-		}
+		
 		.setup-window {
 			line-height:150%;
 			font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
@@ -410,66 +409,10 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 			margin-left: auto;
 			margin-right: auto;
 			padding: 10px 40px 10px 40px;
-		}
-
-		.display-generic,.display-notice,.display-error,.display-success {
-			line-height:150%;
-			font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
-			font-size:12px;
-			color:#333;
-			-moz-border-radius:10px;
-			-webkit-border-radius:10px;
-			margin:25px 0;
-			padding:15px;
-			width: 85%;
-			padding: 20px;
-		}
-
-		.display-success {
-			background-color:#DEE6E3;
-			border:1px #A9D392 solid;
-		}
-
-		.display-notice {
-			background-color:#FFC;
-			border:1px #FC0 solid;
-		}
-
-		.display-error {
-			background-color:#FFD9D0;
-			border:1px #C00 solid;
-		}
-
-		.setup-window {
 			background-color:#FFF;
 			border:1px #CCC solid;
 		}
-		.display-generic {
-			background-color:#F0F0EE;
-			border:1px #CCC solid;
-		}
-		.display-generic ul,.display-success ul,.display-notice ul,.display-error ul,ul.notify-communities {
-			list-style-type:none;
-			margin:0;
-			padding:4px 10px 10px;
-		}
-
-		.display-generic ul li,.display-success ul li,.display-notice ul li,.display-error ul li {
-			vertical-align:middle;
-			padding:0 0 0 18px;
-		}
-
-		.display-success ul li {
-			background:transparent url(../images/list-success.gif) no-repeat 0 2px;
-		}
-
-		.display-notice ul li {
-			background:transparent url(../images/list-notice.gif) no-repeat 0 2px;
-		}
-
-		.display-error ul li {
-			background:transparent url(../images/list-error.gif) no-repeat 0 2px;
-		}
+		
 		table.setup-list {
 			width: 100%;
 			border-collapse: collapse;
@@ -528,6 +471,10 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 			-moz-opacity:0.85;
 			z-index:10000;
 		}
+		
+		.alert {
+			margin-top: 20px;
+		}
 	</style>
 </head>
 <body>
@@ -559,11 +506,11 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 			switch ($STEP) {
 				case 6 :
 					?>
-					<div id="step_6">
-						<p id="success"<?php echo ($ERROR ? " style=\"display: none;\"" : "");?>>
+					<div id="step_6" class="row-fluid">
+						<p class="alert alert-success" id="success"<?php echo ($ERROR ? " style=\"display: none;\"" : "");?>>
 							You have successfully installed Entrada. You may view the site at this url: <strong><?php echo $PROCESSED["entrada_url"]; ?></strong> or by clicking the "View Site" button below. Once on the site, you may log in using the admin username and password you entered during the setup process.
 						</p>
-						<p id="error"<?php echo (!$ERROR ? " style=\"display: none;\"" : "");?>>
+						<p class="alert alert-error" id="error"<?php echo (!$ERROR ? " style=\"display: none;\"" : "");?>>
 							There was an issue while attempting to load the table information into your databases. Please ensure all three databases are completely empty before clicking the 'Refresh' button.
 						</p>
 					</div>
@@ -571,8 +518,8 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 				break;
 				case 5 :
 					?>
-					<div id="step_5">
-						<div class="display-generic">
+					<div id="step_5" class="row-fluid">
+						<div class="alert alert-info">
 							Lastly we need to <strong>save your configuration data</strong> to the <span style="font-family: monospace">core/config/config.inc.php</span> file and write a new <span style="font-family: monospace">.htaccess</span> file to your Entrada directory. We will try to do this for you, but if the setup tool does not have the proper permissions you will be asked to save this yourself before continuing.
 						</div>
 						<h2>Step 5: Save Config Data &amp; .htaccess File</h2>
@@ -581,14 +528,14 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 								1. <strong>Copy and paste</strong> the following text into the <span style="font-family: monospace">core/config/config.inc.php</span> file.
 							</label>
 							<br />
-							<textarea id="config_text" name="config_text" style="width: 80%; height: 305px; font-size: 11px" onclick="this.select()" readonly="readonly"><?php echo (isset($display_config) && $display_config) ? $config_text : ""; ?></textarea>
+							<textarea id="config_text" name="config_text" class="span12" rows="15" onclick="this.select()" readonly="readonly"><?php echo (isset($display_config) && $display_config) ? $config_text : ""; ?></textarea>
 						</div>
 						<div id="htaccess" style="margin-top: 15px;<?php echo ((isset($display_htaccess) && $display_htaccess) ? "" : " display: none;"); ?>">
 							<label for="htaccess_text">
 								2. <strong>Copy and paste</strong> the following text into a new file named <span style="font-family: monospace">.htaccess</span> in your Entrada root.
 							</label>
 							<br />
-							<textarea id="htaccess_text" name="htaccess_text" style="width: 80%; height: 330px; font-size: 11px" onclick="this.select()" readonly="readonly"><?php
+							<textarea id="htaccess_text" name="htaccess_text" class="span12" rows="15" onclick="this.select()" readonly="readonly"><?php
 							if (isset($display_htaccess) && $display_htaccess) {
 									$htaccess_text = file_get_contents($setup->entrada_absolute.$setup->htaccess_file);
 									$htaccess_text = str_replace("ENTRADA_RELATIVE", (($setup->entrada_relative != "") ? $setup->entrada_relative : "/"), $htaccess_text);
@@ -599,7 +546,7 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 						<?php
 						if (!$display_htaccess && !$display_config) {
 							?>
-							<div class="display-success">
+							<div class="alert alert-success">
 								<ul>
 									<li>We have successfully saved your configuration information and created a new .htaccess file in your Entrada directory. We are now ready to create the MySQL database tables that Entrada needs to operate.</li>
 								</ul>
@@ -637,8 +584,8 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 				break;
 				case 4 :
 					?>
-					<div id="step_4">
-						<div class="display-generic">
+					<div id="step_4" class="row-fluid">
+						<div class="alert alert-info">
 							Please create a new <strong>system administrator account</strong> that you will use to manage your Entrada installation. Additional accounts can be created later in the <strong>Admin &gt; Manage Users</strong> section.
 						</div>
 						<h2>Step 4: System Administrator Account</h2>
@@ -770,8 +717,8 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 				break;
 				case 3 :
 					?>
-					<div id="step_3">
-						<div class="display-generic">
+					<div id="step_3" class="row-fluid">
+						<div class="alert alert-info">
 							<strong>Before completing this step</strong> please log into your MySQL server and create <strong>three</strong> new databases (i.e. entrada, entrada_auth, and entrada_clerkship) that Entrada will use to store its data. Also you will need to create a new MySQL user account that has full privileges to each of these databases.
 						</div>
 						<h2>Step 3: Database Connection Information</h2>
@@ -918,8 +865,8 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 				break;
 				case 2 :
 					?>
-					<div id="step_2">
-						<div class="display-generic">
+					<div id="step_2" class="row-fluid">
+						<div class="alert alert-info">
 							Entrada requires a bit of information about where this installation is located on your server, and how it will be accessed via the web-browser. We have tried to pre-populate this information, but please review each field and confirm it is correct before continuing.
 							<br /><br />
 							This data will be written to your <span style="font-family: monospace">core/config/config.inc.php</span> file later in the setup process.
@@ -1011,21 +958,23 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 				case 1 :
 				default :
 					?>
-					<div id="step_1">
-						<div class="display-generic">
+					<div id="step_1" class="row-fluid">
+						<div class="alert alert-info">
 							Welcome to the <strong>Entrada setup</strong> program. Before we begin please be aware that Entrada is open source software, and is licensed under the GNU General Public License (GPL v3). By continuing you acknowledge that you have read and agree to the terms of the license.
 						</div>
 						<h2>Step 1: Software License Agreement</h2>
-						<textarea name="sla" cols="80" rows="15" style="width: 637px; height: 200px;" readonly="readonly"><?php echo $GNU; ?></textarea>
+						<div class="row-fluid">
+							<textarea name="sla" class="span12" rows="15" readonly="readonly"><?php echo $GNU; ?></textarea>
+						</div>
 					</div>
 					<?php
 				break;
 			}
 			?>
 
-			<div style="margin: 15px 25px 10px 0; padding-right: 40px; text-align: right">
-				<input class="btn btn-primary" type="submit" value="Continue" id="continue-button" name="continue"<?php echo ($STEP > 5 ? " style=\"display: none;\"" : "");?> />
-				<input class="btn" type="button" value="View Site" onclick="window.location= '<?php echo (isset($PROCESSED["entrada_url"]) && $PROCESSED["entrada_url"] ? $PROCESSED["entrada_url"] : "../.."); ?>';" name="view"<?php echo ($STEP != 6 || $ERROR ? " style=\"display: none;\"" : ""); ?> />
+			<div class="row-fluid" style="margin: 15px 25px 10px 0; padding-right: 40px; text-align: right">
+				<input class="btn btn-primary pull-right" type="submit" value="Continue" id="continue-button" name="continue"<?php echo ($STEP > 5 ? " style=\"display: none;\"" : "");?> />
+				<input class="btn btn-primary pull-right" type="button" value="View Site" onclick="window.location= '<?php echo (isset($PROCESSED["entrada_url"]) && $PROCESSED["entrada_url"] ? $PROCESSED["entrada_url"] : "../.."); ?>';" name="view"<?php echo ($STEP != 6 || $ERROR ? " style=\"display: none;\"" : ""); ?> />
 				<input class="btn" type="submit" value="Refresh" name="refresh"<?php echo ($STEP != 6 || !$ERROR ? " style=\"display: none;\"" : "");?> />
 			</div>
 		</form>

@@ -218,19 +218,22 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					<?php echo $form_content["description"]; ?>
 
 					<?php if ($form_content["anon"]) { ?>
-					<div class="control-group">
-						<label for="hide_identity" class="form-nrequired control-label"><?php echo $form_content["anon-text"]; ?></label>
-						<div class="controls"><input type="checkbox" value="1" id="hide_identity" name="hide_identity" checked="checked" /></div>
+					<div class="alert alert-info space-below space-above">
+						<div class="row-fluid">
+							<div class="span1"><input type="checkbox" value="1" id="hide_identity" name="hide_identity" checked="checked" /></div>
+							<div class="span11"><label for="hide_identity"><?php echo $form_content["anon-text"]; ?></label></div>
+						</div>
 					</div>
+					<?php } else { ?>
+					<br />
 					<?php } ?>
-					<br /><br />
 					<div class="control-group">
 						<label for="feedback" class="form-required control-label">Feedback or Comments:</label>
 						<div class="controls"><textarea id="feedback" name="feedback" maxlength="750"></textarea></div>
 					</div>
 					<div class="row-fluid">
 						<input type="button" class="btn" value="Close" />
-						<input type="button" class="btn btn-primary pull-right" value="Submit" />
+						<input type="submit" class="btn btn-primary pull-right" value="Submit" />
 					</div>
 				</form>
 				<?php

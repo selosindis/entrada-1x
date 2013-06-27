@@ -797,7 +797,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 									mapped.push(id);								
 								}
 							</script>
-							<h2 class="collapsable" title="Child Objectives Section">Child Objectives</h2>
+							<h2 class="collapsable" title="Child Objectives Section">Sub-Objectives</h2>
 							<div id="child-objectives-section">
 								<div style="float: right">
 									<ul class="page-action">

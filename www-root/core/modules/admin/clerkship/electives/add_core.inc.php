@@ -66,11 +66,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 						$PROCESSED["rotation_id"] = (int) $result["rotation_id"];
 					} else {
 						$ERROR++;
-						$ERRORSTR[] = "We were unable to locate the rotation title you've selected.";
+						$ERRORSTR[] = "We were unable to locate the event rotation you've selected.";
 					}
 				} else {
 					$ERROR++;
-					$ERRORSTR[] = "You must select a rotation title to continue..";
+					$ERRORSTR[] = "You must select a event rotation to continue..";
 				}
 
 				if (isset($_POST["region_id"]) && ($region_id = clean_input($_POST["region_id"], array("trim", "int")))) {
@@ -215,8 +215,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 			$HEAD[]	= "	<script type=\"text/javascript\">
 						function selectCategory(category_id) {
 							new Ajax.Updater('selectCategoryField', '".ENTRADA_URL."/api/category-in-select.api.php', {parameters: {'cid': category_id}});
-							new Ajax.Updater('hidden_event_title', '".ENTRADA_URL."/api/category-title.api.php', {parameters: {'cid': category_id}, onComplete: function(){ $('event_title').value = $('hidden_event_title').innerHTML.unescapeHTML(); }});
-							return;
+                            new Ajax.Updater('hidden_rotation_id', '".ENTRADA_URL."/api/category-rotation.api.php', 
+                            {
+                                parameters: 
+                                {
+                                    'cid': category_id
+                                }, 
+                                onComplete: function()
+                                { 
+                                    jQuery(\"#rotation option[value=\'\"+$('hidden_rotation_id').innerHTML+\"\']\").attr('selected', 'selected');
+                                }
+                            });
+
+                            return;
 						}
 						</script>";
 
@@ -263,25 +274,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							<td colspan="3">&nbsp;</td>
 						</tr>
 						<tr>
-							<td colspan="2"><label class="form-required">Rotation Title</label></td>
-							<td>
-								<select id="rotation_id" name="rotation_id" style="width: 75%">
-								<?php
-								$query = "	SELECT *
-											FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations`
-											ORDER BY `rotation_title` ASC";
-								$results = $db->GetAll($query);
-								if ($results) {
-									foreach($results as $result) {
-										echo "<option value=\"".(int) $result["rotation_id"]."\"".((isset($_POST["rotation_id"]) && $_POST["rotation_id"] == $result["rotation_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["rotation_title"])."</option>\n";
-									}
-								}
-								?>
-								</select>
-							</td>
-						</tr>
-						<tr>
-							<td colspan="2" style="vertical-align: top"><label for="region_id" class="form-required">Rotation Location</label></td>
+							<td colspan="2" style="vertical-align: top"><label for="region_id" class="form-required">Event Region</label></td>
 							<td>
 								<select id="region_id" name="region_id" style="width: 75%">
 								<option value="">-- Select Rotation Location --</option>
@@ -324,11 +317,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP")) || (!defined("IN
 							<td colspan="3">&nbsp;</td>
 						</tr>
 						<tr>
-							<td style="vertical-align: top" colspan="2"><label for="category_id" class="form-required">Rotation Category</label></td>
-							<td style="vertical-align: top">
-								<input type="text" id="event_title" name="event_title" style="width: 75%; border: 0; margin: 0; padding: 0; font-weight: 700" readonly="readonly" value="<?php echo html_decode((isset($PROCESSED["event_title"]) && $PROCESSED["event_title"] ? $PROCESSED["event_title"] : "")) ?>" /><div style="display: none;" id="hidden_event_title"><?php echo html_decode((isset($PROCESSED["event_title"]) && $PROCESSED["event_title"] ? $PROCESSED["event_title"] : "")) ?></div>
-								<div id="selectCategoryField"></div>
+							<td colspan="2"><label for="event_title" class="form-required">Event Title:</label></td>
+							<td><input type="text" id="event_title" name="event_title" style="width: 75%" value="<?php echo html_decode((isset($PROCESSED["event_title"]) && $PROCESSED["event_title"] ? $PROCESSED["event_title"] : "")); ?>" /><div style="display: none;" id="hidden_event_title"><?php echo html_decode($PROCESSED["event_title"]) ?></div></td>
+						</tr>
+						<tr>
+							<td colspan="2"><label class="form-required">Event Rotation</label></td>
+							<td>
+								<select id="rotation" name="rotation_id" style="width: 75%">
+								<?php
+								$query = "	SELECT *
+											FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations`
+											ORDER BY `rotation_title` ASC";
+								$results = $db->GetAll($query);
+								if ($results) {
+									foreach($results as $result) {
+										echo "<option value=\"".(int) $result["rotation_id"]."\"".((isset($_POST["rotation_id"]) && $_POST["rotation_id"] == $result["rotation_id"]) ? " selected=\"selected\"" : "").">".html_encode($result["rotation_title"])."</option>\n";
+									}
+								}
+								?>
+								</select>
+								<div id="hidden_rotation_id" style="display: none;"><?php echo $PROCESSED["rotation_id"]; ?>"</div>
 							</td>
+						</tr>
+						<tr>
+							<td style="vertical-align: top; padding-top: 15px" colspan="2"><label for="category_id" class="form-required">Event Takes Place In:</label></td>
+							<td style="vertical-align: top"><div id="selectCategoryField"></div></td>
 						</tr>
 						<tr>
 							<td colspan="3">&nbsp;</td>

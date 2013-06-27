@@ -77,7 +77,6 @@ if (!defined("IN_MANAGE")) {
 
 			$event["event_id"] = ($result["event_id"] ? $result["event_id"] : uniqid());
 			$event["event_title"] = (($result["fullname"]) ? (($result["gender"]) ? ($result["gender"] == 1 ? "F: " : "M: ") : "").$result["fullname"] : $result["occupant_title"]);
-			$event["event_desc"] = $result["event_title"];
 			$event["event_link"] = ENTRADA_URL."/admin/regionaled/apartments/manage/schedule?id=".$APARTMENT_ID."&sid=".$result["aschedule_id"];
 			$event["event_misc"] = array("fullname" => $result["fullname"], "gender" => $result["gender"]);
 

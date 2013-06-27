@@ -50,14 +50,19 @@ var AutoCompleteList = function() {
 
 				li = new Element('li', {'id':type+'_'+id, 'style':'cursor: move;'+((type=='faculty')?'margin-bottom:10px;width:350px;':'')}).update($(type+'_name').value).addClassName('user');
 				if(type=='faculty'){
-					var select = new Element('select',{name:'faculty_role[]',class:'input-medium',style:'float:right;margin-right:30px;margin-top:-5px;'});
-					select.insert({bottom:new Element('option', { value: 'teacher'}).update('Teacher')});
-					select.insert({bottom:new Element('option', { value: 'tutor'}).update('Tutor')});
-					select.insert({bottom:new Element('option', { value: 'ta'}).update('Teacher\'s Assistant')});
-					select.insert({bottom:new Element('option', { value: 'auditor'}).update('Auditor')});
+					var select = new Element('select'); 
+					select.setAttribute('name', 'faculty_role[]');
+					select.setAttribute('style', 'float:right;margin-right:30px;margin-top:-5px;');
+					select.addClassName('input-medium');
+					select.insert({bottom:new Element('option', {value: 'teacher'}).update('Teacher')});
+					select.insert({bottom:new Element('option', {value: 'tutor'}).update('Tutor')});
+					select.insert({bottom:new Element('option', {value: 'ta'}).update('Teacher\'s Assistant')});
+					select.insert({bottom:new Element('option', {value: 'auditor'}).update('Auditor')});
 					li.insert({bottom:select});
 				}
-				var img = new Element('img', {'src':remove_image} ).addClassName('list-cancel-image');
+				var img = new Element('img');
+				img.setAttribute("src", remove_image);
+				img.addClassName('list-cancel-image');
 				$(type+'_name').value = '';
 
 				li.insert({bottom:img});
@@ -84,7 +89,7 @@ var AutoCompleteList = function() {
 
 			//fires the change event for the list holding the added elements
 			if ("fireEvent" in $(type+'_list'))
-				$(type+'_list').fireEvent("onchange");
+				$(type+'_list').fire("onchange");
 			else
 			{
 				var evt = document.createEvent("HTMLEvents");

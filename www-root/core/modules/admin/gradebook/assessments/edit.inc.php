@@ -764,8 +764,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                             $query = "SELECT a.*, b.`assessment_id` FROM `quiz_questions` AS a
                                                                         LEFT JOIN `assessment_quiz_questions` AS b
                                                                         ON a.`qquestion_id` = b.`qquestion_id`
-                                                                        AND b.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
-                                                                        WHERE b.`aquiz_id` = ".$db->qstr($attached_quiz["aquiz_id"])."
+                                                                        WHERE b.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
                                                                         AND a.`questiontype_id` = 1";
                                                             $quiz_questions = $db->GetAll($query);
                                                             if ($quiz_questions) {

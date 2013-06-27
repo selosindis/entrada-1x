@@ -90,7 +90,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 
 		<meta name="MSSmartTagsPreventParsing" content="true" />
 		<meta http-equiv="imagetoolbar" content="no" />
-
+		<script type="text/javascript" src="<?php echo ENTRADA_URL; ?>/javascript/jquery/jquery.min.js"></script>
+		<link href="<?php echo $ENTRADA_TEMPLATE->url(); ?>/css/bootstrap.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
+		<link href="<?php echo $ENTRADA_TEMPLATE->url(); ?>/css/style.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
 		<link href="<?php echo ENTRADA_URL; ?>/css/common.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="all" />
 		<link href="<?php echo ENTRADA_URL; ?>/css/print.css?release=<?php echo html_encode(APPLICATION_VERSION); ?>" rel="stylesheet" type="text/css" media="print" />
 
@@ -230,58 +232,32 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		default :
 			?>
 			<form id="feedback-form" action="<?php echo ENTRADA_URL; ?>/agent-undergrad-teaching.php?step=2&amp;enc=<?php echo $ENCODED_INFORMATION; ?>" method="post" style="display: inline">
-			<div id="form-processing" style="display: block; position: absolute; top: 0px; left: 0px; width: 485px; height: 555px">
-				<div id="wizard-body" style="position: absolute; top: 35px; left: 0px; width: 452px; height: 440px; padding-left: 15px; overflow: auto">
-					<h2>Your Feedback is Important</h2>
-					<table style="width: 100%" cellspacing="1" cellpadding="1" border="0">
-					<colgroup>
-						<col style="width: 25%" />
-						<col style="width: 75%" />
-					</colgroup>
-					<thead>
-						<tr>
-							<td colspan="2" style="padding-bottom: 15px">
-								<img src="<?php echo ENTRADA_URL; ?>/images/feedback.gif" width="48" height="48" alt="Give Feedback" title="Give Feedback" align="right" />
-								This form is provided so you can efficiently provide our undergraduate office with important feedback regarding teaching as it is recorded in the system. Use this feature if you need to report missing / incorrect undergraduate teaching.
-							</td>
-						</tr>
-					</thead>
-					<tbody>
-					<tr>
-						<td><span class="form-nrequired">Your Name:</span></td>
-						<td><a href="mailto:<?php echo html_encode($_SESSION["details"]["email"]); ?>"><?php echo html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]); ?></a></td>
-					</tr>
-					<tr>
-						<td><span class="form-nrequired">Your E-Mail:</span></td>
-						<td><a href="mailto:<?php echo html_encode($_SESSION["details"]["email"]); ?>"><?php echo html_encode($_SESSION["details"]["email"]); ?></a></td>
-					</tr>
-					<tr>
-						<td colspan="2" style="padding-top: 15px">
-							<label for="feedback" class="form-required">Description of Teaching:</label>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="2">
-							<textarea id="feedback" name="feedback" style="width: 98%; height: 115px"></textarea>
-							<div style="margin-top: 15px" class="content-small"><strong>Please note:</strong> Please try to be as specific as possible when reporting missing / incorrect undergraduate teaching.</div>
-						</td>
-					</tr>
-					</tbody>
-					</table>
+				<div class="panel-head" style="border-radius:0px;">
+					<h3>Your Feedback is Important</h3>
 				</div>
-				<div id="wizard-footer" style="position: absolute; top: 465px; left: 0px; width: 100%; height: 40px; border-top: 2px #CCCCCC solid; padding: 4px 4px 4px 10px">
-					<table style="width: 100" cellspacing="0" cellpadding="0" border="0">
-					<tr>
-						<td style="width: 180px; text-align: left">
-							<input type="button" class="btn" value="Close" onclick="closeWindow()" />
-						</td>
-						<td style="width: 272px; text-align: right">
-							<input type="button" class="btn btn-primary" value="Submit" onclick="submitFeedback()" />
-						</td>
-					</tr>
-					</table>
+				<div class="inner-content" style="margin:20px;">
+					<img src="<?php echo ENTRADA_URL; ?>/images/feedback.gif" width="48" height="48" alt="Give Feedback" title="Give Feedback" align="right" />
+					This form is provided so you can efficiently provide our undergraduate office with important feedback regarding teaching as it is recorded in the system. Use this feature if you need to report missing / incorrect undergraduate teaching.
+					<div class="row space-above">
+						Your Name:
+						<a href="mailto:<?php echo html_encode($_SESSION["details"]["email"]); ?>"><?php echo html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]); ?></a>
+					</div>
+					<div class="row space-below">
+						Your E-Mail:
+						<a href="mailto:<?php echo html_encode($_SESSION["details"]["email"]); ?>"><?php echo html_encode($_SESSION["details"]["email"]); ?></a></td>
+					</div>
+					<div class="row space-below">
+						<label for="feedback" class="form-required">Description of Teaching:</label>
+						<textarea id="feedback" name="feedback" style="width: 98%; height: 115px"></textarea>
+					</div>
+					<div class="row space-below">
+						<strong>Please note:</strong> Please try to be as specific as possible when reporting missing / incorrect undergraduate teaching.
+					</div>
+					<div class="row space-above">
+						<input type="button" class="btn" value="Close" onclick="closeWindow()" />
+						<input type="button" class="btn btn-primary pull-right" value="Submit" onclick="submitFeedback()" />
+					</div>
 				</div>
-			</div>
 			</form>
 			<div id="form-submitting" style="display: none; position: absolute; top: 0px; left: 0px;  background-color: #FFFFFF; opacity:.90; filter: alpha(opacity=90); -moz-opacity: 0.90">
 				<div style="display: table; width: 485px; height: 555px; _position: relative; overflow: hidden">

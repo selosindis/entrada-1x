@@ -1,4 +1,14 @@
 <?php
+/**
+ * Entrada [ http://www.entrada-project.org ]
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Josh Dillon <jdillon@qmed.ca>
+ * @copyright Copyright 2013 Queen's University. All Rights Reserved.
+ *
+ */
+
 @set_include_path(implode(PATH_SEPARATOR, array(
     dirname(__FILE__) . "/../core",
     dirname(__FILE__) . "/../core/includes",
@@ -206,7 +216,7 @@ if ($isAuthenticated) {
 						"start_date"	=> date("o-m-d G:i", $event["event_start"]),
 						"end_date" => date("o-m-d G:i", $event["event_finish"]),
 						"text" => strip_tags($event["event_title"]),
-						"details" => $event["event_description"]. "<br /><b>Event Duration: </b>". $event["event_duration"] . " minutes <br /><b>Location: </b>". ($event["event_location"] == "" ? "To be announced" : $event["event_location"]) ."<br /><a href='https://meds.queensu.ca/central/events?id=".$event["event_id"]."' data-role='button' class='back' rel='external' target='_blank'>Review Learning Event</a>",
+						"details" => $event["event_description"]. "<br /><b>Event Duration: </b>". $event["event_duration"] . " minutes <br /><b>Location: </b>". ($event["event_location"] == "" ? "To be announced" : $event["event_location"]) ."<br /><a href='#' data-role='button' class='back' onclick='window.open(\"". ENTRADA_URL ."/events?rid=" . $event['event_id'] . "\", \"_blank\", \"location=yes\");'>Review Learning Event</a>",
 					);
 				}
 			}
@@ -214,77 +224,12 @@ if ($isAuthenticated) {
 			echo json_encode($events);
 			break;
 		case "notices" :
-			$user_proxy_id = $user_details["id"];
-			$user_role = $user_details["role"];
-			$user_organisation_id = $user_details["organisation_id"];
-			$group = strtolower($group);
-			switch ($group) {
-				case "alumni" :
-					$corrected_role = "students";
-				break;
-				case "faculty" :
-					$corrected_role = "faculty";
-				break;
-				case "medtech" :
-					$corrected_role = "medtech";
-				break;
-				case "resident" :
-					$corrected_role = "resident";
-				break;
-				case "staff" :
-					$corrected_role = "staff";
-				break;
-				case "student" :
-				default :
-					$cohort = groups_get_cohort($user_proxy_id);
-					$corrected_role = "students";
-				break;
-			}
-			$query = "	SELECT a.*, b.`statistic_id`, MAX(b.`timestamp`) AS `last_read`
-						FROM `notices` AS a
-						LEFT JOIN `statistics` AS b
-						ON b.`module` = 'notices'
-						AND b.`proxy_id` = ".$db->qstr($user_proxy_id)."
-						AND b.`action` = 'read'
-						AND b.`action_field` = 'notice_id'
-						AND b.`action_value` = a.`notice_id`
-						LEFT JOIN `notice_audience` AS c
-						ON a.`notice_id` = c.`notice_id`
-						WHERE (
-							c.`audience_type` = 'all:users'
-							".($corrected_role == "medtech" ? "OR c.`audience_type` LIKE '%all%' OR c.`audience_type` = 'cohorts'" : "OR c.`audience_type` = 'all:".$corrected_role."'")."
-							OR
-							((
-								c.`audience_type` = 'students'
-								OR c.`audience_type` = 'faculty'
-								OR c.`audience_type` = 'staff')
-								AND c.`audience_value` = ".$db->qstr($user_proxy_id)."
-							)
-							OR ((
-								c.`audience_type` = 'cohorts'
-								OR c.`audience_type` = 'course_list')
-								AND c.`audience_value` IN (
-									SELECT `group_id`
-									FROM `group_members`
-									WHERE `proxy_id` = ".$db->qstr($user_proxy_id).")
-							)
-						)
-						AND (a.`organisation_id` IS NULL
-						OR a.`organisation_id` = ".$db->qstr($user_organisation_id).")
-						AND (a.`display_from`='0'
-						OR a.`display_from` <= '".time()."')
-						AND (a.`display_until`='0'
-						OR a.`display_until` >= '".time()."')
-						AND a.`organisation_id` = ".$db->qstr($user_organisation_id)."
-						GROUP BY a.`notice_id`
-						ORDER BY a.`updated_date` DESC, a.`display_until` ASC";
-			$notices_to_display = array();
-			$results = $db->GetAll($query);
-			$previous_notices = array();
 			
-			if ($results) {
+			$notices_to_display = Models_Notice::fetchUserNotices(true);
+			
+			if ($notices_to_display) {
 				$rows = 0;
-				foreach ($results as $result) {
+				foreach ($notices_to_display as $result) {
 					if ((!$result["statistic_id"]) || ($result["last_read"] <= $result["updated_date"])) {
 						$result['notice_status'] = 'new';
 						$result["updated_date"] = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
@@ -299,11 +244,13 @@ if ($isAuthenticated) {
 			
 				echo json_encode($notices_to_display, JSON_FORCE_OBJECT);	
 			}
+			
 			break;
 		case "evaluations" :
-			require_once("Models/evaluation/Evaluation.class.php");
+			
 			$evaluations_list = array();
-			$evaluations = Evaluation::getEvaluatorEvaluations();
+			$evaluations = Models_Evaluation::getEvaluatorEvaluations($ENTRADA_USER->getID(), $ENTRADA_USER->getActiveOrganisation());
+		
 			if ($evaluations) {				
 				if (count($evaluations)) {
 					foreach ($evaluations as $evaluation) {
@@ -325,7 +272,7 @@ if ($isAuthenticated) {
 			
             $content = array("evaluation_attempt" => "<div id=\"evaluation_attempt\">\n", "success_status" => "false");
 			
-            require_once("Models/evaluation/Evaluation.class.php");
+            //require_once("Models/evaluation/Evaluation.class.php");
             $cohort = groups_get_cohort($ENTRADA_USER->getID());
 			
             $query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
@@ -335,7 +282,6 @@ if ($isAuthenticated) {
                         AND a.`active` = 1
                         AND b.`active` = 1";
             $course_groups = $db->GetAll($query);
-
 			
 			
             $cgroup_ids_string = "";
@@ -386,32 +332,34 @@ if ($isAuthenticated) {
                                 )
                                 AND a.`evaluation_active` = '1'
                                 GROUP BY cr.`eprogress_id`";
-			//echo $query; exit;
+			
             $evaluation_record	= $db->GetRow($query);
 			
             if ($evaluation_record) {
                 $PROCESSED = $evaluation_record;
+				
+				
 
                 if (array_search($PROCESSED["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false) {
-                        $full_evaluation_targets_list = Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), true, false);
+                        $full_evaluation_targets_list = Models_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), true, false);
                         $evaluation_targets_count = count($full_evaluation_targets_list);
                         if (isset($full_evaluation_targets_list) && $evaluation_targets_count) {
                                 $evaluation_record["max_submittable"] = ($evaluation_targets_count * (int) $evaluation_record["max_submittable"]);
                         }
                 }
-
+				
                 $query = "SELECT COUNT(`eprogress_id`) FROM `evaluation_progress`
                             WHERE `evaluation_id` = ".$db->qstr($evaluation_record["evaluation_id"])."
                             AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
                             AND `progress_value` = 'complete'";
                 $completed_attempts = $db->GetOne($query);
-
+				
                 if ((!isset($completed_attempts) || !$evaluation_record["max_submittable"] || $completed_attempts < $evaluation_record["max_submittable"]) 
                     && (((int) $evaluation_record["release_date"] === 0) || ($evaluation_record["release_date"] <= time()))) {
 
                     $completed_attempts = evaluations_fetch_attempts($evaluation_id);
 
-                    $evaluation_targets_list = Evaluation::getTargetsArray($evaluation_id, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID());
+                    $evaluation_targets_list = Models_Evaluation::getTargetsArray($evaluation_id, $evaluation_record["eevaluator_id"], $ENTRADA_USER->getID());
                     $max_submittable = $evaluation_record["max_submittable"];
                     if ($evaluation_targets_list) {
                         $evaluation_targets_count = count($evaluation_targets_list);
@@ -435,8 +383,10 @@ if ($isAuthenticated) {
                         if (isset($_POST["step"]) && ((int) $_POST["step"])) {
                             $STEP = $_POST["step"];
                         }
+						
                         switch ($STEP) {
                             case 2 :
+								
                                 $PROCESSED_CLERKSHIP_EVENT = array();
                                 if ((isset($_POST["event_id"])) && ($event_id = clean_input($_POST["event_id"], array("trim", "int"))) && array_search($PROCESSED["target_shortname"], array("rotation_core", "rotation_elective", "preceptor")) !== false) {
                                     $PROCESSED_CLERKSHIP_EVENT["event_id"] = $event_id;
@@ -457,6 +407,7 @@ if ($isAuthenticated) {
                                         $ERRORSTR[] = "Please ensure you have selected a valid preceptor to evaluate from the list.";
                                     }
                                 }
+								
                                 if ((isset($etarget_id) && $etarget_id) || ((isset($_POST["evaluation_target"])) && ($etarget_id = clean_input($_POST["evaluation_target"], array("trim", "int"))))) {
                                         $query = "SELECT * FROM `evaluation_targets` AS a 
                                                     JOIN `evaluations_lu_targets` AS b 
@@ -464,6 +415,7 @@ if ($isAuthenticated) {
                                                     WHERE a.`evaluation_id` = ".$db->qstr($evaluation_record["evaluation_id"])." 
                                                     AND a.`etarget_id` = ".$db->qstr($etarget_id);
                                         $target_record = $db->GetRow($query);
+										
                                         //If course_id or proxy_id, set based on target_value
                                         switch ($target_record["target_type"]) {
                                             case "cgroup_id" :
@@ -480,8 +432,10 @@ if ($isAuthenticated) {
                                             break;
                                         }
                                         if ((isset($target_record_id) && $target_record_id) || ((isset($_POST["target_record_id"])) && ($target_record_id = clean_input($_POST["target_record_id"], array("trim", "int"))))) {
-                                            $evaluation_targets = Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true);
-                                            foreach ($evaluation_targets as $evaluation_target) {
+                                            
+											$evaluation_targets = Models_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true);
+                                            
+											foreach ($evaluation_targets as $evaluation_target) {
                                                 switch ($evaluation_target["target_type"]) {
                                                     case "cgroup_id" :
                                                     case "cohort" :
@@ -511,6 +465,7 @@ if ($isAuthenticated) {
                                                     break;
                                                 }
                                             }
+											
                                             if ($target_record) {
                                                 if ($target_record["target_type"] == "proxy_id") {
                                                     $query = "SELECT `etarget_id` FROM `evaluations_progress`
@@ -650,12 +605,12 @@ if ($isAuthenticated) {
 
                                                 if ($db->AutoExecute("evaluation_progress", $evaluation_progress_array, "UPDATE", "eprogress_id = ".$db->qstr($eprogress_id))) {
                                                     if ($evaluation_record["threshold_notifications_type"] != "disabled") {
-                                                        $is_below_threshold = Evaluation::responsesBelowThreshold($evaluation_record["evaluation_id"], $eprogress_id);
+                                                        $is_below_threshold = Models_Evaluation::responsesBelowThreshold($evaluation_record["evaluation_id"], $eprogress_id);
                                                         if ($is_below_threshold) {
                                                             if (defined("NOTIFICATIONS_ACTIVE") && NOTIFICATIONS_ACTIVE) {
                                                                 require_once("Models/notifications/NotificationUser.class.php");
                                                                 require_once("Models/notifications/Notification.class.php");
-                                                                $threshold_notification_recipients = Evaluation::getThresholdNotificationRecipients($evaluation_record["evaluation_id"], $eprogress_id, $PROCESSED["eevaluator_id"]);
+                                                                $threshold_notification_recipients = Models_Evaluation::getThresholdNotificationRecipients($evaluation_record["evaluation_id"], $eprogress_id, $PROCESSED["eevaluator_id"]);
                                                                 if (isset($threshold_notification_recipients) && $threshold_notification_recipients) {
                                                                     foreach ($threshold_notification_recipients as $threshold_notification_recipient) {
                                                                         $notification_user = NotificationUser::get($threshold_notification_recipient["proxy_id"], "evaluation_threshold", $evaluation_record["evaluation_id"], $ENTRADA_USER->getID());
@@ -732,6 +687,7 @@ if ($isAuthenticated) {
                             break;
                         }
                         if (((int) $evaluation_record["max_submittable"] === 0) || ($completed_attempts < $evaluation_record["max_submittable"])) {
+															
                             // Display Content
                             switch ($STEP) {
                                 case 2 :
@@ -740,12 +696,14 @@ if ($isAuthenticated) {
                                     }
                                 break;
                                 case 1 :
+									
                                 default :
                                     if ($evaluation_record["evaluation_finish"] < time() && $evaluation_record["min_submittable"] > $completed_attempts) {
+										
                                         $NOTICE++;
                                         $NOTICESTR[] = "This evaluation has not been completed and was marked as to be completed by ".date(DEFAULT_DATE_FORMAT, $evaluation_record["evaluation_finish"]).". Please complete this evaluation now to continue using ".APPLICATION_NAME.".";
                                     }
-
+									
                                     if (isset($evaluation_record["evaluation_description"]) && $evaluation_record["evaluation_description"]) {
                                         $content["evaluation_attempt"] .= "<div class=\"display-generic\">".$evaluation_record["evaluation_description"]."</div>";
                                     }
@@ -760,6 +718,7 @@ if ($isAuthenticated) {
                                                             AND `progress_value` = 'inprogress'
                                                             ORDER BY `updated_date` ASC";
                                     $progress_record	= $db->GetRow($query);
+									
                                     if ($progress_record) {
                                         $eprogress_id		= $progress_record["eprogress_id"];
                                         $evaluation_start_time	= $progress_record["updated_date"];
@@ -783,7 +742,7 @@ if ($isAuthenticated) {
                                             application_log("error", "Unable to create an evaluation_progress entery when attempting complete an evaluation. Database said: ".$db->ErrorMsg());
                                         }
                                     }
-
+									
                                     if ($eprogress_id) {
                                         if ((isset($_GET["proxy_id"])) && ($proxy_id = clean_input($_GET["proxy_id"], array("trim", "int"))) && array_search($PROCESSED["target_shortname"], array("peer", "student", "teacher", "resident")) !== false) {
                                             $PROCESSED["target_record_id"] = $proxy_id;
@@ -796,8 +755,9 @@ if ($isAuthenticated) {
                                         $content["evaluation_attempt"] .= "<input type=\"hidden\" name=\"evaluation_id\" value=\"".$evaluation_id."\" />\n";
                                         add_statistic("evaluation", "evaluation_view", "evaluation_id", $evaluation_id);
                                         if (!isset($evaluation_targets) || !count($evaluation_targets)) {
-                                            $evaluation_targets = Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true);
+                                            $evaluation_targets = Models_Evaluation::getTargetsArray($evaluation_id, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true);
                                         }
+										
                                         if ($evaluation_targets) {
                                             if (count($evaluation_targets) == 1) {
                                                 $content["evaluation_attempt"] .= "<input type=\"hidden\" id=\"evaluation_target\" name=\"evaluation_target\" value=\"".$evaluation_targets[0]["etarget_id"]."\" />";
@@ -852,7 +812,7 @@ if ($isAuthenticated) {
                                                 if ($PROCESSED["target_shortname"] == "preceptor") {
                                                     $content["evaluation_attempt"] .= "<div id=\"preceptor_select\">\n";
                                                     if (isset($PROCESSED["event_id"]) && $PROCESSED["event_id"]) {
-                                                        $content["evaluation_attempt"] .= Evaluation::getPreceptorSelect($evaluation_id, $PROCESSED["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED["preceptor_proxy_id"]) && $PROCESSED["preceptor_proxy_id"] ? $PROCESSED["preceptor_proxy_id"] : 0));
+                                                        $content["evaluation_attempt"] .= Models_Evaluation::getPreceptorSelect($evaluation_id, $PROCESSED["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED["preceptor_proxy_id"]) && $PROCESSED["preceptor_proxy_id"] ? $PROCESSED["preceptor_proxy_id"] : 0));
                                                     } else {
                                                         $content["evaluation_attempt"] .= display_notice("Please select a <strong>Clerkship Service</strong> to evaluate a <strong>Preceptor</strong> for.");
                                                     }
@@ -920,10 +880,11 @@ if ($isAuthenticated) {
                                                                 WHERE a.`eform_id` = ".$db->qstr($evaluation_record["eform_id"])."
                                                                 ORDER BY a.`question_order` ASC";
                                         $questions			= $db->GetAll($query);
+										
                                         $total_questions	= 0;
                                         if ($questions) {
                                             $total_questions = count($questions);
-                                            $content["evaluation_attempt"] .= Evaluation::getMobileQuestionAnswerControls($questions, $PROCESSED["eform_id"], $eprogress_id);
+											$content["evaluation_attempt"] .= Models_Evaluation::getMobileQuestionAnswerControls($questions, $PROCESSED["eform_id"], $eprogress_id);
                                         } else {
                                             $ERROR++;
                                             $ERRORSTR[] = "There are no questions currently available for this evaluation. This problem has been reported to a system administrator; please try again later.";

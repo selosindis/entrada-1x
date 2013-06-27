@@ -111,7 +111,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ANNUAL_REPORT"))) {
 			<a href="<?php echo ENTRADA_URL; ?>/admin/annualreport/reports?section=opth-report">Publiatons, Posters, Awards and Grants</a><br />
 			A report containing all peer and non peer-reviewed publications, poster presentations / invited lectures, awards and research grants for a department.
 		</li>
-		
 	</ol>
 	<?php
 }

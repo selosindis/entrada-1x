@@ -721,7 +721,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         <option value="0">-- Select the course this event belongs to --</option>
                                         <?php
                                         foreach($results as $result) {
-                                            if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $event_info["organisation_id"]), "create") || $ENTRADA_ACL->amIAllowed(new EventClosedResource($EVENT_ID, $result["course_id"], $event_info["organisation_id"]), "update")) {
+											if ($ENTRADA_ACL->amIAllowed(new EventResource(null, $result["course_id"], $event_info["organisation_id"]), "create")) {
                                                 echo "<option value=\"".(int) $result["course_id"]."\"".(($PROCESSED["course_id"] == $result["course_id"]) ? " selected=\"selected\"" : "").">".html_encode(($result["course_code"] ? $result["course_code"].": " : "").$result["course_name"])."</option>\n";
                                             }
                                         }
@@ -874,10 +874,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										<td colspan="2">
 											<div id="related_events">
 												<?php
-												if (!$PROCESSED["parent_id"]) {
+												if (!(int) $PROCESSED["parent_id"]) {
 													require_once("modules/admin/events/api-related-events.inc.php");
 												} else {
-													$query = "SELECT * FROM `".$tables['events']."` ".$where_query;
+													$query = "SELECT * FROM `".$tables['events']."` WHERE `event_id` = ".$db->qstr($PROCESSED["parent_id"]);
 													$related_event = $db->GetRow($query);
 													if ($related_event) {
 														?>

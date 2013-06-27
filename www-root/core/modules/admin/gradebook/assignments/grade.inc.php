@@ -204,381 +204,383 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
 				if ($students && count($students) >= 1): ?>
 					<span id="assessment_name" style="display: none;"><?php echo $assignment["assignment_title"]; ?></span>
-					<div id="assignment_submissions">
-						<h2>Submissions <?php if(extension_loaded('zip')) { ?><a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=download-submissions&id=<?php echo $assignment["assignment_id"];?>"><span style="float:right;"><img src="<?php echo ENTRADA_URL;?>/templates/default/images/btn_save.gif" title="Download File" alt="Download File" width="15"/> Download All Submissions</span></a><?php } ?></h2>
-						<div style="margin-bottom: 5px;">							
-							<span class="content-small"><strong>Tip: </strong><?php echo $assignment["marking_scheme_description"]; ?></span>
-						</div>				
-						<table style="width: 100%;" class="tableList assignment <?php echo $editable; ?>">
-							<colgroup>
-								<col class="modified" style="width: 5%;">
-								<col class="title" style="width: 45%;">
-								<col class="grade" style="width: 20%;">								
-								<col class="date" style="width: 30%;">
-							</colgroup>
-							<thead>
-								<tr style="background-color:#ccc;">
-									<td class="modified">&nbsp;</td>
-									<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] == "student") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"]) : ""); ?>">
-										<a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=grade&amp;id=<?php echo $COURSE_ID;?>&amp;assignment_id=<?php echo $ASSIGNMENT_ID;?>&amp;sb=student&amp;so=<?php echo $orders['student'];?>" title="Order by Student, Sort Decending">Student</a>										
-									</td>
-									<td class="grade<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] == "grade") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"]) : ""); ?>">
-										<a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=grade&amp;id=<?php echo $COURSE_ID;?>&amp;assignment_id=<?php echo $ASSIGNMENT_ID;?>&amp;sb=grade&amp;so=<?php echo $orders['grade'];?>" title="Order by Grade, Sort Decending">Grade</a>										
-									</td>
-									<td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] == "submitted") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"]) : ""); ?>">
-										<a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=grade&amp;id=<?php echo $COURSE_ID;?>&amp;assignment_id=<?php echo $ASSIGNMENT_ID;?>&amp;sb=submitted&amp;so=<?php echo $orders['submitted'];?>" title="Order by Submitted, Sort Decending">Submitted</a>										
-									</td>
-								</tr>
-							</thead>
-							<tbody>
-								<?php								
-								foreach ($students as $key => $student) {
-									if (isset($student["grade_id"])) {
-										$grade_id = $student["grade_id"];
-									} else {
-										$grade_id = "";
-									}
-									
-									if (isset($student["grade_value"])) {
-										$grade_value = format_retrieved_grade($student["grade_value"], $assessment);
-									} else {
-										$grade_value = "-";
-									}
-									if (isset($student["grade_weighting"]) && $student["grade_weighting"]) {
-										$grade_weighting = $student["grade_weighting"];
-									} else {
-										$grade_weighting = $student["grade_weighting"];
-									}
-									?>
-									<tr id="grades<?php echo $student["proxy_id"]; ?>">
-										<td><a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=download-submission&id=<?php echo $ASSIGNMENT_ID;?>&sid=<?php echo $student["proxy_id"]; ?>"><img src="<?php echo ENTRADA_URL;?>/templates/default/images/btn_save.gif" title="Download File" alt="Download File" width="15"/></a></td>
-										<td><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$ASSIGNMENT_ID."&pid=".$student["proxy_id"];?>"><?php echo $student["fullname"]; ?></a></td>
-										<td>
-											<?php if (isset($assessment) && $assessment) { ?>
-											<span class="grade" id="grade_<?php echo $assignment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"
-												data-grade-id="<?php echo $grade_id; ?>"
-												data-assessment-id="<?php echo $assignment["assessment_id"]; ?>"
-												data-proxy-id="<?php echo $student["proxy_id"] ?>"
-											><?php echo $grade_value; ?></span>
-											<span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?>>
-												<?php echo assessment_suffix($assessment); ?>
-											</span>
-											<span class="gradesuffix" style="float:right;">
-												<img src="<?php echo ENTRADA_URL;?>/images/action-edit.gif" class="edit_grade" id ="edit_grade_<?php echo $assignment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>" style="cursor:pointer;"/>
-											</span>
-											<?php } else { ?>
-											No Assessment
-											<?php } ?>
-										</td>
-										<td><?php echo date(DEFAULT_DATE_FORMAT,$student["submitted_date"]); ?></td>
-										<?php
-										if ($assessment["marking_scheme_id"] == 3) {
-											?>
-										<td id="percentage_<?php echo $assignment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"><?php echo round($student["grade_value"],2);?>%</td>
-										<?php
-										}
-										?>
-									</tr>
-									<tr class="comment-row">
-										<td colspan="4" style="text-align:right;">
-											<a href="javascript:void(0);" class="view_comments" id="view_comments_<?php echo $student["proxy_id"] ?>">View Comments</a> &nbsp; <span class="leave_comment" id="leave_comment_<?php echo $student["proxy_id"] ?>">Leave Comment</span>
-											<ul class="comments" id="comments_<?php echo $student["proxy_id"] ?>">
-												<?php 
-												$query = "	SELECT a.*, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `commenter_fullname`, c.`username` AS `commenter_username` 
-															FROM `assignment_comments` AS a 
-															JOIN `assignment_files` AS b 
-															ON a.`afile_id` = b.`afile_id` 
-															LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
-															ON a.`proxy_id` = c.`id` 
-															WHERE b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)." 
-															AND b.`proxy_id` = ".$db->qstr($student["proxy_id"])."
-															AND a.`comment_active` = '1'";
-												$comment_results = $db->GetAll($query);
-												if($comment_results){
-												?>
-												
-												<?php
-												foreach($comment_results as $result) {
-													$comments++;
-													?>
-													<li><table style="width:100%;" class="discussions posts"><tr>
-														<td style="border-bottom: none; border-right: none"><span class="content-small">By:</span> <a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($result["commenter_username"]); ?>" style="font-size: 10px"><?php echo html_encode($result["commenter_fullname"]); ?></a></td>
-														<td style="border-bottom: none">
-															<div style="float: left">
-																<span class="content-small"><strong>Commented:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $result["updated_date"]); ?></span>
-															</div>
-															<div style="float: right">
-															<?php
-															echo (($result["proxy_id"] == $ENTRADA_USER->getID()) ? " (<a class=\"action\" href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=edit-comment&amp;id=".$assignment["assignment_id"]."&amp;cid=".$result["acomment_id"]."\">edit</a>)" : "");
-															echo (($result["proxy_id"] == $ENTRADA_USER->getID()) ? " (<a class= \"action delete\" id=\"delete_".$result["acomment_id"]."\" href=\"#delete_".$result["acomment_id"]."\">delete</a>)":"");// href=\"javascript:commentDelete('".$result["acomment_id"]."')\">delete</a>)" : "");
-															?>
-															</div>
-														</td>
-													</tr>
-													<tr>
-														<td colspan="2" class="content" style="border-bottom: 3px solid #EBEBEB;">
-														<a name="comment-<?php echo (int) $result["cscomment_id"]; ?>"></a>
-														<?php
-															echo ((trim($result["comment_title"])) ? "<div style=\"font-weight: bold\">".html_encode(trim($result["comment_title"]))."</div>" : "");
-															echo $result["comment_description"];
+                    <div class="row-fluid">
+                        <span id="assignment_submissions" class="span12">
+                            <h2>Submissions <?php if(extension_loaded('zip')) { ?><a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=download-submissions&id=<?php echo $assignment["assignment_id"];?>"><span style="float:right;"><img src="<?php echo ENTRADA_URL;?>/templates/default/images/btn_save.gif" title="Download File" alt="Download File" width="15"/> Download All Submissions</span></a><?php } ?></h2>
+                            <div style="margin-bottom: 5px;">							
+                                <span class="content-small"><strong>Tip: </strong><?php echo $assignment["marking_scheme_description"]; ?></span>
+                            </div>				
+                            <table style="width: 100%;" class="tableList assignment <?php echo $editable; ?>">
+                                <colgroup>
+                                    <col class="modified" style="width: 5%;">
+                                    <col class="title" style="width: 45%;">
+                                    <col class="grade" style="width: 20%;">								
+                                    <col class="date" style="width: 30%;">
+                                </colgroup>
+                                <thead>
+                                    <tr style="background-color:#ccc;">
+                                        <td class="modified">&nbsp;</td>
+                                        <td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] == "student") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"]) : ""); ?>">
+                                            <a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=grade&amp;id=<?php echo $COURSE_ID;?>&amp;assignment_id=<?php echo $ASSIGNMENT_ID;?>&amp;sb=student&amp;so=<?php echo $orders['student'];?>" title="Order by Student, Sort Decending">Student</a>										
+                                        </td>
+                                        <td class="grade<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] == "grade") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"]) : ""); ?>">
+                                            <a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=grade&amp;id=<?php echo $COURSE_ID;?>&amp;assignment_id=<?php echo $ASSIGNMENT_ID;?>&amp;sb=grade&amp;so=<?php echo $orders['grade'];?>" title="Order by Grade, Sort Decending">Grade</a>										
+                                        </td>
+                                        <td class="date<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["sb"] == "submitted") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["assignments"]["so"]) : ""); ?>">
+                                            <a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=grade&amp;id=<?php echo $COURSE_ID;?>&amp;assignment_id=<?php echo $ASSIGNMENT_ID;?>&amp;sb=submitted&amp;so=<?php echo $orders['submitted'];?>" title="Order by Submitted, Sort Decending">Submitted</a>										
+                                        </td>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php								
+                                    foreach ($students as $key => $student) {
+                                        if (isset($student["grade_id"])) {
+                                            $grade_id = $student["grade_id"];
+                                        } else {
+                                            $grade_id = "";
+                                        }
 
-															if ($result["release_date"] != $result["updated_date"]) {
-																echo "<div class=\"content-small\" style=\"margin-top: 15px\">\n";
-																echo "	<strong>Last updated:</strong> ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by ".(($result["proxy_id"] == $result["updated_by"]) ? html_encode($result["commenter_fullname"]) : html_encode(get_account_data("firstlast", $result["updated_by"]))).".";
-																echo "</div>\n";
-															}
-														?>
-														</td>
-													</tr></table></li>
-													<?php
-												}
-												?>
-											    <li style="text-align:right;" class="list-action"><span class="leave_comment" id="leave_comment_<?php echo $student["proxy_id"] ?>">Leave Comment</span></li>
-												<?php } ?>													
-											</ul>
-											<div class="new_comment" id="new_comment_<?php echo $student["proxy_id"] ?>">
-												<table class="comment_form" style="width:100%;">
-													<tr><td style="width:100%;"><label for="new_comment_title_<?php echo $student["proxy_id"] ?>">Comment Title:</label></td></tr>
-													<tr><td style="width:100%;"><input type="text" id="new_comment_title_<?php echo $student["proxy_id"] ?>" class="new_comment_text"/></td></tr>
-													<tr><td><label for="new_comment_desc_<?php echo $student["proxy_id"] ?>"  class="form-required">Comment Description:</label></td></tr><tr><td><textarea id="new_comment_desc_<?php echo $student["proxy_id"] ?>" class="expandable new_comment_text"></textarea></td></tr>
-												</table>
-											<input type="button" value="Cancel" id="cancel_comment_<?php echo $student["proxy_id"] ?>" class="cancel_comment btn" style="margin-right:5px;"/><input type="button" class="add_comment btn btn-primary" value="Add Comment" id="add_comment_<?php echo $student["proxy_id"] ?>" style="float:right;"/>
-											</div>
-										</td>
-									</tr>
-									<?php
-								}
-								?>
-							</tbody>
-						</table>					
-					</div>
-					<script type="text/javascript">
-						jQuery(document).ready(function(){
+                                        if (isset($student["grade_value"])) {
+                                            $grade_value = format_retrieved_grade($student["grade_value"], $assessment);
+                                        } else {
+                                            $grade_value = "-";
+                                        }
+                                        if (isset($student["grade_weighting"]) && $student["grade_weighting"]) {
+                                            $grade_weighting = $student["grade_weighting"];
+                                        } else {
+                                            $grade_weighting = $student["grade_weighting"];
+                                        }
+                                        ?>
+                                        <tr id="grades<?php echo $student["proxy_id"]; ?>">
+                                            <td><a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=download-submission&id=<?php echo $ASSIGNMENT_ID;?>&sid=<?php echo $student["proxy_id"]; ?>"><img src="<?php echo ENTRADA_URL;?>/templates/default/images/btn_save.gif" title="Download File" alt="Download File" width="15"/></a></td>
+                                            <td><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$ASSIGNMENT_ID."&pid=".$student["proxy_id"];?>"><?php echo $student["fullname"]; ?></a></td>
+                                            <td>
+                                                <?php if (isset($assessment) && $assessment) { ?>
+                                                <span class="grade" id="grade_<?php echo $assignment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"
+                                                    data-grade-id="<?php echo $grade_id; ?>"
+                                                    data-assessment-id="<?php echo $assignment["assessment_id"]; ?>"
+                                                    data-proxy-id="<?php echo $student["proxy_id"] ?>"
+                                                ><?php echo $grade_value; ?></span>
+                                                <span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?>>
+                                                    <?php echo assessment_suffix($assessment); ?>
+                                                </span>
+                                                <span class="gradesuffix" style="float:right;">
+                                                    <img src="<?php echo ENTRADA_URL;?>/images/action-edit.gif" class="edit_grade" id ="edit_grade_<?php echo $assignment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>" style="cursor:pointer;"/>
+                                                </span>
+                                                <?php } else { ?>
+                                                No Assessment
+                                                <?php } ?>
+                                            </td>
+                                            <td><?php echo date(DEFAULT_DATE_FORMAT,$student["submitted_date"]); ?></td>
+                                            <?php
+                                            if ($assessment["marking_scheme_id"] == 3) {
+                                                ?>
+                                            <td id="percentage_<?php echo $assignment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"><?php echo round($student["grade_value"],2);?>%</td>
+                                            <?php
+                                            }
+                                            ?>
+                                        </tr>
+                                        <tr class="comment-row">
+                                            <td colspan="4" style="text-align:right;">
+                                                <a href="javascript:void(0);" class="view_comments" id="view_comments_<?php echo $student["proxy_id"] ?>">View Comments</a> &nbsp; <span class="leave_comment" id="leave_comment_<?php echo $student["proxy_id"] ?>">Leave Comment</span>
+                                                <ul class="comments" id="comments_<?php echo $student["proxy_id"] ?>">
+                                                    <?php 
+                                                    $query = "	SELECT a.*, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `commenter_fullname`, c.`username` AS `commenter_username` 
+                                                                FROM `assignment_comments` AS a 
+                                                                JOIN `assignment_files` AS b 
+                                                                ON a.`afile_id` = b.`afile_id` 
+                                                                LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
+                                                                ON a.`proxy_id` = c.`id` 
+                                                                WHERE b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)." 
+                                                                AND b.`proxy_id` = ".$db->qstr($student["proxy_id"])."
+                                                                AND a.`comment_active` = '1'";
+                                                    $comment_results = $db->GetAll($query);
+                                                    if($comment_results){
+                                                    ?>
 
-							jQuery('.edit_grade').click(function(e){
-								var id = e.target.id.substring(5);
-								jQuery('#'+id).trigger('click');
-							});
-						});
+                                                    <?php
+                                                    foreach($comment_results as $result) {
+                                                        $comments++;
+                                                        ?>
+                                                        <li><table style="width:100%;" class="discussions posts"><tr>
+                                                            <td style="border-bottom: none; border-right: none"><span class="content-small">By:</span> <a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($result["commenter_username"]); ?>" style="font-size: 10px"><?php echo html_encode($result["commenter_fullname"]); ?></a></td>
+                                                            <td style="border-bottom: none">
+                                                                <div style="float: left">
+                                                                    <span class="content-small"><strong>Commented:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $result["updated_date"]); ?></span>
+                                                                </div>
+                                                                <div style="float: right">
+                                                                <?php
+                                                                echo (($result["proxy_id"] == $ENTRADA_USER->getID()) ? " (<a class=\"action\" href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=edit-comment&amp;id=".$assignment["assignment_id"]."&amp;cid=".$result["acomment_id"]."\">edit</a>)" : "");
+                                                                echo (($result["proxy_id"] == $ENTRADA_USER->getID()) ? " (<a class= \"action delete\" id=\"delete_".$result["acomment_id"]."\" href=\"#delete_".$result["acomment_id"]."\">delete</a>)":"");// href=\"javascript:commentDelete('".$result["acomment_id"]."')\">delete</a>)" : "");
+                                                                ?>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td colspan="2" class="content" style="border-bottom: 3px solid #EBEBEB;">
+                                                            <a name="comment-<?php echo (int) $result["cscomment_id"]; ?>"></a>
+                                                            <?php
+                                                                echo ((trim($result["comment_title"])) ? "<div style=\"font-weight: bold\">".html_encode(trim($result["comment_title"]))."</div>" : "");
+                                                                echo $result["comment_description"];
 
-					</script>
-					<div id="gradebook_stats" style="margin-top:14px;padding-left:15px;">
-						<h2>Statistics</h2>
-						<div id="graph"></div>
-					 	<?php 
-						switch($assessment["marking_scheme_id"]) {
-							case 1:
-							case 4:
-								//pass/fail
-								$grades = array(0,0,0);
-								$unentered = 0;
+                                                                if ($result["release_date"] != $result["updated_date"]) {
+                                                                    echo "<div class=\"content-small\" style=\"margin-top: 15px\">\n";
+                                                                    echo "	<strong>Last updated:</strong> ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by ".(($result["proxy_id"] == $result["updated_by"]) ? html_encode($result["commenter_fullname"]) : html_encode(get_account_data("firstlast", $result["updated_by"]))).".";
+                                                                    echo "</div>\n";
+                                                                }
+                                                            ?>
+                                                            </td>
+                                                        </tr></table></li>
+                                                        <?php
+                                                    }
+                                                    ?>
+                                                    <li style="text-align:right;" class="list-action"><span class="leave_comment" id="leave_comment_<?php echo $student["proxy_id"] ?>">Leave Comment</span></li>
+                                                    <?php } ?>													
+                                                </ul>
+                                                <div class="new_comment" id="new_comment_<?php echo $student["proxy_id"] ?>">
+                                                    <table class="comment_form" style="width:100%;">
+                                                        <tr><td style="width:100%;"><label for="new_comment_title_<?php echo $student["proxy_id"] ?>">Comment Title:</label></td></tr>
+                                                        <tr><td style="width:100%;"><input type="text" id="new_comment_title_<?php echo $student["proxy_id"] ?>" class="new_comment_text"/></td></tr>
+                                                        <tr><td><label for="new_comment_desc_<?php echo $student["proxy_id"] ?>"  class="form-required">Comment Description:</label></td></tr><tr><td><textarea id="new_comment_desc_<?php echo $student["proxy_id"] ?>" class="expandable new_comment_text"></textarea></td></tr>
+                                                    </table>
+                                                <input type="button" value="Cancel" id="cancel_comment_<?php echo $student["proxy_id"] ?>" class="cancel_comment btn" style="margin-right:5px;"/><input type="button" class="add_comment btn btn-primary" value="Add Comment" id="add_comment_<?php echo $student["proxy_id"] ?>" style="float:right;"/>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <?php
+                                    }
+                                    ?>
+                                </tbody>
+                            </table>					
+                        </span>
+                        <script type="text/javascript">
+                            jQuery(document).ready(function(){
 
-								foreach ($students as $key => $student) {
-									if ($student["grade_value"] == "") {
-										$unentered++;
-									} elseif ($student["grade_value"] > 50){
-										$grades[0]++;
-									} else {
-										$grades[1]++;
-									}
-								}
+                                jQuery('.edit_grade').click(function(e){
+                                    var id = e.target.id.substring(5);
+                                    jQuery('#'+id).trigger('click');
+                                });
+                            });
 
-								$grade_data = array();
-								foreach ($grades as $key => $grade) {
-									$grade_data[] = "[$key, $grade]";
-								}
-								?>
-								<script type="text/javascript" charset="utf-8">
-									var data = [<?php echo implode(", ", $grade_data); ?>];
-									var plotter = PlotKit.EasyPlot(
-										"pie",
-										{
-											"xTicks": [{v:0, label:"<?php echo $assignment["marking_scheme_id"] == 4 ? "Complete" : "Pass" ?>"},
-														{v:1, label:"<?php echo $assignment["marking_scheme_id"] == 4 ? "Incomplete" : "Fail" ?>"}]
-										},
-										$("graph"),
-										[data]
-									);
-								</script>
-								<br />
-								<p>Unentered Grades: <?php echo (int) $unentered; ?></p>
-								<?php
-							break;
-							case 2:
-							case 3:
-								// Percentage (numeric interpreted as percentage)
-								$grades = array(0,0,0,0,0,0,0,0,0,0,0);
+                        </script>
+                        <span id="gradebook_stats" class="span5" style="margin-top:14px;">
+                            <h2>Statistics</h2>
+                            <div id="graph"></div>
+                            <?php 
+                            switch($assessment["marking_scheme_id"]) {
+                                case 1:
+                                case 4:
+                                    //pass/fail
+                                    $grades = array(0,0,0);
+                                    $unentered = 0;
 
-								$sum = 0;
+                                    foreach ($students as $key => $student) {
+                                        if ($student["grade_value"] == "") {
+                                            $unentered++;
+                                        } elseif ($student["grade_value"] > 50){
+                                            $grades[0]++;
+                                        } else {
+                                            $grades[1]++;
+                                        }
+                                    }
 
-								$entered = 0;
-								$unentered = 0;
+                                    $grade_data = array();
+                                    foreach ($grades as $key => $grade) {
+                                        $grade_data[] = "[$key, $grade]";
+                                    }
+                                    ?>
+                                    <script type="text/javascript" charset="utf-8">
+                                        var data = [<?php echo implode(", ", $grade_data); ?>];
+                                        var plotter = PlotKit.EasyPlot(
+                                            "pie",
+                                            {
+                                                "xTicks": [{v:0, label:"<?php echo $assignment["marking_scheme_id"] == 4 ? "Complete" : "Pass" ?>"},
+                                                            {v:1, label:"<?php echo $assignment["marking_scheme_id"] == 4 ? "Incomplete" : "Fail" ?>"}]
+                                            },
+                                            $("graph"),
+                                            [data]
+                                        );
+                                    </script>
+                                    <br />
+                                    <p>Unentered Grades: <?php echo (int) $unentered; ?></p>
+                                    <?php
+                                break;
+                                case 2:
+                                case 3:
+                                    // Percentage (numeric interpreted as percentage)
+                                    $grades = array(0,0,0,0,0,0,0,0,0,0,0);
 
-								$grade_values = array();
-								foreach ($students as $key => $student) {
-									if ($student["grade_value"] == "") {
-										//$grades[11]++;
-										$unentered++;
-									} else {
-										$sum += $student["grade_value"];
-										$entered++;
-										$grade_values[] = $student["grade_value"];
+                                    $sum = 0;
 
-										$key = floor($student["grade_value"] / 10);
-										$grades[$key]++;
-									}
-								}
+                                    $entered = 0;
+                                    $unentered = 0;
 
-								$grade_data = array();
-								foreach ($grades as $key => $grade) {
-									$grade_data[] = "[$key, $grade]";
-								}
-								sort($grade_values);
-								?>
-								<script type="text/javascript" charset="utf-8">
-									var data = [<?php echo implode(", ", $grade_data); ?>];
-									var plotter = PlotKit.EasyPlot(
-										"bar",
-										{
-											"xTicks": [{v:0, label:"0s"},
-														{v:1, label:"10s"},
-														{v:2, label:"20s"},
-														{v:3, label:"30s"},
-														{v:4, label:"40s"},
-														{v:5, label:"50s"},
-														{v:6, label:"60s"},
-														{v:7, label:"70s"},
-														{v:8, label:"80s"},
-														{v:9, label:"90s"},
-														{v:10, label:"100"}]
-										},
-										$("graph"),
-										[data]
-									);
-								</script>
-								<br />
-								<p>Unentered Grades: <?php echo (int) $unentered; ?></p>
-								<p>Mean grade: <?php echo number_format(($entered > 0 ? $sum / $entered : 0), 0); ?>%</p>
-								<p>Median grade: <?php echo $grade_values[floor(count($grade_values) / 2)]; ?>%</p>
-								<?php
-							break;
-							default:
-								echo "No statistics for this marking scheme.";
-							break;
-						}
-						?>
-						<button class="btn" onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $assignment["assessment_id"])); ?>'">Download CSV</button>
-						<button class="btn" onclick="location.reload(true)">Refresh</button>
-						<div style="margin-top: 40px;">
-							<h2>Grade Calculation Exceptions</h2>
-							<p>
-								You can use the following exception creator to modify the calculations used to create the students final grade in this course. 
-							</p>
-							
-							<label for="student_exceptions" class="form-required">Student Name</label>
-							<select name="student_exceptions" id="student_exceptions" style="width: 210px;" onchange="add_exception(this.options[this.selectedIndex].value, '<?php echo $assignment["assessment_id"]; ?>')">
-							<option value="0">-- Select A Student --</option>
-								<?php
-								foreach ($students as $student) {
-									if (!isset($student["grade_weighting"]) || $student["grade_weighting"] == NULL) {
-										echo "<option value=\"".$student["proxy_id"]."\">".$student["fullname"]."</option>";
-									}
-								}
-								?>
-							</select>
-							<br /><br /><br />
-							<script type="text/javascript">
-							var updating = false;
-							function delete_exception (proxy_id, assessment_id) {
-								
-								var anOption = document.createElement('option');
-								anOption.value = proxy_id;
-								anOption.innerHTML = $(proxy_id+'_name').innerHTML;
-								$('student_exceptions').appendChild(anOption);
-								
-								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
-									{
-										method:	'post',
-										parameters: 'remove=1&assessment_id='+assessment_id+'&proxy_id='+proxy_id
-							    	}
-							    );
-							}
-							
-							function modify_exception (proxy_id, assessment_id) {
-								if (!updating) {
-									updating = true;
-									setTimeout('modify_exception_ajax('+proxy_id+', '+assessment_id+')', 2000);
-								}
-							    
-							}
-							
-							function modify_exception_ajax(proxy_id, assessment_id) {
-								var grade_weighting = $('student_exception_'+proxy_id).value;
-								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
-									{
-										method:	'post',
-										parameters: 'assessment_id='+assessment_id+'&proxy_id='+proxy_id+'&grade_weighting='+grade_weighting,
-										onComplete: function () {
-											$('student_exception_'+proxy_id).focus();
-											updating = false;
-										}
-							    	}
-							    )
-							}
-							
-							function add_exception (proxy_id, assessment_id) {
-								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
-									{
-										method:	'post',
-										parameters: 'assessment_id='+assessment_id+'&proxy_id='+proxy_id+'&grade_weighting=0'
-							    	}
-							    );
-							    var children = $('student_exceptions').childNodes;
-							    var numchildren = children.length;
-							    
-								for (var i = 0; i < numchildren; i++) {
-									if (children[i].value == proxy_id) {
-										$('student_exceptions').removeChild(children[i]);
-										break;
-									}
-								}
-							}
-							</script>
-							<h3>Students with modified weighting:</h3>
-							<ol id="exception_container" class="sortableList">
-								<?php
-								$exceptions_exist = false;
-								foreach ($students as $student) {
-									if (isset($student["grade_weighting"]) && $student["grade_weighting"] !== NULL) {
-										$exceptions_exist = true;
-										echo "<li id=\"proxy_".$student["proxy_id"]."\"><span id=\"".$student["proxy_id"]."_name\">".$student["fullname"]."</span>
-											<a style=\"cursor: pointer;\" onclick=\"delete_exception('".$student["proxy_id"]."', '".$assignment["assessment_id"]."');\" class=\"remove\">
-												<img src=\"".ENTRADA_URL."/images/action-delete.gif\">
-											</a>
-											<span class=\"duration_segment_container\">
-												Weighting: <input class=\"duration_segment\" id=\"student_exception_".$student["proxy_id"]."\" name=\"student_exception[]\" onkeyup=\"modify_exception('".$student["proxy_id"]."', '".$assessment["assessment_id"]."', this.value);\" value=\"".$student["grade_weighting"]."\">
-											</span>
-										</li>";
-									}
-								}
-								if (!$exceptions_exist) {
-									echo "<div class=\"display-notice\">There are currently no students with custom grade weighting in the system for this assessment.</div>";
-								}
-								?>
-							</ol>
-						</div>
-							<br />
-						<h2>Import Grades</h2>
-						<div id="display-notice-box" class="display-notice">
-								<strong>Important Notes:</strong>
-								<br />Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets). 
-								<br />Any grades entered will be overwritten if present in the CSV.
-						</div>
-						<form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $assignment["assessment_id"])); ?>" method="POST">
-							<input type="file" name ="file"/><br /><br />
-							<input type="submit" class="btn btn-primary" value ="Import CSV"/>
-						</form>
-					</div>
+                                    $grade_values = array();
+                                    foreach ($students as $key => $student) {
+                                        if ($student["grade_value"] == "") {
+                                            //$grades[11]++;
+                                            $unentered++;
+                                        } else {
+                                            $sum += $student["grade_value"];
+                                            $entered++;
+                                            $grade_values[] = $student["grade_value"];
+
+                                            $key = floor($student["grade_value"] / 10);
+                                            $grades[$key]++;
+                                        }
+                                    }
+
+                                    $grade_data = array();
+                                    foreach ($grades as $key => $grade) {
+                                        $grade_data[] = "[$key, $grade]";
+                                    }
+                                    sort($grade_values);
+                                    ?>
+                                    <script type="text/javascript" charset="utf-8">
+                                        var data = [<?php echo implode(", ", $grade_data); ?>];
+                                        var plotter = PlotKit.EasyPlot(
+                                            "bar",
+                                            {
+                                                "xTicks": [{v:0, label:"0s"},
+                                                            {v:1, label:"10s"},
+                                                            {v:2, label:"20s"},
+                                                            {v:3, label:"30s"},
+                                                            {v:4, label:"40s"},
+                                                            {v:5, label:"50s"},
+                                                            {v:6, label:"60s"},
+                                                            {v:7, label:"70s"},
+                                                            {v:8, label:"80s"},
+                                                            {v:9, label:"90s"},
+                                                            {v:10, label:"100"}]
+                                            },
+                                            $("graph"),
+                                            [data]
+                                        );
+                                    </script>
+                                    <br />
+                                    <p>Unentered Grades: <?php echo (int) $unentered; ?></p>
+                                    <p>Mean grade: <?php echo number_format(($entered > 0 ? $sum / $entered : 0), 0); ?>%</p>
+                                    <p>Median grade: <?php echo $grade_values[floor(count($grade_values) / 2)]; ?>%</p>
+                                    <?php
+                                break;
+                                default:
+                                    echo "No statistics for this marking scheme.";
+                                break;
+                            }
+                            ?>
+                            <button class="btn" onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $assignment["assessment_id"])); ?>'">Download CSV</button>
+                            <button class="btn" onclick="location.reload(true)">Refresh</button>
+                            <div style="margin-top: 40px;">
+                                <h2>Grade Calculation Exceptions</h2>
+                                <p>
+                                    You can use the following exception creator to modify the calculations used to create the students final grade in this course. 
+                                </p>
+
+                                <label for="student_exceptions" class="form-required">Student Name</label>
+                                <select name="student_exceptions" id="student_exceptions" style="width: 210px;" onchange="add_exception(this.options[this.selectedIndex].value, '<?php echo $assignment["assessment_id"]; ?>')">
+                                <option value="0">-- Select A Student --</option>
+                                    <?php
+                                    foreach ($students as $student) {
+                                        if (!isset($student["grade_weighting"]) || $student["grade_weighting"] == NULL) {
+                                            echo "<option value=\"".$student["proxy_id"]."\">".$student["fullname"]."</option>";
+                                        }
+                                    }
+                                    ?>
+                                </select>
+                                <br /><br /><br />
+                                <script type="text/javascript">
+                                var updating = false;
+                                function delete_exception (proxy_id, assessment_id) {
+
+                                    var anOption = document.createElement('option');
+                                    anOption.value = proxy_id;
+                                    anOption.innerHTML = $(proxy_id+'_name').innerHTML;
+                                    $('student_exceptions').appendChild(anOption);
+
+                                    new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
+                                        {
+                                            method:	'post',
+                                            parameters: 'remove=1&assessment_id='+assessment_id+'&proxy_id='+proxy_id
+                                        }
+                                    );
+                                }
+
+                                function modify_exception (proxy_id, assessment_id) {
+                                    if (!updating) {
+                                        updating = true;
+                                        setTimeout('modify_exception_ajax('+proxy_id+', '+assessment_id+')', 2000);
+                                    }
+
+                                }
+
+                                function modify_exception_ajax(proxy_id, assessment_id) {
+                                    var grade_weighting = $('student_exception_'+proxy_id).value;
+                                    new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
+                                        {
+                                            method:	'post',
+                                            parameters: 'assessment_id='+assessment_id+'&proxy_id='+proxy_id+'&grade_weighting='+grade_weighting,
+                                            onComplete: function () {
+                                                $('student_exception_'+proxy_id).focus();
+                                                updating = false;
+                                            }
+                                        }
+                                    )
+                                }
+
+                                function add_exception (proxy_id, assessment_id) {
+                                    new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
+                                        {
+                                            method:	'post',
+                                            parameters: 'assessment_id='+assessment_id+'&proxy_id='+proxy_id+'&grade_weighting=0'
+                                        }
+                                    );
+                                    var children = $('student_exceptions').childNodes;
+                                    var numchildren = children.length;
+
+                                    for (var i = 0; i < numchildren; i++) {
+                                        if (children[i].value == proxy_id) {
+                                            $('student_exceptions').removeChild(children[i]);
+                                            break;
+                                        }
+                                    }
+                                }
+                                </script>
+                                <h3>Students with modified weighting:</h3>
+                                <ol id="exception_container" class="sortableList">
+                                    <?php
+                                    $exceptions_exist = false;
+                                    foreach ($students as $student) {
+                                        if (isset($student["grade_weighting"]) && $student["grade_weighting"] !== NULL) {
+                                            $exceptions_exist = true;
+                                            echo "<li id=\"proxy_".$student["proxy_id"]."\"><span id=\"".$student["proxy_id"]."_name\">".$student["fullname"]."</span>
+                                                <a style=\"cursor: pointer;\" onclick=\"delete_exception('".$student["proxy_id"]."', '".$assignment["assessment_id"]."');\" class=\"remove\">
+                                                    <img src=\"".ENTRADA_URL."/images/action-delete.gif\">
+                                                </a>
+                                                <span class=\"duration_segment_container\">
+                                                    Weighting: <input class=\"duration_segment\" id=\"student_exception_".$student["proxy_id"]."\" name=\"student_exception[]\" onkeyup=\"modify_exception('".$student["proxy_id"]."', '".$assessment["assessment_id"]."', this.value);\" value=\"".$student["grade_weighting"]."\">
+                                                </span>
+                                            </li>";
+                                        }
+                                    }
+                                    if (!$exceptions_exist) {
+                                        echo "<div class=\"display-notice\">There are currently no students with custom grade weighting in the system for this assessment.</div>";
+                                    }
+                                    ?>
+                                </ol>
+                            </div>
+                                <br />
+                            <h2>Import Grades</h2>
+                            <div id="display-notice-box" class="display-notice">
+                                    <strong>Important Notes:</strong>
+                                    <br />Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets). 
+                                    <br />Any grades entered will be overwritten if present in the CSV.
+                            </div>
+                            <form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $assignment["assessment_id"])); ?>" method="POST">
+                                <input type="file" name ="file"/><br /><br />
+                                <input type="submit" class="btn btn-primary" value ="Import CSV"/>
+                            </form>
+                        </span>
+                    </div>
 					<script type="text/javascript">
 					jQuery(document).ready(function(){
 						jQuery('.comments').hide();
@@ -586,11 +588,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						jQuery('#gradebook_stats').hide();
 						jQuery('#advanced-options').click(function(){
 							if (jQuery('#gradebook_stats').is(":visible")) {
-								jQuery('#assignment_submissions').attr('class','');
+								jQuery('#assignment_submissions').attr('class','span12');
 								jQuery('#gradebook_stats').hide();
 								jQuery('#advanced-options').text('Show Options');
 							} else {
-								jQuery('#assignment_submissions').attr('class','squeeze');
+								jQuery('#assignment_submissions').attr('class','span7');
 								jQuery('#gradebook_stats').show();	
 								jQuery('#advanced-options').text('Hide Options');
 							}

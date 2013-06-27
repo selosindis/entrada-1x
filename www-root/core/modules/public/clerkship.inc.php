@@ -234,10 +234,13 @@ if(!defined("PARENT_INCLUDED")) {
 			
 			$objectives_required = 0;
 		    $objectives_recorded = 0;
+		    $grad_year = get_account_data("grad_year", $ENTRADA_USER->getID());
 		    if ($rotation < 10) {
 				$query = "	SELECT `objective_id`, MAX(`number_required`) AS `required`
 							FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
-							WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."
+							WHERE `rotation_id` = ".$db->qstr((($rotation ? $rotation : ($ROTATION_ID ? $ROTATION_ID : 0))))."
+							AND `grad_year_min` <= ".$db->qstr($grad_year)."
+							AND (`grad_year_max` = 0 OR `grad_year_max` >= ".$db->qstr($grad_year).")
 							GROUP BY `objective_id`";
 				$required_objectives = $db->GetAll($query);
 				if ($required_objectives) {

@@ -1790,7 +1790,7 @@ class ClerkshipAssertion implements Zend_Acl_Assert_Interface {
 			return false;
 		}
 
-		if ((time() < $end_timestamp = mktime(0, 0, 0, 7, 13, intval($GRAD_YEAR))) && (time() >= strtotime("-23 months", $end_timestamp))) {
+		if ((time() < $end_timestamp = mktime(0, 0, 0, 7, 13, intval($GRAD_YEAR))) && (time() >= strtotime("-26 months", $end_timestamp))) {
 			return true;
 		} else {
 			return false;
@@ -2720,6 +2720,28 @@ class DepartmentHeadAssertion implements Zend_Acl_Assert_Interface {
 		// I'm sure there is a way to get this ID without using the SESSION but I needed to get this into production ASAP.
 		// I will fix this as soon as I find out how to access the masked ID without going through the session.
 		if (!(is_department_head($ENTRADA_USER->getActiveId()))) {
+			return false;
+		} else {
+			return true;
+		}
+
+		return false;
+	}
+}
+/**
+ * Dean Assertion Class
+ *
+ * Checks to see if the if the user is a dean
+ * which therefore gives them access to their performance appraisal within the profile section.
+ */
+class DeanAssertion implements Zend_Acl_Assert_Interface {
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db, $ENTRADA_USER;
+
+		// This was done so that the correct proxy_id was being used as $role->details["id"] was not using the "masked" id.
+		// I'm sure there is a way to get this ID without using the SESSION but I needed to get this into production ASAP.
+		// I will fix this as soon as I find out how to access the masked ID without going through the session.
+		if (!(is_dean($ENTRADA_USER->getActiveId()))) {
 			return false;
 		} else {
 			return true;

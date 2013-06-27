@@ -389,8 +389,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					</ul>					
 					<?php
 					} 
-				} ?>
+                ?>
 				</div>
+                <?php
+				} ?>
 				<a name="course-resources-section"></a>
 				<h2 title="Course Resources Section"><?php echo $module_singular_name; ?> Resources</h2>
 				<div id="course-resources-section">

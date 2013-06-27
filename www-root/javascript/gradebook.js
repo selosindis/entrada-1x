@@ -150,7 +150,7 @@ jQuery(document).ready(function($) {
 	gradebookize();
 	
 	$('.gradebook_edit').jqm({
-		ajax: '@href',
+		ajax: '@data-href',
 		ajaxText: loading_html,
 		trigger: $("#fullscreen-edit"),
 		modal: true,

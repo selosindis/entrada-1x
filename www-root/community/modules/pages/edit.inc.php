@@ -228,7 +228,10 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								 * Required field "page_type" / Page Type (Unchangeable for course content pages).
 								 */
 								foreach ($PAGE_TYPES as $PAGE) {
-									if ((isset($_POST["page_type"])) && (is_array($PAGE)) && (array_search(trim($_POST["page_type"]), $PAGE))) {
+									if (isset($_POST["page_type"]) && $_POST["page_type"] == "course") {
+										$PROCESSED["page_type"] = "course";
+										break;
+									} else if ((isset($_POST["page_type"])) && (is_array($PAGE)) && (array_search(trim($_POST["page_type"]), $PAGE))) {
 										$PROCESSED["page_type"] = trim($_POST["page_type"]);
 										break;
 									}

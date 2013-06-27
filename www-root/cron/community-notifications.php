@@ -36,7 +36,7 @@ $mail->addHeader("X-Section", "Communities Notify System",true);
  * @param array $post elements of post subject and body
  */
 function build_post($post) {
-	global $mail, $AGENT_CONTACTS, $db;
+	global $mail, $AGENT_CONTACTS, $db, $ENTRADA_TEMPLATE;
 	$mail->clearFrom();
 	$mail->clearSubject();
 	$mail->setFrom($AGENT_CONTACTS["community-notifications"]["email"],

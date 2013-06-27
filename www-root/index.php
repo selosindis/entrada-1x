@@ -38,7 +38,7 @@ require_once("init.inc.php");
 
 ob_start("on_checkout");
 
-$PROCEED_TO = rtrim(((isset($_GET["url"])) ? clean_input($_GET["url"], "trim") : (isset($_SERVER["REQUEST_URI"]) ? clean_input($_SERVER["REQUEST_URI"], "trim") : false)), "/");
+$PROCEED_TO = ((isset($_GET["url"])) ? clean_input($_GET["url"], "trim") : (isset($_SERVER["REQUEST_URI"]) ? clean_input($_SERVER["REQUEST_URI"], "trim") : false));
 
 $PATH_INFO = ((isset($_SERVER["PATH_INFO"])) ? clean_input($_SERVER["PATH_INFO"], array("url", "lowercase")) : "");
 $PATH_SEPARATED = explode("/", $PATH_INFO);
@@ -489,11 +489,33 @@ switch ($MODULE) {
 	default :
 		/*
 		$excused_proxy_ids = array();
-		if ($_SESSION["details"]["group"] == "student" && $MODULE != "evaluations" && !in_array($ENTRADA_USER->getID(), $excused_proxy_ids)) {
+        if ($ENTRADA_USER->getActiveGroup() == "student" && $MODULE != "evaluations" && !in_array($ENTRADA_USER->getID(), $excused_proxy_ids)) {
+            $query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
+                        JOIN `course_groups` AS b
+                        ON a.`cgroup_id` = b.`cgroup_id`
+                        WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+                        AND a.`active` = 1
+                        AND b.`active` = 1";
+            $course_groups = $db->GetAll($query);
+
+            $cgroup_ids_string = "";
+            if (isset($course_groups) && is_array($course_groups)) {
+                foreach ($course_groups as $course_group) {
+                    if ($cgroup_ids_string) {
+                        $cgroup_ids_string .= ", ".$db->qstr($course_group["cgroup_id"]);
+                    } else {
+                        $cgroup_ids_string = $db->qstr($course_group["cgroup_id"]);
+                    }
+                }
+            }
 			$cohort = groups_get_cohort($ENTRADA_USER->getID());
 			$query = "SELECT * FROM `evaluations` AS a
 						JOIN `evaluation_evaluators` AS b
 						ON a.`evaluation_id` = b.`evaluation_id`
+						JOIN `evaluation_forms` AS c
+						ON a.`eform_id` = c.`eform_id`
+						JOIN `evaluations_lu_targets` AS d
+						ON c.`target_id` = d.`target_id`
 						WHERE
 						(
 							(
@@ -503,14 +525,21 @@ switch ($MODULE) {
 							OR
 							(
 								b.`evaluator_type` = 'organisation_id'
-								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
+								AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 							)".($_SESSION["details"]["group"] == "student" ? " OR (
 								b.`evaluator_type` = 'cohort'
 								AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
+							)" : "").($cgroup_ids_string ? " OR (
+								b.`evaluator_type` = 'cgroup_id'
+								AND b.`evaluator_value` IN (".$cgroup_ids_string.")
 							)" : "")."
 						)
 						AND a.`evaluation_finish` < ".$db->qstr(time())."
 						AND a.`evaluation_active` = 1
+						AND ".$db->qstr($ENTRADA_USER->getID())." NOT IN (
+							SELECT `proxy_id` FROM `evaluation_evaluator_exclusions`
+							WHERE `evaluation_id` = a.`evaluation_id`
+						)
 						GROUP BY a.`evaluation_id`
 						ORDER BY a.`evaluation_finish` ASC";
 
@@ -546,7 +575,7 @@ switch ($MODULE) {
                 $display_masks = false;
                 $added_users = array();
                 foreach ($_SESSION["permissions"] as $access_id => $result) {
-                    if (is_int($access_id) && ((isset($result["mask"]) && $result["mask"]) || $access_id == $ENTRADA_USER->getDefaultAccessId()) && array_search($result["id"], $added_users) === false) {
+                    if ($result["organisation_id"] == $ENTRADA_USER->getActiveOrganisation() && is_int($access_id) && ((isset($result["mask"]) && $result["mask"]) || $access_id == $ENTRADA_USER->getDefaultAccessId() || ($result["id"] == $ENTRADA_USER->getID() && $ENTRADA_USER->getDefaultAccessId() != $access_id)) && array_search($result["id"], $added_users) === false) {
                         if (isset($result["mask"]) && $result["mask"]) {
                             $display_masks = true;
                         }

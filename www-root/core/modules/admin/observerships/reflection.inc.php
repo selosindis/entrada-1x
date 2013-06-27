@@ -41,7 +41,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 
 	echo "<h1>My Observership Reflection</h1>";
 	
-	require_once("Models/utility/Editable.interface.php");
 	require_once("Models/mspr/Observership.class.php");
 	require_once("Models/mspr/ObservershipReflection.class.php");
 	

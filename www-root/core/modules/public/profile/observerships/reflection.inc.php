@@ -32,8 +32,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_OBSERVERSHIPS"))) {
 	exit;
 } else {
 	
-	
-	require_once("Models/utility/Editable.interface.php");
 	require_once("Models/mspr/Observership.class.php");
 	require_once("Models/mspr/ObservershipReflection.class.php");
 	

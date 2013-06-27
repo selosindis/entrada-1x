@@ -3,6 +3,7 @@
  */
 
 var shown = false;
+var submitted = false;
 
 function submitFeedback() {
 	return true;
@@ -50,24 +51,29 @@ jQuery(function(){
 		return false;
 	});
 	jQuery("#feedback-form input[value=Submit]").live("click", function() {
-		var action		= jQuery("#feedback-form").attr("action");
-		var method		= jQuery("#feedback-form").attr("method");
-		var form_data	= jQuery("#feedback-form").serialize();
+		jQuery("#feedback-form").hide();
+		jQuery("#feedback-form-container").append("<div class=\"loading\">Loading</div>");
+		if (submitted == false) {
+			var action		= jQuery("#feedback-form").attr("action");
+			var method		= jQuery("#feedback-form").attr("method");
+			var form_data	= jQuery("#feedback-form").serialize();
 
-		jQuery.ajax({
-			url: action,
-			type: method,
-			data: form_data,
-			async: false,
-			success: function (data) {
-				jQuery("#feedback-form").fadeOut(500, function(){
-					jQuery("#feedback-form").html(data);
-					jQuery("#feedback-form").fadeIn();
-					setTimeout("removeFeedbackForm()", 5000);
-				});
-			}
-		});
-
+			jQuery.ajax({
+				url: action,
+				type: method,
+				data: form_data,
+				async: false,
+				success: function (data) {
+					jQuery("#feedback-form-container .loading").remove();
+					jQuery("#feedback-form").fadeOut(500, function(){
+						jQuery("#feedback-form").html(data);
+						jQuery("#feedback-form").fadeIn();
+						setTimeout("removeFeedbackForm()", 5000);
+					});
+				}
+			});
+			submitted = true;
+		}
 		return false;
 	});
 });

@@ -25,7 +25,6 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 }  else {
 //	require_once(dirname(__FILE__)."/includes/functions.inc.php");
 //	
-	require_once("Models/utility/Editable.interface.php");
 	require_once("Models/mspr/Observership.class.php");
 	require_once("Models/mspr/Observerships.class.php");
 	
@@ -77,12 +76,10 @@ if (!defined("IN_MANAGE_USER_STUDENTS")) {
 		break;
 		case 1 :
 		default:
-			if (clerkship_fetch_schedule($user->getID()) == false) {
+			if (clerkship_fetch_schedule($user->getID()) == false || ($ENTRADA_USER->getGroup() == "staff" || $ENTRADA_USER->getGroup() == "medtech")) {
 				?>
 <div class="row-fluid">
-	<ul class="page-action pull-right">
-		<li><a id="add_observership" href="<?php echo ENTRADA_URL; ?>/admin/observerships?section=add&id=<?php echo $PROXY_ID; ?>" class="strong-green">Add Observership</a></li>
-	</ul>
+	<a id="add_observership" href="<?php echo ENTRADA_URL; ?>/admin/observerships?section=add&id=<?php echo $PROXY_ID; ?>" class="btn btn-small btn-success pull-right"><i class="icon-plus-sign icon-white"></i> Add Observership</a></li>
 </div>
 				<?php
 			}

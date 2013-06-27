@@ -783,7 +783,7 @@ if (!defined("PARENT_INCLUDED")) {
 			echo "</div>";
 			
 			foreach ($results as $key => $result) {
-				echo "<div id=\"result-".$result["id"]."\" class=\"media ps-media-padding\"".($key % 2 == 1 ? " background-color: rgb(238, 238, 238);" : "")."\">\n";
+				echo "<div id=\"result-".$result["id"]."\" class=\"media ps-media-padding\" style=\"overflow: visible;".($key % 2 == 1 ? " background-color: rgb(238, 238, 238);" : "")."\">\n";
 			
 				$offical_file_active	= false;
 				$uploaded_file_active	= false;

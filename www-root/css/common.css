@@ -3433,13 +3433,13 @@ margin: 0 1em 0 0;
     margin: 0.5ex 0;
     text-shadow: none;
     vertical-align: top;
-    width: 18%;
+    width: 25%;
 }
 
 .mspr-list .entry .label + * {
 	display:inline-block;
 	margin: 0.5ex 0 0.5ex 0;
-	width:75%;
+	width:65%;
 	vertical-align:top;
 }
 

@@ -76,7 +76,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					ON a.`objective_id` = b.`objective_id`";
 		$qu_arr[3] = "AND b.`objective_id` IN (".$objective_ids_string.")";	
 	}	
-	
+	$qu_arr[1] .= " JOIN `objective_organisation` AS c ON a.`objective_id` = c.`objective_id` ";
 	$qu_arr[2] = "WHERE a.`objective_parent` = ".$db->qstr($id)." 
 				AND a.`objective_active` = '1'";
 	$qu_arr[4] = "ORDER BY a.`objective_order`";
@@ -101,7 +101,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				}												
 			}			
 			$query = "	SELECT * FROM `global_lu_objectives` 
-						WHERE `objective_parent` = ".$db->qstr($objective["objective_id"]);
+						WHERE `objective_parent` = ".$db->qstr($objective["objective_id"])."
+						AND c.`objective_organisation` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 			$fields["has_child"] = $db->GetAll($query)?true:false;			
 			$obj_array[] = $fields;
 		}

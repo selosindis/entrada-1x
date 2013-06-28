@@ -24,14 +24,14 @@
 
 <widget xmlns="http://www.w3.org/ns/widgets"
         xmlns:rim="http://www.blackberry.com/ns/widgets"
-	version="1.1.0.0" id="Entrada">
+	version="1.0.0.0" id="">
 
   <name>Entrada</name>
 
-  <author>Queen's School of Medicine</author>
+  <author>Faculty of Health Sciences, Queen's University</author>
 
   <description>
-       Entrada
+       Entrada for mobile Devices
   </description>
     
   <license href="http://opensource.org/licenses/alphabetical">
@@ -76,7 +76,7 @@
   <icon rim:hover="false" src="res/icon/blackberry/icon-80.png" />
   <icon rim:hover="true" src="res/icon/blackberry/icon-80.png" />
 
-  <rim:loadingScreen backgroundColor="#33627e"
+  <rim:loadingScreen backgroundColor="#FFFFFF"
                      foregroundImage="res/screen/blackberry/screen-225.png"
 		     onFirstLaunch="true">
     <rim:transitionEffect type="fadeOut" />
@@ -85,11 +85,7 @@
   <content src="index.html" />
 
   <rim:permissions>
-    <rim:permit>use_camera</rim:permit>
-    <rim:permit>read_device_identifying_information</rim:permit>
-    <rim:permit>access_shared</rim:permit>
-    <rim:permit>read_geolocation</rim:permit>
-    <rim:permit>record_audio</rim:permit> 
+    <rim:permit>read_device_identifying_information</rim:permit> 
   </rim:permissions>
 
 </widget>

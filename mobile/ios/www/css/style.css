@@ -1,3 +1,4 @@
-.selected_event {
-	width:97%;
+.ui-li-desc {
+	white-space : normal;
+	overflow: visible;
 }

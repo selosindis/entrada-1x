@@ -4,39 +4,42 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="viewport" content="user-scalable=no, initial-scale=1, width=device-width, target-densitydpi=device-dpi" />
-		<link rel="stylesheet" type="text/css" href="js/jquery.mobile.structure-1.2.0.min.css" />
-		<link rel="stylesheet" type="text/css" href="js/jquery.mobile.theme-1.2.0.min.css" />
-		<link rel="stylesheet" type="text/css" href="js/jquery.mobile-1.2.0.min.css" />
+		<link rel="stylesheet" type="text/css" href="js/jquery.mobile.structure-1.3.1.min.css" />
+		<link rel="stylesheet" type="text/css" href="js/jquery.mobile.theme-1.3.1.min.css" />
+		<link rel="stylesheet" type="text/css" href="js/jquery.mobile-1.3.1.min.css" />
 		<link rel="stylesheet" href="js/dhtmlxscheduler_mobile.css" type="text/css" media="screen"/>  
 		<link rel="stylesheet" type="text/css" href="css/style.css" />
         <title>Entrada</title>
     </head>
     <body>
+		
 		<div data-role="page" id="agenda" data-theme="b">
-		    <div data-role="header" class="header" data-id="persistent" data-position="fixed">
-		        <h1>Entrada</h1>
-                <a href="#settings" data-role="button" data-icon="gear" class="ui-btn-right settings" data-transition="none">Settings</a>
-                <div data-role="navbar">
-                    <ul>
-                        <li><a id="agenda_button" href="#agenda" data-role="button" data-icon="home" data-iconpos="top" class="agenda" data-transition="none">My Agenda</a></li>
-                        <li class="notice"><a href="#events" data-role="button" data-icon="info" data-iconpos="top" class="notices" data-transition="none">My Notices</a></li>
-                    </ul>
-                </div>
-		    </div>
+			<div id="menu-panel" data-role="panel" data-theme="a">
+				<ul id="menu-list-agenda" data-role="listview" data-theme="a">
+				</ul>
+			</div>
+			<div data-role="header" class="header" data-id="persistent" data-position="fixed">
+				<a href="#menu-panel" data-role="button" data-icon="bars" id="open-panel">Menu</a>
+				<h1>Entrada</h1>
+				<select data-native-menu="false" data-inline="true" id="user-groups-roles-agenda" class="ui-btn-right group-menu">
+					<option class="user-name"></option>
+				</select>
+			</div>
             <div data-role="content" id="content" style="margin:0; padding:0; height:927px;"> 
 			</div>
 		</div>		
         
 		<div data-role="page" id="events" data-theme="b">
+			<div id="menu-panel-notices" data-role="panel" data-theme="a">
+				<ul id="menu-list-events" data-role="listview" data-theme="a" class="menu-list">
+				</ul>
+			</div>
             <div data-role="header" class="header" data-id="persistent" data-position="fixed">
+				<a href="#menu-panel-notices" data-role="button" data-icon="bars" id="open-panel">Menu</a>
                 <h1>Entrada</h1>
-                <a href="#settings" data-role="button" data-icon="gear" class="ui-btn-right settings" data-transition="none">Settings</a>
-                <div data-role="navbar">
-                    <ul>
-                        <li><a href="#agenda" data-role="button" data-icon="home" data-iconpos="top" class="agenda" data-transition="none">My Agenda</a></li>
-                        <li class="notice"><a href="#events" data-role="button" data-icon="info" data-iconpos="top" class="ui-btn-active notices" data-transition="none">My Notices</a></li>                        
-                    </ul>
-                </div>
+				<select data-native-menu="false" data-inline="true" id="user-groups-roles-events" class="ui-btn-right group-menu">
+					<option class="user-name"></option>
+				</select>
             </div>
             
             <div data-role="content" id="notice_content">
@@ -48,18 +51,62 @@
             </div>
         </div>
         
+        <div data-role="page" id="evaluations" data-theme="b">
+			<div id="menu-panel" data-role="panel" data-theme="a">
+				<ul id="menu-list-evaluations" data-role="listview" data-theme="a" class="menu-list">
+				</ul>
+			</div>
+            <div data-role="header" class="header" data-id="persistent" data-position="fixed">
+				<a href="#menu-panel" data-role="button" data-icon="bars" id="open-panel">Menu</a>
+                <h1>Entrada</h1>
+				<select data-native-menu="false" data-inline="true" id="user-groups-roles-evaluations" class="ui-btn-right group-menu">
+					<option class="user-name"></option>
+				</select>
+            </div>
+
+            <div data-role="content" id="evaluation_content">
+                <h1>Available Evaluations</h1>
+                <div id="evaluation_loading">&nbsp;</div>
+            </div>
+        </div>
+        
+        <div data-role="page" id="evaluation-attempt" data-theme="b">
+			<div id="menu-panel" data-role="panel" data-theme="a">
+				<ul id="menu-list-evaluation-attempt" data-role="listview" data-theme="a" class="menu-list">
+				</ul>
+			</div>
+            <div data-role="header" class="header" data-id="persistent" data-position="fixed">
+                <a href="#menu-panel" data-role="button" data-icon="bars" id="open-panel">Menu</a>
+				<h1>Entrada</h1>
+				<select data-native-menu="false" data-inline="true" id="user-groups-roles-evaluation-attempt" class="ui-btn-right group-menu">
+					<option class="user-name"></option>
+				</select>
+            </div>
+
+            <div data-role="content" id="evaluation_attempt_content"></div>
+        </div>
+        
         <div data-role="page" id="settings" data-theme="b">
-            <div data-role="header">
+			<div id="menu-panel" data-role="panel" data-theme="a" class="menu-pan">
+				<ul id="menu-list-settings" data-role="listview" data-theme="a" class="menu-list">
+				</ul>
+			</div>
+            <div data-role="header" data-id="persistent" data-position="fixed">
+				<a href="#menu-panel" data-role="button" data-icon="bars" id="open-panel" class="open-panel">Menu</a>
                 <h1>Settings</h1>
-                <a href="#agenda" data-role="button" data-icon="delete" class="ui-btn-right ui-btn-active close" data-transition="none">Close</a>
+				<select data-native-menu="false" data-inline="true" id="user-groups-roles-settings" class="ui-btn-right group-menu">
+					<option class="user-name"></option>
+				</select>
             </div>
             
             <div data-role="content" id="test">	
                 <h1>Entrada Settings</h1>
+				<!--
                 <div data-role="fieldcontain">
                     <label for="url">Entrada URL:</label>
-                    <input type="text" autocorrect="off" autocapitalize="off" name="url" id="url" value="" />
+                    <input type="text" autocorrect="off" autocapitalize="off" name="url" id="url" value="130.15.42.229/entrada/www-root" />
                 </div>
+				-->
 					<div data-role="fieldcontain" id="username_field">
 						<label for="username" id="username-label">Username:</label>
 						<input type="text" autocorrect="off" autocapitalize="off" name="username" id="username" value="" />
@@ -80,13 +127,27 @@
 				<input type="button" id="logout" value="Log Out" />
             </div>
         </div>
-		<script type="text/javascript" src="js/jquery-1.8.3.min.js"></script>
-		<script type="text/javascript" src="js/jquery.mobile-1.2.0.min.js"></script>
-        <script type="text/javascript" src="cordova-2.2.0.js"></script>
+		
+		<script type="text/javascript" src="js/jquery-1.10.1.min.js"></script>
+		<script type="text/javascript" src="js/jquery.mobile-1.3.1.min.js"></script>
+        <script type="text/javascript" src="js/cordova-2.7.0.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
 		<script type="text/javascript" src="js/dhtmlxscheduler_mobile.js"></script>
+		<script type="text/javascript" src="js/json2.js"></script>
         <script type="text/javascript">
-            app.initialize();
+			
+			var jqmReady = $.Deferred(), pgReady = $.Deferred();
+			$(document).bind("pageinit", jqmReady.resolve);
+			document.addEventListener("deviceready", pgReady.resolve, false);
+			
+			//When jqm and phonegap are both ready call init
+			$.when(jqmReady, pgReady).then(function () {
+				$(document).trigger('init');
+			});
+			
+			$(document).bind('init', function () {
+				entrada.init();
+			});
         </script>
     </body>
 </html>

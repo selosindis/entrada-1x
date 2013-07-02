@@ -74,12 +74,13 @@ class CsvImporter {
 		* 8		Total Duration
 		* 9		Event Types
 		* 10	Event Title
-		* 11	Location
-		* 12	Audience (Cohorts)
-		* 13	Audience (Groups)
-		* 14	Audience (Student numbers)
-		* 15	Teacher Numbers
-		* 16	Teacher Names
+		* 11	Event Description
+		* 12	Location
+		* 13	Audience (Cohorts)
+		* 14	Audience (Groups)
+		* 15	Audience (Student numbers)
+		* 16	Teacher Numbers
+		* 17	Teacher Names
 		*/
 
 		$event_id				= ((isset($row[0]) ? clean_input($row[0], "int") : 0 ));
@@ -93,12 +94,13 @@ class CsvImporter {
 		$eventtype_durations	= ((isset($row[8]) ? explode(";", $row[8]) : 0 ));
 		$eventtypes				= ((isset($row[9]) ? explode(";", $row[9]) : 0 ));
 		$event_title			= ((isset($row[10]) ? clean_input($row[10], array("trim","striptags")) : 0 ));
-		$event_location			= ((isset($row[11]) ? clean_input($row[11], array("trim","striptags")) : 0 ));
-		$event_audiences_cohort = ((isset($row[12]) && !empty($row[12]) ? explode(";", $row[12]) : 0 ));
-		$event_audiences_groups = ((isset($row[13]) && !empty($row[13]) ? explode(";", $row[13]) : 0 ));
-		$event_audiences_students = ((isset($row[14]) && !empty($row[14]) ? explode(";", clean_input($row[14], array("nows", "striptags"))) : 0 ));
-		$event_teachers			= ((isset($row[15]) && !empty($row[15]) ? explode(";", clean_input($row[15], array("nows", "striptags"))) : 0 ));
-		$teacher_names			= ((isset($row[16]) && !empty($row[16]) ? explode(";", $row[16]) : 0 ));
+		$event_description		= ((isset($row[11]) ? clean_input($row[11], array("trim","allowedtags")) : 0 ));
+		$event_location			= ((isset($row[12]) ? clean_input($row[12], array("trim","striptags")) : 0 ));
+		$event_audiences_cohort = ((isset($row[13]) && !empty($row[13]) ? explode(";", $row[13]) : 0 ));
+		$event_audiences_groups = ((isset($row[14]) && !empty($row[14]) ? explode(";", $row[14]) : 0 ));
+		$event_audiences_students = ((isset($row[15]) && !empty($row[15]) ? explode(";", clean_input($row[15], array("nows", "striptags"))) : 0 ));
+		$event_teachers			= ((isset($row[16]) && !empty($row[16]) ? explode(";", clean_input($row[16], array("nows", "striptags"))) : 0 ));
+		$teacher_names			= ((isset($row[17]) && !empty($row[17]) ? explode(";", $row[17]) : 0 ));
 		$event_duration			= 0;
 
 		// check draft for existing event_id and get the devent_id if found
@@ -199,6 +201,11 @@ class CsvImporter {
 		} else {
 			$err["errors"][] = "The event title was not set for this event.";
 			$skip_row = true;
+		}
+
+		// event location, not required
+		if (!empty($event_description)) {
+			$output[$event_id]["event_description"] = $event_description;
 		}
 
 		// event location, not required
@@ -307,8 +314,8 @@ class CsvImporter {
                     $where = "";
                 }
 
-                $query =	$mode." `draft_events` (`draft_id`, `event_id`, `parent_id`, `course_id`, `event_title`, `event_start`, `event_finish`, `event_duration`, `event_location`)
-                            VALUES (".$this->draft_id.", ".$db->qstr($row["event_id"]).", ".$db->qstr($row["parent_event"]).", ".$db->qstr($row["course_id"]).", ".$db->qstr($row["event_title"]).", ".$db->qstr($row["event_start"]).", ".$db->qstr($row["event_start"] + ($row["total_duration"] * 60)).", ".$db->qstr($row["total_duration"]).", ".$db->qstr($row["event_location"]).")".
+                $query =	$mode." `draft_events` (`draft_id`, `event_id`, `parent_id`, `course_id`, `event_title`, `event_description`, `event_start`, `event_finish`, `event_duration`, `event_location`)
+                            VALUES (".$this->draft_id.", ".$db->qstr($row["event_id"]).", ".$db->qstr($row["parent_event"]).", ".$db->qstr($row["course_id"]).", ".$db->qstr($row["event_title"]).", ".$db->qstr($row["event_description"]).", ".$db->qstr($row["event_start"]).", ".$db->qstr($row["event_start"] + ($row["total_duration"] * 60)).", ".$db->qstr($row["total_duration"]).", ".$db->qstr($row["event_location"]).")".
                             $where;
                 $result = $db->Execute($query);
 

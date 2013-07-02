@@ -80,7 +80,7 @@ jQuery(document).ready(function(){
 		var objective_id = jQuery(this).attr("data-id");
 		var modal_container = jQuery(document.createElement("div"));
 		
-		modal_container.load(SITE_URL + "/admin/settings/manage/objectives?org=1&section=edit&id=" + objective_id + "&mode=ajax");
+		modal_container.load(SITE_URL + "/admin/settings/manage/objectives?org="+org_id+"&section=edit&id=" + objective_id + "&mode=ajax");
 		
 		modal_container.dialog({
 			title: "Edit Objective",
@@ -144,7 +144,7 @@ jQuery(document).ready(function(){
 	jQuery(".objective-add-control").live("click", function(){
 		var parent_id = jQuery(this).attr("data-id");
 		var modal_container = jQuery(document.createElement("div"));
-		var url = SITE_URL + "/admin/settings/manage/objectives?org=1&section=add&mode=ajax&parent_id="+parent_id;
+		var url = SITE_URL + "/admin/settings/manage/objectives?org="+org_id+"&section=add&mode=ajax&parent_id="+parent_id;
 		modal_container.load(url);
 		
 		modal_container.dialog({
@@ -217,7 +217,7 @@ jQuery(document).ready(function(){
 	jQuery(".objective-delete-control").live("click", function(){
 		var objective_id = jQuery(this).attr("data-id");
 		var modal_container = jQuery(document.createElement("div"));
-		var url = SITE_URL + "/admin/settings/manage/objectives?org=1&section=delete&mode=ajax&objective_id="+objective_id;
+		var url = SITE_URL + "/admin/settings/manage/objectives?org="+org_id+"&section=delete&mode=ajax&objective_id="+objective_id;
 		modal_container.load(url);
 		
 		modal_container.dialog({

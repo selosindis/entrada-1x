@@ -1493,6 +1493,11 @@ div.img-holder img.uploaded, div.img-holder img.upload {
 z-index:5;
 }
 
+.people-search-thumb {
+	width: 72px; 
+	height: 100px;
+}
+
 div.img-holder a.zoomin {
 opacity:75;
 position:absolute;

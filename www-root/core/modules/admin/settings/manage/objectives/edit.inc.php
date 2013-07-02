@@ -622,6 +622,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						<script type="text/javascript">
 							var SITE_URL = "<?php echo ENTRADA_URL;?>";
 							var EDITABLE = true;
+							var org_id = "<?php echo $ORGANISATION_ID; ?>";
 						</script>
 						<?php $HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>"; ?>
 
@@ -797,7 +798,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 									mapped.push(id);								
 								}
 							</script>
-							<h2 class="collapsable" title="Child Objectives Section">Sub-Objectives</h2>
+							<h2 class="collapsable" title="Child Objectives Section">Child Objectives</h2>
 							<div id="child-objectives-section">
 								<div style="float: right">
 									<ul class="page-action">

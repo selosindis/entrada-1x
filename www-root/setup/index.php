@@ -376,10 +376,15 @@ $absolute_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPA
 
 $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPARATOR, $_SERVER['SCRIPT_FILENAME']), 0, (count(explode(DIRECTORY_SEPARATOR, $_SERVER['SCRIPT_FILENAME'])) - 2)) )."/core/storage";
 ?>
-<html>
+<!doctype html>
+<!--[if lt IE 7]> <html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js lt-ie9 lt-ie8" lang="en"> <![endif]-->
+<!--[if IE 8]>    <html class="no-js lt-ie9" lang="en"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"> <!--<![endif]-->
 <head>
 	<title>Entrada: Setup</title>
-	<link href="../templates/default/css/bootstrap.css" rel="stylesheet" type="text/css" media="all" />	
+	<link href="../templates/default/css/bootstrap.css" rel="stylesheet" type="text/css" media="all" />
+    <link href="../templates/default/css/style.css" rel="stylesheet" type="text/css" media="all" />
 
 	<script type="text/javascript" src="../javascript/scriptaculous/prototype.js"></script>
 	<script type="text/javascript" src="../javascript/scriptaculous/scriptaculous.js"></script>
@@ -389,30 +394,6 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
     <script type="text/javascript" src="../templates/default/js/libs/modernizr-2.5.3.min.js"></script>
 
 	<style type="text/css">
-		html, body {
-			height: 100%;
-			margin: 0;
-			padding: 0;
-			background-color: #F0F0EE;
-		}
-		
-		.setup-window {
-			line-height:150%;
-			font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
-			font-size:12px;
-			color:#333;
-			-moz-border-radius:10px;
-			-webkit-border-radius:10px;
-			margin:35px 0;
-			padding:15px;
-			width: 700px;
-			margin-left: auto;
-			margin-right: auto;
-			padding: 10px 40px 10px 40px;
-			background-color:#FFF;
-			border:1px #CCC solid;
-		}
-		
 		table.setup-list {
 			width: 100%;
 			border-collapse: collapse;
@@ -471,513 +452,519 @@ $storage_path = implode(DIRECTORY_SEPARATOR, array_slice(explode(DIRECTORY_SEPAR
 			-moz-opacity:0.85;
 			z-index:10000;
 		}
-		
+
 		.alert {
 			margin-top: 20px;
 		}
 	</style>
 </head>
 <body>
-	<div class="setup-window">
-		<img src="../images/entrada-logo.gif" width="296" height="50" alt="Entrada Logo" title="Welcome to Entrada" style="margin-top: 5px" />
-		<?php
-		if ($ERROR && count($ERRORSTR)) {
-			echo display_error();
-		}
-		if ($NOTICE) {
-			echo display_notice();
-		}
-		if ($SUCCESS) {
-			echo display_success();
-		}
-		?>
-		<form action="index.php?<?php echo replace_query(array("step" => (!$ERROR || count($ERRORSTR) ? $STEP + 1 : $STEP))); ?>" method="post">
-			<input name="step" id="step" type="hidden" value="<?php echo $STEP; ?>" />
-			<?php
-			if (is_array($PROCESSED) && !empty($PROCESSED)) {
-				foreach ($PROCESSED as $key => $value) {
-					echo "<input name=\"".html_encode($key)."\" id=\"processed_".html_encode($key)."\" type=\"hidden\" value=\"".html_encode($value)."\" />\n";
-				}
-			}
+    <div id="page" class="container">
+        <div class="row-fluid">
+            <div id="content" class="span9 offset1">
+                <div class="clearfix inner-content">
+                    <img src="../images/entrada-logo.png" width="296" height="50" alt="Entrada Logo" title="Welcome to Entrada" style="margin-top: 5px" />
+                    <?php
+                    if ($ERROR && count($ERRORSTR)) {
+                        echo display_error();
+                    }
+                    if ($NOTICE) {
+                        echo display_notice();
+                    }
+                    if ($SUCCESS) {
+                        echo display_success();
+                    }
+                    ?>
+                    <form action="index.php?<?php echo replace_query(array("step" => (!$ERROR || count($ERRORSTR) ? $STEP + 1 : $STEP))); ?>" method="post">
+                        <input name="step" id="step" type="hidden" value="<?php echo $STEP; ?>" />
+                        <?php
+                        if (is_array($PROCESSED) && !empty($PROCESSED)) {
+                            foreach ($PROCESSED as $key => $value) {
+                                echo "<input name=\"".html_encode($key)."\" id=\"processed_".html_encode($key)."\" type=\"hidden\" value=\"".html_encode($value)."\" />\n";
+                            }
+                        }
 
-			/**
-			 * Display Page
-			 */
-			switch ($STEP) {
-				case 6 :
-					?>
-					<div id="step_6" class="row-fluid">
-						<p class="alert alert-success" id="success"<?php echo ($ERROR ? " style=\"display: none;\"" : "");?>>
-							You have successfully installed Entrada. You may view the site at this url: <strong><?php echo $PROCESSED["entrada_url"]; ?></strong> or by clicking the "View Site" button below. Once on the site, you may log in using the admin username and password you entered during the setup process.
-						</p>
-						<p class="alert alert-error" id="error"<?php echo (!$ERROR ? " style=\"display: none;\"" : "");?>>
-							There was an issue while attempting to load the table information into your databases. Please ensure all three databases are completely empty before clicking the 'Refresh' button.
-						</p>
-					</div>
-					<?php
-				break;
-				case 5 :
-					?>
-					<div id="step_5" class="row-fluid">
-						<div class="alert alert-info">
-							Lastly we need to <strong>save your configuration data</strong> to the <span style="font-family: monospace">core/config/config.inc.php</span> file and write a new <span style="font-family: monospace">.htaccess</span> file to your Entrada directory. We will try to do this for you, but if the setup tool does not have the proper permissions you will be asked to save this yourself before continuing.
-						</div>
-						<h2>Step 5: Save Config Data &amp; .htaccess File</h2>
-						<div id="config"<?php echo (isset($display_config) && $display_config ? "" : " style=\"display: none;\"") ?>>
-							<label for="config_text">
-								1. <strong>Copy and paste</strong> the following text into the <span style="font-family: monospace">core/config/config.inc.php</span> file.
-							</label>
-							<br />
-							<textarea id="config_text" name="config_text" class="span12" rows="15" onclick="this.select()" readonly="readonly"><?php echo (isset($display_config) && $display_config) ? $config_text : ""; ?></textarea>
-						</div>
-						<div id="htaccess" style="margin-top: 15px;<?php echo ((isset($display_htaccess) && $display_htaccess) ? "" : " display: none;"); ?>">
-							<label for="htaccess_text">
-								2. <strong>Copy and paste</strong> the following text into a new file named <span style="font-family: monospace">.htaccess</span> in your Entrada root.
-							</label>
-							<br />
-							<textarea id="htaccess_text" name="htaccess_text" class="span12" rows="15" onclick="this.select()" readonly="readonly"><?php
-							if (isset($display_htaccess) && $display_htaccess) {
-									$htaccess_text = file_get_contents($setup->entrada_absolute.$setup->htaccess_file);
-									$htaccess_text = str_replace("ENTRADA_RELATIVE", (($setup->entrada_relative != "") ? $setup->entrada_relative : "/"), $htaccess_text);
-									echo $htaccess_text;
-								}
-							?></textarea>
-						</div>
-						<?php
-						if (!$display_htaccess && !$display_config) {
-							?>
-							<div class="alert alert-success">
-								<ul>
-									<li>We have successfully saved your configuration information and created a new .htaccess file in your Entrada directory. We are now ready to create the MySQL database tables that Entrada needs to operate.</li>
-								</ul>
-							</div>
-							<?php
-						}
-						?>
-					</div>
-					<div id="db-import-progress" style="display: none">
-						<div style="display: table; width: 100%; height: 100%; _position: relative; overflow: hidden">
-							<div style=" _position: absolute; _top: 50%; display: table-cell; vertical-align: middle;">
-								<div style="_position: relative; _top: -50%; width: 100%; text-align: center">
-									<span style="font-size: 18px; font-weight: bold">
-										<img src="../images/loading.gif" width="32" height="32" alt="Importing Database" title="Please wait while Entrada installs the databases." style="vertical-align: middle" /> Please wait while Entrada installs the databases.
-									</span>
-									<br /><br />
-									This can take a few moments depending on the speed of your server.
-								</div>
-							</div>
-						</div>
-					</div>
-					<script type="text/javascript">
-						$('db-import-progress').setStyle({
-							width: document.viewport.getWidth() + 'px',
-							height: document.viewport.getHeight() + 'px'
-						});
+                        /**
+                         * Display Page
+                         */
+                        switch ($STEP) {
+                            case 6 :
+                                ?>
+                                <div id="step_6" class="row-fluid">
+                                    <p class="alert alert-success" id="success"<?php echo ($ERROR ? " style=\"display: none;\"" : "");?>>
+                                        You have successfully installed Entrada. You may view the site at this url: <strong><?php echo $PROCESSED["entrada_url"]; ?></strong> or by clicking the "View Site" button below. Once on the site, you may log in using the admin username and password you entered during the setup process.
+                                    </p>
+                                    <p class="alert alert-error" id="error"<?php echo (!$ERROR ? " style=\"display: none;\"" : "");?>>
+                                        There was an issue while attempting to load the table information into your databases. Please ensure all three databases are completely empty before clicking the 'Refresh' button.
+                                    </p>
+                                </div>
+                                <?php
+                            break;
+                            case 5 :
+                                ?>
+                                <div id="step_5" class="row-fluid">
+                                    <div class="alert alert-info">
+                                        Lastly we need to <strong>save your configuration data</strong> to the <span style="font-family: monospace">core/config/config.inc.php</span> file and write a new <span style="font-family: monospace">.htaccess</span> file to your Entrada directory. We will try to do this for you, but if the setup tool does not have the proper permissions you will be asked to save this yourself before continuing.
+                                    </div>
+                                    <h2>Step 5: Save Config Data &amp; .htaccess File</h2>
+                                    <div id="config"<?php echo (isset($display_config) && $display_config ? "" : " style=\"display: none;\"") ?>>
+                                        <label for="config_text">
+                                            1. <strong>Copy and paste</strong> the following text into the <span style="font-family: monospace">core/config/config.inc.php</span> file.
+                                        </label>
+                                        <br />
+                                        <textarea id="config_text" name="config_text" class="span12" rows="15" onclick="this.select()" readonly="readonly"><?php echo (isset($display_config) && $display_config) ? $config_text : ""; ?></textarea>
+                                    </div>
+                                    <div id="htaccess" style="margin-top: 15px;<?php echo ((isset($display_htaccess) && $display_htaccess) ? "" : " display: none;"); ?>">
+                                        <label for="htaccess_text">
+                                            2. <strong>Copy and paste</strong> the following text into a new file named <span style="font-family: monospace">.htaccess</span> in your Entrada root.
+                                        </label>
+                                        <br />
+                                        <textarea id="htaccess_text" name="htaccess_text" class="span12" rows="15" onclick="this.select()" readonly="readonly"><?php
+                                        if (isset($display_htaccess) && $display_htaccess) {
+                                                $htaccess_text = file_get_contents($setup->entrada_absolute.$setup->htaccess_file);
+                                                $htaccess_text = str_replace("ENTRADA_RELATIVE", (($setup->entrada_relative != "") ? $setup->entrada_relative : "/"), $htaccess_text);
+                                                echo $htaccess_text;
+                                            }
+                                        ?></textarea>
+                                    </div>
+                                    <?php
+                                    if (!$display_htaccess && !$display_config) {
+                                        ?>
+                                        <div class="alert alert-success">
+                                            <ul>
+                                                <li>We have successfully saved your configuration information and created a new .htaccess file in your Entrada directory. We are now ready to create the MySQL database tables that Entrada needs to operate.</li>
+                                            </ul>
+                                        </div>
+                                        <?php
+                                    }
+                                    ?>
+                                </div>
+                                <div id="db-import-progress" style="display: none">
+                                    <div style="display: table; width: 100%; height: 100%; _position: relative; overflow: hidden">
+                                        <div style=" _position: absolute; _top: 50%; display: table-cell; vertical-align: middle;">
+                                            <div style="_position: relative; _top: -50%; width: 100%; text-align: center">
+                                                <span style="font-size: 18px; font-weight: bold">
+                                                    <img src="../images/loading.gif" width="32" height="32" alt="Importing Database" title="Please wait while Entrada installs the databases." style="vertical-align: middle" /> Please wait while Entrada installs the databases.
+                                                </span>
+                                                <br /><br />
+                                                This can take a few moments depending on the speed of your server.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <script type="text/javascript">
+                                    $('db-import-progress').setStyle({
+                                        width: document.viewport.getWidth() + 'px',
+                                        height: document.viewport.getHeight() + 'px'
+                                    });
 
-						Event.observe(window, 'load', function() {
-							Event.observe('continue-button', 'click', function() {
-								$('db-import-progress').show();
-							});
-						});
-					</script>
-					<?php
-				break;
-				case 4 :
-					?>
-					<div id="step_4" class="row-fluid">
-						<div class="alert alert-info">
-							Please create a new <strong>system administrator account</strong> that you will use to manage your Entrada installation. Additional accounts can be created later in the <strong>Admin &gt; Manage Users</strong> section.
-						</div>
-						<h2>Step 4: System Administrator Account</h2>
-						<table class="setup-list" summary="Step 4: System Administrator Account">
-							<colgroup>
-								<col width="25%" />
-								<col width="75%" />
-							</colgroup>
-							<tbody>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="admin_firstname">Firstname</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="text" id="admin_firstname" name="admin_firstname" value="<?php echo (isset($PROCESSED["admin_firstname"]) && $PROCESSED["admin_firstname"] ? $PROCESSED["admin_firstname"] : "System"); ?>" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										The first name of the system administrator.
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="admin_lastname">Lastname</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="text" id="admin_lastname" name="admin_lastname" value="<?php echo (isset($PROCESSED["admin_lastname"]) && $PROCESSED["admin_lastname"] ? $PROCESSED["admin_lastname"] : "Administrator"); ?>" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										The lastname name of the system administrator.
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="admin_email">E-Mail Address</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="text" id="admin_email" name="admin_email" value="<?php echo (isset($PROCESSED["admin_email"]) && $PROCESSED["admin_email"] ? $PROCESSED["admin_email"] : ""); ?>" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										The email address of the system administrator.
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">&nbsp;</td>
-								</tr>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="admin_username">Username</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="text" id="admin_username" name="admin_username" value="<?php echo (isset($PROCESSED["admin_username"]) && $PROCESSED["admin_username"] ? $PROCESSED["admin_username"] : ""); ?>" />
-										</div>
-									</td>
-									<td class="right">
-										<span></span>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										A username for the system administrator account.
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="admin_password">Password</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="password" id="admin_password" name="admin_password" value="" />
-											<input type="hidden" id="admin_password_hash" name="admin_password_hash" value="<?php echo (isset($PROCESSED["admin_password_hash"]) && $PROCESSED["admin_password_hash"] ? $PROCESSED["admin_password_hash"] : ""); ?>" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										A secure password for the administrator account.
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="re_admin_password">Confirm Password</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="password" id="re_admin_password" name="re_admin_password" value="" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										Please re-type the new administrator password from above.
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-					<?php
-				break;
-				case 3 :
-					?>
-					<div id="step_3" class="row-fluid">
-						<div class="alert alert-info">
-							<strong>Before completing this step</strong> please log into your MySQL server and create <strong>three</strong> new databases (i.e. entrada, entrada_auth, and entrada_clerkship) that Entrada will use to store its data. Also you will need to create a new MySQL user account that has full privileges to each of these databases.
-						</div>
-						<h2>Step 3: Database Connection Information</h2>
-						<table class="setup-list" summary="Step 3: Database Connection Information">
-							<colgroup>
-								<col width="25%" />
-								<col width="75%" />
-							</colgroup>
-							<tbody>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="database_adapter">Database Adapter</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<select id="database_adapter" name="database_adapter" style="width: 205px">
-												<?php
-												foreach ($DATABASE_ADAPTERS as $type => $title) {
-													echo "<option value=\"".html_encode($type)."\"".((isset($PROCESSED["database_adapter"]) && ($PROCESSED["database_adapter"] == $type)) ? " selected=\"selected\"" : "").">".html_encode($title)."</option>\n";
-												}
-												?>
-											</select>
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="database_host">MySQL Hostname</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="text" id="database_host" name="database_host" value="<?php echo (isset($PROCESSED["database_host"]) && $PROCESSED["database_host"] ? $PROCESSED["database_host"] : "localhost"); ?>" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										The hostname of your MySQL server.
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="database_username">MySQL Username</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="text" id="database_username" name="database_username" value="<?php echo (isset($PROCESSED["database_username"]) && $PROCESSED["database_username"] ? $PROCESSED["database_username"] : "entrada"); ?>" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										The MySQL user with full privileges to each of the databases below.
-									</td>
-								</tr>
+                                    Event.observe(window, 'load', function() {
+                                        Event.observe('continue-button', 'click', function() {
+                                            $('db-import-progress').show();
+                                        });
+                                    });
+                                </script>
+                                <?php
+                            break;
+                            case 4 :
+                                ?>
+                                <div id="step_4" class="row-fluid">
+                                    <div class="alert alert-info">
+                                        Please create a new <strong>system administrator account</strong> that you will use to manage your Entrada installation. Additional accounts can be created later in the <strong>Admin &gt; Manage Users</strong> section.
+                                    </div>
+                                    <h2>Step 4: System Administrator Account</h2>
+                                    <table class="setup-list" summary="Step 4: System Administrator Account">
+                                        <colgroup>
+                                            <col width="25%" />
+                                            <col width="75%" />
+                                        </colgroup>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="admin_firstname">Firstname</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="text" id="admin_firstname" name="admin_firstname" value="<?php echo (isset($PROCESSED["admin_firstname"]) && $PROCESSED["admin_firstname"] ? $PROCESSED["admin_firstname"] : "System"); ?>" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    The first name of the system administrator.
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="admin_lastname">Lastname</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="text" id="admin_lastname" name="admin_lastname" value="<?php echo (isset($PROCESSED["admin_lastname"]) && $PROCESSED["admin_lastname"] ? $PROCESSED["admin_lastname"] : "Administrator"); ?>" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    The lastname name of the system administrator.
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="admin_email">E-Mail Address</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="text" id="admin_email" name="admin_email" value="<?php echo (isset($PROCESSED["admin_email"]) && $PROCESSED["admin_email"] ? $PROCESSED["admin_email"] : ""); ?>" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    The email address of the system administrator.
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">&nbsp;</td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="admin_username">Username</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="text" id="admin_username" name="admin_username" value="<?php echo (isset($PROCESSED["admin_username"]) && $PROCESSED["admin_username"] ? $PROCESSED["admin_username"] : ""); ?>" />
+                                                    </div>
+                                                </td>
+                                                <td class="right">
+                                                    <span></span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    A username for the system administrator account.
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="admin_password">Password</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="password" id="admin_password" name="admin_password" value="" />
+                                                        <input type="hidden" id="admin_password_hash" name="admin_password_hash" value="<?php echo (isset($PROCESSED["admin_password_hash"]) && $PROCESSED["admin_password_hash"] ? $PROCESSED["admin_password_hash"] : ""); ?>" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    A secure password for the administrator account.
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="re_admin_password">Confirm Password</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="password" id="re_admin_password" name="re_admin_password" value="" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    Please re-type the new administrator password from above.
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <?php
+                            break;
+                            case 3 :
+                                ?>
+                                <div id="step_3" class="row-fluid">
+                                    <div class="alert alert-info">
+                                        <strong>Before completing this step</strong> please log into your MySQL server and create <strong>three</strong> new databases (i.e. entrada, entrada_auth, and entrada_clerkship) that Entrada will use to store its data. Also you will need to create a new MySQL user account that has full privileges to each of these databases.
+                                    </div>
+                                    <h2>Step 3: Database Connection Information</h2>
+                                    <table class="setup-list" summary="Step 3: Database Connection Information">
+                                        <colgroup>
+                                            <col width="25%" />
+                                            <col width="75%" />
+                                        </colgroup>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="database_adapter">Database Adapter</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <select id="database_adapter" name="database_adapter" style="width: 205px">
+                                                            <?php
+                                                            foreach ($DATABASE_ADAPTERS as $type => $title) {
+                                                                echo "<option value=\"".html_encode($type)."\"".((isset($PROCESSED["database_adapter"]) && ($PROCESSED["database_adapter"] == $type)) ? " selected=\"selected\"" : "").">".html_encode($title)."</option>\n";
+                                                            }
+                                                            ?>
+                                                        </select>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="database_host">MySQL Hostname</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="text" id="database_host" name="database_host" value="<?php echo (isset($PROCESSED["database_host"]) && $PROCESSED["database_host"] ? $PROCESSED["database_host"] : "localhost"); ?>" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    The hostname of your MySQL server.
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="database_username">MySQL Username</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="text" id="database_username" name="database_username" value="<?php echo (isset($PROCESSED["database_username"]) && $PROCESSED["database_username"] ? $PROCESSED["database_username"] : "entrada"); ?>" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    The MySQL user with full privileges to each of the databases below.
+                                                </td>
+                                            </tr>
 
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="database_password">MySQL Password</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="password" id="database_password" name="database_password" value="<?php echo (isset($PROCESSED["database_password"]) && $PROCESSED["database_password"] ? $PROCESSED["database_password"] : ""); ?>" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										The password of the MySQL user listed above.
-									</td>
-								</tr>
-								<tr>
-									<td colspan="2">&nbsp;</td>
-								</tr>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="entrada_database">Entrada Database</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="text" id="entrada_database" name="entrada_database" value="<?php echo (isset($PROCESSED["entrada_database"]) && $PROCESSED["entrada_database"] ? $PROCESSED["entrada_database"] : "entrada"); ?>" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										1 of 3: The name of your primary Entrada database.
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="auth_database">Authentication Database</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="text" id="auth_database" name="auth_database" value="<?php echo (isset($PROCESSED["auth_database"]) && $PROCESSED["auth_database"] ? $PROCESSED["auth_database"] : "entrada_auth"); ?>" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										2 of 3: The name of your Entrada authentication database.
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="clerkship_database">Clerkship Database</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="text" id="clerkship_database" name="clerkship_database" value="<?php echo (isset($PROCESSED["clerkship_database"]) && $PROCESSED["clerkship_database"] ? $PROCESSED["clerkship_database"] : "entrada_clerkship"); ?>" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										3 of 3: The name of your Entrada Clerkship database.
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-					<?php
-				break;
-				case 2 :
-					?>
-					<div id="step_2" class="row-fluid">
-						<div class="alert alert-info">
-							Entrada requires a bit of information about where this installation is located on your server, and how it will be accessed via the web-browser. We have tried to pre-populate this information, but please review each field and confirm it is correct before continuing.
-							<br /><br />
-							This data will be written to your <span style="font-family: monospace">core/config/config.inc.php</span> file later in the setup process.
-						</div>
-						<h2>Step 2: URL &amp; Path Information</h2>
-						<table class="setup-list" summary="Step 2: URL &amp; Path Information">
-							<colgroup>
-								<col width="25%" />
-								<col width="75%" />
-							</colgroup>
-							<tbody>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="entrada_url">Entrada URL</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="text" id="entrada_url" name="entrada_url" value="<?php echo (isset($PROCESSED["entrada_url"]) && $PROCESSED["entrada_url"] ? $PROCESSED["entrada_url"] : $absolute_url); ?>" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										Full URL to Entrada (i.e. http://website.edu/entrada).
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="entrada_relative" style="font-weight: normal">Entrada Relative URL</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="text" id="entrada_relative" name="entrada_relative" value="<?php echo (isset($PROCESSED["entrada_relative"]) && $PROCESSED["entrada_relative"] ? $PROCESSED["entrada_relative"] : $relative_url); ?>" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										The relative URL to Entrada on your site (i.e. /entrada).
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="entrada_absolute">Entrada Absolute Path</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="text" id="entrada_absolute" name="entrada_absolute" value="<?php echo (isset($PROCESSED["entrada_absolute"]) && $PROCESSED["entrada_absolute"] ? $PROCESSED["entrada_absolute"] : $absolute_path); ?>" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										Full absolute filesystem path to Entrada (without trailing slash).
-									</td>
-								</tr>
-								<tr>
-									<td>
-										<div class="valign">
-											<label for="entrada_storage">Entrada Storage Path</label>
-										</div>
-									</td>
-									<td>
-										<div class="valign">
-											<input type="text" id="entrada_storage" name="entrada_storage" value="<?php echo (isset($PROCESSED["entrada_storage"]) && $PROCESSED["entrada_storage"] ? $PROCESSED["entrada_storage"] : $storage_path); ?>" />
-										</div>
-									</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td class="content-small" style="padding-bottom: 15px">
-										Full absolute filesystem path to Entrada storage directory.
-									</td>
-								</tr>
-							</tbody>
-						</table>
-					</div>
-					<?php
-				break;
-				case 1 :
-				default :
-					?>
-					<div id="step_1" class="row-fluid">
-						<div class="alert alert-info">
-							Welcome to the <strong>Entrada setup</strong> program. Before we begin please be aware that Entrada is open source software, and is licensed under the GNU General Public License (GPL v3). By continuing you acknowledge that you have read and agree to the terms of the license.
-						</div>
-						<h2>Step 1: Software License Agreement</h2>
-						<div class="row-fluid">
-							<textarea name="sla" class="span12" rows="15" readonly="readonly"><?php echo $GNU; ?></textarea>
-						</div>
-					</div>
-					<?php
-				break;
-			}
-			?>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="database_password">MySQL Password</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="password" id="database_password" name="database_password" value="<?php echo (isset($PROCESSED["database_password"]) && $PROCESSED["database_password"] ? $PROCESSED["database_password"] : ""); ?>" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    The password of the MySQL user listed above.
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td colspan="2">&nbsp;</td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="entrada_database">Entrada Database</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="text" id="entrada_database" name="entrada_database" value="<?php echo (isset($PROCESSED["entrada_database"]) && $PROCESSED["entrada_database"] ? $PROCESSED["entrada_database"] : "entrada"); ?>" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    1 of 3: The name of your primary Entrada database.
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="auth_database">Authentication Database</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="text" id="auth_database" name="auth_database" value="<?php echo (isset($PROCESSED["auth_database"]) && $PROCESSED["auth_database"] ? $PROCESSED["auth_database"] : "entrada_auth"); ?>" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    2 of 3: The name of your Entrada authentication database.
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="clerkship_database">Clerkship Database</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="text" id="clerkship_database" name="clerkship_database" value="<?php echo (isset($PROCESSED["clerkship_database"]) && $PROCESSED["clerkship_database"] ? $PROCESSED["clerkship_database"] : "entrada_clerkship"); ?>" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    3 of 3: The name of your Entrada Clerkship database.
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <?php
+                            break;
+                            case 2 :
+                                ?>
+                                <div id="step_2" class="row-fluid">
+                                    <div class="alert alert-info">
+                                        Entrada requires a bit of information about where this installation is located on your server, and how it will be accessed via the web-browser. We have tried to pre-populate this information, but please review each field and confirm it is correct before continuing.
+                                        <br /><br />
+                                        This data will be written to your <span style="font-family: monospace">core/config/config.inc.php</span> file later in the setup process.
+                                    </div>
+                                    <h2>Step 2: URL &amp; Path Information</h2>
+                                    <table class="setup-list" summary="Step 2: URL &amp; Path Information">
+                                        <colgroup>
+                                            <col width="25%" />
+                                            <col width="75%" />
+                                        </colgroup>
+                                        <tbody>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="entrada_url">Entrada URL</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="text" id="entrada_url" name="entrada_url" value="<?php echo (isset($PROCESSED["entrada_url"]) && $PROCESSED["entrada_url"] ? $PROCESSED["entrada_url"] : $absolute_url); ?>" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    Full URL to Entrada (i.e. http://website.edu/entrada).
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="entrada_relative" style="font-weight: normal">Entrada Relative URL</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="text" id="entrada_relative" name="entrada_relative" value="<?php echo (isset($PROCESSED["entrada_relative"]) && $PROCESSED["entrada_relative"] ? $PROCESSED["entrada_relative"] : $relative_url); ?>" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    The relative URL to Entrada on your site (i.e. /entrada).
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="entrada_absolute">Entrada Absolute Path</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="text" id="entrada_absolute" name="entrada_absolute" value="<?php echo (isset($PROCESSED["entrada_absolute"]) && $PROCESSED["entrada_absolute"] ? $PROCESSED["entrada_absolute"] : $absolute_path); ?>" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    Full absolute filesystem path to Entrada (without trailing slash).
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="valign">
+                                                        <label for="entrada_storage">Entrada Storage Path</label>
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div class="valign">
+                                                        <input type="text" id="entrada_storage" name="entrada_storage" value="<?php echo (isset($PROCESSED["entrada_storage"]) && $PROCESSED["entrada_storage"] ? $PROCESSED["entrada_storage"] : $storage_path); ?>" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>&nbsp;</td>
+                                                <td class="content-small" style="padding-bottom: 15px">
+                                                    Full absolute filesystem path to Entrada storage directory.
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <?php
+                            break;
+                            case 1 :
+                            default :
+                                ?>
+                                <div id="step_1" class="row-fluid">
+                                    <div class="alert alert-info">
+                                        Welcome to the <strong>Entrada setup</strong> program. Before we begin please be aware that Entrada is open source software, and is licensed under the GNU General Public License (GPL v3). By continuing you acknowledge that you have read and agree to the terms of the license.
+                                    </div>
+                                    <h2>Step 1: Software License Agreement</h2>
+                                    <div class="row-fluid">
+                                        <textarea name="sla" class="span12" rows="15" readonly="readonly"><?php echo $GNU; ?></textarea>
+                                    </div>
+                                </div>
+                                <?php
+                            break;
+                        }
+                        ?>
 
-			<div class="row-fluid" style="margin: 15px 25px 10px 0; padding-right: 40px; text-align: right">
-				<input class="btn btn-primary pull-right" type="submit" value="Continue" id="continue-button" name="continue"<?php echo ($STEP > 5 ? " style=\"display: none;\"" : "");?> />
-				<input class="btn btn-primary pull-right" type="button" value="View Site" onclick="window.location= '<?php echo (isset($PROCESSED["entrada_url"]) && $PROCESSED["entrada_url"] ? $PROCESSED["entrada_url"] : "../.."); ?>';" name="view"<?php echo ($STEP != 6 || $ERROR ? " style=\"display: none;\"" : ""); ?> />
-				<input class="btn" type="submit" value="Refresh" name="refresh"<?php echo ($STEP != 6 || !$ERROR ? " style=\"display: none;\"" : "");?> />
-			</div>
-		</form>
+                        <div class="row-fluid" style="margin: 15px 25px 10px 0; padding-right: 40px; text-align: right">
+                            <input class="btn btn-primary pull-right" type="submit" value="Continue" id="continue-button" name="continue"<?php echo ($STEP > 5 ? " style=\"display: none;\"" : "");?> />
+                            <input class="btn btn-primary pull-right" type="button" value="View Site" onclick="window.location= '<?php echo (isset($PROCESSED["entrada_url"]) && $PROCESSED["entrada_url"] ? $PROCESSED["entrada_url"] : "../.."); ?>';" name="view"<?php echo ($STEP != 6 || $ERROR ? " style=\"display: none;\"" : ""); ?> />
+                            <input class="btn" type="submit" value="Refresh" name="refresh"<?php echo ($STEP != 6 || !$ERROR ? " style=\"display: none;\"" : "");?> />
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
 	</div>
 </body>
 </html>

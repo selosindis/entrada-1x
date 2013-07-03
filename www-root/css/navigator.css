@@ -1,0 +1,121 @@
+#navigator-container {
+position:fixed;
+top:0;
+left:0;
+width:100%;
+min-height:29px;
+z-index:10000;
+margin:0;
+}
+
+#navigator {
+background-color:#162D35;
+background-color:rgba(23,48,57,0.96);
+height:375px;
+overflow:hidden;
+margin:0;
+padding:0;
+}
+
+#navigator-tab {
+border-top:4px solid #173039;
+text-align:center;
+display:block;
+-moz-box-shadow:1px 1px 0 rgba(255,255,255,0.05) inset;
+-webkit-box-shadow:1px 1px 0 rgba(255,255,255,0.05) inset;
+box-shadow:1px 1px 0 rgba(255,255,255,0.05) inset;
+}
+a.toc{
+  display:inline-block;
+  color:#D3E9F0;
+  text-transform:uppercase;
+  font-weight:bold;
+  padding:0 10px;
+  border-radius:0 0 5px 5px;
+  background:#162D35;
+  box-shadow:1px 1px 0 rgba(255,255,255,0.05);
+  font-size:0.75em;
+  vertical-align:top;
+}
+a.toc:hover{
+  text-decoration:none;
+  color:#FFF;
+}
+#navigator-interior {
+background-color:transparent;
+font-family:"Lucida Grande", Geneva, Verdana, Arial, Helvetica, sans-serif;
+font-size:11px;
+margin:0;
+padding:8px 12px 0 20px;
+}
+
+#navigator-interior h3 {
+font-family:"Lucida Grande", Geneva, Verdana, Arial, Helvetica, sans-serif;
+border:0;
+font-size:12px;
+color:#FFF;
+margin:0 0 5px;
+padding:0;
+}
+
+#navigator-interior td {
+color:#EEE;
+/*background:transparent url(../images/nav_separator.jpg) repeat-y left top;*/
+vertical-align:top;
+font-weight:400;
+padding:0 0 0 20px;
+border-right:1px dotted rgba(255,255,255,0.2);
+}
+
+#navigator-interior p {
+color:#EEE;
+background-color:transparent;
+margin:0 0 10px;
+padding:0;
+}
+
+#navigator-interior ul {
+list-style-image:url(../images/nav_arrow.gif);
+margin:8px 0 12px;
+padding:0 0 0 18px;
+}
+
+#navigator-interior ul li {
+margin:0 0 4px;
+padding:0;
+}
+
+#navigator-interior ul.history {
+list-style-type:none;
+margin:0 0 10px;
+padding:4px 0 0;
+}
+
+#navigator-interior ul.history li {
+white-space:nowrap;
+overflow:hidden;
+font-size:11px;
+text-decoration:none;
+line-height:135%;
+padding:1px;
+}
+
+#navigator-interior a {
+font-size:11px;
+color:#EEE;
+background-color:transparent;
+text-decoration:none;
+font-weight:400;
+}
+
+#navigator-interior a:visited {
+color:#EEE;
+background-color:transparent;
+text-decoration:none;
+}
+
+#navigator-interior a:hover {
+color:#CCC;
+text-decoration:none;
+background-color:transparent;
+}

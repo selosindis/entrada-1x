@@ -658,3 +658,4 @@ define("PDF_PASSWORD", "MyPassword");                   // Used to set the owner
  */
 define("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL", 1);          // Used to determine whether or not to include final grade calculations in Grade Export.
 define("GRADEBOOK_DISPLAY_MEAN_GRADE", 1);              // Used to determine whether or not to include mean (average) grade calculations in student gradebook.
+define("GRADEBOOK_DISPLAY_MEDIAN_GRADE", 1);            // Used to determine whether or not to include median grade calculations in student gradebook.

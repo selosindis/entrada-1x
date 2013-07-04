@@ -91,6 +91,11 @@ if ($COURSE_ID) {
                         <td class="grade">Mean Mark</td>
                         <?php
                     }
+                    if (defined("GRADEBOOK_DISPLAY_MEDIAN_GRADE") && GRADEBOOK_DISPLAY_MEDIAN_GRADE) {
+                        ?>
+                        <td class="grade">Median Mark</td>
+                        <?php
+                    }
                     if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
 						?>
 						<td class="grade">Weighted Mark</td>
@@ -104,12 +109,12 @@ if ($COURSE_ID) {
 			<?php
 			foreach ($results as $result) {
 				if (isset($result["value"])) {
-					$grade_value = format_retrieved_grade($result["value"], $result);
+					$grade_value = format_retrieved_grade(round($result["value"], 2), $result);
 				} else {
 					$grade_value = "-";
 				}
 				if (isset($result["mean"])) {
-					$mean_value = format_retrieved_grade(round($result["mean"], 1), $result);
+					$mean_value = format_retrieved_grade(round($result["mean"], 2), $result);
 				} else {
 					$mean_value = "-";
 				}
@@ -119,6 +124,37 @@ if ($COURSE_ID) {
 				echo "	<td>".trim($grade_value).assessment_suffix($result)."</td>\n";
 				if (defined("GRADEBOOK_DISPLAY_MEAN_GRADE") && GRADEBOOK_DISPLAY_MEAN_GRADE) {
                     echo "	<td>".trim($mean_value).assessment_suffix($result)."</td>\n";
+                }
+				if (defined("GRADEBOOK_DISPLAY_MEDIAN_GRADE") && GRADEBOOK_DISPLAY_MEDIAN_GRADE) {
+                    $query = "SELECT c.`value`
+                                FROM `courses` AS a
+                                JOIN `assessments` AS b
+                                ON a.`course_id` = b.`course_id`
+                                AND b.`cohort` IN(".$group_ids_string.")
+                                JOIN `assessment_grades` AS c
+                                ON b.`assessment_id` = c.`assessment_id`
+                                JOIN `assessment_marking_schemes` AS d
+                                ON b.`marking_scheme_id` = d.`id`
+                                JOIN `assessment_grades` AS e
+                                ON b.`assessment_id` = e.`assessment_id`
+                                WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
+                                AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
+                                AND (b.`release_until` = '0' OR b.`release_until` >= ".$db->qstr(time()).")
+                                AND b.`assessment_id` = ".$db->qstr($result["assessment_id"])."
+                                ORDER BY `order` ASC";
+                    $all_grades = $db->GetAll($query);
+                    if ($all_grades) {
+                        $n = count($all_grades);
+                        $h = intval($n / 2);
+
+                        if($n % 2 == 0) { 
+                            $median_value = ($all_grades[$h]["value"] + $all_grades[$h-1]["value"]) / 2; 
+                        } else { 
+                            $median_value = $all_grades[$h]["value"]; 
+                        }
+                        $median_value = format_retrieved_grade(round($median_value, 2), $result);
+                    }
+                    echo "	<td>".trim($median_value).assessment_suffix($result)."</td>\n";
                 }
 				if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
 					$gradebook = gradebook_get_weighted_grades($result["course_id"], $ENTRADA_USER->getCohort(), $ENTRADA_USER->getID(), $result["assessment_id"]);

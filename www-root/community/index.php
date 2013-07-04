@@ -368,6 +368,7 @@ if ($COMMUNITY_URL) {
                                     ON a.`page_url` = b.`page_url`
                                     AND a.`page_type` = b.`page_type`
                                     WHERE a.`type_id` = ".$db->qstr($COMMUNITY_TYPE["octype_id"])."
+                                    AND a.`lock_page` = 1
                                     AND a.`type_scope` = 'organisation'
                                     AND b.`community_id` = ".$db->qstr($COMMUNITY_ID);
                         $locked_pages = $db->GetAll($query);

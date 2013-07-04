@@ -59,10 +59,10 @@ define("ENTRADA_CORE", ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."core");			// Full D
 
 /**
  * DEMO_MODE - Whether or not you want to run in demo mode.
- * When in demo mode upload functionality is limited or replaced 
+ * When in demo mode upload functionality is limited or replaced
  * with place holder files (DEMO_FILENAME) to reduce the posibility of any malicious
  * actions taking place through the Entrada demo site.
- * 
+ *
  */
 define("DEMO_MODE", false);
 define("DEMO_FILE", ENTRADA_ABSOLUTE.DIRECTORY_SEPARATOR."templates".DIRECTORY_SEPARATOR."default".DIRECTORY_SEPARATOR."demo".DIRECTORY_SEPARATOR."demo_file.jpg");
@@ -297,7 +297,7 @@ define("DEBUG_MODE", true);														// Some places have extra debug code to
 define("SHOW_LOAD_STATS", false);												// Do you want to see the time it takes to load each page?
 
 define("APPLICATION_NAME", "Entrada");											// The name of this application in your school (i.e. MedCentral, Osler, etc.)
-define("APPLICATION_VERSION", "1.5.0");											// The current filesystem version of Entrada.
+define("APPLICATION_VERSION", "1.5.0.1");										// The current filesystem version of Entrada.
 define("APPLICATION_IDENTIFIER", "app-".AUTH_APP_ID);							// PHP does not allow session key's to be integers (sometimes), so we have to make it a string.
 
 $DEFAULT_META["title"] = "Entrada: An eLearning Ecosystem";

@@ -84,16 +84,16 @@ if ($COURSE_ID) {
 				<tr>
 					<td class="title borderl<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("title", "Assessment Title", ENTRADA_RELATIVE."/profile/gradebook"); ?></td>
 					<td class="assessment-type<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) && ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo public_order_link("type", "Assessment Type", ENTRADA_RELATIVE."/profile/gradebook"); ?></td>
-					<td class="grade">Mark</td>
+					<td class="grade">Your Mark</td>
                     <?php
                     if (defined("GRADEBOOK_DISPLAY_MEAN_GRADE") && GRADEBOOK_DISPLAY_MEAN_GRADE) {
                         ?>
-                        <td class="grade">Mean Mark</td>
+                        <td class="grade">Class Mean</td>
                         <?php
                     }
                     if (defined("GRADEBOOK_DISPLAY_MEDIAN_GRADE") && GRADEBOOK_DISPLAY_MEDIAN_GRADE) {
                         ?>
-                        <td class="grade">Median Mark</td>
+                        <td class="grade">Class Median</td>
                         <?php
                     }
                     if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {

@@ -933,7 +933,7 @@ function add_feedback_sidebar($group = "") {
     $feedback_text = $translate->_("global_feedback_widget");
 
 	if ($feedback_text) {
-		$SCRIPT[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/feedback.js\"></script>";
+		$SCRIPT[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/feedback.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 
 		$sidebar_html  = "<div id=\"feedback-widget\">";
 		$sidebar_html .= "  <ul class=\"menu feedback\" data-enc=\"".feedback_enc()."\">";

@@ -180,12 +180,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_OBSERVERSHIPS"))) {
 		} ?>
 				</tbody>
 			</table>
-		<?php if (clerkship_fetch_schedule($ENTRADA_USER->getID()) == false) { ?>
 		<div class="row-fluid">
 			<input class="btn btn-primary pull-right" type="button" value="Reorder" id="reorder_observership" />
 			<input class="btn" type="button" value="Cancel Reorder" id="cancel_order" style="display:none;" />
 		</div>
-		<?php } ?>
 		<?php
 	} 
 	

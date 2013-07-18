@@ -565,13 +565,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 												AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 									$entry_ids = $db->GetAll($query);
 								    $entry_ids_string = "";
-								    foreach ($entry_ids as $entry_id) {
-								    	if (!$entry_ids_string) {
-								    		$entry_ids_string = $db->qstr($entry_id["lentry_id"]);
-								    	} else {
-								    		$entry_ids_string .= ", ".$db->qstr($entry_id["lentry_id"]);
-								    	}
-								    }
+                                    if ($entry_ids) {
+                                        foreach ($entry_ids as $entry_id) {
+                                            if (!$entry_ids_string) {
+                                                $entry_ids_string = $db->qstr($entry_id["lentry_id"]);
+                                            } else {
+                                                $entry_ids_string .= ", ".$db->qstr($entry_id["lentry_id"]);
+                                            }
+                                        }
+                                    }
 									$procedures_required = $required_procedure["required"];
 									$query = "SELECT COUNT(`lprocedure_id`) AS `recorded`
 												FROM `".CLERKSHIP_DATABASE."`.`logbook_entry_procedures`

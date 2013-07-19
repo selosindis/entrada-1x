@@ -886,19 +886,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						<div class="control-group">
 							<label class="control-label" for="city">City:</label>
 							<div class="controls">
-								<input type="text" id="city" class="input-medium" name="city" value="<?php echo ((isset($PROCESSED["city"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" maxlength="35" />
+								<input type="text" id="city" class="input-medium" name="city" value="<?php echo ((isset($PROCESSED["city"])) ? html_encode($PROCESSED["city"]) : ""); ?>" maxlength="35" />
 							</div>
 						</div>
 						<div class="control-group">
 							<label class="control-label" for="address">Address:</label>
 							<div class="controls">
-								<input type="text" id="address" class="input-medium" name="address" value="<?php echo ((isset($PROCESSED["address"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" maxlength="255" />
+								<input type="text" id="address" class="input-medium" name="address" value="<?php echo ((isset($PROCESSED["address"])) ? html_encode($PROCESSED["address"]) : ""); ?>" maxlength="255" />
 							</div>
 						</div>
 						<div class="control-group">
 							<label class="control-label" for="postcode">Postal Code:</label>
 							<div class="controls">
-								<input type="text" id="postcode" class="input-medium" name="postcode" value="<?php echo ((isset($PROCESSED["postcode"])) ? html_encode($PROCESSED["email_alt"]) : ""); ?>" maxlength="7" />
+								<input type="text" id="postcode" class="input-medium" name="postcode" value="<?php echo ((isset($PROCESSED["postcode"])) ? html_encode($PROCESSED["postcode"]) : ""); ?>" maxlength="7" />
 							</div>
 						</div>
 						<div class="control-group">

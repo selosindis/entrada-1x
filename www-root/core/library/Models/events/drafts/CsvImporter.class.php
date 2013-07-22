@@ -113,6 +113,9 @@ class CsvImporter {
 			if ($result = $db->GetRow($query)) {
 				$output[$event_id]["devent_id"] = $result["devent_id"];
 			}
+			
+			$query = "	SELECT * FROM `events` WHERE `event_id` = ".$db->qstr($event_id);
+			$old_event_data = $db->GetRow($query);
 		}
 
 		// set the output event_id
@@ -203,14 +206,22 @@ class CsvImporter {
 			$skip_row = true;
 		}
 
-		// event location, not required
-		if (!empty($event_description)) {
+		// event description, not required
+		if (strlen($event_description) > 0) {
 			$output[$event_id]["event_description"] = $event_description;
+		} else {
+			if ($old_event_data) {
+				$output[$event_id]["event_description"] = $old_event_data["event_description"];
+			}
 		}
 
 		// event location, not required
-		if ($event_location !== 0) {
+		if (strlen($event_location) > 0) {
 			$output[$event_id]["event_location"] = $event_location;
+		} else {
+			if ($old_event_data) {
+				$output[$event_id]["event_location"] = $old_event_data["event_location"];
+			}
 		}
 
 		// event audience, not required	but needs to be verified

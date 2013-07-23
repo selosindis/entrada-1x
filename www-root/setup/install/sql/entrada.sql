@@ -2545,10 +2545,12 @@ CREATE TABLE IF NOT EXISTS `events_lu_objectives` (
 
 CREATE TABLE IF NOT EXISTS `events_lu_resources` (
   `resource_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(11) DEFAULT '0',
   `resource` varchar(250) NOT NULL DEFAULT '',
   `description` text,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(11) NOT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`resource_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 

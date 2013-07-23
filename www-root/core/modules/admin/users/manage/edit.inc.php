@@ -67,6 +67,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			$PROCESSED_ACCESS = array();
 			$PROCESSED_DEPARTMENTS = array();
 
+			$custom_fields = fetch_department_fields($PROXY_ID);
+			
+			/*
+			 * Get the user departments and the custom fields for the departments.
+			 */
+			$user_departments = get_user_departments($PROXY_ID);
+			foreach ($user_departments as $department) {
+			   $PROCESSED_DEPARTMENTS[$department["department_id"]] = $department["department_title"];
+			}
+			ksort($PROCESSED_DEPARTMENTS);
+			
 			// Error Checking
 			switch ($STEP) {
 				case 2 :
@@ -75,7 +86,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						/*
 						* Fetch the custom fields
 						*/
-						$query = "SELECT * FROM `profile_custom_fields` WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())." ORDER BY `organisation_id`, `department_id`, `id`";
+						$query = "SELECT * FROM `profile_custom_fields` WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())." AND `active` = '1' ORDER BY `organisation_id`, `department_id`, `id`";
 						$dep_fields = $db->GetAssoc($query);
 						if ($dep_fields) {
 							foreach ($dep_fields as $field_id => $field) {
@@ -632,16 +643,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($PROXY_ID)." AND `app_id` = ".$db->qstr(AUTH_APP_ID);
 					$PROCESSED_ACCESS = $db->GetRow($query);
 
-					/*
-					 * Get the user departments and the custom fields for the departments.
-					 */
-					$user_departments = get_user_departments($PROXY_ID);
-					foreach ($user_departments as $department) {
-					   $PROCESSED_DEPARTMENTS[$department["department_id"]] = $department["department_title"];
-					}
-					ksort($PROCESSED_DEPARTMENTS);
-					$custom_fields = fetch_department_fields($PROXY_ID);
-
 					//Initialize Organisation ID array for initial page display
 					$organisation_ids = array();
 					$query = "SELECT `organisation_id` FROM `".AUTH_DATABASE."`.`user_access` WHERE `user_id` = ".$db->qstr($PROXY_ID);
@@ -1123,6 +1124,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 								"ar_conference_papers"			=> array("id_field" => "conference_papers_id", "title" => "lectures_papers_list")
 							);
 							echo "<h2>Department Specific Information</h2>";
+							$NOTICESTR = array();
 							add_notice("The information below has been requested by departments the user is a member of. This information is considered public and may be published on department websites.");
 							echo display_notice();
 							echo "<div class=\"tabbable departments\">";

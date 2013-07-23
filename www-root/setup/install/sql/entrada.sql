@@ -4941,7 +4941,7 @@ CREATE TABLE `profile_custom_fields` (
   `organisation_id` int(11) NOT NULL,
   `title` varchar(255) NOT NULL DEFAULT '',
   `name` varchar(32) NOT NULL DEFAULT '',
-  `type` enum('TEXTAREA','TEXTINPUT','CHECKBOX','RICHTEXT') NOT NULL DEFAULT 'TEXTAREA',
+  `type` enum('TEXTAREA','TEXTINPUT','CHECKBOX','RICHTEXT','LINK') NOT NULL DEFAULT 'TEXTAREA',
   `active` tinyint(1) NOT NULL DEFAULT '1',
   `length` smallint(3) DEFAULT NULL,
   `required` tinyint(1) NOT NULL DEFAULT '0',

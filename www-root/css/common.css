@@ -4407,3 +4407,10 @@ a.help {
 .pagination .notice{
   background-color: #FFC;
 }
+
+/* Course CSS */
+
+/*modifies the menu so it can be seen on smaller window */
+.dropdown-menu{
+    margin: 2px 0 0 -135px;
+}

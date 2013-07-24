@@ -329,19 +329,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                 echo "      </button>";
                                 echo "      <ul class=\"dropdown-menu\">";
                                     if($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update")) {
-                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $result["course_id"], "step" => false))."\" >Details</a></li>\n";
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $result["course_id"], "step" => false))."\" >Course Details</a></li>\n";
                                     }
                                     if($ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), "read")) {
-                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $result["course_id"], "step" => false))."\" >Content</a></li>\n";
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $result["course_id"], "step" => false))."\" >Course Content</a></li>\n";
                                     }
                                     if($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update")) {
-                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $result["course_id"], "step" => false))."\" >Enrolment</a></li>\n";
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $result["course_id"], "step" => false))."\" >Course Enrolment</a></li>\n";
                                     }
                                     if($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update")) {
-                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $result["course_id"], "step" => false))."\">Groups</a></li>\n";
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $result["course_id"], "step" => false))."\">Course Groups</a></li>\n";
                                     }
                                     if($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "read")) {
-                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$result["course_id"]."\">Gradebook</a></li>";
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$result["course_id"]."\">Course Gradebook</a></li>";
                                     }
                                 echo "      </ul>";
                             } else {

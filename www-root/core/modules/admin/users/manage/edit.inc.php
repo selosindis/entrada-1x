@@ -1423,7 +1423,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									grad_year = $('#grad_year').val();
 								}
 								$('#perm_organisation_' + $('#organisations').val() + ' > tbody:last').append('<tr id=\"' + org_id + '_' + group_id + '_' + role_id + '\"><td valign="top"><strong>' + group_text + ' / ' + role_text + '</strong></td><td>' + options + '</td><td><a class=\"remove_perm\" data-group=\"' + group_text + '\" href=\"\"><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif"></a></td></tr>');
-								$('#perm_organisation_' + $('#organisations').val()).show();
+								$('#perm_organisation_' + $('#organisations').val() + '_holder').show();
 
 								var temp_permissions = {"org_id" : org_id, "group_id" : group_id, "role_id" : role_id, "clinical" : clinical, "entry_year" : entry_year, "grad_year" : grad_year};
 								permissions.acl.push(temp_permissions);

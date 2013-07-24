@@ -322,24 +322,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			echo "	<td class=\"general".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\">" : "").html_encode($result["course_code"]).(($url) ? "</a>" : "")."</td>\n";
 			echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"]).(($url) ? "</a>" : "")."</td>\n";
                         echo "  <td class=\"attachment".((!$url) ? " np" : "")."\">";
-
                             if ($url) {
                                 echo "  <div class=\"btn-group\">";
                                 echo "      <button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\">";
                                 echo "          <i class=\"icon-pencil\"></i>";
                                 echo "      </button>";
                                 echo "      <ul class=\"dropdown-menu\">";
-                                    echo "<li><a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=content&amp;id=".$result["course_id"]."\">Manage ". $module_singular_name . "</a>";
-                                    if ($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "read")) {
-                                        echo "      <li><a href=\"".ENTRADA_URL."/admin/gradebook?section=view&amp;id=".$result["course_id"]."\">View Gradebook</a></li>";
-                                    }                    
-                                    if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update", false)) {
-                                        echo "      <li><a href=\"".ENTRADA_URL."/admin/courses/groups?id=".$result["course_id"]."\">Manage Course Groups</a></li>";                            
-                                    } 
+                                    if($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update")) {
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $result["course_id"], "step" => false))."\" >Details</a></li>\n";
+                                    }
+                                    if($ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), "read")) {
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $result["course_id"], "step" => false))."\" >Content</a></li>\n";
+                                    }
+                                    if($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update")) {
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $result["course_id"], "step" => false))."\" >Enrolment</a></li>\n";
+                                    }
+                                    if($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update")) {
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $result["course_id"], "step" => false))."\">Groups</a></li>\n";
+                                    }
+                                    if($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "read")) {
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$result["course_id"]."\">Gradebook</a></li>";
+                                    }
                                 echo "      </ul>";
                             } else {
                                 echo "&nbsp;";
-                            }   
+                            }
 			echo "	</td>\n";
 			echo "</tr>\n";
 		}

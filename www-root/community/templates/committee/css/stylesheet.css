@@ -1266,7 +1266,7 @@ div.community-page-container {
 }
 div.community-page-list.home {
 	background: url(../../../../images/record-next-on.gif) no-repeat 0px 6px;
-	padding: 4px 0px 4px 46px;
+	padding: 4px 0px 4px 43px;
 	border-bottom: 1px solid #CCC;
 }
 #pagelists > li > div {
@@ -1334,6 +1334,10 @@ The solution is using selectors for the elements inside them to move them around
 }
 ul.community-page-list ul span.delete {
 	padding-right: 25px;
+}
+div.locked-spacer {
+	width: 21px;
+	float: left;
 }
 ul.community-page-list ul ul span.delete {
 	padding-right: 50px;

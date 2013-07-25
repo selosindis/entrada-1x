@@ -1013,15 +1013,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 									</tr>
 									<tr>
 										<td colspan="2">
-										<?php if (!$home_page) { ?>
-												<textarea id="page_content" name="page_content" style="margin-right: 10px;width: 95%; height: <?php echo (($PAGE_TYPE == "default") ? "400" : "200"); ?>px" rows="20" cols="70"><?php echo ((isset($PROCESSED["page_content"])) ? html_encode($PROCESSED["page_content"]) : ""); ?></textarea>
-										<?php } else { 
-												echo "	<br />\n
-														<div class=\"display-notice\">\n
-															Please edit the Course Description through the Manage Courses > Course Content tab found <a href=\"" . ENTRADA_URL . "/admin/courses\">here</a>.\n
-														</div>\n";
-												}
-										?>
+                                            <textarea id="page_content" name="page_content" style="margin-right: 10px;width: 95%; height: <?php echo (($PAGE_TYPE == "default") ? "400" : "200"); ?>px" rows="20" cols="70"><?php echo ((isset($PROCESSED["page_content"])) ? html_encode($PROCESSED["page_content"]) : ""); ?></textarea>
 										</td>
 									</tr>
 									<?php
@@ -1244,7 +1236,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 										<td>
 											<input id="show_left_nav" name="show_left_nav" type="checkbox" value="1"<?php echo (!isset($PROCESSED["page_navigation"]["show_previous_nav"]) || ((int) $PROCESSED["page_navigation"]["show_previous_nav"] == 1) ? " checked=\"checked\"" : ""); ?>/>
 											<input class="btn" id="change_previous_nav_button" name="change_previous_nav_button" type="button" value="Previous Page" />
-											<input type="hidden" name="selected_nav_previous_page_id" id="selected_nav_previous_page_id" <?php echo (isset($nav_previous_page_id) && $nav_previous_page_id ? "value = \"" . $nav_previous_page_id . "\"" : "value = \"" . $default_previous_page["cpage_id"]) . "\"" ?> />
+											<input type="hidden" name="selected_nav_previous_page_id" id="selected_nav_previous_page_id" <?php echo (isset($nav_previous_page_id) && $nav_previous_page_id ? "value = \"" . $nav_previous_page_id . "\"" : "value = \"" . (isset($default_previous_page["cpage_id"]) && $default_previous_page["cpage_id"] ? $default_previous_page["cpage_id"] : "")) . "\"" ?> />
 										</td>
 									</tr>
 									<tr>
@@ -1349,7 +1341,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 								<?php echo communities_pages_inradio(0, 0, array('id'=>'next_page_list', "nav_type" => "next", "selected" => (isset($nav_next_page_id) && $nav_next_page_id ? $nav_next_page_id : $default_next_page["cpage_id"]))); ?>
 							</div>
 							<div id="modal_previous_page_navigation" style="display: none; text-align: left;">
-								<?php echo communities_pages_inradio(0, 0, array('id'=>'previous_page_list', "nav_type" => "previous", "selected" => (isset($nav_previous_page_id) && $nav_previous_page_id ? $nav_previous_page_id : $default_previous_page["cpage_id"]))); ?>
+								<?php echo communities_pages_inradio(0, 0, array('id'=>'previous_page_list', "nav_type" => "previous", "selected" => (isset($nav_previous_page_id) && $nav_previous_page_id ? $nav_previous_page_id : (isset($default_previous_page["cpage_id"]) && $default_previous_page["cpage_id"] ? $default_previous_page["cpage_id"] : "")))); ?>
 							</div>
 							</form>
 							<?php

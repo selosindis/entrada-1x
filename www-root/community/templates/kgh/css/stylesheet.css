@@ -1269,6 +1269,10 @@ div.community-page-list.home {
 	padding: 4px 0px 4px 46px;
 	border-bottom: 1px solid #CCC;
 }
+div.locked-spacer {
+	width: 21px;
+	float: left;
+}
 #pagelists > li > div {
 	font-weight: bold;
 }

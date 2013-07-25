@@ -1854,6 +1854,11 @@ CREATE TABLE IF NOT EXISTS `community_type_page_options` (
   PRIMARY KEY (`ctpoption_id`,`ctpage_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+INSERT INTO `community_type_page_options` (`ctpoption_id`, `ctpage_id`, `option_title`, `option_value`, `proxy_id`, `updated_date`)
+VALUES
+	(1, 39, 'community_title', 1, 1, 0),
+	(2, 49, 'community_title', 1, 1, 0);
+
 CREATE TABLE IF NOT EXISTS `community_type_pages` (
   `ctpage_id` int(12) NOT NULL AUTO_INCREMENT,
   `type_id` int(12) NOT NULL DEFAULT '0',
@@ -1916,7 +1921,27 @@ VALUES
 	(35,2,'organisation',0,7,'default','Assessment Strategies','Assessment Strategies','assessment_strategies',' ',1,1,1,0,1,1,1362062187,1),
 	(36,2,'organisation',0,8,'default','Resources','Resources','resources',' ',1,1,1,0,1,1,1362062187,1),
 	(37,2,'organisation',0,9,'default','Expectations of Students','What is Expected of Students','expectations_of_students',' ',1,1,1,0,1,1,1362062187,1),
-	(38,2,'organisation',0,10,'default','Expectations of Faculty','What is Expected of Course Faculty','expectations_of_faculty',' ',1,1,1,0,1,1,1362062187,1);
+	(38,2,'organisation',0,10,'default','Expectations of Faculty','What is Expected of Course Faculty','expectations_of_faculty',' ',1,1,1,0,1,1,1362062187,1),
+	(39, 3, 'global', 0, 0, 'default', 'Community Title', 'Community Title', '', ' ', 1, 1, 1, 1, 1, 0, 0, 1),
+	(40, 3, 'global', 0, 7, 'default', 'Credits', 'Credits', 'credits', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(41, 3, 'global', 0, 4, 'default', 'Formative Assessment', 'Formative Assessment', 'formative_assessment', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(42, 3, 'global', 0, 3, 'default', 'Foundational Knowledge', 'Foundational Knowledge', 'foundational_knowledge', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(43, 3, 'global', 0, 1, 'default', 'Introduction', 'Introduction', 'introduction', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(44, 3, 'global', 0, 2, 'default', 'Objectives', 'Objectives', 'objectives', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(45, 3, 'global', 0, 8, 'url', 'Print Version', 'Print Version', 'print_version', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(46, 3, 'global', 0, 6, 'default', 'Summary', 'Summary', 'summary', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(47, 3, 'global', 0, 5, 'default', 'Test your understanding', 'Test your understanding', 'test_your_understanding', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(49, 3, 'organisation', 0, 0, 'default', 'Community Title', 'Community Title', '', ' ', 1, 1, 1, 1, 1, 0, 0, 1),
+	(50, 3, 'organisation', 0, 7, 'default', 'Credits', 'Credits', 'credits', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(51, 3, 'organisation', 0, 4, 'default', 'Formative Assessment', 'Formative Assessment', 'formative_assessment', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(52, 3, 'organisation', 0, 3, 'default', 'Foundational Knowledge', 'Foundational Knowledge', 'foundational_knowledge', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(53, 3, 'organisation', 0, 1, 'default', 'Introduction', 'Introduction', 'introduction', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(54, 3, 'organisation', 0, 2, 'default', 'Objectives', 'Objectives', 'objectives', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(55, 3, 'organisation', 0, 8, 'url', 'Print Version', 'Print Version', 'print_version', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(56, 3, 'organisation', 0, 6, 'default', 'Summary', 'Summary', 'summary', '', 1, 1, 1, 1, 1, 0, 0, 1),
+	(57, 3, 'organisation', 0, 5, 'default', 'Test your understanding', 'Test your understanding', 'test_your_understanding', '', 1, 1, 1, 1, 1, 0, 0, 1);
+
+
 
 CREATE TABLE IF NOT EXISTS `community_type_templates` (
   `cttemplate_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -1939,7 +1964,12 @@ VALUES
 	(9,3,1,'organisation'),
 	(10,4,1,'organisation'),
 	(11,5,1,'organisation'),
-	(12,5,2,'organisation');
+	(12,5,2,'organisation'),
+	(13, 4, 3, 'global'),
+	(14, 3, 3, 'global'),
+	(15, 4, 3, 'organisation'),
+	(16, 3, 3, 'organisation');
+
 
 CREATE TABLE IF NOT EXISTS `courses` (
   `course_id` int(12) unsigned NOT NULL AUTO_INCREMENT,

@@ -155,7 +155,7 @@ if ($community_courses) {
 					echo "		<td style=\"font-size: 12px; color: #003366; vertical-align: top\">";
 					echo "			<div style=\"font-weight: bold; font-size: 13px;\">".html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"])."</div>";
 					echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? "Class of " : "").ucwords($result["role"])."</div>\n";
-					if ($result["privacy_level"] > 1 || $is_administrator) {
+					if ($result["privacy_level"] > 1 || $COMMUNITY_ADMIN) {
 						echo "			<a href=\"mailto:".html_encode($result["email"])."\" style=\"font-size: 10px;\">".html_encode($result["email"])."</a><br />\n";
 
 						if ($result["email_alt"]) {
@@ -166,19 +166,19 @@ if ($community_courses) {
 					echo "		<td style=\"padding-top: 1.3em;\">\n";
 					echo "			<div>\n";
 					echo "				<table class=\"address-info\" style=\"width: 100%;\">\n";
-					if ($result["telephone"] && ($result["privacy_level"] > 2 || (isset($is_administrator) && $is_administrator))) {
+					if ($result["telephone"] && ($result["privacy_level"] > 2 || (isset($COMMUNITY_ADMIN) && $COMMUNITY_ADMIN))) {
 						echo "			<tr>\n";
 						echo "				<td style=\"width: 30%;\">Telephone: </td>\n";
 						echo "				<td>".html_encode($result["telephone"])."</td>\n";
 						echo "			</tr>\n";
 					}
-					if ($result["fax"] && ($result["privacy_level"] > 2 || $is_administrator)) {
+					if ($result["fax"] && ($result["privacy_level"] > 2 || $COMMUNITY_ADMIN)) {
 						echo "			<tr>\n";
 						echo "				<td>Fax: </td>\n";
 						echo "				<td>".html_encode($result["fax"])."</td>\n";
 						echo "			</tr>\n\n";
 					}
-					if ($result["address"] && $result["city"] && ($result["privacy_level"] > 2 || (isset($is_administrator) && $is_administrator))) {
+					if ($result["address"] && $result["city"] && ($result["privacy_level"] > 2 || (isset($COMMUNITY_ADMIN) && $COMMUNITY_ADMIN))) {
 						echo "			<tr>\n";
 						echo "				<td><br />Address: </td>\n";
 						echo "				<td><br />".html_encode($result["address"])."</td>\n";
@@ -192,7 +192,7 @@ if ($community_courses) {
 						echo "				<td>".html_encode($result["country"].($result["country"] && $result["postcode"] ? ", ".$result["postcode"] : ""))."</td>\n";
 						echo "			</tr>\n";
 					}
-					if ($result["office_hours"] && ($result["privacy_level"] > 2 || (isset($is_administrator) && $is_administrator))) {
+					if ($result["office_hours"] && ($result["privacy_level"] > 2 || (isset($COMMUNITY_ADMIN) && $COMMUNITY_ADMIN))) {
 						echo "			<tr><td colspan=\"2\">&nbsp;</td></tr>";
 						echo "			<tr>\n";
 						echo "				<td>Office Hours: </td>\n";
@@ -296,7 +296,7 @@ if ($community_courses) {
 					echo "		<td style=\"font-size: 12px; color: #003366; vertical-align: top\">";
 					echo "			<div style=\"font-weight: bold; font-size: 13px;\">".html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"])."</div>";
 					echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? "Class of " : "").ucwords($result["role"])."</div>\n";
-					if ($result["privacy_level"] > 1 || $is_administrator) {
+					if ($result["privacy_level"] > 1 || $COMMUNITY_ADMIN) {
 						echo "			<a href=\"mailto:".html_encode($result["email"])."\" style=\"font-size: 10px;\">".html_encode($result["email"])."</a><br />\n";
 
 						if ($result["email_alt"]) {
@@ -307,19 +307,19 @@ if ($community_courses) {
 					echo "		<td style=\"padding-top: 1.3em;\">\n";
 					echo "			<div>\n";
 					echo "				<table class=\"address-info\" style=\"width: 100%;\">\n";
-					if ($result["telephone"] && ($result["privacy_level"] > 2 || $is_administrator)) {
+					if ($result["telephone"] && ($result["privacy_level"] > 2 || $COMMUNITY_ADMIN)) {
 						echo "			<tr>\n";
 						echo "				<td style=\"width: 30%;\">Telephone: </td>\n";
 						echo "				<td>".html_encode($result["telephone"])."</td>\n";
 						echo "			</tr>\n";
 					}
-					if ($result["fax"] && ($result["privacy_level"] > 2 || $is_administrator)) {
+					if ($result["fax"] && ($result["privacy_level"] > 2 || $COMMUNITY_ADMIN)) {
 						echo "			<tr>\n";
 						echo "				<td>Fax: </td>\n";
 						echo "				<td>".html_encode($result["fax"])."</td>\n";
 						echo "			</tr>\n\n";
 					}
-					if ($result["address"] && $result["city"] && ($result["privacy_level"] > 2 || $is_administrator)) {
+					if ($result["address"] && $result["city"] && ($result["privacy_level"] > 2 || $COMMUNITY_ADMIN)) {
 						echo "			<tr>\n";
 						echo "				<td><br />Address: </td>\n";
 						echo "				<td><br />".html_encode($result["address"])."</td>\n";
@@ -333,7 +333,7 @@ if ($community_courses) {
 						echo "				<td>".html_encode($result["country"].($result["country"] && $result["postcode"] ? ", ".$result["postcode"] : ""))."</td>\n";
 						echo "			</tr>\n";
 					}
-					if ($result["office_hours"] && ($result["privacy_level"] > 2 || $is_administrator)) {
+					if ($result["office_hours"] && ($result["privacy_level"] > 2 || $COMMUNITY_ADMIN)) {
 						echo "			<tr><td colspan=\"2\">&nbsp;</td></tr>";
 						echo "			<tr>\n";
 						echo "				<td>Office Hours: </td>\n";
@@ -438,7 +438,7 @@ if ($community_courses) {
 					echo "		<td style=\"font-size: 12px; color: #003366; vertical-align: top\">";
 					echo "			<div style=\"font-weight: bold; font-size: 13px;\">".html_encode((($result["prefix"]) ? $result["prefix"]." " : "").$result["firstname"]." ".$result["lastname"])."</div>";
 					echo "			<div class=\"content-small\" style=\"margin-bottom: 15px\">".ucwords($result["group"])." > ".($result["group"] == "student" ? "Class of " : "").ucwords($result["role"])."</div>\n";
-					if ($result["privacy_level"] > 1 || $is_administrator) {
+					if ($result["privacy_level"] > 1 || $COMMUNITY_ADMIN) {
 						echo "			<a href=\"mailto:".html_encode($result["email"])."\" style=\"font-size: 10px;\">".html_encode($result["email"])."</a><br />\n";
 
 						if ($result["email_alt"]) {
@@ -449,19 +449,19 @@ if ($community_courses) {
 					echo "		<td style=\"padding-top: 1.3em;\">\n";
 					echo "			<div>\n";
 					echo "				<table class=\"address-info\" style=\"width: 100%;\">\n";
-					if ($result["telephone"] && ($result["privacy_level"] > 2 || (isset($is_administrator) && $is_administrator))) {
+					if ($result["telephone"] && ($result["privacy_level"] > 2 || (isset($COMMUNITY_ADMIN) && $COMMUNITY_ADMIN))) {
 						echo "			<tr>\n";
 						echo "				<td style=\"width: 30%;\">Telephone: </td>\n";
 						echo "				<td>".html_encode($result["telephone"])."</td>\n";
 						echo "			</tr>\n";
 					}
-					if ($result["fax"] && ($result["privacy_level"] > 2 || (isset($is_administrator) && $is_administrator))) {
+					if ($result["fax"] && ($result["privacy_level"] > 2 || (isset($COMMUNITY_ADMIN) && $COMMUNITY_ADMIN))) {
 						echo "			<tr>\n";
 						echo "				<td>Fax: </td>\n";
 						echo "				<td>".html_encode($result["fax"])."</td>\n";
 						echo "			</tr>\n\n";
 					}
-					if ($result["address"] && $result["city"] && ($result["privacy_level"] > 2 || (isset($is_administrator) && $is_administrator))) {
+					if ($result["address"] && $result["city"] && ($result["privacy_level"] > 2 || (isset($COMMUNITY_ADMIN) && $COMMUNITY_ADMIN))) {
 						echo "			<tr>\n";
 						echo "				<td><br />Address: </td>\n";
 						echo "				<td><br />".html_encode($result["address"])."</td>\n";
@@ -475,7 +475,7 @@ if ($community_courses) {
 						echo "				<td>".html_encode($result["country"].($result["country"] && $result["postcode"] ? ", ".$result["postcode"] : ""))."</td>\n";
 						echo "			</tr>\n";
 					}
-					if ($result["office_hours"] && ($result["privacy_level"] > 2 || (isset($is_administrator) && $is_administrator))) {
+					if ($result["office_hours"] && ($result["privacy_level"] > 2 || (isset($COMMUNITY_ADMIN) && $COMMUNITY_ADMIN))) {
 						echo "			<tr><td colspan=\"2\">&nbsp;</td></tr>";
 						echo "			<tr>\n";
 						echo "				<td>Office Hours: </td>\n";

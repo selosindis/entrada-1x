@@ -1698,8 +1698,8 @@ div.community-page-container {
 	background-image: url(../../../../images/record-next-off.gif);
 }
 div.community-page-list.home {
-	background: url(../../../../images/record-next-on.gif) no-repeat 29px 6px;
-	padding: 4px 0px 4px 46px;
+	background: url(../../../../images/record-next-on.gif) no-repeat 21px 6px;
+	padding: 4px 0px 4px 38px;
 	border-bottom: 1px solid #CCC;
 }
 #pagelists > li > div {
@@ -1768,8 +1768,8 @@ The solution is using selectors for the elements inside them to move them around
 ul.community-page-list ul span.delete {
 	padding-right: 25px;
 }
-div.course-spacer {
-	width: 24px;
+div.locked-spacer {
+	width: 16px;
 	float: left;
 }
 ul.community-page-list ul ul span.delete {

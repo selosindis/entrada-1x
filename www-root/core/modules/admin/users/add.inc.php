@@ -185,7 +185,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					$ERRORSTR[] = "You must provide a valid username for this user to login with. We suggest that you use their University NetID if at all possible.";
 				}
 
-				if ((!$permissions_only) && (!$ERROR)) {
+				if ((!$permissions_only)) {
                     /**
                      * Required field "password" / Password.
                      */
@@ -402,369 +402,370 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					}
 				}
 			}
+            if (!$ERROR) {
+                if ($ENTRADA_ACL->amIAllowed(new UserResource(null, $PROCESSED["organisation_id"]), 'create')) {
+                    if ($permissions_only) {
+                        foreach ($permissions as $perm) {
+                            if (!$perm["org_id"]) {
+                                $ERROR++;
+                                $ERRORSTR[] = "Please assign an organisation for all permissions.";
+                            } elseif (!$perm["group_id"]) {
+                                $ERROR++;
+                                $ERRORSTR[] = "Please assign a group for all permissions.";
+                            } elseif (!$perm["role_id"]) {
+                                $ERROR++;
+                                $ERRORSTR[] = "Please assign a role for all permissions.";
+                            } else {
+                                $query = "SELECT g.`group_name`, r.`role_name`
+                                        FROM `" . AUTH_DATABASE . "`.`system_groups` g, `" . AUTH_DATABASE . "`.`system_roles` r,
+                                            `" . AUTH_DATABASE . "`.`system_group_organisation` gho, `" . AUTH_DATABASE . "`.`organisations` o
+                                        WHERE gho.`groups_id` = " . $perm["group_id"] . " AND g.`id` = " . $perm["group_id"] . " AND
+                                        r.`id` = " . $perm["role_id"] . " AND o.`organisation_id` = " . $perm["org_id"];
+                                $group_role = $db->GetRow($query);
+                                $PROCESSED_ACCESS["group"] = $group_role["group_name"];
+                                $PROCESSED_ACCESS["role"] = $group_role["role_name"];
+                                $PROCESSED_ACCESS["organisation_id"] = $perm["org_id"];
 
-			if ($ENTRADA_ACL->amIAllowed(new UserResource(null, $PROCESSED["organisation_id"]), 'create')) {
-				if ($permissions_only) {
-					foreach ($permissions as $perm) {
-						if (!$perm["org_id"]) {
-							$ERROR++;
-							$ERRORSTR[] = "Please assign an organisation for all permissions.";
-						} elseif (!$perm["group_id"]) {
-							$ERROR++;
-							$ERRORSTR[] = "Please assign a group for all permissions.";
-						} elseif (!$perm["role_id"]) {
-							$ERROR++;
-							$ERRORSTR[] = "Please assign a role for all permissions.";
-						} else {
-							$query = "SELECT g.`group_name`, r.`role_name`
-									FROM `" . AUTH_DATABASE . "`.`system_groups` g, `" . AUTH_DATABASE . "`.`system_roles` r,
-										`" . AUTH_DATABASE . "`.`system_group_organisation` gho, `" . AUTH_DATABASE . "`.`organisations` o
-									WHERE gho.`groups_id` = " . $perm["group_id"] . " AND g.`id` = " . $perm["group_id"] . " AND
-									r.`id` = " . $perm["role_id"] . " AND o.`organisation_id` = " . $perm["org_id"];
-							$group_role = $db->GetRow($query);
-							$PROCESSED_ACCESS["group"] = $group_role["group_name"];
-							$PROCESSED_ACCESS["role"] = $group_role["role_name"];
-							$PROCESSED_ACCESS["organisation_id"] = $perm["org_id"];
-
-							if ($PROCESSED_ACCESS["group"] == "faculty") {
-								if (isset($perm["clinical"])) {
-									$PROCESSED["clinical"] = clean_input($perm["clinical"], array("trim", "int"));
-									$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
-												SET `clinical` = " . $PROCESSED["clinical"] . "
-												WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
-												LIMIT 1";
-									if (!$db->Execute($query)) {
-										$ERROR++;
-										$ERRORSTR[] = "Failed to set the clinical field." . $query . " DB said: " . $db->ErrorMsg();
-									}
-								}
-							}
-
-							if ($PROCESSED_ACCESS["group"] == "student") {
-								if (isset($perm["entry_year"]) && isset($perm["grad_year"])) {
-									$entry_year = clean_input($perm["entry_year"],"int");
-									$grad_year = clean_input($perm["grad_year"],"int");
-									$sanity_start = 1995;
-									$sanity_end = (fetch_first_year() + 1);
-									if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
-										$PROCESSED["grad_year"] = $grad_year;
-									} else {
-										$ERROR++;
-										$ERRORSTR[] = "You must provide a valid graduation year.";
-									}
-									if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
-										$PROCESSED["entry_year"] = $entry_year;
-									} else {
-										$ERROR++;
-										$ERRORSTR[] = "You must provide a valid program entry year.";
-									}
-									if (!$ERROR) {
-										$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
-													SET `grad_year` = " . $PROCESSED["grad_year"] . ",
-													`entry_year` = " . $PROCESSED["entry_year"] . "
-													WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
-													LIMIT 1";
-										if (!$db->Execute($query)) {
-											$ERROR++;
-											$ERRORSTR[] = "Failed to set the entry and grad year." . $query . " DB said: " . $db->ErrorMsg();
-										}
-									}
-								}
-							}
-
-							if ($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
-								if (($PROCESSED_ACCESS["group"] == "medtech") || ($PROCESSED_ACCESS["role"] == "admin")) {
-									application_log("error", "USER NOTICE: A new user (".$PROCESSED["firstname"]." ".$PROCESSED["lastname"].") was added to ".APPLICATION_NAME." as ".$PROCESSED_ACCESS["group"]." > ".$PROCESSED_ACCESS["role"].".");
-								}
-
-								/**
-								* Handle the inserting of user data into the user_departments table
-								* if departmental information exists in the form.
-								* NOTE: This is also done below (line 375)... arg.
-								*/
-								if (isset($_POST["my_departments"]) && $in_departments = json_decode($_POST["my_departments"], true)) {
-									$in_departments = json_decode($in_departments["list"], true);
-										if (is_array($in_departments)) {
-										foreach ($in_departments as $key => $department_id) {
-											$department_id = clean_input($department_id, "int");
-											if ($department_id) {
-												$query = "SELECT * FROM `" . AUTH_DATABASE . "`.`user_departments` WHERE `user_id` = " . $db->qstr($PROCESSED_ACCESS["user_id"]) . " AND `dep_id` = " . $db->qstr($department_id);
-												$result = $db->GetRow($query);
-												if (!$result) {
-													$PROCESSED_DEPARTMENTS[] = $department_id;
-												}
-											}
-										}
-									}
-								}
-
-								if (@count($PROCESSED_DEPARTMENTS)) {
-									foreach($PROCESSED_DEPARTMENTS as $department_id) {
-										if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROCESSED_ACCESS["user_id"], "dep_id" => $department_id), "INSERT")) {
-											application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into department [".$department_id."]. Database said: ".$db->ErrorMsg());
-										}
-									}
-								}
-
-
-								/**
-								 * Add user to cohort if they're a student
-                                 *
-                                 * @todo Wow, this is just plain lazy. Someone needs to fix this dirty bit.
-								 */
-								if ($PROCESSED_ACCESS["group"] == "student") {
-                                    $query = "  SELECT a.`group_id`
-                                                FROM `groups` AS a
-                                                JOIN `group_organisations` AS b
-                                                ON a.`group_id` = b.`group_id`
-                                                AND b.`organisation_id` = ".$db->qstr($PROCESSED_ACCESS["organisation_id"])."
-                                                WHERE a.`group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."'
-                                                AND a.`group_type` = 'cohort'
-                                                AND a.`group_active` = 1";
-									$group_id = $db->GetOne($query);
-									if ($group_id) {
-                                        $query = "SELECT * FROM `group_members` WHERE `group_id`=".$db->qstr($group_id)." AND `proxy_id`=".$db->qstr($PROCESSED_ACCESS["user_id"]);
-                                        $result = $db->GetRow($query);
-                                        if ($result) {
-                                            /**
-                                             * Update existing group_member record.
-                                             */
-                                            $gmember = array(
-                                                'member_active' => 1,
-                                                'updated_date' => time(),
-                                                'updated_by' => $ENTRADA_USER->getID()
-                                            );
-
-                                            $db->AutoExecute("group_members", $gmember, "UPDATE", "gmember_id = ".$result["gmember_id"]);
-                                        } else {
-                                            /**
-                                             * Create new group_member record.
-                                             */
-                                            $gmember = array(
-                                                'group_id' => $group_id,
-                                                'proxy_id' => $PROCESSED_ACCESS["user_id"],
-                                                'start_date' => 0,
-                                                'finish_date' => 0,
-                                                'member_active' => 1,
-                                                'entrada_only' => 1,
-                                                'updated_date' => time(),
-                                                'updated_by' => $ENTRADA_USER->getID()
-                                            );
-
-                                            $db->AutoExecute("group_members", $gmember, "INSERT");
+                                if ($PROCESSED_ACCESS["group"] == "faculty") {
+                                    if (isset($perm["clinical"])) {
+                                        $PROCESSED["clinical"] = clean_input($perm["clinical"], array("trim", "int"));
+                                        $query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
+                                                    SET `clinical` = " . $PROCESSED["clinical"] . "
+                                                    WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
+                                                    LIMIT 1";
+                                        if (!$db->Execute($query)) {
+                                            $ERROR++;
+                                            $ERRORSTR[] = "Failed to set the clinical field." . $query . " DB said: " . $db->ErrorMsg();
                                         }
-									}
-								}
+                                    }
+                                }
 
-								$url			= ENTRADA_URL."/admin/users";
+                                if ($PROCESSED_ACCESS["group"] == "student") {
+                                    if (isset($perm["entry_year"]) && isset($perm["grad_year"])) {
+                                        $entry_year = clean_input($perm["entry_year"],"int");
+                                        $grad_year = clean_input($perm["grad_year"],"int");
+                                        $sanity_start = 1995;
+                                        $sanity_end = (fetch_first_year() + 1);
+                                        if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
+                                            $PROCESSED["grad_year"] = $grad_year;
+                                        } else {
+                                            $ERROR++;
+                                            $ERRORSTR[] = "You must provide a valid graduation year.";
+                                        }
+                                        if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
+                                            $PROCESSED["entry_year"] = $entry_year;
+                                        } else {
+                                            $ERROR++;
+                                            $ERRORSTR[] = "You must provide a valid program entry year.";
+                                        }
+                                        if (!$ERROR) {
+                                            $query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
+                                                        SET `grad_year` = " . $PROCESSED["grad_year"] . ",
+                                                        `entry_year` = " . $PROCESSED["entry_year"] . "
+                                                        WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
+                                                        LIMIT 1";
+                                            if (!$db->Execute($query)) {
+                                                $ERROR++;
+                                                $ERRORSTR[] = "Failed to set the entry and grad year." . $query . " DB said: " . $db->ErrorMsg();
+                                            }
+                                        }
+                                    }
+                                }
 
-								$SUCCESS++;
-								$SUCCESSSTR[]	= "You have successfully given this existing user access to this application.<br /><br />You will now be redirected to the users index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+                                if ($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
+                                    if (($PROCESSED_ACCESS["group"] == "medtech") || ($PROCESSED_ACCESS["role"] == "admin")) {
+                                        application_log("error", "USER NOTICE: A new user (".$PROCESSED["firstname"]." ".$PROCESSED["lastname"].") was added to ".APPLICATION_NAME." as ".$PROCESSED_ACCESS["group"]." > ".$PROCESSED_ACCESS["role"].".");
+                                    }
 
-								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
-								application_log("success", "Gave [".$PROCESSED_ACCESS["group"]." / ".$PROCESSED_ACCESS["role"]."] permissions to user id [".$PROCESSED_ACCESS["user_id"]."].");
-							} else {
-								$ERROR++;
-								$ERRORSTR[]	= "Unable to give existing user access permissions to this application. ".$db->ErrorMsg();
-
-								application_log("error", "Error giving existing user access to application id [".AUTH_APP_ID."]. Database said: ".$db->ErrorMsg());
-							}
-						}
-					}
-				} else {
-					if (!$ERROR) {
-					/**
-					 * Now change the password to the MD5 value, just before it was inserted.
-					 */
-						$PROCESSED["password"] = md5($PROCESSED["password"]);
-						$PROCESSED["email_updated"] = time();
-						if (($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "INSERT")) && ($PROCESSED_ACCESS["user_id"] = $db->Insert_Id())) {
-							foreach ($permissions as $perm) {
-								if (!$perm["org_id"]) {
-									$ERROR++;
-									$ERRORSTR[] = "Please assign an organisation for all permissions.";
-								} elseif (!$perm["group_id"]) {
-									$ERROR++;
-									$ERRORSTR[] = "Please assign a group for all permissions.";
-								} elseif (!$perm["role_id"]) {
-									$ERROR++;
-									$ERRORSTR[] = "Please assign a role for all permissions.";
-								} else {
-									$query = "SELECT g.`group_name`, r.`role_name`
-											FROM `" . AUTH_DATABASE . "`.`system_groups` g, `" . AUTH_DATABASE . "`.`system_roles` r,
-												`" . AUTH_DATABASE . "`.`system_group_organisation` gho, `" . AUTH_DATABASE . "`.`organisations` o
-											WHERE gho.`groups_id` = " . $perm["group_id"] . " AND g.`id` = " . $perm["group_id"] . " AND
-											r.`id` = " . $perm["role_id"] . " AND o.`organisation_id` = " . $perm["org_id"];
-									$group_role = $db->GetRow($query);
-									$PROCESSED_ACCESS["group"] = $group_role["group_name"];
-									$PROCESSED_ACCESS["role"] = $group_role["role_name"];
-									$PROCESSED_ACCESS["organisation_id"] = $perm["org_id"];
-
-									if ($PROCESSED_ACCESS["group"] == "student") {
-										if (isset($perm["entry_year"]) && isset($perm["grad_year"])) {
-											$entry_year = clean_input($perm["entry_year"],"int");
-											$grad_year = clean_input($perm["grad_year"],"int");
-											$sanity_start = 1995;
-                							$sanity_end = (fetch_first_year() + 1);
-											if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
-												$PROCESSED["grad_year"] = $grad_year;
-											} else {
-												$ERROR++;
-												$ERRORSTR[] = "You must provide a valid graduation year.";
-											}
-											if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
-												$PROCESSED["entry_year"] = $entry_year;
-											} else {
-												$ERROR++;
-												$ERRORSTR[] = "You must provide a valid program entry year.";
-											}
-											if (!$ERROR) {
-												$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
-															SET `grad_year` = " . $PROCESSED["grad_year"] . ",
-															`entry_year` = " . $PROCESSED["entry_year"] . "
-															WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
-															LIMIT 1";
-												if (!$db->Execute($query)) {
-													$ERROR++;
-													$ERRORSTR[] = "Failed to set the entry and grad year." . $query . " DB said: " . $db->ErrorMsg();
-												}
-											}
-										}
-									}
-
-									if ($PROCESSED_ACCESS["group"] == "faculty") {
-										if (isset($perm["clinical"])) {
-											$PROCESSED["clinical"] = clean_input($perm["clinical"], array("trim", "int"));
-											$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
-														SET `clinical` = " . $PROCESSED["clinical"] . "
-														WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
-														LIMIT 1";
-											if (!$db->Execute($query)) {
-												$ERROR++;
-												$ERRORSTR[] = "Failed to set the clinical field." . $query . " DB said: " . $db->ErrorMsg();
-											}
-										}
-									}
-
-									$PROCESSED_ACCESS["private_hash"] = generate_hash(32);
-
-									if (!$ERROR) {
-										if ($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
-											if (($PROCESSED_ACCESS["group"] == "medtech") || ($PROCESSED_ACCESS["role"] == "admin")) {
-												application_log("error", "USER NOTICE: A new user (".$PROCESSED["firstname"]." ".$PROCESSED["lastname"].") was added to ".APPLICATION_NAME." as ".$PROCESSED_ACCESS["group"]." > ".$PROCESSED_ACCESS["role"].".");
-											}
-
-                                            /**
-                                             * Add user to cohort if they're a student
-                                             *
-                                             * @todo Wow, this is just plain lazy. Someone needs to fix this dirty bit.
-                                             */
-                                            if ($PROCESSED_ACCESS["group"] == "student") {
-                                                $query = "  SELECT a.`group_id`
-                                                            FROM `groups` AS a
-                                                            JOIN `group_organisations` AS b
-                                                            ON a.`group_id` = b.`group_id`
-                                                            AND b.`organisation_id` = ".$db->qstr($PROCESSED_ACCESS["organisation_id"])."
-                                                            WHERE a.`group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."'
-                                                            AND a.`group_type` = 'cohort'
-                                                            AND a.`group_active` = 1";
-                                                $group_id = $db->GetOne($query);
-                                                if ($group_id) {
-                                                    $query = "SELECT * FROM `group_members` WHERE `group_id`=".$db->qstr($group_id)." AND `proxy_id`=".$db->qstr($PROCESSED_ACCESS["user_id"]);
+                                    /**
+                                    * Handle the inserting of user data into the user_departments table
+                                    * if departmental information exists in the form.
+                                    * NOTE: This is also done below (line 375)... arg.
+                                    */
+                                    if (isset($_POST["my_departments"]) && $in_departments = json_decode($_POST["my_departments"], true)) {
+                                        $in_departments = json_decode($in_departments["list"], true);
+                                            if (is_array($in_departments)) {
+                                            foreach ($in_departments as $key => $department_id) {
+                                                $department_id = clean_input($department_id, "int");
+                                                if ($department_id) {
+                                                    $query = "SELECT * FROM `" . AUTH_DATABASE . "`.`user_departments` WHERE `user_id` = " . $db->qstr($PROCESSED_ACCESS["user_id"]) . " AND `dep_id` = " . $db->qstr($department_id);
                                                     $result = $db->GetRow($query);
-                                                    if ($result) {
-                                                        /**
-                                                         * Update existing group_member record.
-                                                         */
-                                                        $gmember = array(
-                                                            'member_active' => 1,
-                                                            'updated_date' => time(),
-                                                            'updated_by' => $ENTRADA_USER->getID()
-                                                        );
-
-                                                        $db->AutoExecute("group_members", $gmember, "UPDATE", "gmember_id = ".$result["gmember_id"]);
-                                                    } else {
-                                                        /**
-                                                         * Create new group_member record.
-                                                         */
-                                                        $gmember = array(
-                                                            'group_id' => $group_id,
-                                                            'proxy_id' => $PROCESSED_ACCESS["user_id"],
-                                                            'start_date' => 0,
-                                                            'finish_date' => 0,
-                                                            'member_active' => 1,
-                                                            'entrada_only' => 1,
-                                                            'updated_date' => time(),
-                                                            'updated_by' => $ENTRADA_USER->getID()
-                                                        );
-
-                                                        $db->AutoExecute("group_members", $gmember, "INSERT");
+                                                    if (!$result) {
+                                                        $PROCESSED_DEPARTMENTS[] = $department_id;
                                                     }
                                                 }
                                             }
+                                        }
+                                    }
 
-											/**
-											 * Handle the inserting of user data into the user_departments table
-											 * if departmental information exists in the form.
-											 */
-											if (isset($_POST["my_departments"]) && $in_departments = json_decode($_POST["my_departments"], true)) {
-												$in_departments = json_decode($in_departments["list"], true);
-													if (is_array($in_departments)) {
-													foreach ($in_departments as $key => $department_id) {
-														$department_id = clean_input($department_id, "int");
-														if ($department_id) {
-															$query = "SELECT * FROM `" . AUTH_DATABASE . "`.`user_departments` WHERE `user_id` = " . $db->qstr($PROCESSED_ACCESS["user_id"]) . " AND `dep_id` = " . $db->qstr($department_id);
-															$result = $db->GetRow($query);
-															if (!$result) {
-																$PROCESSED_DEPARTMENTS[] = $department_id;
-															}
-														}
-													}
-												}
-											}
+                                    if (@count($PROCESSED_DEPARTMENTS)) {
+                                        foreach($PROCESSED_DEPARTMENTS as $department_id) {
+                                            if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROCESSED_ACCESS["user_id"], "dep_id" => $department_id), "INSERT")) {
+                                                application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into department [".$department_id."]. Database said: ".$db->ErrorMsg());
+                                            }
+                                        }
+                                    }
 
-											if (@count($PROCESSED_DEPARTMENTS)) {
-												foreach($PROCESSED_DEPARTMENTS as $key => $department_id) {
-													if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROCESSED_ACCESS["user_id"], "dep_id" => $department_id), "INSERT")) {
-														application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into department [".$department_id."]. Database said: ".$db->ErrorMsg());
-													}
-												}
-											}
 
-											$url			= ENTRADA_URL."/admin/users";
+                                    /**
+                                     * Add user to cohort if they're a student
+                                     *
+                                     * @todo Wow, this is just plain lazy. Someone needs to fix this dirty bit.
+                                     */
+                                    if ($PROCESSED_ACCESS["group"] == "student") {
+                                        $query = "  SELECT a.`group_id`
+                                                    FROM `groups` AS a
+                                                    JOIN `group_organisations` AS b
+                                                    ON a.`group_id` = b.`group_id`
+                                                    AND b.`organisation_id` = ".$db->qstr($PROCESSED_ACCESS["organisation_id"])."
+                                                    WHERE a.`group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."'
+                                                    AND a.`group_type` = 'cohort'
+                                                    AND a.`group_active` = 1";
+                                        $group_id = $db->GetOne($query);
+                                        if ($group_id) {
+                                            $query = "SELECT * FROM `group_members` WHERE `group_id`=".$db->qstr($group_id)." AND `proxy_id`=".$db->qstr($PROCESSED_ACCESS["user_id"]);
+                                            $result = $db->GetRow($query);
+                                            if ($result) {
+                                                /**
+                                                 * Update existing group_member record.
+                                                 */
+                                                $gmember = array(
+                                                    'member_active' => 1,
+                                                    'updated_date' => time(),
+                                                    'updated_by' => $ENTRADA_USER->getID()
+                                                );
 
-											$SUCCESS++;
-											$SUCCESSSTR[]	= "You have successfully created a new user in the authentication system, and have given them <strong>".$PROCESSED_ACCESS["group"]."</strong> / <strong>".$PROCESSED_ACCESS["role"]."</strong> access.<br /><br />You will now be redirected to the users index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+                                                $db->AutoExecute("group_members", $gmember, "UPDATE", "gmember_id = ".$result["gmember_id"]);
+                                            } else {
+                                                /**
+                                                 * Create new group_member record.
+                                                 */
+                                                $gmember = array(
+                                                    'group_id' => $group_id,
+                                                    'proxy_id' => $PROCESSED_ACCESS["user_id"],
+                                                    'start_date' => 0,
+                                                    'finish_date' => 0,
+                                                    'member_active' => 1,
+                                                    'entrada_only' => 1,
+                                                    'updated_date' => time(),
+                                                    'updated_by' => $ENTRADA_USER->getID()
+                                                );
 
-											$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+                                                $db->AutoExecute("group_members", $gmember, "INSERT");
+                                            }
+                                        }
+                                    }
 
-											application_log("success", "Gave [".$PROCESSED_ACCESS["group"]." / ".$PROCESSED_ACCESS["role"]."] permissions to user id [".$PROCESSED_ACCESS["user_id"]."].");
-										} else {
-											$ERROR++;
-											$ERRORSTR[]	= "Unable to give this new user access permissions to this application. ".$db->ErrorMsg();
+                                    $url			= ENTRADA_URL."/admin/users";
 
-											application_log("error", "Error giving new user access to application id [".AUTH_APP_ID."]. Database said: ".$db->ErrorMsg());
-										}
-									} else {
-										echo display_error();
-									}
-								}
-							}
-						} else {
-							$ERROR++;
-							$ERRORSTR[] = "Unable to create a new user account at this time. The MEdTech Unit has been informed of this error, please try again later.";
+                                    $SUCCESS++;
+                                    $SUCCESSSTR[]	= "You have successfully given this existing user access to this application.<br /><br />You will now be redirected to the users index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
-							application_log("error", "Unable to create new user account. Database said: ".$db->ErrorMsg());
-						}
-					}
-				}
-			} else {
-				$ERROR++;
-				$ERRORSTR[] = "You do not have permission to create a user with those details. Please try again with a different organisation.";
+                                    $ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
-				application_log("error", "Unable to create new user account because this user didn't have permissions to create with the selected organisation ID. This should only happen if the request is tampered with.");
-			}
+                                    application_log("success", "Gave [".$PROCESSED_ACCESS["group"]." / ".$PROCESSED_ACCESS["role"]."] permissions to user id [".$PROCESSED_ACCESS["user_id"]."].");
+                                } else {
+                                    $ERROR++;
+                                    $ERRORSTR[]	= "Unable to give existing user access permissions to this application. ".$db->ErrorMsg();
+
+                                    application_log("error", "Error giving existing user access to application id [".AUTH_APP_ID."]. Database said: ".$db->ErrorMsg());
+                                }
+                            }
+                        }
+                    } else {
+                        if (!$ERROR) {
+                        /**
+                         * Now change the password to the MD5 value, just before it was inserted.
+                         */
+                            $PROCESSED["password"] = md5($PROCESSED["password"]);
+                            $PROCESSED["email_updated"] = time();
+                            if (($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "INSERT")) && ($PROCESSED_ACCESS["user_id"] = $db->Insert_Id())) {
+                                foreach ($permissions as $perm) {
+                                    if (!$perm["org_id"]) {
+                                        $ERROR++;
+                                        $ERRORSTR[] = "Please assign an organisation for all permissions.";
+                                    } elseif (!$perm["group_id"]) {
+                                        $ERROR++;
+                                        $ERRORSTR[] = "Please assign a group for all permissions.";
+                                    } elseif (!$perm["role_id"]) {
+                                        $ERROR++;
+                                        $ERRORSTR[] = "Please assign a role for all permissions.";
+                                    } else {
+                                        $query = "SELECT g.`group_name`, r.`role_name`
+                                                FROM `" . AUTH_DATABASE . "`.`system_groups` g, `" . AUTH_DATABASE . "`.`system_roles` r,
+                                                    `" . AUTH_DATABASE . "`.`system_group_organisation` gho, `" . AUTH_DATABASE . "`.`organisations` o
+                                                WHERE gho.`groups_id` = " . $perm["group_id"] . " AND g.`id` = " . $perm["group_id"] . " AND
+                                                r.`id` = " . $perm["role_id"] . " AND o.`organisation_id` = " . $perm["org_id"];
+                                        $group_role = $db->GetRow($query);
+                                        $PROCESSED_ACCESS["group"] = $group_role["group_name"];
+                                        $PROCESSED_ACCESS["role"] = $group_role["role_name"];
+                                        $PROCESSED_ACCESS["organisation_id"] = $perm["org_id"];
+
+                                        if ($PROCESSED_ACCESS["group"] == "student") {
+                                            if (isset($perm["entry_year"]) && isset($perm["grad_year"])) {
+                                                $entry_year = clean_input($perm["entry_year"],"int");
+                                                $grad_year = clean_input($perm["grad_year"],"int");
+                                                $sanity_start = 1995;
+                                                $sanity_end = (fetch_first_year() + 1);
+                                                if ($grad_year <= $sanity_end && $grad_year >= $sanity_start) {
+                                                    $PROCESSED["grad_year"] = $grad_year;
+                                                } else {
+                                                    $ERROR++;
+                                                    $ERRORSTR[] = "You must provide a valid graduation year.";
+                                                }
+                                                if ($entry_year <= $sanity_end && $entry_year >= $sanity_start) {
+                                                    $PROCESSED["entry_year"] = $entry_year;
+                                                } else {
+                                                    $ERROR++;
+                                                    $ERRORSTR[] = "You must provide a valid program entry year.";
+                                                }
+                                                if (!$ERROR) {
+                                                    $query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
+                                                                SET `grad_year` = " . $PROCESSED["grad_year"] . ",
+                                                                `entry_year` = " . $PROCESSED["entry_year"] . "
+                                                                WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
+                                                                LIMIT 1";
+                                                    if (!$db->Execute($query)) {
+                                                        $ERROR++;
+                                                        $ERRORSTR[] = "Failed to set the entry and grad year." . $query . " DB said: " . $db->ErrorMsg();
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        if ($PROCESSED_ACCESS["group"] == "faculty") {
+                                            if (isset($perm["clinical"])) {
+                                                $PROCESSED["clinical"] = clean_input($perm["clinical"], array("trim", "int"));
+                                                $query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
+                                                            SET `clinical` = " . $PROCESSED["clinical"] . "
+                                                            WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
+                                                            LIMIT 1";
+                                                if (!$db->Execute($query)) {
+                                                    $ERROR++;
+                                                    $ERRORSTR[] = "Failed to set the clinical field." . $query . " DB said: " . $db->ErrorMsg();
+                                                }
+                                            }
+                                        }
+
+                                        $PROCESSED_ACCESS["private_hash"] = generate_hash(32);
+
+                                        if (!$ERROR) {
+                                            if ($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
+                                                if (($PROCESSED_ACCESS["group"] == "medtech") || ($PROCESSED_ACCESS["role"] == "admin")) {
+                                                    application_log("error", "USER NOTICE: A new user (".$PROCESSED["firstname"]." ".$PROCESSED["lastname"].") was added to ".APPLICATION_NAME." as ".$PROCESSED_ACCESS["group"]." > ".$PROCESSED_ACCESS["role"].".");
+                                                }
+
+                                                /**
+                                                 * Add user to cohort if they're a student
+                                                 *
+                                                 * @todo Wow, this is just plain lazy. Someone needs to fix this dirty bit.
+                                                 */
+                                                if ($PROCESSED_ACCESS["group"] == "student") {
+                                                    $query = "  SELECT a.`group_id`
+                                                                FROM `groups` AS a
+                                                                JOIN `group_organisations` AS b
+                                                                ON a.`group_id` = b.`group_id`
+                                                                AND b.`organisation_id` = ".$db->qstr($PROCESSED_ACCESS["organisation_id"])."
+                                                                WHERE a.`group_name` = 'Class of ".$PROCESSED_ACCESS["role"]."'
+                                                                AND a.`group_type` = 'cohort'
+                                                                AND a.`group_active` = 1";
+                                                    $group_id = $db->GetOne($query);
+                                                    if ($group_id) {
+                                                        $query = "SELECT * FROM `group_members` WHERE `group_id`=".$db->qstr($group_id)." AND `proxy_id`=".$db->qstr($PROCESSED_ACCESS["user_id"]);
+                                                        $result = $db->GetRow($query);
+                                                        if ($result) {
+                                                            /**
+                                                             * Update existing group_member record.
+                                                             */
+                                                            $gmember = array(
+                                                                'member_active' => 1,
+                                                                'updated_date' => time(),
+                                                                'updated_by' => $ENTRADA_USER->getID()
+                                                            );
+
+                                                            $db->AutoExecute("group_members", $gmember, "UPDATE", "gmember_id = ".$result["gmember_id"]);
+                                                        } else {
+                                                            /**
+                                                             * Create new group_member record.
+                                                             */
+                                                            $gmember = array(
+                                                                'group_id' => $group_id,
+                                                                'proxy_id' => $PROCESSED_ACCESS["user_id"],
+                                                                'start_date' => 0,
+                                                                'finish_date' => 0,
+                                                                'member_active' => 1,
+                                                                'entrada_only' => 1,
+                                                                'updated_date' => time(),
+                                                                'updated_by' => $ENTRADA_USER->getID()
+                                                            );
+
+                                                            $db->AutoExecute("group_members", $gmember, "INSERT");
+                                                        }
+                                                    }
+                                                }
+
+                                                /**
+                                                 * Handle the inserting of user data into the user_departments table
+                                                 * if departmental information exists in the form.
+                                                 */
+                                                if (isset($_POST["my_departments"]) && $in_departments = json_decode($_POST["my_departments"], true)) {
+                                                    $in_departments = json_decode($in_departments["list"], true);
+                                                        if (is_array($in_departments)) {
+                                                        foreach ($in_departments as $key => $department_id) {
+                                                            $department_id = clean_input($department_id, "int");
+                                                            if ($department_id) {
+                                                                $query = "SELECT * FROM `" . AUTH_DATABASE . "`.`user_departments` WHERE `user_id` = " . $db->qstr($PROCESSED_ACCESS["user_id"]) . " AND `dep_id` = " . $db->qstr($department_id);
+                                                                $result = $db->GetRow($query);
+                                                                if (!$result) {
+                                                                    $PROCESSED_DEPARTMENTS[] = $department_id;
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                }
+
+                                                if (@count($PROCESSED_DEPARTMENTS)) {
+                                                    foreach($PROCESSED_DEPARTMENTS as $key => $department_id) {
+                                                        if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROCESSED_ACCESS["user_id"], "dep_id" => $department_id), "INSERT")) {
+                                                            application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into department [".$department_id."]. Database said: ".$db->ErrorMsg());
+                                                        }
+                                                    }
+                                                }
+
+                                                $url			= ENTRADA_URL."/admin/users";
+
+                                                $SUCCESS++;
+                                                $SUCCESSSTR[]	= "You have successfully created a new user in the authentication system, and have given them <strong>".$PROCESSED_ACCESS["group"]."</strong> / <strong>".$PROCESSED_ACCESS["role"]."</strong> access.<br /><br />You will now be redirected to the users index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+
+                                                $ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
+
+                                                application_log("success", "Gave [".$PROCESSED_ACCESS["group"]." / ".$PROCESSED_ACCESS["role"]."] permissions to user id [".$PROCESSED_ACCESS["user_id"]."].");
+                                            } else {
+                                                $ERROR++;
+                                                $ERRORSTR[]	= "Unable to give this new user access permissions to this application. ".$db->ErrorMsg();
+
+                                                application_log("error", "Error giving new user access to application id [".AUTH_APP_ID."]. Database said: ".$db->ErrorMsg());
+                                            }
+                                        } else {
+                                            echo display_error();
+                                        }
+                                    }
+                                }
+                            } else {
+                                $ERROR++;
+                                $ERRORSTR[] = "Unable to create a new user account at this time. The MEdTech Unit has been informed of this error, please try again later.";
+
+                                application_log("error", "Unable to create new user account. Database said: ".$db->ErrorMsg());
+                            }
+                        }
+                    }
+                } else {
+                    $ERROR++;
+                    $ERRORSTR[] = "You do not have permission to create a user with those details. Please try again with a different organisation.";
+
+                    application_log("error", "Unable to create new user account because this user didn't have permissions to create with the selected organisation ID. This should only happen if the request is tampered with.");
+                }
+            }
 			if ($ERROR) {
 				$STEP = 1;
 			} else {
@@ -1028,7 +1029,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                     <label for="prefix" class="control-label form-nrequired">Prefix</label>
                     <div class="controls">
                         <select id="prefix" name="prefix" class="input-small">
-                            <option value=""<?php echo ((!$result["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
+                            <option value=""<?php echo ((!isset($result["prefix"])) ? " selected=\"selected\"" : ""); ?>></option>
                             <?php
                             if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
                                 foreach($PROFILE_NAME_PREFIX as $key => $prefix) {
@@ -1058,9 +1059,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                     <label for="gender" class="control-label form-required">Gender:</label>
                     <div class="controls">
                         <select name="gender" id="gender">
-                            <option value="0"<?php echo ($PROCESSED["gender"] == 0 ? " selected=\"selected\"" : ""); ?>>Not Specified</option>
-                            <option value="1"<?php echo ($PROCESSED["gender"] == 1 ? " selected=\"selected\"" : ""); ?>>Female</option>
-                            <option value="2"<?php echo ($PROCESSED["gender"] == 2 ? " selected=\"selected\"" : ""); ?>>Male</option>
+                            <option value="0"<?php echo (!isset($PROCESSED["gender"]) || $PROCESSED["gender"] == 0 ? " selected=\"selected\"" : ""); ?>>Not Specified</option>
+                            <option value="1"<?php echo (isset($PROCESSED["gender"]) && $PROCESSED["gender"] == 1 ? " selected=\"selected\"" : ""); ?>>Female</option>
+                            <option value="2"<?php echo (isset($PROCESSED["gender"]) && $PROCESSED["gender"] == 2 ? " selected=\"selected\"" : ""); ?>>Male</option>
                         </select>
                     </div>
                 </div>

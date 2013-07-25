@@ -3730,27 +3730,6 @@ ul.community-themes li.first {
 ul.community-themes li.last {
 	margin-right:0;
 }
-
-#committee-template {
-	background: url("../images/meeting-thumb.jpg");
-	border-color: #ccc;
-}
-#virtualpatient-template {
-	background: url("../images/vp-thumb.jpg");
-	border-color: #ccc;
-}
-#course-template {
-background: url("../images/course-thumb.jpg");
-border-color: #CCC;
-}
-#learningmodule-template {
-background: url("../images/education-thumb.jpg");
-border-color: #ccc;
-}
-#default-template {
-background: url("../images/default-thumb.jpg");
-border-color: #ccc;
-}
 div.template-rdo {
 background:#fff;
 border-left: 1px solid #ccc;

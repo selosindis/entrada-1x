@@ -251,7 +251,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     echo "      <button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\">\n";
                     echo "          <i class=\"icon-pencil\"></i>\n";
                     echo "      </button>";
-                    echo "      <ul class=\"dropdown-menu\">\n";
+                    echo "      <ul class=\"dropdown-menu toggle-left\">\n";
                 	if ($ENTRADA_ACL->amIAllowed(new EventResource($result["event_id"], $result["course_id"], $result["organisation_id"]), 'update')) {
                         echo "      <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=edit&amp;id=".$result["event_id"]."\">Event Details</a></li>";
                     }

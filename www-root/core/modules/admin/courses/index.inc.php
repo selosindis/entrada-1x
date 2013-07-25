@@ -327,7 +327,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                 echo "      <button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\">";
                                 echo "          <i class=\"icon-pencil\"></i>";
                                 echo "      </button>";
-                                echo "      <ul class=\"dropdown-menu\">";
+                                echo "      <ul class=\"dropdown-menu toggle-left\">";
                                     if($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update")) {
                                         echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $result["course_id"], "step" => false))."\" >Course Details</a></li>\n";
                                     }

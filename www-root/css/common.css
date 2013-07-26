@@ -4390,6 +4390,6 @@ a.help {
 /* Course CSS */
 
 /*modifies the menu so it can be seen on smaller window */
-.dropdown-menu{
+.dropdown-menu.toggle-left{
     margin: 2px 0 0 -135px;
 }

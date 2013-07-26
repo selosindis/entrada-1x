@@ -359,13 +359,14 @@ define("DISCUSSIONS_ANON", true);
  */
 $VALID_PODCASTS = array();
 $VALID_PODCASTS[] = "audio/mp3";
-$VALID_PODCASTS[] = "audio/mpeg";
 $VALID_PODCASTS[] = "audio/mpg";
+$VALID_PODCASTS[] = "audio/mpeg";
 $VALID_PODCASTS[] = "audio/x-m4a";
 $VALID_PODCASTS[] = "video/mp4";
 $VALID_PODCASTS[] = "video/x-m4v";
 $VALID_PODCASTS[] = "video/quicktime";
 $VALID_PODCASTS[] = "application/pdf";
+$VALID_PODCASTS[] = "document/x-epub";
 
 /**
  * Array containing valid name prefix's.

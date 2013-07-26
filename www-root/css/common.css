@@ -1,3 +1,7 @@
+body {
+	font-size: 12px;
+}
+
 td.filtered {
 color:#000;
 font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;

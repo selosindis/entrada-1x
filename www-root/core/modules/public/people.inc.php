@@ -873,11 +873,11 @@ if (!defined("PARENT_INCLUDED")) {
 					if ($result["address"] && $result["city"]) {
 						echo "<br />Address:\n";
 						echo "<br />".html_encode($result["address"])."\n";
-						echo "".html_encode($result["city"].($result["city"] && $result["province"] ? ", ".$result["province"] : ""))."\n";
-						echo html_encode($result["country"].($result["country"] && $result["postcode"] ? ", ".$result["postcode"] : ""))."\n";
+						echo "<br />".html_encode($result["city"].($result["city"] && $result["province"] ? ", ".$result["province"] : ""))."\n";
+						echo "<br />".html_encode($result["country"].($result["country"] && $result["postcode"] ? ", ".$result["postcode"] : ""))."\n";
 					}
 					if ($result["office_hours"]) {
-						echo "Office Hours:\n";
+						echo "<br />Office Hours:\n";
 						echo nl2br(html_encode($result["office_hours"]))."\n";
 					}
 				}

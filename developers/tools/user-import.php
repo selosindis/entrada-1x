@@ -223,6 +223,7 @@ switch($ACTION) {
 								$access["last_ip"]			= "";
 								$access["role"]				= $user["role"];
 								$access["group"]			= $user["group"];
+                                $access["private_hash"]     = md5(hash("sha256", (uniqid(rand(), 1) . time() . $proxy_id)));
 
 								if ($db->AutoExecute(AUTH_DATABASE.".user_access", $access, "INSERT")) {
 									if ($SKIP_EMAIL_NOTIFICATION) {

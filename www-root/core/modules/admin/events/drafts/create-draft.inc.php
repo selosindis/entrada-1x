@@ -132,6 +132,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							// adds the offset time to the event year and week, preserves the day of the week
 							$event["event_start"]  = strtotime((date("o", ($event["event_start"] + $date_diff)))."-W".date("W", ($event["event_start"] + $date_diff))."-".date("w", $event["event_start"])." ".date("H:i",$event["event_start"]));
 							$event["event_finish"] = strtotime((date("o", ($event["event_finish"] + $date_diff)))."-W".date("W", ($event["event_finish"] + $date_diff))."-".date("w", $event["event_finish"])." ".date("H:i",$event["event_finish"]));
+							$event["objectives_release_date"] = strtotime((date("o", ($event["objectives_release_date"] + $date_diff)))."-W".date("W", ($event["objectives_release_date"] + $date_diff))."-".date("w", $event["objectives_release_date"])." ".date("H:i",$event["objectives_release_date"]));
 							
 							if (!$db->AutoExecute("draft_events", $event, 'INSERT')) {
 								add_error("An error occured, an administrator has been notified. Please try again later.");

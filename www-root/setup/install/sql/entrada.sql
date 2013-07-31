@@ -2454,6 +2454,7 @@ CREATE TABLE IF NOT EXISTS `events` (
   `include_parent_description` tinyint(1) NOT NULL DEFAULT '1',
   `event_goals` text,
   `event_objectives` text,
+  `objectives_release_date` bigint(64) DEFAULT '0',
   `event_message` text,
   `include_parent_message` tinyint(1) NOT NULL DEFAULT '1',
   `event_location` varchar(64) DEFAULT NULL,

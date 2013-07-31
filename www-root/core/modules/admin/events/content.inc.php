@@ -57,6 +57,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 		$event_info	= $db->GetRow($query);
 		if ($event_info) {
+			$PROCESSED["objectives_release_date"] = $event_info["objectives_release_date"];
 			$COURSE_ID = $event_info["course_id"];
 			if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), "update")) {
 				application_log("error", "Someone attempted to modify content for an event [".$EVENT_ID."] that they were not the coordinator for.");
@@ -170,7 +171,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				 * Fetch the Curriculum Objective details.
 				 */
 				list($curriculum_objectives_list,$top_level_id) = courses_fetch_objectives($event_info["organisation_id"],array($event_info["course_id"]),-1, 1, false, false, $EVENT_ID, true);
-
 				$curriculum_objectives = array();
 
 				if (isset($_POST["checked_objectives"]) && ($checked_objectives = $_POST["checked_objectives"]) && (is_array($checked_objectives))) {
@@ -275,6 +275,40 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					}
 				}
 
+				/**
+				* Event objective release date
+				*/
+				
+				if (isset($_POST["delay_release"]) && $tmp_input = clean_input($_POST["delay_release"], array("int"))) {
+					$PROCESSED["delay_release"] = $tmp_input;
+					$release_date = validate_calendar("Delay release until", "delay_release_option", true, true);
+					if (!$ERROR) {
+						if ($release_date >= time()) {
+							if (isset($release_date)) {
+								$PROCESSED["objectives_release_date"] = (int) $release_date;
+								if (!$db->AutoExecute("events", $PROCESSED, 'UPDATE', $event_info["event_id"])) {
+									add_error("An error occured while updating the event objectives release date");
+									application_log("error", "Failed to update learning event content. Database said: ".$db->ErrorMsg());
+								}
+							}
+						} else {
+							$PROCESSED["objectives_release_date"] = 0;
+							add_error("<strong>Objective release date</strong> must on or after the current date and time.");
+						}
+					} else {
+						$PROCESSED["objectives_release_date"] = 0;
+					}
+				} else {
+					if ($_SERVER['REQUEST_METHOD'] == "POST") {
+						$PROCESSED["objectives_release_date"] = 0;
+						if (!$db->AutoExecute("events", $PROCESSED, 'UPDATE', $event_info["event_id"])) {
+							add_error("An error occured while updating the event objectives release date");
+							application_log("error", "Failed to update learning event content. Database said: ".$db->ErrorMsg());
+						}	
+					}
+					
+				}
+
 				if (isset($_POST["type"])) {
 					switch ($_POST["type"]) {
 						case "content" :
@@ -377,7 +411,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											} else {
 												$objective_text = false;
 											}
-											if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
+											if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "event", "release_date" => $event_objectives_release_date, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 												$ERROR++;
 												$ERRORSTR[] = "There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.";
 
@@ -404,7 +438,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 														AND a.`objective_active` = '1'";
 												$result	= $db->GetRow($query);
 												if ($result) {
-													if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "course", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
+													if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "course", "release_date" => $event_objectives_release_date, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 														$ERROR++;
 														$ERRORSTR[] = "There was an error when trying to insert a &quot;course objective&quot; into the system. System administrators have been informed of this error; please try again later.";
 
@@ -623,6 +657,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				<a id="false-link" href="#placeholder"></a>
 				<div id="placeholder" style="display: none"></div>
 				<script type="text/javascript">
+				jQuery(document).ready(function () {
+					jQuery("#delay_release_option_date").css("margin", "0");
+					jQuery("#delay_release").is(":checked") ? jQuery("#delay_release_controls").show() : jQuery("#delay_release_controls").hide();
+					jQuery("#delay_release").on("click", function() {
+						jQuery("#delay_release_controls").toggle(this.checked);
+					});
+				});
+				
 				var ajax_url = '';
 				var modalDialog;
 				document.observe('dom:loaded', function() {
@@ -876,6 +918,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				<a name="event-objectives-section"></a>
 				<h2 title="Event Objectives Section">Event Objectives</h2>
 				<div id="event-objectives-section">
+					<div class="row-fluid">
+						<label class="checkbox">
+							<input type="checkbox" id="delay_release" name="delay_release" value="1" <?php echo ($event_info["objectives_release_date"] != 0 || isset($PROCESSED["delay_release"]) ? " checked=\"checked\"" : "") ?> />
+							Delay the release of all objectives
+						</label>	
+						<div id="delay_release_controls" class="space-below">
+							<?php echo generate_calendar("delay_release_option", "Delay release until", true, $PROCESSED["objectives_release_date"], true, false, false, false, false); ?>
+						</div>
+					</div>
+					
                     <label for="event_objectives" class="form-nrequired">Free-Text Objectives</label><br />
                     <textarea id="event_objectives" name="event_objectives" style="width: 100%; height: 100px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_objectives"], array("font")))); ?></textarea>
 

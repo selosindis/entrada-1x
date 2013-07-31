@@ -363,6 +363,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$row[$key] = 0;
 						}
 						break;
+					case "objective_release_date":
+						$row[$key] = date("Y-m-d H:i", $event["objectives_release_date"]);
+						break;
 					default:
 						if (is_int($event[$key])) {
 							$row[$key] = (int) $event[$key];

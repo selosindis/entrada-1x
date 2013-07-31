@@ -552,7 +552,6 @@ if (!defined("PARENT_INCLUDED")) {
                                     AND a.`event_id` = ".$db->qstr($EVENT_ID)."
                                     ORDER BY b.`objective_name` ASC;";
                         $clinical_presentations	= $db->GetAll($query);
-
                         $show_event_objectives	= ((clean_input($event_info["event_objectives"], array("notags", "nows")) != "") ? true : false);
                         $show_clinical_presentations = (($clinical_presentations) ? true : false);
 
@@ -594,6 +593,7 @@ if (!defined("PARENT_INCLUDED")) {
                                 }
                             }
                         }
+						if (time() >= $event_info["objectives_release_date"]) {
                         if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_objectives) {
                             $include_objectives = true;
 
@@ -643,6 +643,8 @@ if (!defined("PARENT_INCLUDED")) {
                             }
                             echo "</div>\n";
                         }
+						}
+                        
 
                         $query = "SELECT a.`topic_id`,a.`topic_name`, e.`topic_coverage`, e.`topic_time`
                                     FROM `events_lu_topics` AS a

@@ -57,7 +57,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			"audience_students" => "Audience (Students)",
 			"staff_numbers" => "Teacher Numbers",
 			"staff_names" => "Teacher Names",
-			"objective_release_dates" => "Objectives Release Date"
+			"objectives_release_dates" => "Objectives Release Date"
 	);
 
 	if (isset($_SESSION["my_export_options"]) && $_SESSION["my_export_options"]) {

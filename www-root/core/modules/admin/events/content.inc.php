@@ -81,7 +81,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 				if (!$history) { // Create the first history record of the event's creation when another user updates the event
 					if(count($_POST) && ($ENTRADA_USER->getID() != $event_info["updated_by"])) {	// Ignore starting history when it's the sole author initially adding content.
-                                            history_log($EVENT_ID, 'created this learning event.', $event_info["updated_by"], $event_info["updated_date"]);
+						history_log($EVENT_ID, 'created this learning event.', $event_info["updated_by"], $event_info["updated_date"]);
 					}
 				}
 
@@ -275,43 +275,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					}
 				}
 
-				/**
-				* Event objective release date
-				*/
 				
-				if (isset($_POST["delay_release"]) && $tmp_input = clean_input($_POST["delay_release"], array("int"))) {
-					$PROCESSED["delay_release"] = $tmp_input;
-					$release_date = validate_calendar("Delay release until", "delay_release_option", true, true);
-					if (!$ERROR) {
-						if ($release_date >= time()) {
-							if (isset($release_date)) {
-								$PROCESSED["objectives_release_date"] = (int) $release_date;
-								if (!$db->AutoExecute("events", $PROCESSED, 'UPDATE', $event_info["event_id"])) {
-									add_error("An error occured while updating the event objectives release date");
-									application_log("error", "Failed to update learning event content. Database said: ".$db->ErrorMsg());
-								}
-							}
-						} else {
-							$PROCESSED["objectives_release_date"] = 0;
-							add_error("<strong>Objective release date</strong> must on or after the current date and time.");
-						}
-					} else {
-						$PROCESSED["objectives_release_date"] = 0;
-					}
-				} else {
-					if ($_SERVER['REQUEST_METHOD'] == "POST") {
-						$PROCESSED["objectives_release_date"] = 0;
-						if (!$db->AutoExecute("events", $PROCESSED, 'UPDATE', $event_info["event_id"])) {
-							add_error("An error occured while updating the event objectives release date");
-							application_log("error", "Failed to update learning event content. Database said: ".$db->ErrorMsg());
-						}	
-					}
-					
-				}
 
 				if (isset($_POST["type"])) {
 					switch ($_POST["type"]) {
 						case "content" :
+							
+							/**
+							* Event objective release date
+							*/
+							$PROCESSED["objectives_release_date"] = 0;
+							if (isset($_POST["delay_release"]) && $tmp_input = clean_input($_POST["delay_release"], array("int"))) {
+								$PROCESSED["delay_release"] = $tmp_input;
+								$release_date = validate_calendar("Delay release until", "delay_release_option", true, true);
+								if (!$ERROR) {
+									if ($release_date >= time()) {
+										$PROCESSED["objectives_release_date"] = (int) $release_date;
+									} else {
+										add_error("<strong>Objective release date</strong> must on or after the current date and time.");
+									}
+								}
+							}
+							
 							if(!$ERROR) {
 								
 								$history_texts = " [";
@@ -368,7 +353,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								/**
 								 * Update base Learning Event.
 								 */
-								if ($db->AutoExecute("events", array("event_objectives" => $event_objectives, "event_description" => $event_description, "event_message" => $event_message, "event_finish" => $event_finish, "event_duration" => $event_duration, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
+								if ($db->AutoExecute("events", array("event_objectives" => $event_objectives, "objectives_release_date" => $PROCESSED["objectives_release_date"] , "event_description" => $event_description, "event_message" => $event_message, "event_finish" => $event_finish, "event_duration" => $event_duration, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
 									$SUCCESS++;
 									$SUCCESSSTR[] = "You have successfully updated the event details for this learning event.";
 
@@ -411,7 +396,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											} else {
 												$objective_text = false;
 											}
-											if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "event", "release_date" => $event_objectives_release_date, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
+											if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 												$ERROR++;
 												$ERRORSTR[] = "There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.";
 
@@ -438,7 +423,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 														AND a.`objective_active` = '1'";
 												$result	= $db->GetRow($query);
 												if ($result) {
-													if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "course", "release_date" => $event_objectives_release_date, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
+													if (!$db->AutoExecute("event_objectives", array("event_id" => $EVENT_ID, "objective_details" => $objective_text, "objective_id" => $objective_id, "objective_type" => "course", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 														$ERROR++;
 														$ERRORSTR[] = "There was an error when trying to insert a &quot;course objective&quot; into the system. System administrators have been informed of this error; please try again later.";
 

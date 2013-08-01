@@ -37,7 +37,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		ob_clear_open_buffers();
 		switch ($temp) {
 			case "csv-example" :
-				$csv_content  = "Original Event,Parent Event,Term,Course Code,Course Name,Date,Start Time,Total Duration,Event Type Durations,Event Types,Event Title,Event Description,Location,Audience (Cohorts),Audience (Groups),Audience (Students),Teacher Numbers,Teacher Names, Objective Release Date"."\n";
+				$csv_content  = "Original Event,Parent Event,Term,Course Code,Course Name,Date,Start Time,Total Duration,Event Type Durations,Event Types,Event Title,Event Description,Location,Audience (Cohorts),Audience (Groups),Audience (Students),Teacher Numbers,Teacher Names, Objectives Release Date"."\n";
 				$csv_content .= "0,1,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d").",9:00,120,60;30;30,Lecture;Lab;Review / Feedback Session,\"Demo Event #1: Learning Demos\",\"This session will focus on learning demos and their purpose.\",Room 102,Class of ".fetch_first_year().",,,8217321,Dr. Jenn Warden,".date("Y-m-d", strtotime("+1 day"))."\n";
 				$csv_content .= "0,1,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d", strtotime("+1 week")).",9:00,60,60,Lecture,\"Demo Event #2: More About Demos\",\"This session will expand on learning demos, and give an idea of how to give one.\",Room 102,Class of ".fetch_first_year().",,,7291430,Ted Simon,".date("Y-m-d", strtotime("+10 days"))."\n";
 				$csv_content .= "0,0,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d", strtotime("+1 week")).",10:00,60,60,Small Group,\"Demo Small Group Session (Group 1)\",,Room 201,,".fetch_first_year()." Group 1,,7291430,Ted Simon,".date("Y-m-d", strtotime("+12 days"))."\n";

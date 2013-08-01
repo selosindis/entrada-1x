@@ -81,7 +81,7 @@ class CsvImporter {
 		* 15	Audience (Student numbers)
 		* 16	Teacher Numbers
 		* 17	Teacher Names
-		* 18	Objective Release Date
+		* 18	Objectives Release Date
 		*/
 
 		$event_id				= ((isset($row[0]) ? clean_input($row[0], "int") : 0 ));
@@ -103,7 +103,7 @@ class CsvImporter {
 		$event_teachers			= ((isset($row[16]) && !empty($row[16]) ? explode(";", clean_input($row[16], array("nows", "striptags"))) : 0 ));
 		$teacher_names			= ((isset($row[17]) && !empty($row[17]) ? explode(";", $row[17]) : 0 ));
 		$event_duration			= 0;
-		$objective_release_date = ((isset($row[18]) ? clean_input($row[18], array("trim","striptags")) : 0 ));
+		$objectives_release_date = ((isset($row[18]) ? clean_input($row[18], array("trim","striptags")) : 0 ));
 
 		// check draft for existing event_id and get the devent_id if found
 		if ($event_id != 0) {

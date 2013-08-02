@@ -66,12 +66,7 @@ $occupants = $db->GetAll($query);
 
 if ($occupants) {
 	foreach ($occupants as $occupant) {
-		//Check for 415 Simcoe St., Oshawa, ON.
-		if (in_array($occupant["apartment_id"], array(23,24,32))) {
-			$email_body = file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . $ENTRADA_TEMPLATE->activeTemplate() . "/email/regionaled-learner-predeparture-415simcoe-notification.txt");
-		} else {
-			$email_body = file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . $ENTRADA_TEMPLATE->activeTemplate() . "/email/regionaled-learner-predeparture-notification.txt");
-		}
+		$email_body = file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . $ENTRADA_TEMPLATE->activeTemplate() . "/email/regionaled-learner-predeparture-notification.txt");
 
 		$mail->addHeader("X-Section",  "Regional Education Notification System", true);
 		$mail->setFrom($AGENT_CONTACTS["agent-regionaled"][$occupant["department_id"]]["email"], $AGENT_CONTACTS["agent-regionaled"][$occupant["department_id"]]["name"]);

@@ -6256,13 +6256,13 @@ function communities_pages_inlists($identifier = 0, $indent = 0, $options = arra
 				$output .= "	<span class=\"".(((int) $result["page_visible"]) == 0 ? "hidden-page " : "")."next off\">".
 								html_encode($result["menu_title"])."</span>\n";
 			} else {
-				$output .= "	<span class=\"delete\">".(array_search($result["cpage_id"], $locked_ids) === false ? "<input type=\"checkbox\" id=\"delete_".$result["cpage_id"]."\" name=\"delete[]\" value=\"".$result["cpage_id"]."\"".(($selected == $result["cpage_id"]) ? " checked=\"checked\"" : "")." />" : "<div class=\"locked-spacer\">&nbsp;</div>")."</span>\n";
+				$output .= "	<span class=\"delete\">".(!in_array($result["cpage_id"], $locked_ids) ? "<input type=\"checkbox\" id=\"delete_".$result["cpage_id"]."\" name=\"delete[]\" value=\"".$result["cpage_id"]."\"".(($selected == $result["cpage_id"]) ? " checked=\"checked\"" : "")." />" : "<div class=\"locked-spacer\">&nbsp;</div>")."</span>\n";
 				$output .= "	<span class=\"".(((int) $result["page_visible"]) == 0 ? "hidden-page " : "")."next\">
 								<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":pages?".replace_query(array("action" => "edit", "step" => 1, "page" => $result["cpage_id"]))."\">".
 								html_encode($result["menu_title"])."</a></span>\n";
 			}
 			$output .= "</div>";
-			$output .= communities_pages_inlists($result["cpage_id"], $indent + 1, $options);
+			$output .= communities_pages_inlists($result["cpage_id"], $indent + 1, $options, $locked_ids);
 			$output .= "</li>\n";
 
 		}
@@ -15943,7 +15943,7 @@ function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessme
 				WHERE `assessments`.`course_id` = ".$db->qstr($course_id)."
 				AND `assessments`.`cohort` = ".$db->qstr($cohort).
 				($assessment_id ? " AND `assessments`.`assessment_id` = ".$db->qstr($assessment_id) : ($assessment_ids_string ? " AND `assessments`.`assessment_id` IN (".$assessment_ids_string.")" : ""));
-				
+
 	$assessments = $db->GetAll($query);
 	if($assessments) {
 		$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, c.`role`";

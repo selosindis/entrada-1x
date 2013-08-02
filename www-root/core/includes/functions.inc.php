@@ -13289,10 +13289,10 @@ function regionaled_apartment_notification($type, $to = array(), $keywords = arr
 		 */
 		$mail = new Zend_Mail();
 		$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
-		$mail->addHeader("X-Section", "Regional Education Module", true);
+		$mail->addHeader("X-Section", $keywords["department_tile"] . " Accommodations Module", true);
 		$mail->clearFrom();
 		$mail->clearSubject();
-		$mail->setFrom($AGENT_CONTACTS["agent-regionaled"]["email"], APPLICATION_NAME." Regional Education System");
+		$mail->setFrom($AGENT_CONTACTS["agent-regionaled"][$keywords["department_id"]]["email"], APPLICATION_NAME. $keywords["department_tile"] . " Accommodation System");
 		$mail->setSubject($subject);
 		$mail->setBodyText(clean_input($message, "emailcontent"));
 

@@ -39,13 +39,6 @@ if (!defined("IN_REGIONALED_VIEW")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	/**
-	 * Add the accommodation issue sidebar item.
-	 */
-	$sidebar_html = "<strong>Having issues?</strong> If you are having any problems with your accommodations that you would like to report please <a href=\"javascript:sendAccommodation('".ENTRADA_URL."/agent-regionaled.php')\" style=\"font-size: 11px; font-weight: bold\">click here</a>.\n";
-
-	new_sidebar_item("Issue Reporting", $sidebar_html, "page-clerkship", "open");
-
 	$BREADCRUMB[] = array("url" => "", "title" => "Accommodation Details");
 
 	$max_occupants = (int) $APARTMENT_INFO["max_occupants"];
@@ -101,7 +94,7 @@ if (!defined("IN_REGIONALED_VIEW")) {
 							}
 
 							$message_variables = array (
-								"to_fullname" => $AGENT_CONTACTS["agent-regionaled"]["name"],
+								"to_fullname" => $AGENT_CONTACTS["agent-regionaled"][$APARTMENT_INFO["department_id"]]["name"],
 								"from_firstname" => $_SESSION["details"]["firstname"],
 								"from_lastname" => $_SESSION["details"]["lastname"],
 								"region" => $APARTMENT_INFO["region_name"],
@@ -109,12 +102,13 @@ if (!defined("IN_REGIONALED_VIEW")) {
 								"apartment_address" => strip_tags($apartment_address),
 								"inhabiting_start" => date(DEFAULT_DATE_FORMAT, $APARTMENT_INFO["inhabiting_start"]),
 								"inhabiting_finish" => date(DEFAULT_DATE_FORMAT, $APARTMENT_INFO["inhabiting_finish"]),
-								"application_name" => APPLICATION_NAME
+								"application_name" => APPLICATION_NAME,
+								"department_id" => $APARTMENT_INFO["department_id"]								
 							);
 
 							$recipient = array (
-								"email" => $AGENT_CONTACTS["agent-regionaled"]["email"],
-								"firstname" => $AGENT_CONTACTS["agent-regionaled"]["name"],
+								"email" => $AGENT_CONTACTS["agent-regionaled"][$APARTMENT_INFO["department_id"]]["email"],
+								"firstname" => $AGENT_CONTACTS["agent-regionaled"][$APARTMENT_INFO["department_id"]]["name"],
 								"lastname" => "Contact"
 							);
 
@@ -123,7 +117,7 @@ if (!defined("IN_REGIONALED_VIEW")) {
 							application_log("error", "Unable to delete aschedule_id [".$ASCHEDULE_ID."] from the database when an accommodation was rejected. Database said: ".$db->ErrorMsg());
 
 							$ERROR++;
-							$ERRORSTR[] = "We were unable to complete the accommodation rejection at this time. The system administrator was notified of this error, please try again later or contact the Regional Education office directly.";
+							$ERRORSTR[] = "We were unable to complete the accommodation rejection at this time. The system administrator was notified of this error, please try again later or contact the " . $APARTMENT_INFO["department_title"] . " Office directly.";
 						}
 					}
 
@@ -200,7 +194,7 @@ if (!defined("IN_REGIONALED_VIEW")) {
 		<div class="display-notice">
 			<h3>Confirmation Required</h3>
 			<ul>
-				<li>The Regional Education office has scheduled you to reside in this accommodation from <strong><?php echo date(DEFAULT_DATE_FORMAT, $APARTMENT_INFO["inhabiting_start"]); ?></strong> until <strong><?php echo date(DEFAULT_DATE_FORMAT, $APARTMENT_INFO["inhabiting_finish"]); ?></strong>. You must indicate whether you accept or reject these accommodations.</li>
+				<li>The <?php echo $APARTMENT_INFO["department_title"]; ?> Office has scheduled you to reside in this accommodation from <strong><?php echo date("l, F j, Y", $APARTMENT_INFO["inhabiting_start"]); ?></strong> until <strong><?php echo date("l, F j, Y", $APARTMENT_INFO["inhabiting_finish"]); ?></strong>. You must indicate whether you accept or reject these accommodations.</li>
 			</ul>
 			<div>
 				<a class="btn btn-danger" style="float:left" href="#reject-accommodation-box" id="reject-accommodation-button"><div>Reject</div></a>

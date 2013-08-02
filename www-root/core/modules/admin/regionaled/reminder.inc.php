@@ -44,7 +44,7 @@ if (!defined("IN_REGIONALED")) {
 		foreach ($_POST["remind"] as $aschedule_id) {
 			$aschedule_id = clean_input($aschedule_id, array("nows", "int"));
 			if ($aschedule_id) {
-				$query = "	SELECT a.*, c.`region_name`, d.`firstname`, d.`lastname`, d.`email`
+				$query = "	SELECT a.*, c.`region_name`, d.`firstname`, d.`lastname`, d.`email`, g.`department_id`, g.`department_title`
 							FROM `".CLERKSHIP_DATABASE."`.`apartment_schedule` AS a
 							LEFT JOIN `".CLERKSHIP_DATABASE."`.`apartments` AS b
 							ON b.`apartment_id` = a.`apartment_id`
@@ -52,9 +52,14 @@ if (!defined("IN_REGIONALED")) {
 							ON c.`region_id` = b.`region_id`
 							LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS d
 							ON d.`id` = a.`proxy_id`
+							LEFT JOIN `".CLERKSHIP_DATABASE."`.`apartment_contacts` AS f
+							ON a.`apartment_id` = f.`apartment_id`
+							LEFT JOIN `".AUTH_DATABASE."`.`departments` AS g
+							ON f.`department_id` = g.`department_id`
 							WHERE a.`aschedule_id` = ".$db->qstr($aschedule_id)."
 							AND a.`proxy_id` > 0
-							AND a.`confirmed` = 0";
+							AND a.`confirmed` = 0
+							AND f.`proxy_id` = " . $db->qstr($ENTRADA_USER->getId());
 				$result = $db->GetRow($query);
 				if ($result) {
 					/**
@@ -73,7 +78,9 @@ if (!defined("IN_REGIONALED")) {
 						"from_lastname" => $_SESSION["details"]["lastname"],
 						"region" => $result["region_name"],
 						"confirmation_url" => ENTRADA_URL."/regionaled/view?id=".$aschedule_id,
-						"application_name" => APPLICATION_NAME
+						"application_name" => APPLICATION_NAME,
+						"department_title" => $result["department_title"],
+						"department_id" => $result["department_id"]
 					);
 
 					if (regionaled_apartment_notification("confirmation", $recipient, $message_variables)) {
@@ -91,7 +98,7 @@ if (!defined("IN_REGIONALED")) {
 			$SUCCESSSTR[$SUCCESS] .= "<ul>\n";
 			$SUCCESSSTR[$SUCCESS] .= "	<li>".implode("</li>\n<li>", $recipients)."</li>\n";
 			$SUCCESSSTR[$SUCCESS] .= "</ul>";
-			$SUCCESSSTR[$SUCCESS] .= "<p>You will now be redirected to the Regional Education dashboard; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.</p>";
+			$SUCCESSSTR[$SUCCESS] .= "<p>You will now be redirected to the " . $result["department_titile"] . " dashboard; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.</p>";
 		}
 
 		$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 15000)";

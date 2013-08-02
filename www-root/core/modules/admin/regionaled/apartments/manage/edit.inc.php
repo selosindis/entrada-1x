@@ -277,16 +277,39 @@ if (!defined("IN_MANAGE")) {
 				$PROCESSED["available_finish"] = 0;
 			}
 
+			$query = "	SELECT `dep_id`
+						FROM `" . AUTH_DATABASE . "`.`user_departments`
+						WHERE `user_id` = " . $db->qstr($ENTRADA_USER->getId());
+			$department_id = $db->getOne($query);
+			if ($department_id) {
+				$PROCESSED["department_id"] = $department_id;
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "You are not associated with a department in the " . APPLICATION_NAME . " System.  Please email the system administration to be added to a department: " . $AGENT_CONTACTS["administrator"]["email"];
+				application_log("error", "Proxy id: " . $ENTRADA_USER->getId() . " is not associated with a department and therefore cannot use the Regional Education module.");
+			}
+
+			
 			if (!$ERROR) {
 				$PROCESSED["updated_last"] = time();
+				$PROCESSED["updated_date"] = time();
+				$PROCESSED["proxy_id"] = $ENTRADA_USER->getId();
 				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
 				if ($db->AutoExecute(CLERKSHIP_DATABASE . ".apartments", $PROCESSED, "UPDATE", "apartment_id = " . $db->qstr($APARTMENT_ID))) {
+					if ($db->AutoExecute(CLERKSHIP_DATABASE.".apartment_contacts", $PROCESSED, "UPDATE", "apartment_id = " . $db->qstr($APARTMENT_ID))) {
 					$SUCCESS++;
-					$SUCCESSSTR[] = "You have successfully updated <strong>" . html_encode($PROCESSED["apartment_title"]) . "</strong>.<br /><br />You will now be redirected to the apartment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"" . ENTRADA_URL . "/admin/regionaled/apartments/manage?id=" . $APARTMENT_ID . "\" style=\"font-weight: bold\">click here</a> to continue.";
+						$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["apartment_title"])."</strong> to the system.<br /><br />You will now be redirected to the apartment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/regionaled/apartments\" style=\"font-weight: bold\">click here</a> to continue.";
 
-					$ONLOAD[] = "setTimeout('window.location=\\'" . ENTRADA_URL . "/admin/regionaled/apartments/manage?id=" . $APARTMENT_ID . "\\'', 5000)";
-					application_log("success", "Apartment_id [" . $APARTMENT_ID . "] was updated.");
+						$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/regionaled/apartments\\'', 5000)";
+
+						application_log("success", "New apartment [".$apartment_id."] added to the system.");
+					} else {
+						$ERROR++;
+						$ERRORSTR[]	= "We were unable to add this apartment to the system at this time.<br /><br />The system administrator has been notified of this issue, please try again later.";
+
+						application_log("error", "Failed to insert a apartment_contact into the database. Database said: ".$db->ErrorMsg());
+					}
 				} else {
 					$ERROR++;
 					$ERRORSTR[] = "We were unable to updated this apartment at this time.<br /><br />The system administrator has been notified of this issue, please try again later.";

@@ -343,6 +343,90 @@ class Course {
 		return Organisation::get($this->organization);
 	}
 	
+	public function getOrganisationID() {
+		return $this->organization;
+	}
+	
+	public function getContacts($course_id = NULL) {
+		global $db;
+		
+		if (is_null($course_id)) {
+			if (!is_null($this->course_id)) {
+				$course_id = $this->course_id;
+			} else {
+				return false;
+			}
+ 		}
+		
+		$query = "SELECT * FROM `course_contacts` WHERE `course_id` = ?";
+		$results = $db->GetAll($query, array($course_id));
+		if (is_array($results)) {
+			foreach ($results as $result) {
+				$u = new User;
+				$c[$result["contact_type"]][$result["proxy_id"]] = $u->get($result["proxy_id"]);
+			}
+			return $c;
+		} else {
+			return false;
+		}
+	}
+	
+	public function getPages($course_id = NULL, $whitelist = array()) {
+		global $db;
+
+		if (is_null($course_id)) {
+			if (!is_null($this->course_id)) {
+				$course_id = $this->course_id;
+			} else {
+				return false;
+			}
+ 		}
+		
+		$p = false;
+		
+		$query = "	SELECT a.*
+					FROM `community_pages` AS a
+					JOIN `community_courses` AS b
+					ON a.`community_id` = b.`community_id`
+					WHERE b.`course_id` = ?".
+					(!empty($whitelist) ? " AND `page_url` IN ('".implode("','", $whitelist)."')" : "")."
+					ORDER BY IF (a.`page_order` != 0, a.`page_order`, a.`parent_id`), a.`page_url`";
+		$results = $db->GetAssoc($query, array($course_id));
+		
+		return $results;
+		
+	}
+	
+	public function getEvents($start, $end) {
+		global $db;
+				
+		$e = array();
+		
+		$query = "	SELECT a.* 
+					FROM `events` AS a
+					WHERE a.`course_id` = ?
+					AND a.`event_start` BETWEEN ? AND ?
+					ORDER BY a.`event_start`";
+		$results = $db->GetAll($query, array($this->course_id, $start, $end));
+		if ($results) {
+			foreach ($results as $key => $event) {
+				$e[$key] = $event;
+				$query = "	SELECT b.`objective_id`, b.`objective_name` 
+							FROM `event_objectives` AS a 
+							JOIN `global_lu_objectives` AS b
+							ON a.`objective_id` = b.`objective_id`
+							WHERE a.`event_id` = ?";
+				$event_objectives = $db->GetAssoc($query, $event["event_id"]);
+				if ($event_objectives) {
+					$e[$key]["objectives"] = $event_objectives;
+				}
+			}
+			return $e;
+		} else {
+			return false;
+		}
+	}
+	
 	/**
 	 * Returns the Course belonging to the specified ID
 	 * @param int $course_id
@@ -370,4 +454,5 @@ class Course {
 	public static function fromArray($arr) {
 		return new Course($arr['course_id'],$arr['curriculum_type_id'],$arr['director_id'],$arr['pcoord_id'],$arr['evalrep_id'],$arr['studrep_id'],$arr['course_name'],$arr['course_code'],$arr['course_description'],$arr['unit_collaborator'],$arr['unit_communicator'],$arr['unit_health_advocate'],$arr['unit_manager'],$arr['unit_professional'],$arr['unit_scholar'],$arr['unit_medical_expert'],$arr['unit_summative_assessment'],$arr['unit_formative_assessment'],$arr['unit_grading'],$arr['resources_required'],$arr['resources_optional'],$arr['course_url'],$arr['course_message'],$arr['notifications'],$arr['organisation_id'],$arr['course_active']);
 	}
+	
 }

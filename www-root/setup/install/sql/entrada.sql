@@ -2097,6 +2097,17 @@ CREATE TABLE IF NOT EXISTS `course_objectives` (
   KEY `objective_id` (`objective_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `course_syllabi` (
+  `syllabus_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `course_id` int(12) DEFAULT NULL,
+  `syllabus_start` smallint(2) DEFAULT NULL,
+  `syllabus_finish` smallint(2) DEFAULT NULL,
+  `template` varchar(255) DEFAULT NULL,
+  `repeat` tinyint(1) DEFAULT '1',
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`syllabus_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `cron_community_notifications` (
   `ccnotification_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `cnotification_id` int(12) NOT NULL,
@@ -4189,7 +4200,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1501'),
+('version_db', '1504'),
 ('version_entrada', '1.5.0.1');
 
 CREATE TABLE IF NOT EXISTS `statistics` (

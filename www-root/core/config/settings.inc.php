@@ -315,6 +315,7 @@ define("ENABLE_NOTICES", true);													// Do you want the dashboard notices
  */
 $APPLICATION_PATH = array();
 $APPLICATION_PATH["htmldoc"] = "/usr/bin/htmldoc";
+$APPLICATION_PATH["wkhtmltopdf"] = "/usr/bin/wkhtmltopdf";
 
 /**
  * Application contact name's and e-mail addresses.

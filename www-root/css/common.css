@@ -4393,3 +4393,8 @@ a.help {
 .dropdown-menu.toggle-left{
     margin: 2px 0 0 -135px;
 }
+
+/*Previous notices on dashboard*/
+#previous-notices {
+	display:none;
+}

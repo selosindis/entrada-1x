@@ -207,19 +207,19 @@ if ($COMMUNITY_URL) {
 	$community_details = $db->GetRow($query);
 	if (($community_details) && ($COMMUNITY_ID = (int) $community_details["community_id"])) {
 		if ((int) $community_details["community_active"]) {
-			
+
 			if (isset($_GET["method"]) && $tmp_input = clean_input($_GET["method"], array("trim", "striptags"))) {
-				
+
 				ob_clear_open_buffers();
-				
+
 				$method = $tmp_input;
-				
+
 				switch ($method) {
 					case "serve-syllabus" :
 						$course_code = clean_input($_GET["course_code"], array("trim", "striptags"));
 						$year = clean_input($_GET["year"], "int");
 						$month = clean_input($_GET["month"], "int");
-						
+
 						$community_id = clean_input($_GET["community_id"], "int");
 						if (!isset($course_code)) {
 							$query = "	SELECT a.`course_id`, a.`course_code`
@@ -243,19 +243,19 @@ if ($COMMUNITY_URL) {
 								header('Cache-Control: must-revalidate');
 								header('Pragma: public');
 								header('Content-Length: ' . filesize($file_realpath));
-								
-								readfile($file_realpath);	
+
+								readfile($file_realpath);
 							} else {
 								header("Location: ".ENTRADA_URL."/communities");
 							}
 						}
 					break;
 				}
-				
+
 				exit;
-				
+
 			}
-			
+
 			if (isset($PAGE_URL)) {
 				switch ($PAGE_URL) {
 					case "pages" :
@@ -620,7 +620,7 @@ if ($COMMUNITY_URL) {
 						$sidebar_html .= "	<li class=\"admin\"><a href=\"".ENTRADA_URL."/communities?section=modify&amp;community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">Manage Community</a></li>\n";
 						$sidebar_html .= "	<li class=\"admin\"><a href=\"".ENTRADA_URL."/communities?section=members&amp;community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">Manage Members</a></li>\n";
 						$sidebar_html .= "	<li class=\"admin\"><a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":pages\" style=\"font-weight: bold\">Manage Pages</a></li>\n";
-                        $sidebar_html .= "    <li class=\"admin\"><a href=\"".ENTRADA_URL."/communities/reports?community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">Community Reports</a></li>\n";
+                        $sidebar_html .= "  <li class=\"admin\"><a href=\"".ENTRADA_URL."/communities/reports?community=".$COMMUNITY_ID."\" style=\"font-weight: bold\">Community Reports</a></li>\n";
 						$sidebar_html .= "</ul>\n";
 
 						new_sidebar_item("Admin Centre", $sidebar_html, "community-admin", "open");
@@ -779,10 +779,37 @@ if ($COMMUNITY_URL) {
 
 				if ($LOGGED_IN) {
 					$member_name = html_encode($_SESSION["details"]["firstname"]." ".$_SESSION["details"]["lastname"]);
+                    $sys_profile_photo = webservice_url("photo", array($ENTRADA_USER->getID(), (isset($uploaded_file_active) && $uploaded_file_active ? "upload" : (!file_exists(STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-official") && file_exists(STORAGE_USER_PHOTOS."/".$ENTRADA_USER->getID()."-upload") ? "upload" : "official"))));
+
+                    /**
+                     * Cache any outstanding evaluations.
+                     */
+                    if (!isset($ENTRADA_CACHE) || !$ENTRADA_CACHE->test("evaluations_outstanding_"  . AUTH_APP_ID . "_" . $ENTRADA_USER->getID())) {
+                        $evaluations_outstanding = Models_Evaluation::getOutstandingEvaluations($ENTRADA_USER->getID(), $ENTRADA_USER->getActiveOrganisation(), true);
+
+                        if (isset($ENTRADA_CACHE)) {
+                            $ENTRADA_CACHE->save($evaluations_outstanding, "evaluations_outstanding_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
+                        }
+                    } else {
+                        $evaluations_outstanding = $ENTRADA_CACHE->load("evaluations_outstanding_" . AUTH_APP_ID . "_" . $ENTRADA_USER->getID());
+                    }
+
+                    if ($evaluations_outstanding) {
+                        $sys_profile_evaluations = "<span class=\"badge badge-success\"><small>".$evaluations_outstanding."</small></span>";
+                    } else {
+                        $sys_profile_evaluations = "";
+                    }
+
 				} else {
 					$member_name = "Guest";
+                    $sys_profile_photo = "";
+                    $sys_profile_evaluations = "";
+
 				}
 				$date_joined = "Joined: ".date("Y-m-d", $COMMUNITY_MEMBER_SINCE);
+
+                $smarty->assign("sys_profile_photo", $sys_profile_photo);
+                $smarty->assign("sys_profile_evaluations", $sys_profile_evaluations);
 
 				$smarty->assign("template_relative", COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE);
 				$smarty->assign("sys_community_relative", COMMUNITY_RELATIVE);
@@ -822,7 +849,7 @@ if ($COMMUNITY_URL) {
 							}
 						}
 					}
-					
+
 					$file_realpath = ENTRADA_ABSOLUTE."/core/storage/syllabi/".$result["course_code"]."-syllabus-". ($year != 0 ? $year : date("Y", time())) . "-".$syllabus_month.".pdf";
 					if (file_exists($file_realpath)) {
 						$COMMUNITY_PAGES["navigation"][] = array(
@@ -831,7 +858,7 @@ if ($COMMUNITY_URL) {
 						);
 					}
 				}
-				
+
 				$smarty->assign("site_primary_navigation", $COMMUNITY_PAGES["navigation"]);
 				$show_tertiary_sideblock = false;
 				foreach ($COMMUNITY_PAGES["navigation"] as $top_level_page) {

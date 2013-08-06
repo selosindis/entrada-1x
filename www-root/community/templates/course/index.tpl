@@ -25,6 +25,9 @@
 	<link href="{$template_relative}/css/bootstrap.css" rel="stylesheet" type="text/css" />
 	<link href="{$template_relative}/css/common.css" rel="stylesheet" type="text/css" />
 	<link href="{$template_relative}/css/style.css" rel="stylesheet" type="text/css" />
+
+    <link href="{$template_relative}/images/favicon.ico" rel="shortcut icon" type="image/x-icon" />
+
 	<script type="text/javascript" src="{$sys_website_url}/javascript/livepipe/livepipe.js"></script>
 	<script type="text/javascript" src="{$sys_website_url}/javascript/livepipe/window.js"></script>
 	<script type="text/javascript" src="{$sys_website_url}/javascript/livepipe/selectmultiplemod.js"></script>
@@ -53,10 +56,21 @@
             {php}
             if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) : {/php}
                 <div class="span5">
-
+                    <div class="welcome-area">
+                        <div class="userAvatar">
+                            <a href="#"><img src="{$sys_profile_photo}" width="32" height="42" style="width: 32px; height: 42px;" alt="{$member_name}" class="img-polaroid" /></a>
+                        </div>
+                        <div class="welcome-block">
+                            Welcome <span class="userName">{$member_name}</span>
+                            <br />
+                            <a href="{$sys_website_url}/profile">My Profile</a> |
+                            <a href="{$sys_website_url}/evaluations">My Evaluations</a>
+                            {$sys_profile_evaluations}
+                        </div>
+                    </div>
                 </div>
                 <div class="span2">
-                    <a href="{php} echo ENTRADA_RELATIVE; {/php}/?action=logout" class="log-out">Logout <i class="icon icon-logout"></i></a>
+                    <a href="{$sys_website_url}/?action=logout" class="log-out">Logout <i class="icon icon-logout"></i></a>
                 </div>
        		{php}
        		endif;
@@ -80,31 +94,33 @@
 </header>
 <div id="site-container" class="container">
 	<div id="site-body" class="row-fluid">
-			<div class="span3">
+			<div class="span3 no-printing" id="sidebar">
 				{include file="navigation_primary.tpl" site_primary_navigation=$site_primary_navigation}
 				<br />
 				{$page_sidebar}
 			</div>
-			<div class="span9">
-				{$site_breadcrumb_trail}
-				<h1 class="community-title">{$site_community_title}</h1>
-				{$child_nav}
-				<div class="content" style="padding-left: 10px;">
-					{$page_content}
-				</div>
-				{if $is_sequential_nav}
-					<div style="text-align:right;">
-						{if $next_page_url != "#" && $previous_page_url != "#"}
-							<p><a href="{$previous_page_url}"><< Previous</a> | <a href="{$next_page_url}">Next >></a></p>
-						{elseif $next_page_url != "#" && $previous_page_url == "#"}
-							<p> <a href="{$next_page_url}"> Next >></a></p>
-						{elseif $next_page_url == "#" && $previous_page_url != "#"}
-							<p> <a href="{$previous_page_url}"><< Previous</a> </p>
-						{else $next_page_url == "#" && $previous_page_url == "#"}
-							<p> </p>
-						{/if}
-					</div>
-				{/if}
+			<div class="span9" id="content">
+                <div class="clearfix inner-content">
+                    {$site_breadcrumb_trail}
+                    <h1 class="community-title">{$site_community_title}</h1>
+                    {$child_nav}
+                    <div class="content" style="padding-left: 10px;">
+                        {$page_content}
+                    </div>
+                    {if $is_sequential_nav}
+                        <div style="text-align:right;">
+                            {if $next_page_url != "#" && $previous_page_url != "#"}
+                                <p><a href="{$previous_page_url}"><< Previous</a> | <a href="{$next_page_url}">Next >></a></p>
+                            {elseif $next_page_url != "#" && $previous_page_url == "#"}
+                                <p> <a href="{$next_page_url}"> Next >></a></p>
+                            {elseif $next_page_url == "#" && $previous_page_url != "#"}
+                                <p> <a href="{$previous_page_url}"><< Previous</a> </p>
+                            {else $next_page_url == "#" && $previous_page_url == "#"}
+                                <p> </p>
+                            {/if}
+                        </div>
+                    {/if}
+                </div>
 			</div>
 	</div>
 </div>

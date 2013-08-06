@@ -112,16 +112,6 @@ padding-left:17px;
 background:transparent url(../images/list-download.gif) no-repeat 0 3px;
 }
 
-body {
-margin:0;
-}
-
-body,p,td,a {
-color:#000;
-font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
-font-size:12px;
-}
-
 a:hover {
 color:#C03;
 text-decoration:underline;
@@ -464,6 +454,7 @@ background:transparent url(../images/checkbox-on.gif) no-repeat;
 
 ul.menu li.nav {
 background:transparent url(../images/nav_arrow.gif) no-repeat;
+margin-bottom: 0px;
 }
 
 ul.menu li.community {

@@ -297,7 +297,7 @@ if (!defined("IN_MANAGE")) {
 				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
 				if ($db->AutoExecute(CLERKSHIP_DATABASE . ".apartments", $PROCESSED, "UPDATE", "apartment_id = " . $db->qstr($APARTMENT_ID))) {
-					if ($db->AutoExecute(CLERKSHIP_DATABASE.".apartment_contacts", $PROCESSED, "UPDATE", "apartment_id = " . $db->qstr($APARTMENT_ID))) {
+					if ($db->AutoExecute(CLERKSHIP_DATABASE.".apartment_contacts", $PROCESSED, "UPDATE", "apartment_id = " . $db->qstr($APARTMENT_ID) . " AND `proxy_id` = " . $ENTRADA_USER->getId())) {
 					$SUCCESS++;
 						$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["apartment_title"])."</strong> to the system.<br /><br />You will now be redirected to the apartment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/regionaled/apartments\" style=\"font-weight: bold\">click here</a> to continue.";
 

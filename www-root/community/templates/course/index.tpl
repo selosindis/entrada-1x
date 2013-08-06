@@ -19,7 +19,7 @@
 	<script type="text/javascript" src="{$sys_website_url}/javascript/scriptaculous/scriptaculous.js"></script>
 	<script type="text/javascript" src="{$template_relative}/javascript/libs/bootstrap.min.js"></script>
 	<script type="text/javascript" src="{$template_relative}/javascript/libs/modernizr-2.5.3.min.js"></script>
-	
+
 	<link href="{$template_relative}/css/stylesheet.css" rel="stylesheet" type="text/css" media="all" />
 	<link href="{$template_relative}/css/print.css" rel="stylesheet" type="text/css" media="print" />
 	<link href="{$template_relative}/css/bootstrap.css" rel="stylesheet" type="text/css" />
@@ -48,7 +48,7 @@
     <div class="container">
         <div class="row-fluid">
             <div class="span5">
-                <h1><a href="{$sys_website_url}"><img src="{$template_relative}/images/logo.png" alt="{php} echo APPLICATION_NAME; {/php}" title="{php} echo APPLICATION_NAME; {/php}"/></a></h1>                
+                <h1><a href="{$sys_website_url}"><img src="{$template_relative}/images/logo.png" alt="{php} echo APPLICATION_NAME; {/php}" title="{php} echo APPLICATION_NAME; {/php}"/></a></h1>
             </div>
             {php}
             if ((isset($_SESSION["isAuthorized"])) && ($_SESSION["isAuthorized"])) : {/php}
@@ -60,7 +60,7 @@
                 </div>
        		{php}
        		endif;
-       		{/php}            
+       		{/php}
         </div>
     </div>
 </div>
@@ -70,8 +70,8 @@
     <div class="navbar">
         <div class="navbar-inner">
             <div class="container no-printing">
-                {php} 
-                	echo navigator_tabs(); 
+                {php}
+                	echo navigator_tabs();
             	{/php}
             </div>
         </div>
@@ -87,7 +87,7 @@
 			</div>
 			<div class="span9">
 				{$site_breadcrumb_trail}
-				<span class="community-title">{$site_community_title}</span>
+				<h1 class="community-title">{$site_community_title}</h1>
 				{$child_nav}
 				<div class="content" style="padding-left: 10px;">
 					{$page_content}
@@ -106,7 +106,7 @@
 					</div>
 				{/if}
 			</div>
-	</div>	
+	</div>
 </div>
 <footer id="main-footer">
 	<div class="no-printing container">

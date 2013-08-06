@@ -193,24 +193,25 @@ padding:0 4px;
 }
 
 div.bread-crumb-trail {
-margin-bottom:5px;
-border-bottom:1px #999 dotted;
-padding:2px 2px 2px 5px;
+margin-bottom:15px;
+border-bottom:1px dotted #DDDDDD;
+padding-bottom:8px;
+margin-top:-10px;
 }
 
 div.bread-crumb-trail ul {
 list-style:none;
 list-style-type:none;
 margin:0;
-padding:4px 0 0;
+padding:0;
 }
 
 div.bread-crumb-trail ul li {
 display:inline;
 list-style-type:none;
-padding-left:13px;
+/*padding-left:15px;*/
 vertical-align:middle;
-background:transparent url(../images/breadcrumb-arrow.gif) no-repeat center left;
+/*background:transparent url(../images/record-next-on.gif) no-repeat center left;*/
 }
 
 div.details {
@@ -1093,7 +1094,7 @@ margin-left:3px;
 color:#3C3C3C;
 font-size:11px;
 padding:5px 9px 4px 4px;
-width: 134px; 
+width: 134px;
 }
 
 #tabs li:hover .drop_options li {

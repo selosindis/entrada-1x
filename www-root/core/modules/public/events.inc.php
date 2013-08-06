@@ -552,7 +552,6 @@ if (!defined("PARENT_INCLUDED")) {
                                     AND a.`event_id` = ".$db->qstr($EVENT_ID)."
                                     ORDER BY b.`objective_name` ASC;";
                         $clinical_presentations	= $db->GetAll($query);
-
                         $show_event_objectives	= ((clean_input($event_info["event_objectives"], array("notags", "nows")) != "") ? true : false);
                         $show_clinical_presentations = (($clinical_presentations) ? true : false);
 
@@ -594,55 +593,58 @@ if (!defined("PARENT_INCLUDED")) {
                                 }
                             }
                         }
-                        if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_objectives) {
-                            $include_objectives = true;
+						if (time() >= $event_info["objectives_release_date"]) {
+							if ($show_event_objectives || $show_clinical_presentations || $show_curriculum_objectives) {
+								$include_objectives = true;
 
-                            echo "<a name=\"event-objectives-section\"></a>\n";
-                            echo "<h2 title=\"Event Objectives Section\">Event Objectives</h2>\n";
-                            echo "<div id=\"event-objectives-section\">\n";
+								echo "<a name=\"event-objectives-section\"></a>\n";
+								echo "<h2 title=\"Event Objectives Section\">Event Objectives</h2>\n";
+								echo "<div id=\"event-objectives-section\">\n";
 
-                            if ($show_event_objectives) {
-                                echo "	<div class=\"section-holder\">\n";
-                                echo "		<h3>Free-Text Objectives</h3>\n";
-                                echo		trim(strip_selected_tags($event_info["event_objectives"], array("font")));
-                                echo "	</div>\n";
-                            }
+								if ($show_event_objectives) {
+									echo "	<div class=\"section-holder\">\n";
+									echo "		<h3>Free-Text Objectives</h3>\n";
+									echo		trim(strip_selected_tags($event_info["event_objectives"], array("font")));
+									echo "	</div>\n";
+								}
 
-                            if ($show_clinical_presentations) {
-                                echo "	<div class=\"section-holder\">\n";
-                                echo "		<h3>Clinical Presentations</h3>\n";
-                                foreach ($clinical_presentations as $key => $result) {
-                                    echo (($key) ? ", " : "").$result["objective_name"];
-                                }
-                                echo "	</div>\n";
-                            }
+								if ($show_clinical_presentations) {
+									echo "	<div class=\"section-holder\">\n";
+									echo "		<h3>Clinical Presentations</h3>\n";
+									foreach ($clinical_presentations as $key => $result) {
+										echo (($key) ? ", " : "").$result["objective_name"];
+									}
+									echo "	</div>\n";
+								}
 
-                            if ($show_curriculum_objectives) {
-                                ?>
-                                <script type="text/javascript">
-                                function renewList (hierarchy) {
-                                    if (hierarchy != null && hierarchy) {
-                                        hierarchy = 1;
-                                    } else {
-                                        hierarchy = 0;
-                                    }
-                                    new Ajax.Updater('objectives_list', '<?php echo ENTRADA_RELATIVE; ?>/api/objectives.api.php',
-                                        {
-                                            method:	'post',
-                                            parameters: 'course_ids=<?php echo $event_info["course_id"] ?>&hierarchy='+hierarchy+'&event_id=<?php echo $EVENT_ID; ?>'
-                                        }
-                                    );
-                                }
-                                </script>
-                                <?php
-                                echo "<div class=\"section-holder\">\n";
-                                echo "	<h3>Curriculum Objectives</h3>\n";
-                                echo "	<strong>The learner will be able to:</strong>";
-                                echo	course_objectives_in_list($curriculum_objectives, $top_level_id,$top_level_id, false, false, 1, true)."\n";
-                                echo "</div>\n";
-                            }
-                            echo "</div>\n";
-                        }
+								if ($show_curriculum_objectives) {
+									?>
+									<script type="text/javascript">
+									function renewList (hierarchy) {
+										if (hierarchy != null && hierarchy) {
+											hierarchy = 1;
+										} else {
+											hierarchy = 0;
+										}
+										new Ajax.Updater('objectives_list', '<?php echo ENTRADA_RELATIVE; ?>/api/objectives.api.php',
+											{
+												method:	'post',
+												parameters: 'course_ids=<?php echo $event_info["course_id"] ?>&hierarchy='+hierarchy+'&event_id=<?php echo $EVENT_ID; ?>'
+											}
+										);
+									}
+									</script>
+									<?php
+									echo "<div class=\"section-holder\">\n";
+									echo "	<h3>Curriculum Objectives</h3>\n";
+									echo "	<strong>The learner will be able to:</strong>";
+									echo	course_objectives_in_list($curriculum_objectives, $top_level_id,$top_level_id, false, false, 1, true)."\n";
+									echo "</div>\n";
+								}
+								echo "</div>\n";
+							}
+						}
+                        
 
                         $query = "SELECT a.`topic_id`,a.`topic_name`, e.`topic_coverage`, e.`topic_time`
                                     FROM `events_lu_topics` AS a

@@ -188,6 +188,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 				$PROCESSED["page_ids"] = array();
 			}
 
+			if ((isset($_POST["course_ids"])) && (is_array($_POST["course_ids"])) ) {
+				$PROCESSED["course_ids"] = $_POST["course_ids"];
+			} else {
+				$PROCESSED["course_ids"] = array();
+			}
+
 			if ((isset($_POST["community_shortname"])) && ($community_shortname = clean_input($_POST["community_shortname"], array("notags", "lower", "trim")))) {
 			/**
 			 * Ensure that this community name is less than 32 characters in length.
@@ -354,31 +360,62 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								application_log("error", "Unable to active module ".(int) $module_id." for new community id ".(int) $community_id.". Database said: ".$db->ErrorMsg());
 							}
 						}
-
-						foreach ($PROCESSED["page_ids"] as $page_id) {
-							$query = "SELECT * FROM `community_type_pages` WHERE `ctpage_id` = ".$db->qstr($page_id);
-							$page = $db->GetRow($query);
-							if ($page) {
-								$query = "SELECT * FROM `community_type_page_options` WHERE `ctpage_id` = ".$db->qstr($page_id);
-								$page_options = $db->GetAll($query);
-								$page["community_id"] = $community_id;
-								$page["updated_date"] = time();
-								$page["updated_by"] = $ENTRADA_USER->getActiveId();
-								if ($db->AutoExecute("community_pages", $page, "INSERT") && ($cpage_id = $db->Insert_Id())) {
-									communities_log_history($community_id, $cpage_id, 0, "community_history_add_page", 1);
-									$page_options["cpage_id"] = $cpage_id;
-									if (!$db->AutoExecute("community_page_options", $page, "INSERT")) {
-										$ERROR++;
-										$ERRORSTR[] = "An issue was encountered while attempting to insert page options for a newly created page.";
-										application_log("error", "Could not create a page option record in community page [".$cpage_id."]. Database said: ".$db->ErrorMsg());
-									}
-								} else {
-									$ERROR++;
-									$ERRORSTR[] = "An issue was encountered while attempting to insert a page in this newly created community.";
-									application_log("error", "Could not create a new page in community [".$community_id."]. Database said: ".$db->ErrorMsg());
-								}
-							}
-						}
+                        if (isset($PROCESSED["page_ids"]) && $PROCESSED["page_ids"]) {
+                            foreach ($PROCESSED["page_ids"] as $page_id) {
+                                $query = "SELECT * FROM `community_type_pages` WHERE `ctpage_id` = ".$db->qstr($page_id);
+                                $page = $db->GetRow($query);
+                                if ($page) {
+                                    $query = "SELECT * FROM `community_type_page_options` WHERE `ctpage_id` = ".$db->qstr($page_id);
+                                    $page_options = $db->GetAll($query);
+                                    $page["community_id"] = $community_id;
+                                    $page["updated_date"] = time();
+                                    $page["updated_by"] = $ENTRADA_USER->getActiveId();
+                                    if ($db->AutoExecute("community_pages", $page, "INSERT") && ($cpage_id = $db->Insert_Id())) {
+                                        communities_log_history($community_id, $cpage_id, 0, "community_history_add_page", 1);
+                                        foreach ($page_options as $page_option) {
+                                            if ($page_option["option_title"] == "community_title") {
+                                                $query = "UPDATE `community_pages` 
+                                                            SET `menu_title` = ".$db->qstr($PROCESSED["community_title"]).", 
+                                                                `page_title` = ".$db->qstr($PROCESSED["community_title"])." 
+                                                            WHERE `cpage_id` = ".$db->qstr($cpage_id);
+                                                if (!$db->Execute($query)) {
+                                                    application_log("Unable to set `page_title` and `menu_title` for a community page [".$cpage_id."] to that of the `community_title`.");
+                                                }
+                                            } else {
+                                                $page_option["cpage_id"] = $cpage_id;
+                                                if (!$db->AutoExecute("community_page_options", $page_option, "INSERT")) {
+                                                    $ERROR++;
+                                                    $ERRORSTR[] = "An issue was encountered while attempting to insert page options for a newly created page.";
+                                                    application_log("error", "Could not create a page option record in community page [".$cpage_id."]. Database said: ".$db->ErrorMsg());
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        $ERROR++;
+                                        $ERRORSTR[] = "An issue was encountered while attempting to insert a page in this newly created community.";
+                                        application_log("error", "Could not create a new page in community [".$community_id."]. Database said: ".$db->ErrorMsg());
+                                    }
+                                }
+                            }
+                        }
+                        if (isset($PROCESSED["course_ids"]) && $PROCESSED["course_ids"]) {
+                            foreach ($PROCESSED["course_ids"] as $course_id) {
+                                $query = "SELECT * FROM `courses` 
+                                            WHERE `course_id` = ".$db->qstr($course_id)."
+                                            AND `course_active` = 1
+                                            AND `course_id` NOT IN (
+                                                SELECT `course_id` FROM `community_courses` WHERE `course_id` = ".$db->qstr($course_id)."
+                                            )";
+                                $course = $db->GetRow($query);
+                                if ($course) {
+                                    if (!$db->AutoExecute("community_courses", array("community_id" => $community_id, "course_id" => $course["course_id"]), "INSERT")) {
+                                        $ERROR++;
+                                        $ERRORSTR[] = "An issue was encountered while attempting to attach a course to this newly created community.";
+                                        application_log("error", "Could not connect a course [".$course["course_id"]."] to a newly created community [".$community_id."]. Database said: ".$db->ErrorMsg());
+                                    }
+                                }
+                            }
+                        }
 
 						if (!$PROCESSED["community_active"]) {
 							if ($MAILING_LISTS["active"]) {
@@ -459,6 +496,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 			} else {
 				$ONLOAD[] = "selectRegistrationOption('".(int) $PROCESSED["community_registration"]."')";
 			}
+            
+            $HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/chosen.jquery.min.js\"></script>\n";
+            $HEAD[]	= "<link rel=\"stylesheet\" type=\"text/css\"  href=\"".ENTRADA_RELATIVE."/css/jquery/chosen.css\"></script>\n";
+			$ONLOAD[] = "jQuery('.chosen-select').chosen({no_results_text: 'No courses found matching'})";
 
 			if ($COMMUNITY_PARENT) {
 				$fetched	= array();
@@ -487,126 +528,131 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                         parameters: {
                                         community_type_id: community_type_id,
                                         'page_ids[]' : $$('input[name="page_ids[]"]:checked').pluck('value'),
+                                        'course_ids[]' : jQuery('select#course_ids').val(),
                                         category_id: <?php echo $CATEGORY_ID; ?>,
-                                        group: '<?php echo $GROUP; ?>',
-
-                                    }
+                                        group: '<?php echo $GROUP; ?>'
+                                    },
+                        onComplete: function () {
+                            $('type_options').show();
+                            jQuery('.chosen-select').chosen({no_results_text: 'No courses found matching'});
+                        }
                     });
-                    $('type_options').show();
                 }
-
-                jQuery(function() {
-                    jQuery( ".large-view-1" ).click(function() {
-                        jQuery(".default-large").dialog({
-                             width: 792 ,
-                             height: 720,
-                             position: 'center',
-                             draggable: false,
-                             resizable: false,
-                             modal : true,
-                             show: 'fade',
-                             hide: 'fade',
-                             title: 'Default Template',
-                             buttons: {
-                            'Select': function() {
-                               jQuery('#template_option_1').attr('checked', 'checked');
-                               jQuery(this).dialog('close');
-                            },
-                            'Close': function() {
-                               jQuery(this).dialog('close');
-                            }
-                          }
-                        });
+                
+                function show_default_large() {
+                    jQuery(".default-large").dialog({ 
+                         width: 792 , 
+                         height: 720,
+                         position: 'center',
+                         draggable: false,
+                         resizable: false,
+                         modal : true, 
+                         show: 'fade',
+                         hide: 'fade',
+                         title: 'Default Template',
+                         buttons: {
+                        'Select': function() {
+                           jQuery('#template_option_1').attr('checked', 'checked');
+                           jQuery(this).dialog('close');
+                        },
+                        'Close': function() {
+                           jQuery(this).dialog('close');
+                        }
+                      }
                     });
-                    jQuery( ".large-view-2" ).click(function() {
-                        jQuery(".committee-large").dialog({
-                             width: 792 ,
-                             height: 720,
-                             position: 'center',
-                             draggable: false,
-                             resizable: false,
-                             modal : true,
-                             show: 'fade',
-                             hide: 'fade',
-                             title: 'Committee Template',
-                             buttons: {
-                            'Select': function() {
-                               jQuery('#template_option_2').attr('checked', 'checked');
-                               jQuery(this).dialog('close');
-                            },
-                            'Close': function() {
-                               jQuery(this).dialog('close');
-                            }
-                          }
-                        });
+                }
+                
+                function show_committee_large() {
+                    jQuery(".committee-large").dialog({
+                         width: 792 , 
+                         height: 720,
+                         position: 'center',
+                         draggable: false,
+                         resizable: false,
+                         modal : true,
+                         show: 'fade',
+                         hide: 'fade',
+                         title: 'Committee Template',
+                         buttons: {
+                        'Select': function() {
+                           jQuery('#template_option_2').attr('checked', 'checked');
+                           jQuery(this).dialog('close');
+                        },
+                        'Close': function() {
+                           jQuery(this).dialog('close');
+                        }
+                      }
                     });
-                    jQuery( ".large-view-3" ).click(function() {
-                        jQuery(".vp-large").dialog({
-                             width: 792 ,
-                             height: 720,
-                             position: 'center',
-                             draggable: false,
-                             resizable: false,
-                             modal : true,
-                             show: 'fade',
-                             hide: 'fade',
-                             title: 'Virtual Patient Template',
-                             buttons: {
-                            'Select': function() {
-                               jQuery('#template_option_3').attr('checked', 'checked');
-                               jQuery(this).dialog('close');
-                            },
-                            'Close': function() {
-                               jQuery(this).dialog('close');
-                            }
-                          }
-                        });
+                }
+                
+                function show_virtualpatient_large() {
+                    jQuery(".virtualpatient-large").dialog({
+                         width: 792 , 
+                         height: 720,
+                         position: 'center',
+                         draggable: false,
+                         resizable: false,
+                         modal : true,
+                         show: 'fade',
+                         hide: 'fade',
+                         title: 'Virtual Patient Template',
+                         buttons: {
+                        'Select': function() {
+                           jQuery('#template_option_3').attr('checked', 'checked');
+                           jQuery(this).dialog('close');
+                        },
+                        'Close': function() {
+                           jQuery(this).dialog('close');
+                        }
+                      }
                     });
-                    jQuery( ".large-view-4" ).click(function() {
-                        jQuery(".learningModule-large").dialog({
-                             width: 792,
-                             height: 720,
-                             position: 'center',
-                             draggable: false,
-                             resizable: false,
-                             modal : true,
-                             show: 'fade',
-                             hide: 'fade',
-                             title: 'Learning Module Template',
-                             buttons: {
-                            'Select': function() {
-                               jQuery('#template_option_4').attr('checked', 'checked');
-                               jQuery(this).dialog('close');
-                            },
-                            'Close': function() {
-                               jQuery(this).dialog('close');
-                            }
-                          }
-                        });
+                }
+                
+                function show_learningmodule_large() {
+                    jQuery(".learningmodule-large").dialog({
+                         width: 792, 
+                         height: 720,
+                         position: 'center',
+                         draggable: false,
+                         resizable: false,
+                         modal : true,
+                         show: 'fade',
+                         hide: 'fade',
+                         title: 'Learning Module Template',
+                         buttons: {
+                        'Select': function() {
+                           jQuery('#template_option_4').attr('checked', 'checked');
+                           jQuery(this).dialog('close');
+                        },
+                        'Close': function() {
+                           jQuery(this).dialog('close');
+                        }
+                      }
                     });
-                    jQuery( ".large-view-5" ).click(function() {
-                        jQuery(".course-large").dialog({
-                             width: 792,
-                             height: 720,
-                             position: 'center',
-                             draggable: false,
-                             resizable: false,
-                             modal : true,
-                             show: 'fade',
-                             hide: 'fade',
-                             title: 'Course Template',
-                             buttons: {
-                            'Select': function() {
-                               jQuery('#template_option_5').attr('checked', 'checked');
-                               jQuery(this).dialog('close');
-                            },
-                            'Close': function() {
-                               jQuery(this).dialog('close');
-                            }
-                          }
-                        });
+                }
+                
+                function show_course_large() {
+                    jQuery(".course-large").dialog({
+                         width: 792, 
+                         height: 908,
+                         position: 'center',
+                         draggable: false,
+                         resizable: false,
+                         modal : true,
+                         show: 'fade',
+                         hide: 'fade',
+                         title: 'Course Template',
+                         buttons: {
+                        'Select': function() {
+                           jQuery('#template_option_5').attr('checked', 'checked');
+                           jQuery(this).dialog('close');
+                        },
+                        'Close': function() {
+                           jQuery(this).dialog('close');
+                        }
+                      }
                     });
-                });
+                }
             </script>
             <form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("action" => "create", "step" => 3)); ?>" method="post" class="form-horizontal">
                 <input type="hidden" name="category_id" value="<?php echo html_encode($CATEGORY_ID); ?>" />
@@ -614,7 +660,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                 <h3>Community Details</h3>
                 <div class="control-group">
                     <?php
-                    if (is_array($community_parents)) {
+                    if (isset($community_parents) && @count($community_parents)) {
                         ?>
                         <label class="control-label">Community Path:</label>
                         <div class="controls">
@@ -631,26 +677,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                 <div class="control-group">
                     <label class="control-label form-required" for="community_title">Community Name:</label>
                     <div class="controls">
-                        <input type="text" id="community_title" name="community_title" value="<?php echo html_encode($PROCESSED["community_title"]); ?>" onkeyup="validateShortname(this.value)" />
+                        <input type="text" id="community_title" name="community_title" value="<?php echo html_encode((isset($PROCESSED["community_title"]) && $PROCESSED["community_title"] ? $PROCESSED["community_title"] : "")); ?>" onkeyup="validateShortname(this.value)" />
                         <span class="content-small">(<strong>Example:</strong> Medicine Club)</span>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label" for="community_keywords">Community Keywords:</label>
                     <div class="controls">
-                        <input type="text" id="community_keywords" name="community_keywords" value="<?php echo html_encode($PROCESSED["community_keywords"]); ?>"  />
+                        <input type="text" id="community_keywords" name="community_keywords" value="<?php echo html_encode((isset($PROCESSED["community_keywords"]) && $PROCESSED["community_keywords"] ? $PROCESSED["community_keywords"] : "")); ?>"  />
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label" for="community_description">Community Description:</label>
                     <div class="controls">
-                        <textarea id="community_description" name="community_description"><?php echo html_encode($PROCESSED["community_description"]); ?></textarea>
+                        <textarea id="community_description" name="community_description"><?php echo html_encode((isset($PROCESSED["community_description"]) && $PROCESSED["community_description"] ? $PROCESSED["community_description"] : "")); ?></textarea>
                     </div>
                 </div>
                 <div class="control-group">
                     <label class="control-label form-required" for="community_shortname">Community Shortname:</label>
                     <div class="controls">
-                        <input type="text" id="community_shortname" name="community_shortname" onkeyup="validateShortname(this.value)" />
+                        <input type="text" id="community_shortname" name="community_shortname" onkeyup="validateShortname(this.value)" value="<?php echo (isset($PROCESSED["community_shortname"]) && $PROCESSED["community_shortname"] ? $PROCESSED["community_shortname"] : "") ?>" />
                         <span class="content-small">(<strong>Example:</strong> medicine_club)</span>
                     </div>
                 </div>
@@ -730,6 +776,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                                         $category = array();
                                         $default_categories = array();
                                         $default_groups = array();
+                                        $large_template_images = "";
                                         foreach ($results as $community_template) {
                                             $permissions_query = "SELECT * FROM `communities_template_permissions` WHERE `template`=". $db->qstr($community_template["template_name"]);
                                             $template_permissions = $db->GetAll($permissions_query);
@@ -762,57 +809,84 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                                                 }
                                                 if ((in_array($GROUP, $groups) && in_array($CATEGORY_ID, $category)) || (in_array($community_template["template_name"], $default_templates)) || (in_array($community_template["template_name"], $default_categories))) {
                                                 ?>
-                                                <li id="<?php echo $community_template["template_name"]."-template"; ?>">
-                                                    <div class="template-rdo">
-                                                        <input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
-                                                    </div>
-                                                    <div class="large-view">
-                                                        <a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
-                                                    </div>
-                                                    <label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
-                                                </li>
-                                                <?php
+                                                    <li id="<?php echo $community_template["template_name"]."-template"; ?>" style="background: url('images/<?php echo $community_template["template_name"]; ?>-thumb.jpg')">
+                                                        <div class="template-rdo">
+                                                            <input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo (((!isset($template_selection) || $template_selection == 0) && ($key == 0) || (isset($template_selection) && $template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
+                                                        </div>
+                                                        <div class="large-view">
+                                                            <a href="#" onclick="show_<?php echo $community_template["template_name"]; ?>_large()" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
+                                                        </div>
+                                                        <label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
+                                                    </li>
+                                                    <?php
+                                                    $large_template_images .= " <div class=\"".$community_template["template_name"]."-large\" style=\"display:none;\">\n";
+                                                    $large_template_images .= "     <img src=\"".ENTRADA_URL."/images/template-".$community_template["template_name"]."-large.gif\" alt=\"".ucfirst($community_template["template_name"])." Template Screen shot\" />\n";
+                                                    $large_template_images .= " </div>\n";
                                                 }
                                             }
                                         }
                                         ?>
                                     </ul>
-                                    <div class="default-large" style="display:none;">
-                                        <img src="<?php echo ENTRADA_URL."/images/template-default-large.gif" ?>" alt="Default Template Screen shot" />
-                                    </div>
-                                    <div class="committee-large" style="display:none;">
-                                        <img src="<?php echo ENTRADA_URL."/images/template-meeting-large.gif" ?>" alt="Committee Template Screen shot" />
-                                    </div>
-                                    <div class="vp-large" style="display:none;">
-                                        <img src="<?php echo ENTRADA_URL."/images/template-vp-large.gif" ?>" alt="Virtual Patient Template Screen shot" />
-                                    </div>
-                                    <div class="learningModule-large" style="display:none;">
-                                        <img src="<?php echo ENTRADA_URL."/images/template-education-large.gif" ?>" alt="Learning Template Screen shot" />
-                                    </div>
-                                    <div class="course-large" style="display:none;">
-                                        <img src="<?php echo ENTRADA_URL."/images/template-course-large.gif" ?>" alt="Course Template Screen shot" />
-                                    </div>
                                     <?php
+                                    echo (isset($large_template_images) && $large_template_images ? $large_template_images : "");
                                 }
                             }
                             ?>
                         </div>
                     </div>
-                </div>
-                        
-                <h3>Community Pages</h3>
-
-                <div class="control-group">
-                    <label class="control-label">Default Pages:</label>
-                    <div class="controls" id="community_type_pages">
-                        <?php
-                        if (isset($PROCESSED["octype_id"]) && $PROCESSED["octype_id"]) {
-                            echo community_type_pages_inlists($PROCESSED["octype_id"], 0, 0, array(), $PROCESSED["page_ids"]);
-                        } else {
-                            echo display_notice("No community type selected.");
-                        }
-                        ?>
+                    <div class="clearfix"></div>
+                    <h3>Community Pages</h3>
+                    <div class="control-group">
+                        <label class="control-label form-required">Default Pages</label>
+                        <div class="controls">
+                            <?php
+                            $pages_output = community_type_pages_inlists($PROCESSED["octype_id"], 0, 0, array(), $PROCESSED["page_ids"]);
+                            if ($pages_output != "<ul class=\"community-page-list empty\"></ul>") {
+                                echo $pages_output;
+                            } else {
+                                add_notice("No default pages found for this community type.");
+                                echo display_notice();
+                            }
+                            ?>
+                        </div>
                     </div>
+                    <?php
+                    $query = "SELECT `community_type_options` FROM `org_community_types`
+                                WHERE `octype_id` = ".$db->qstr($PROCESSED["octype_id"]);
+                    $type_options_serialized = $db->GetOne($query);
+                    if ($type_options_serialized && ($type_options = json_decode($type_options_serialized)) && @count($type_options)) {
+                        foreach ($type_options as $type_option => $active) {
+                            if ($type_option == "course_website" && $active && $ENTRADA_ACL->amIAllowed("course", "create", false)) {
+                                ?>
+                                <h3>Community Courses</h3>
+                                <div class="control-group">
+                                    <label class="control-label form-nrequired">Select course(s)</label>
+                                    <div class="controls">
+                                        <?php
+                                            $query = "SELECT `course_id`, `course_code`, `course_name` FROM `courses` 
+                                                        WHERE `course_active` = 1
+                                                        AND `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+                                                        AND `course_id` NOT IN (
+                                                            SELECT `course_id` FROM `community_courses`
+                                                        )";
+                                            $courses = $db->GetAll($query);
+                                            if ($courses) {
+                                                echo "<select multiple=\"multiple\" name=\"course_ids[]\" id=\"course_ids\" class=\"chosen-select\">";
+                                                foreach ($courses as $course) {
+                                                    if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course["course_id"], $ENTRADA_USER->getActiveOrganisation()), 'update')) {
+                                                        echo "<option value=\"".((int)$course["course_id"])."\"".(in_array($course["course_id"], $PROCESSED["course_ids"]) ? " selected=\"selected\"" : "").">".html_encode(($course["course_code"] ? $course["course_code"]." - " : "").$course["course_name"])."</option>";
+                                                    }
+                                                }
+                                                echo "</select>";
+                                            }
+                                        ?>
+                                    </div>
+                                </div>
+                                <?php
+                            }
+                        }
+                    }
+                ?>
                 </div>
 
                 <h3>Community Permissions</h3>
@@ -940,55 +1014,47 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                         </table>
                     </div>
                 </div>
-                <table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Creating a Community">
-                    <colgroup>
-                        <col style="width: 20%" />
-                        <col style="width: 77%" />
-                        <col style="width: 3%" />
-                    </colgroup>
-                    <?php
-                    if ($MAILING_LISTS["active"]) {
-                        ?>
-                        <tr><td colspan="3"><h2 style="margin-top: 0px">Community Mailing List</h2></td></tr>
-                        <tr>
-                            <td style="vertical-align: top"><?php echo help_create_button("Mailing List Mode", ""); ?></td>
-                            <td style="vertical-align: top"><span class="form-nrequired">Mailing List Mode</span></td>
-                            <td style="padding-bottom: 15px">
-                                <table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Setting Mailing List Mode">
-                                    <colgroup>
-                                        <col style="width: 3%" />
-                                        <col style="width: 97%" />
-                                    </colgroup>
-                                    <tbody>
-                                        <tr>
-                                            <td style="padding-bottom: 5px; vertical-align: top"><input type="radio" name="community_list_mode" id="community_list_announcement" style="vertical-align: middle" value="announcements" <?php echo (((!isset($PROCESSED["community_list_mode"]) && $mail_list->type == "announcements") || (isset($PROCESSED["community_list_mode"])) && ($PROCESSED["community_list_mode"] == "announcements")) ? " checked=\"checked\"" : ""); ?>/></td>
-                                            <td style="padding-bottom: 5px; vertical-align: top">
-                                                <label for="community_list_announcement" class="normal-green">Announcement Mode</label>
-                                                <div class="content-small">Allow administrators of this community to send out email announcements to all the members of the community through the mailing list.</div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding-bottom: 5px; vertical-align: top"><input type="radio" name="community_list_mode" id="community_list_discussion" style="vertical-align: middle" value="discussion" <?php echo (((!isset($PROCESSED["community_list_mode"]) && $mail_list->type == "discussion") || (isset($PROCESSED["community_list_mode"])) && ($PROCESSED["community_list_mode"] == "discussion")) ? " checked=\"checked\"" : ""); ?>/></td>
-                                            <td style="padding-bottom: 5px; vertical-align: top">
-                                                <label for="community_list_discussion" class="normal-green">Discussion Mode</label>
-                                                <div class="content-small">Allow all members of this community to send out email to the community through the mailing list.</div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding-bottom: 5px; vertical-align: top"><input type="radio" name="community_list_mode" id="community_list_deactivate" style="vertical-align: middle" value="inactive" <?php echo (((!isset($PROCESSED["community_list_mode"]) || $mail_list->type == "inactive") || (isset($PROCESSED["community_list_mode"])) && ($PROCESSED["community_list_mode"] == "inactive")) ? " checked=\"checked\"" : ""); ?>/></td>
-                                            <td>
-                                                <label for="community_list_deactivates" class="normal-green">Deactivate List</label>
-                                                <div class="content-small">Disable the mailing list for this community so members cannot be contacted through the list.</div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </td>
-                        </tr>
-                        <?php
-                    }
+                <?php
+                if ($MAILING_LISTS["active"]) {
                     ?>
-                </table>
+                    <h3>Community Mailing List</h2>
+                    <div class="control-group">
+                        <label class="control-label form-nrequired">Community Mailing List:</label>
+                        <div class="controls">
+                            <table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Setting Mailing List Mode">
+                                <colgroup>
+                                    <col style="width: 3%" />
+                                    <col style="width: 97%" />
+                                </colgroup>
+                                <tbody>
+                                    <tr>
+                                        <td style="padding-bottom: 5px; vertical-align: top"><input type="radio" name="community_list_mode" id="community_list_announcement" style="vertical-align: middle" value="announcements" <?php echo (((!isset($PROCESSED["community_list_mode"]) && isset($mail_list) && $mail_list->type == "announcements") || (isset($PROCESSED["community_list_mode"])) && ($PROCESSED["community_list_mode"] == "announcements")) ? " checked=\"checked\"" : ""); ?>/></td>
+                                        <td style="padding-bottom: 5px; vertical-align: top">
+                                            <label for="community_list_announcement" class="normal-green">Announcement Mode</label>
+                                            <div class="content-small">Allow administrators of this community to send out email announcements to all the members of the community through the mailing list.</div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-bottom: 5px; vertical-align: top"><input type="radio" name="community_list_mode" id="community_list_discussion" style="vertical-align: middle" value="discussion" <?php echo (((!isset($PROCESSED["community_list_mode"]) && isset($mail_list) && $mail_list->type == "discussion") || (isset($PROCESSED["community_list_mode"])) && ($PROCESSED["community_list_mode"] == "discussion")) ? " checked=\"checked\"" : ""); ?>/></td>
+                                        <td style="padding-bottom: 5px; vertical-align: top">
+                                            <label for="community_list_discussion" class="normal-green">Discussion Mode</label>
+                                            <div class="content-small">Allow all members of this community to send out email to the community through the mailing list.</div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding-bottom: 5px; vertical-align: top"><input type="radio" name="community_list_mode" id="community_list_deactivate" style="vertical-align: middle" value="inactive" <?php echo (((!isset($PROCESSED["community_list_mode"]) || !isset($mail_list) || $mail_list->type == "inactive") || (isset($PROCESSED["community_list_mode"])) && ($PROCESSED["community_list_mode"] == "inactive")) ? " checked=\"checked\"" : ""); ?>/></td>
+                                        <td>
+                                            <label for="community_list_deactivates" class="normal-green">Deactivate List</label>
+                                            <div class="content-small">Disable the mailing list for this community so members cannot be contacted through the list.</div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <?php
+                }
+                ?>
                 <div class="form-actions">
                     <input type="submit" class="btn btn-primary" value="Create" /> <span class="or">or</span>
                     <a class="btn" onclick="window.location='<?php echo ENTRADA_URL."/".$MODULE; ?>'" />Cancel</a>

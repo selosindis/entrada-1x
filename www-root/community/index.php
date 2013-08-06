@@ -589,23 +589,31 @@ if ($COMMUNITY_URL) {
 					if (@file_exists(ENTRADA_ABSOLUTE."/community/templates/".$COMMUNITY_TEMPLATE."/includes/config.inc.php")) {
 						require_once(ENTRADA_ABSOLUTE."/community/templates/".$COMMUNITY_TEMPLATE."/includes/config.inc.php");
 					}
-
-					/**
-					 * Responsible for displaying the permission masks sidebar item
-					 * if they have more than their own permission set available.
-					 */
-					if (($LOGGED_IN) && (isset($_SESSION["permissions"])) && (@is_array($_SESSION["permissions"])) && (@count($_SESSION["permissions"]) > 1)) {
-						$sidebar_html  = "<form id=\"masquerade-form\" action=\"".COMMUNITY_URL.$COMMUNITY_URL."\" method=\"get\">\n";
-						$sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label><br />";
-						$sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 160px\" onchange=\"window.location='".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?".str_replace("&#039;", "'", replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
-						foreach ($_SESSION["permissions"] as $access_id => $result) {
-							$sidebar_html .= "<option value=\"".(($access_id == $ENTRADA_USER->getDefaultAccessId()) ? "close" : $result["permission_id"])."\"".(($access_id == $ENTRADA_USER->getAccessId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"])."</option>\n";
-						}
-						$sidebar_html .= "</select>\n";
-						$sidebar_html .= "</form>\n";
-
-						new_sidebar_item("Permission Masks", $sidebar_html, "permission-masks", "open");
-					}
+                    /**
+                     * Responsible for displaying the permission masks sidebar item
+                     * if they have more than their own permission set available.
+                     */
+                    if (isset($_SESSION["permissions"]) && is_array($_SESSION["permissions"]) && (count($_SESSION["permissions"]) > 1)) {
+                        $sidebar_html  = "<form id=\"masquerade-form\" action=\"".ENTRADA_URL."\" method=\"get\">\n";
+                        $sidebar_html .= "<label for=\"permission-mask\">Available permission masks:</label><br />";
+                        $sidebar_html .= "<select id=\"permission-mask\" name=\"mask\" style=\"width: 100%\" onchange=\"window.location='".ENTRADA_URL."/".$MODULE."/?".str_replace("&#039;", "'", replace_query(array("mask" => "'+this.options[this.selectedIndex].value")))."\">\n";
+                        $display_masks = false;
+                        $added_users = array();
+                        foreach ($_SESSION["permissions"] as $access_id => $result) {
+                            if ($result["organisation_id"] == $ENTRADA_USER->getActiveOrganisation() && is_int($access_id) && ((isset($result["mask"]) && $result["mask"]) || $access_id == $ENTRADA_USER->getDefaultAccessId() || ($result["id"] == $ENTRADA_USER->getID() && $ENTRADA_USER->getDefaultAccessId() != $access_id)) && array_search($result["id"], $added_users) === false) {
+                                if (isset($result["mask"]) && $result["mask"]) {
+                                    $display_masks = true;
+                                }
+                                $added_users[] = $result["id"];
+                                $sidebar_html .= "<option value=\"".(($access_id == $ENTRADA_USER->getDefaultAccessId()) ? "close" : $result["permission_id"])."\"".(($result["id"] == $ENTRADA_USER->getActiveId()) ? " selected=\"selected\"" : "").">".html_encode($result["fullname"]) . "</option>\n";
+                            }
+                        }
+                        $sidebar_html .= "</select>\n";
+                        $sidebar_html .= "</form>\n";
+                        if ($display_masks) {
+                            new_sidebar_item("Permission Masks", $sidebar_html, "permission-masks", "open");
+                        }
+                    }
 
 					if (($LOGGED_IN) && ($COMMUNITY_ADMIN)) {
 						$sidebar_html  = "<ul class=\"menu\">\n";

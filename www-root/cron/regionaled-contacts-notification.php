@@ -37,20 +37,24 @@ $contact_id = 0;
 /*
  *  fetch the apartments
  */
-$query = "	SELECT `apartment_id`, 
-					`apartment_title`, 
-					CONCAT_WS(' ',super_firstname, super_lastname) AS `super_full`, 
+$query = "	SELECT a.`apartment_id`, 
+				   a.`apartment_title`, 
+					CONCAT_WS(' ',a.super_firstname, a.super_lastname) AS `super_full`, 
 					`super_email`, 
-					CONCAT_WS(' ',keys_firstname,keys_lastname) AS `keys_full`, 
-					`keys_email`,
-					b.`region_name`
-				FROM `".CLERKSHIP_DATABASE."`.`apartments`
+					CONCAT_WS(' ',a.keys_firstname,a.keys_lastname) AS `keys_full`, 
+					a.`keys_email`,
+					b.`region_name`,
+					c.`department_id`,
+					c.`department_title`
+				FROM `".CLERKSHIP_DATABASE."`.`apartments` a
 				JOIN `".CLERKSHIP_DATABASE."`.`regions` AS b
-				ON `apartments`.`region_id` = b.`region_id`
-				WHERE `apartments`.`available_finish` >= ".$db->qstr(time())."
-				OR `apartments`.`available_finish` = 0
-				GROUP BY `apartment_id`
-				ORDER BY `apartments`.`region_id`, `keys_full`";
+				ON a.`region_id` = b.`region_id`
+				LEFT JOIN `".AUTH_DATABASE."`.`departments` as c
+				ON a.`department_id` = c.`department_id`
+				WHERE a.`available_finish` >= ".$db->qstr(time())."
+				OR a.`available_finish` = 0
+				GROUP BY a.`apartment_id`
+				ORDER BY a.`region_id`, `keys_full`";
 
 if ($apartments = $db->GetAll($query)) {
 
@@ -101,27 +105,28 @@ if ($apartments = $db->GetAll($query)) {
 			$message_content .= $message;
 		}
 
-		$replace = array($message_body["name"], $message_body["region_name"], $message_content, $AGENT_CONTACTS["agent-regionaled"]["name"], $AGENT_CONTACTS["agent-regionaled"]["email"], $AGENT_CONTACTS["agent-regionaled"]["name"]);
+		$replace = array($message_body["name"], $message_body["region_name"], $message_content, $AGENT_CONTACTS["agent-regionaled"][$apartment["department_id"]]["name"], $AGENT_CONTACTS["agent-regionaled"][$apartment["department_id"]]["email"], $AGENT_CONTACTS["agent-regionaled"][$apartment["department_id"]]["name"]);
 
 		if (!isset($occupants_email)) {
 			$occupants_email = nl2br(file_get_contents(ENTRADA_ABSOLUTE . "/templates/" . $ENTRADA_TEMPLATE->activeTemplate() . "/email/regionaled-apartment-occupants-monthly-notification.txt"));
 		}
 
 		$mail = new Zend_Mail();
-		$mail->addHeader("X-Section", "Regional Education Notification System", true);
-		$mail->setFrom($AGENT_CONTACTS["agent-regionaled"]["email"], $AGENT_CONTACTS["agent-regionaled"]["name"]);
+		$mail->addHeader("X-Section", $apartment["department_title"] . $apartment["department_title"] . "Accommodation Notification System", true);
+		$mail->setFrom($AGENT_CONTACTS["agent-regionaled"][$apartment["department_id"]]["email"], $AGENT_CONTACTS["agent-regionaled"][$apartment["department_id"]]["name"]);
 		$mail->addTo($email, $message_body["name"]);
-		$mail->addCc($AGENT_CONTACTS["agent-regionaled"]["email"], $AGENT_CONTACTS["agent-regionaled"]["name"]);
+		$mail->addCc($AGENT_CONTACTS["agent-regionaled"][$apartment["department_id"]]["email"], $AGENT_CONTACTS["agent-regionaled"][$apartment["department_id"]]["name"]);
 		$mail->setSubject("Queen's Monthly Accomodation Schedule for {$message_body["region_name"]}");
 		$mail->setBodyHtml(str_replace($search, $replace, $occupants_email));
 
 		if ($mail->send()) {
-			application_log("success", "Successfully sent apartment occupant notification to [".$email."].");
+			application_log("success", "Successfully sent apartment contacts notification to [".$email."].");
 		} else {
-			application_log("error", "Failed to send apartment occupant notification to [".$email."].");
+			application_log("error", "Failed to send apartment contacts notification to [".$email."].");
 		}
 
 		unset($mail);
+		exit;
 	}
 	
 } else {

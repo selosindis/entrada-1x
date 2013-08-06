@@ -1264,9 +1264,13 @@ div.community-page-container {
 	background-image: url(../../../../images/record-next-off.gif);
 }
 div.community-page-list.home {
-	background: url(../../../../images/record-next-on.gif) no-repeat 29px 6px;
-	padding: 4px 0px 4px 46px;
+	background: url(../../../../images/record-next-on.gif) no-repeat 26px 6px;
+	padding: 4px 0px 4px 41px;
 	border-bottom: 1px solid #CCC;
+}
+div.locked-spacer {
+	width: 21px;
+	float: left;
 }
 #pagelists > li > div {
 	font-weight: bold;

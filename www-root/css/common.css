@@ -3730,27 +3730,6 @@ ul.community-themes li.first {
 ul.community-themes li.last {
 	margin-right:0;
 }
-
-#committee-template {
-	background: url("../images/meeting-thumb.jpg");
-	border-color: #ccc;
-}
-#virtualpatient-template {
-	background: url("../images/vp-thumb.jpg");
-	border-color: #ccc;
-}
-#course-template {
-background: url("../images/course-thumb.jpg");
-border-color: #CCC;
-}
-#learningmodule-template {
-background: url("../images/education-thumb.jpg");
-border-color: #ccc;
-}
-#default-template {
-background: url("../images/default-thumb.jpg");
-border-color: #ccc;
-}
 div.template-rdo {
 background:#fff;
 border-left: 1px solid #ccc;
@@ -4406,4 +4385,11 @@ a.help {
 }
 .pagination .notice{
   background-color: #FFC;
+}
+
+/* Course CSS */
+
+/*modifies the menu so it can be seen on smaller window */
+.dropdown-menu.toggle-left{
+    margin: 2px 0 0 -135px;
 }

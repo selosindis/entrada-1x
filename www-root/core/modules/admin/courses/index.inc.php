@@ -271,7 +271,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			<col class="general" />
 			<col class="general" />
 			<col class="title" />
-			<col class="actions" />
+			<col class="attachment" />
 		</colgroup>
 		<thead>
 			<tr>
@@ -279,7 +279,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "type") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("type", "Category"); ?></td>
 				<td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "code") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("code", "Code"); ?></td>
 				<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "name") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("name", "Name"); ?></td>
-                <td class="actions">Actions</td>
+                                <td class="attachment">&nbsp;</td>
 			</tr>
 		</thead>
 		<?php if ($ENTRADA_ACL->amIAllowed('course', 'delete', false)) : ?>
@@ -321,16 +321,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			echo "	<td class=\"general".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\">" : "").html_encode($result["curriculum_type_name"]).(($url) ? "</a>" : "")."</td>\n";
 			echo "	<td class=\"general".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\">" : "").html_encode($result["course_code"]).(($url) ? "</a>" : "")."</td>\n";
 			echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"".html_encode($result["course_name"])."\">" : "").html_encode($result["course_name"]).(($url) ? "</a>" : "")."</td>\n";
-			echo "	<td class=\"actions\">".(($url) ? "<a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=content&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/event-contents.gif\" width=\"16\" height=\"16\" alt=\"Manage " . $module_singular_name . " Content\" title=\"Manage ". $module_singular_name . " Content\" border=\"0\" /></a>" : "<img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"16\" height=\"16\" alt=\"\" title=\"\" />");
-			if ($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "read")) {
-				$second_icon = 1;
-				echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/gradebook?section=view&amp;id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/book_go.png\" width=\"16\" height=\"16\" alt=\"View Gradebook\" title=\"View Gradebook\" border=\"0\" /></a>";
-			}
-			if ($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update", false)) {
-				$third_icon = 1;
-				echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/courses/groups?id=".$result["course_id"]."\"><img src=\"".ENTRADA_URL."/images/list-community.gif\" width=\"16\" height=\"16\" alt=\"Manage Course Groups\" title=\"Manage Course Groups\" border=\"0\" /></a>";
-			}
-
+                        echo "  <td class=\"attachment".((!$url) ? " np" : "")."\">";
+                            if ($url) {
+                                echo "  <div class=\"btn-group\">";
+                                echo "      <button class=\"btn btn-mini dropdown-toggle\" data-toggle=\"dropdown\">";
+                                echo "          <i class=\"icon-pencil\"></i>";
+                                echo "      </button>";
+                                echo "      <ul class=\"dropdown-menu toggle-left\">";
+                                    if($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update")) {
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $result["course_id"], "step" => false))."\" >Course Details</a></li>\n";
+                                    }
+                                    if($ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), "read")) {
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $result["course_id"], "step" => false))."\" >Course Content</a></li>\n";
+                                    }
+                                    if($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update")) {
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $result["course_id"], "step" => false))."\" >Course Enrolment</a></li>\n";
+                                    }
+                                    if($ENTRADA_ACL->amIAllowed(new CourseResource($result["course_id"], $result["organisation_id"]), "update")) {
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $result["course_id"], "step" => false))."\">Course Groups</a></li>\n";
+                                    }
+                                    if($ENTRADA_ACL->amIAllowed(new GradebookResource($result["course_id"], $result["organisation_id"]), "read")) {
+                                        echo "<li><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$result["course_id"]."\">Course Gradebook</a></li>";
+                                    }
+                                echo "      </ul>";
+                            } else {
+                                echo "&nbsp;";
+                            }
 			echo "	</td>\n";
 			echo "</tr>\n";
 		}

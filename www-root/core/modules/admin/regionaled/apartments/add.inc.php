@@ -279,17 +279,39 @@ if (!defined("IN_APARTMENTS")) {
 				$PROCESSED["available_finish"] = 0;
 			}
 
+			$query = "	SELECT `dep_id`
+						FROM `" . AUTH_DATABASE . "`.`user_departments`
+						WHERE `user_id` = " . $db->qstr($ENTRADA_USER->getId());
+			$department_id = $db->getOne($query);
+			if ($department_id) {
+				$PROCESSED["department_id"] = $department_id;
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "You are not associated with a department in the " . APPLICATION_NAME . " System.  Please email the system administration to be added to a department: " . $AGENT_CONTACTS["administrator"]["email"];
+				application_log("error", "Proxy id: " . $ENTRADA_USER->getId() . " is not associated with a department and therefore cannot use the Regional Education module.");
+			}
+
 			if (!$ERROR) {
 				$PROCESSED["updated_last"] = time();
 				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 				
 				if (($db->AutoExecute(CLERKSHIP_DATABASE.".apartments", $PROCESSED, "INSERT")) && ($apartment_id = $db->Insert_Id())) {
+					$PROCESSED["apartment_id"] = $apartment_id;
+					$PROCESSED["proxy_id"] = $ENTRADA_USER->getId();
+					$PROCESSED["updated_date"] = time();
+					if ($db->AutoExecute(CLERKSHIP_DATABASE.".apartment_contacts", $PROCESSED, "INSERT")) {
 					$SUCCESS++;
 					$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["apartment_title"])."</strong> to the system.<br /><br />You will now be redirected to the apartment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/regionaled/apartments\" style=\"font-weight: bold\">click here</a> to continue.";
 
 					$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/regionaled/apartments\\'', 5000)";
 
 					application_log("success", "New apartment [".$apartment_id."] added to the system.");
+				} else {
+					$ERROR++;
+					$ERRORSTR[]	= "We were unable to add this apartment to the system at this time.<br /><br />The system administrator has been notified of this issue, please try again later.";
+
+						application_log("error", "Failed to insert a apartment_contact into the database. Database said: ".$db->ErrorMsg());
+					}
 				} else {
 					$ERROR++;
 					$ERRORSTR[]	= "We were unable to add this apartment to the system at this time.<br /><br />The system administrator has been notified of this issue, please try again later.";

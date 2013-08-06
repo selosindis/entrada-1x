@@ -10,4 +10,4 @@ Should you have any questions regarding your accommodations, please feel free to
 
 Sincerely, 
 
-%APPLICATION_NAME%
+%ACCOMMODATION_CONTACT_NAME%

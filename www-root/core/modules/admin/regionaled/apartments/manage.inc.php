@@ -45,6 +45,27 @@ if (!defined("IN_APARTMENTS")) {
 	}
 
 	if ($APARTMENT_ID) {
+		$allowed_apartment = 0;
+		$query = "	SELECT *
+					FROM `".CLERKSHIP_DATABASE."`.`apartment_contacts` a
+					JOIN `".AUTH_DATABASE."`.`departments` b
+					ON a.`department_id` = b.`department_id`
+					WHERE a.`apartment_id` = " . $db->qstr($APARTMENT_ID) . "
+					AND a.`proxy_id` = " . $db->qstr($ENTRADA_USER->getId());
+		$result = $db->getRow($query);
+		if ($result) {
+			$allowed_apartment = 1;
+			$department_id = $result["department_id"];
+			$department_title = $result["department_title"];
+		}
+	} else {
+		application_log("notice", "Someone attempted to manage an apartment without providing an apartment id.");
+
+		header("Location: ".ENTRADA_URL."/admin/regionaled/apartments");
+		exit;
+	}
+	
+	if ($allowed_apartment) {
 		$query = "	SELECT a.*, b.`region_name`, c.`province`, d.`country`
 					FROM `".CLERKSHIP_DATABASE."`.`apartments` AS a
 					LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS b
@@ -57,6 +78,8 @@ if (!defined("IN_APARTMENTS")) {
 		$APARTMENT_INFO = $db->GetRow($query);
 		if ($APARTMENT_INFO) {
 			define("IN_MANAGE", true);
+			$APARTMENT_INFO["department_id"] = $department_id;
+			$APARTMENT_INFO["department_title"] = $department_title;
 
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/regionaled/apartments/manage?id=".$APARTMENT_ID, "title" => limit_chars($APARTMENT_INFO["apartment_title"], 32));
 
@@ -124,7 +147,12 @@ if (!defined("IN_APARTMENTS")) {
 				/**
 				 * Show a list of other apartments in this region so it's quick to switch between them.
 				 */
-				$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`apartments` WHERE `region_id` = ".$db->qstr($APARTMENT_INFO["region_id"]);
+				$query = "	SELECT * 
+							FROM `".CLERKSHIP_DATABASE."`.`apartments` a
+							JOIN `".CLERKSHIP_DATABASE."`.`apartment_contacts` b
+							ON b.`apartment_id` = a.`apartment_id`
+							WHERE a.`region_id` = ".$db->qstr($APARTMENT_INFO["region_id"]) . "
+							AND b.`proxy_id` = " . $db->qstr($ENTRADA_USER->getActiveId());
 				$apartments = $db->GetAll($query);
 				if ($apartments) {
 					echo "<div class=\"container\">\n";
@@ -165,7 +193,10 @@ if (!defined("IN_APARTMENTS")) {
 			echo display_error();
 		}
 	} else {
-		application_log("notice", "Someone attempted to manage an apartment without providing an apartment id.");
+		$ERROR++;
+		$ERRORSTR[] = "You are not authorized to manage this apartment.";
+		
+		application_log("notice", "Someone attempted to manage an apartment without having authorization.");
 
 		header("Location: ".ENTRADA_URL."/admin/regionaled/apartments");
 		exit;

@@ -19,20 +19,20 @@ jQuery(document).ready(function(){
 		var children = [];
 		if (loaded[id] === undefined || !loaded[id]) {
 			var query = {'objective_id':id};
-			if(jQuery('#mapped_objectives').length>0){
-				var type = jQuery('#mapped_objectives').attr('data-resource-type');
-				var value = jQuery('#mapped_objectives').attr('data-resource-id');
-				if(type && value){
-					if (type != 'evaluation_question') {
-						query[type+'_id'] = value;
-					} else if (jQuery('#objective_ids_string_'+value).val()) {
-						query['objective_ids'] = jQuery('#objective_ids_string_'+value).val();
-					}
-				}
-			}
-			// if(mapped != undefined){
-			// 	query['client'] = mapped;
-			// }
+            if (jQuery("#event-objectives-section").length > 0) {
+                if(jQuery('#mapped_objectives').length>0){
+                    var type = jQuery('#mapped_objectives').attr('data-resource-type');
+                    var value = jQuery('#mapped_objectives').attr('data-resource-id');
+                    if(type && value){
+                        if (type != 'evaluation_question') {
+                            query[type+'_id'] = value;
+                        } else if (jQuery('#objective_ids_string_'+value).val()) {
+                            query['objective_ids'] = jQuery('#objective_ids_string_'+value).val();
+                        }
+                    }
+                }
+            }
+			
 			if(!loading_objectives){
 				var loading = jQuery(document.createElement('img'))
 									.attr('src',SITE_URL+'/images/loading.gif')

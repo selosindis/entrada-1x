@@ -93,9 +93,9 @@ if (!defined("IN_REGIONALED")) {
 
 						$query = "	SELECT a.*, g.`department_id`, g.`department_title`
 									FROM `".CLERKSHIP_DATABASE."`.`apartments` a
-									LEFT JOIN `".CLERKSHIP_DATABASE."`.`apartment_contacts` AS f
+									JOIN `".CLERKSHIP_DATABASE."`.`apartment_contacts` AS f
 									ON a.`apartment_id` = f.`apartment_id`
-									LEFT JOIN `".AUTH_DATABASE."`.`departments` AS g
+									JOIN `".AUTH_DATABASE."`.`departments` AS g
 									ON f.`department_id` = g.`department_id`
 									WHERE a.`apartment_id` = ".$db->qstr($PROCESSED["apartment_id"]) . "
 									AND f.`proxy_id` = " . $db->qstr($ENTRADA_USER->getId());

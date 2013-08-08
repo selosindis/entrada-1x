@@ -180,69 +180,56 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	}
 
 	if (defined("ENABLE_NOTICES") && ENABLE_NOTICES) {
-		$notices_to_display = Models_Notice::fetchUserNotices(true);
-		if ($notices_to_display && ($total_notices = count($notices_to_display))) {
-			$notices = array();
-			$previous_notices = array();
-			foreach ($notices_to_display as $notice) {
-				if ((!$notice["statistic_id"]) || ($notice["last_read"] <= $notice["updated_date"])) { 
-					$notices[] = $notice;
-				} else {
-					$previous_notices[] = $notice;
-				}
-			} ?>
+		$notices_to_display = Models_Notice::fetchUserNotices();
+		if ($notices_to_display && ($total_notices = count($notices_to_display))) { ?>
 			<form action="<?php echo ENTRADA_RELATIVE; ?>/dashboard?action=read" method="post">
 				<div class="dashboard-notices alert">
+					<div class="row-fluid">
+						<div class="span8">
+							<h2><?php echo APPLICATION_NAME ." ". $translate->_("Message Center");?></h2>
+						</div>
+						<div class="sapn4">
+							<a class="btn btn-small pull-right previous-notices" href="<?php echo ENTRADA_URL; ?>/messages"><i class="icon-eye-open"></i> Previously Read Messages</a>
+						</div>
+					</div>
 					<?php
-					if ($notices && count($notices)) { ?>
-						<h2><?php echo APPLICATION_NAME; ?> Notice<?php echo (($total_notices != 1) ? "s" : ""); ?></h2>
-						<?php
-						foreach ($notices as $announcement) {
-							echo "<div id=\"notice_box_".(int) $announcement["notice_id"]."\" class=\"new-notice\">";
-							echo "  <label class=\"checkbox\"><input type=\"checkbox\" name=\"mark_read[]\" id=\"notice_msg_".(int) $announcement["notice_id"]."\" value=\"".(int) $announcement["notice_id"]."\" /> ";
-							echo "	<strong>".date(DEFAULT_DATE_FORMAT, $announcement["updated_date"])."</strong>";
-							echo    ($announcement["lastname"] ? " <small>by ".html_encode($announcement["firstname"]." ".$announcement["lastname"])."</small>" : "");
-							echo "  </label>\n";
-							echo "	<div class=\"space-left\">".trim(clean_input($announcement["notice_summary"], "html"))."</div>";
-							echo "</div>";
-						}
-					}
-					if ($previous_notices && count($previous_notices)) { 
-						echo "<div id=\"previous-notices\">"; ?>
-						<h2>Previously Read <?php echo APPLICATION_NAME; ?> Notices</h2>
-						<?php
-						foreach ($previous_notices as $previous_notice) {
-							echo "<div id=\"notice_box_".(int) $previous_notice["notice_id"]."\" class=\"space-below\">";
-							echo	"<strong>".date(DEFAULT_DATE_FORMAT, $previous_notice["updated_date"])."</strong>";
-							echo	"<div class=\"space-left\">".trim(clean_input($previous_notice["notice_summary"], "html"))."</div>";
-							echo "</div>";
-						}
+					foreach ($notices_to_display as $announcement) {
+						echo "<div id=\"notice_box_".(int) $announcement["notice_id"]."\" class=\"new-notice\">";
+						echo "  <label class=\"checkbox\"><input type=\"checkbox\" name=\"mark_read[]\" id=\"notice_msg_".(int) $announcement["notice_id"]."\" value=\"".(int) $announcement["notice_id"]."\" /> ";
+						echo "	<strong>".date(DEFAULT_DATE_FORMAT, $announcement["updated_date"])."</strong>";
+						echo    ($announcement["lastname"] ? " <small>by ".html_encode($announcement["firstname"]." ".$announcement["lastname"])."</small>" : "");
+						echo "  </label>\n";
+						echo "	<div class=\"space-left\">".trim(clean_input($announcement["notice_summary"], "html"))."</div>";
 						echo "</div>";
 					}
 					?>
 				</div>
-				<?php
-				if ($previous_notices && count($previous_notices)) { ?>
-					<a class="btn btn-small pull-right space-left" data-toggle="button" id="previous-notices-toggle"><i class="icon-eye-open"></i> Previously Read Notices</a>
-				<?php	
-				}
-				if ($notices && count($notices)) { ?>
-					<a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $ENTRADA_USER->getUsername() ?>.rss" target="_blank" class="btn-mini"><i class="icon-fire"></i> Subscribe to RSS Feed</a>
-					<button class="btn btn-small btn-success pull-right"><i class="icon-ok icon-white"></i> Mark As Read</button>
-				<?php	
-				}
-				?>
+				<a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $ENTRADA_USER->getUsername() ?>.rss" target="_blank" class="btn-mini"><i class="icon-fire"></i> Subscribe to RSS Feed</a>
+				<button class="btn btn-small btn-success pull-right"><i class="icon-ok icon-white"></i> Mark As Read</button>
 				<div class="clearfix"></div>
 			</form>
 
-		<?php	
+		<?php
+		} else { ?>
+			<div class="well no-dashboard-notices">
+				<div class="row-fluid">
+					<div class="span8">
+						<h2><?php echo APPLICATION_NAME ." ". $translate->_("Message Center");?></h2>
+					</div>
+					<div class="span4 pull-right">
+						<a class="btn btn-small pull-right previous-notices" href="<?php echo ENTRADA_URL; ?>/messages"><i class="icon-eye-open"></i> Previously Read Messages</a>
+					</div>
+				</div>
+				<p>The <?php echo  $translate->_("Message Center"); ?> is currently empty.</p>
+			</div>
+		<?php
 		}
 	}
 	
 	switch ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 		case "medtech" :
 		case "student" :
-			$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE, "title" => "Student Dashboard");
+			$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE . "/dashboard", "title" => "Student Dashboard");
 
 			/**
 			 * How did this person not get assigned this already? Mak'em new.
@@ -515,26 +502,8 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
                     },
                     data : '<?php echo ENTRADA_RELATIVE; ?>/calendars/<?php echo html_encode($_SESSION["details"]["username"]); ?>.json'
                 });
-				
-				jQuery("#previous-notices-toggle").on("click", function () {
-					if (jQuery(this).hasClass("active")) {
-						jQuery(".no-notices-heading").show();
-					} else {
-						jQuery(".no-notices-heading").hide();
-					}
-					jQuery("#previous-notices").toggle("fast");
-				});
             });
-			
-			if (!jQuery(".new-notice").length) {
-				jQuery(".dashboard-notices").removeClass("alert").addClass("well");
-				jQuery(".well").css("padding-top", 0).css("padding-bottom", 0);
-				
-				var header_element = document.createElement("h3");
-				jQuery(header_element).html("No New Notices to Display").addClass("no-notices-heading");
-				jQuery(".dashboard-notices").prepend(header_element);
-			}
-
+		
             function setDateValue(field, date) {
                 timestamp = (getMSFromDate(date) * 1000);
 

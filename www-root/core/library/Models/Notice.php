@@ -59,7 +59,7 @@ class Models_Notice {
      * @param type $include_read_notices
      * @return type
      */
-    public static function fetchUserNotices($include_read_notices = false) {
+    public static function fetchUserNotices($include_read_notices = false, $only_read_notices = false) {
         global $db, $ENTRADA_USER;
 
         $include_read_notices = (bool) $include_read_notices;
@@ -147,13 +147,26 @@ class Models_Notice {
             $results = $db->GetAll($query);
             if ($results) {
                 foreach ($results as $result) {
-                    if ($include_read_notices || !$result["statistic_id"] || ($result["last_read"] <= $result["updated_date"])) {
-                        $output[] = $result;
-                    }
+					if ($only_read_notices) {
+						if (($result["statistic_id"]) || !($result["last_read"] <= $result["updated_date"])) {
+							$output[] = $result;
+						}
+					} else {
+						if ($include_read_notices || !$result["statistic_id"] || ($result["last_read"] <= $result["updated_date"])) {
+							$output[] = $result;
+						}
+					}
                 }
             }
         }
 
         return $output;
     }
+	
+	public static function fetchNotice($notice_id = 0) {
+		global $db, $ENTRADA_USER;
+		$query = "SELECT * FROM `notices` WHERE `notice_id` = ?";
+		$result = $db->GetRow($query, array($notice_id));
+		return $result;
+	}
 }

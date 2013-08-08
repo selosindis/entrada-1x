@@ -4395,6 +4395,11 @@ a.help {
 }
 
 /*Previous notices on dashboard*/
-#previous-notices {
-	display:none;
+.no-dashboard-notices {
+	margin-bottom: 15px;
+	padding: 5px 19px;
+}
+
+.previous-notices {
+	margin-top:21px;
 }

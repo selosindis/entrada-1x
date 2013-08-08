@@ -53,6 +53,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 		$query = "SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($PROCESSED["id"]);
 		$objective_info = $db->GetRow($query);
 		$objective_name = $objective_info["objective_name"];
+		$objective_description = $objective_info["objective_description"];
 	}
 
 	if (isset($MODE) && $MODE == "ajax") {
@@ -91,7 +92,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 		}
 
 		if ($PROCESSED["count"] == 1 || $PROCESSED["count"] == 3) {
-			$query = "	SELECT c.`event_id`, c.`event_title`, c.`event_start`, d.`objective_name`, e.`course_code`, e.`course_name`
+			$query = "	SELECT c.`event_id`, c.`event_title`, c.`event_start`, d.`objective_name`, e.`course_code`, e.`course_name`, d.`objective_description`
 						FROM `event_objectives` AS a
 						JOIN `objective_organisation` AS b
 						ON a.`objective_id` = b.`objective_id`
@@ -164,6 +165,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 		if ($event_objectives) {
 			if (!$objective_name) {
 				$objective_name = $event_objectives[0]["objective_name"];
+				$objective_description = $event_objectives[0]["objective_description"];
 			}
 			foreach ($event_objectives as $objective) {
 				$events[$objective["course_code"] . ": " . $objective["course_name"]][] = $objective;
@@ -172,7 +174,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 			echo $db->ErrorMsg();
 		}
 
-		echo json_encode(array("status" => "success", "objective_parent" => $PROCESSED["objective_parent"], "events" => $events, "courses" => $mapped_courses, "child_objectives" => $child_objectives, "objective_name" => $objective_name, "breadcrumb" => $breadcrumb));
+		echo json_encode(array("status" => "success", "objective_parent" => $PROCESSED["objective_parent"], "events" => $events, "courses" => $mapped_courses, "child_objectives" => $child_objectives, "objective_name" => $objective_name, "objective_description" => $objective_description, "breadcrumb" => $breadcrumb));
 
 		exit;
 

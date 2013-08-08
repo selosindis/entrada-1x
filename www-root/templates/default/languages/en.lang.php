@@ -78,7 +78,7 @@ return array (
     "My Organisations" => "My Organisations",
     "Give Feedback!" => "Give Feedback!",
     "Quick Polls" => "Quick Polls",
-
+	"Message Center" => "Message Center",
     "global_button_save" => "Save",
     "global_button_cancel" => "Cancel",
     "global_button_proceed" => "Proceed",

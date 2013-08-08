@@ -67,12 +67,13 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 			}
 			foreach ($notices as $notice) {
 				$notice["notice_summary"] = strip_tags($notice["notice_summary"]);
-				if (!isset($search_value) || stripos(date(DEFAULT_DATE_FORMAT, $notice["updated_date"]), $search_value) !== false || stripos($notice["notice_summary"], $search_value) !== false || stripos(date(DEFAULT_DATE_FORMAT, $notice["last_read"]), $search_value) !== false) {
+				$notice["notice_summary"] = (strlen($notice["notice_summary"]) > 40 ? substr($notice["notice_summary"], 0, 40)."..." : $notice["notice_summary"]);
+				if (!isset($search_value) || stripos(date("Y-m-d g:ia", $notice["updated_date"]), $search_value) !== false || stripos($notice["notice_summary"], $search_value) !== false || stripos(date("Y-m-d g:ia", $notice["last_read"]), $search_value) !== false) {
 					if ($count >= $start && $count < ($start + $limit)) {
 						$row = array();
-						$row["updated_date"] = "<a href=\"". ENTRADA_URL ."/messages?section=view&notice_id=". $notice["notice_id"] ."\">".date(DEFAULT_DATE_FORMAT, $notice["updated_date"])."</a>";
-						$row["notice_summary"] = "<a href=\"". ENTRADA_URL ."/messages?section=view&notice_id=". $notice["notice_id"] ."\">".(strlen($notice["notice_summary"]) > 40 ? substr($notice["notice_summary"], 0, 40)."..." : $notice["notice_summary"])."</a>";
-						$row["last_read"] = "<a href=\"". ENTRADA_URL ."/messages?section=view&notice_id=". $notice["notice_id"] ."\">".date(DEFAULT_DATE_FORMAT, $notice["last_read"])."</a>";
+						$row["updated_date"] = "<a href=\"". ENTRADA_URL ."/messages?section=view&notice_id=". $notice["notice_id"] ."\">".date("Y-m-d g:ia", $notice["updated_date"])."</a>";
+						$row["notice_summary"] = "<a href=\"". ENTRADA_URL ."/messages?section=view&notice_id=". $notice["notice_id"] ."\">".$notice["notice_summary"]."</a>";
+						$row["last_read"] = "<a href=\"". ENTRADA_URL ."/messages?section=view&notice_id=". $notice["notice_id"] ."\">".date("Y-m-d g:ia", $notice["last_read"])."</a>";
 						$row["id"] = $notice["notice_id"];
 						$output["aaData"][] = $row;
 					}

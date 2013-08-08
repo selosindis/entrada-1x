@@ -112,7 +112,7 @@ jQuery(function(){
 			link.children("span").remove();
 			jQuery("#objective-details").html("<h1>"+link.html()+"</h1>" + "<div class=\"loading display-generic\">Loading...<br /><img src=\""+SITE_URL+"/images/loading.gif\" /></div>");
 			jQuery.ajax({
-				url: SITE_URL + "/curriculum/explorer?mode=ajax&objective_parent=" + jQuery(this).attr("data-id") + "&year=" + YEAR + "&course_id=" + COURSE + "&count=" + COUNT,
+				url: SITE_URL + "/curriculum/explorer?mode=ajax&objective_parent=" + jQuery(this).attr("data-id") + "&year=" + YEAR + "&course_id=" + COURSE + "&count=" + COUNT + "&group_id=" + COHORT,
 				success: function(data) {
 					var jsonResponse = JSON.parse(data);
 					current_total = 0;

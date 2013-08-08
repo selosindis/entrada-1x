@@ -17043,7 +17043,7 @@ function fetch_objective_parents($objective_id, $level = 0) {
 	}
 }
 
-function count_objective_child_events($objective_id = 0, $start = NULL, $end = NULL, $course_id = NULL, $level = 0) {
+function count_objective_child_events($objective_id = 0, $start = NULL, $end = NULL, $course_id = NULL, $group_id = NULL, $level = 0) {
 	global $db, $ENTRADA_USER;
 	if ($level >= 99) {
 		application_log("error", "Recursion depth out of bounds in [count_objective_child_events].");
@@ -17057,9 +17057,13 @@ function count_objective_child_events($objective_id = 0, $start = NULL, $end = N
 				FROM `event_objectives` AS a
 				JOIN `events` AS b
 				ON a.`event_id` = b.`event_id`
+				JOIN `event_audience` AS c
+				ON a.`event_id` = c.`event_id`
+				AND c.`audience_type` = 'cohort'
 				WHERE `objective_id` = ".$db->qstr($objective_id).
 				($start != NULL ? " AND (IF (b.`event_id` IS NOT NULL, b.`event_start` BETWEEN ".$db->qstr($start)." AND ".$db->qstr($end).", '1' = '1'))" : "").
-				($course_id != NULL ? " AND b.`course_id` = ".$db->qstr($course_id) : "");
+				($course_id != NULL ? " AND b.`course_id` = ".$db->qstr($course_id) : "").
+				($group_id != NULL ? " AND c.`audience_value` = ".$db->qstr($group_id) : "");
 	$output[$objective_id] = $db->GetOne($query);
 
 	/* Fetch objective children */
@@ -17073,7 +17077,7 @@ function count_objective_child_events($objective_id = 0, $start = NULL, $end = N
 	$children = $db->GetAll($query);
 	if ($children) {
 		foreach ($children as $child) {
-			$child_count = count_objective_child_events($child["objective_id"], $start, $end, $course_id, $level++);
+			$child_count = count_objective_child_events($child["objective_id"], $start, $end, $course_id, $group_id, $level++);
 
 			if (is_array($child_count)) {
 					$return = array_sum($child_count);

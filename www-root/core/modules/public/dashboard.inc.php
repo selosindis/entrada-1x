@@ -188,7 +188,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 						<div class="span8">
 							<h2><?php echo APPLICATION_NAME ." ". $translate->_("Message Center");?></h2>
 						</div>
-						<div class="sapn4">
+						<div class="span4">
 							<a class="btn btn-small pull-right previous-notices" href="<?php echo ENTRADA_URL; ?>/messages"><i class="icon-eye-open"></i> Previously Read Messages</a>
 						</div>
 					</div>

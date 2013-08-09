@@ -102,9 +102,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				}												
 			}			
 			$query = "	SELECT a.* FROM `global_lu_objectives` AS a
-						WHERE a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
 						JOIN `objective_organisation` AS b ON a.`objective_id` = b.`objective_id`
-						AND b.`objective_organisation` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+						WHERE a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
+						AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 			$fields["has_child"] = $db->GetAll($query) ? true : false;			
 			$obj_array[] = $fields;
 		}

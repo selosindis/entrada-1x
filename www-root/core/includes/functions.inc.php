@@ -9999,7 +9999,6 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 			return;
 		}
 	}
-
 	if (!$full_objective_list) {
 		$full_objective_list = events_fetch_objectives_structure($parent_id, $objectives["used_ids"], $org_id);
 	}
@@ -10026,35 +10025,37 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 				}
 
 				foreach ($flat_objective_list as $objective_id => $objective_active) {
-					$objective = $objectives[$objective_id];
-					if (($objective["parent"] == $parent_id) && (($objective["objective_".$display_importance."_children"]) || ((isset($objective[$display_importance]) && $objective[$display_importance]) || ($parent_active && count($objective["parent_ids"]) > 2) && !$selected_only) || ($selected_only && isset($objective["event_objective"]) && $objective["event_objective"] && (isset($objective[$display_importance]) && $objective[$display_importance])))) {
-						$importance = ((isset($objective["primary"]) && $objective["primary"]) ? 1 : ((isset($objective["secondary"]) && $objective["secondary"]) ? 2 : ((isset($objective["tertiary"]) && $objective["tertiary"]) ? 3 : $importance)));
-						if ((count($objective["parent_ids"]) > 1) || $hierarchical) {
-							$output .= "<li".((($parent_active) || (isset($objective[$display_importance]) && $objective[$display_importance])) && (count($objective["parent_ids"]) > 2) ? " class=\"\"" : "")." id=\"objective_".$objective_id."_row\">\n";
-							if (($edit_importance) && (isset($objective[$display_importance]) && $objective[$display_importance])) {
-								$output .= "<select onchange=\"javascript: moveObjective('".$objective_id."', this.value);\" style=\"float: right; margin: 5px\">\n";
-								$output .= "	<option value=\"primary\"".(($objective["primary"]) ? " selected=\"selected\"" : "").">Primary</option>\n";
-								$output .= "	<option value=\"secondary\"".(($objective["secondary"]) ? " selected=\"selected\"" : "").">Secondary</option>\n";
-								$output .= "	<option value=\"tertiary\"".(($objective["tertiary"]) ? " selected=\"selected\"" : "").">Tertiary</option>\n";
-								$output .= "</select>";
-							}
-							if (count($objective["parent_ids"]) == 3) {
-								$output .= "	<div><div class=\"objective-title\">".$objective["name"]."</div>";
-								$output .= "	<div class=\"objective-description content-small\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])."</div>";
-							} else {
-								$output .= "	<div class=\"objective-title\" id=\"objective_".$objective_id."\">".$objective["name"]."</div>\n";
-								$output .= "	<div class=\"objective-description content-small\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"]);
-							}
-							if (isset($objective["event_objective_details"]) && $objective["event_objective_details"]) {
-								$output .= "	<div class=\"objective-description content-small\"><em>".$objective["event_objective_details"]."</em></div>";
-							}
-							$output .= "	</div>";
-							$output .= "</li>";
-						}
-					}
-					if ($objective["parent"] == $parent_id) {
-						$output .= course_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_importance, ((isset($objective[$display_importance]) && $objective[$display_importance]) ? true : false), $importance, $selected_only, false, $display_importance, $hierarchical, $full_objective_list);
-					}
+                    if (isset($objectives[$objective_id])) {
+                        $objective = $objectives[$objective_id];
+                        if (($objective["parent"] == $parent_id) && (($objective["objective_".$display_importance."_children"]) || ((isset($objective[$display_importance]) && $objective[$display_importance]) || ($parent_active && count($objective["parent_ids"]) > 2) && !$selected_only) || ($selected_only && isset($objective["event_objective"]) && $objective["event_objective"] && (isset($objective[$display_importance]) && $objective[$display_importance])))) {
+                            $importance = ((isset($objective["primary"]) && $objective["primary"]) ? 1 : ((isset($objective["secondary"]) && $objective["secondary"]) ? 2 : ((isset($objective["tertiary"]) && $objective["tertiary"]) ? 3 : $importance)));
+                            if ((count($objective["parent_ids"]) > 1) || $hierarchical) {
+                                $output .= "<li".((($parent_active) || (isset($objective[$display_importance]) && $objective[$display_importance])) && (count($objective["parent_ids"]) > 2) ? " class=\"\"" : "")." id=\"objective_".$objective_id."_row\">\n";
+                                if (($edit_importance) && (isset($objective[$display_importance]) && $objective[$display_importance])) {
+                                    $output .= "<select onchange=\"javascript: moveObjective('".$objective_id."', this.value);\" style=\"float: right; margin: 5px\">\n";
+                                    $output .= "	<option value=\"primary\"".(($objective["primary"]) ? " selected=\"selected\"" : "").">Primary</option>\n";
+                                    $output .= "	<option value=\"secondary\"".(($objective["secondary"]) ? " selected=\"selected\"" : "").">Secondary</option>\n";
+                                    $output .= "	<option value=\"tertiary\"".(($objective["tertiary"]) ? " selected=\"selected\"" : "").">Tertiary</option>\n";
+                                    $output .= "</select>";
+                                }
+                                if (count($objective["parent_ids"]) == 3) {
+                                    $output .= "	<div><div class=\"objective-title\">".$objective["name"]."</div>";
+                                    $output .= "	<div class=\"objective-description content-small\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])."</div>";
+                                } else {
+                                    $output .= "	<div class=\"objective-title\" id=\"objective_".$objective_id."\">".$objective["name"]."</div>\n";
+                                    $output .= "	<div class=\"objective-description content-small\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"]);
+                                }
+                                if (isset($objective["event_objective_details"]) && $objective["event_objective_details"]) {
+                                    $output .= "	<div class=\"objective-description content-small\"><em>".$objective["event_objective_details"]."</em></div>";
+                                }
+                                $output .= "	</div>";
+                                $output .= "</li>";
+                            }
+                        }
+                        if ($objective["parent"] == $parent_id) {
+                            $output .= course_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_importance, ((isset($objective[$display_importance]) && $objective[$display_importance]) ? true : false), $importance, $selected_only, false, $display_importance, $hierarchical, $full_objective_list);
+                        }
+                    }
 				}
 
 				if ($top) {
@@ -11057,8 +11058,67 @@ function events_process_filters($action = "", $module_type = "") {
 	}
 }
 
-
-
+function events_process_recurring_eventtimes ($period = "daily", $start_date = 0, $offset = 7, $weekdays = array(), $recurring_end = false) {
+    if (!$start_date) {
+        $start_date = time();
+    }
+    if (!$recurring_end || $recurring_end > strtotime("+1 year", $start_date) || $recurring_end <= $start_date) {
+        $recurring_end = strtotime("+1 year", $start_date);
+    }
+    if (!$offset) {
+        $offset = 1;
+    }
+    $output_dates = array();
+    $current_session_date = $start_date;
+    switch ($period) {
+        case "daily" :
+            while ($current_session_date <= $recurring_end) {
+                $current_session_date = strtotime("+".$offset." days", $current_session_date);
+                if ($current_session_date <= $recurring_end) {
+                    $output_dates[] = $current_session_date;
+                }
+            }
+        break;
+        case "weekly" :
+            while ($current_session_date <= $recurring_end) {
+                $current_weekday = date("N", $current_session_date);
+                foreach ($weekdays as $weekday) {
+                    if ($weekday >= $current_weekday) {
+                        $weekday_difference = ($weekday - $current_weekday);
+                        $event_date = strtotime("+".$weekday_difference." days", $current_session_date);
+                        if ($event_date <= $recurring_end) {
+                            $output_dates[] = $event_date;
+                        }
+                    }
+                }
+                $current_session_date = strtotime("next monday", $current_session_date);
+            }
+        break;
+        case "monthly" :
+            
+                $month_numeric = (date("n", $current_session_date) + 1);
+                $year = date("Y", $current_session_date);
+                if ($month_numeric > 12) {
+                    $month_numeric = 1;
+                    $year++;
+                }
+            while ($current_session_date <= $recurring_end) {
+                $month = date("F", mktime(0, 0, 0, $month_numeric, 10));
+                $weekday = $weekdays[0];
+                $current_session_date = strtotime($month." ".$year." ".$offset." ".$weekday);
+                if ($current_session_date <= $recurring_end) {
+                    $output_dates[] = $current_session_date;
+                }
+                $month_numeric++;
+                if ($month_numeric > 12) {
+                    $month_numeric = 1;
+                    $year++;
+                }
+            }
+        break;
+    }
+    return $output_dates;
+}
 
 /**
  * Function used by community tracking to process the provided filter settings.

@@ -66,7 +66,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	} elseif ($event_id) {
 		$qu_arr[1] = "LEFT JOIN `event_objectives` b
 					ON a.`objective_id` = b.`objective_id`";
-		$qu_arr[3] = "AND b.`event_id` = ".$db->qstr($event_id);									
+		$qu_arr[3] = "AND (b.`event_id` = ".$db->qstr($event_id)." OR b.`event_id` IS NULL)";
 	} elseif ($assessment_id) {
 		$qu_arr[1] = "LEFT JOIN `assessment_objectives` b
 					ON a.`objective_id` = b.`objective_id`";

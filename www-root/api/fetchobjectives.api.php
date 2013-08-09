@@ -60,26 +60,27 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	$qu_arr = array("SELECT ".$select." FROM `global_lu_objectives` a");
 	
 	if ($course_id){
-		$qu_arr[1] = "LEFT JOIN `course_objectives` b
-					ON a.`objective_id` = b.`objective_id`";
-		$qu_arr[3] = "AND b.`course_id` = ".$db->qstr($course_id);					
+		$qu_arr[1] = "	LEFT JOIN `course_objectives` b
+						ON a.`objective_id` = b.`objective_id`";
+		$qu_arr[3] = "	AND b.`course_id` = ".$db->qstr($course_id);					
 	} elseif ($event_id) {
-		$qu_arr[1] = "LEFT JOIN `event_objectives` b
-					ON a.`objective_id` = b.`objective_id`";
-		$qu_arr[3] = "AND (b.`event_id` = ".$db->qstr($event_id)." OR b.`event_id` IS NULL)";
+		$qu_arr[1] = "	LEFT JOIN `event_objectives` b
+						ON a.`objective_id` = b.`objective_id`
+						AND b.`event_id` = ".$db->qstr($event_id);									
 	} elseif ($assessment_id) {
-		$qu_arr[1] = "LEFT JOIN `assessment_objectives` b
-					ON a.`objective_id` = b.`objective_id`";
-		$qu_arr[3] = "AND b.`assessment_id` = ".$db->qstr($assessment_id);									
+		$qu_arr[1] = "	LEFT JOIN `assessment_objectives` b
+						ON a.`objective_id` = b.`objective_id`";
+		$qu_arr[3] = "	AND b.`assessment_id` = ".$db->qstr($assessment_id);									
 	} elseif ($objective_ids_string) {
-		$qu_arr[1] = "LEFT JOIN `global_lu_objectives` AS b
-					ON a.`objective_id` = b.`objective_id`";
-		$qu_arr[3] = "AND b.`objective_id` IN (".$objective_ids_string.")";	
+		$qu_arr[1] = "	LEFT JOIN `global_lu_objectives` AS b
+						ON a.`objective_id` = b.`objective_id`";
+		$qu_arr[3] = "	AND b.`objective_id` IN (".$objective_ids_string.")";	
 	}	
-	$qu_arr[1] .= " JOIN `objective_organisation` AS c ON a.`objective_id` = c.`objective_id` ";
-	$qu_arr[2] = "WHERE a.`objective_parent` = ".$db->qstr($id)." 
-				AND a.`objective_active` = '1'";
-	$qu_arr[4] = "ORDER BY a.`objective_order`";
+	$qu_arr[1] .= "		JOIN `objective_organisation` AS c ON a.`objective_id` = c.`objective_id` ";
+	$qu_arr[2] = "		WHERE a.`objective_parent` = ".$db->qstr($id)." 
+						AND a.`objective_active` = '1'
+						AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+	$qu_arr[4] = "		ORDER BY a.`objective_order`";
 	$query = implode(" ",$qu_arr);
 	$objectives = $db->GetAll($query);
 	if ($objectives) {
@@ -100,10 +101,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					$fields["child_mapped"] = assessment_objective_parent_mapped_course($objective["objective_id"],$assessment_id,true);
 				}												
 			}			
-			$query = "	SELECT * FROM `global_lu_objectives` 
-						WHERE `objective_parent` = ".$db->qstr($objective["objective_id"])."
-						AND c.`objective_organisation` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
-			$fields["has_child"] = $db->GetAll($query)?true:false;			
+			$query = "	SELECT a.* FROM `global_lu_objectives` AS a
+						WHERE a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
+						JOIN `objective_organisation` AS b ON a.`objective_id` = b.`objective_id`
+						AND b.`objective_organisation` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+			$fields["has_child"] = $db->GetAll($query) ? true : false;			
 			$obj_array[] = $fields;
 		}
 		echo json_encode($obj_array);

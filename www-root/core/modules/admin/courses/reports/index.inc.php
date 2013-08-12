@@ -43,7 +43,10 @@ if (!defined("IN_COURSE_REPORTS")) {
 ?>
 
 	<h1>Available Reports</h1>
-
-	<a href="<?php echo ENTRADA_URL . '/admin/courses/reports?section=my-teachers&id=' . $COURSE_ID; ?>">My Teachers</a>
+	<ul>
+		<li>
+			<a href="<?php echo ENTRADA_URL . '/admin/courses/reports?section=my-teachers&id=' . $COURSE_ID; ?>">My Teachers</a>
+		</li>
+	</ul>
 <?php
 }

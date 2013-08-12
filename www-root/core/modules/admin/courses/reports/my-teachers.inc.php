@@ -189,7 +189,7 @@ if (!defined("IN_COURSE_REPORTS")) {
 				}			
 			} else { ?>
 				<tr>
-					<td colspan="4"><?php echo (isset($PROCESSED["start_date"]) && isset($PROCESSED["finish_date"]) && !$ERROR ? "No Teachers found between " . date("Y-m-d", $PROCESSED["start_date"]) . " and " . date("Y-m-d", $PROCESSED["finish_date"])   : "There currently are no teachers to display. To generate a list of teachers to email use the Teacher Search Options above."); ?></td>
+					<td colspan="4"><?php echo "There currently are no teachers to display. To generate a list of teachers to email use the Teacher Search Options above."; ?></td>
 				</tr>
 			<?php	
 			} 

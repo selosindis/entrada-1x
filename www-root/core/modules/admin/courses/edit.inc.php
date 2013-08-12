@@ -82,8 +82,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
 				}
 			} else {
-					$clinical_presentations = array();
-				}
+				$clinical_presentations = array();
+			}
 			// } else {
 			// 	$query		= "SELECT `objective_id` FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($COURSE_ID);
 			// 	$results	= $db->GetAll($query);
@@ -101,6 +101,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 			$PROCESSED["permission"] = $course_details["permission"];
 			$PROCESSED["sync_ldap"] = $course_details["sync_ldap"];
+			$PROCESSED["sync_ldap_courses"] = $course_details["sync_ldap_courses"];
 
 			// Error Checking
 			switch($STEP) {
@@ -160,12 +161,36 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					/**
 					 * Check to see if this course audience should syncronize with LDAP or not.
 					 */
+					$PROCESSED["sync_ldap_courses"] = "";
 					if ((isset($_POST["sync_ldap"])) && ($_POST["sync_ldap"] == "1")) {
 						$PROCESSED["sync_ldap"] = 1;
 					} else {
 						$PROCESSED["sync_ldap"] = 0;
 					}
-
+					
+					/*
+					 * Process the ldap sync course list.
+					 */
+					$PROCESSED["sync_ldap_courses"] = "";
+					$clean_ldap_course_codes = array();
+					if (isset($_POST["sync_ldap_courses"]) && !empty($_POST["sync_ldap_courses"])) {
+						$sync_ldap_courses = explode(",", $_POST["sync_ldap_courses"]);
+						foreach ($sync_ldap_courses as $course_code) {
+							if ($tmp_input = clean_input($course_code, array("trim", "striptags", "alphanumeric"))) {
+								if (!in_array(strtoupper($tmp_input), $clean_ldap_course_codes)) {
+									$clean_ldap_course_codes[] = strtoupper($tmp_input);
+								}
+							}
+						}
+						if (isset($clean_ldap_course_codes) && !empty($clean_ldap_course_codes)) {
+							$PROCESSED["sync_ldap_courses"] = implode(", ", $clean_ldap_course_codes);
+						}
+					}
+					
+					if (empty($PROCESSED["sync_ldap_courses"]) && $PROCESSED["sync_ldap"] != 0) {
+						add_error("The LDAP synchronization course list can not be empty.");
+					}
+					
 					/**
 					 * Non-required field "course_directors" / Course Directors (array of proxy ids).
 					 * This is actually accomplished after the course is modified below.
@@ -873,7 +898,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</label>
 							</div>
 						</div>
-
+						<script type="text/javascript">
+							jQuery(function($) {
+								$("input[name='sync_ldap']").on("change", function() {
+									if ($(this).val() == "1") {
+										$(".ldap-course-sync-list").slideDown("fast");
+										if ($("textarea[name='sync_ldap_courses']").val().length <= 0) {
+											$("textarea[name='sync_ldap_courses']").attr("value", $("#course_code").val());
+										}
+									} else {
+										$(".ldap-course-sync-list").slideUp("fast");
+									}
+								});
+							});
+						</script>
 						<div class="control-group">
 							<label class="form-nrequired control-label">Audience Sync</label>
 							<div class="controls">
@@ -883,7 +921,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<label for="sync_on" class="radio">
 									<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> This course <strong>should</strong> have its audience synced with the LDAP server.
 								</label>
-								<div class="well well-small content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>
+								<div class="<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? "" : "hide"); ?> ldap-course-sync-list">
+									<div class="well well-small content-small"><strong>Note:</strong> Please enter a comma separated list of alphanumeric course codes you wish to sync in the text area below. Additional individuals and groups can be manually added in the <strong>Course Enrollment</strong> below. </div>
+									<textarea name="sync_ldap_courses" class="span12"><?php echo (isset($PROCESSED["sync_ldap_courses"]) ? $PROCESSED["sync_ldap_courses"] : $PROCESSED["course_code"]); ?></textarea>
+								</div>
 							</div>
 						</div>
 					</div>

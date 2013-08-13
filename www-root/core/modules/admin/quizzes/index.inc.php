@@ -38,10 +38,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else { 
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js"."\"></script>";
-	if (isset($_GET["ajax"]) && $_GET["ajax"] && isset($_GET["method"]) && $_GET["method"] == "list") {
-		ob_clear_open_buffers();
-		$output = array("aaData" => array());
-		$query = "  SELECT a.*, COUNT(DISTINCT c.`qquestion_id`) AS `question_total`, IF(a.`quiz_active` = '1', 'Active', 'Disabled') AS `quiz_status`, CONCAT(d.`firstname`, ' ', d.`lastname`) AS author
+	$query = "  SELECT a.*, COUNT(DISTINCT c.`qquestion_id`) AS `question_total`, IF(a.`quiz_active` = '1', 'Active', 'Disabled') AS `quiz_status`, CONCAT(d.`firstname`, ' ', d.`lastname`) AS author
 					FROM `quizzes` AS a
 					LEFT JOIN `quiz_contacts` AS b
 					ON a.`quiz_id` = b.`quiz_id`
@@ -54,7 +51,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					AND a.`quiz_active` = 1
 					GROUP BY a.`quiz_id`";
 	
-		$quizzes = $db->GetAll($query);
+	$quizzes = $db->GetAll($query);
+	if (isset($_GET["ajax"]) && $_GET["ajax"] && isset($_GET["method"]) && $_GET["method"] == "list") {
+		ob_clear_open_buffers();
+		$output = array("aaData" => array());
 		$count = 0;
 		if ($quizzes) {
 			/*
@@ -83,7 +83,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				if (!isset($search_value) || stripos($quiz["quiz_title"], $search_value) !== false || stripos($quiz["author"], $search_value) !== false || stripos($quiz["question_total"], $search_value) !== false || !isset($search_value) || stripos(date("Y-m-d g:ia", $quiz["updated_date"]), $search_value) !== false) {
 					if ($count >= $start && $count < ($start + $limit)) {
 						$row = array();
-						$row["modified"] = "<input type=\"checkbox\" name=\"delete[]\" value=\"".$quiz["quiz_id"]."\" />";
+						$row["modified"] = "<input class=\"delete-control\" type=\"checkbox\" name=\"delete[]\" value=\"".$quiz["quiz_id"]."\" />";
 						$row["quiz_title"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">".$quiz["quiz_title"]."</a>";
 						$row["author"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">". $quiz["author"] ."</a>";
 						$row["question_total"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">". $quiz["question_total"] ."</a>";
@@ -106,6 +106,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 	?>
 	<script type="text/javascript">
 		jQuery(document).ready(function () {
+			jQuery("#delete-quizzes").on("click", function (event) {
+				var checked = document.querySelectorAll("input.delete-control:checked").length === 0 ? false : true;
+				if (!checked) {
+					event.preventDefault();
+					var errors = new Array();
+					errors[0] = "You must select at least 1 quiz to delete by checking the checkbox to the left the quiz.";
+					display_error(errors, "#msg");
+				}
+			});
+			
 			jQuery('#quiz-list').dataTable(
 				{
 					'sPaginationType': 'full_numbers',
@@ -152,6 +162,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 		}); 
 	</script>
 	<h1><?php echo $MODULES[strtolower($MODULE)]["title"]; ?></h1>
+	<div id="msg"></div>
     <div class="row-fluid">
 		<a href="<?php echo ENTRADA_RELATIVE; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary space-below pull-right">Create New Quiz</a>
     </div>
@@ -170,9 +181,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				
 			</tbody>
 		</table>
+		<?php
+		if ($quizzes) { ?>
 		<div class="row-fluid">
-			<input type="submit" class="btn btn-danger" value="Delete Selected" />
+			<input id="delete-quizzes" type="submit" class="btn btn-danger" value="Delete Selected" />
 		</div>
+		<?php
+		}
+		?>
 	</form>
     <?php
 }

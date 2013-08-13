@@ -100,10 +100,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
             }
         } else {
             ?>
-            <div class="alert alert-block alert-danger">
+			<script type="text/javascript">
+				jQuery(document).ready(function () {
+					jQuery("#delete-quizzes").on("click", function (event) {
+						var checked = document.querySelectorAll("input.delete-control:checked").length === 0 ? false : true;
+						if (!checked) {
+							event.preventDefault();
+							var errors = new Array();
+							errors[0] = "You must select at least 1 quiz to delete by checking the checkbox to the left the quiz.";
+							display_error(errors, "#msg");
+						}
+					});
+				});
+			</script>
+            <div class="alert alert-block">
                 <strong>Warning!</strong> Do you really wish to delete the quiz<?php echo ($total_quizzes != 1 ? "zes" : ""); ?> below? If you proceed with this action the selected quiz<?php echo ($total_quizzes != 1 ? "zes" : ""); ?> will no longer be available to learners.
             </div>
-
+			<div id="msg"></div>
             <form action="<?php echo ENTRADA_RELATIVE; ?>/admin/<?php echo $MODULE; ?>?section=delete" method="post">
                 <input type="hidden" name="confirmed" value="1" />
                 <table class="table table-striped table-bordered" summary="List of Quizzes Pending Delete">
@@ -120,7 +133,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                         <?php
                         foreach ($delete_quizzes as $quiz) {
                             echo "<tr>\n";
-                            echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".(int) $quiz["quiz_id"]."\" checked=\"checked\" /></td>\n";
+                            echo "	<td class=\"modified\"><input class=\"delete-control\" type=\"checkbox\" name=\"delete[]\" value=\"".(int) $quiz["quiz_id"]."\" checked=\"checked\" /></td>\n";
                             echo "	<td class=\"title\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz["quiz_id"]."\">".html_encode($quiz["quiz_title"])."</a></td>\n";
 							echo "	<td class=\"author\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz["quiz_id"]."\">".html_encode($quiz["author"])."</a></td>\n";
 							echo "	<td class=\"questions\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz["quiz_id"]."\">".$quiz["question_total"]."</a></td>\n";
@@ -132,7 +145,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                 </table>
 				<div class="row-fluid">
 					<a href="<?php echo ENTRADA_RELATIVE."/admin/".$MODULE; ?>" class="btn">Cancel</a>
-                    <input type="submit" class="btn btn-danger pull-right" value="Confirm Delete" />
+                    <input id="delete-quizzes" type="submit" class="btn btn-danger pull-right" value="Confirm Delete" />
 				</div>
             </form>
             <?php

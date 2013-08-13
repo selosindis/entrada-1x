@@ -35,10 +35,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js"."\"></script>";
+	$notices = Models_Notice::fetchOrganisationNotices();
 	if (isset($_GET["ajax"]) && $_GET["ajax"] && isset($_GET["method"]) && $_GET["method"] == "list") {
 		ob_clear_open_buffers();
 		$output = array("aaData" => array());
-		$notices = Models_Notice::fetchOrganisationNotices();
 		$count = 0;
 		if ($notices) {
 			/*
@@ -69,7 +69,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 				if (!isset($search_value) || stripos(date("Y-m-d g:ia", $notice["display_until"]), $search_value) !== false || stripos($notice["notice_author"], $search_value) !== false || stripos($notice["notice_summary"], $search_value) !== false) {
 					if ($count >= $start && $count < ($start + $limit)) {
 						$row = array();
-						$row["modified"] = "<input type=\"checkbox\" name=\"delete[]\" value=\"".$notice["notice_id"]."\" />";
+						$row["modified"] = "<input class=\"delete-control\" type=\"checkbox\" name=\"delete[]\" value=\"".$notice["notice_id"]."\" />";
 						$row["display_until"] = "<a href=\"". ENTRADA_RELATIVE."/admin/notices?section=edit&amp;id=".$notice["notice_id"] ."\">".date("Y-m-d g:ia", $notice["display_until"])."</a>";
 						$row["notice_author"] = "<a href=\"". ENTRADA_RELATIVE."/admin/notices?section=edit&amp;id=".$notice["notice_id"] ."\">". $notice["notice_author"] ."</a>";
 						$row["notice_summary"] = "<a href=\"". ENTRADA_RELATIVE."/admin/notices?section=edit&amp;id=".$notice["notice_id"] ."\">". $notice["notice_summary"] ."</a>";
@@ -91,6 +91,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 	?>
 	<script type="text/javascript">
 		jQuery(document).ready(function () {
+			jQuery("#delete-notices").on("click", function (event) {
+				var checked = document.querySelectorAll("input.delete-control:checked").length === 0 ? false : true;
+				if (!checked) {
+					event.preventDefault();
+					var errors = new Array();
+					errors[0] = "You must select at least 1 notice to delete by checking the checkbox to the left the notice.";
+					display_error(errors, "#msg");
+				}
+			});
+			
 			jQuery('#notice-list').dataTable(
 				{
 					'sPaginationType': 'full_numbers',
@@ -134,11 +144,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 		}); 
 	</script>
     <h1><?php echo $MODULES[strtolower($MODULE)]["title"]; ?></h1>
-
 	<div class="display-generic">
 		These notices will be displayed to the user directly on their <?php echo APPLICATION_NAME; ?> dashboard as well as on a publicly accessible RSS feed. <strong>Please note</strong> we do not recommend posting confidential information inside these notices.
 	</div>
-
+	<div id="msg"></div>
+	
     <?php
 	if ($ENTRADA_ACL->amIAllowed("notice", "create", false)) {
 		?>
@@ -162,9 +172,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 					
 				</tbody>
 			</table>
+			<?php 
+			if ($notices) { ?>
 			<div class="row-fluid">
-				<input type="submit" class="btn btn-danger" value="Delete Selected" />
+				<input id="delete-notices" type="submit" class="btn btn-danger" value="Delete Selected" />
 			</div>
+			<?php 
+			}
+			?>
 		</form>
 		<?php
 }

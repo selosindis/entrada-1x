@@ -126,43 +126,57 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 			if($results) {
 				echo display_notice(array("Please review the following notices to ensure that you wish to permanently delete them. This action cannot be undone."));
 				?>
+				<script type="text/javascript">
+					jQuery(document).ready(function () {
+						jQuery("#delete-notices").on("click", function (event) {
+							var checked = document.querySelectorAll("input.delete-control:checked").length === 0 ? false : true;
+							if (!checked) {
+								event.preventDefault();
+								var errors = new Array();
+								errors[0] = "You must select at least 1 notice to delete by checking the checkbox to the left the notice.";
+								display_error(errors, "#msg");
+							}
+						});
+					});
+				</script>
+				<div id="msg"></div>
 				<form action="<?php echo ENTRADA_URL; ?>/admin/notices?section=delete&amp;step=2" method="post">
-				<table class="table table-striped table-bordered" cellspacing="0" summary="List of Notices">
-				<thead>
-					<tr>
-						<th width="5%"></th>
-						<th width="25%">Display Until</th>
-						<th width="25%">Notice Author</th>
-						<th width="45%">Notice Summary</th>
-					</tr>
-				</thead>
-				<tbody>
-					<?php
-					foreach($results as $result) {
-						$url			= ENTRADA_URL."/admin/notices?section=edit&amp;id=".$result["notice_id"];
-						$expired		= false;
+					<table id="notice-list" class="table table-striped table-bordered" cellspacing="0" summary="List of Notices">
+						<thead>
+							<tr>
+								<th width="5%"></th>
+								<th width="25%">Display Until</th>
+								<th width="25%">Notice Author</th>
+								<th width="45%">Notice Summary</th>
+							</tr>
+						</thead>
+						<tbody>
+							<?php
+							foreach($results as $result) {
+								$url			= ENTRADA_URL."/admin/notices?section=edit&amp;id=".$result["notice_id"];
+								$expired		= false;
 
-						if(($display_until = (int) $result["display_until"]) && ($display_until < time())) {
-							$expired	= true;
-						}
-						
-						$result["notice_summary"] = strip_tags($result["notice_summary"]);
-						$result["notice_summary"] = (strlen($result["notice_summary"]) > 45 ? substr($result["notice_summary"], 0, 45)."..." : $result["notice_summary"]);
+								if(($display_until = (int) $result["display_until"]) && ($display_until < time())) {
+									$expired	= true;
+								}
 
-						echo "<tr id=\"notice-".$result["notice_id"]."\" class=\"notice".(($expired) ? " na" : "")."\">\n";
-						echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".$result["notice_id"]."\" checked=\"checked\" /></td>\n";
-						echo "	<td class=\"date\">".(($url) ? "<a href=\"".$url."\">" : "").date(DEFAULT_DATE_FORMAT, $result["display_until"]).(($url) ? "</a>" : "")."</td>\n";
-						echo "	<td class=\"notice_author\">".(($url) ? "<a href=\"".$url."\">" : "").html_encode($result["notice_author"]).(($url) ? "</a>" : "")."</td>\n";
-						echo "	<td class=\"title\">".(($url) ? "<a href=\"".$url."\">" : "").html_encode($result["notice_summary"]).(($url) ? "</a>" : "")."</td>\n";
-						echo "</tr>\n";
-					}
-					?>
-				</tbody>
-				</table>
-				<div class="row-fluid space-above">
-					<a href="<?php echo ENTRADA_RELATIVE; ?>/admin/notices" class="btn">Cancel</a>
-					<input type="submit" class="btn btn-danger pull-right" value="Confirm Removal" />
-				</div>	
+								$result["notice_summary"] = strip_tags($result["notice_summary"]);
+								$result["notice_summary"] = (strlen($result["notice_summary"]) > 45 ? substr($result["notice_summary"], 0, 45)."..." : $result["notice_summary"]);
+
+								echo "<tr id=\"notice-".$result["notice_id"]."\" class=\"notice".(($expired) ? " na" : "")."\">\n";
+								echo "	<td class=\"modified\"><input class=\"delete-control\" type=\"checkbox\" name=\"delete[]\" value=\"".$result["notice_id"]."\" checked=\"checked\" /></td>\n";
+								echo "	<td class=\"date\">".(($url) ? "<a href=\"".$url."\">" : "").date(DEFAULT_DATE_FORMAT, $result["display_until"]).(($url) ? "</a>" : "")."</td>\n";
+								echo "	<td class=\"notice_author\">".(($url) ? "<a href=\"".$url."\">" : "").html_encode($result["notice_author"]).(($url) ? "</a>" : "")."</td>\n";
+								echo "	<td class=\"title\">".(($url) ? "<a href=\"".$url."\">" : "").html_encode($result["notice_summary"]).(($url) ? "</a>" : "")."</td>\n";
+								echo "</tr>\n";
+							}
+							?>
+						</tbody>
+					</table>
+					<div class="row-fluid space-above">
+						<a href="<?php echo ENTRADA_RELATIVE; ?>/admin/notices" class="btn">Cancel</a>
+						<input id="delete-notices" type="submit" class="btn btn-danger pull-right" value="Confirm Removal" />
+					</div>	
 				</form>
 				<?php
 			}

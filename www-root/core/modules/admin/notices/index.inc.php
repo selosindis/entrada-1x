@@ -34,7 +34,105 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js"."\"></script>";
+	if (isset($_GET["ajax"]) && $_GET["ajax"] && isset($_GET["method"]) && $_GET["method"] == "list") {
+		ob_clear_open_buffers();
+		$output = array("aaData" => array());
+		$notices = Models_Notice::fetchOrganisationNotices();
+		$count = 0;
+		if ($notices) {
+			/*
+			* Ordering
+			*/
+			if (isset($_GET["iSortCol_0"]) && in_array($_GET["iSortCol_0"], array(0, 1, 2, 3))) {
+				$aColumns = array("modified", "display_until", "notice_author", "notice_summary");
+				$sort_array = array();
+				foreach ($notices as $notice) {
+					$notice_array = $notice;
+					$sort_array[] = $notice_array[$aColumns[clean_input($_GET["iSortCol_0"], "int")]];
+				}
+				array_multisort($sort_array, (isset($_GET["sSortDir_0"]) && $_GET["sSortDir_0"] == "desc" ? SORT_DESC : SORT_ASC), (clean_input($_GET["iSortCol_0"], "int") == 1 ? SORT_NUMERIC : SORT_STRING), $notices);
+			}
+			if (isset($_GET["iDisplayStart"]) && isset($_GET["iDisplayLength"]) && $_GET["iDisplayLength"] != "-1" ) {
+				$start = (int)$_GET["iDisplayStart"];
+				$limit = (int)$_GET["iDisplayLength"];
+			} else {
+				$start = 0;
+				$limit = count($notices) - 1;
+			}
+			if ($_GET["sSearch"] != "") {
+				$search_value = $_GET["sSearch"];
+			}
+			foreach ($notices as $notice) {
+				$notice["notice_summary"] = strip_tags($notice["notice_summary"]);
+				$notice["notice_summary"] = (strlen($notice["notice_summary"]) > 45 ? substr($notice["notice_summary"], 0, 45)."..." : $notice["notice_summary"]);
+				if (!isset($search_value) || stripos(date("Y-m-d g:ia", $notice["display_until"]), $search_value) !== false || stripos($notice["notice_author"], $search_value) !== false || stripos($notice["notice_summary"], $search_value) !== false) {
+					if ($count >= $start && $count < ($start + $limit)) {
+						$row = array();
+						$row["modified"] = "<input type=\"checkbox\" name=\"delete[]\" value=\"".$notice["notice_id"]."\" />";
+						$row["display_until"] = "<a href=\"". ENTRADA_RELATIVE."/admin/notices?section=edit&amp;id=".$notice["notice_id"] ."\">".date("Y-m-d g:ia", $notice["display_until"])."</a>";
+						$row["notice_author"] = "<a href=\"". ENTRADA_RELATIVE."/admin/notices?section=edit&amp;id=".$notice["notice_id"] ."\">". $notice["notice_author"] ."</a>";
+						$row["notice_summary"] = "<a href=\"". ENTRADA_RELATIVE."/admin/notices?section=edit&amp;id=".$notice["notice_id"] ."\">". $notice["notice_summary"] ."</a>";
+						$row["id"] = $notice["notice_id"];
+						$output["aaData"][] = $row;
+					}
+					$count++;
+				}
+			}
+		}
+		$output["iTotalRecords"] = (is_array($notices) ? @count($notices) : 0);
+		$output["iTotalDisplayRecords"] = $count;
+		$output["sEcho"] = clean_input($_GET["sEcho"], "int");
+		if ($output && count($output)) {
+		   echo json_encode($output);
+		}
+		exit;
+	}
 	?>
+	<script type="text/javascript">
+		jQuery(document).ready(function () {
+			jQuery('#notice-list').dataTable(
+				{
+					'sPaginationType': 'full_numbers',
+					'bInfo': false,
+					'bAutoWidth': false,
+					'sAjaxSource': '?ajax=true&method=list',
+					'bServerSide': true,
+					'bProcessing': true,
+					'aoColumns': [
+						{ 'mDataProp': 'modified' },
+						{ 'mDataProp': 'display_until' },
+						{ 'mDataProp': 'notice_author' },
+						{ 'mDataProp': 'notice_summary' },
+					],
+					'aoColumnDefs': [ {
+						'aTargets': [0,1,2,3,],
+						'fnCreatedCell': function (nTd, sData, oData, iRow, iCol) {
+							if (iCol == 0) {
+								jQuery(nTd).addClass('modified')
+							} else if ( iCol == 1 ) {
+								jQuery(nTd).addClass('until')
+							} else if ( iCol == 2 ) {
+								jQuery(nTd).addClass('author')
+							} else if ( iCol == 4 ) {
+								jQuery(nTd).addClass('summary')
+							}
+						}
+					}],
+					'fnRowCallback': function(nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+						jQuery(nRow).attr('data-id', aData.id);
+
+						return nRow;
+					},
+					'oLanguage': {
+						'sEmptyTable': 'There are currently notices in the system.',
+						'sZeroRecords': 'No notices found.'
+					}
+
+				}
+			);
+		}); 
+	</script>
     <h1><?php echo $MODULES[strtolower($MODULE)]["title"]; ?></h1>
 
 	<div class="display-generic">
@@ -44,71 +142,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
     <?php
 	if ($ENTRADA_ACL->amIAllowed("notice", "create", false)) {
 		?>
-		<div class="row-fluid">
+		<div class="row-fluid space-below">
 			<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add" class="pull-right btn btn-primary">Add New Notice</a>
 		</div>
 		<?php
 	}
-
-	$query = "	SELECT a.*, b.`organisation_title`
-				FROM `notices` AS a
-				JOIN `".AUTH_DATABASE."`.`organisations` AS b
-				ON b.`organisation_id` = a.`organisation_id`
-				WHERE a.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-                AND a.`display_until` > '".strtotime("-5 days 00:00:00")."'
-				ORDER BY a.`display_until` ASC";
-	$results = $db->GetAll($query);
-	if ($results) {
 		?>
 		<form action="<?php echo ENTRADA_URL; ?>/admin/notices?section=delete" method="post">
-			<table class="tableList" cellspacing="0" summary="List of Notices">
-				<colgroup>
-					<col class="modified" />
-					<col class="date" />
-					<col class="title" />
-				</colgroup>
+			<table id="notice-list" class="table table-striped table-bordered" summary="List of Notices">
 				<thead>
 					<tr>
-						<td class="modified">&nbsp;</td>
-						<td class="date sortedDESC">Display Until</td>
-						<td class="title">Notice</td>
+						<th width="5%"></th>
+						<th width="25%">Display Until</th>
+						<th width="25%">Notice Author</th>
+						<th width="45%">Notice Summary</th>
 					</tr>
 				</thead>
-				<tfoot>
-					<tr>
-						<td></td>
-						<td colspan="2" style="padding-top: 10px">
-							<input type="submit" class="btn btn-danger" value="Delete Selected" />
-						</td>
-					</tr>
-				</tfoot>
 				<tbody>
-					<?php
-					foreach ($results as $result) {
-						$url = ENTRADA_RELATIVE."/admin/notices?section=edit&amp;id=".$result["notice_id"];
-						$expired = false;
-
-						if (($display_until = (int) $result["display_until"]) && ($display_until < time())) {
-							$expired = true;
-						}
-
-						echo "<tr id=\"notice-".$result["notice_id"]."\" class=\"notice".(($expired) ? " na" : "")."\">\n";
-						echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".$result["notice_id"]."\" /></td>\n";
-						echo "	<td class=\"date\">".(($url) ? "<a href=\"".$url."\">" : "").date(DEFAULT_DATE_FORMAT, $result["display_until"]).(($url) ? "</a>" : "")."</td>\n";
-						echo "	<td class=\"title content-small\">".limit_chars(strip_tags($result["notice_summary"]), 125, false, true)."</td>\n";
-						echo "</tr>\n";
-					}
-					?>
+					
 				</tbody>
 			</table>
+			<div class="row-fluid">
+				<input type="submit" class="btn btn-danger" value="Delete Selected" />
+			</div>
 		</form>
 		<?php
-	} else {
-		?>
-		<div class="display-notice">
-			<h3>No Available Notices</h3>
-			There are currently no notices registered in the system. To add a notice click the <strong>Add Notice</strong> link.
-		</div>
-		<?php
-	}
 }

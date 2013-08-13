@@ -169,6 +169,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 			if (!$ERROR) {
 				$PROCESSED["updated_date"] = time();
 				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
+				$PROCESSED["created_by"] = $ENTRADA_USER->getID();
 
 				if ($db->AutoExecute("notices", $PROCESSED, "INSERT")) {
 					if ($NOTICE_ID = $db->Insert_Id()) {

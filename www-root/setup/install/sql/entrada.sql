@@ -4030,6 +4030,7 @@ CREATE TABLE IF NOT EXISTS `notices` (
   `display_until` bigint(64) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
+  `created_by` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY (`notice_id`),
   KEY `display_from` (`display_from`),
   KEY `display_until` (`display_until`),
@@ -4133,6 +4134,7 @@ CREATE TABLE IF NOT EXISTS `quizzes` (
   `quiz_active` int(1) NOT NULL DEFAULT '1',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
+  `created_by` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY (`quiz_id`),
   KEY `quiz_active` (`quiz_active`),
   FULLTEXT KEY `quiz_title` (`quiz_title`)

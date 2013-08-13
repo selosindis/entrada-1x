@@ -55,8 +55,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
         }
 
         if ($quiz_ids) {
-            $query = "SELECT a.`quiz_id`, a.`quiz_title`
+            $query = "	SELECT a.`quiz_id`, a.`quiz_title`, a.`updated_date`, CONCAT(b.`firstname`, ' ', b.`lastname`) AS author, COUNT(DISTINCT c.`qquestion_id`) AS `question_total`
                         FROM `quizzes` AS a
+						JOIN `".AUTH_DATABASE."`.`user_data` AS b
+						ON a.`created_by` = b.id
+						LEFT JOIN `quiz_questions` AS c
+						ON a.`quiz_id` = c.`quiz_id`
                         WHERE a.`quiz_id` IN (".implode(", ", $quiz_ids).")
                         AND a.`quiz_active` = 1
                         ORDER BY a.`quiz_title` ASC";
@@ -64,7 +68,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
             if ($results) {
                 foreach ($results as $result) {
                     if ($ENTRADA_ACL->amIAllowed(new QuizResource($result["quiz_id"]), "update")) {
-                        $delete_quizzes[$result["quiz_id"]] = $result["quiz_title"];
+                        $delete_quizzes[$result["quiz_id"]] = $result;
                     }
                 }
             }
@@ -102,37 +106,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
             <form action="<?php echo ENTRADA_RELATIVE; ?>/admin/<?php echo $MODULE; ?>?section=delete" method="post">
                 <input type="hidden" name="confirmed" value="1" />
-                <table class="tableList" cellspacing="0" summary="List of Quizzes Pending Delete">
-                    <colgroup>
-                        <col class="modified" />
-                        <col class="title" />
-                    </colgroup>
+                <table class="table table-striped table-bordered" summary="List of Quizzes Pending Delete">
                     <thead>
                         <tr>
-                            <td class="modified">&nbsp;</td>
-                            <td class="title sortedASC">Quiz Title</td>
-                        </tr>
+							<th width="5%">&nbsp;</th>
+							<th width="30%">Quiz Title</th>
+							<th width="25%">Author</th>
+							<th width="15%">Questions</th>
+							<th width="25%">Last Updated</th>
+						</tr>
                     </thead>
-                    <tfoot>
-                        <tr>
-                            <td></td>
-                            <td style="padding-top: 10px">
-                                <a href="<?php echo ENTRADA_RELATIVE."/admin/".$MODULE; ?>" class="btn">Cancel</a>
-                                <input type="submit" class="btn btn-danger pull-right" value="Confirm Delete" />
-                            </td>
-                        </tr>
-                    </tfoot>
                     <tbody>
                         <?php
-                        foreach ($delete_quizzes as $quiz_id => $quiz_title) {
+                        foreach ($delete_quizzes as $quiz) {
                             echo "<tr>\n";
-                            echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".(int) $quiz_id."\" checked=\"checked\" /></td>\n";
-                            echo "	<td class=\"title\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz_id."\">".html_encode($quiz_title)."</a></td>\n";
+                            echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".(int) $quiz["quiz_id"]."\" checked=\"checked\" /></td>\n";
+                            echo "	<td class=\"title\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz["quiz_id"]."\">".html_encode($quiz["quiz_title"])."</a></td>\n";
+							echo "	<td class=\"author\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz["quiz_id"]."\">".html_encode($quiz["author"])."</a></td>\n";
+							echo "	<td class=\"questions\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz["quiz_id"]."\">".$quiz["question_total"]."</a></td>\n";
+                            echo "	<td class=\"updated\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz["quiz_id"]."\">".date("Y-m-d g:ia", $quiz["updated_date"])."</a></td>\n";
                             echo "</tr>\n";
                         }
                         ?>
                     </tbody>
                 </table>
+				<div class="row-fluid">
+					<a href="<?php echo ENTRADA_RELATIVE."/admin/".$MODULE; ?>" class="btn">Cancel</a>
+                    <input type="submit" class="btn btn-danger pull-right" value="Confirm Delete" />
+				</div>
             </form>
             <?php
         }

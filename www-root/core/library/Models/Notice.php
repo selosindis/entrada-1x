@@ -107,7 +107,7 @@ class Models_Notice {
                 $query .= "     (
                                     a.`organisation_id` = ".$db->qstr($organisation_id)."
                                     AND (
-                                        c.`audience_type` = 'all'
+                                        c.`audience_type` = 'all:all'
                                         OR c.`audience_type` IN ('".implode("', '", $all_audience_types)."')
                                         OR (
                                             c.`audience_type` IN ('".implode("', '", $all_groups)."')

@@ -36,6 +36,99 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
+	
+	if (isset($_POST["ajax"]) && $_POST["ajax"] === "ajax") {
+		
+		ob_clear_open_buffers();
+		
+			$method = clean_input($_POST["method"], array("trim", "striptags"));
+
+			switch ($method) {
+				case "store-late" :
+					
+					if (isset($_POST["aovalue_id"]) && $tmp_input = clean_input($_POST["aovalue_id"], "int")) {
+						$PROCESSED["aovalue_id"] = $tmp_input;
+						$MODE = "UPDATE";
+						$WHERE = "`aovalue_id` = ".$db->qstr($tmp_input);
+					} else {
+						$MODE = "INSERT";
+						$WHERE = "'1' = '1'";
+					}
+					if (isset($_POST["proxy_id"]) && $tmp_input = clean_input($_POST["proxy_id"], "int")) {
+						$PROCESSED["proxy_id"] = $tmp_input;
+					} else {
+						add_error("Invalid proxy ID supplied.");
+					}
+					if (isset($_POST["aoption_id"]) && $tmp_input = clean_input($_POST["aoption_id"], "int")) {
+						$PROCESSED["aoption_id"] = $tmp_input;
+					} else {
+						add_error("Invalid assessment option ID provided.");
+					}
+					if (isset($_POST["value"]) && $tmp_input = clean_input($_POST["value"], "int")) {
+						$PROCESSED["value"] = clean_input($_POST["value"], "int");
+					} else {
+						add_error("Invalid lates value provided");
+					}
+					
+					if (!$ERROR) {
+						if ($db->AutoExecute("assessment_option_values", $PROCESSED, $MODE, $WHERE)) {
+							if (!isset($PROCESSED["aovalue_id"])) {
+								$PROCESSED["aovalue_id"] = $db->Insert_ID();
+							}
+							echo json_encode(array("status" => "success", "data" => $PROCESSED));
+						} else {
+							echo json_encode(array("status" => "error", "data" => $ERRORSTR));
+						}
+					} else {
+						echo json_encode(array("status" => "error", "data" => $ERRORSTR));
+					}
+					
+				break;
+				case "store-resubmit" :
+					
+					if (isset($_POST["aovalue_id"]) && $tmp_input = clean_input($_POST["aovalue_id"], "int")) {
+						$PROCESSED["aovalue_id"] = $tmp_input;
+						$MODE = "UPDATE";
+						$WHERE = "`aovalue_id` = ".$db->qstr($tmp_input);
+					} else {
+						$MODE = "INSERT";
+						$WHERE = "'1' = '1'";
+					}
+					if (isset($_POST["proxy_id"]) && $tmp_input = clean_input($_POST["proxy_id"], "int")) {
+						$PROCESSED["proxy_id"] = $tmp_input;
+					} else {
+						add_error("Invalid proxy ID supplied.");
+					}
+					if (isset($_POST["aoption_id"]) && $tmp_input = clean_input($_POST["aoption_id"], "int")) {
+						$PROCESSED["aoption_id"] = $tmp_input;
+					} else {
+						add_error("Invalid assessment option ID provided.");
+					}
+					if (isset($_POST["value"]) && $_POST["value"] == "1") {
+						$PROCESSED["value"] = 1;
+					} else {
+						$PROCESSED["value"] = 0;
+					}
+					
+					if (!$ERROR) {
+						if ($db->AutoExecute("assessment_option_values", $PROCESSED, $MODE, $WHERE)) {
+							if (!isset($PROCESSED["aovalue_id"])) {
+								$PROCESSED["aovalue_id"] = $db->Insert_ID();
+							}
+							echo json_encode(array("status" => "success", "data" => $PROCESSED));
+						} else {
+							echo json_encode(array("status" => "error", "data" => $ERRORSTR));
+						}
+					} else {
+						echo json_encode(array("status" => "error", "data" => $ERRORSTR));
+					}
+					
+				break;
+			}
+		
+		exit;
+	}
+	
 	/**
 	 * Add PlotKit to the beginning of the $HEAD array.
 	 */
@@ -67,7 +160,43 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
 			$assessment = $db->GetRow($query);
 			if ($assessment) {
+				$query = "SELECT `option_id`, `aoption_id` FROM `assessment_options` WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)." AND `option_active` = '1'";
+				$assessment_options = $db->GetAssoc($query);
+				
 				$COHORT = $assessment["cohort"];
+				
+				$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`
+							FROM `".AUTH_DATABASE."`.`user_data` AS b
+							JOIN `".AUTH_DATABASE."`.`user_access` AS c
+							ON c.`user_id` = b.`id` 
+							AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+							AND c.`account_active` = 'true'
+							AND (c.`access_starts` = '0' OR c.`access_starts`<=".$db->qstr(time()).")
+							AND (c.`access_expires` = '0' OR c.`access_expires`>=".$db->qstr(time()).")
+							JOIN `group_members` AS c
+							ON b.`id` = c.`proxy_id`
+							WHERE c.`group` = 'student'
+							AND c.`group_id` = ".$db->qstr($COHORT)."
+							AND c.`member_active` = '1' 
+							ORDER BY b.`lastname` ASC, b.`firstname` ASC";
+				$students = $db->GetAll($query);
+				
+				foreach ($students as $key => &$student) {
+					$query = "SELECT `grade_id`, `value` AS `grade_value` FROM `assessment_grades`
+								WHERE `proxy_id` = ".$db->qstr($student["proxy_id"])."
+								AND `assessment_id` = ".$db->qstr($assessment["assessment_id"]);
+					$grade = $db->GetRow($query);
+
+					$student["grade_id"] = (isset($grade["grade_id"]) ? $grade["grade_id"] : NULL);
+					$student["grade_value"] = (isset($grade["grade_value"]) ? $grade["grade_value"] : NULL);
+
+					$query = "SELECT `grade_weighting` FROM `assessment_exceptions`
+								WHERE `proxy_id` = ".$db->qstr($student["proxy_id"])."
+								AND `assessment_id` = ".$db->qstr($assessment["assessment_id"]);
+					$weight = $db->GetOne($query);
+
+					$student["grade_weighting"] = (isset($weight) ? $weight : NULL);
+				}
 				
 				courses_subnavigation($course_details,"gradebook");
 
@@ -87,126 +216,211 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					width: 100%;
 				}	
 				</style>
-				<div>
-					<h1 class="event-title"><?php echo $assessment["name"]; ?> (<?php echo groups_get_name($assessment["cohort"]); ?>)</h1>
+				<h1 class="event-title"><?php echo $assessment["name"]; ?> (<?php echo groups_get_name($assessment["cohort"]); ?>)</h1>
+				<?php if (!empty($assessment["description"])) { ?><p style="margin-top: 0;"><?php echo $assessment["description"]; ?></p><?php } ?>
+				<div class="row-fluid">
+					<div class="pull-right">
+						<div class="btn-group">
+							<a class="btn dropdown-toggle" data-toggle="dropdown" href="#"> Import / Export<span class="caret"></span></a>
+							<ul class="dropdown-menu">
+							<?php if ($assessment["assessment_type"] == "quiz" && !empty($attached_quizzes)) { ?>
+								<li><a href="#" id="import-quiz-button">Import grades from attached Quiz</a></li>
+							<?php } ?>
+								<li><a href="#" id="import-csv-button">Import grades from CSV file</a></li>
+								<li><a href="#" onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $ASSESSMENT_ID)); ?>'; return false;">Export grades to CSV file</a></li>
+							</ul>
+						</div>
+						<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit", "step" => false)); ?>" class="btn btn-success">Edit Assessment</a>
+					</div>
 				</div>
-				<div style="float: left; width: 350px;">
-					<h2 style="border-bottom: none; margin-bottom: 3px; margin-top: 0;"><?php echo $assessment["type"]; ?> Assessment</h2>
-					<p style="margin-top: 0;"><?php echo $assessment["description"]; ?></p>
+				<div class="row-fluid">
+					<h2>Assessment Statistics</h2>
+					<div id="graph" class="pull-right"></div>
+					<p><strong class="span3">Assessment Type:</strong> <?php echo $assessment["type"]; ?> Assessment</p>
+					<p><strong class="span3">Assessment Weighting:</strong> <?php echo $assessment["grade_weighting"]."%"; ?></p>
+					<?php 
+					switch($assessment["marking_scheme_id"]) {
+						case 1:
+						case 4:
+							//pass/fail
+							$grades = array(0,0,0);
+							$unentered = 0;
+
+							foreach ($students as $key => $student) {
+								if ($student["grade_value"] == "") {
+									$unentered++;
+								} elseif ($student["grade_value"] > 50){
+									$grades[0]++;
+								} else {
+									$grades[1]++;
+								}
+							}
+
+							$grade_data = array();
+							foreach ($grades as $key => $grade) {
+								$grade_data[] = "[$key, $grade]";
+							}
+							?>
+							<script type="text/javascript" charset="utf-8">
+								var data = [<?php echo implode(", ", $grade_data); ?>];
+								var plotter = PlotKit.EasyPlot(
+									"pie",
+									{
+										"xTicks": [{v:0, label:"<?php echo $assessment["marking_scheme_id"] == 4 ? "Complete" : "Pass" ?>"},
+													{v:1, label:"<?php echo $assessment["marking_scheme_id"] == 4 ? "Incomplete" : "Fail" ?>"}]
+									},
+									$("graph"),
+									[data]
+								);
+							</script>
+							<p><strong class="span3">Unentered grades:</strong> <?php echo (int) $unentered; ?></p>
+							<?php
+						break;
+						case 2:
+						case 3:
+							// Percentage (numeric interpreted as percentage)
+							$grades = array(0,0,0,0,0,0,0,0,0,0,0);
+
+							$sum = 0;
+
+							$entered = 0;
+							$unentered = 0;
+
+							$grade_values = array();
+							foreach ($students as $key => $student) {
+								if (!isset($student["grade_value"]) || !$student["grade_value"]) {
+									//$grades[11]++;
+									$unentered++;
+								} else {
+									$sum += $student["grade_value"];
+									$entered++;
+									$grade_values[] = $student["grade_value"];
+
+									$key = floor($student["grade_value"] / 10);
+									$grades[$key]++;
+								}
+							}
+
+							$grade_data = array();
+							foreach ($grades as $key => $grade) {
+								$grade_data[] = "[$key, $grade]";
+							}
+							sort($grade_values);
+							?>
+							<script type="text/javascript" charset="utf-8">
+								var data = [<?php echo implode(", ", $grade_data); ?>];
+								var plotter = PlotKit.EasyPlot(
+									"bar",
+									{
+										"xTicks": [ {v:0,  label:"0s"},
+													{v:1,  label:"10s"},
+													{v:2,  label:"20s"},
+													{v:3,  label:"30s"},
+													{v:4,  label:"40s"},
+													{v:5,  label:"50s"},
+													{v:6,  label:"60s"},
+													{v:7,  label:"70s"},
+													{v:8,  label:"80s"},
+													{v:9,  label:"90s"},
+													{v:10, label:"100"}]
+									},
+									$("graph"),
+									[data]
+								);
+							</script>
+							<p><strong class="span3">Unentered grades:</strong> <?php echo (int) $unentered; ?></p>
+							<p><strong class="span3">Mean grade:</strong> <?php echo number_format(($entered > 0 ? $sum / $entered : 0), 0); ?>%</p>
+							<p><strong class="span3">Median grade:</strong> <?php echo $grade_values[floor(count($grade_values) / 2)]; ?>%</p>
+							<?php
+						break;
+						default:
+							echo "No statistics for this marking scheme.";
+						break;
+					}
+					?>
 				</div>
-				<div style="float: right; width:280px;">
-					<h2 style="border-bottom: none; margin-top: 0;">Weighting <?php echo $assessment["grade_weighting"]."%"; ?></h2>
-					<ul class="page-action">
-						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit", "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
-					</ul>
-					<ul style="list-style:none;">
-						<li><a href="#" style="background-image:url(<?php echo ENTRADA_URL."/images/reset.gif"; ?>);background-repeat:no-repeat;padding-left:20px;font-weight:700;" onclick="location.reload(true)" /> Refresh</a></li>
-					</ul>
-				</div>
-				<div style="clear: both;"></div>
-                <div class="row-fluid">
-                    <?php
+				<?php if ($students && @count($students) >= 1) { ?>
+						<div class="row-fluid">
+							<?php
 
-                    if (isset($_POST["error_grades"]) && @count($_POST["error_grades"])) {
-                        $error_grades = $_POST["error_grades"];
-                        add_notice((count($_POST["error_grades"]) > 1 ? "Errors were encountered while importing the CSV.<br /><br /> Please manually update the grades of each of the <strong>".count($_POST["error_grades"])." highlighted students</strong>, otherwise those students' grades will be left as what they were prior to the CSV import process." : "An error was encountered while importing the CSV.<br /><br /> Please manually update the grade of the <strong>highlighted student</strong>, otherwise the grade for that student will be left as it was prior to the CSV import process."));
-                        echo display_notice();
-                    }
+							if (isset($_POST["error_grades"]) && @count($_POST["error_grades"])) {
+								$error_grades = $_POST["error_grades"];
+								add_notice((count($_POST["error_grades"]) > 1 ? "Errors were encountered while importing the CSV.<br /><br /> Please manually update the grades of each of the <strong>".count($_POST["error_grades"])." highlighted students</strong>, otherwise those students' grades will be left as what they were prior to the CSV import process." : "An error was encountered while importing the CSV.<br /><br /> Please manually update the grade of the <strong>highlighted student</strong>, otherwise the grade for that student will be left as it was prior to the CSV import process."));
+								echo display_notice();
+							}
 
-                    $query = "SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`
-                                FROM `".AUTH_DATABASE."`.`user_data` AS b
-                                JOIN `".AUTH_DATABASE."`.`user_access` AS c
-                                ON c.`user_id` = b.`id` 
-                                AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-                                AND c.`account_active` = 'true'
-                                AND (c.`access_starts` = '0' OR c.`access_starts`<=".$db->qstr(time()).")
-                                AND (c.`access_expires` = '0' OR c.`access_expires`>=".$db->qstr(time()).")
-                                JOIN `group_members` AS c
-                                ON b.`id` = c.`proxy_id`
-                                WHERE c.`group` = 'student'
-                                AND c.`group_id` = ".$db->qstr($COHORT)."
-                                AND c.`member_active` = '1' 
-                                ORDER BY b.`lastname` ASC, b.`firstname` ASC";
-                    $students = $db->GetAll($query);
-                    $editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
-                    if ($students && @count($students) >= 1) { 
-                        ?>
-                        <span id="assessment_name" style="display: none;"><?php echo $assessment["name"]; ?></span>
-                        <span id="gradebook_grades" class="span7">
-                            <h2>Grades</h2>
-                            <div style="margin-bottom: 5px;">
-                                <span class="content-small"><strong>Tip: </strong><?php echo $assessment["marking_scheme_description"]; ?></span>
-                            </div>				
-                            <table class="gradebook single <?php echo $editable; ?>">
-                                <tbody>
-                                    <?php
-                                    foreach ($students as $key => &$student) {
-                                        $query = "SELECT `grade_id`, `value` AS `grade_value` FROM `assessment_grades`
-                                                    WHERE `proxy_id` = ".$db->qstr($student["proxy_id"])."
-                                                    AND `assessment_id` = ".$db->qstr($assessment["assessment_id"]);
-                                        $grade = $db->GetRow($query);
-                                        
-                                        $student["grade_id"] = (isset($grade["grade_id"]) ? $grade["grade_id"] : NULL);
-                                        $student["grade_value"] = (isset($grade["grade_value"]) ? $grade["grade_value"] : NULL);
-                                        
-                                        $query = "SELECT `grade_weighting` FROM `assessment_exceptions`
-                                                    WHERE `proxy_id` = ".$db->qstr($student["proxy_id"])."
-                                                    AND `assessment_id` = ".$db->qstr($assessment["assessment_id"]);
-                                        $weight = $db->GetOne($query);
-                                        
-                                        $student["grade_weighting"] = (isset($weight) ? $weight : NULL);
+							$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
 
-                                        if (isset($student["grade_id"])) {
-                                            $grade_id = $student["grade_id"];
-                                        } else {
-                                            $grade_id = "";
-                                        }
+								?>
+								<div id="gradebook_grades" class="span12">
+									<h2>Grades</h2>
+									<div style="margin-bottom: 5px;">
+										<span class="content-small"><strong>Tip: </strong><?php echo $assessment["marking_scheme_description"]; ?></span>
+									</div>				
+									<table class="gradebook single <?php echo $editable; ?>">
+										<tbody>
+											<?php
+											foreach ($students as $key => &$student) {
+												$query = "SELECT `aoption_id`, `value`, `aovalue_id` FROM `assessment_option_values` WHERE `proxy_id` = ".$db->qstr($student["proxy_id"])." AND `aoption_id` IN (".implode(",", $assessment_options).")";
+												$option_values = $db->GetAssoc($query);
 
-                                        if (isset($student["grade_value"])) {
-                                            $grade_value = format_retrieved_grade($student["grade_value"], $assessment);
-                                        } else {
-                                            $grade_value = "-";
-                                        }
-                                        if (isset($student["grade_weighting"]) && $student["grade_weighting"]) {
-                                            $grade_weighting = $student["grade_weighting"];
-                                        } else {
-                                            $grade_weighting = $assessment["grade_weighting"];
-                                        }
-                                        ?>
-                                        <tr id="grades<?php echo $student["proxy_id"]; ?>"<?php echo (isset($error_grades[$student["proxy_id"]]) ? " class=\"highlight\"" : "") ?>>
-                                            <td><?php echo $student["fullname"]; ?></td>
-                                            <td><?php echo $student["number"]; ?></td>
-                                            <td>
-                                                <span class="grade" id="grade_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"
-                                                    data-grade-id="<?php echo $grade_id; ?>"
-                                                    data-assessment-id="<?php echo $assessment["assessment_id"]; ?>"
-                                                    data-proxy-id="<?php echo $student["proxy_id"] ?>"
-                                                    style="float:left;"
-                                                ><?php echo (!isset($error_grades[$student["proxy_id"]]) ? $grade_value : $error_grades[$student["proxy_id"]]); ?></span>
-                                                <span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?> style="float:left;">
-                                                    <?php echo assessment_suffix($assessment); ?>
-                                                </span>
-                                                <span class="gradesuffix" style="float:right;">
-                                                    <img src="<?php echo ENTRADA_URL;?>/images/action-edit.gif" class="edit_grade" id ="edit_grade_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>" style="cursor:pointer;"/>
-                                                </span>
-                                            </td>
-                                            <?php
-                                            if ($assessment["marking_scheme_id"] == 3) {
-                                                ?>
-                                            <td id="percentage_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"><?php echo round($student["grade_value"],2);?>%</td>
-                                            <?php
-                                            }
-                                            ?>
-                                        </tr>
-                                        <?php
-                                    }
-                                    ?>
-                                </tbody>
-                            </table>
-                        </span>
+												if (isset($student["grade_id"])) {
+													$grade_id = $student["grade_id"];
+												} else {
+													$grade_id = "";
+												}
+
+												if (isset($student["grade_value"])) {
+													$grade_value = format_retrieved_grade($student["grade_value"], $assessment);
+												} else {
+													$grade_value = "-";
+												}
+												if (isset($student["grade_weighting"]) && $student["grade_weighting"]) {
+													$grade_weighting = $student["grade_weighting"];
+												} else {
+													$grade_weighting = $assessment["grade_weighting"];
+												}
+												?>
+												<tr id="grades<?php echo $student["proxy_id"]; ?>"<?php echo (isset($error_grades[$student["proxy_id"]]) ? " class=\"highlight\"" : "") ?>>
+													<td><?php echo $student["fullname"]; ?></td>
+													<td><?php echo $student["number"]; ?></td>
+													<td>
+														<span class="grade" id="grade_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"
+															data-grade-id="<?php echo $grade_id; ?>"
+															data-assessment-id="<?php echo $assessment["assessment_id"]; ?>"
+															data-proxy-id="<?php echo $student["proxy_id"] ?>"
+															style="float:left;"
+														><?php echo (!isset($error_grades[$student["proxy_id"]]) ? $grade_value : $error_grades[$student["proxy_id"]]); ?></span>
+														<span class="gradesuffix" <?php echo (($grade_value === "-") ? "style=\"display: none;\"" : "") ?> style="float:left;">
+															<?php echo assessment_suffix($assessment); ?>
+														</span>
+														<span class="gradesuffix" style="float:right;">
+															<i class="icon-edit edit_grade" id ="edit_grade_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"></i>
+														</span>
+													</td>
+													<?php if ($assessment["marking_scheme_id"] == 3) { ?>
+													<td id="percentage_<?php echo $assessment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"><?php echo round($student["grade_value"],2);?>%</td>
+													<?php } ?>
+													<?php if (array_key_exists("5", $assessment_options)) { ?>
+													<td class="late-submissions">
+														<span class="late pull-left" data-id="<?php echo $assessment_options[5]; ?>" data-proxy-id="<?php echo $student["proxy_id"]; ?>" data-aovalue-id="<?php echo !empty($option_values[$assessment_options[5]]["aovalue_id"]) ? $option_values[$assessment_options[5]]["aovalue_id"] : "" ?>"><?php echo empty($option_values[$assessment_options[5]]["value"]) ? "-" : $option_values[$assessment_options[5]]["value"]; ?></span><i class="late-button icon-edit pull-right"></i>
+													</td>
+													<?php } ?>
+													<?php if (array_key_exists("6", $assessment_options)) { ?>
+													<td class="resubmissions">
+														<input type="checkbox" data-id="<?php echo $assessment_options[6]; ?>" data-proxy-id="<?php echo $student["proxy_id"]; ?>" data-aovalue-id="<?php echo !empty($option_values[$assessment_options[6]]["aovalue_id"]) ? $option_values[$assessment_options[6]]["aovalue_id"] : "" ?>" <?php echo $option_values[$assessment_options[6]]["value"] == "1" ? "checked=\"checked\"" : ""; ?> />
+													</td>
+													<?php } ?>
+												</tr>
+												<?php
+											}
+											?>
+										</tbody>
+									</table>
+								</div>
+						</div>
                         <script type="text/javascript">
                             jQuery(document).ready(function(){
-
                                 jQuery('.edit_grade').click(function(e){
                                     var id = e.target.id.substring(5);
                                     jQuery('#'+id).trigger('click');
@@ -214,307 +428,193 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             });
 
                         </script>
-                        <span id="gradebook_stats" class="span5">
-                            <h2>Statistics</h2>
-                            <div id="graph"></div>
-                            <?php 
-                            switch($assessment["marking_scheme_id"]) {
-                                case 1:
-                                case 4:
-                                    //pass/fail
-                                    $grades = array(0,0,0);
-                                    $unentered = 0;
+						
+						<div id="import-csv" style="display:none;">
+							<h2>Import grades from CSV</h2>
+							<div id="display-notice-box" class="display-notice">
+								<ul>
+								<li><strong>Important Notes:</strong>
+									<br />Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets). 
+									<br />Any grades entered will be overwritten if present in the CSV.</li>
+								</ul>
+							</div>
+							<form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
+								<input type="file" name="file"/>
+							</form>
+						</div>
 
-                                    foreach ($students as $key => $student) {
-                                        if ($student["grade_value"] == "") {
-                                            $unentered++;
-                                        } elseif ($student["grade_value"] > 50){
-                                            $grades[0]++;
-                                        } else {
-                                            $grades[1]++;
-                                        }
-                                    }
+						<?php 
+						if ($assessment["assessment_type"] == "quiz") { 
+						   $query = "SELECT * FROM `assessment_attached_quizzes` 
+										WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+							$attached_quizzes = $db->GetAll($query);
+							if ($attached_quizzes) {
+								if (count($attached_quizzes) == 1) {
+									$attached_quiz = $attached_quizzes[0];
+								}
+								?>
+								<div id="import-quiz" style="display:none;">
+									<h2>Import grades from attached quiz</h2>
+									<div id="display-notice-box" class="display-notice">
+										<ul>
+										<li><strong>Important Notes:</strong><br />
+											This will import the results for the attached questions from <?php echo (isset($attached_quiz) && $attached_quiz ? "the quiz <strong>". $attached_quiz["quiz_title"] ."</strong>" : "<strong>".count($attached_quizzes)."</strong> attached quizzes"); ?>. Any existing grades will be overwritten during this import process. Only students who have completed the quiz will be graded.</li>
+										</ul>
+									</div>
+									<form action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "import-quiz", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST" class="row-fluid">
+										<label class="span4 form-required" for="import_type">Import action</label>
+										<span class="span7 offset1">
+											<select name="import_type" id="import_type">
+												<option value="all">Average of all attempts</option>
+												<option value="first">First attempt</option>
+												<option value="last">Last attempt</option>
+												<option value="best">Best (highest marked) attempt</option>
+											</select>
+										</span>
+										<input type="hidden" name="course_id" value="<?php echo $assessment["course_id"]; ?>" />
+										<input type="hidden" name="assessment_id" value="<?php echo $assessment["assessment_id"]; ?>" />
+									</form>
+								</div>
+								<?php 
+							}
+						} ?>
 
-                                    $grade_data = array();
-                                    foreach ($grades as $key => $grade) {
-                                        $grade_data[] = "[$key, $grade]";
-                                    }
-                                    ?>
-                                    <script type="text/javascript" charset="utf-8">
-                                        var data = [<?php echo implode(", ", $grade_data); ?>];
-                                        var plotter = PlotKit.EasyPlot(
-                                            "pie",
-                                            {
-                                                "xTicks": [{v:0, label:"<?php echo $assessment["marking_scheme_id"] == 4 ? "Complete" : "Pass" ?>"},
-                                                            {v:1, label:"<?php echo $assessment["marking_scheme_id"] == 4 ? "Incomplete" : "Fail" ?>"}]
-                                            },
-                                            $("graph"),
-                                            [data]
-                                        );
-                                    </script>
-                                    <br />
-                                    <p>Unentered grades: <?php echo (int) $unentered; ?></p>
-                                    <?php
-                                break;
-                                case 2:
-                                case 3:
-                                    // Percentage (numeric interpreted as percentage)
-                                    $grades = array(0,0,0,0,0,0,0,0,0,0,0);
+						<script type="text/javascript">
+						jQuery(function(){
+							jQuery("#import-csv-button, #import-quiz-button").live("click", function(){
+								if (jQuery(this).attr("id") == "import-quiz-button") {
+									var target = jQuery("#import-quiz");
+									var title = "Import Quiz";
+									var height = 365;
+								} else if (jQuery(this).attr("id") == "import-csv-button") {
+									var target = jQuery("#import-csv");
+									var title = "Import CSV";
+									var height = 350;
+								}
+								var importResults = target.dialog({
+									modal:		true,
+									resizable:	false,
+									draggable:	false,
+									width: 500,
+									height: height,
+									title: title,
+									buttons: [
+										{
+											text: "Ok",
+											click: function() { 
+												importResults.children("form").submit();
+											}
+										},
+										{
+											text: "Cancel",
+											click: function() {
+												importResults.dialog("close");
+												importResults.dialog("destroy");
+											}
+										}
+									]
+								});
+								return false;
+							});
+						});
+						</script>
+						
+                        <div id="gradebook_stats" class="space-above">
+							<h2>Grade Calculation Exceptions</h2>
+							<p>You can use the following exception creator to modify the calculations used to create the students final grade in this course.</p>
 
-                                    $sum = 0;
+							<label for="student_exceptions" class="form-required">Student Name</label>
+							<select name="student_exceptions" id="student_exceptions" style="width: 210px;" onchange="add_exception(this.options[this.selectedIndex].value, '<?php echo $assessment["assessment_id"]; ?>')">
+							<option value="0">-- Select A Student --</option>
+								<?php
+								foreach ($students as $student) {
+									if (!isset($student["grade_weighting"]) || $student["grade_weighting"] == NULL) {
+										echo "<option value=\"".$student["proxy_id"]."\">".$student["fullname"]."</option>";
+									}
+								}
+								?>
+							</select>
+							
+							<script type="text/javascript">
+							var updating = false;
+							function delete_exception (proxy_id, assessment_id) {
 
-                                    $entered = 0;
-                                    $unentered = 0;
+								var anOption = document.createElement('option');
+								anOption.value = proxy_id;
+								anOption.innerHTML = $(proxy_id+'_name').innerHTML;
+								$('student_exceptions').appendChild(anOption);
 
-                                    $grade_values = array();
-                                    foreach ($students as $key => $student) {
-                                        if (!isset($student["grade_value"]) || !$student["grade_value"]) {
-                                            //$grades[11]++;
-                                            $unentered++;
-                                        } else {
-                                            $sum += $student["grade_value"];
-                                            $entered++;
-                                            $grade_values[] = $student["grade_value"];
+								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
+									{
+										method:	'post',
+										parameters: 'remove=1&assessment_id='+assessment_id+'&proxy_id='+proxy_id
+									}
+								);
+							}
 
-                                            $key = floor($student["grade_value"] / 10);
-                                            $grades[$key]++;
-                                        }
-                                    }
+							function modify_exception (proxy_id, assessment_id) {
+								if (!updating) {
+									updating = true;
+									setTimeout('modify_exception_ajax('+proxy_id+', '+assessment_id+')', 2000);
+								}
 
-                                    $grade_data = array();
-                                    foreach ($grades as $key => $grade) {
-                                        $grade_data[] = "[$key, $grade]";
-                                    }
-                                    sort($grade_values);
-                                    ?>
-                                    <script type="text/javascript" charset="utf-8">
-                                        var data = [<?php echo implode(", ", $grade_data); ?>];
-                                        var plotter = PlotKit.EasyPlot(
-                                            "bar",
-                                            {
-                                                "xTicks": [{v:0, label:"0s"},
-                                                            {v:1, label:"10s"},
-                                                            {v:2, label:"20s"},
-                                                            {v:3, label:"30s"},
-                                                            {v:4, label:"40s"},
-                                                            {v:5, label:"50s"},
-                                                            {v:6, label:"60s"},
-                                                            {v:7, label:"70s"},
-                                                            {v:8, label:"80s"},
-                                                            {v:9, label:"90s"},
-                                                            {v:10, label:"100"}]
-                                            },
-                                            $("graph"),
-                                            [data]
-                                        );
-                                    </script>
-                                    <br />
-                                    <p>Unentered grades: <?php echo (int) $unentered; ?></p>
-                                    <p>Mean grade: <?php echo number_format(($entered > 0 ? $sum / $entered : 0), 0); ?>%</p>
-                                    <p>Median grade: <?php echo $grade_values[floor(count($grade_values) / 2)]; ?>%</p>
-                                    <?php
-                                break;
-                                default:
-                                    echo "No statistics for this marking scheme.";
-                                break;
-                            }
-                            ?>
-                            <div id="import-csv" style="display:none;">
-                                <h2>Import grades from CSV</h2>
-                                <div id="display-notice-box" class="display-notice">
-                                    <ul>
-                                    <li><strong>Important Notes:</strong>
-                                        <br />Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets). 
-                                        <br />Any grades entered will be overwritten if present in the CSV.</li>
-                                    </ul>
-                                </div>
-                                <form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
-                                    <input type="file" name="file"/>
-                                </form>
-                            </div>
-                            <?php 
-                            if ($assessment["assessment_type"] == "quiz") { 
-                               $query = "SELECT * FROM `assessment_attached_quizzes` 
-                                            WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID);
-                                $attached_quizzes = $db->GetAll($query);
-                                if ($attached_quizzes) {
-                                    if (count($attached_quizzes) == 1) {
-                                        $attached_quiz = $attached_quizzes[0];
-                                    }
-                                    ?>
-                                    <div id="import-quiz" style="display:none;">
-                                        <h2>Import grades from attached quiz</h2>
-                                        <div id="display-notice-box" class="display-notice">
-                                            <ul>
-                                            <li><strong>Important Notes:</strong><br />
-                                                This will import the results for the attached questions from <?php echo (isset($attached_quiz) && $attached_quiz ? "the quiz <strong>". $attached_quiz["quiz_title"] ."</strong>" : "<strong>".count($attached_quizzes)."</strong> attached quizzes"); ?>. Any existing grades will be overwritten during this import process. Only students who have completed the quiz will be graded.</li>
-                                            </ul>
-                                        </div>
-                                        <form action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "import-quiz", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST" class="row-fluid">
-                                            <label class="span4 form-required" for="import_type">Import action</label>
-                                            <span class="span7 offset1">
-                                                <select name="import_type" id="import_type">
-                                                    <option value="all">Average of all attempts</option>
-                                                    <option value="first">First attempt</option>
-                                                    <option value="last">Last attempt</option>
-                                                    <option value="best">Best (highest marked) attempt</option>
-                                                </select>
-                                            </span>
-                                            <input type="hidden" name="course_id" value="<?php echo $assessment["course_id"]; ?>" />
-                                            <input type="hidden" name="assessment_id" value="<?php echo $assessment["assessment_id"]; ?>" />
-                                        </form>
-                                    </div>
-                                    <?php 
-                                }
-                            } ?>
-                            <div style="margin-top: 20px;">
-                                <script type="text/javascript">
-                                jQuery(function(){
-                                    jQuery("#import-csv-button, #import-quiz-button").live("click", function(){
-                                        if (jQuery(this).attr("id") == "import-quiz-button") {
-                                            var target = jQuery("#import-quiz");
-                                            var title = "Import Quiz";
-                                            var height = 365;
-                                        } else if (jQuery(this).attr("id") == "import-csv-button") {
-                                            var target = jQuery("#import-csv");
-                                            var title = "Import CSV";
-                                            var height = 350;
-                                        }
-                                        var importResults = target.dialog({
-                                            modal:		true,
-                                            resizable:	false,
-                                            draggable:	false,
-                                            width: 500,
-                                            height: height,
-                                            title: title,
-                                            buttons: [
-                                                {
-                                                    text: "Ok",
-                                                    click: function() { 
-                                                        importResults.children("form").submit();
-                                                    }
-                                                },
-                                                {
-                                                    text: "Cancel",
-                                                    click: function() {
-                                                        importResults.dialog("close");
-                                                        importResults.dialog("destroy");
-                                                    }
-                                                }
-                                            ]
-                                        });
-                                        return false;
-                                    });
-                                });
-                                </script>
-                                <h2>Import &amp; Export</h2>
-                                <ul class="import-export-list" style="padding:0px;">
-                                <?php if ($assessment["assessment_type"] == "quiz" && !empty($attached_quizzes)) { ?>
-                                    <li class="up" style="display:block;"><a href="#" id="import-quiz-button">Import grades from attached Quiz</a></li>
-                                <?php } ?>
-                                    <li class="up" style="display:block;"><a href="#" id="import-csv-button">Import grades from CSV file</a></li>
-                                    <li class="down" style="display:block;"><a href="#" onclick="window.location='<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => $ASSESSMENT_ID)); ?>'; return false;">Export grades to CSV file</a></li>
-                                </ul>
-                            </div>
-                            <div  style="margin-top: 20px;">
-                                <h2>Grade Calculation Exceptions</h2>
-                                <p>
-                                    You can use the following exception creator to modify the calculations used to create the students final grade in this course. 
-                                </p>
+							}
 
-                                <label for="student_exceptions" class="form-required">Student Name</label>
-                                <select name="student_exceptions" id="student_exceptions" style="width: 210px;" onchange="add_exception(this.options[this.selectedIndex].value, '<?php echo $assessment["assessment_id"]; ?>')">
-                                <option value="0">-- Select A Student --</option>
-                                    <?php
-                                    foreach ($students as $student) {
-                                        if (!isset($student["grade_weighting"]) || $student["grade_weighting"] == NULL) {
-                                            echo "<option value=\"".$student["proxy_id"]."\">".$student["fullname"]."</option>";
-                                        }
-                                    }
-                                    ?>
-                                </select>
-                                <br /><br /><br />
-                                <script type="text/javascript">
-                                var updating = false;
-                                function delete_exception (proxy_id, assessment_id) {
+							function modify_exception_ajax(proxy_id, assessment_id) {
+								var grade_weighting = $('student_exception_'+proxy_id).value;
+								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
+									{
+										method:	'post',
+										parameters: 'assessment_id='+assessment_id+'&proxy_id='+proxy_id+'&grade_weighting='+grade_weighting,
+										onComplete: function () {
+											$('student_exception_'+proxy_id).focus();
+											updating = false;
+										}
+									}
+								)
+							}
 
-                                    var anOption = document.createElement('option');
-                                    anOption.value = proxy_id;
-                                    anOption.innerHTML = $(proxy_id+'_name').innerHTML;
-                                    $('student_exceptions').appendChild(anOption);
+							function add_exception (proxy_id, assessment_id) {
+								new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
+									{
+										method:	'post',
+										parameters: 'assessment_id='+assessment_id+'&proxy_id='+proxy_id+'&grade_weighting=0'
+									}
+								);
+								var children = $('student_exceptions').childNodes;
+								var numchildren = children.length;
 
-                                    new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
-                                        {
-                                            method:	'post',
-                                            parameters: 'remove=1&assessment_id='+assessment_id+'&proxy_id='+proxy_id
-                                        }
-                                    );
-                                }
-
-                                function modify_exception (proxy_id, assessment_id) {
-                                    if (!updating) {
-                                        updating = true;
-                                        setTimeout('modify_exception_ajax('+proxy_id+', '+assessment_id+')', 2000);
-                                    }
-
-                                }
-
-                                function modify_exception_ajax(proxy_id, assessment_id) {
-                                    var grade_weighting = $('student_exception_'+proxy_id).value;
-                                    new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
-                                        {
-                                            method:	'post',
-                                            parameters: 'assessment_id='+assessment_id+'&proxy_id='+proxy_id+'&grade_weighting='+grade_weighting,
-                                            onComplete: function () {
-                                                $('student_exception_'+proxy_id).focus();
-                                                updating = false;
-                                            }
-                                        }
-                                    )
-                                }
-
-                                function add_exception (proxy_id, assessment_id) {
-                                    new Ajax.Updater('exception_container', '<?php echo ENTRADA_URL; ?>/api/assessment-weighting-exception.api.php', 
-                                        {
-                                            method:	'post',
-                                            parameters: 'assessment_id='+assessment_id+'&proxy_id='+proxy_id+'&grade_weighting=0'
-                                        }
-                                    );
-                                    var children = $('student_exceptions').childNodes;
-                                    var numchildren = children.length;
-
-                                    for (var i = 0; i < numchildren; i++) {
-                                        if (children[i].value == proxy_id) {
-                                            $('student_exceptions').removeChild(children[i]);
-                                            break;
-                                        }
-                                    }
-                                }
-                                </script>
-                                <h3>Students with modified weighting:</h3>
-                                <ol id="exception_container" class="sortableList">
-                                    <?php
-                                    $exceptions_exist = false;
-                                    foreach ($students as $student) {
-                                        if (isset($student["grade_weighting"]) && $student["grade_weighting"] !== NULL) {
-                                            $exceptions_exist = true;
-                                            echo "<li id=\"proxy_".$student["proxy_id"]."\"><span id=\"".$student["proxy_id"]."_name\">".$student["fullname"]."</span>
-                                                <a style=\"cursor: pointer;\" onclick=\"delete_exception('".$student["proxy_id"]."', '".$assessment["assessment_id"]."');\" class=\"remove\">
-                                                    <img src=\"".ENTRADA_URL."/images/action-delete.gif\">
-                                                </a>
-                                                <span class=\"duration_segment_container\">
-                                                    Weighting: <input class=\"duration_segment\" id=\"student_exception_".$student["proxy_id"]."\" name=\"student_exception[]\" onkeyup=\"modify_exception('".$student["proxy_id"]."', '".$assessment["assessment_id"]."', this.value);\" value=\"".$student["grade_weighting"]."\">
-                                                </span>
-                                            </li>";
-                                        }
-                                    }
-                                    if (!$exceptions_exist) {
-                                        echo "<div class=\"display-notice\">There are currently no students with custom grade weighting in the system for this assessment.</div>";
-                                    }
-                                    ?>
-                                </ol>
-                            </div>
-                        </span>
+								for (var i = 0; i < numchildren; i++) {
+									if (children[i].value == proxy_id) {
+										$('student_exceptions').removeChild(children[i]);
+										break;
+									}
+								}
+							}
+							</script>
+							<h3>Students with modified weighting:</h3>
+							<ol id="exception_container" class="sortableList">
+								<?php
+								$exceptions_exist = false;
+								foreach ($students as $student) {
+									if (isset($student["grade_weighting"]) && $student["grade_weighting"] !== NULL) {
+										$exceptions_exist = true;
+										echo "<li id=\"proxy_".$student["proxy_id"]."\"><span id=\"".$student["proxy_id"]."_name\">".$student["fullname"]."</span>
+											<a style=\"cursor: pointer;\" onclick=\"delete_exception('".$student["proxy_id"]."', '".$assessment["assessment_id"]."');\" class=\"remove\">
+												<img src=\"".ENTRADA_URL."/images/action-delete.gif\">
+											</a>
+											<span class=\"duration_segment_container\">
+												Weighting: <input class=\"duration_segment\" id=\"student_exception_".$student["proxy_id"]."\" name=\"student_exception[]\" onkeyup=\"modify_exception('".$student["proxy_id"]."', '".$assessment["assessment_id"]."', this.value);\" value=\"".$student["grade_weighting"]."\">
+											</span>
+										</li>";
+									}
+								}
+								if (!$exceptions_exist) {
+									echo "<div class=\"display-notice\">There are currently no students with custom grade weighting in the system for this assessment.</div>";
+								}
+								?>
+							</ol>
+                        </div>
                         <?php
                     } else {
                         ?>

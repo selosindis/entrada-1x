@@ -997,6 +997,14 @@ CREATE TABLE IF NOT EXISTS `assessment_options` (
   KEY `assessment_id` (`assessment_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `assessment_option_values` (
+  `aovalue_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `aoption_id` int(12) NOT NULL,
+  `proxy_id` int(12) NOT NULL,
+  `value` varchar(32) DEFAULT '',
+  PRIMARY KEY (`aovalue_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `assessment_quiz_questions` (
   `aqquestion_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `assessment_id` int(11) NOT NULL,
@@ -1044,6 +1052,10 @@ INSERT INTO `assessments_lu_meta_options` (`title`) VALUES
 ('Fill-in, short answer questions'),
 ('Multiple-choice, true/false, matching questions'),
 ('Problem-solving written exercises');
+
+INSERT INTO `assessments_lu_meta_options` (`title`, `type`) VALUES
+('Track Late Submissions', 'reflection, project, paper'),
+('Track Resubmissions', 'reflection, project, paper');
 
 CREATE TABLE IF NOT EXISTS `assessment_exceptions` (
   `aexception_id` int(12) NOT NULL auto_increment,

@@ -1044,6 +1044,7 @@ CREATE TABLE IF NOT EXISTS `assessments_lu_meta_options` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `title` varchar(60) NOT NULL,
   `active` tinyint(1) unsigned DEFAULT '1',
+  `type` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 

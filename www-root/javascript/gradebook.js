@@ -15,9 +15,11 @@ jQuery(document).ready(function($) {
 		var singleOptions = [
 			{display: 'Student Name', name: 'name', width: $('.late-submissions').length >= 1 ? 239 : 400, sortable: false},
 			{display: 'Student Number', name: 'number', width: 100, sortable: false},
-			{display: 'Student Mark', name: 'name', width: 73, sortable: false},
-			{display: 'Percent', name: 'name', width: 30, sortable: false}
+			{display: 'Student Mark', name: 'name', width: 73, sortable: false}
 		];
+		if (marking_scheme_id == 3) {
+			singleOptions.push({display: 'Percent', name: 'name', width: 30, sortable: false});
+		}
 		var lateSubmissions = null;
 		if ($('.late-submissions').length >= 1) {
 			singleOptions.push({display: 'Late Submissions', name: 'name', width: 30, sortable: false});

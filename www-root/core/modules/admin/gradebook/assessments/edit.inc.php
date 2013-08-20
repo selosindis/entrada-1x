@@ -675,7 +675,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											} else if (in_array($current_type, array("quiz", "exam"))) {
 												$where = " WHERE `type` IS NULL ";
 											} else {
-												$hwere = " WHERE 'x' = 'y'";
+												$where = " WHERE 'x' = 'y'";
 											}
 											$query = "SELECT `id`, `title` FROM `assessments_lu_meta_options`" . $where;
 											$assessment_options = $db->GetAll($query);

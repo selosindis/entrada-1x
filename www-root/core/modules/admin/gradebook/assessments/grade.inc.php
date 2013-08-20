@@ -238,6 +238,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<div id="graph" class="pull-right"></div>
 					<p><strong class="span3">Assessment Type:</strong> <?php echo $assessment["type"]; ?> Assessment</p>
 					<p><strong class="span3">Assessment Weighting:</strong> <?php echo $assessment["grade_weighting"]."%"; ?></p>
+					<script type="text/javascript">
+						var marking_scheme_id = "<?php echo $assessment["marking_scheme_id"]; ?>";
+					</script>
 					<?php 
 					switch($assessment["marking_scheme_id"]) {
 						case 1:

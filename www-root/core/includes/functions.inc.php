@@ -4287,60 +4287,29 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
     if (!$toolbar_groups || (is_scalar($toolbar_groups) && ($toolbar_groups = clean_input($toolbar_groups, "alpha")))) {
         switch ($toolbar_groups) {
             case "full" :
-                $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard")),
-                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
-                    array("name" => "links"),
-                    array("name" => "insert"),
-                    array("name" => "forms"),
-                    array("name" => "tools"),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
-                    "/",
-                    array("name" => "basicstyles", "groups" => array("basicstyles", "cleanup")),
-                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
-                    array("name" => "styles"),
-                    array("name" => "colors"),
-                );
-            break;
             case "communityadvanced" :
             case "communitybasic" :
             case "advanced" :
                 $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard")),
-                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
+                    array("name" => "clipboard", "groups" => array("clipboard", "spellchecker")),
                     array("name" => "links"),
-                    array("name" => "insert"),
-                    array("name" => "forms"),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
-                    "/",
+                    array("name" => "insert", "groups" => array("mediaembed", "insert")),
+                    array("name" => "styles"),
                     array("name" => "basicstyles", "groups" => array("basicstyles", "cleanup")),
-                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
-                    array("name" => "colors"),
+                    array("name" => "paragraph", "groups" => array("colors", "list", "indent", "blocks", "align")),
+                    array("name" => "mode"),
                 );
             break;
             case "community" :
-            case "minimal" :
             case "mspr" :
-                $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard")),
-                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
-                    array("name" => "links"),
-                    array("name" => "insert"),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
-                    "/",
-                    array("name" => "basicstyles", "groups" => array("basicstyles", "cleanup")),
-                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
-                );
-            break;
+            case "minimal" :
             case "basic" :
             default :
                 $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard")),
-                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
+                    array("name" => "clipboard", "groups" => array("clipboard", "spellchecker")),
                     array("name" => "links"),
-                    array("name" => "insert"),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
+                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
+                    array("name" => "mode"),
                 );
             break;
         }
@@ -4350,6 +4319,7 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
 	$output .= "<script type=\"text/javascript\" defer=\"defer\">\n";
     $output .= "CKEDITOR.editorConfig = function( config ) {\n";
     $output .= "    config.customConfig = '';\n";
+    $output .= "    config.allowedContent = true;\n";
     $output .= "    config.baseHref = '".ENTRADA_URL."';\n";
     $output .= "    config.forcePasteAsPlainText = true;\n";
     $output .= "    config.autoParagraph = false;\n";

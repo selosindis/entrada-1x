@@ -670,10 +670,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										<td style="vertical-align: top;"><label for="extended_option1" class="form-nrequired">Extended Options</label></td>
 										<td>
 											<?php
-											if (in_array($current_type, array("reflection"))) {
+											if (in_array($current_type, array("reflection", "paper", "project"))) {
 												$where = " WHERE `type` LIKE ".$db->qstr("%".$current_type."%");
-											} else {
+											} else if (in_array($current_type, array("quiz", "exam"))) {
 												$where = " WHERE `type` IS NULL ";
+											} else {
+												$hwere = " WHERE 'x' = 'y'";
 											}
 											$query = "SELECT `id`, `title` FROM `assessments_lu_meta_options`" . $where;
 											$assessment_options = $db->GetAll($query);

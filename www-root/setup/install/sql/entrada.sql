@@ -4069,6 +4069,14 @@ CREATE TABLE IF NOT EXISTS `objective_organisation` (
 
 INSERT INTO `objective_organisation` SELECT `objective_id`, 1 FROM `global_lu_objectives`;
 
+CREATE TABLE `linked_objectives` (
+  `linked_objective_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `objective_id` int(12) NOT NULL,
+  `target_objective_id` int(12) NOT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`linked_objective_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `org_community_types` (
   `octype_id` int(12) NOT NULL AUTO_INCREMENT,
   `organisation_id` int(12) NOT NULL,

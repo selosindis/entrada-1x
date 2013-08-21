@@ -33,6 +33,7 @@ return array (
 			),
 			"courses" => array ("title" => "Courses"),
 			"events" => array ("title" => "Learning Events"),
+			"logbook" => array ("title" => "Logbook", "resource" => "encounter_tracking", "permission" => "read"),
 			"clerkship" => array ("title" => "Clerkship", "resource" => "clerkship", "permission" => "read"),
 			"people" => array ("title" => "People Search"),
 			"tasks" => array ("title" => "My Tasks", "resource" => "tasktab", "permission" => "read"),

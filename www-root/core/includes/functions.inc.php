@@ -12814,6 +12814,11 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 					LEFT JOIN `event_objectives` c
 					ON c.`objective_id` = a.`objective_id`
 					AND c.`event_id` = ".$db->qstr($event_id)."
+                    JOIN `courses` AS d
+                    ON d.`course_id` = ".$db->qstr($course_id)."
+                    JOIN `objective_organisation` AS e
+                    ON a.`objective_id` = e.`objective_id`
+                    AND d.`organisation_id` = e.`organisation_id`
 					WHERE a.`objective_active` = '1'
 					AND a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
 					GROUP BY a.`objective_id`

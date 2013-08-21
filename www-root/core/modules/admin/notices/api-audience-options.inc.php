@@ -309,7 +309,7 @@ if (!defined("IN_NOTICES")) {
 				<select id="audience_type" name="target_audience" onchange="showMultiSelect();" style="width: 275px;">
 					<option value="">-- Select an audience type --</option>
 					<option value="public"<?php echo ($target_audience == "public" ? "selected=\"selected\"" : ""); ?>>Public announcement visible on login page.</option>
-					<option value="all"<?php echo ($target_audience=="all:users"?"selected=\"selected\"":"");?>>Everyone should receive this notice.</option>
+					<option value="all:all"<?php echo ($target_audience=="all:users"?"selected=\"selected\"":"");?>>Everyone should receive this notice.</option>
 					<option value="all:student"<?php echo ($target_audience=="all:student"?"selected=\"selected\"":"");?>>All students should receive this notice.</option>
 					<option value="all:faculty"<?php echo ($target_audience=="all:faculty"?"selected=\"selected\"":"");?>>All faculty should receive this notice.</option>
 					<option value="all:staff"<?php echo ($target_audience=="all:staff"?"selected=\"selected\"":"");?>>All staff should receive this notice.</option>

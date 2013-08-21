@@ -4287,60 +4287,29 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
     if (!$toolbar_groups || (is_scalar($toolbar_groups) && ($toolbar_groups = clean_input($toolbar_groups, "alpha")))) {
         switch ($toolbar_groups) {
             case "full" :
-                $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard")),
-                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
-                    array("name" => "links"),
-                    array("name" => "insert"),
-                    array("name" => "forms"),
-                    array("name" => "tools"),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
-                    "/",
-                    array("name" => "basicstyles", "groups" => array("basicstyles", "cleanup")),
-                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
-                    array("name" => "styles"),
-                    array("name" => "colors"),
-                );
-            break;
             case "communityadvanced" :
             case "communitybasic" :
             case "advanced" :
                 $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard")),
-                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
+                    array("name" => "clipboard", "groups" => array("clipboard", "spellchecker")),
                     array("name" => "links"),
-                    array("name" => "insert"),
-                    array("name" => "forms"),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
-                    "/",
+                    array("name" => "insert", "groups" => array("mediaembed", "insert")),
+                    array("name" => "styles"),
                     array("name" => "basicstyles", "groups" => array("basicstyles", "cleanup")),
-                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
-                    array("name" => "colors"),
+                    array("name" => "paragraph", "groups" => array("colors", "list", "indent", "blocks", "align")),
+                    array("name" => "mode"),
                 );
             break;
             case "community" :
-            case "minimal" :
             case "mspr" :
-                $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard")),
-                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
-                    array("name" => "links"),
-                    array("name" => "insert"),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
-                    "/",
-                    array("name" => "basicstyles", "groups" => array("basicstyles", "cleanup")),
-                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
-                );
-            break;
+            case "minimal" :
             case "basic" :
             default :
                 $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard")),
-                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
+                    array("name" => "clipboard", "groups" => array("clipboard", "spellchecker")),
                     array("name" => "links"),
-                    array("name" => "insert"),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
+                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
+                    array("name" => "mode"),
                 );
             break;
         }
@@ -4350,6 +4319,7 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
 	$output .= "<script type=\"text/javascript\" defer=\"defer\">\n";
     $output .= "CKEDITOR.editorConfig = function( config ) {\n";
     $output .= "    config.customConfig = '';\n";
+    $output .= "    config.allowedContent = true;\n";
     $output .= "    config.baseHref = '".ENTRADA_URL."';\n";
     $output .= "    config.forcePasteAsPlainText = true;\n";
     $output .= "    config.autoParagraph = false;\n";
@@ -9449,14 +9419,14 @@ function courses_subnavigation($course_details, $tab="details") {
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
 		echo "<li".($tab=="enrolment"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" >Enrolment</a></li>\n";
 	}
-	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"], true), "update")) {
-		echo "<li".($tab=="reports"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/reports?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" >Reports</a></li>\n";
-	}
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
         echo "<li".($tab=="groups"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\">Groups</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
         echo "<li".($tab=="gradebook"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\">Gradebook</a></li>";
+	}
+	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"], true), "update")) {
+		echo "<li".($tab=="reports"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/reports?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" >Reports</a></li>\n";
 	}
 	echo "	</ul>\n";
 

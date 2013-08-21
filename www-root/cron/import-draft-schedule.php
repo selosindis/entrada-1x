@@ -223,6 +223,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 											foreach ($event_links as $link) {
 												unset($link["elink_id"]);
 												$link["event_id"]		= $event_id;
+												$link["accesses"]		= 0;
 												$file["updated_by"]		= $draft_creators[0]["proxy_id"];
 												if ($db->AutoExecute("`event_links`", $link, "INSERT")) {
 													application_log("success", "Successfully inserted link [".$db->Insert_ID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
@@ -296,6 +297,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 											foreach ($event_quizzes as $quiz) {
 												unset($quiz["aquiz_id"]);
 												$quiz["content_id"]		= $event_id;
+												$quiz["accesses"]		= 0;
 												$quiz["updated_by"]	= $draft_creators[0]["proxy_id"];
 												if ($db->AutoExecute("`attached_quizzes`", $quiz, "INSERT")) {
 													application_log("success", "Successfully inserted quiz [".$db->Insert_ID()."] from old event [".$old_event_id."], for new event [".$event_id."].");

@@ -6,23 +6,35 @@ jQuery(document).ready(function($) {
 	var flexiopts = {
 		resizable: false,
 		height: 'auto',
+		width: 'auto',
 		disableSelect: true,
 		showToggleBtn: false
 	};
 	
 	var gradebookize = function() {
+		var singleOptions = [
+			{display: 'Student Name', name: 'name', width: $('.late-submissions').length >= 1 ? 239 : 400, sortable: false},
+			{display: 'Student Number', name: 'number', width: 100, sortable: false},
+			{display: 'Student Mark', name: 'name', width: 73, sortable: false}
+		];
+		if (marking_scheme_id == 3) {
+			singleOptions.push({display: 'Percent', name: 'name', width: 30, sortable: false});
+		}
+		var lateSubmissions = null;
+		if ($('.late-submissions').length >= 1) {
+			singleOptions.push({display: 'Late Submissions', name: 'name', width: 30, sortable: false});
+		}
+		var reSubmissions = null;
+		if ($('.resubmissions').length >= 1) {
+			singleOptions.push({display: 'Resubmission', name: 'name', width: 30, sortable: false});
+		}
 		$('table.gradebook.single').flexigrid($.extend({}, flexiopts, {
-			colModel: [
-				{display: 'Student Name', name: 'name', width: 133, sortable: false},
-				{display: 'Student Number', name: 'number', width: 100, sortable: false},
-				{display: 'Student Mark', name: 'name', width: 73, sortable: false},
-				{display: 'Percent', name: 'name', width: 30, sortable: false}
-			]
+			colModel: singleOptions			
 		}));
 
 		$('table.gradebook.numeric').flexigrid($.extend({}, flexiopts, {
 			colModel: [
-				{display: 'Student Name', name: 'name', width: 133, sortable: false},
+				{display: 'Student Name', name: 'name', width: 233, sortable: false},
 				{display: 'Student Number', name: 'number', width: 100, sortable: false},
 				{display: 'Student Mark', name: 'name', width: 73, sortable: false},
 				{display: 'Percent', name: 'name', width: 30, sortable: false}
@@ -194,5 +206,68 @@ jQuery(document).ready(function($) {
             alert("There are no assessments to export for this cohort.");
         }
         return false;
+	});
+	$(".late-button").on("click", function(e) {
+		$(this).siblings(".late").click();
+		e.preventDefault();
+	});
+	$('.late').on("click", function(e) {
+		$(this).hide();
+		var input = $(document.createElement("input"));
+		input.attr("type", "text")
+			 .attr("data-id", $(this).attr("data-id"))
+			 .attr("data-proxy-id", $(this).attr("data-proxy-id"))
+			 .attr("data-aovalue-id", $(this).attr("data-aovalue-id"))
+			 .addClass("input-mini")
+			 .addClass("late-input")
+			 .appendTo($(this).parent()).focus();
+		e.preventDefault();
+	});
+	$('.late-submissions').on('blur', '.late-input', function(e) {
+		var input = $(this);
+		$.ajax({
+			url: ENTRADA_URL + "/admin/gradebook/assessments?section=grade",
+			data: "ajax=ajax&method=store-late&value=" + $(this).attr("value") + "&aoption_id=" + $(this).attr("data-id") + "&proxy_id=" + $(this).attr("data-proxy-id") + "&aovalue_id=" + $(this).attr("data-aovalue-id"),
+			type: "POST",
+			success: function(data) {
+				var jsonResponse = JSON.parse(data);
+				if (jsonResponse.status == "success") {
+					if (jsonResponse.data.value > 0) {
+						input.siblings(".late")
+							 .html(jsonResponse.data.value)
+							 .attr("data-aovalue-id", jsonResponse.data.aovalue_id)
+							 .attr("data-proxy-id", jsonResponse.data.proxy_id);
+					} else {
+						input.siblings(".late").html("-");
+					}
+				} else {
+					input.siblings(".late").html("-");
+				}
+				input.hide();
+				input.siblings(".late").show();
+				input.remove();
+			}
+		})
+		e.preventDefault();
+	});
+	$(".resubmissions input").on("change", function(e) {
+		var input = $(this);
+		var value = "0";
+		if ($(this).is(":checked")) {
+			value = "1";
+		}
+		$.ajax({
+			url: ENTRADA_URL + "/admin/gradebook/assessments?section=grade",
+			data: "ajax=ajax&method=store-resubmit&value=" + value + "&aoption_id=" + $(this).attr("data-id") + "&proxy_id=" + $(this).attr("data-proxy-id") + "&aovalue_id=" + $(this).attr("data-aovalue-id"),
+			type: "POST",
+			success: function(data) {
+				var jsonResponse = JSON.parse(data);
+				if (jsonResponse.status == "success") {
+					input.attr("data-aovalue-id", jsonResponse.data.aovalue_id)
+						 .attr("data-proxy-id", jsonResponse.data.proxy_id);
+				}
+			}
+		})
+		e.preventDefault();
 	});
 });

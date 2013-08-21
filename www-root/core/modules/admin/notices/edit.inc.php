@@ -140,7 +140,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 									$id = explode("_",$group_id);
 									$id = $id[1];
 									if ($group_id = clean_input($id, array("trim", "int"))) {
-										$PROCESSED["associated_audience"][] =  array("audience_type"=>"cohorts","audience_value"=>$group_id);
+										$PROCESSED["associated_audience"][] =  array("audience_type"=>"cohort","audience_value"=>$group_id);
 									}
 								}
 							}

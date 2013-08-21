@@ -82,8 +82,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
 				}
 			} else {
-					$clinical_presentations = array();
-				}
+				$clinical_presentations = array();
+			}
 			// } else {
 			// 	$query		= "SELECT `objective_id` FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($COURSE_ID);
 			// 	$results	= $db->GetAll($query);
@@ -101,6 +101,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 			$PROCESSED["permission"] = $course_details["permission"];
 			$PROCESSED["sync_ldap"] = $course_details["sync_ldap"];
+			$PROCESSED["sync_ldap_courses"] = $course_details["sync_ldap_courses"];
 
 			// Error Checking
 			switch($STEP) {
@@ -160,12 +161,36 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					/**
 					 * Check to see if this course audience should syncronize with LDAP or not.
 					 */
+					$PROCESSED["sync_ldap_courses"] = "";
 					if ((isset($_POST["sync_ldap"])) && ($_POST["sync_ldap"] == "1")) {
 						$PROCESSED["sync_ldap"] = 1;
 					} else {
 						$PROCESSED["sync_ldap"] = 0;
 					}
-
+					
+					/*
+					 * Process the ldap sync course list.
+					 */
+					$PROCESSED["sync_ldap_courses"] = "";
+					$clean_ldap_course_codes = array();
+					if (isset($_POST["sync_ldap_courses"]) && !empty($_POST["sync_ldap_courses"])) {
+						$sync_ldap_courses = explode(",", $_POST["sync_ldap_courses"]);
+						foreach ($sync_ldap_courses as $course_code) {
+							if ($tmp_input = clean_input($course_code, array("trim", "striptags", "alphanumeric"))) {
+								if (!in_array(strtoupper($tmp_input), $clean_ldap_course_codes)) {
+									$clean_ldap_course_codes[] = strtoupper($tmp_input);
+								}
+							}
+						}
+						if (isset($clean_ldap_course_codes) && !empty($clean_ldap_course_codes)) {
+							$PROCESSED["sync_ldap_courses"] = implode(", ", $clean_ldap_course_codes);
+						}
+					}
+					
+					if (empty($PROCESSED["sync_ldap_courses"]) && $PROCESSED["sync_ldap"] != 0) {
+						add_error("The LDAP synchronization course list can not be empty.");
+					}
+					
 					/**
 					 * Non-required field "course_directors" / Course Directors (array of proxy ids).
 					 * This is actually accomplished after the course is modified below.
@@ -272,7 +297,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								}
 							}
 						}
-
 					}
 
 					if (isset($_POST["syllabus_id"]) && $tmp_input = clean_input($_POST["syllabus_id"], array("int"))) {
@@ -288,6 +312,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					if ($PROCESSED["syllabus"]["syllabus_enabled"] == 1) {
 						if (isset($_POST["syllabus_template"]) && $tmp_input = clean_input($_POST["syllabus_template"], array("trim", "striptags"))) {
 							$PROCESSED["syllabus"]["syllabus_template"] = $tmp_input;
+						}
+					}
+
+					if (isset($_POST["course_report_ids"])) {						
+						$PROCESSED["course_report_ids"] = array();
+						foreach ($_POST["course_report_ids"] as $index => $tmp_input) {
+							if ($course_report_id = clean_input($tmp_input, "int")) {								
+								$PROCESSED["course_report_ids"][] = $course_report_id;
+							}
 						}
 					}
 
@@ -451,8 +484,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								}
 							}
 
+							if (isset($PROCESSED["course_report_ids"]) && count($PROCESSED["course_report_ids"]) > 0) {
+								//remove existing course_reports for this course before adding the new set of course reports.
+								$query = "DELETE FROM `course_reports` WHERE `course_id` = ".$db->qstr($COURSE_ID);
+								if (!$db->Execute($query)) {
+									add_error("An error occurred while editing course reports.  The system administrator was informed of this error; please try again later.");
+									application_log("error", "Error inserting course reports for course id: " . $COURSE_ID);
+								}
+								if (!has_error()) {
+									foreach ($PROCESSED["course_report_ids"] as $index => $course_report_id) {									
+										$PROCESSED["course_report_id"] = $course_report_id;		
+										$PROCESSED["course_id"] = $COURSE_ID;								
 
-
+										if ($db->AutoExecute("course_reports", $PROCESSED, "INSERT")) {											
+											add_statistic("Course Edit", "edit", "course_reports.course_report_id", $PROCESSED["course_report_id"], $ENTRADA_USER->getID());
+										} else {
+											add_error("An error occurred while editing course reports.  The system administrator was informed of this error; please try again later.");
+											application_log("error", "Error inserting course reports for course id: " . $COURSE_ID);
+										}								
+									}
+								}
+							} else {
+								//No course reports for this course.
+								$query = "DELETE FROM `course_reports` WHERE `course_id` = ".$db->qstr($COURSE_ID);
+								$db->Execute($query);
+							}								
 
 							$query = "	DELETE FROM `course_audience` WHERE `course_id` = ".$db->qstr($COURSE_ID).(isset($period_list)?" AND `cperiod_id` NOT IN (".implode(",",$period_list).")":"");
 							$db->Execute($query);
@@ -578,6 +634,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				break;
 				case 1 :
 				default :
+					$query = "	SELECT * 
+								FROM `course_reports`
+								WHERE `course_id` = ".$db->qstr($COURSE_ID);
+					$results = $db->GetAll($query);
+
+					if (!isset($PROCESSED["course_report_ids"])) {
+						$PROCESSED["course_report_ids"] = array();
+						if ($results) {						
+							foreach ($results as $result) {
+								$PROCESSED["course_report_ids"][] = $result["course_report_id"];
+							}
+						}
+					}
 					?>
 					<script type="text/javascript">
 					<?php
@@ -873,7 +942,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</label>
 							</div>
 						</div>
-
+						<script type="text/javascript">
+							jQuery(function($) {
+								$("input[name='sync_ldap']").on("change", function() {
+									if ($(this).val() == "1") {
+										$(".ldap-course-sync-list").slideDown("fast");
+										if ($("textarea[name='sync_ldap_courses']").val().length <= 0) {
+											$("textarea[name='sync_ldap_courses']").attr("value", $("#course_code").val());
+										}
+									} else {
+										$(".ldap-course-sync-list").slideUp("fast");
+									}
+								});
+							});
+						</script>
 						<div class="control-group">
 							<label class="form-nrequired control-label">Audience Sync</label>
 							<div class="controls">
@@ -883,7 +965,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<label for="sync_on" class="radio">
 									<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> This course <strong>should</strong> have its audience synced with the LDAP server.
 								</label>
-								<div class="well well-small content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>
+								<div class="<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? "" : "hide"); ?> ldap-course-sync-list">
+									<div class="well well-small content-small"><strong>Note:</strong> Please enter a comma separated list of alphanumeric course codes you wish to sync in the text area below. Additional individuals and groups can be manually added in the <strong>Course Enrollment</strong> below. </div>
+									<textarea name="sync_ldap_courses" class="span12"><?php echo (isset($PROCESSED["sync_ldap_courses"]) ? $PROCESSED["sync_ldap_courses"] : $PROCESSED["course_code"]); ?></textarea>
+								</div>
 							</div>
 						</div>
 					</div>
@@ -1335,6 +1420,46 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						<div style="clear:both;"></div>
 					</div>
 					<?php 	} 	?>
+					<h2 title="Course Reports Section"><?php echo $module_singular_name; ?> Reports</h2>
+					<div id="course-reports-section">
+						<div class="control-group">
+							<label for="course_report_ids" class="control-label form-nrequired">Report Types:</label>
+							<div class="controls">
+								<?php
+                                $query = "	SELECT *
+											FROM `course_report_organisations` a
+											JOIN `course_lu_reports` b
+											ON a.`course_report_id` = b.`course_report_id`
+											WHERE a.`organisation_id` = " . $db->qstr($course_details["organisation_id"]);
+                                $results = $db->GetAll($query);
+                                if ($results) {
+                                    ?>
+                                    <select id="course_report_ids" name="course_report_ids[]" multiple data-placeholder="Choose reports..." class="chosen-select">
+                                        <?php
+                                        foreach($results as $result) {
+											$selected = false;
+											if (isset($PROCESSED["course_report_ids"]) && $PROCESSED["course_report_ids"] && in_array($result["course_report_id"], $PROCESSED["course_report_ids"])) {
+												$selected = true;
+											}
+                                            echo build_option($result["course_report_id"], $result["course_report_title"], $selected);
+                                        }
+                                    ?>
+                                    </select>
+                                    <?php
+                                } 
+                                ?>                               
+                                <?php
+                                if (is_array($PROCESSED["course_reports"])) {
+                                    foreach ($PROCESSED["course_reports"] as $course_report) {
+                                        echo "<li id=\"type_".$course_report[0]."\" class=\"\">".$course_report[2]."
+                                                <a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\"></a>                                                
+                                                </li>";
+                                    }
+                                }
+                                ?>                               
+							</div>
+						</div>
+					</div>
 
 					<!-- Course Audience-->
 					<h2 title="Course Enrolment Section"><?php echo $module_singular_name; ?> Enrolment</h2>
@@ -1465,6 +1590,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									$("#syllabus-settings").hide();
 								}
 							});
+							$('.chosen-select').chosen({no_results_text: 'No Reports Available.'});	
 						});
 					</script>
 					<h2 title="Course Syllabus Section">Course Syllabus</h2>

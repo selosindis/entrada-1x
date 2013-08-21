@@ -34,10 +34,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	 */
 	ob_clear_open_buffers();
 	
-	$id = (int)$_GET["objective_id"];
-	$course_id = (int)(isset($_GET["course_id"])?$_GET["course_id"]:false);
-	$event_id = (int)(isset($_GET["event_id"])?$_GET["event_id"]:false);
-	$assessment_id = (int)(isset($_GET["assessment_id"])?$_GET["assessment_id"]:false);
+	$id				= (int) $_GET["objective_id"];
+	$course_id		= (int) (isset($_GET["course_id"]) ? $_GET["course_id"] : false);
+	$event_id		= (int) (isset($_GET["event_id"]) ? $_GET["event_id"] : false);
+	$assessment_id	= (int) (isset($_GET["assessment_id"]) ? $_GET["assessment_id"] : false);
 	$objective_ids_string = "";
 	if (isset($_GET["objective_ids"]) && ($objective_ids = explode(",", $_GET["objective_ids"])) && @count($objective_ids)) {
 		foreach ($objective_ids as $objective_id) {
@@ -102,9 +102,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 				}												
 			}			
 			$query = "	SELECT a.* FROM `global_lu_objectives` AS a
-						WHERE a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
 						JOIN `objective_organisation` AS b ON a.`objective_id` = b.`objective_id`
-						AND b.`objective_organisation` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
+						WHERE a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
+						AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 			$fields["has_child"] = $db->GetAll($query) ? true : false;			
 			$obj_array[] = $fields;
 		}

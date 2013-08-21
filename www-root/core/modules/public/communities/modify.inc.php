@@ -326,6 +326,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
+						if ($_POST["community_template"] && $tmp_input = clean_input($_POST["community_template"], array("trim", "striptags"))) {
+							$PROCESSED["community_template"] = $tmp_input;
+						}
 
 						if ($db->AutoExecute("communities", $PROCESSED, "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID))) {
                             

@@ -135,7 +135,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 						$id = explode("_", $group_id);
 						$id = $id[1];
 						if ($group_id = clean_input($id, array("trim", "int"))) {
-							$PROCESSED["associated_audience"][] =  array("audience_type"=>"cohorts","audience_value"=>$group_id);
+							$PROCESSED["associated_audience"][] =  array("audience_type"=>"cohort","audience_value"=>$group_id);
 						}
 					}
 				}
@@ -169,6 +169,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 			if (!$ERROR) {
 				$PROCESSED["updated_date"] = time();
 				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
+				$PROCESSED["created_by"] = $ENTRADA_USER->getID();
 
 				if ($db->AutoExecute("notices", $PROCESSED, "INSERT")) {
 					if ($NOTICE_ID = $db->Insert_Id()) {

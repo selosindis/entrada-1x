@@ -44,6 +44,44 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_assessment.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";				
 	
+	if (isset($_POST["mode"]) && $_POST["mode"] == "ajax") {
+		
+		ob_clear_open_buffers();
+		
+		$method = clean_input($_POST["method"], array("trim", "striptags"));
+		
+		switch ($method) {
+			case "fetch-extended-options" :
+				
+				$current_type_id = clean_input($_POST["type"], "int");
+				
+				$query = "SELECT `type` FROM `assessments_lu_meta` WHERE `id` = ".$db->qstr($current_type_id);
+				$current_type = $db->GetOne($query);
+				
+				if (in_array($current_type, array("reflection", "paper", "project"))) {
+					$where = " WHERE `type` LIKE ".$db->qstr("%".$current_type."%");
+				} else if (in_array($current_type, array("exam", "quiz"))) {
+					$where = " WHERE `type` IS NULL ";
+				} else {
+					$where = " WHERE 'x' = 'y'";
+				}
+				$query = "SELECT `id`, `title` FROM `assessments_lu_meta_options`" . $where;
+				$assessment_options = $db->GetAll($query);
+				if ($assessment_options) {
+					foreach ($assessment_options as $assessment_option) {
+						echo "<label class=\"checkbox\" for=\"extended_option" . $assessment_option["id"] . "\"><input type=\"checkbox\" value=\"" . $assessment_option["id"] . "\" name=\"option[]\" id=\"extended_option" . $assessment_option["id"] . "\"/>" . $assessment_option["title"] . "</label><br />";
+					}
+				}
+				
+			break;
+			default:
+			continue;
+		}
+		
+		exit;
+		
+	}
+	
 	if ($COURSE_ID) {
 		$query = "	SELECT * FROM `courses`
 					WHERE `course_id` = ".$db->qstr($COURSE_ID)."
@@ -577,6 +615,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 													}
 
 													echo "<option value=\"" . $characteristic["id"] . "\" assessmenttype=\"" . $characteristic["type"] . "\"".(($PROCESSED["characteristic_id"] == $characteristic["id"]) ? " selected=\"selected\"" : "").">".$characteristic["title"]."</option>";
+													if ($PROCESSED["characteristic_id"] == $characteristic["id"]) {
+														$current_type = $characteristic["type"];
+													}
 												}
 												echo "</optgroup>";
 											}
@@ -585,24 +626,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									</td>
 								</tr>
 							</tbody>
-							<tbody id="assessment_options" style="display: none;">
-								<tr>
-									<td></td>
-									<td style="vertical-align: top;"><label class="form-nrequired">Extended Options</label></td>
-									<td>
-										<?php 
-										if ($assessment_options) {
-											foreach ($assessment_options as $assessment_option) {
-												echo "<input type=\"checkbox\" value=\"".$assessment_option["id"]."\" name=\"option[]\"" .((is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected)) ? " checked=\"checked\"" : "") . " id=\"extended_option".$assessment_option["id"]. "\" /><label for=\"extended_option".$assessment_option["id"]."\">".$assessment_option["title"]."</label><br />";
-											}
-										}
-										?>
-									</td>
-								</tr>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
-							</tbody>
+							<tbody id="assessment_options" style="display:none;">
+									<tr>
+										<td></td>
+										<td style="vertical-align: top;"><label for="extended_option1" class="form-nrequired">Extended Options</label></td>
+										<td class="options">
+											//<?php
+//											if (in_array($current_type, array("reflection", "paper", "project"))) {
+//												$where = " WHERE `type` LIKE ".$db->qstr("%".$current_type."%");
+//											} else {
+//												$where = " WHERE `type` IS NULL ";
+//											}
+//											$query = "SELECT `id`, `title` FROM `assessments_lu_meta_options`" . $where;
+//											$assessment_options = $db->GetAll($query);
+//											if ($assessment_options) {
+//												if (!is_array($assessment_options_selected)) {
+//													$assessment_options_selected = array();
+//												}
+//												foreach ($assessment_options as $assessment_option) {
+//													echo "<label class=\"checkbox\" for=\"extended_option" . $assessment_option["id"] . "\"><input type=\"checkbox\" value=\"" . $assessment_option["id"] . "\" name=\"option[]\"" . (((in_array($assessment_option["id"], $assessment_options_selected))) ? " checked=\"checked\"" : "") . " id=\"extended_option" . $assessment_option["id"] . "\"/>" . $assessment_option["title"] . "</label><br />";
+//												}
+//											}
+//											?>
+										</td>
+									</tr>
+								</tbody>
 							<tbody>
 								<tr>
 									<td></td>
@@ -712,24 +760,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 								}
 							});
-
-							jQuery('#assessment_characteristic').change(function (){
-								jQuery('#assessment_options input:[type=checkbox]').removeAttr('checked');
-								var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
-								if(assessmentType == 'exam' || assessmentType == 'quiz') {
-									jQuery('#assessment_options').show();
-								} else {
-									jQuery('#assessment_options').hide();
-								}
-							});
-
-							jQuery('#assessment_characteristic').ready(function (){
-								var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
-								if(assessmentType == 'exam' || assessmentType == 'quiz') {
-									jQuery('#assessment_options').show();
-								} else {
-									jQuery('#assessment_options').hide();
-								}
+							
+							jQuery('#assessment_characteristic').on("change", function(e) {
+								var select = jQuery(this);
+								jQuery("#assessment_options .options").html("");
+								jQuery.ajax({
+									url: "<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments/?section=add",
+									data: "mode=ajax&method=fetch-extended-options&type=" + select.val(),
+									type: "POST",
+									success: function(data) {
+										if (data.length > 0) {
+											jQuery("#assessment_options .options").append(data);
+											if (!jQuery("#assessment_options").is(":visible")) {
+												jQuery("#assessment_options").show();
+											}
+										} else {
+											jQuery("#assessment_options").hide();
+										}
+									}
+								});
+								
+								e.preventDefault();
 							});
 
 							jQuery("input[name='show_learner_option']").change(function(){

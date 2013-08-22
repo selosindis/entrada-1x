@@ -809,7 +809,7 @@ function display_msg(type, msg_array, target, location) {
 
 	if (jQuery("div#display-" + type + "-box-modal").length > 0) {
 		if (jQuery("div#display-" + type + "-box-modal").not("visible")) {
-			jQuery("div#display-" + type + "-box-modal").show("slow");
+			jQuery("div#display-" + type + "-box-modal").show();
 		}
 	} else {
 		if (location == "append") {

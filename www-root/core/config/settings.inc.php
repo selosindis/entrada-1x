@@ -116,6 +116,13 @@ $CLERKSHIP_FIELD_STATUS["approval"] = array("name" => "Awaiting Approval", "visi
 $CLERKSHIP_FIELD_STATUS["trash"] = array("name" => "Trash", "visible" => false);
 $CLERKSHIP_FIELD_STATUS["cancelled"] = array("name" => "Cancelled", "visible" => false);
 
+/**
+ * The Course Report tab requires the event type ids that are to be reported on.
+ * Patient Contact Session is eventtype_id 4.
+*/
+$COURSE_REPORT_EVENT_TYPES = array(4);
+
+
 define("CURRICULAR_OBJECTIVES_PARENT_ID", 1);
 
 define("AUTH_PRODUCTION", ENTRADA_URL."/authentication/authenticate.php");		// Full URL to your production Entrada authentication server.

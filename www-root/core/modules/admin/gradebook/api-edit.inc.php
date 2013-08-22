@@ -85,12 +85,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				</select>
 			</div>
 			<?php
-			$query = "	SELECT `assessments`.*, `assessment_marking_schemes`.`handler`
-						FROM `assessments`
-						LEFT JOIN `assessment_marking_schemes` 
-						ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-						WHERE `assessments`.`course_id` = ".$db->qstr($COURSE_ID)."
-						AND `assessments`.`cohort` = ".$db->qstr($COHORT);
+			$query = "	SELECT a.*, b.`handler`, GROUP_CONCAT(c.`aoption_id`) AS `options`
+						FROM `assessments` AS a
+						LEFT JOIN `assessment_marking_schemes` AS b
+						ON b.`id` = a.`marking_scheme_id`
+						LEFT JOIN `assessment_options` AS c
+						ON a.`assessment_id` = c.`assessment_id`
+						AND (c.`option_id` = 5 OR c.`option_id` = 6)
+						WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
+						AND a.`cohort` = ".$db->qstr($COHORT)."
+						GROUP BY a.`assessment_id`";
 			$assessments = $db->GetAll($query);
 			if($assessments) {
 				
@@ -108,6 +112,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
                 $assessment_ids_string = "";
                 foreach($assessments as $assessment) {
+					if (!is_null($assessment["options"])) {
+						$assessment_options[$assessment["assessment_id"]] = explode(",", $assessment["options"]);
+					}
                     $assessment_ids_string .= ($assessment_ids_string ? ", " : "").$db->qstr($assessment["assessment_id"]);
                     echo "<input type=\"hidden\" id=\"assessment_ids\" name=\"assessment_ids[]\" value=\"".$assessment["assessment_id"]."\" />\n";
                 }
@@ -124,6 +131,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								echo "<th>{$assessment["name"]}</th>\n";
 							}
 							?>
+							<?php if (isset($assessment_options)) { ?>
+							<th>Lates</th>
+							<th>Resubmits</th>
+							<?php } ?>
 						</tr>
 					</thead>
 					<tbody>
@@ -145,6 +156,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<td><?php echo $student["number"]; ?></td>
 							<td><?php echo $student["cohort"]; ?></td>
 							<?php
+							$lates = 0;
+							$resubmits = 0;
 							foreach($assessments as $key2 => $assessment) {
 								if(isset($student_grades[$student["proxy_id"]."-".$assessment["assessment_id"]]["grade_id"])) {
 									$grade_id = $student_grades[$student["proxy_id"]."-".$assessment["assessment_id"]]["grade_id"];
@@ -157,6 +170,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								} else {
 									$grade_value = "-";
 								}
+								
+								if ($assessment_options[$assessment["assessment_id"]]) {
+									foreach ($assessment_options[$assessment["assessment_id"]] as $aoption_id) {
+										$query = "	SELECT a.`value`, b.`option_id`
+													FROM `assessment_option_values` AS a
+													JOIN `assessment_options` AS b
+													ON a.`aoption_id` = b.`aoption_id`
+													WHERE a.`aoption_id` = ".$db->qstr($aoption_id). " 
+													AND a.`proxy_id` = ".$db->qstr($student["proxy_id"]). " 
+													AND a.`value` != 0 
+													AND a.`value` IS NOT NULL";
+										$result = $db->GetRow($query);
+										if ($result && $result["option_id"] == "5") {
+											$lates += $result["value"];
+										} else if ($result && $result["option_id"] == "6") {
+											$resubmits ++;
+										}
+									}
+								}
+								
 								?>
 								<td>
 									<span class="grade"
@@ -175,6 +208,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								<?php
 							}
 							?>
+							<?php if (isset($assessment_options)) { ?>
+							<td><?php echo $lates; ?></td>
+							<td><?php echo $resubmits; ?></td>
+							<?php } ?>
 						</tr>
 					<?php } ?>
 					</tbody>

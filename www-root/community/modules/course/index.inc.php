@@ -1147,7 +1147,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                         $output[$assessment["cohort"]]["group_name"] = $assessment["group_name"];
                     }
                     foreach ($output as $course) {
-                        echo "<h2>".$course["group_name"]."</h1>";
+                        echo "<h2>".$course["group_name"]."</h2>";
                         echo "<table width=\"100%\">\n";
                         echo "\t<thead>\n";
                         echo "\t\t<tr>\n";

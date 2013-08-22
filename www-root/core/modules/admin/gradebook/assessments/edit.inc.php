@@ -532,9 +532,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
 										</td>
 									</tr>
-									<tr>
-										<td colspan="3">&nbsp;</td>
-									</tr>
 									<?php 					
 									$query = "	SELECT * 
 												FROM `groups` 

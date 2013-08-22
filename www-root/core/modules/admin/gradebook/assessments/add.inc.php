@@ -495,9 +495,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										<a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
 									</td>
 								</tr>
-								<tr>
-									<td colspan="3">&nbsp;</td>
-								</tr>
 								<?php 					
 								$query = "	SELECT * 
 											FROM `groups` 
@@ -509,9 +506,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								if($course_lists) {
 									if (count($course_lists) == 1) {
 									?>
-										<tr>
-											<td colspan="3">&nbsp;</td>
-										</tr>
 										<tr>
 											<td></td>
 											<td><label for="course_list" class="form-required">Course List:</label></td>
@@ -559,6 +553,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								<?php 								
 								} 
 								?>
+								<tr>
+									<td colspan="3">&nbsp;</td>
+								</tr>
 								<tr>
 									<td></td>
 									<td><label for="name" class="form-required">Assessment Name:</label></td>

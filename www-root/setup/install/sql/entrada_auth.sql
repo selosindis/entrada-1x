@@ -123,7 +123,9 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('evaluation', NULL, 'group', 'faculty', 1, NULL, 1, NULL, NULL, 'EvaluationReviewer'),
 ('evaluationform', NULL, 'group', 'faculty', 1, 1, 1, 1, NULL, 'EvaluationFormAuthor'),
 ('evaluationquestion', NULL, 'group', 'faculty', 1, 1, 1, 1, NULL, NULL),
-('evaluationquestion', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL);
+('evaluationquestion', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
+('encounter_tracking', NULL, 'group', 'student', NULL, NULL, 1, NULL, NULL, 'LoggableFound'),
+('encounter_tracking', NULL, 'role', 'admin', NULL, NULL, 0, NULL, NULL, NULL);
 
 CREATE TABLE IF NOT EXISTS `departments` (
   `department_id` int(12) unsigned NOT NULL AUTO_INCREMENT,

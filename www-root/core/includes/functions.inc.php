@@ -12413,6 +12413,7 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 	$fetch_quizzes = false;
 	$fetch_discussions = false;
 	$fetch_types = false;
+    $fetch_lti = false;
 
 	$output = array();
 
@@ -12445,6 +12446,7 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 			$fetch_quizzes = true;
 			$fetch_discussions = true;
 			$fetch_types = true;
+            $fetch_lti = true;
 		}
 
 		if (in_array("files", $options)) {
@@ -12486,6 +12488,10 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 		if (in_array("types", $exclude)) {
 			$fetch_types = false;
 		}
+
+        if (in_array("lti", $exclude)) {
+            $fetch_lti = false;
+        }
 
 		if ($fetch_files) {
 			/**
@@ -12567,6 +12573,14 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 						ORDER BY a.`eeventtype_id` ASC";
 			$output["types"] = $db->GetAll($query);
 		}
+
+        if ($fetch_lti) {
+            $query	= "	SELECT *
+						FROM `event_lti_consumers`
+						WHERE `event_id` = ".$db->qstr($event_id)."
+						ORDER BY `lti_title` ASC";
+            $output["lti"] = $db->GetAll($query);
+        }
 	}
 
 	return $output;

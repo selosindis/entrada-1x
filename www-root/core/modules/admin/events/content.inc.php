@@ -581,48 +581,90 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							}
 						break;
 						case "quizzes" :
-							$QUIZ_IDS = array();
+                        $QUIZ_IDS = array();
 
-							if ((!isset($_POST["delete"])) || (!is_array($_POST["delete"])) || (!@count($_POST["delete"]))) {
-								$ERROR++;
-								$ERRORSTR[] = "You must select at least 1 quiz to detach by checking the box to the left the quiz.";
+                        if ((!isset($_POST["delete"])) || (!is_array($_POST["delete"])) || (!@count($_POST["delete"]))) {
+                            $ERROR++;
+                            $ERRORSTR[] = "You must select at least 1 quiz to detach by checking the box to the left the quiz.";
 
-								application_log("notice", "User pressed the Detach Selected button without selecting any quizzes to detach.");
-							} else {
-								foreach ($_POST["delete"] as $aquiz_id) {
-									$aquiz_id = clean_input($aquiz_id, "int");
-									if ($aquiz_id) {
-										$QUIZ_IDS[] = $aquiz_id;
-									}
-								}
+                            application_log("notice", "User pressed the Detach Selected button without selecting any quizzes to detach.");
+                        } else {
+                            foreach ($_POST["delete"] as $aquiz_id) {
+                                $aquiz_id = clean_input($aquiz_id, "int");
+                                if ($aquiz_id) {
+                                    $QUIZ_IDS[] = $aquiz_id;
+                                }
+                            }
 
-								if (count($QUIZ_IDS) < 1) {
-									$ERROR++;
-									$ERRORSTR[] = "There were no valid quiz identifiers provided to detach.";
-								} else {
-									foreach ($QUIZ_IDS as $aquiz_id) {
-										$query	= "SELECT * FROM `attached_quizzes` WHERE `aquiz_id` = ".$db->qstr($aquiz_id)." AND `content_type` = 'event' AND `content_id` = ".$db->qstr($EVENT_ID);
-										$result	= $db->GetRow($query);
-										if ($result) {
-											$query = "DELETE FROM `attached_quizzes` WHERE `aquiz_id` = ".$db->qstr($aquiz_id)." AND `content_type` = 'event' AND `content_id` = ".$db->qstr($EVENT_ID);
-											if ($db->Execute($query)) {
-												if ($db->Affected_Rows()) {
-													application_log("success", "Detached quiz [".$result["quiz_id"]."] from event [".$EVENT_ID."].");
-												} else {
-													application_log("error", "Failed to detach quiz [".$result["quiz_id"]."] from event [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
-												}
-											} else {
-												$ERROR++;
-												$ERRORSTR[] = "We are unable to detach <strong>".html_encode($result["quiz_title"])."</strong> from this event. The system administrator has been informed of the error; please try again later.";
+                            if (count($QUIZ_IDS) < 1) {
+                                $ERROR++;
+                                $ERRORSTR[] = "There were no valid quiz identifiers provided to detach.";
+                            } else {
+                                foreach ($QUIZ_IDS as $aquiz_id) {
+                                    $query	= "SELECT * FROM `attached_quizzes` WHERE `aquiz_id` = ".$db->qstr($aquiz_id)." AND `content_type` = 'event' AND `content_id` = ".$db->qstr($EVENT_ID);
+                                    $result	= $db->GetRow($query);
+                                    if ($result) {
+                                        $query = "DELETE FROM `attached_quizzes` WHERE `aquiz_id` = ".$db->qstr($aquiz_id)." AND `content_type` = 'event' AND `content_id` = ".$db->qstr($EVENT_ID);
+                                        if ($db->Execute($query)) {
+                                            if ($db->Affected_Rows()) {
+                                                application_log("success", "Detached quiz [".$result["quiz_id"]."] from event [".$EVENT_ID."].");
+                                            } else {
+                                                application_log("error", "Failed to detach quiz [".$result["quiz_id"]."] from event [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
+                                            }
+                                        } else {
+                                            $ERROR++;
+                                            $ERRORSTR[] = "We are unable to detach <strong>".html_encode($result["quiz_title"])."</strong> from this event. The system administrator has been informed of the error; please try again later.";
 
-												application_log("error", "Failed to detach quiz [".$result["quiz_id"]."] from event [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
-											}
-										}
-									}
-									history_log($EVENT_ID, "deleted ". count($QUIZ_IDS) ." ".($QUIZ_IDS>1?"zes":""));
-								}
-							}
-						break;
+                                            application_log("error", "Failed to detach quiz [".$result["quiz_id"]."] from event [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
+                                        }
+                                    }
+                                }
+                                history_log($EVENT_ID, "deleted ". count($QUIZ_IDS) ." ".($QUIZ_IDS>1?"zes":""));
+                            }
+                        }
+                        break;
+                        case "lti" :
+                            $LTI_IDS = array();
+
+                            if((!isset($_POST["delete"])) || (!is_array($_POST["delete"])) || (!@count($_POST["delete"]))) {
+                                $ERROR++;
+                                $ERRORSTR[] = "You must select at least 1 LTI Provider to delete by checking the checkbox to the left the LTI Provider.";
+
+                                application_log("notice", "User pressed the Delete LTI Provider button without selecting any files to delete.");
+                            } else {
+                                foreach($_POST["delete"] as $lti_id) {
+                                    $lti_id = (int) trim($lti_id);
+                                    if($lti_id) {
+                                        $LTI_IDS[] = (int) trim($lti_id);
+                                    }
+                                }
+
+                                if(!@count($LTI_IDS)) {
+                                    $ERROR++;
+                                    $ERRORSTR[] = "There were no valid LTI Provider identifiers provided to delete.";
+                                } else {
+                                    foreach($LTI_IDS as $lti_id) {
+                                        $query	= "SELECT * FROM `event_lti_consumers` WHERE `id`=".$db->qstr($lti_id)." AND `event_id`=".$db->qstr($EVENT_ID);
+                                        $sresult	= $db->GetRow($query);
+                                        if($sresult) {
+                                            $query = "DELETE FROM `event_lti_consumers` WHERE `id`=".$db->qstr($lti_id)." AND `event_id`=".$db->qstr($EVENT_ID);
+                                            if($db->Execute($query)) {
+                                                if($db->Affected_Rows()) {
+                                                    application_log("success", "Deleted course ".$sresult["lti_title"]." [ID: ".$lti_id."] from database.");
+                                                } else {
+                                                    application_log("error", "Trying to delete course ".$sresult["lti_title"]." [ID: ".$lti_id."] from database, but there were no rows affected. Database said: ".$db->ErrorMsg());
+                                                }
+                                            } else {
+                                                $ERROR++;
+                                                $ERRORSTR[] = "We are unable to delete ".$sresult["lti_title"]." from the course at this time. The system administrator has been informed of the error, please try again later.";
+
+                                                application_log("error", "Trying to delete course ".$sresult["lti_title"]." [ID: ".$link_id."] from database, but the execute statement returned false. Database said: ".$db->ErrorMsg());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            break;
 						default :
 							continue;
 						break;
@@ -716,6 +758,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						return false;
 					}
 				}
+
+                function confirmLTIDelete() {
+                    ask_user = confirm("Press OK to confirm that you would like to delete the selected LTI Provider or LTI Providers from this event, otherwise press Cancel.");
+
+                    if (ask_user == true) {
+                        $('lti-listing').submit();
+                    } else {
+                        return false;
+                    }
+                }
 
 				function updateEdChecks(obj) {
 					return true;
@@ -1464,6 +1516,98 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						echo "</form>\n";
 						?>
 					</div>
+
+                    <div style="margin-bottom: 15px">
+                        <div style="float: left; margin-bottom: 5px">
+                            <h3>Attached LTI Providers</h3>
+                        </div>
+                        <div class="pull-right">
+                            <a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/lti-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')" class="btn">Add LTI Provider</a>
+                        </div>
+                        <div class="clear"></div>
+                        <?php
+                        $query		= "SELECT *
+									   FROM `event_lti_consumers`
+									   WHERE `event_id` = ".$db->qstr($EVENT_ID)."
+									   ORDER BY `lti_title` ASC";
+                        $results	= $db->GetAll($query);
+                        ?>
+                        <form id="lti-listing" action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(); ?>" method="post">
+                            <input type="hidden" name="type" value="lti" />
+                            <table class="tableList" cellspacing="0" summary="List of Attached LTI Providers">
+                                <colgroup>
+                                    <col class="modified wide"/>
+                                    <col class="title" />
+                                    <col class="title" />
+                                    <col class="date" />
+                                    <col class="date" />
+                                </colgroup>
+                                <thead>
+                                <tr>
+                                    <td class="modified">&nbsp;</td>
+                                    <td class="title sortedASC"><div class="noLink">LTI Provider Title</div></td>
+                                    <td class="title">Launch URL</td>
+                                    <td class="date-small">Accessible Start</td>
+                                    <td class="date-small">Accessible Finish</td>
+                                </tr>
+                                </thead>
+                                <tfoot>
+                                <tr>
+                                    <td>&nbsp;</td>
+                                    <td colspan="4">
+                                        <?php
+                                        echo (($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Delete Selected\" onclick=\"confirmLTIDelete()\" />" : "&nbsp;")."\n";
+                                        ?>
+                                    </td>
+                                </tr>
+                                </tfoot>
+                                <tbody>
+                                <?php
+                                if($results) {
+                                    foreach($results as $result) { ?>
+                                        <tr>
+                                            <td class="modified wide">
+                                                <input type="checkbox" name="delete[]" value="<?php echo $result["id"];?>"/>
+                                            </td>
+                                            <td class="title">
+                                                <a 	href="#"
+                                                      onclick="openDialog('<?php echo ENTRADA_URL;?>/api/lti-wizard-event.api.php?action=edit&id=<?php echo $EVENT_ID."&ltiid=".$result["id"];?>')"
+                                                      title="Click to edit <?php echo html_encode($result["lti_title"]);?>">
+                                                    <strong>
+                                                        <?php echo (($result["lti_title"] != "") ? html_encode($result["lti_title"]) : $result["lti_title"]);?>
+                                                    </strong>
+                                                </a>
+                                            </td>
+                                            <td class="title">
+                                                <?php echo (($result["launch_url"] != "") ? html_encode($result["launch_url"]) : $result["launch_url"]);?>
+                                            </td>
+                                            <td class="date-small">
+											<span class="content-date">
+												<?php echo (((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions");?>
+											</span>
+                                            </td>
+                                            <td class="date-small">
+											<span class="content-date">
+												<?php echo (((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions");?>
+											</span>
+                                            </td>
+                                        </tr>
+                                    <?php
+                                    }
+                                } else { ?>
+                                    <tr>
+                                        <td colspan="5">
+                                            <div class="display-generic">
+                                                There have been no LTI Providers added to this <?php echo strtolower($module_singular_name);?>. To <strong>add a new LTI Provider</strong>, simply click the Add LTI Provider button.
+                                            </div>
+                                        </td>
+                                    </tr>
+                                <?php
+                                } ?>
+                                </tbody>
+                            </table>
+                        </form>
+                    </div>
 				</div>
 
 				<script type="text/javascript">

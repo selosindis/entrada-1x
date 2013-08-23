@@ -206,6 +206,7 @@ if (!defined("PARENT_INCLUDED")) {
 					$event_quizzes = $event_resources["quizzes"];
 					$event_discussions = $event_resources["discussions"];
 					$event_types = $event_resources["types"];
+                    $event_lti = $event_resources['lti'];
 
 					// Meta information for this page.
 					$PAGE_META["title"]			= $event_info["event_title"]." - ".APPLICATION_NAME;
@@ -330,6 +331,52 @@ if (!defined("PARENT_INCLUDED")) {
 					echo "<h1 id=\"page-top\" class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
 
 					?>
+                    <script type="text/javascript">
+                        var ajax_url = '';
+                        var modalDialog;
+
+                        function submitLTIForm() {
+                            jQuery('#ltiSubmitForm').submit();
+                        }
+
+                        function openLTIDialog(url) {
+                            var width  = jQuery(window).width() * 0.9,
+                                height = jQuery(window).height() * 0.9;
+
+                            if(width < 400) { width = 400; }
+                            if(height < 400) { height = 400; }
+
+                            modalDialog = new Control.Modal($('#false-link'), {
+                                position:		'center',
+                                overlayOpacity:	0.75,
+                                closeOnClick:	'overlay',
+                                className:		'modal',
+                                fade:			true,
+                                fadeDuration:	0.30,
+                                width: width,
+                                height: height,
+                                afterOpen: function(request) {
+                                    eval($('scripts-on-open').innerHTML);
+                                },
+                                beforeClose: function(request) {
+                                    jQuery('#ltiContainer').remove();
+                                }
+                            });
+
+                            new Ajax.Request(url, {
+                                method: 'get',
+                                parameters: 'width=' + width + '&height=' + height,
+                                onComplete: function(transport) {
+                                    modalDialog.container.update(transport.responseText);
+                                    modalDialog.open();
+                                }
+                            });
+                        }
+
+                        function closeLTIDialog() {
+                            modalDialog.close();
+                        }
+                    </script>
                     <div class="row-fluid">
                         <div class="span7">
                             <?php
@@ -929,6 +976,80 @@ if (!defined("PARENT_INCLUDED")) {
                             echo "		<tr>\n";
                             echo "			<td colspan=\"3\">\n";
                             echo "				<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There are no online quizzes currently attached to this learning event.</div>\n";
+                            echo "			</td>\n";
+                            echo "		</tr>\n";
+                        }
+                        echo "		</tbody>\n";
+                        echo "		</table>\n";
+                        echo "	</div>\n";
+                        echo "</div>\n";
+
+                        echo "	<div class=\"section-holder\">\n";
+                        echo "		<h3>Attached LTI Providers</h3><a name=\"event-resources-lti\"></a>\n";
+                        echo "		<table class=\"tableList\" cellspacing=\"0\" summary=\"List of LTI Providers\">\n";
+                        echo "		<colgroup>\n";
+                        echo "			<col class=\"modified\" />\n";
+                        echo "			<col class=\"title\" />\n";
+                        echo "			<col class=\"date\" />\n";
+                        echo "		</colgroup>\n";
+                        echo "		<thead>\n";
+                        echo "			<tr>\n";
+                        echo "				<td class=\"modified\">&nbsp;</td>\n";
+                        echo "				<td class=\"title sortedASC\"><div class=\"noLink\">LTI Provider Title</div></td>\n";
+                        echo "				<td class=\"date\">Update date</td>\n";
+                        echo "			</tr>\n";
+                        echo "		</thead>\n";
+                        echo "		<tbody>\n";
+
+                        if ($event_lti) {
+                            foreach ($event_lti as $result) { ?>
+                                <tr style="vertical-align: top;">
+                                    <td class="modified"></td>
+                                    <td class="title" style="overflow: visible">
+                                        <?php
+                                        if (((!(int) $result["valid_from"]) || ($result["valid_from"] <= time())) && ((!(int) $result["valid_until"]) || ($result["valid_until"] >= time()))) { ?>
+                                            <a href="javascript:void(0)"
+                                               onclick="openLTIDialog('<?php echo ENTRADA_URL;?>/api/lti-consumer-runner.api.php?ltiid=<?php echo $result["id"];?>&event=1')"
+                                               title="Click to visit <?php echo $result["lti_title"];?>">
+                                                <strong>
+                                                    <?php echo (($result["lti_title"] != "") ? html_encode($result["lti_title"]) : '');?>
+                                                </strong>
+                                            </a>
+                                        <?php
+                                        } else { ?>
+                                            <span style="color: #666666;">
+                                                <strong>
+                                                    <?php echo (($result["lti_title"] != "") ? html_encode($result["lti_title"]) : '');?>
+                                                </strong>
+                                            </span>
+                                        <?php
+                                        } ?>
+
+                                        <div class="content-small">
+                                            <?php
+                                            if (((int) $result["valid_from"]) && ($result["valid_from"] > time())) { ?>
+                                                This link will become accessible <strong><?php echo date(DEFAULT_DATE_FORMAT, $result["valid_from"]);?></strong>.<br /><br />
+                                            <?php
+                                            } elseif (((int) $result["valid_until"]) && ($result["valid_until"] < time())) { ?>
+                                                This link was only accessible until <strong><?php echo date(DEFAULT_DATE_FORMAT, $result["valid_until"]);?></strong>. Please contact the primary teacher for assistance if required.<br /><br />
+                                            <?php
+                                            }
+
+                                            if (clean_input($result["link_notes"], array("notags", "nows")) != "") {
+                                                echo "<div class=\"clearfix\">".trim(strip_selected_tags($result["link_notes"], array("font")))."</div>";
+                                            } ?>
+                                        </div>
+                                    </td>
+                                    <td class="date">
+                                        <?php echo (((int) $result["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $result["updated_date"]) : "Unknown");?>
+                                    </td>
+                                </tr>
+                            <?php
+                            }
+                        } else {
+                            echo "		<tr>\n";
+                            echo "			<td colspan=\"3\">\n";
+                            echo "				<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There have been no LTI Providers added to this event.</div>\n";
                             echo "			</td>\n";
                             echo "		</tr>\n";
                         }

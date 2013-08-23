@@ -577,9 +577,130 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					} ?>
 						</tbody>
 					</table>
-					
-				</div>
+                    <br />
+                    <?php
+                    $query = "SELECT * FROM `course_lti_consumers` WHERE `course_id`=".$db->qstr($COURSE_ID)." ORDER BY `lti_title` ASC";
+                    $results = $db->GetAll($query);
+                    ?>
+                    <script type="text/javascript">
+                        var ajax_url = '';
+                        var modalDialog;
 
+                        function submitLTIForm() {
+                            jQuery('#ltiSubmitForm').submit();
+                        }
+
+                        function openLTIDialog(url) {
+                            var width  = jQuery(window).width() * 0.9,
+                                height = jQuery(window).height() * 0.9;
+
+                            if(width < 400) { width = 400; }
+                            if(height < 400) { height = 400; }
+
+                            modalDialog = new Control.Modal($('#false-link'), {
+                                position:		'center',
+                                overlayOpacity:	0.75,
+                                closeOnClick:	'overlay',
+                                className:		'modal',
+                                fade:			true,
+                                fadeDuration:	0.30,
+                                width: width,
+                                height: height,
+                                afterOpen: function(request) {
+                                    eval($('scripts-on-open').innerHTML);
+                                },
+                                beforeClose: function(request) {
+                                    jQuery('#ltiContainer').remove();
+                                }
+                            });
+
+                            new Ajax.Request(url, {
+                                method: 'get',
+                                parameters: 'width=' + width + '&height=' + height,
+                                onComplete: function(transport) {
+                                    modalDialog.container.update(transport.responseText);
+                                    modalDialog.open();
+                                }
+                            });
+                        }
+
+                        function closeLTIDialog() {
+                            modalDialog.close();
+                        }
+                    </script>
+
+                    <table class="tableList" cellspacing="0" summary="LTI Provider of Resources">
+                        <colgroup>
+                            <col class="modified" />
+                            <col class="title" />
+                            <col class="date" />
+                        </colgroup>
+                        <thead>
+                        <tr>
+                            <td class="modified">&nbsp;</td>
+                            <td class="title sortedASC"><div class="noLink">LTI Provider Title</div></td>
+                            <td class="date">Last Updated</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <?php
+                        if ($results) {
+                            foreach ($results as $result) { ?>
+                                <tr style="vertical-align: top;">
+                                    <td class="modified"></td>
+                                    <td class="title" style="overflow: visible">
+                                        <?php
+                                        if (((!(int) $result["valid_from"]) || ($result["valid_from"] <= time())) && ((!(int) $result["valid_until"]) || ($result["valid_until"] >= time()))) { ?>
+                                            <a href="javascript:void(0)"
+                                               onclick="openLTIDialog('<?php echo ENTRADA_URL;?>/api/lti-consumer-runner.api.php?ltiid=<?php echo $result["id"];?>')"
+                                               title="Click to visit <?php echo $result["lti_title"];?>">
+                                                <strong>
+                                                    <?php echo (($result["lti_title"] != "") ? html_encode($result["lti_title"]) : '');?>
+                                                </strong>
+                                            </a>
+                                        <?php
+                                        } else { ?>
+                                            <span style="color: #666666;">
+                                                <strong>
+                                                    <?php echo (($result["lti_title"] != "") ? html_encode($result["lti_title"]) : '');?>
+                                                </strong>
+                                            </span>
+                                        <?php
+                                        } ?>
+
+                                        <div class="content-small">
+                                            <?php
+                                            if (((int) $result["valid_from"]) && ($result["valid_from"] > time())) { ?>
+                                                This link will become accessible <strong><?php echo date(DEFAULT_DATE_FORMAT, $result["valid_from"]);?></strong>.<br /><br />
+                                            <?php
+                                            } elseif (((int) $result["valid_until"]) && ($result["valid_until"] < time())) { ?>
+                                                This link was only accessible until <strong><?php echo date(DEFAULT_DATE_FORMAT, $result["valid_until"]);?></strong>. Please contact the primary teacher for assistance if required.<br /><br />
+                                            <?php
+                                            }
+
+                                            if (clean_input($result["link_notes"], array("notags", "nows")) != "") {
+                                                echo "<div class=\"clearfix\">".trim(strip_selected_tags($result["link_notes"], array("font")))."</div>";
+                                            } ?>
+                                        </div>
+                                    </td>
+                                    <td class="date">
+                                        <?php echo (((int) $result["updated_date"]) ? date(DEFAULT_DATE_FORMAT, $result["updated_date"]) : "Unknown");?>
+                                    </td>
+                                </tr>
+                            <?php
+                            }
+                        } else { ?>
+                            <tr>
+                                <td colspan="2">
+                                    <div class="well well-small content-small">
+                                        There have been no linked resources added to this course.
+                                    </div>
+                                </td>
+                            </tr>
+                        <?php
+                        } ?>
+                        </tbody>
+                    </table>
 				<?php
 				/**
 				 * Sidebar item that will provide the links to the different sections within this page.

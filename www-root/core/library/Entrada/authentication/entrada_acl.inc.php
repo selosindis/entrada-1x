@@ -93,13 +93,14 @@ class Entrada_ACL extends ACL_Factory {
 			),
 			"mydepartment",
 			"myowndepartment",
-			"group"
+			"group",
+            "encounter_tracking"
 		)
 	);
 	/**
 	 * Constructs the ACL upon instantiation of the class
 	 *
-	 * @param array $userdetails The user for which the ACL is being constructed details. $_SESSION["details"] is usually used
+	 * @param array $user,ils The user for which the ACL is being constructed details. $_SESSION["details"] is usually used
 	 */
 	function __construct($userdetails) {
 
@@ -2745,6 +2746,24 @@ class DeanAssertion implements Zend_Acl_Assert_Interface {
 			return false;
 		} else {
 			return true;
+		}
+
+		return false;
+	}
+}
+/**
+ * Logbook Assertion Class
+ *
+ * Checks to see if the user has access to a course with loggable objectives
+ * associated with it.
+ */
+class LoggableFoundAssertion implements Zend_Acl_Assert_Interface {
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		$courses = Models_Logbook::getLoggingCourses();
+		if ($courses && @count($courses)) {
+			return true;
+		} else {
+			return false;
 		}
 
 		return false;

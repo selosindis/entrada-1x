@@ -1,8 +1,9 @@
 var ENTRADA_URL;
+var marking_scheme_id = 1;
 
 jQuery(document).ready(function($) {
 	var loading_html = '<img width="16" height="16" src="'+ENTRADA_URL+'/images/loading.gif">';
-	
+
 	var flexiopts = {
 		resizable: false,
 		height: 'auto',
@@ -10,7 +11,7 @@ jQuery(document).ready(function($) {
 		disableSelect: true,
 		showToggleBtn: false
 	};
-	
+
 	var gradebookize = function() {
 		var singleOptions = [
 			{display: 'Student Name', name: 'name', width: $('.late-submissions').length >= 1 ? 239 : 400, sortable: false},
@@ -29,7 +30,7 @@ jQuery(document).ready(function($) {
 			singleOptions.push({display: 'Resubmission', name: 'name', width: 30, sortable: false});
 		}
 		$('table.gradebook.single').flexigrid($.extend({}, flexiopts, {
-			colModel: singleOptions			
+			colModel: singleOptions
 		}));
 
 		$('table.gradebook.numeric').flexigrid($.extend({}, flexiopts, {
@@ -63,7 +64,7 @@ jQuery(document).ready(function($) {
 			$('.gradebook_edit').html(loading_html);
 			$.ajax({
 				url: $('#fullscreen-edit').attr('href') + "&cohort=" + $(this).val(),
-				cache: false, 
+				cache: false,
 				success: function(data, status, request) {
 					$('.gradebook_edit').html(data);
 					gradebookize();
@@ -95,9 +96,9 @@ jQuery(document).ready(function($) {
 					var values = value.split("|");
 					var grade_id = values[0];
 					value = values[1];
-					$(this).html(value);				
+					$(this).html(value);
 				}
-					
+
 				var suffix = $(this).next('.gradesuffix').html().split('|');
 
 				if(value == "-") {
@@ -108,11 +109,11 @@ jQuery(document).ready(function($) {
 					if (suffix[1]) {
 						var percent = (value/suffix[1]*100).toFixed(2);
 					}
-					
+
 					$(this).attr('data-grade-id', grade_id);
 					$(this).next('.gradesuffix').show();
 				}
-				
+
 				if (suffix[1]) {
 					var id_suffix = $(this).attr('id').substring(5);
 					$('#percentage'+id_suffix).html('<div style="width: 45px; ">'+percent+'%</div>');
@@ -123,7 +124,7 @@ jQuery(document).ready(function($) {
 			}
 		}).keyup(function(e){
 			var dest;
-			
+
 			switch(e.which) {
 				case 38: // Up
 				case 40: // Down
@@ -157,10 +158,10 @@ jQuery(document).ready(function($) {
 				break;
 			}
 		});
-	};	
-	
+	};
+
 	gradebookize();
-	
+
 	$('.gradebook_edit').jqm({
 		ajax: '@data-href',
 		ajaxText: loading_html,
@@ -173,25 +174,25 @@ jQuery(document).ready(function($) {
 		},
 		onLoad: function(hash) {
 			gradebookize();
-			
+
 		},
 		onHide: function(hash) {
 			hash.o.hide();
 			hash.w.hide();
 		}
 	});
-	
+
 	$("#fullscreen-edit").click(function(e) {
 		e.preventDefault();
 		$('#navigator-container').hide();
 	});
-	
+
 	$('.gradebook_edit_close').live('click', function(e) {
 		e.preventDefault();
 		$('#navigator-container').show();
 		$('.gradebook_edit').jqmHide();
 	});
-	
+
 	$('.gradebook_edit_add').live('click', function(e) {
 		window.location = $("#gradebook_assessment_add").attr('href');
 	});

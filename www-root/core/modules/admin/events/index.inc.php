@@ -65,6 +65,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		$default_csv_headings = $_SESSION["my_export_options"];
 	}
 
+	$objective_name = $translate->_("events_filter_controls");
+	$curriculum_objectives_name = $objective_name["co"]["global_lu_objectives_name"];
+	$clinical_presentations_name = $objective_name["cp"]["global_lu_objectives_name"];
+	
 	$additional_csv_headings = array(
 		"student_names" => "Student Names",
 		"release_date" => "Release Date",
@@ -72,8 +76,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		"event_children" => "Child Events",
 		"event_message" => "Required Preparation",
 		"free_text_objectives" => "Free-Text Objectives",
-		"queens_objectives" => "Queen's Objectives",
-		"mcc_presentations" => "MCC Presentations",
+		"curriculum_objectives" => $curriculum_objectives_name,
+		"clinical_presentations" => $clinical_presentations_name,
 		"hot_topics" => "Hot Topics",
 		"attached_files" => "Attached Files",
 		"attached_links" => "Attached Links",

@@ -99,6 +99,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		// Output CSV headings
 		fputcsv($fp, $csv_headings, $csv_delimiter, $csv_enclosure);
 		
+		$objective_name = $translate->_("events_filter_controls");
+		$curriculum_objectives_name = $objective_name["co"]["global_lu_objectives_name"];
+		$clinical_presentations_name = $objective_name["cp"]["global_lu_objectives_name"];
+		
+		$query = "	SELECT *
+					FROM `global_lu_objectives` a
+					WHERE a.`objective_name` = " . $db->qstr($curriculum_objectives_name);
+		$curriculum_objective_result = $db->getRow($query);
+		
+		$query = "	SELECT *
+					FROM `global_lu_objectives` a
+					WHERE a.`objective_name` = " . $db->qstr($clinical_presentations_name);
+		$cp_objectives = $db->getRow($query);
+		
 		foreach ($learning_events["events"] as $event) {
 			$event_type_durations = array();
 			$event_types = array();
@@ -249,39 +263,42 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						
 						$row[$key] = implode("; ", $free_text_objectives);
 						break;
-					case "mcc_presentations":
-						$mcc_presentations = array();
+					case "clinical_presentations":
+						$clinical_presentation_objectives = array();
 						$query = "	SELECT *
-									FROM `events_lu_objectives` elo
-									JOIN `event_objectives` eo
-									ON elo.`objective_id` = eo.`objective_id`
-									WHERE eo.`event_id` = " . $db->qstr($event["event_id"]) . "
-									AND eo.`objective_type` = 'event'";
-						$objs = $db->GetAll($query);
+									FROM `event_objectives` eo
+									JOIN `global_lu_objectives` glo
+									ON eo.`objective_id` = glo.`objective_id`
+									WHERE eo.`event_id` = " . $db->qstr($event["event_id"]);
+						$objs = $db->GetAll($query);						
+						$obj_ids = array();
 						if ($objs) {
 							foreach ($objs as $o) {
-								$mcc_presentations[] = $o["objective_name"];
+								$obj_ids[] = $o["objective_id"];								
 							}
 						}
+						$clinical_presentation_objectives = events_fetch_objectives_structure($cp_objectives["objective_id"], $obj_ids);						
+						$output_objective_names = events_all_active_objectives($clinical_presentation_objectives);
 						
-						$row[$key] = implode("; ", $mcc_presentations);
+						$row[$key] = implode("; ", $output_objective_names);
 						break;
-					case "queens_objectives":
-						$queens_objectives = array();
+					case "curriculum_objectives":
+						$curriculum_objectives = array();
 						$query = "	SELECT *
-									FROM `events_lu_objectives` elo
-									JOIN `event_objectives` eo
-									ON elo.`objective_id` = eo.`objective_id`
-									WHERE eo.`event_id` = " . $db->qstr($event["event_id"]) . "
-									AND eo.`objective_type` = 'course'";
-						$objs = $db->GetAll($query);
+									FROM `event_objectives` eo
+									JOIN `global_lu_objectives` glo
+									ON eo.`objective_id` = glo.`objective_id`
+									WHERE eo.`event_id` = " . $db->qstr($event["event_id"]);
+						$objs = $db->GetAll($query);						
+						$obj_ids = array();
 						if ($objs) {
 							foreach ($objs as $o) {
-								$queens_objectives[] = $o["objective_name"];
+								$obj_ids[] = $o["objective_id"];								
 							}
 						}
-						
-						$row[$key] = implode("; ", $queens_objectives);
+						$curriculum_objectives = events_fetch_objectives_structure($curriculum_objective_result["objective_id"], $obj_ids);						
+						$output_objective_names = events_all_active_objectives($curriculum_objectives);						
+						$row[$key] = implode("; ", $output_objective_names);
 						break;
 					case "attached_files":
 						$attached_files = array();

@@ -13175,6 +13175,26 @@ function events_flatten_objectives ($objectives) {
 	return $flat_objectives;
 }
 
+/**
+ * This function is used in conjunction with the output of events_fetch_objectives_structure and is used to
+ * find all the active objectives by objective name.
+ * 
+ * @param type $objs - an array containing an objective set as produced by events_fetch_objectives_structure.
+ * @param type $output - an array of objective names of all the active objectives as accumlated by recursive call.
+ * @return type - an array of objective names of all the active objectives.
+ */
+function events_all_active_objectives($objs, $output = array()) {
+	foreach($objs as $obj_id => $details) {				
+		if ($details["objective_active"]) {	
+			$output[] = $details["objective_name"];				
+		}
+		if ($details["children_active"]) {				
+			$output = events_all_active_objectives($details["children"], $output);
+		}			
+	}
+	return $output;
+}
+
 function events_fetch_objectives_structure($parent_id, $used_ids, $org_id = 0) {
 	global $db, $ENTRADA_USER;
 
@@ -13193,6 +13213,7 @@ function events_fetch_objectives_structure($parent_id, $used_ids, $org_id = 0) {
 	if ($objective_children) {
 		foreach ($objective_children as $objective) {
 			$full_objective_list[$objective["objective_id"]] = array(
+																		"objective_name" => $objective["objective_name"],
 																		"objective_active" => (is_array($used_ids) && array_search($objective["objective_id"], $used_ids) !== false ? true : false),
 																		"children_active" => false,
 																		"children" => array()

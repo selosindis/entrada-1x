@@ -675,7 +675,7 @@ if (!defined("PARENT_INCLUDED")) {
 							<div id="mapped_objectives">
 								<div id="event-list-wrapper" <?php echo ($explicit_event_objectives)?'':' style="display:none;"';?>>
 									<a name="event-objective-list"></a>
-									<h2 id="event-toggle"  title="Event Objective List" class="collapsed list-heading">Event Specific Objectives</h2>
+									<h2 id="event-toggle"  title="Event Objective List" class="list-heading">Event Specific Objectives</h2>
 									<div id="event-objective-list">
 										<ul class="objective-list mapped-list" id="mapped_event_objectives" data-importance="event">
 											<?php

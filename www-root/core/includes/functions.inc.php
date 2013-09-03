@@ -10107,7 +10107,7 @@ function course_fetch_course_audience($course_id = 0, $organisation_id = false,$
 				switch ($result["audience_type"]) {
 					case "cohort" :	// Cohorts
 					case "group_id" : // Course Groups
-						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname, d.`eattendance_id` AS `has_attendance`
+						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname
 									FROM `group_members` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
 									ON a.`proxy_id` = u.`id`
@@ -10142,8 +10142,6 @@ function course_fetch_course_audience($course_id = 0, $organisation_id = false,$
 						application_log("notice", "audience_type [".$result["audience_type"]."] is no longer supported, but is used in event_id [".$event_id."].");
 					break;
 				}
-
-
 			}
 			$course_audience = array_unique($course_audience,SORT_REGULAR);
 			usort($course_audience,"audience_sort");

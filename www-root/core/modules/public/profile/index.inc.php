@@ -504,29 +504,6 @@ if (!defined("IN_PROFILE")) {
 			});
 		});
 		</script>
-		<div id="upload-image" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="label" aria-hidden="true">
-			<div class="modal-header">
-				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-				<h3 id="label">Upload Photo</h3>
-			</div>
-			<div class="modal-body">
-				<div class="preview-img"></div>
-				<div class="description alert" style="height:264px;width:483px;padding:20px;">
-					To upload a new profile image you can drag and drop it on this area, or use the Browse button to select an image from your computer.
-				</div>
-			</div>
-			<div class="modal-footer">
-				<form name="upload_profile_image_form" id="upload_profile_image_form" action="<?php echo ENTRADA_URL; ?>/profile" method="post" enctype="multipart/form-data">
-					<input type="hidden" name="coordinates" id="coordinates" value="" />
-					<input type="hidden" name="dimensions" id="dimensions" value="" />
-					<input type="file" name="image" id="image" />
-				</form>
-				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-				<button id="upload-image-button" class="btn btn-primary">Upload</button>
-			</div>
-		</div>
-
-
 		<div id="profile-image-container">
 			<a href="#upload-image" id="upload-image-modal-btn" data-toggle="modal" class="btn btn-primary" id="upload-profile-image">Upload Photo</a>
 			<?php
@@ -863,6 +840,27 @@ if (!defined("IN_PROFILE")) {
 				</div>
 			</div>
 		</form>
+		</div>
+		<div id="upload-image" class="modal hide" tabindex="-1" role="dialog" aria-labelledby="label" aria-hidden="true">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 id="label">Upload Photo</h3>
+			</div>
+			<div class="modal-body">
+				<div class="preview-img"></div>
+				<div class="description alert" style="height:264px;width:483px;padding:20px;">
+					To upload a new profile image you can drag and drop it on this area, or use the Browse button to select an image from your computer.
+				</div>
+			</div>
+			<div class="modal-footer">
+				<form name="upload_profile_image_form" id="upload_profile_image_form" action="<?php echo ENTRADA_URL; ?>/profile" method="post" enctype="multipart/form-data">
+					<input type="hidden" name="coordinates" id="coordinates" value="" />
+					<input type="hidden" name="dimensions" id="dimensions" value="" />
+					<input type="file" name="image" id="image" />
+				</form>
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+				<button id="upload-image-button" class="btn btn-primary">Upload</button>
+			</div>
 		</div>
 		<div class="modal hide fade" id="reset-hash-modal">
 			<div class="modal-header">

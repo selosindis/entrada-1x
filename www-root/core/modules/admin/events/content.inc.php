@@ -679,6 +679,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							onComplete: function(transport) {
 								modalDialog.container.update(transport.responseText);
 								modalDialog.open();
+								var windowHeight = jQuery(window).outerHeight();
+								var modalHeight = jQuery("#placeholder.modal").outerHeight();
+								if (modalHeight >= windowHeight) {
+									jQuery(document).scrollTop(0);
+								}
 							}
 						});
 					} else {

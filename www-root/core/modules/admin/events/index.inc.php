@@ -70,7 +70,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		"release_date" => "Release Date",
 		"release_until" => "Release Until",
 		"event_children" => "Child Events",
-		"event_message" => "Teachers Message",
+		"event_message" => "Required Preparation",
 		"free_text_objectives" => "Free-Text Objectives",
 		"queens_objectives" => "Queen's Objectives",
 		"mcc_presentations" => "MCC Presentations",

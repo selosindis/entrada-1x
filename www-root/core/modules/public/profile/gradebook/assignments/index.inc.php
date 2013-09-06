@@ -80,6 +80,8 @@ switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["sb"]) {
 		$sort_by = "e.`due_date` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"]);
 	break;
 }
+	$group_ids = groups_get_enrolled_group_ids($ENTRADA_USER->getId());
+	$group_ids_string = implode(', ',$group_ids);
 
 	$courses = groups_get_enrolled_course_ids($ENTRADA_USER->getID());
 	$query = "SELECT c.`course_code`, e.`assignment_id`, e.`assignment_title`, e.`due_date`, h.`grade_id` AS `grade_id`, h.`value` AS `grade_value`, i.`grade_weighting` AS `submitted_date`
@@ -88,6 +90,7 @@ switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["sb"]) {
 						ON e.`course_id` = c.`course_id`
 						LEFT JOIN `assessments` AS f
 						ON e.`assessment_id` = f.`assessment_id`
+						AND f.`cohort` IN (". $group_ids_string .")
 						LEFT JOIN `assessment_grades` AS h
 						ON h.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 						AND h.`assessment_id` = e.`assessment_id`

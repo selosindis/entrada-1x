@@ -328,13 +328,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 
 								/**
-								 * Teacher's Message
+								 * Required Preparation
 								 */
 								if (event_text_change($EVENT_ID,"event_message")) {
 									if (strlen($history_texts)>2) {
 										$history_texts .= ":";
 									}
-									$history_texts .= "teacher's message";
+									$history_texts .= "Required Preparation";
 								}
 								if ((isset($_POST["event_message"])) && (clean_input($_POST["event_message"], array("notags", "nows")))) {
 									$event_message = clean_input($_POST["event_message"], array("allowedtags"));
@@ -898,7 +898,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 							<tr>
 								<td colspan="2">
-                                    <label for="event_message" class="form-nrequired">Teacher's Message:</label><br />
+                                    <label for="event_message" class="form-nrequired">Required Preparation:</label><br />
 									<textarea id="event_message" name="event_message" style="width: 100%; height: 100px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_message"], array("font")))); ?></textarea>
 								</td>
 							</tr>

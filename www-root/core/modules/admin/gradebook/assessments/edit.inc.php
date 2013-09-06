@@ -959,7 +959,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											jQuery('#numeric_marking_scheme_details').hide();
 										}
 									}).trigger('change');
-												
+									/*
+									 *			
+									 *  Removed as per under grad medicine request, commented out in case this functionality needs to re implemented								
 									jQuery('#grade_weighting').keyup(function() {
 										if (parseFloat(jQuery('#grade_weighting').val())) {
 											jQuery('#assessment_required_1').attr('checked', 'checked');
@@ -982,7 +984,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 														
 										}
 									});
-												
+									*/			
 //									jQuery('#assessment_characteristic').change(function (){
 //										jQuery('#assessment_options input:[type=checkbox]').removeAttr('checked');
 //										var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');

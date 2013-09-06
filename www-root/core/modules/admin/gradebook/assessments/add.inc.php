@@ -586,7 +586,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									</td>
 								</tr>
 							</tbody>
-							<tbody id="assessment_required_options" style="display: none;">
+							<tbody id="assessment_required_options">
 								<tr>
 									<td>&nbsp;</td>
 									<td colspan="2" style="padding-top: 10px">
@@ -737,7 +737,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									jQuery('#numeric_marking_scheme_details').hide();
 								}
 							}).trigger('change');
-
+							/*
+							 *
+							 *  Removed as per under grad medicine request, commented out in case this functionality needs to re implemented								
 							jQuery('#grade_weighting').keyup(function() {
 								if (parseFloat(jQuery('#grade_weighting').val())) {
 									jQuery('#assessment_required_1').attr('checked', 'checked');
@@ -760,7 +762,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 								}
 							});
-							
+							*/
 							function fetchOptions(select, selected_options) {
 								jQuery.ajax({
 									url: "<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments/?section=add",

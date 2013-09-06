@@ -341,7 +341,7 @@ if (!defined("PARENT_INCLUDED")) {
 
                             if (clean_input($event_info["event_message"], array("notags", "nows")) != "") {
                                 echo "<div class=\"event-message\">\n";
-                                echo "	<h3>Teacher's Message</h3>\n";
+                                echo "	<h3>Required Preparation</h3>\n";
                                 echo	trim(strip_selected_tags($event_info["event_message"], array("font")));
                                 echo "</div>\n";
                             }

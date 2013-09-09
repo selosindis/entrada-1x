@@ -24,7 +24,11 @@
 require_once("init.inc.php");
 require_once("Entrada/icalendar/class.ical.inc.php");
 
-$cohorts = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
+$tmp_org_id = $argv[1];
+
+$PROCESSED["org_id"] = clean_input($tmp_org_id, "int");
+
+$cohorts = groups_get_active_cohorts($PROCESSED["org_id"]);
 
 foreach($cohorts as $cohort) {
 	$query		= "

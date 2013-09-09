@@ -28,7 +28,7 @@ $tmp_org_id = $_GET["org"];
 
 $PROCESSED["org_id"] = clean_input($tmp_org_id, "int");
 
-if ($PROCESSEd["org_id"]) {
+if ($PROCESSED["org_id"]) {
 
 	$cohorts = groups_get_active_cohorts($PROCESSED["org_id"]);
 
@@ -81,6 +81,6 @@ if ($PROCESSEd["org_id"]) {
 	}
 	
 } else {
-	application_log("error", "When running the calender generation cron job an invalid org_id was provided, or no org_id was provided.");
+	echo("When running the calender generation cron job an invalid org_id was provided, or no org_id was provided.");
 }
 ?>

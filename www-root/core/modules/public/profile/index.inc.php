@@ -28,12 +28,83 @@ if (!defined("IN_PROFILE")) {
 
 	$ajax_action = clean_input($_POST["ajax_action"], "alpha");
 
-	if (!empty($ajax_action)) {
+	if ($ajax_action == "uploadimageie") {
+		$file_data = getimagesize($_FILES["image"]["tmp_name"]);
+		$file_dimensions = $file_data[0] . "," . $file_data[1];
+		
+		$aspect_ratio = $file_data[0] / $file_data[1];
+		if ($aspect_ratio >= 0.76) {
+			$offset = round(($file_data[0] - ($file_data[0] * .76)) / 2);
+			$coordinates = $offset . ",0,".($offset + round($file_data[0] * .76)).",".$file_data[1];
+		} else {
+			$offset = round(($file_data[1] - ($file_data[1] * .76)) / 2);
+			$coordinates =  "0,".$offset.",".$file_data[0].",".($offset + round($file_data[1] * .76));
+		}
+		
+		if ($coordinates) {
+			$coords = explode(",", $coordinates);
+			foreach($coords as $coord) {
+				$tmp_coords[] = clean_input($coord, "int");
+			}
+			$PROCESSED["coordinates"] = implode(",", $tmp_coords);
+		}
+		if ($file_dimensions) {
+			$dimensions = explode(",", $file_dimensions);
+			foreach($dimensions as $dimension) {
+				$tmp_dimensions[] = clean_input($dimension, "int");
+			}
+			$PROCESSED["dimensions"] = implode(",", $tmp_dimensions);
+		}		
+		$filesize = moveImage($_FILES["image"]["tmp_name"], $ENTRADA_USER->getID(), $PROCESSED["coordinates"], $PROCESSED["dimensions"]);
+
+		if ($filesize) {
+			$PROCESSED_PHOTO["proxy_id"]			= $ENTRADA_USER->getID();
+			$PROCESSED_PHOTO["photo_active"]		= 1;
+			$PROCESSED_PHOTO["photo_type"]			= 1;
+			$PROCESSED_PHOTO["updated_date"]		= time();
+			$PROCESSED_PHOTO["photo_filesize"]		= $filesize;
+
+			$query = "SELECT `photo_id` FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+			$photo_id = $db->GetOne($query);
+			if ($photo_id) {
+				if ($db->AutoExecute("`".AUTH_DATABASE."`.`user_photos`", $PROCESSED_PHOTO, "UPDATE", "`photo_id` = ".$db->qstr($photo_id))) {
+					add_success("Your profile image has been successfully uploaded.");
+				}
+			} else {
+				if ($db->AutoExecute("`".AUTH_DATABASE."`.`user_photos`", $PROCESSED_PHOTO, "INSERT")) {
+					add_success("Your profile image has been successfully uploaded.");
+				} else {
+					add_error("An error ocurred while attempting to update your profile photo record, please try again later.");
+				}
+			}
+		} else {
+			add_error("An error ocurred while moving your image in the system, please try again later.");
+		}
+	}
+	
+	if (!empty($ajax_action) && $ajax_action != "uploadimageie") {
+		
 		ob_clear_open_buffers();
 
 		switch ($ajax_action) {
 			case "uploadimage" :
-				$filesize = moveImage($_FILES["image"]["tmp_name"], $ENTRADA_USER->getID(), $_POST["coordinates"], $_POST["dimensions"]);
+
+				if ($_POST["coordinates"]) {
+					$coords = explode(",", $_POST["coordinates"]);
+					foreach($coords as $coord) {
+						$tmp_coords[] = clean_input($coord, "int");
+					}
+					$PROCESSED["coordinates"] = implode(",", $tmp_coords);
+				}
+				if ($_POST["dimensions"]) {
+					$dimensions = explode(",", $_POST["dimensions"]);
+					foreach($dimensions as $dimension) {
+						$tmp_dimensions[] = clean_input($dimension, "int");
+					}
+					$PROCESSED["dimensions"] = implode(",", $tmp_dimensions);
+				}
+				
+				$filesize = moveImage($_FILES["image"]["tmp_name"], $ENTRADA_USER->getID(), $PROCESSED["coordinates"], $PROCESSED["dimensions"]);
 
 				if ($filesize) {
 					$PROCESSED_PHOTO["proxy_id"]			= $ENTRADA_USER->getID();
@@ -390,65 +461,78 @@ if (!defined("IN_PROFILE")) {
 						selectImage(jQuery(".preview-image"));
 					});
 				};
+			} else {
+				jQuery(".preview-img").hide();
+				jQuery("#upload-image .description").css("height", "auto");
+			}
 			
-				// Required for drag and drop file access
-				jQuery.event.props.push('dataTransfer');
+			// Required for drag and drop file access
+			jQuery.event.props.push('dataTransfer');
 
-				jQuery("#upload-image").on('drop', function(event) {
+			jQuery("#upload-image").on('drop', function(event) {
 
-					jQuery(".modal-body").css("background-color", "#FFF");
+				jQuery(".modal-body").css("background-color", "#FFF");
 
-					event.preventDefault();
+				event.preventDefault();
 
-					var file = event.dataTransfer.files[0];
+				var file = event.dataTransfer.files[0];
 
-					if (file.type.match('image.*')) {
-						jQuery("#image").html(file);
+				if (file.type.match('image.*')) {
+					jQuery("#image").html(file);
+					if (window.FileReader) {
 						reader.readAsDataURL(file);
-					} else {
-						// However you want to handle error that dropped file wasn't an image
 					}
-				});
+				} else {
+					// However you want to handle error that dropped file wasn't an image
+				}
+			});
 
-				jQuery("#upload-image").on("dragover", function(event) {
-					jQuery(".modal-body").css("background-color", "#f3f3f3");
-					return false;
-				});
+			jQuery("#upload-image").on("dragover", function(event) {
+				jQuery(".modal-body").css("background-color", "#f3f3f3");
+				return false;
+			});
 
-				jQuery("#upload-image").on("dragleave", function(event) {
-					jQuery(".modal-body").css("background-color", "#FFF");
-				});
+			jQuery("#upload-image").on("dragleave", function(event) {
+				jQuery(".modal-body").css("background-color", "#FFF");
+			});
 
-				jQuery('#upload-image').on('hidden', function () {
-					if (jQuery(".profile-image-preview").length > 0) {
-						jQuery(".profile-image-preview").remove();
-						jQuery(".imgareaselect-selection").parent().remove();
-						jQuery(".imgareaselect-outer").remove();
-						jQuery("#image").val("");
-						jQuery(".description").show();
-					}
-				});
+			jQuery('#upload-image').on('hidden', function () {
+				if (jQuery(".profile-image-preview").length > 0) {
+					jQuery(".profile-image-preview").remove();
+					jQuery(".imgareaselect-selection").parent().remove();
+					jQuery(".imgareaselect-outer").remove();
+					jQuery("#image").val("");
+					jQuery(".description").show();
+				}
+			});
 
-				jQuery('#upload-image').on('shown', function() {
-					if (jQuery(".profile-image-preview").length <= 0) {
-						var preview = jQuery("<div />").addClass("profile-image-preview");
-						preview.append("<img />");
-						preview.children("img").addClass("preview-image");
-						jQuery(".preview-img").append(preview);
-					}
-				});
+			jQuery('#upload-image').on('shown', function() {
+				if (!window.FileReader) {
+					jQuery("#upload-image .description").html("Your browser does not support image cropping, your image will be center cropped.")
+				}
+				if (jQuery(".profile-image-preview").length <= 0) {
+					var preview = jQuery("<div />").addClass("profile-image-preview");
+					preview.append("<img />");
+					preview.children("img").addClass("preview-image");
+					jQuery(".preview-img").append(preview);
+				}
+			});
 
-				jQuery("#upload-image-button").live("click", function(){
+			jQuery("#upload-image-button").live("click", function(){
+				if (window.FileReader) {
 					if (typeof jQuery(".preview-image").attr("src") != "undefined") {
 						jQuery("#upload_profile_image_form").submit();
 						jQuery('#upload-image').modal("hide");
 					} else {
 						jQuery('#upload-image').modal("hide");
 					}
-				});
+				} else {
+					jQuery("#upload_profile_image_form").submit();
+				}
+			});
 
-				jQuery("#upload_profile_image_form").submit(function(){
-					console.log(jQuery("#image").val());
+			jQuery("#upload_profile_image_form").submit(function(){
+				if (window.FileReader) {
 					var imageFile = dataURItoBlob(jQuery(".preview-image").attr("src"));
 
 					var xhr = new XMLHttpRequest();
@@ -487,16 +571,21 @@ if (!defined("IN_PROFILE")) {
 					}
 
 					return false;
-				});
+				} else {
+					jQuery("#upload_profile_image_form").append("<input type=\"hidden\" name=\"ajax_action\" value=\"uploadimageie\" />");
+				}
+			});
 
-				jQuery("#image").live("change", function(){
-					var files = jQuery(this).prop("files");
+			jQuery("#image").live("change", function(){
+				var files = jQuery(this).prop("files");
 
-					if (files && files[0]) {
+				if (files && files[0]) {
+					if (window.FileReader) {
 						reader.readAsDataURL(files[0]);
 					}
-				});
-			}
+				}
+			});
+
 			jQuery("#profile-image-container").hover(function(){
 				jQuery("#profile-image-container .btn, #btn-toggle").fadeIn("fast");
 			},

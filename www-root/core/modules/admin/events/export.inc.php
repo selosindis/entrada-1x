@@ -119,8 +119,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			$audience_cohorts = array();
 			$audience_groups = array();
 			$audience_students = array();
-			$staff_numbers = array();
-			$staff_names = array();
+			$teacher_numbers = array();
+			$teacher_names = array();
+			$auditor_numbers = array();
+			$auditor_names = array();
+			$teachers_assistant_numbers = array();
+			$teachers_assistant_names = array();
+			$tutor_numbers = array();
+			$tutor_names = array();
 			$student_names = array();
 
 			// Event Type Durations, and Event Types
@@ -192,19 +198,41 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			}
 			
 			// Staff Numbers, and Names
-			$query = "	SELECT b.`number`, CONCAT(b.`firstname`, ' ', b.`lastname`) AS `fullname`
+			$query = "	SELECT b.`number`, a.`contact_role`, CONCAT(b.`firstname`, ' ', b.`lastname`) AS `fullname`
 						FROM `event_contacts` AS a
 						JOIN `".AUTH_DATABASE."`.`user_data` AS b
 						ON b.`id` = a.`proxy_id`
-						WHERE a.`event_id` = ".$db->qstr($event["event_id"])."
-						AND `contact_role` = 'teacher'
+						WHERE a.`event_id` = ".$db->qstr($event["event_id"])."						
 						ORDER BY `contact_order` ASC";
 			if ($results = $db->GetAll($query)) {
 				foreach ($results as $key => $result) {
-					$staff_numbers[$key] = (int) $result["number"];
-					$staff_names[$key] = $result["fullname"];
+					switch ($result["contact_role"]) {
+						case "teacher":
+							$teacher_numbers[$key] = (int) $result["number"];
+							$teacher_names[$key] = $result["fullname"];
+							break;
+						
+						case "tutor":
+							$tutor_numbers[$key] = (int) $result["number"];
+							$tutor_names[$key] = $result["fullname"];
+							break;
+						
+						case "ta":
+							$teachers_assistant_numbers[$key] = (int) $result["number"];
+							$teachers_assistant_names[$key] = $result["fullname"];
+							break;
+						
+						case "auditor":
+							$auditor_numbers[$key] = (int) $result["number"];
+							$auditor_names[$key] = $result["fullname"];
+							break;
+						
+						default:
+							break;
+					}					
 				}
 			}
+			
 			$row = array();
 			foreach ($csv_headings as $key => $value) {
 				switch($key) {
@@ -238,11 +266,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					case "audience_students":
 						$row[$key] = implode("; ", $audience_students);
 						break;
-					case "staff_numbers":
-						$row[$key] = implode("; ", $staff_numbers);
+					case "teacher_numbers":
+						$row[$key] = implode("; ", $teacher_numbers);
 						break;
-					case "staff_names":
-						$row[$key] = implode("; ", $staff_names);
+					case "teacher_names":
+						$row[$key] = implode("; ", $teacher_names);
+						break;
+					case "teachers_assistant_numbers":
+						$row[$key] = implode("; ", $teachers_assistant_numbers);
+						break;
+					case "teachers_assistant_names":
+						$row[$key] = implode("; ", $teachers_assistant_names);
+						break;
+					case "tutor_numbers":
+						$row[$key] = implode("; ", $tutor_numbers);
+						break;
+					case "tutor_names":
+						$row[$key] = implode("; ", $tutor_names);
+						break;
+					case "auditor_numbers":
+						$row[$key] = implode("; ", $auditor_numbers);
+						break;
+					case "auditor_names":
+						$row[$key] = implode("; ", $auditor_names);
 						break;
 					case "student_names":
 						$row[$key] = implode("; ", $student_names);

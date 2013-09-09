@@ -55,8 +55,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			"audience_cohorts" => "Audience (Cohorts)",
 			"audience_groups" => "Audience (Groups)",
 			"audience_students" => "Audience (Students)",
-			"staff_numbers" => "Teacher Numbers",
-			"staff_names" => "Teacher Names",
+			"teacher_numbers" => "Teacher Numbers",
+			"teacher_names" => "Teacher Names",
+			"auditor_numbers" => "Auditor Numbers",
+			"auditor_names" => "Auditor Names",
+			"teachers_assistant_numbers" => "Teacher's Assistant Numbers",
+			"teachers_assistant_names" => "Teacher's Assistant Names",
+			"tutor_numbers" => "Tutor Numbers",
+			"tutor_names" => "Tutor Names",
 			"objectives_release_date" => "Objectives Release Date"
 	);
 

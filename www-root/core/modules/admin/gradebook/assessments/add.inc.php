@@ -934,7 +934,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         </ul>
                                     </div>												
                                     <p class="well well-small content-small">
-                                        <strong>Helpful Tip:</strong> Click <strong>Map Aditional Objectives</strong> to view the list of available objective sets. Select an objective from the list on the left and it will be mapped to the assessment.
+                                        <strong>Helpful Tip:</strong> Click <strong>Map Additional Objectives</strong> to view the list of available objective sets. Select an objective from the list on the left and it will be mapped to the assessment.
                                     </p>
                                 <?php
                                     if ($hierarchical_objectives) {

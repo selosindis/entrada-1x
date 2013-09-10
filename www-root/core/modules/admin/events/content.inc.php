@@ -1036,7 +1036,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<a href="javascript:void(0)" class="mapping-toggle btn btn-success btn-small pull-right" data-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Map Additional Objectives</a>
 						</div>
 						<p class="well well-small content-small">
-							<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left and it will be mapped to the event.
+							<strong>Helpful Tip:</strong> Click <strong>Map Additional Objectives</strong> to view the list of available objectives. Select an objective from the list on the left and it will be mapped to the event.
 						</p>
                         <?php
 						if ($hierarchical_objectives) {

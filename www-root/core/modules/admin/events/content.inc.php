@@ -1053,7 +1053,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             ?>
                             <div id="clinical-list-wrapper">
                                 <a name="clinical-objective-list"></a>
-                                <h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed list-heading">Other Objectives</h2>
+                                <h2 id="flat-toggle"  title="Clinical Objective List" class="<?php echo empty($objective_name["cp"]["global_lu_objectives_name"]) ? "collapsed" : ""; ?> list-heading"><?php echo $objective_name["cp"]["global_lu_objectives_name"] ? $objective_name["cp"]["global_lu_objectives_name"] : "Other Objectives"; ?></h2>
                                 <div id="clinical-objective-list">
                                     <ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
                                         <?php

@@ -648,6 +648,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					jQuery("#delay_release").on("click", function() {
 						jQuery("#delay_release_controls").toggle(this.checked);
 					});
+					
+					jQuery(".remove-hottopic").on("click", function(e) {
+						jQuery("#topic_"+jQuery(this).attr("data-id")+"_major").removeAttr("checked");
+						jQuery("#topic_"+jQuery(this).attr("data-id")+"_minor").removeAttr("checked");
+						e.preventDefault();
+					});
 				});
 				
 				var ajax_url = '';
@@ -1193,10 +1199,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</div>
                         <table style="width: 100%" cellspacing="0" summary="List of ED10">
                             <colgroup>
-                                <col style="width: 55%" />
-                                <col style="width: 15%" />
-                                <col style="width: 15%" />
-                                <col style="width: 15%" />
+                                <col style="width: 76%" />
+                                <col style="width: 8%" />
+                                <col style="width: 8%" />
+                                <col style="width: 8%" />
                             </colgroup>
                             <tfoot>
                                 <tr>
@@ -1205,19 +1211,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             </tfoot>
 							<tr>
                                 <td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
-                                <td><span style="font-weight: bold; color: #003366;">Major</span></td>
-                                <td><span style="font-weight: bold; color: #003366;">Minor</span></td>
+                                <td align="center"><span style="font-weight: bold; color: #003366;">Major</span></td>
+                                <td align="center"><span style="font-weight: bold; color: #003366;">Minor</span></td>
+								<td align="center"><span style="font-weight: bold; color: #003366;">Remove</span></td>
                             </tr>
                             <?php
                             foreach ($topic_results as $topic_result) {
                                 echo "<tr>\n";
                                 echo "	<td>".html_encode($topic_result["topic_name"])."</td>\n";
-                                echo "	<td>";
+                                echo "	<td align=\"center\">";
                                 echo "		<input type=\"radio\" id=\"topic_".$topic_result["topic_id"]."_major\" name=\"event_topic[".$topic_result["topic_id"]."]\" value=\"major\" onclick=\"updateEdChecks(this)\"".(($topic_result["topic_coverage"] == "major") ? " checked=\"checked\"" : "")." />";
                                 echo "	</td>\n";
-                                echo "	<td>";
+                                echo "	<td align=\"center\">";
                                 echo "		<input type=\"radio\" id=\"topic_".$topic_result["topic_id"]."_minor\" name=\"event_topic[".$topic_result["topic_id"]."]\" value=\"minor\" ".(($topic_result["topic_coverage"] == "minor") ? " checked=\"checked\"" : "")."/>";
                                 echo "	</td>\n";
+								echo "  <td align=\"center\"><a href=\"#\" class=\"remove-hottopic\" data-id=\"".$topic_result["topic_id"]."\"><i class=\"icon-remove\"></i></a></td>";
                                 echo "</tr>\n";
                             }
                             echo "<tr><td colspan=\"3\">&nbsp;</td></tr>";

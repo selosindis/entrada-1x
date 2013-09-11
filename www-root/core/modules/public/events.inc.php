@@ -729,13 +729,12 @@ if (!defined("PARENT_INCLUDED")) {
                             ?>
                             <table style="width: 100%" cellspacing="0">
                                 <colgroup>
-                                    <col style="width: 70%" />
-                                    <col style="width: 10%" />
+                                    <col style="width: 80%" />
                                     <col style="width: 10%" />
                                     <col style="width: 10%" />
                                 </colgroup>
                                 <tr>
-                                    <td colspan="4">
+                                    <td colspan="3">
                                         <h2>Event Topics</h2>
                                         <div class="content-small" style="padding-bottom: 10px">These topics will be covered in this learning event.</div>
                                     </td>
@@ -744,7 +743,6 @@ if (!defined("PARENT_INCLUDED")) {
                                     <td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
                                     <td><span style="font-weight: bold; color: #003366;">Major</span></td>
                                     <td><span style="font-weight: bold; color: #003366;">Minor</span></td>
-                                    <td><span style="font-weight: bold; color: #003366;">Time</span></td>
                                 </tr>
                                 <?php
                                     foreach ($topic_results as $topic_result) {
@@ -752,7 +750,6 @@ if (!defined("PARENT_INCLUDED")) {
                                         echo "	<td>".html_encode($topic_result["topic_name"])."</td>\n";
                                         echo "	<td>".(($topic_result["topic_coverage"] == "major") ? "<img src=\"".ENTRADA_URL."/images/question-correct.gif"."\" />" : "" )."</td>\n";
                                         echo "	<td>".(($topic_result["topic_coverage"] == "minor") ? "<img src=\"".ENTRADA_URL."/images/question-correct.gif"."\" />": "" )."</td>\n";
-                                        echo "	<td>".$topic_result["topic_time"]."</td>\n";
                                         echo "</tr>\n";
                                     }
                                     echo "<tr><td colspan=\"2\">&nbsp;</td></tr>";

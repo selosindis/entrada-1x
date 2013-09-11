@@ -407,7 +407,7 @@ jQuery(document).ready(function(){
 });
 
 function buildDOM(children,id){
-	var container,title,title_text,controls,check,d_control,e_control,a_control,description,child_container;
+	var container,title,title_text,controls,check,d_control,e_control,a_control,m_control,description,child_container;
 	jQuery('#children_'+id).hide();
 	if(children.error !== undefined){
 		if(!EDITABLE){

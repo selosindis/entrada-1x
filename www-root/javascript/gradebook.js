@@ -135,12 +135,12 @@ jQuery(document).ready(function($) {
 					var row = $(this).parent().parent().parent();
 					if(e.which == 38) { //going up!
 						dest = row.prev();
-						if($(dest).attr('class').indexOf('comment-row') !== -1){
+						if($(dest).hasClass('comment-row')){
 							dest = dest.prev();
 						}
 					} else {
 						dest = row.next();
-						if($(dest).attr('class').indexOf('comment-row') !== -1){
+						if($(dest).hasClass('comment-row')){
 							dest = dest.next();
 						}
 					}

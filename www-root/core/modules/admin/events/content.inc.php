@@ -242,9 +242,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					if ((is_array($event_types)) && (count($event_types))) {
 						foreach ($event_types as $order => $eventtype_id) {
 							if (($eventtype_id = clean_input($eventtype_id, array("trim", "int"))) && ($duration = clean_input($eventtype_durations[$order], array("trim", "int")))) {
-								if (!($duration >= 30)) {
+								if (!($duration >= LEARNING_EVENT_MIN_DURATION)) {
 									$ERROR++;
-									$ERRORSTR[] = "Event type <strong>durations</strong> may not be less than 30 minutes.";
+									$ERRORSTR[] = "Event type <strong>durations</strong> may not be less than ".LEARNING_EVENT_MIN_DURATION." minutes.";
 								}
 
 								$query	= "SELECT `eventtype_title` FROM `events_lu_eventtypes` WHERE `eventtype_id` = ".$db->qstr($eventtype_id);

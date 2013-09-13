@@ -158,8 +158,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								if (isset($eventtype_durations[$order])) {
 									$duration = clean_input($eventtype_durations[$order], array("trim", "int"));
 
-									if ($duration <= 0) {
-										add_error("The duration of <strong>".html_encode($eventtype_title)."</strong> (".numeric_suffix(($order + 1))." <strong>Event Type</strong> entry) must be greater than zero.");
+									if ($duration <= LEARNING_EVENT_MIN_DURATION) {
+										add_error("The duration of <strong>".html_encode($eventtype_title)."</strong> (".numeric_suffix(($order + 1))." <strong>Event Type</strong> entry) must be greater than ".LEARNING_EVENT_MIN_DURATION.".");
 									}
 								} else {
 									$duration = 0;

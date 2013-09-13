@@ -56,13 +56,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			"audience_groups" => "Audience (Groups)",
 			"audience_students" => "Audience (Students)",
 			"teacher_numbers" => "Teacher Numbers",
-			"teacher_names" => "Teacher Names",
-			"auditor_numbers" => "Auditor Numbers",
-			"auditor_names" => "Auditor Names",
-			"teachers_assistant_numbers" => "Teacher's Assistant Numbers",
-			"teachers_assistant_names" => "Teacher's Assistant Names",
-			"tutor_numbers" => "Tutor Numbers",
-			"tutor_names" => "Tutor Names",
+			"teacher_names" => "Teacher Names",			
 			"objectives_release_date" => "Objectives Release Date"
 	);
 
@@ -88,7 +82,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		"attached_files" => "Attached Files",
 		"attached_links" => "Attached Links",
 		"attached_quizzes" => "Attached Quizzes",
-		"attendance" => "Attendance"
+		"attendance" => "Attendance",
+		"auditor_numbers" => "Auditor Numbers",
+		"auditor_names" => "Auditor Names",
+		"teachers_assistant_numbers" => "Teacher's Assistant Numbers",
+		"teachers_assistant_names" => "Teacher's Assistant Names",
+		"tutor_numbers" => "Tutor Numbers",
+		"tutor_names" => "Tutor Names",
 	);
 
 	if (isset($diff) && $diff && is_array($diff)) {

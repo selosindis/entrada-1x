@@ -40,14 +40,26 @@ jQuery(document).ready(function($) {
 				{display: 'Student Mark', name: 'name', width: 73, sortable: false},
 				{display: 'Percent', name: 'name', width: 30, sortable: false}
 			]
-		}));
+		}));		
 
+		var assignmentOptions = [
+			{display: 'Download', name: 'download_assignment', width: 50, sortable: false},
+			{display: 'Student Name', name: 'name', width: (marking_scheme_id == 3) ? 200 : 250, sortable: false},
+			{display: 'Student Number', name: 'number', width: 100, sortable: false},
+			{display: 'Student Mark', name: 'mark', width: 73, sortable: false},
+			{display: 'Date Submitted', name: 'date_submitted', width: 150, sortable: false}
+		];
+		
+		var student_name_width = 200
+		if (marking_scheme_id == 3) {			
+			assignmentOptions.push({display: 'Percent', name: 'percent', width: 50, sortable: false});
+		}
+				
 		$('table.gradebook.assignment').flexigrid($.extend({}, flexiopts, {
-			colModel: [
-
-			]
+			colModel: assignmentOptions
+			
 		}));
-
+		
 		$('table.gradebook').flexigrid($.extend({}, flexiopts, {
 			title: "Gradebook",
 			buttons : [

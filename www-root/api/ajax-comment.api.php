@@ -101,7 +101,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 						<td colspan="2" class="content" style="border-bottom: 3px solid #EBEBEB;">
 						<a name="comment-<?php echo (int) $result["cscomment_id"]; ?>"></a>
 						<?php
-							echo ((trim($PROCESSED["comment_title"])) ? "<div style=\"font-weight: bold\">".html_encode(trim($PROCESSED["comment_title"]))."</div>" : "");
+							echo ((trim($PROCESSED["comment_title"])) ? "<strong>".html_encode(trim($PROCESSED["comment_title"]))."</strong><br />" : "");
 							echo $PROCESSED["comment_description"];
 
 						?>

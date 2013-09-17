@@ -326,8 +326,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 															}
 															
 														} ?>													
-													</ul>
-													<div style="text-align:right;" class="list-action"><span class="leave_comment" id="leave_comment_<?php echo $student["proxy_id"] ?>">Leave Comment</span></div>
+														<li style="text-align:right;" class="list-action"><span class="leave_comment" id="leave_comment_<?php echo $student["proxy_id"] ?>">Leave Comment</span></li>
+													</ul>													
 													<div class="new_comment" id="new_comment_<?php echo $student["proxy_id"] ?>">
 														<table class="comment_form" style="width:100%;">
 															<tr>
@@ -629,12 +629,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										alert('Successfully added comment.  Please refresh your page to view it.');
 									}
 								} catch(e) {									
-									jQuery("#comments_" + id).append(data);
+									jQuery("#comments_" + id + " li:last").before(data);
 									jQuery('#comments_'+id).show();
 									jQuery('#view_comments_'+id).text('Hide Comments');
 									jQuery('#view_comments_'+id).attr('class','hide_comments');
 									jQuery('#new_comment_'+id).hide();
-									jQuery('#new_comment_text_'+id).val('');									
+									jQuery('#new_comment_desc_'+id).val('');									
+									jQuery('#new_comment_title_'+id).val('');									
 								}
 							});
 						});

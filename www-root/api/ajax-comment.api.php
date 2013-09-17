@@ -72,8 +72,8 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 	if($COMMENT_TABLE){
 	
 		if (!$db->AutoExecute($COMMENT_TABLE,$PROCESSED,"INSERT")) {
-			application_log("error", "Error occurred while submitting comment.");
-			echo htmlspecialchars(json_encode(array('error'=>'Error occurred while submitting comment.')), ENT_NOQUOTES);
+			application_log("error", "Error occurred while submitting comment.  DB said [".$db->ErrorMsg()."]");
+			echo htmlspecialchars(json_encode(array('error'=>'Error occurred while submitting comment.  Please try again.')), ENT_NOQUOTES);
 			exit;						
 		} else {
 			$COMMENT_ID = $db->Insert_Id();

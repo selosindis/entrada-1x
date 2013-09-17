@@ -617,13 +617,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								url: "<?php echo ENTRADA_URL;?>/api/ajax-comment.api.php",
 								data: "comment_description="+comment_desc+"&comment_title="+comment_title+"&uid="+id+"&assignment_id=<?php echo $ASSIGNMENT_ID;?>&comment_type=assignment"
 							})
-							.done(function(data, textStatus, jqXHR) {																	
+							.done(function(data, textStatus, jqXHR) {
+								try {
+									var result = jQuery.parseJSON(data);
+									if (result.error) {
+										alert(result.error);
+									} else {
+										jQuery('#new_comment_desc_'+id).val('');
+										jQuery('#new_comment_title_'+id).val('');											
+										jQuery('#new_comment_'+id).hide();
+										alert('Successfully added comment.  Please refresh your page to view it.');
+									}
+								} catch(e) {									
 									jQuery("#comments_" + id).append(data);
 									jQuery('#comments_'+id).show();
 									jQuery('#view_comments_'+id).text('Hide Comments');
 									jQuery('#view_comments_'+id).attr('class','hide_comments');
 									jQuery('#new_comment_'+id).hide();
-									jQuery('#new_comment_text_'+id).val('');
+									jQuery('#new_comment_text_'+id).val('');									
+								}
 							});
 						});
 						

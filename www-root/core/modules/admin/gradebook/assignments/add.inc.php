@@ -357,6 +357,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     <input type="hidden" id="associated_director" name="associated_director" />
                                     <input type="button" class="btn" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
                                     <span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+                                    <span class="content-small"><br><strong>Tip:</strong> You will automatically be added as a contact</span>
                                     <ul id="director_list" class="menu" style="margin-top: 15px">
                                         <?php
                                         if (is_array($chosen_course_directors) && count($chosen_course_directors)) {

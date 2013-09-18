@@ -155,6 +155,17 @@ if (!defined("IN_COURSE_REPORTS")) {
 											AND d.`eventtype_id` = " . $db->qstr($etype_id);
 								$procedure_completed = $db->getOne($query);											
 								
+								$query = "	SELECT b.`participation_level`, count(*) as `completed`
+											FROM `logbook_entries` a
+											JOIN `logbook_entry_objectives` b
+											ON a.`lentry_id` = b.`lentry_id`
+											WHERE b.`objective_id` = " . $db->qstr($obj_id) . "
+											AND a.`updated_date` BETWEEN " . $curr_period["start_date"] . " AND " . $curr_period["finish_date"] . "
+											AND a.`proxy_id` =  " . $db->qstr($PROCESSED["student_proxy_id"]) . "
+											GROUP BY b.`participation_level`
+											ORDER BY b.`participation_level`";	
+								$clinical_encounters = $db->getAll($query);
+								
 								if ($procedure_total > 0) {							
 									$leaf_objs[$obj_id]["event_types"][$etype_id]["procedure_total"] = $procedure_total;
 									$leaf_objs[$obj_id]["event_types"][$etype_id]["procedure_completed"] = $procedure_completed;								 
@@ -170,6 +181,12 @@ if (!defined("IN_COURSE_REPORTS")) {
 									if (array_key_exists($obj_id, $leaf_objs) && strlen($leaf_objs[$obj_id]["breadcrumb"]) < strlen($temp_leaf_objs[$obj_id]["breadcrumb"])) {
 										$leaf_objs[$obj_id]["breadcrumb"] = $temp_leaf_objs[$obj_id]["breadcrumb"];
 									} 
+									
+									if ($clinical_encounters) {
+										foreach ($clinical_encounters as $c) {
+											$leaf_objs[$obj_id]["clinical_encounters"][$c["participation_level"]] = $c["completed"];
+										}
+									}
 								}
 							}							
 						}
@@ -188,6 +205,14 @@ if (!defined("IN_COURSE_REPORTS")) {
 		});
 	});
 </script>
+<style type="text/css">
+	#report-card td, #report-card th {
+		text-align: center!important;
+	}
+	#report-card td.first-column, #report-card th.first-column {
+		text-align: left!important;
+	}
+</style>
 <h2>Report Card</h2>
 <?php if ($course_objectives) { ?>
 	<div class="row-fluid">
@@ -224,10 +249,10 @@ if (!defined("IN_COURSE_REPORTS")) {
 				<?php 
 					if (isset($leaf_objs) && count($leaf_objs) > 0) { 						
 				?>
-						<table class="table table-striped">
+						<table id="report-card" class="table table-striped">
 							<thead>
 								<tr>
-									<th>Procedure</th>
+									<th class="first-column">Procedure</th>
 									<?php
 											foreach ($COURSE_REPORT_EVENT_TYPES as $etype_id) {
 											$query = "	SELECT `eventtype_title`
@@ -236,25 +261,44 @@ if (!defined("IN_COURSE_REPORTS")) {
 														ORDER BY `eventtype_id` ASC";										
 											$event_title = $db->getOne($query);
 											?>
-											<th><?php echo $event_title ?> <br />Attended / Opportunities</th>									
-											<?php
+											<th><?php echo $event_title ?></th>																				
+											<?php																																
 										}
-									?>								
+									?>	
+									<th colspan="3">Clinical Encounters</th>
 								</tr>
 							</thead>
 							<tbody>
 								<?php	
+								$count = 1;
 								foreach($leaf_objs as $obj_id => $details) {
+									if ($count == 1) { 
+									?>
+									<tr><td></td><td class="text-center">Attended / Opportunities</td></td><td class="text-center">Observed</td><td class="text-center">Performed With Help</td><td class="text-center">Performed Independently</td></tr>
+								<?php										
+									}
 									echo "<tr>";									
-									echo "<td>" . $details["breadcrumb"] . "</td>";
+									echo "<td class=\"first-column\">" . $details["breadcrumb"] . "</td>";
 									foreach ($COURSE_REPORT_EVENT_TYPES as $etype_id) {
 										if (isset($details["event_types"][$etype_id])) {
 											echo "<td>" . $details["event_types"][$etype_id]["procedure_completed"] . " / " . $details["event_types"][$etype_id]["procedure_total"] . "</td>";
 										} else {
-											echo "<td>N/A</td>";
-										}
+											echo "<td>-</td>";
+										}																				
+									}
+									if ($details["clinical_encounters"]) {												
+										for ($i = 1; $i <= 3; $i++) {																							
+											if ($details["clinical_encounters"][$i]) {
+												echo "<td>" . $details["clinical_encounters"][$i] . "</td>";
+											} else {
+												echo "<td>-</td>";
+											}											
+										}												
+									} else {
+										echo "<td>-</td><td>-</td><td>-</td>";
 									}
 									echo "</tr>";
+									$count++;
 								}
 								?>
 							</tbody>

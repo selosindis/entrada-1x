@@ -133,7 +133,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 								AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 								WHERE a.`objective_parent` = '0'
 								AND a.`objective_active` = '1'
-								AND a.`objective_id` != ".$db->qstr($PROCESSED["objective_set_id"]);
+								AND a.`objective_id` != ".$db->qstr($PROCESSED["objective_set_id"])."
+								GROUP BY a.`objective_id`";
 					$objectives = $db->GetAll($query);
 					if ($objectives) {
 						$objective_name = $translate->_("events_filter_controls");

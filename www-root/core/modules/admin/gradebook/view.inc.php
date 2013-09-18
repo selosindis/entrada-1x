@@ -180,6 +180,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			} elseif ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"]) {
                 $selected_cohort = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"];
             }
+			
+			if (isset($_GET["course_list"]) && ((int)$_GET["course_list"])) {
+				$selected_classlist = (int) $_GET["course_list"];
+			} elseif ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_list"]) {
+                $selected_classlist = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_list"];
+            }
 
 			if ($total_pages > 1) {
 				$pagination = new Pagination($page_current, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $total_rows, ENTRADA_URL."/admin/".$MODULE, replace_query());
@@ -200,19 +206,73 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
             echo "  <br />\n";
 
             echo "<div class=\"row-fluid\">\n";
-			$query =  "SELECT a.`course_id`, b.`group_name`, b.`group_id` 
-                        FROM `assessments` AS a
-                        JOIN `groups` AS b
-                        ON a.`cohort` = b.`group_id`
-                        JOIN `group_organisations` AS c
-                        ON b.`group_id` = c.`group_id`
-                        WHERE a.`course_id` =". $db->qstr($COURSE_ID)."
-                        AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-                        GROUP BY b.`group_id`
-                        ORDER BY b.`group_name`";
-			$cohorts = $db->GetAll($query);
-            
-            if ($cohorts) {
+			
+			$query = "	SELECT * 
+						FROM `groups` 
+						WHERE `group_type` = 'course_list' 
+						AND `group_value` = ".$db->qstr($COURSE_ID)." 
+						AND `group_active` = '1'
+						ORDER BY `group_name`";
+			$course_lists = $db->GetAll($query);			
+			if ($course_lists) { 		
+				$cohorts = $course_lists;
+				if (count($course_lists) == 1) {										
+					$output_cohort = $course_lists[0];
+					?>
+					<h2 class="pull-left"><?php echo $course_list["group_name"];?></h2>				
+		<?php
+				} else {
+					$output_cohort = false;
+					$classlist_found = false;
+					foreach ($course_lists as $key => $course_list) {
+						if (!$classlist_found) {
+							$output_cohort = $course_list;
+							if (isset($selected_classlist) && $selected_classlist && $selected_classlist == $course_list["group_id"]) {
+								$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_list"] = $selected_classlist;
+								$classlist_found = true;
+							}
+							if ($key == (count($course_lists) - 1) && !$classlist_found) {
+								$selected_classlist = $course_list["group_id"];
+							}
+						}
+					} 
+		?>
+					<div class="span12 clearfix">
+					<h2 class="pull-left"><?php echo $output_cohort["group_name"];?></h2>
+            		<form class="pull-right form-horizontal" style="margin-bottom:0;">
+						<div class="control-group">
+                			<label for="course_list-quick-select" class="control-label content-small">
+                				Target Audience:
+                			</label>
+                			<div class="controls">
+								<select id="course_list-quick-select" name="course_list-quick-select" onchange="window.location='<?php echo ENTRADA_URL;?>/admin/gradebook?section=view&id=<?php echo $COURSE_ID;?>&course_list='+this.options[this.selectedIndex].value">
+                                    <?php
+                                    foreach ($course_lists as $key => $course_list) { ?>
+                                        <option value="<?php echo $course_list["group_id"];?>" <?php echo (($course_list["group_id"] == $selected_classlist) ? "selected=\"selected\"" : "");?>>
+                                            <?php echo $course_list["group_name"];?>
+                                        </option>
+                                    <?php
+                                    } ?>
+                				</select>
+                			</div>
+                		</div>
+                	</form>
+                </div>
+		<?php
+				}
+			} else {
+				$query =  "SELECT a.`course_id`, b.`group_name`, b.`group_id` 
+							FROM `assessments` AS a
+							JOIN `groups` AS b
+							ON a.`cohort` = b.`group_id`
+							JOIN `group_organisations` AS c
+							ON b.`group_id` = c.`group_id`
+							WHERE a.`course_id` =". $db->qstr($COURSE_ID)."
+							AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+							GROUP BY b.`group_id`
+							ORDER BY b.`group_name`";
+				$cohorts = $db->GetAll($query);
+				
                 $output_cohort = false;
                 $cohort_found = false;
                 foreach ($cohorts as $key => $cohort) {
@@ -233,7 +293,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
             		<form class="pull-right form-horizontal" style="margin-bottom:0;">
 						<div class="control-group">
                 			<label for="cohort-quick-select" class="control-label content-small">
-                				Cohort Quick Select:
+                				Target Audience:
                 			</label>
                 			<div class="controls">
 								<select id="cohort-quick-select" name="cohort-quick-select" onchange="window.location='<?php echo ENTRADA_URL;?>/admin/gradebook?section=view&id=<?php echo $COURSE_ID;?>&cohort='+this.options[this.selectedIndex].value">

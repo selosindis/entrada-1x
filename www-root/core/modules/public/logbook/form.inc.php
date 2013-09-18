@@ -430,14 +430,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_ENCOUNTER_TRACKING"))) {
                             <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/clerkship'" />
                         </span>
                         <span class="span7">
-                            <span class="pull-right">
-                                <span class="content-small">After saving:</span>
-                                <select name="post_action" id="post_action" style="width: 200px; margin-right: 20px;">
-                                    <option value="entries"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "entries")) ? " selected=\"selected\"" : ""); ?>>View your logbook entries</option>
-                                    <option value="new"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new") ? " selected=\"selected\"" : ""); ?>>Add another entry</option>
-                                    <option value="index"<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "index") ? " selected=\"selected\"" : ""); ?>>Return to logbook index</option>
-                                </select>
-                            </span>
+                            &nbsp;
                         </span>
                         <span class="span2">
                             <input type="submit" class="btn btn-primary pull-right" value="Submit" />

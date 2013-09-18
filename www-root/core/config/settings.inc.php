@@ -668,3 +668,8 @@ define("PDF_PASSWORD", "MyPassword");                   // Used to set the owner
 define("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL", 1);          // Used to determine whether or not to include final grade calculations in Grade Export.
 define("GRADEBOOK_DISPLAY_MEAN_GRADE", 1);              // Used to determine whether or not to include mean (average) grade calculations in student gradebook.
 define("GRADEBOOK_DISPLAY_MEDIAN_GRADE", 1);            // Used to determine whether or not to include median grade calculations in student gradebook.
+
+/**
+ * Learning Events Validation Constant
+ */
+define("LEARNING_EVENT_MIN_DURATION", 30);              // Used to determine the minimum event duration for validation when adding and editing learning events.

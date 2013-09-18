@@ -90,11 +90,11 @@ class Models_Logbook {
                     $descendant_ids = Models_Objective::getChildIDs($objective_id["objective_id"]);
                     foreach ($descendant_ids as $descendant_id) {
                         $descendant = Models_Objective::fetchRow($descendant_id);
-                        if ($descendant && $descendant->getLoggable()) {
+                        if ($descendant && $descendant->getLoggable() && !(Models_Objective::getChildIDs($descendant_id))) {
                             $objectives[$descendant->getID()] = $descendant;
                         }
                     }
-                    if ($objective->getLoggable()) {
+                    if (!$descendant_ids && $objective->getLoggable()) {
                         $objectives[$objective->getID()] = $objective;
                     }
                 }

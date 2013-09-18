@@ -7353,7 +7353,7 @@ function google_create_id() {
 						try {
 							$client		= Zend_Gdata_ClientLogin::getHttpClient($GOOGLE_APPS["admin_username"], $GOOGLE_APPS["admin_password"], Zend_Gdata_Gapps::AUTH_SERVICE_NAME);
 							$service	= new Zend_Gdata_Gapps($client, $GOOGLE_APPS["domain"]);
-							$service->createUser($google_id, $firstname, $lastname, $password, "MD5");
+							$service->createUser($google_id, $firstname, $lastname, $password, "SHA-1");
 
 							$search		= array("%FIRSTNAME%", "%LASTNAME%", "%GOOGLE_APPS_DOMAIN%", "%GOOGLE_ID%", "%GOOGLE_APPS_QUOTA%", "%APPLICATION_NAME%", "%ADMINISTRATOR_NAME%", "%ADMINISTRATOR_EMAIL%");
 							$replace	= array($firstname, $lastname, $GOOGLE_APPS["domain"], $google_id, $GOOGLE_APPS["quota"], APPLICATION_NAME, $AGENT_CONTACTS["administrator"]["name"], $AGENT_CONTACTS["administrator"]["email"]);
@@ -9723,6 +9723,21 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
 				$objectives["objectives"][$result["objective_id"]]["description"] = (isset($objectives["objectives"][$result["objective_id"]]["objective_details"]) && $objectives["objectives"][$result["objective_id"]]["objective_details"] ? $objectives["objectives"][$result["objective_id"]]["objective_details"] : $result["objective_description"]);
 				$objectives["objectives"][$result["objective_id"]]["parent"] = $top_level_id;
 				$objectives["objectives"][$result["objective_id"]]["parent_ids"] = array();
+				if (is_array($objectives["primary_ids"]) && array_search($result["objective_id"], $objectives["primary_ids"]) !== false) {
+					$objectives["objectives"][$result["objective_id"]]["primary"] = true;
+				} else {
+					$objectives["objectives"][$result["objective_id"]]["primary"] = false;
+				}
+				if (is_array($objectives["secondary_ids"]) && array_search($result["objective_id"], $objectives["secondary_ids"]) !== false) {
+					$objectives["objectives"][$result["objective_id"]]["secondary"] = true;
+				} else {
+					$objectives["objectives"][$result["objective_id"]]["secondary"] = false;
+				}
+				if (is_array($objectives["tertiary_ids"]) && array_search($result["objective_id"], $objectives["tertiary_ids"]) !== false) {
+					$objectives["objectives"][$result["objective_id"]]["tertiary"] = true;
+				} else {
+					$objectives["objectives"][$result["objective_id"]]["tertiary"] = false;
+				}
 			} else {
 				$objectives["objectives"][$result["objective_id"]]["objective_primary_children"] = 0;
 				$objectives["objectives"][$result["objective_id"]]["objective_secondary_children"] = 0;
@@ -9904,9 +9919,8 @@ function course_objective_child_recursive($objectives,$objective_id,$course_id,$
  * @param type $hierarchical
  * @return string
  */
-function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = false, $full_objective_list = false, $org_id = 0) {
+function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = true, $full_objective_list = false, $org_id = 0) {
 	global $ENTRADA_USER;
-
 	$output = "";
 	$active = array("primary" => false, "secondary" => false, "tertiary" => false);
 	$org_id = ($org_id == 0 ? $ENTRADA_USER->getActiveOrganisation() : (int) $org_id );
@@ -9975,7 +9989,7 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 	$flat_objective_list = events_flatten_objectives($full_objective_list);
 
 	if ((is_array($objectives)) && (count($objectives))) {
-		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"])) || $hierarchical) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
+		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"])) || ($hierarchical && (!$selected_only || isset($objective["event_objective"]) && $objective["event_objective"] && (isset($objective[$display_importance]) && $objective[$display_importance])))) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
 			$output .= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".(((count($objectives[$parent_id]["parent_ids"]) < 2 && !$hierarchical) || ($hierarchical && $parent_id == $top_level_id)) ? " style=\"padding-left: 0; margin-top: 0\"" : "").">\n";
 		}
 		$iterated = false;
@@ -10036,7 +10050,7 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 			$iterated = true;
 		} while ((($display_importance != "tertiary") && ($display_importance != "secondary" || $active["tertiary"]) && ($display_importance != "primary" || $active["secondary"] || $active["tertiary"])) && $top);
 
-		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"])) || $hierarchical) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
+		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"])) || ($hierarchical && (!$selected_only || isset($objective["event_objective"]) && $objective["event_objective"] && (isset($objective[$display_importance]) && $objective[$display_importance])))) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
 			$output .= "</ul>";
 		}
 	}
@@ -10096,7 +10110,7 @@ function course_fetch_course_audience($course_id = 0, $organisation_id = false,$
 				switch ($result["audience_type"]) {
 					case "cohort" :	// Cohorts
 					case "group_id" : // Course Groups
-						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname, d.`eattendance_id` AS `has_attendance`
+						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname
 									FROM `group_members` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
 									ON a.`proxy_id` = u.`id`
@@ -10131,8 +10145,6 @@ function course_fetch_course_audience($course_id = 0, $organisation_id = false,$
 						application_log("notice", "audience_type [".$result["audience_type"]."] is no longer supported, but is used in event_id [".$event_id."].");
 					break;
 				}
-
-
 			}
 			$course_audience = array_unique($course_audience,SORT_REGULAR);
 			usort($course_audience,"audience_sort");
@@ -13225,6 +13237,26 @@ function events_flatten_objectives ($objectives) {
 	return $flat_objectives;
 }
 
+/**
+ * This function is used in conjunction with the output of events_fetch_objectives_structure and is used to
+ * find all the active objectives by objective name.
+ * 
+ * @param type $objs - an array containing an objective set as produced by events_fetch_objectives_structure.
+ * @param type $output - an array of objective names of all the active objectives as accumlated by recursive call.
+ * @return type - an array of objective names of all the active objectives.
+ */
+function events_all_active_objectives($objs, $output = array()) {
+	foreach($objs as $obj_id => $details) {				
+		if ($details["objective_active"]) {	
+			$output[] = $details["objective_name"];				
+		}
+		if ($details["children_active"]) {				
+			$output = events_all_active_objectives($details["children"], $output);
+		}			
+	}
+	return $output;
+}
+
 function events_fetch_objectives_structure($parent_id, $used_ids, $org_id = 0) {
 	global $db, $ENTRADA_USER;
 
@@ -13243,6 +13275,7 @@ function events_fetch_objectives_structure($parent_id, $used_ids, $org_id = 0) {
 	if ($objective_children) {
 		foreach ($objective_children as $objective) {
 			$full_objective_list[$objective["objective_id"]] = array(
+																		"objective_name" => $objective["objective_name"],
 																		"objective_active" => (is_array($used_ids) && array_search($objective["objective_id"], $used_ids) !== false ? true : false),
 																		"children_active" => false,
 																		"children" => array()

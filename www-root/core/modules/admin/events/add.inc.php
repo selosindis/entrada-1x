@@ -158,8 +158,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								if (isset($eventtype_durations[$order])) {
 									$duration = clean_input($eventtype_durations[$order], array("trim", "int"));
 
-									if ($duration <= 0) {
-										add_error("The duration of <strong>".html_encode($eventtype_title)."</strong> (".numeric_suffix(($order + 1))." <strong>Event Type</strong> entry) must be greater than zero.");
+									if ($duration <= LEARNING_EVENT_MIN_DURATION) {
+										add_error("The duration of <strong>".html_encode($eventtype_title)."</strong> (".numeric_suffix(($order + 1))." <strong>Event Type</strong> entry) must be greater than ".LEARNING_EVENT_MIN_DURATION.".");
 									}
 								} else {
 									$duration = 0;
@@ -1239,6 +1239,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 }
             }
 
+
 //				var prevDate = '';
 //				var prevTime = '00:00 AM';
 //				var t = self.setInterval("checkDifference()", 1500);
@@ -1277,6 +1278,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 //						onFailure: function(){ alert('Unable to check if a conflict exists.') }
 //					});
 //				}
+
                 function add_year(date) {
                     return new Date((date.getFullYear() + 1), date.getMonth(), date.getDate());
                 }

@@ -1049,7 +1049,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             <label class="span2" for="recurring_event_start_%event_num%">Event Start:</label>
                             <span class="span7">
                                 <div class="input-append">
-                                    <input type="text" class="input-small inpage-datepicker" value="%event_date%" name="recurring_event_start[]" id="recurring_event_start_%event_num%" />
+                                    <input type="text" class="input-small inpage-datepicker" value="%event_date%" onchange="checkEventDate('%event_num%')" name="recurring_event_start[]" id="recurring_event_start_%event_num%" />
                                     <span class="add-on pointer inpage-add-on"><i class="icon-calendar"></i></span>
                                 </div>
                                 &nbsp;
@@ -1061,7 +1061,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         </div>
                     </span>
                     <span class="span1 pad-right">
-                        <button type="button" class="close" onclick="jQuery('#recurring-event-%event_num%').remove()">×</button>
+                        <button type="button" class="close" onclick="jQuery('#recurring-event-%event_num%').remove()">&times;</button>
                     </span>
                 </div>
             </div>
@@ -1362,13 +1362,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         $(".timepicker").timepicker('destroy');
                                     }
                                     jQuery('#recurring-events-list').html('<h3 class="space-below">Recurring Events</h3>');
-                                    for (var i = 1; i <= result.dates.length; i++) {
+                                    for (var i = 1; i <= result.events.length; i++) {
                                         var string = jQuery('#recurring-event-skeleton').html();
-                                        string = string.replace(/%event_class%/g, (i % 2 > 0 ? ' odd' : ''));
+                                        var class_string = (result.events[(i - 1)].restricted ? ' restricted' : '')+(i % 2 > 0 ? ' odd' : '');
+                                        string = string.replace(/%event_class%/g, class_string);
                                         string = string.replace(/%event_num%/g, i);
                                         string = string.replace(/%event_title%/g, jQuery('#event_title').val());
                                         string = string.replace(/%event_time%/g, jQuery('#event_start_hour').val() + ":" + jQuery('#event_start_min').val());
-                                        string = string.replace(/%event_date%/g, result.dates[(i - 1)]);
+                                        string = string.replace(/%event_date%/g, result.events[(i - 1)].date);
                                         jQuery('#recurring-events-list').append(string);
                                     }
                                     jQuery('#recurring-events-list').show();
@@ -1386,6 +1387,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         }
                                     });
                                     $('#recurringModal').modal('hide');
+                                    $('.restricted').popover({
+                                        trigger: 'manual',
+                                        placement: 'right',
+                                        title: 'Error',
+                                        content: 'This day is restricted. Please ensure this is the correct date before continuing.',
+                                        template: '<div class=\"popover alert alert-error\"><div class=\"arrow\"></div><div class=\"popover-inner\"><div class=\"popover-content\"><p></p></div></div></div>'
+                                    }).click(function(e) {
+                                        $(this).popover('hide');
+                                        $(this).show();
+                                        e.stopPropagation();
+                                    });
+                                    $('.restricted').popover('show');
                                 } else {
                                     $('#error-messages').html(result.message);
                                 }
@@ -1396,6 +1409,41 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         });
                     });
                 });
+                
+                function checkEventDate(event_num) {
+                    var date = new Date(jQuery('#recurring_event_start_'+event_num).val());
+                    var event_date = (date.getTime() / 1000) + (date.getTimezoneOffset() * 60);
+                    jQuery.ajax({
+                            type: "POST",
+                            url: '<?php echo ENTRADA_URL ?>/admin/events?section=api-check-date',
+                            data: 'event_start='+event_date+'&organisation_id=<?php echo $ENTRADA_USER->getActiveOrganisation(); ?>',
+                            success: function (data) {
+                                if (data == 'Found') {
+                                    if (!jQuery('#recurring-event-'+event_num).hasClass('restricted')) {
+                                        jQuery('#recurring-event-'+event_num).addClass('restricted');
+                                    }
+                                    jQuery('.restricted').popover('destroy');
+                                    jQuery('.restricted').popover({
+                                        trigger: 'manual',
+                                        placement: 'right',
+                                        title: 'Error',
+                                        content: 'This day is restricted. Please ensure this is the correct date before continuing.',
+                                        template: '<div class=\"popover alert alert-error\"><div class=\"arrow\"></div><div class=\"popover-inner\"><div class=\"popover-content\"><p></p></div></div></div>'
+                                    }).click(function(e) {
+                                        jQuery(this).popover('hide');
+                                        jQuery(this).show();
+                                        e.stopPropagation();
+                                    });
+                                    jQuery('.restricted').popover('show');
+                                } else if (jQuery('#recurring-event-'+event_num).hasClass('restricted')) {
+                                    jQuery('#recurring-event-'+event_num).removeClass('restricted');
+                                }
+                            },
+                            error: function () {
+                                alert("error");
+                            }
+                        });
+                }
             </script>
             <?php
 		break;

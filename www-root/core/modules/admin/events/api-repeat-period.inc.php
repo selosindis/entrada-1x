@@ -173,10 +173,22 @@ if (!defined("IN_EVENTS")) {
             if (!isset($output["status"]) || $output["status"] != "error") {
                 if (isset($period) && $period) {
                     $dates = events_process_recurring_eventtimes($period, $event_start, (isset($offset) && $offset ? $offset : (isset($week_offset) && $week_offset ? $week_offset : "1")), $weekdays, $recurring_end);
-                    $output["dates"] = array();
+                    $output["events"] = array();
                     if (@count($dates)) {
+                        $restricted_days = Models_RestrictedDays::fetchAll($ENTRADA_USER->getActiveOrganisation());
                         foreach ($dates as $date) {
-                            $output["dates"][] = ($output["dates"] ? "\n" : "").date("Y-m-d", $date);
+                            $restricted = false;
+                            if ($restricted_days && @count($restricted_days)) {
+                                $date_string = date("Y-m-d", $date);
+                                foreach ($restricted_days as $restricted_day) {
+                                    $restricted_string = date("Y-m-d", $restricted_day->getCalculatedDate(date("Y", $date), date("n", $date), $date));
+                                    if ($restricted_string == $date_string) {
+                                        $restricted = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            $output["events"][] = array("date" => ($output["dates"] ? "\n" : "").date("Y-m-d", $date), "restricted" => $restricted);
                         }
                         $output["status"] = "success";
                     } else {

@@ -2342,6 +2342,14 @@ margin-right: 25px;
 background-color:#EEE;
 }
 
+#recurring-events-list div.restricted_message {
+display: none;
+}
+
+#recurring-events-list > div.restricted div.restricted_message {
+display: block;
+}
+
 #form-questions-list > li > div.controls,
 #form-questions-list > div > div.controls {
 float:right;
@@ -4381,6 +4389,9 @@ a.help {
 }
 .pad-above{
   padding-top:10px;
+}
+.pad-above-small{
+  padding-top:5px;
 }
 .pad-below{
   padding-bottom:10px;

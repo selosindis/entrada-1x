@@ -358,7 +358,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					if ($results) {
 					?>
 					<h3>Clinical Presentations</h3>
-					<ul class="objectives">
+					<ul class="objectives" style="float: none;">
 					<?php 
 							$HEAD[] = "
 								<script type=\"text/javascript\" defer=\"defer\">

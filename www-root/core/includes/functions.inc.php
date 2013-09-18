@@ -9983,6 +9983,7 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 			return;
 		}
 	}
+
 	if (!$full_objective_list) {
 		$full_objective_list = events_fetch_objectives_structure($parent_id, $objectives["used_ids"], $org_id);
 	}
@@ -10009,37 +10010,33 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 				}
 
 				foreach ($flat_objective_list as $objective_id => $objective_active) {
-                    if (isset($objectives[$objective_id])) {
-                        $objective = $objectives[$objective_id];
-                        if (($objective["parent"] == $parent_id) && (($objective["objective_".$display_importance."_children"]) || ((isset($objective[$display_importance]) && $objective[$display_importance]) || ($parent_active && count($objective["parent_ids"]) > 2) && !$selected_only) || ($selected_only && isset($objective["event_objective"]) && $objective["event_objective"] && (isset($objective[$display_importance]) && $objective[$display_importance])))) {
-                            $importance = ((isset($objective["primary"]) && $objective["primary"]) ? 1 : ((isset($objective["secondary"]) && $objective["secondary"]) ? 2 : ((isset($objective["tertiary"]) && $objective["tertiary"]) ? 3 : $importance)));
-                            if ((count($objective["parent_ids"]) > 1) || $hierarchical) {
-                                $output .= "<li".((($parent_active) || (isset($objective[$display_importance]) && $objective[$display_importance])) && (count($objective["parent_ids"]) > 2) ? " class=\"\"" : "")." id=\"objective_".$objective_id."_row\">\n";
-                                if (($edit_importance) && (isset($objective[$display_importance]) && $objective[$display_importance])) {
-                                    $output .= "<select onchange=\"javascript: moveObjective('".$objective_id."', this.value);\" style=\"float: right; margin: 5px\">\n";
-                                    $output .= "	<option value=\"primary\"".(($objective["primary"]) ? " selected=\"selected\"" : "").">Primary</option>\n";
-                                    $output .= "	<option value=\"secondary\"".(($objective["secondary"]) ? " selected=\"selected\"" : "").">Secondary</option>\n";
-                                    $output .= "	<option value=\"tertiary\"".(($objective["tertiary"]) ? " selected=\"selected\"" : "").">Tertiary</option>\n";
-                                    $output .= "</select>";
-                                }
-                                if (count($objective["parent_ids"]) == 3) {
-                                    $output .= "	<div><div class=\"objective-title\">".$objective["name"]."</div>";
-                                    $output .= "	<div class=\"objective-description content-small\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])."</div>";
-                                } else {
-                                    $output .= "	<div class=\"objective-title\" id=\"objective_".$objective_id."\">".$objective["name"]."</div>\n";
-                                    $output .= "	<div class=\"objective-description content-small\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"]);
-                                }
-                                if (isset($objective["event_objective_details"]) && $objective["event_objective_details"]) {
-                                    $output .= "	<div class=\"objective-description content-small\"><em>".$objective["event_objective_details"]."</em></div>";
-                                }
-                                $output .= "	</div>";
-                                $output .= "</li>";
-                            }
+					$objective = $objectives[$objective_id];
+					if (($objective["parent"] == $parent_id) && (((($objective["objective_".$display_importance."_children"]) || ((isset($objective[$display_importance]) && $objective[$display_importance]) || $parent_active)) && !$selected_only) || ($selected_only && isset($objective["event_objective"]) && $objective["event_objective"] && (isset($objective[$display_importance]) && $objective[$display_importance])))) {
+						$importance = ((isset($objective["primary"]) && $objective["primary"]) ? 1 : ((isset($objective["secondary"]) && $objective["secondary"]) ? 2 : ((isset($objective["tertiary"]) && $objective["tertiary"]) ? 3 : $importance)));
+                        $output .= "<li".((($parent_active) || (isset($objective[$display_importance]) && $objective[$display_importance])) && (count($objective["parent_ids"]) > 2) ? " class=\"\"" : "")." id=\"objective_".$objective_id."_row\">\n";
+                        if (($edit_importance) && (isset($objective[$display_importance]) && $objective[$display_importance])) {
+                            $output .= "<select onchange=\"javascript: moveObjective('".$objective_id."', this.value);\" style=\"float: right; margin: 5px\">\n";
+                            $output .= "	<option value=\"primary\"".(($objective["primary"]) ? " selected=\"selected\"" : "").">Primary</option>\n";
+                            $output .= "	<option value=\"secondary\"".(($objective["secondary"]) ? " selected=\"selected\"" : "").">Secondary</option>\n";
+                            $output .= "	<option value=\"tertiary\"".(($objective["tertiary"]) ? " selected=\"selected\"" : "").">Tertiary</option>\n";
+                            $output .= "</select>";
                         }
-                        if ($objective["parent"] == $parent_id) {
-                            $output .= course_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_importance, ((isset($objective[$display_importance]) && $objective[$display_importance]) ? true : false), $importance, $selected_only, false, $display_importance, $hierarchical, $full_objective_list);
+                        if (count($objective["parent_ids"]) == 3) {
+                            $output .= "	<div><div class=\"objective-title\">".$objective["name"]."</div>";
+                            $output .= "	<div class=\"objective-description content-small\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])."</div>";
+                        } else {
+                            $output .= "	<div class=\"objective-title\" id=\"objective_".$objective_id."\">".$objective["name"]."</div>\n";
+                            $output .= "	<div class=\"objective-description content-small\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"]);
                         }
-                    }
+                        if (isset($objective["event_objective_details"]) && $objective["event_objective_details"]) {
+                            $output .= "	<div class=\"objective-description content-small\"><em>".$objective["event_objective_details"]."</em></div>";
+                        }
+                        $output .= "	</div>";
+                        $output .= "</li>";
+					}
+					if ($objective["parent"] == $parent_id) {
+						$output .= course_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_importance, ((isset($objective[$display_importance]) && $objective[$display_importance]) || $parent_active ? true : false), $importance, $selected_only, false, $display_importance, $hierarchical, $full_objective_list);
+					}
 				}
 
 				if ($top) {
@@ -12827,28 +12824,28 @@ function assessment_objective_parent_mapped_recursive($objectives,$objective_id,
 /**
 * Calls event_objectives_bottom_leaves to get array of objectives to display, then calls event_objectives_display_leaf for each objective
 */
-function event_objectives_display_leafs($objectives,$course_id,$event_id){
+function event_objectives_display_leafs($objectives, $course_id, $event_id, $editable = true){
 	$leaves = event_objectives_bottom_leaves($objectives,$course_id,$event_id, false);
 	$displayed = array();
 	foreach ($leaves as $importance=>$leafs) {
 		//if no leaves, don't show category
 		if($leafs && !empty($leafs)){
-	?>
-	<a name="#<?php echo $importance;?>-objective-list"></a>
-	<h2 id="<?php echo $importance;?>-toggle"  title="<?php echo ucwords($importance);?> Objectives List" class="list-heading <?php echo $importance == 'primary'?'':'collapsed';?>"><?php echo ucwords($importance);?> Objectives</h2>
-	<div id="<?php echo $importance;?>-objectives-list">
-	<ul class="objective-list mapped-list" id="mapped_<?php echo $importance;?>_objectives" data-importance="hierarchical">
-	<?php
-		foreach($leafs as $leaf){
-			if (!in_array($leaf["objective_id"],$displayed)){
-				array_push($displayed,$leaf["objective_id"]);
-				event_objectives_display_leaf($leaf);
-			}
-		}
-	?>
-	</ul>
-	</div>
-	<?php
+            ?>
+            <a name="#<?php echo $importance;?>-objective-list"></a>
+            <h2 id="<?php echo $importance;?>-toggle"  title="<?php echo ucwords($importance);?> Objectives List" class="list-heading <?php echo $importance == 'primary'?'':'collapsed';?>"><?php echo ucwords($importance);?> Objectives</h2>
+            <div id="<?php echo $importance;?>-objectives-list">
+                <ul class="objective-list mapped-list" id="mapped_<?php echo $importance;?>_objectives" data-importance="hierarchical">
+                    <?php
+                    foreach($leafs as $leaf){
+                        if (!in_array($leaf["objective_id"],$displayed)){
+                            array_push($displayed,$leaf["objective_id"]);
+                            event_objectives_display_leaf($leaf, $editable);
+                        }
+                    }
+                    ?>
+                </ul>
+            </div>
+            <?php
 		}
 	}
 }
@@ -12862,9 +12859,10 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 	$importances = array('primary','secondary','tertiary');
 	$list = array('primary' => array(),'secondary'=>array(),'tertiary'=>array());
 	foreach($objectives as $objective){
-		$imp = ($parent_importance?$parent_importance:($objective["importance"]?$objective["importance"]:3));
+		$imp = ($parent_importance ? $parent_importance : ($objective["importance"] ? $objective["importance"] : 1));
 		switch($imp){
 			case 1:
+			default:
 				$importance = "primary";
 				break;
 			case 2:
@@ -12873,8 +12871,6 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 			case 3:
 				$importance = "tertiary";
 				break;
-			default:
-				$importance;
 		}
 		$query = "SELECT a.*,COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description` ,COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`,
 					b.`importance`,c.`objective_details`, COALESCE(c.`eobjective_id`,0) AS `mapped`,
@@ -12897,20 +12893,20 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 					ORDER BY a.`objective_order` ASC
 					";
 		$children = $db->GetAll($query);
-		$map = ($parent_mapped?true:($objective["mapped"]?true:false));
+		$map = ($parent_mapped ? true : ($objective["mapped"] ? true : false));
 		if (!$children) {
 			if ($map) {
 				$objective["mapped"] = 1;
 			}
 			array_push($list[$importance],$objective);
-		}else{
+		} else {
 
 			$response = event_objectives_bottom_leaves($children,$course_id,$event_id,$map,$imp);
 			if ($response) {
 				if ($parent_mapped) {
 					foreach($response as $imp=>$list){
-						foreach($list as $k=>$item){
-						$response[$imp][$k]["mapped"] = 1;
+						foreach($list as $k => $item){
+                            $response[$imp][$k]["mapped"] = 1;
 						}
 					}
 				}
@@ -12927,43 +12923,53 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 /**
 * Displays the objective leaf as it is on the event content page
 */
-function event_objectives_display_leaf($objective){
-	$title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
-	?>
-		<li class = "mapped-objective"
-			id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-			data-id = "<?php echo $objective["objective_id"]; ?>"
-			data-title="<?php echo $title;?>"
-			data-description="<?php echo htmlentities($objective["objective_description"]);?>">
-			<strong><?php echo $title; ?></strong>
-			<div class="objective-description">
-				<?php
-				$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
-				if ($set) {
-					echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
-				}
-				?>
-				<?php echo $objective["objective_description"];?>
-			</div>
-			<div class="event-objective-controls">
-				<input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo $objective["mapped"]?' checked="checked"':''; ?>/>
-			</div>
-			<?php if ($objective["mapped"]) { ?>
-			<div 	id="text_container_<?php echo $objective["objective_id"]; ?>"
-					class="objective_text_container"
-					data-id="<?php echo $objective["objective_id"]; ?>">
-				<label 	for="objective_text_<?php echo $objective["objective_id"]; ?>"
-						class="content-small" id="objective_<?php echo $objective["objective_id"]; ?>_append"
-						style="vertical-align: middle;">Provide your sessional free-text objective below as it relates to this curricular objective.</label>
-				<textarea 	name="objective_text[<?php echo $objective["objective_id"]; ?>]"
-							id="objective_text_<?php echo $objective["objective_id"]; ?>"
-							data-id="<?php echo $objective["objective_id"]; ?>"
-							class="expandable"
-							style="height: 28px; overflow: hidden;"><?php echo $objective["objective_details"];?></textarea>
-			</div>
-			<?php } ?>
-		</li>
-	<?php
+function event_objectives_display_leaf($objective, $editable = true){
+    if ($objective["mapped"] || $editable) {
+        $title = ($objective["objective_code"]?$objective["objective_code"].': '.$objective["objective_name"]:$objective["objective_name"]);
+        ?>
+            <li class = "mapped-objective"
+                id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+                data-id = "<?php echo $objective["objective_id"]; ?>"
+                data-title="<?php echo $title;?>"
+                data-description="<?php echo htmlentities($objective["objective_description"]);?>">
+                <strong><?php echo $title; ?></strong>
+                <div class="objective-description">
+                    <?php
+                    $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+                    if ($set) {
+                        echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                    }
+                    ?>
+                    <?php echo $objective["objective_description"];?>
+                </div>
+                <div class="event-objective-controls">
+                    <?php
+                    if ($editable) {
+                        ?>
+                        <input type="checkbox" class="checked-mapped" id="check_mapped_<?php echo $objective['objective_id'];?>" value="<?php echo $objective['objective_id'];?>" <?php echo ($objective["mapped"] ? ' checked="checked"':''); ?>/>
+                        <?php
+                    } else {
+                        echo "&nbsp;";
+                    }
+                    ?>
+                </div>
+                <?php if ($objective["mapped"] && $editable) { ?>
+                <div 	id="text_container_<?php echo $objective["objective_id"]; ?>"
+                        class="objective_text_container"
+                        data-id="<?php echo $objective["objective_id"]; ?>">
+                    <label 	for="objective_text_<?php echo $objective["objective_id"]; ?>"
+                            class="content-small" id="objective_<?php echo $objective["objective_id"]; ?>_append"
+                            style="vertical-align: middle;">Provide your sessional free-text objective below as it relates to this curricular objective.</label>
+                    <textarea 	name="objective_text[<?php echo $objective["objective_id"]; ?>]"
+                                id="objective_text_<?php echo $objective["objective_id"]; ?>"
+                                data-id="<?php echo $objective["objective_id"]; ?>"
+                                class="expandable"
+                                style="height: 28px; overflow: hidden;"><?php echo $objective["objective_details"];?></textarea>
+                </div>
+                <?php } ?>
+            </li>
+        <?php
+    }
 }
 
 /**
@@ -13021,7 +13027,7 @@ function event_objective_parent_mapped_recursive($objectives,$objective_id,$cour
 			return true;
 		}
 		if ($objective["objective_parent"]) {
-			$query = "	SELECT a.*, COALESCE(b.`cobjective_id`, 0) AS `mapped`
+			$query = "	SELECT a.*, COALESCE(b.`cobjective_id`, 0) AS `mapped`, b.`importance`
 						FROM `global_lu_objectives` a
 						LEFT JOIN `course_objectives` b
 						ON a.`objective_id` = b.`objective_id`
@@ -13041,7 +13047,7 @@ function event_objective_parent_mapped_recursive($objectives,$objective_id,$cour
 					return true;
 				}
 				if ($parent["mapped"]) {
-					return true;
+					return ($parent["importance"] ? $parent["importance"] : true);
 				}
 				$parents[] = $parent;
 			}

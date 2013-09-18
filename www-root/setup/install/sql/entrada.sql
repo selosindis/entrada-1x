@@ -643,7 +643,7 @@ CREATE TABLE IF NOT EXISTS `ar_memberships` (
   PRIMARY KEY (`memberships_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `ar_non_peer_reviewed_papers` (
+CREATE TABLE IF NOT EXISTS `ar_non_peer_reviewed_papers` (
   `non_peer_reviewed_papers_id` int(11) NOT NULL AUTO_INCREMENT,
   `title` text NOT NULL,
   `source` varchar(200) NOT NULL,
@@ -718,7 +718,7 @@ CREATE TABLE IF NOT EXISTS `ar_patent_activity` (
   PRIMARY KEY (`patent_activity_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `ar_peer_reviewed_papers` (
+CREATE TABLE IF NOT EXISTS `ar_peer_reviewed_papers` (
   `peer_reviewed_papers_id` int(11) NOT NULL AUTO_INCREMENT,
   `title` text NOT NULL,
   `source` varchar(200) NOT NULL,
@@ -745,7 +745,7 @@ CREATE TABLE `ar_peer_reviewed_papers` (
   PRIMARY KEY (`peer_reviewed_papers_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `ar_poster_reports` (
+CREATE TABLE IF NOT EXISTS `ar_poster_reports` (
   `poster_reports_id` int(11) NOT NULL AUTO_INCREMENT,
   `title` text NOT NULL,
   `source` varchar(200) NOT NULL,
@@ -977,7 +977,7 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   KEY `order` (`order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `assessment_attached_quizzes` (
+CREATE TABLE IF NOT EXISTS `assessment_attached_quizzes` (
   `aaquiz_id` int(12) NOT NULL AUTO_INCREMENT,
   `assessment_id` int(12) NOT NULL DEFAULT '0',
   `aquiz_id` int(12) NOT NULL DEFAULT '0',
@@ -1620,7 +1620,7 @@ CREATE TABLE IF NOT EXISTS `community_page_options` (
   KEY `cpage_id` (`cpage_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `community_page_navigation` (
+CREATE TABLE IF NOT EXISTS `community_page_navigation` (
   `cpnav_id` INT(12) NOT NULL AUTO_INCREMENT,
   `community_id` INT(12) NOT NULL,
   `cpage_id` INT(12) NOT NULL DEFAULT '0',
@@ -2278,7 +2278,7 @@ CREATE TABLE IF NOT EXISTS `evaluations` (
   PRIMARY KEY (`evaluation_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `evaluations_lu_questions` (
+CREATE TABLE IF NOT EXISTS `evaluations_lu_questions` (
   `equestion_id` int(12) NOT NULL AUTO_INCREMENT,
   `efquestion_id` int(12) NOT NULL DEFAULT '0',
   `question_parent_id` int(12) NOT NULL DEFAULT '0',
@@ -2290,7 +2290,7 @@ CREATE TABLE `evaluations_lu_questions` (
   PRIMARY KEY (`equestion_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `evaluations_lu_question_responses` (
+CREATE TABLE IF NOT EXISTS `evaluations_lu_question_responses` (
   `eqresponse_id` int(12) NOT NULL AUTO_INCREMENT,
   `efresponse_id` int(12) NOT NULL,
   `equestion_id` int(12) NOT NULL,
@@ -2301,7 +2301,7 @@ CREATE TABLE `evaluations_lu_question_responses` (
   PRIMARY KEY (`eqresponse_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `evaluations_lu_question_response_criteria` (
+CREATE TABLE IF NOT EXISTS `evaluations_lu_question_response_criteria` (
   `eqrcriteria_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `eqresponse_id` int(11) DEFAULT NULL,
   `criteria_text` text,
@@ -2323,7 +2323,7 @@ INSERT INTO `evaluations_lu_questiontypes` (`questiontype_id`, `questiontype_sho
 (3, 'rubric', 'Rubric', 'The rating scale allows evaluators to rate each question based on the scale you provide, while also providing a short description of the requirements to meet each level on the scale (i.e. Level 1 to 4 of \\\"Professionalism\\\" for an assignment are qualified with what traits the learner is expected to show to meet each level, and while the same scale is used for \\\"Collaborator\\\", the requirements at each level are defined differently).', 1),
 (4, 'free_text', 'Free Text Comments', 'Allows the user to be asked for a simple free-text response. This can be used to get additional details about prior questions, or to simply ask for any comments from the evaluator regarding a specific topic.', 1);
 
-CREATE TABLE `evaluations_lu_rubrics` (
+CREATE TABLE IF NOT EXISTS `evaluations_lu_rubrics` (
   `erubric_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `rubric_title` varchar(32) DEFAULT NULL,
   `rubric_description` text,
@@ -2351,7 +2351,7 @@ INSERT INTO `evaluations_lu_targets` (`target_id`, `target_shortname`, `target_t
 (8, 'self', 'Self Assessment', '', 1),
 (9, 'resident', 'Resident Evaluation', '', 1);
 
-CREATE TABLE `evaluations_related_questions` (
+CREATE TABLE IF NOT EXISTS `evaluations_related_questions` (
   `erubric_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `related_equestion_id` int(11) unsigned NOT NULL,
   `equestion_id` int(11) unsigned NOT NULL,
@@ -2461,7 +2461,7 @@ CREATE TABLE IF NOT EXISTS `evaluation_progress_clerkship_events` (
   PRIMARY KEY (`epcevent_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `evaluation_question_objectives` (
+CREATE TABLE IF NOT EXISTS `evaluation_question_objectives` (
   `eqobjective_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `equestion_id` int(12) NOT NULL,
   `objective_id` int(12) NOT NULL,
@@ -2485,7 +2485,7 @@ CREATE TABLE IF NOT EXISTS `evaluation_responses` (
   PRIMARY KEY (`eresponse_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `evaluation_rubric_questions` (
+CREATE TABLE IF NOT EXISTS `evaluation_rubric_questions` (
   `efrquestion_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `erubric_id` int(11) DEFAULT NULL,
   `equestion_id` int(11) DEFAULT NULL,
@@ -4109,7 +4109,7 @@ CREATE TABLE IF NOT EXISTS `objective_organisation` (
 
 INSERT INTO `objective_organisation` SELECT `objective_id`, 1 FROM `global_lu_objectives`;
 
-CREATE TABLE `linked_objectives` (
+CREATE TABLE IF NOT EXISTS `linked_objectives` (
   `linked_objective_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `objective_id` int(12) NOT NULL,
   `target_objective_id` int(12) NOT NULL,
@@ -5044,7 +5044,7 @@ VALUES
 	(2, 200, 1, 'COURSE', 'all', 0, 0),
 	(3, 309, 1, 'COURSE', 'all', 0, 0);
 
-CREATE TABLE `profile_custom_fields` (
+CREATE TABLE IF NOT EXISTS `profile_custom_fields` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `department_id` int(11) NOT NULL,
   `organisation_id` int(11) NOT NULL,
@@ -5058,7 +5058,7 @@ CREATE TABLE `profile_custom_fields` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `profile_custom_responses` (
+CREATE TABLE IF NOT EXISTS `profile_custom_responses` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `field_id` int(11) NOT NULL,
   `proxy_id` int(11) NOT NULL,
@@ -5157,3 +5157,17 @@ VALUES
 	(11, 'Quinte Health Care', 1),
 	(12, 'Weenebayko General Hospital', 1),
 	(13, 'Other (provide details in additional comments field)', 1);
+
+CREATE TABLE IF NOT EXISTS `organisation_lu_restricted_days` (
+  `orday_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(12) NOT NULL,
+  `date_type` enum('specific','computed','weekly','monthly') NOT NULL DEFAULT 'specific',
+  `offset` tinyint(1) DEFAULT NULL,
+  `day` tinyint(2) DEFAULT NULL,
+  `month` tinyint(2) DEFAULT NULL,
+  `year` int(4) DEFAULT NULL,
+  `updated_date` int(12) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  `day_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`orday_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;

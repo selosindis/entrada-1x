@@ -187,18 +187,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$query = "	SELECT * FROM `assessments` AS a
 							JOIN `assessment_marking_schemes` AS b
 							ON a.`marking_scheme_id` = b.`id`
-							WHERE a.`assessment_id` = ".$db->qstr($assignment["assessment_id"]);
-				$assessment = $db->GetRow($query);
+							WHERE a.`assessment_id` = ".$db->qstr($assignment["assessment_id"]);				
+				$assessment = $db->GetRow($query);				
 				?>
-				<div style="float: right; text-align: right; width:400px;">
-					<ul class="page-action">
-						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "edit","assignment_id"=>$assignment["assignment_id"], "step" => false)); ?>" class="strong-green">Edit Assignment</a></li>
-						<?php if($assignment["assessment_id"]){ ?>
-						<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit","assessment_id"=>$assignment["assessment_id"], "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
-						<?php } ?>
-						<?php if (isset($assessment) && $assessment){ ?><li><a href="#" id="advanced-options" class="strong-green">Show Options</a></li><?php } ?>
-					</ul>
-				</div>
+					<div style="float: right; text-align: right; width:400px;">
+						<ul class="page-action">
+						<?php 
+						if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) { 
+						?>
+							<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "edit","assignment_id"=>$assignment["assignment_id"], "step" => false)); ?>" class="strong-green">Edit Assignment</a></li>
+							<?php 
+							if($assignment["assessment_id"]) { ?>
+								<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit","assessment_id"=>$assignment["assessment_id"], "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
+							<?php
+							} 
+						}
+						if (isset($assessment) && $assessment) { 
+						?>
+								<li><a href="#" id="advanced-options" class="strong-green">Show Options</a></li>
+						<?php 						
+						} 
+						?>
+						</ul>
+					</div>				
 				<div style="clear: both;"></div>
 				<?php				
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";
@@ -206,7 +217,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					<span id="assessment_name" style="display: none;"><?php echo $assignment["assignment_title"]; ?></span>
                     <div class="row-fluid">
                         <span id="assignment_submissions" class="span12">
-                            <h2>Submissions <?php if(extension_loaded('zip')) { ?><a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=download-submissions&id=<?php echo $assignment["assignment_id"];?>"><span style="float:right;"><img src="<?php echo ENTRADA_URL;?>/templates/default/images/btn_save.gif" title="Download File" alt="Download File" width="15"/> Download All Submissions</span></a><?php } ?></h2>
+                            <h2>Submissions <?php if(extension_loaded('zip')) { ?><a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=download-submissions&assignment_id=<?php echo $assignment["assignment_id"];?>"><span style="float:right;"><i class="icon-download-alt"></i>&nbsp;Download All Submissions</span></a><?php } ?></h2>
                             <div style="margin-bottom: 5px;">							
                                 <span class="content-small"><strong>Tip: </strong><?php echo $assignment["marking_scheme_description"]; ?></span>
                             </div>	
@@ -233,7 +244,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         }
                                         ?>
                                         <tr id="grades<?php echo $student["proxy_id"]; ?>">
-											<td><a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=download-submission&id=<?php echo $ASSIGNMENT_ID;?>&sid=<?php echo $student["proxy_id"]; ?>"><img src="<?php echo ENTRADA_URL;?>/templates/default/images/btn_save.gif" title="Download File" alt="Download File" width="15"/></a></td>
+											<td><div class="text-center"><a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=download-submission&id=<?php echo $ASSIGNMENT_ID;?>&sid=<?php echo $student["proxy_id"]; ?>"><i class="icon-download-alt"></i></a></div></td>
 											<td><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$ASSIGNMENT_ID."&pid=".$student["proxy_id"];?>"><?php echo $student["fullname"]; ?></a></td>
                                             <td><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$ASSIGNMENT_ID."&pid=".$student["proxy_id"];?>"><?php echo $student["student_number"]; ?></a></td>
                                             <td>
@@ -265,8 +276,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                             ?>
                                         </tr>
                                         <tr class="comment-row">
-                                            <td colspan="<?php echo $comment_colspan; ?>" style="text-align:right;">
-                                                <a href="javascript:void(0);" class="view_comments" id="view_comments_<?php echo $student["proxy_id"] ?>">View Comments</a> &nbsp; <span class="leave_comment" id="leave_comment_<?php echo $student["proxy_id"] ?>">Leave Comment</span>
+                                            <td colspan="<?php echo $comment_colspan; ?>" style="text-align:right;">												
+												<a href="javascript:void(0);" class="view_comments" id="view_comments_<?php echo $student["proxy_id"] ?>">View Comments</a>&nbsp; <span class="leave_comment" id="leave_comment_<?php echo $student["proxy_id"] ?>">Leave Comment</span>
 											</td>
 										</tr>
 										<tr>
@@ -360,12 +371,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             </table>					
                         </span>
                         <script type="text/javascript">
-                            jQuery(document).ready(function(){
-
-                                jQuery('.edit_grade').click(function(e){
+                            jQuery(document).ready(function($){
+                                $('.edit_grade').click(function(e){
                                     var id = e.target.id.substring(5);
-                                    jQuery('#'+id).trigger('click');
-                                });
+                                    $('#'+id).trigger('click');
+                                });								
+								$(".comments").each(function() {
+									var c_id = $(this).attr("id").split("comments_")[1];									
+									if ($(this).children().length <= 1) {		
+										var no_comment = document.createElement("span");
+										$(no_comment).attr("id", "no_comments_" + c_id);
+										$(no_comment).text("No Comments");
+										$('#view_comments_'+c_id).replaceWith(no_comment);																			
+									} 
+								});
                             });
 
                         </script>
@@ -635,7 +654,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									jQuery('#view_comments_'+id).attr('class','hide_comments');
 									jQuery('#new_comment_'+id).hide();
 									jQuery('#new_comment_desc_'+id).val('');									
-									jQuery('#new_comment_title_'+id).val('');									
+									jQuery('#new_comment_title_'+id).val('');										
+									if (jQuery('#no_comments_' + id).length > 0) {											
+										jQuery('#no_comments_' + id).replaceWith("<a href=\"javascript:void(0);\" class=\"hide_comments\" id=\"view_comments_" + id + "\">Hide Comments</a>");
+									} 
 								}
 							});
 						});

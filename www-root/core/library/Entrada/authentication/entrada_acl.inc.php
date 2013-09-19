@@ -34,9 +34,10 @@ class Entrada_ACL extends ACL_Factory {
 				),
 				"evaluationquestion"
 			),			
-			"gradebook" => array(
+			"gradebook" => array (
 				"assessment"
 			),
+			"assignment",
 			"regionaled" => array (
 				"apartments",
 				"regions",
@@ -497,6 +498,113 @@ class CourseOwnerAssertion implements Zend_Acl_Assert_Interface {
 		}
 
 		return false;
+	}
+}
+
+/**
+ * Not Course Owner Assertion
+ *
+ * Used to assert that the course referenced by the course resource is not owned by the user referenced by the user role.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>, Don Zuiker <don.zuiker@queensu.ca>
+ * @copyright Copyright 2010, 2013 Queen's University. All Rights Reserved.
+ */
+class NotCourseOwnerAssertion implements Zend_Acl_Assert_Interface {
+	/**
+	* Asserts that the role references the director, coordinator, or secondary director of the course resource
+	*
+	* @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+	* @param Zend_Acl_Role_Interface $role The role being queried
+	* @param Zend_Acl_Resource_Interface $resource The resource being queried
+	* @param string $privilege The privilege being queried
+	* @return boolean
+	*/
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;
+		//If asserting is off then return true right away
+		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return false;
+		}
+
+		if (isset($resource->course_id)) {
+			$course_id = $resource->course_id;
+		} else if (isset($acl->_entrada_last_query->course_id)) {
+			$course_id = $acl->_entrada_last_query->course_id;
+		} else {
+			//Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);
+
+			if ($resource_type !== "course" && $resource_type !== "coursecontent") {
+				//This only asserts for users on courses.
+				return false;
+			}
+
+			$course_id = preg_replace('/[^0-9]+/', "", $resource_id);
+		}
+
+		$role_id = $role->getRoleId();
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access` WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
+		if (!isset($user_id) || !$user_id) {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access` WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
+		}
+
+		return $this->_checkCourseOwner($user_id, $course_id);
+	}
+
+	/**
+	 * Checks if the $user_id is a director or program coordinator of a course.
+	 *
+	 * @param string|integer $user_id The proxy_id to be checked
+	 * @param string|integer $course_id The course id to be checked
+	 * @return boolean
+	 */
+	static function _checkCourseOwner($user_id, $course_id) {
+		//Logic taken from the old permissions_check() function.
+		global $db;
+
+		$query	=  "SELECT a.`pcoord_id` AS `coordinator`, b.`proxy_id` AS `director_id`, d.`proxy_id` AS `admin_id`, e.`proxy_id` AS `pcoordinator`
+					FROM `".DATABASE_NAME."`.`courses` AS a
+					LEFT JOIN `".DATABASE_NAME."`.`course_contacts` AS b
+					ON b.`course_id` = a.`course_id`
+					AND b.`contact_type` = 'director'
+					LEFT JOIN `".DATABASE_NAME."`.`community_courses` AS c
+					ON c.`course_id` = a.`course_id`
+					LEFT JOIN `".DATABASE_NAME."`.`community_members` AS d
+					ON d.`community_id` = c.`community_id`
+					AND d.`member_active` = '1'
+					AND d.`member_acl` = '1'
+					LEFT JOIN `".DATABASE_NAME."`.`course_contacts` AS e
+					ON e.`course_id` = a.`course_id`
+					AND e.`contact_type` = 'pcoordinator'
+					WHERE a.`course_id` = ".$db->qstr($course_id)."
+					AND (a.`pcoord_id` = ".$db->qstr($user_id)."
+						OR b.`proxy_id` = ".$db->qstr($user_id)."
+						OR d.`proxy_id` = ".$db->qstr($user_id)."
+						OR e.`proxy_id` = ".$db->qstr($user_id)."
+					)
+					AND a.`course_active` = '1'
+					LIMIT 0, 1";
+		
+		$result = $db->GetRow($query);
+		if ($result) {
+			foreach (array("director_id", "coordinator", "admin_id", "pcoordinator") as $owner) {
+				if ($result[$owner] == $user_id) {
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 }
 
@@ -1352,6 +1460,252 @@ class GradebookOwnerAssertion extends CourseOwnerAssertion {
 		return $this->_checkCourseOwner($user_id, $course_id);
 	}
 }
+
+/**
+ * GradebookDropbox Assertion
+ *
+ * Assert true if access should be granted to a gradebook for a user that is a dropbox contact for an assignment.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>, Don Zuiker <zuikerd@qmed.ca>
+ * @copyright Copyright 2010, 2013 Queen's University. All Rights Reserved.
+ */
+class GradebookDropboxAssertion implements Zend_Acl_Assert_Interface {	
+/**
+ *
+ * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+ * @param Zend_Acl_Role_Interface $role The role being queried
+ * @param Zend_Acl_Resource_Interface $resource The resource being queried
+ * @param string $privilege The privilege being queried
+ * @return boolean
+ */
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;			
+		
+		//If asserting is off then return true right away
+		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+		
+		if (isset($resource->course_id)) {
+			$course_id = $resource->course_id;
+		} else if (isset($acl->_entrada_last_query->course_id)) {
+			$course_id = $acl->_entrada_last_query->course_id;
+		} else {
+			//Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);						
+
+			if ($resource_type !== "gradebook" && $resource_type !== "assessment") {
+				//This only asserts for users on gradebooks.
+				return false;
+			}
+
+			$course_id = preg_replace('/[^0-9]+/', "", $resource_id);
+		}
+		
+		$role_id = $role->getRoleId();
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
+
+		if (!isset($user_id) || !$user_id) {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
+		}					
+		return $this->_checkGradebookDropbox($user_id, $course_id);
+	}
+	
+	static function _checkGradebookDropbox($user_id, $course_id) {
+		global $db;		
+		
+		$query		= "	SELECT *
+						FROM `assignment_contacts` a
+						JOIN `assignments` b
+						ON a.`assignment_id` = b.`assignment_id`
+						WHERE a.`proxy_id` = " . $db->qstr($user_id) . "
+						AND b.`assignment_active` = 1
+						AND b.`course_id` = " . $db->qstr($course_id);			
+		$results	= $db->GetAll($query);
+		
+		if ($results) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+}
+
+/**
+ * AssignmentContact Assertion
+ *
+ * Assert true if access should be granted to an assignment for a user that is listed as an Assignment Contact.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>, Don Zuiker <zuikerd@qmed.ca>
+ * @copyright Copyright 2010, 2013 Queen's University. All Rights Reserved.
+ */
+class AssignmentContactAssertion implements Zend_Acl_Assert_Interface {	
+/**
+ *
+ * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+ * @param Zend_Acl_Role_Interface $role The role being queried
+ * @param Zend_Acl_Resource_Interface $resource The resource being queried
+ * @param string $privilege The privilege being queried
+ * @return boolean
+ */
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;	
+
+		//If asserting is off then return true right away
+		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+		
+		if (isset($resource->assignment_id)) {
+			$assignment_id = $resource->assignment_id;
+		} else if (isset($acl->_entrada_last_query->assignment_id)) {
+			$assignment_id = $acl->_entrada_last_query->assignment_id;
+		} else {
+			//Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);						
+
+			if ($resource_type !== "assignment") {
+				//This only asserts for users on gradebooks.
+				return false;
+			}
+
+			$assignment_id = preg_replace('/[^0-9]+/', "", $resource_id);
+		}
+		
+		$role_id = $role->getRoleId();
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
+
+		if (!isset($user_id) || !$user_id) {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
+		}					
+		return $this->_checkAssignmentContacts($user_id, $assignment_id);
+	}
+	
+	static function _checkAssignmentContacts($user_id, $assignment_id) {
+		global $db;		
+		
+		$query		= "	SELECT *
+						FROM `assignment_contacts` a
+						JOIN `assignments` b
+						ON a.`assignment_id` = b.`assignment_id`
+						WHERE a.`proxy_id` = " . $db->qstr($user_id) . "
+						AND b.`assignment_active` = 1
+						AND a.`assignment_id` = " . $db->qstr($assignment_id);					
+		$results	= $db->GetAll($query);		
+		if ($results) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+}
+
+/**
+ * AssessmentContact Assertion
+ *
+ * Assert true if access should be granted to an assessment for a user that is an assignment contact of an assignment within the assessment.
+ *
+ * @author Organisation: Queen's University
+ * @author Unit: School of Medicine
+ * @author Developer: Harry Brundage <hbrundage@qmed.ca>, Don Zuiker <zuikerd@qmed.ca>
+ * @copyright Copyright 2010, 2013 Queen's University. All Rights Reserved.
+ */
+class AssessmentContactAssertion implements Zend_Acl_Assert_Interface {	
+/**
+ *
+ * @param Zend_Acl $acl The ACL object isself (the one calling the assertion)
+ * @param Zend_Acl_Role_Interface $role The role being queried
+ * @param Zend_Acl_Resource_Interface $resource The resource being queried
+ * @param string $privilege The privilege being queried
+ * @return boolean
+ */
+	public function assert(Zend_Acl $acl, Zend_Acl_Role_Interface $role = null, Zend_Acl_Resource_Interface $resource = null, $privilege = null) {
+		global $db;	
+		
+		//If asserting is off then return true right away
+		if ((isset($resource->assert) && $resource->assert == false) || (isset($acl->_entrada_last_query) && isset($acl->_entrada_last_query->assert) && $acl->_entrada_last_query->assert == false)) {
+			return true;
+		}
+		
+		if (isset($resource->assessment_id)) {
+			$assessment_id = $resource->assessment_id;
+		} else if (isset($acl->_entrada_last_query->assessment_id)) {
+			$assessment_id = $acl->_entrada_last_query->assessment_id;
+		} else {
+			//Parse out the user ID and course ID
+			$resource_id = $resource->getResourceId();
+			$resource_type = preg_replace('/[0-9]+/', "", $resource_id);						
+
+			if ($resource_type !== "assessment") {
+				//This only asserts for users on gradebooks.
+				return false;
+			}
+
+			$assessment_id = preg_replace('/[^0-9]+/', "", $resource_id);
+		}
+		$role_id = $role->getRoleId();
+		$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+		$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+					WHERE `id` = ".$db->qstr($access_id);
+		$user_id = $db->GetOne($query);
+
+		if (!isset($user_id) || !$user_id) {
+			$role_id = $acl->_entrada_last_query_role->getRoleId();
+			$access_id	= preg_replace('/[^0-9]+/', "", $role_id);
+
+			$query = "SELECT `user_id` FROM `".AUTH_DATABASE."`.`user_access`
+						WHERE `id` = ".$db->qstr($access_id);
+			$user_id = $db->GetOne($query);
+		}					
+		return $this->_checkAssessmentContacts($user_id, $assessment_id);
+	}
+	
+	static function _checkAssessmentContacts($user_id, $assessment_id) {
+		global $db;		
+		
+		$query		= "	SELECT *
+						FROM `assignment_contacts` a
+						JOIN `assignments` b
+						ON a.`assignment_id` = b.`assignment_id`
+						JOIN `assessments` c
+						ON c.`assessment_id` = b.`assessment_id`
+						WHERE a.`proxy_id` = " . $db->qstr($user_id) . "
+						AND b.`assignment_active` = 1
+						AND c.`assessment_id` = " . $db->qstr($assessment_id);	
+		$results	= $db->GetAll($query);		
+		if ($results) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+}
+
 /**
  * Event Owner Assertion
  *
@@ -2122,6 +2476,38 @@ class GradebookResource extends CourseResource {
 	 */
 	public function getResourceId() {
 		return "gradebook".($this->specific ? $this->course_id : "");
+	}
+}
+
+class AssessmentResource extends EntradaAclResource {
+	var $assessment_id;
+	
+	function __construct($assessment_id, $assert = null) {		
+		$this->assessment_id = $assessment_id;
+		
+		if (isset($assert)) {
+			$this->assert = $assert;
+		}
+	}
+	
+	public function getResourceId() {
+		return "assessment".($this->specific ? $this->assessment_id : "");
+	}
+}
+
+class AssignmentResource extends EntradaAclResource {
+	var $assignment_id;
+	
+	function __construct($assignment_id, $assert = null) {		
+		$this->assignment_id = $assignment_id;
+		
+		if (isset($assert)) {
+			$this->assert = $assert;
+		}
+	}
+	
+	public function getResourceId() {
+		return "assignment".($this->specific ? $this->assignment_id : "");
 	}
 }
 

@@ -499,7 +499,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											$url = ENTRADA_URL."/admin/gradebook/assignments?section=grade&amp;id=".$COURSE_ID."&amp;assignment_id=".$assignment["assignment_id"];
 											echo "<td id=\"assignment-".$assignment["assignment_id"]."\">";
 											echo "<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=download-submissions&assignment_id=".$assignment["assignment_id"]."\"><i class=\"icon-download-alt\"></i></a>";
-											echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=delete&id=".$COURSE_ID."&delete=".$assignment["assignment_id"]."\"><i class=\"icon-minus-sign\"></i></a>";
+											if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
+												echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=delete&id=".$COURSE_ID."&delete=".$assignment["assignment_id"]."\"><i class=\"icon-minus-sign\"></i></a>";
+											}
 											echo "&nbsp;<a href=\"".$url."\">".$assignment["assignment_title"]."</a>";																						
 											echo "</td>";
 										} else {

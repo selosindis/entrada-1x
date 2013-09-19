@@ -244,9 +244,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         }
                                         ?>
                                         <tr id="grades<?php echo $student["proxy_id"]; ?>">
-											<td><div class="text-center"><a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=download-submission&id=<?php echo $ASSIGNMENT_ID;?>&sid=<?php echo $student["proxy_id"]; ?>"><i class="icon-download-alt"></i></a></div></td>
-											<td><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$ASSIGNMENT_ID."&pid=".$student["proxy_id"];?>"><?php echo $student["fullname"]; ?></a></td>
-                                            <td><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$ASSIGNMENT_ID."&pid=".$student["proxy_id"];?>"><?php echo $student["student_number"]; ?></a></td>
+											<td><div class="text-center"><a href="<?php echo ENTRADA_URL;?>/admin/gradebook/assignments?section=download-submission&id=<?php echo $COURSE_ID; ?>&assignment_id=<?php echo $ASSIGNMENT_ID;?>&sid=<?php echo $student["proxy_id"]; ?>"><i class="icon-download-alt"></i></a></div></td>
+											<td><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=view&id=" .$COURSE_ID . "&assignment_id=".$ASSIGNMENT_ID."&pid=".$student["proxy_id"];?>"><?php echo $student["fullname"]; ?></a></td>
+                                            <td><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=view&id=" .$COURSE_ID . "&assignment_id=".$ASSIGNMENT_ID."&pid=".$student["proxy_id"];?>"><?php echo $student["student_number"]; ?></a></td>
                                             <td>
                                                 <?php if (isset($assessment) && $assessment) { ?>
                                                 <span class="grade" id="grade_<?php echo $assignment["assessment_id"]; ?>_<?php echo $student["proxy_id"] ?>"
@@ -310,7 +310,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 																				</div>
 																				<div style="float: right">
 																					<?php
-																					echo (($result["proxy_id"] == $ENTRADA_USER->getID()) ? " (<a class=\"action\" href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=edit-comment&amp;id=".$assignment["assignment_id"]."&amp;cid=".$result["acomment_id"]."\">edit</a>)" : "");
+																					echo (($result["proxy_id"] == $ENTRADA_USER->getID()) ? " (<a class=\"action\" href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=edit-comment&amp;id=" .$COURSE_ID . "&amp;assignment_id=".$assignment["assignment_id"]."&amp;cid=".$result["acomment_id"]."\">edit</a>)" : "");
 																					echo (($result["proxy_id"] == $ENTRADA_USER->getID()) ? " (<a class= \"action delete\" id=\"delete_".$result["acomment_id"]."\" href=\"#delete_".$result["acomment_id"]."\">delete</a>)":"");// href=\"javascript:commentDelete('".$result["acomment_id"]."')\">delete</a>)" : "");
 																					?>
 																				</div>

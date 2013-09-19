@@ -54,7 +54,7 @@ if(!defined("PARENT_INCLUDED")) {
 
 	if (($router) && ($router->initRoute())) {
 		$PREFERENCES = preferences_load($MODULE);
-		if (isset($_GET["id"]) && ($tmp_input = clean_input($_GET["id"], array("nows", "int")))) {
+		if (isset($_GET["assignment_id"]) && ($tmp_input = clean_input($_GET["assignment_id"], array("nows", "int")))) {
 			$RECORD_ID = $tmp_input;
 		} else {
 			$RECORD_ID = 0;

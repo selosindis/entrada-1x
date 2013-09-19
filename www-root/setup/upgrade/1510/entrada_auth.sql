@@ -7,4 +7,6 @@ VALUES
 	('assessment', NULL, 'group', 'faculty', 1, NULL, NULL, 1, NULL, 'AssessmentContact'),
 	('assignment', NULL, 'group:role', 'staff:admin', 1, NULL, 1, 1, NULL, 'AssignmentContact'),
 	('assessment', NULL, 'group:role', 'staff:admin', 1, NULL, NULL, 1, NULL, 'AssessmentContact'),
-	('gradebook', NULL, 'group:role', 'staff:admin', 1, NULL, 1, 1, NULL, 'GradebookDropbox');
+	('gradebook', NULL, 'group:role', 'staff:admin', 1, NULL, 1, 1, NULL, 'GradebookDropbox'),
+	('gradebook', NULL, 'group:role', 'staff:admin', 1, NULL, 1, NULL, NULL, NULL),
+	('gradebook', NULL, 'group', 'faculty', 1, NULL, 1, NULL, NULL, NULL);

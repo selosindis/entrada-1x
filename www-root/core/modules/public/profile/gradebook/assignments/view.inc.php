@@ -15,7 +15,7 @@ if ((!defined("IN_PUBLIC_ASSIGNMENTS"))) {
 }
 
 if (!$RECORD_ID) {
-	if (isset($_GET["id"]) && $tmp = clean_input($_GET["id"], "int")) {
+	if (isset($_GET["assignment_id"]) && $tmp = clean_input($_GET["assignment_id"], "int")) {
 		$RECORD_ID = $tmp;
 	}
 }

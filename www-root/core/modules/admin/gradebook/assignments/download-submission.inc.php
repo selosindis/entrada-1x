@@ -108,7 +108,7 @@ if ($ASSIGNMENT_ID) {
 						echo display_error();
 					}
 			} else {
-				header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=submit&id=".$ASSIGNMENT_ID);
+				header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=submit&id=".$COURSE_ID . "&assignment_id=" . $ASSIGNMENT_ID);
 				//echo 'Invalid id specified. Redirect to submit page.';
 				exit;
 			}

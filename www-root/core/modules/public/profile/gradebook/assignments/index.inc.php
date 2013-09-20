@@ -122,10 +122,10 @@ switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["sb"]) {
                 foreach ($assignments as $result) {
                     ?>
                     <tr id="gradebook-1">
-                        <td><a href="<?php echo ENTRADA_RELATIVE."/".$MODULE;?>/gradebook/assignments?section=view&amp;id=<?php echo $result["assignment_id"];?>"><?php echo html_encode($result["assignment_title"]);?></a></td>
-                        <td><a href="<?php echo ENTRADA_RELATIVE."/".$MODULE;?>/gradebook/assignments?section=view&amp;id=<?php echo $result["assignment_id"];?>"><?php echo html_encode($result["course_code"]);?></a></td>
-                        <td><a href="<?php echo ENTRADA_RELATIVE."/".$MODULE;?>/gradebook/assignments?section=view&amp;id=<?php echo $result["assignment_id"];?>"><?php echo (isset($result["grade_value"]) ? $result["grade_value"] : "NA"); ?></a></td>
-                        <td><a href="<?php echo ENTRADA_RELATIVE."/".$MODULE;?>/gradebook/assignments?section=view&amp;id=<?php echo $result["assignment_id"];?>"><?php echo ($result["due_date"]==0?'-':date(DEFAULT_DATE_FORMAT,$result["due_date"]));?></a></td>
+                        <td><a href="<?php echo ENTRADA_RELATIVE."/".$MODULE;?>/gradebook/assignments?section=view&amp;assignment_id=<?php echo $result["assignment_id"];?>"><?php echo html_encode($result["assignment_title"]);?></a></td>
+                        <td><a href="<?php echo ENTRADA_RELATIVE."/".$MODULE;?>/gradebook/assignments?section=view&amp;assignment_id=<?php echo $result["assignment_id"];?>"><?php echo html_encode($result["course_code"]);?></a></td>
+                        <td><a href="<?php echo ENTRADA_RELATIVE."/".$MODULE;?>/gradebook/assignments?section=view&amp;assignment_id=<?php echo $result["assignment_id"];?>"><?php echo (isset($result["grade_value"]) ? $result["grade_value"] : "NA"); ?></a></td>
+                        <td><a href="<?php echo ENTRADA_RELATIVE."/".$MODULE;?>/gradebook/assignments?section=view&amp;assignment_id=<?php echo $result["assignment_id"];?>"><?php echo ($result["due_date"]==0?'-':date(DEFAULT_DATE_FORMAT,$result["due_date"]));?></a></td>
                     </tr>
                     <?php
                 }

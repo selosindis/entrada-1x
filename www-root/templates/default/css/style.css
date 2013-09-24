@@ -531,6 +531,7 @@ div.ps-tab-style {
     max-height: 300px;
     overflow: auto;
     margin-bottom: 5px;
+	padding-right: 14px !important;
 }
 
 /** Events Module **/

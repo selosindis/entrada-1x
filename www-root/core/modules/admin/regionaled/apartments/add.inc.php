@@ -38,7 +38,8 @@ if (!defined("IN_APARTMENTS")) {
 	application_log("error", "Group [".$GROUP."] and role [".$ROLE."] does not have access to this module [".$MODULE."]");
 } else {
 	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/regionaled/apartments?section=add", "title" => "Add Apartment");
-
+	$PROCESSED["associated_proxy_ids"] = array($ENTRADA_USER->getActiveId());
+	
 	switch ($STEP) {
 		case 2 :
 			if ((isset($_POST["countries_id"])) && ($tmp_input = clean_input($_POST["countries_id"], "int"))) {
@@ -279,17 +280,66 @@ if (!defined("IN_APARTMENTS")) {
 				$PROCESSED["available_finish"] = 0;
 			}
 
+			$query = "	SELECT `dep_id`
+						FROM `" . AUTH_DATABASE . "`.`user_departments`
+						WHERE `user_id` = " . $db->qstr($ENTRADA_USER->getId());
+			$department_id = $db->getOne($query);
+			if ($department_id) {
+				$PROCESSED["department_id"] = $department_id;
+			} else {
+				$ERROR++;
+				$ERRORSTR[] = "You are not associated with a department in the " . APPLICATION_NAME . " System.  Please email the system administration to be added to a department: " . $AGENT_CONTACTS["administrator"]["email"];
+				application_log("error", "Proxy id: " . $ENTRADA_USER->getId() . " is not associated with a department and therefore cannot use the Regional Education module.");
+			}
+			/*
+			 * Required field "associated_proxy_ids" / Apartment Contacts (array of proxy ids).
+			 * This is actually accomplished after the apartment is inserted below.
+			 */
+			if ((isset($_POST["associated_proxy_ids"]))) {
+				$associated_proxy_ids = explode(",", $_POST["associated_proxy_ids"]);
+				foreach($associated_proxy_ids as $contact_order => $proxy_id) {
+					if($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+						$PROCESSED["associated_proxy_ids"][(int) $contact_order] = $proxy_id;
+					}
+				}
+			}
+			
+			/**
+			 * The current quiz author must be in the quiz author list.
+			 */
+			if (!in_array($ENTRADA_USER->getActiveId(), $PROCESSED["associated_proxy_ids"])) {
+				array_unshift($PROCESSED["associated_proxy_ids"], $ENTRADA_USER->getActiveId());
+			}
+			
 			if (!$ERROR) {
 				$PROCESSED["updated_last"] = time();
 				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
-				
+								
 				if (($db->AutoExecute(CLERKSHIP_DATABASE.".apartments", $PROCESSED, "INSERT")) && ($apartment_id = $db->Insert_Id())) {
-					$SUCCESS++;
-					$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["apartment_title"])."</strong> to the system.<br /><br />You will now be redirected to the apartment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/regionaled/apartments\" style=\"font-weight: bold\">click here</a> to continue.";
+					$PROCESSED["apartment_id"] = $apartment_id;
+					$PROCESSED["updated_date"] = time();					
+					/**
+					* Add the apartment contacts to the apartment_contacts table.
+					*/
+					if ((is_array($PROCESSED["associated_proxy_ids"])) && (count($PROCESSED["associated_proxy_ids"]))) {						
+						foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
+							$PROCESSED["proxy_id"] = $proxy_id;
+							if (!$db->AutoExecute(CLERKSHIP_DATABASE.".apartment_contacts", $PROCESSED, "INSERT")) {
+								$ERROR++;
+								$ERRORSTR[] = "There was an error while trying to attach an <strong>Apartment Contact</strong> to this Apartment.<br /><br />The system administrator was informed of this error; please try again later.";
 
-					$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/regionaled/apartments\\'', 5000)";
+								application_log("error", "Unable to insert a new apartment_contact record while adding a new apartment. Database said: ".$db->ErrorMsg());
+							}
+						}
+					}
+					if (!$ERROR) {
+						$SUCCESS++;
+						$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["apartment_title"])."</strong> to the system.<br /><br />You will now be redirected to the apartment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/regionaled/apartments\" style=\"font-weight: bold\">click here</a> to continue.";
 
-					application_log("success", "New apartment [".$apartment_id."] added to the system.");
+						$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/regionaled/apartments\\'', 5000)";
+
+						application_log("success", "New apartment [".$apartment_id."] added to the system.");
+					}	application_log("error", "Failed to insert a apartment_contact into the database. Database said: ".$db->ErrorMsg());					
 				} else {
 					$ERROR++;
 					$ERRORSTR[]	= "We were unable to add this apartment to the system at this time.<br /><br />The system administrator has been notified of this issue, please try again later.";
@@ -325,6 +375,7 @@ if (!defined("IN_APARTMENTS")) {
 		break;
 		case 1 :
 		default :
+			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 			$PROCESSED["prov_state"] = ((isset($PROCESSED["province_id"]) && $PROCESSED["province_id"]) ? (int) $PROCESSED["province_id"] : ((isset($PROCESSED["apartment_province"]) && $PROCESSED["apartment_province"]) ? $PROCESSED["apartment_province"] : ""));
 		
 			$ONLOAD[] = "provStateFunction(\$F($('addApartmentForm')['countries_id']))";
@@ -719,6 +770,66 @@ if (!defined("IN_APARTMENTS")) {
 
 						echo generate_calendars("available", "", true, true, $available_start, true, false, $available_finish, false);
 						?>
+					</tbody>
+					<tbody>
+						<tr>
+							<td colspan="4">
+								<label for="contact_name" class="control-label form-nrequired"><h2>Apartment Contacts:</h2>
+								<div class="content-small" style="margin-top: 15px">
+									<strong>Tip:</strong> Select any other individuals you would like to give access to this apartment.
+								</div>
+								</label>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="3">
+								<input type="text" id="contact_name" name="fullname" size="30" autocomplete="off" style="width: 203px" />
+								<?php
+								$ONLOAD[] = "contact_list = new AutoCompleteList({ type: 'contact', url: '" . ENTRADA_RELATIVE . "/api/personnel.api.php?type=facultyorstaff', remove_image: '" . ENTRADA_RELATIVE . "/images/action-delete.gif'})";
+								?>
+								<div class="autocomplete" id="contact_name_auto_complete"></div>
+								<input type="hidden" id="associated_contact" name="associated_proxy_ids" value="" />
+								<input type="button" class="btn" id="add_associated_contact" value="Add" />
+								<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"] . ", " . $_SESSION["details"]["firstname"]); ?>)</span>
+							</td>
+						</tr>
+						<tr>
+							<td colspan="2">
+								<ul id="contact_list" class="menu" style="margin-top: 15px">
+									<?php
+									if (is_array($PROCESSED["associated_proxy_ids"]) && !empty($PROCESSED["associated_proxy_ids"])) {
+										$selected_contacts = array();
+
+										$query = "	SELECT `id` AS `proxy_id`, CONCAT_WS(', ', `lastname`, `firstname`) AS `fullname`, `organisation_id`
+													FROM `" . AUTH_DATABASE . "`.`user_data`
+													WHERE `id` IN (" . implode(", ", $PROCESSED["associated_proxy_ids"]) . ")
+													ORDER BY `lastname` ASC, `firstname` ASC";
+										$results = $db->GetAll($query);
+										if ($results) {
+											foreach ($results as $result) {
+												$selected_contacts[$result["proxy_id"]] = $result;
+											}
+											unset($results);
+										}
+										foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
+											if ($proxy_id = (int) $proxy_id) {
+												if (array_key_exists($proxy_id, $selected_contacts)) {
+													?>
+													<li class="community" id="contact_<?php echo $proxy_id; ?>" style="cursor: move;">
+														<?php echo $selected_contacts[$proxy_id]["fullname"]; ?>
+														<img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="contact_list.removeItem('<?php echo $proxy_id; ?>');" class="list-cancel-image" />
+													</li>
+													<?php
+												}
+											}
+										}
+									}
+									?>
+								</ul>
+								<input type="hidden" id="contact_ref" name="contact_ref" value="" />
+								<input type="hidden" id="contact_id" name="contact_id" value="" />
+							</td>
+						</tr>
 					</tbody>
 				</table>
 			</form>

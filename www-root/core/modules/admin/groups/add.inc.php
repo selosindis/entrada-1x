@@ -58,7 +58,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 	echo "<h1>Add Group</h1>\n";
 
 	// Error Checking
-	switch($STEP) {
+	switch ($STEP) {
 		case 2 :
 			/**
 			 * Get the active organisation_id and add it to the PROCESSED array.
@@ -100,7 +100,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			}
 
 			if (isset($_POST["post_action"])) {
-				switch($_POST["post_action"]) {
+				switch ($_POST["post_action"]) {
 					case "content" :
 						$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
 					break;
@@ -127,16 +127,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 			$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
 			if (!$ERROR) {
-				$result = $db->GetRow("SELECT `group_id` FROM `groups` WHERE `group_name` = ".$db->qstr($PROCESSED["group_name"]));
+                $query = "SELECT a.`group_id`
+                         FROM `groups` AS a
+                         JOIN `group_organisations` AS b
+                         ON a.`group_id` = b.`group_id`
+                         AND b.`organisation_id` = ".$db->qstr($PROCESSED["organisation_id"])."
+                         WHERE a.`group_name` = ".$db->qstr($PROCESSED["group_name"]);
+				$result = $db->GetRow($query);
 				if ($result) {
 					$ERROR++;
-					$ERRORSTR[] = "The <strong>Group name</strong> already exits. The group was not created";
+					$ERRORSTR[] = "Lucky you, the <strong>goup name</strong> you are trying to create already exits.";
 				} else {
 					if (!$db->AutoExecute("groups", $PROCESSED, "INSERT")) {
 						$ERROR++;
 						$ERRORSTR[] = "There was an error while trying to add the <strong>Group</strong> ".$PROCESSED["group_name"].".<br /><br />The system administrator was informed of this error; please try again later.";
 						application_log("error", "Unable to insert a new group ".$PROCESSED["group_name"].". Database said: ".$db->ErrorMsg());
 					}
+
 					$GROUP_ID = $db->Insert_Id();
 					$PROCESSED["group_id"] = $GROUP_ID;
 					if (!$db->AutoExecute("group_organisations", $PROCESSED, "INSERT")) {
@@ -145,11 +152,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 						application_log("error", "Unable to insert a new group organisation for group_id [".$GROUP_ID."[. Database said: ".$db->ErrorMsg());
 					} else {
 						$added = 0;
-						foreach($proxy_ids as $proxy_id) {
-							if(($proxy_id = (int) trim($proxy_id))) {
+						foreach ($proxy_ids as $proxy_id) {
+							if (($proxy_id = (int) trim($proxy_id))) {
 								$PROCESSED["proxy_id"]	= $proxy_id;
 								$added++;
-								if (!$db->AutoExecute("`group_members`", $PROCESSED, "INSERT")) {
+								if (!$db->AutoExecute("group_members", $PROCESSED, "INSERT")) {
 									$ERROR++;
 									$ERRORSTR[]	= "Failed to insert this member into the group. Please contact a system administrator if this problem persists.";
 									application_log("error", "Error while inserting member into database. Database server said: ".$db->ErrorMsg());
@@ -159,24 +166,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 					}
 				}
 
+                if (!$ERROR) {
+                    switch ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
+                        case "new" :
+                            $url = ENTRADA_URL."/admin/groups?section=add";
+                            $msg = "You will now be redirected to add another group; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+                        break;
+                        case "index" :
+                        default :
+                            $url = ENTRADA_URL."/admin/groups";
+                            $msg = "You will now be redirected to the group index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+                        break;
+                    }
 
-				switch($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) {
-					case "new" :
-							$url	= ENTRADA_URL."/admin/groups?section=add";
-							$msg	= "You will now be redirected to add another group; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-						break;
-						case "index" :
-						default :
-							$url	= ENTRADA_URL."/admin/groups";
-							$msg	= "You will now be redirected to the group index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-						break;
-					}
+                    $SUCCESS++;
+                    $SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["event_title"])."</strong> to the system.<br /><br />".$msg;
+                    $ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
-					$SUCCESS++;
-					$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["event_title"])."</strong> to the system.<br /><br />".$msg;
-					$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
-
-					application_log("success", "New event [".$EVENT_ID."] added to the system.");
+                    application_log("success", "Added new cohort group [".$GROUP_ID." / ".$PROCESSED["group_name"]."] to org_id [".$PROCESSED["organisation_id"]."] the system.");
+                }
 			} else {
 				$ERROR++;
 				$ERRORSTR[] = "There was a problem inserting group into the system. The system administrator was informed of this error; please try again later.";
@@ -195,7 +203,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 	}
 
 	// Display Content
-	switch($STEP) {
+	switch ($STEP) {
 		case 2 :
 			display_status_messages();
 		break;
@@ -322,10 +330,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 														//Fetch list of categories
 														$query	= "SELECT `organisation_id`,`organisation_title` FROM `".AUTH_DATABASE."`.`organisations` ORDER BY `organisation_title` ASC";
 														$organisation_results	= $db->GetAll($query);
-														if($organisation_results) {
+														if ($organisation_results) {
 															$organisations = array();
-															foreach($organisation_results as $result) {
-																if($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'create')) {
+															foreach ($organisation_results as $result) {
+																if ($ENTRADA_ACL->amIAllowed('resourceorganisation'.$result["organisation_id"], 'create')) {
 																	$member_categories[$result["organisation_id"]] = array('text' => $result["organisation_title"], 'value' => 'organisation_'.$result["organisation_id"], 'category'=>true);
 																}
 															}
@@ -334,23 +342,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 														$current_member_list	= array();
 														$query		= "SELECT `proxy_id` FROM `group_members` WHERE `group_id` = ".$db->qstr($GROUP_ID)." AND `member_active` = '1'";
 														$results	= $db->GetAll($query);
-														if($results) {
-															foreach($results as $result) {
-																if($proxy_id = (int) $result["proxy_id"]) {
+														if ($results) {
+															foreach ($results as $result) {
+																if ($proxy_id = (int) $result["proxy_id"]) {
 																	$current_member_list[] = $proxy_id;
 																}
 															}
 														}
 
 														$nmembers_results = $db->GetAll($nmembers_query);
-														if($nmembers_results) {
+														if ($nmembers_results) {
 															$members = $member_categories;
-															foreach($nmembers_results as $member) {
+															foreach ($nmembers_results as $member) {
 																$organisation_id = $member['organisation_id'];
 																$group = $member['group'];
 																$role = $member['role'];
 
-																if($group == "student" && !isset($members[$organisation_id]['options'][$group.$role])) {
+																if ($group == "student" && !isset($members[$organisation_id]['options'][$group.$role])) {
 																	$members[$organisation_id]['options'][$group.$role] = array('text' => $group. ' > '.$role, 'value' => $organisation_id.'|'.$group.'|'.$role);
 																} elseif ($group != "guest" && $group != "student" && !isset($members[$organisation_id]['options'][$group."all"])) {
 																	$members[$organisation_id]['options'][$group."all"] = array('text' => $group. ' > all', 'value' => $organisation_id.'|'.$group.'|all');
@@ -360,7 +368,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 															$added_ids = array();
 															$added_people = array();
 															$key_value = 1;
-															foreach($members as $key => $member) {
+															foreach ($members as $key => $member) {
 																if(isset($member['options']) && is_array($member['options']) && !empty($member['options'])) {
 																	sort($members[$key]['options']);
 																	foreach ($members[$key]['options'] as $member_group) {

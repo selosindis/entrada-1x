@@ -280,7 +280,7 @@ if (!defined("IN_REGIONS")) {
 								</tr>
 								<tr>
 									<td><input type="checkbox" id="manage_apartments" name="manage_apartments" value="1"<?php echo ((isset($PROCESSED["manage_apartments"]) && ($PROCESSED["manage_apartments"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-									<td colspan="2"><label for="manage_apartments" class="form-nrequired">The Regional Education office manages accommodations in this region.</label></td>
+									<td colspan="2"><label for="manage_apartments" class="form-nrequired">This region contains managed accommodations.</label></td>
 								</tr>
 								<?php if ($region_info["region_active"] == "0") : ?>
 								<tr>

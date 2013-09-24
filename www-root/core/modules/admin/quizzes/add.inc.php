@@ -108,6 +108,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			if (!$ERROR) {
 				$PROCESSED["updated_date"]	= time();
 				$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
+				$PROCESSED["created_by"]	= $ENTRADA_USER->getID();
 
 				if ($db->AutoExecute("quizzes", $PROCESSED, "INSERT")) {
 					if ($quiz_id = $db->Insert_Id()) {

@@ -997,6 +997,14 @@ CREATE TABLE IF NOT EXISTS `assessment_options` (
   KEY `assessment_id` (`assessment_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `assessment_option_values` (
+  `aovalue_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `aoption_id` int(12) NOT NULL,
+  `proxy_id` int(12) NOT NULL,
+  `value` varchar(32) DEFAULT '',
+  PRIMARY KEY (`aovalue_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `assessment_quiz_questions` (
   `aqquestion_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `assessment_id` int(11) NOT NULL,
@@ -1036,6 +1044,7 @@ CREATE TABLE IF NOT EXISTS `assessments_lu_meta_options` (
   `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `title` varchar(60) NOT NULL,
   `active` tinyint(1) unsigned DEFAULT '1',
+  `type` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -1044,6 +1053,10 @@ INSERT INTO `assessments_lu_meta_options` (`title`) VALUES
 ('Fill-in, short answer questions'),
 ('Multiple-choice, true/false, matching questions'),
 ('Problem-solving written exercises');
+
+INSERT INTO `assessments_lu_meta_options` (`title`, `type`) VALUES
+('Track Late Submissions', 'reflection, project, paper'),
+('Track Resubmissions', 'reflection, project, paper');
 
 CREATE TABLE IF NOT EXISTS `assessment_exceptions` (
   `aexception_id` int(12) NOT NULL auto_increment,
@@ -1987,6 +2000,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `course_message` text NOT NULL,
   `permission` ENUM('open','closed') NOT NULL DEFAULT 'closed',
   `sync_ldap` int(1) NOT NULL DEFAULT '0',
+  `sync_ldap_courses` text,
   `notifications` int(1) NOT NULL DEFAULT '1',
   `course_active` int(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`course_id`),
@@ -2126,6 +2140,56 @@ CREATE TABLE IF NOT EXISTS `course_objectives` (
   KEY `course_id` (`course_id`),
   KEY `objective_id` (`objective_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `course_syllabi` (
+  `syllabus_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `course_id` int(12) DEFAULT NULL,
+  `syllabus_start` smallint(2) DEFAULT NULL,
+  `syllabus_finish` smallint(2) DEFAULT NULL,
+  `template` varchar(255) DEFAULT NULL,
+  `repeat` tinyint(1) DEFAULT '1',
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`syllabus_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `course_reports` (
+  `creport_id` int(12) NOT NULL AUTO_INCREMENT,
+  `course_id` int(12) NOT NULL DEFAULT '0',
+  `course_report_id` int(12) NOT NULL DEFAULT '0',
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`creport_id`),
+  KEY `course_id` (`course_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `course_lu_reports` (
+  `course_report_id` int(12) NOT NULL AUTO_INCREMENT,
+  `course_report_title` varchar(250) NOT NULL DEFAULT '',
+  `section` varchar(250) NOT NULL DEFAULT '',
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`course_report_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `course_lu_reports` (`course_report_id`, `course_report_title`, `section`, `updated_date`, `updated_by`)
+VALUES
+	(1, 'Report Card', 'report-card', UNIX_TIMESTAMP(), 1),
+	(2, 'My Teachers', 'my-teachers', UNIX_TIMESTAMP(), 1);
+
+CREATE TABLE IF NOT EXISTS `course_report_organisations` (
+  `crorganisation_id` int(12) NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(12) NOT NULL DEFAULT '0',
+  `course_report_id` int(12) NOT NULL DEFAULT '0',
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`crorganisation_id`),
+  KEY `organisation_id` (`organisation_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+INSERT INTO `course_report_organisations` (`organisation_id`, `course_report_id`, `updated_date`, `updated_by`)
+VALUES
+	(1, 1, UNIX_TIMESTAMP(), 1),
+	(1, 2, UNIX_TIMESTAMP(), 1);
 
 CREATE TABLE IF NOT EXISTS `cron_community_notifications` (
   `ccnotification_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -3368,6 +3432,7 @@ CREATE TABLE IF NOT EXISTS `global_lu_objectives` (
   `objective_description` text,
   `objective_parent` int(12) NOT NULL DEFAULT '0',
   `objective_order` int(12) NOT NULL DEFAULT '0',
+  `objective_loggable` tinyint(1) NOT NULL DEFAULT '0',
   `objective_active` int(12) NOT NULL DEFAULT '1',
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
@@ -4018,6 +4083,7 @@ CREATE TABLE IF NOT EXISTS `notices` (
   `display_until` bigint(64) NOT NULL DEFAULT '0',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
+  `created_by` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY (`notice_id`),
   KEY `display_from` (`display_from`),
   KEY `display_until` (`display_until`),
@@ -4042,6 +4108,14 @@ CREATE TABLE IF NOT EXISTS `objective_organisation` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `objective_organisation` SELECT `objective_id`, 1 FROM `global_lu_objectives`;
+
+CREATE TABLE `linked_objectives` (
+  `linked_objective_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `objective_id` int(12) NOT NULL,
+  `target_objective_id` int(12) NOT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`linked_objective_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `org_community_types` (
   `octype_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -4121,6 +4195,7 @@ CREATE TABLE IF NOT EXISTS `quizzes` (
   `quiz_active` int(1) NOT NULL DEFAULT '1',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
   `updated_by` int(12) NOT NULL DEFAULT '0',
+  `created_by` int(12) NOT NULL DEFAULT '0',
   PRIMARY KEY (`quiz_id`),
   KEY `quiz_active` (`quiz_active`),
   FULLTEXT KEY `quiz_title` (`quiz_title`)
@@ -4221,8 +4296,8 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1501'),
-('version_entrada', '1.5.0.1');
+('version_db', '1510'),
+('version_entrada', '1.5.1');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -4442,64 +4517,6 @@ CREATE TABLE IF NOT EXISTS `users_online` (
   KEY `ip_address` (`ip_address`),
   KEY `proxy_id` (`proxy_id`),
   KEY `timestamp` (`timestamp`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `tasks` (
-  `task_id` int(12) unsigned NOT NULL auto_increment,
-  `title` varchar(255) NOT NULL,
-  `description` text,
-  `release_start` bigint(64) default NULL,
-  `release_finish` bigint(64) default NULL,
-  `duration` bigint(64) default NULL,
-  `updated_date` bigint(64) default NULL,
-  `updated_by` int(12) unsigned default NULL,
-  `deadline` bigint(64) default NULL,
-  `organisation_id` int(12) unsigned NOT NULL,
-  `verification_type` enum('faculty','other','none') NOT NULL default 'none',
-  `faculty_selection_policy` enum('off','allow','require') NOT NULL default 'allow',
-  `completion_comment_policy` enum('no_comments','require_comments','allow_comments') NOT NULL default 'allow_comments',
-  `rejection_comment_policy` enum('no_comments','require_comments','allow_comments') NOT NULL default 'allow_comments',
-  `verification_notification_policy` smallint(5) unsigned NOT NULL default '0',
-  PRIMARY KEY (`task_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_associated_faculty` (
-  `task_id` int(12) unsigned NOT NULL,
-  `faculty_id` int(12) unsigned NOT NULL,
-  PRIMARY KEY (`task_id`,`faculty_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_completion` (
-  `task_id` int(12) unsigned NOT NULL,
-  `verifier_id` int(12) unsigned default NULL,
-  `verified_date` bigint(64) default NULL,
-  `recipient_id` int(12) unsigned NOT NULL,
-  `completed_date` bigint(64) default NULL,
-  `faculty_id` int(12) unsigned default NULL,
-  `completion_comment` text,
-  `rejection_comment` text,
-  `rejection_date` bigint(64) default NULL,
-  PRIMARY KEY (`task_id`,`recipient_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_owners` (
-  `task_id` int(12) unsigned NOT NULL default '0',
-  `owner_id` int(12) unsigned NOT NULL default '0',
-  `owner_type` enum('course','event','user') NOT NULL default 'course',
-  PRIMARY KEY (`task_id`,`owner_id`,`owner_type`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_recipients` (
-  `task_id` int(12) unsigned NOT NULL,
-  `recipient_type` enum('user','group','grad_year','cohort','organisation') NOT NULL,
-  `recipient_id` int(12) unsigned NOT NULL,
-  PRIMARY KEY (`task_id`,`recipient_type`,`recipient_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_verifiers` (
-  `task_id` int(12) unsigned NOT NULL,
-  `verifier_id` int(12) unsigned NOT NULL,
-  PRIMARY KEY (`task_id`,`verifier_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `meta_types` (
@@ -4990,3 +5007,95 @@ CREATE TABLE `profile_custom_responses` (
   `value` text NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `logbook_entries` (
+  `lentry_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `proxy_id` int(12) unsigned NOT NULL,
+  `encounter_date` int(12) NOT NULL,
+  `updated_date` bigint(64) unsigned NOT NULL DEFAULT '0',
+  `patient_info` varchar(30) NOT NULL,
+  `agerange_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `gender` varchar(1) NOT NULL DEFAULT '0',
+  `course_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `llocation_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `lsite_id` int(11) NOT NULL,
+  `comments` text,
+  `reflection` text NOT NULL,
+  `entry_active` int(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`lentry_id`),
+  KEY `proxy_id` (`proxy_id`,`entry_active`),
+  KEY `proxy_id_2` (`proxy_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `logbook_entry_objectives` (
+  `leobjective_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `lentry_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `objective_id` int(12) unsigned NOT NULL DEFAULT '0',
+  `participation_level` int(12) NOT NULL DEFAULT '3',
+  `updated_by` int(11) NOT NULL,
+  `updated_date` int(11) DEFAULT NULL,
+  `objective_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`leobjective_id`),
+  KEY `lentry_id` (`lentry_id`,`objective_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `logbook_lu_ageranges` (
+  `agerange_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `agerange` varchar(8) DEFAULT NULL,
+  `agerange_active` tinyint(1) unsigned NOT NULL DEFAULT '1',
+  PRIMARY KEY (`agerange_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `logbook_lu_ageranges` (`agerange_id`, `agerange`, `agerange_active`)
+VALUES
+	(1, '< 1', 1),
+	(2, '1 - 4', 1),
+	(3, '5 - 12', 1),
+	(4, '13 - 19', 1),
+	(5, '20 - 64', 1),
+	(6, '65 - 74', 1),
+	(7, '75+', 1);
+
+CREATE TABLE IF NOT EXISTS `logbook_lu_locations` (
+  `llocation_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `location` varchar(64) DEFAULT NULL,
+  `location_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`llocation_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `logbook_lu_locations` (`llocation_id`, `location`, `location_active`)
+VALUES
+	(1, 'Clinic', 1),
+	(2, 'Ward', 1),
+	(3, 'Emergency', 1),
+	(4, 'ICU', 1),
+	(5, 'Private Office', 1),
+	(6, 'OR', 1),
+	(7, 'NICU', 1),
+	(8, 'Nursing Home', 1),
+	(9, 'Community Site', 1),
+	(10, 'Computer Interactive Case', 1),
+	(11, 'Other (provide details in additional comments field)', 1);
+
+CREATE TABLE IF NOT EXISTS `logbook_lu_sites` (
+  `lsite_id` int(11) NOT NULL AUTO_INCREMENT,
+  `site_name` varchar(64) NOT NULL,
+  `site_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`lsite_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+INSERT INTO `logbook_lu_sites` (`lsite_id`, `site_name`, `site_active`)
+VALUES
+	(1, 'Brockville General Hospital', 1),
+	(2, 'Brockville Pyschiatric Hospital', 1),
+	(3, 'Hotel Dieu Hospital (Kingston)', 1),
+	(4, 'Kingston General Hospital', 1),
+	(5, 'Lakeridge Health', 1),
+	(6, 'Markam Stouffville Hospital', 1),
+	(7, 'Perth Family Health Team', 1),
+	(8, 'Perth/Smiths Falls District Hospital', 1),
+	(9, 'Peterborough Regional Health Centre', 1),
+	(10, 'Providence Care Centre', 1),
+	(11, 'Quinte Health Care', 1),
+	(12, 'Weenebayko General Hospital', 1),
+	(13, 'Other (provide details in additional comments field)', 1);

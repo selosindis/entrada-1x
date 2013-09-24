@@ -50,8 +50,8 @@ if ($RECORD_ID && $FILE_ID) {
 				}
 			}
 			if ($allowed){//shares_module_access($file_record["cshare_id"], "add-comment")) {
-				$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$RECORD_ID.(isset($assignment_contact)&&$assignment_contact?"&pid=".$file_record["proxy_id"]:""), "title" => limit_chars($file_record["file_title"], 32));
-				$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=add-comment&id=".$RECORD_ID."&fid=".$FILE_ID, "title" => "Add File Comment");
+				$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=view&assignment_id=".$RECORD_ID.(isset($assignment_contact)&&$assignment_contact?"&pid=".$file_record["proxy_id"]:""), "title" => limit_chars($file_record["file_title"], 32));
+				$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=add-comment&assignment_id=".$RECORD_ID."&fid=".$FILE_ID, "title" => "Add File Comment");
 
 				load_rte();
 
@@ -97,7 +97,7 @@ if ($RECORD_ID && $FILE_ID) {
 
 							if ($db->AutoExecute("assignment_comments", $PROCESSED, "INSERT")) {
 								if ($COMMENT_ID = $db->Insert_Id()) {
-									$url			= ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$RECORD_ID.(isset($assignment_contact)&&$assignment_contact?"&pid=".$file_record["proxy_id"]:"")."#comment-".$COMMENT_ID;
+									$url			= ENTRADA_URL."/profile/gradebook/assignments?section=view&assignment_id=".$RECORD_ID.(isset($assignment_contact)&&$assignment_contact?"&pid=".$file_record["proxy_id"]:"")."#comment-".$COMMENT_ID;
 									$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 									$SUCCESS++;

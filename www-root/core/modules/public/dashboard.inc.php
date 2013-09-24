@@ -181,36 +181,55 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
 	if (defined("ENABLE_NOTICES") && ENABLE_NOTICES) {
 		$notices_to_display = Models_Notice::fetchUserNotices();
-		if ($notices_to_display && ($total_notices = count($notices_to_display))) {
-			?>
-            <form action="<?php echo ENTRADA_RELATIVE; ?>/dashboard?action=read" method="post">
-                <div class="dashboard-notices alert">
-                    <h2><?php echo APPLICATION_NAME; ?> Notice<?php echo (($total_notices != 1) ? "s" : ""); ?></h2>
-                    <?php
-                    foreach ($notices_to_display as $announcement) {
-                        echo "<div id=\"notice_box_".(int) $announcement["notice_id"]."\">";
-                        echo "  <label class=\"checkbox\"><input type=\"checkbox\" name=\"mark_read[]\" id=\"notice_msg_".(int) $announcement["notice_id"]."\" value=\"".(int) $announcement["notice_id"]."\" /> ";
-                        echo "	<strong>".date(DEFAULT_DATE_FORMAT, $announcement["updated_date"])."</strong>";
-                        echo    ($announcement["lastname"] ? " <small>by ".html_encode($announcement["firstname"]." ".$announcement["lastname"])."</small>" : "");
-                        echo "  </label>\n";
-                        echo "	<div class=\"space-left\">".trim(clean_input($announcement["notice_summary"], "html"))."</div>";
-                        echo "</div>";
-                    }
-                    ?>
-                </div>
-                <a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $ENTRADA_USER->getUsername() ?>.rss" target="_blank" class="btn-mini"><i class="icon-fire"></i> Subscribe to RSS Feed</a>
-                <button class="btn btn-small btn-success pull-right"><i class="icon-ok icon-white"></i> Mark As Read</button>
-                <div class="clearfix"></div>
-            </form>
+		if ($notices_to_display && ($total_notices = count($notices_to_display))) { ?>
+			<form action="<?php echo ENTRADA_RELATIVE; ?>/dashboard?action=read" method="post">
+				<div class="dashboard-notices alert">
+					<div class="row-fluid">
+						<div class="span8">
+							<h2><?php echo APPLICATION_NAME ." ". $translate->_("Message Center");?></h2>
+						</div>
+						<div class="span4">
+							<a class="btn btn-small pull-right previous-notices" href="<?php echo ENTRADA_URL; ?>/messages"><i class="icon-eye-open"></i> Previously Read Messages</a>
+						</div>
+					</div>
+					<?php
+					foreach ($notices_to_display as $announcement) {
+						echo "<div id=\"notice_box_".(int) $announcement["notice_id"]."\" class=\"new-notice\">";
+						echo "  <label class=\"checkbox\"><input type=\"checkbox\" name=\"mark_read[]\" id=\"notice_msg_".(int) $announcement["notice_id"]."\" value=\"".(int) $announcement["notice_id"]."\" /> ";
+						echo "	<strong>".date(DEFAULT_DATE_FORMAT, $announcement["updated_date"])."</strong>";
+						echo    ($announcement["lastname"] ? " <small>by ".html_encode($announcement["firstname"]." ".$announcement["lastname"])."</small>" : "");
+						echo "  </label>\n";
+						echo "	<div class=\"space-left\">".trim(clean_input($announcement["notice_summary"], "html"))."</div>";
+						echo "</div>";
+					}
+					?>
+				</div>
+				<a href="<?php echo ENTRADA_URL; ?>/rss/<?php echo $ENTRADA_USER->getUsername() ?>.rss" target="_blank" class="btn-mini"><i class="icon-fire"></i> Subscribe to RSS Feed</a>
+				<button class="btn btn-small btn-success pull-right"><i class="icon-ok icon-white"></i> Mark As Read</button>
+				<div class="clearfix"></div>
+			</form>
 
-			<?php
+		<?php
+		} else { ?>
+			<div class="well no-dashboard-notices">
+				<div class="row-fluid">
+					<div class="span8">
+						<h2><?php echo APPLICATION_NAME ." ". $translate->_("Message Center");?></h2>
+					</div>
+					<div class="span4 pull-right">
+						<a class="btn btn-small pull-right previous-notices" href="<?php echo ENTRADA_URL; ?>/messages"><i class="icon-eye-open"></i> Previously Read Messages</a>
+					</div>
+				</div>
+				<p>The <?php echo  $translate->_("Message Center"); ?> is currently empty.</p>
+			</div>
+		<?php
 		}
 	}
-
+	
 	switch ($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]) {
 		case "medtech" :
 		case "student" :
-			$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE, "title" => "Student Dashboard");
+			$BREADCRUMB[] = array("url" => ENTRADA_RELATIVE . "/dashboard", "title" => "Student Dashboard");
 
 			/**
 			 * How did this person not get assigned this already? Mak'em new.
@@ -484,7 +503,7 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
                     data : '<?php echo ENTRADA_RELATIVE; ?>/calendars/<?php echo html_encode($_SESSION["details"]["username"]); ?>.json'
                 });
             });
-
+		
             function setDateValue(field, date) {
                 timestamp = (getMSFromDate(date) * 1000);
 

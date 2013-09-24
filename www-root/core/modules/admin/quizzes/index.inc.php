@@ -36,219 +36,159 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
-} else {
-	/**
-	 * Update requested column to sort by.
-	 * Valid: date, teacher, title, phase
-	 */
-	if (isset($_GET["sb"])) {
-		if (in_array(trim($_GET["sb"]), array("title", "questions", "status"))) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = trim($_GET["sb"]);
+} else { 
+	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js"."\"></script>";
+	$query = "  SELECT a.*, COUNT(DISTINCT c.`qquestion_id`) AS `question_total`, IF(a.`quiz_active` = '1', 'Active', 'Disabled') AS `quiz_status`, CONCAT(d.`firstname`, ' ', d.`lastname`) AS author
+					FROM `quizzes` AS a
+					LEFT JOIN `quiz_contacts` AS b
+					ON a.`quiz_id` = b.`quiz_id`
+					LEFT JOIN `quiz_questions` AS c
+					ON a.`quiz_id` = c.`quiz_id`
+					AND c.`question_active` = 1
+					LEFT JOIN `". AUTH_DATABASE ."`.`user_data` AS d
+					ON a.`created_by` = d.`id`
+					WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
+					AND a.`quiz_active` = 1
+					GROUP BY a.`quiz_id`";
+	
+	$quizzes = $db->GetAll($query);
+	if (isset($_GET["ajax"]) && $_GET["ajax"] && isset($_GET["method"]) && $_GET["method"] == "list") {
+		ob_clear_open_buffers();
+		$output = array("aaData" => array());
+		$count = 0;
+		if ($quizzes) {
+			/*
+			* Ordering
+			*/
+			if (isset($_GET["iSortCol_0"]) && in_array($_GET["iSortCol_0"], array(0, 1, 2, 3, 4))) {
+				$aColumns = array("modified", "quiz_title", "author", "question_total", "updated_date");
+				$sort_array = array();
+				foreach ($quizzes as $quiz) {
+					$quiz_array = $quiz;
+					$sort_array[] = $quiz_array[$aColumns[clean_input($_GET["iSortCol_0"], "int")]];
+				}
+				array_multisort($sort_array, (isset($_GET["sSortDir_0"]) && $_GET["sSortDir_0"] == "desc" ? SORT_DESC : SORT_ASC), (clean_input($_GET["iSortCol_0"], "int") == 3 ? SORT_NUMERIC : SORT_STRING), $quizzes);
+			}
+			if (isset($_GET["iDisplayStart"]) && isset($_GET["iDisplayLength"]) && $_GET["iDisplayLength"] != "-1" ) {
+				$start = (int)$_GET["iDisplayStart"];
+				$limit = (int)$_GET["iDisplayLength"];
+			} else {
+				$start = 0;
+				$limit = count($quizzes) - 1;
+			}
+			if ($_GET["sSearch"] != "") {
+				$search_value = $_GET["sSearch"];
+			}
+			foreach ($quizzes as $quiz) {
+				if (!isset($search_value) || stripos($quiz["quiz_title"], $search_value) !== false || stripos($quiz["author"], $search_value) !== false || stripos($quiz["question_total"], $search_value) !== false || !isset($search_value) || stripos(date("Y-m-d g:ia", $quiz["updated_date"]), $search_value) !== false) {
+					if ($count >= $start && $count < ($start + $limit)) {
+						$row = array();
+						$row["modified"] = "<input class=\"delete-control\" type=\"checkbox\" name=\"delete[]\" value=\"".$quiz["quiz_id"]."\" />";
+						$row["quiz_title"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">".$quiz["quiz_title"]."</a>";
+						$row["author"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">". $quiz["author"] ."</a>";
+						$row["question_total"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">". $quiz["question_total"] ."</a>";
+						$row["updated_date"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">".date("Y-m-d g:ia", $quiz["updated_date"])."</a>";
+						$row["id"] = $quiz["quiz_id"];
+						$output["aaData"][] = $row;
+					}
+					$count++;
+				}
+			}
 		}
-
-		$_SERVER["QUERY_STRING"] = replace_query(array("sb" => false));
-	} else {
-		if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "title";
+		$output["iTotalRecords"] = (is_array($quizzes) ? @count($quizzes) : 0);
+		$output["iTotalDisplayRecords"] = $count;
+		$output["sEcho"] = clean_input($_GET["sEcho"], "int");
+		if ($output && count($output)) {
+		   echo json_encode($output);
 		}
+		exit;
 	}
-
-	/**
-	 * Update requested order to sort by.
-	 * Valid: asc, desc
-	 */
-	if (isset($_GET["so"])) {
-		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = ((strtolower($_GET["so"]) == "desc") ? "desc" : "asc");
-
-		$_SERVER["QUERY_STRING"] = replace_query(array("so" => false));
-	} else {
-		if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"])) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = "asc";
-		}
-	}
-
-	/**
-	 * Update requsted number of rows per page.
-	 * Valid: any integer really.
-	 */
-	if ((isset($_GET["pp"])) && ((int) trim($_GET["pp"]))) {
-		$integer = (int) trim($_GET["pp"]);
-
-		if (($integer > 0) && ($integer <= 250)) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] = $integer;
-		}
-
-		$_SERVER["QUERY_STRING"] = replace_query(array("pp" => false));
-	} else {
-		if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"])) {
-			$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] = DEFAULT_ROWS_PER_PAGE;
-		}
-	}
-
-	/**
-	 * Check if preferences need to be updated on the server at this point.
-	 */
-	preferences_update($MODULE, $PREFERENCES);
-
-	/**
-	 * Provide the queries with the columns to order by.
-	 */
-	switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
-		case "status" :
-		case "title" :
-			$sort_by = "a.`quiz_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
-        break;
-		case "questions" :
-		default :
-			$sort_by = "`question_total` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
-		break;
-	}
-
-	/**
-	 * Get the total number of results using the generated queries above and calculate the total number
-	 * of pages that are available based on the results per page preferences.
-	 */
-
-	$query = "	SELECT COUNT(*) AS `total_rows`
-				FROM `quizzes` AS a
-				LEFT JOIN `quiz_contacts` AS b
-				ON a.`quiz_id` = b.`quiz_id`
-				WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-                AND a.`quiz_active` = 1";
-	$result = $db->GetRow($query);
-	if ($result) {
-		$total_rows	= $result["total_rows"];
-
-		if ($total_rows <= $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) {
-			$total_pages = 1;
-		} elseif (($total_rows % $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) == 0) {
-			$total_pages = (int) ($total_rows / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-		} else {
-			$total_pages = (int) ($total_rows / $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]) + 1;
-		}
-	} else {
-		$total_rows = 0;
-		$total_pages = 1;
-	}
-
-	/**
-	 * Check if pv variable is set and see if it's a valid page, other wise page 1 it is.
-	 */
-	if (isset($_GET["pv"])) {
-		$page_current = (int) trim($_GET["pv"]);
-
-		if (($page_current < 1) || ($page_current > $total_pages)) {
-			$page_current = 1;
-		}
-	} else {
-		$page_current = 1;
-	}
-
-	$page_previous = (($page_current > 1) ? ($page_current - 1) : false);
-	$page_next = (($page_current < $total_pages) ? ($page_current + 1) : false);
 	?>
+	<script type="text/javascript">
+		jQuery(document).ready(function () {
+			jQuery("#delete-quizzes").on("click", function (event) {
+				var checked = document.querySelectorAll("input.delete-control:checked").length === 0 ? false : true;
+				if (!checked) {
+					event.preventDefault();
+					var errors = new Array();
+					errors[0] = "You must select at least 1 quiz to delete by checking the checkbox to the left the quiz.";
+					display_error(errors, "#msg");
+				}
+			});
+			
+			jQuery('#quiz-list').dataTable(
+				{
+					'sPaginationType': 'full_numbers',
+					'bInfo': false,
+					'bAutoWidth': false,
+					'sAjaxSource': '?ajax=true&method=list',
+					'bServerSide': true,
+					'bProcessing': true,
+					'aoColumns': [
+						{ 'mDataProp': 'modified' },
+						{ 'mDataProp': 'quiz_title' },
+						{ 'mDataProp': 'author' },
+						{ 'mDataProp': 'question_total' },
+						{ 'mDataProp': 'updated_date' },
+					],
+					'aoColumnDefs': [ {
+						'aTargets': [0,1,2,3,4,],
+						'fnCreatedCell': function (nTd, sData, oData, iRow, iCol) {
+							if (iCol == 0) {
+								jQuery(nTd).addClass('modified')
+							} else if ( iCol == 1 ) {
+								jQuery(nTd).addClass('title')
+							} else if ( iCol == 2 ) {
+								jQuery(nTd).addClass('author')
+							} else if ( iCol == 4 ) {
+								jQuery(nTd).addClass('questions')
+							} else if ( iCol == 5 ) {
+								jQuery(nTd).addClass('updated')
+							}
+						}
+					}],
+					'fnRowCallback': function(nRow, aData, iDisplayIndex, iDisplayIndexFull) {
+						jQuery(nRow).attr('data-id', aData.id);
 
+						return nRow;
+					},
+					'oLanguage': {
+						'sEmptyTable': 'There are currently quizzes in the system.',
+						'sZeroRecords': 'No quizzes found.'
+					}
+
+				}
+			);
+		}); 
+	</script>
 	<h1><?php echo $MODULES[strtolower($MODULE)]["title"]; ?></h1>
-
-    <div class="pull-right">
-		<a href="<?php echo ENTRADA_RELATIVE; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary space-below">Create New Quiz</a>
+	<div id="msg"></div>
+    <div class="row-fluid">
+		<a href="<?php echo ENTRADA_RELATIVE; ?>/admin/<?php echo $MODULE; ?>?section=add" class="btn btn-primary space-below pull-right">Create New Quiz</a>
     </div>
-    <?php
-    if ($total_pages > 1) {
-        echo "<div class=\"clear\" style=\"margin-bottom: 15px\"></div>";
-        echo "<div class=\"pull-right\">\n";
-        echo "<form action=\"".ENTRADA_RELATIVE."/admin/".$MODULE."\" method=\"get\" id=\"pageSelector\">\n";
-        echo "<span style=\"width: 20px; vertical-align: middle; margin-right: 3px; text-align: left\">\n";
-        if ($page_previous) {
-            echo "<a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?".replace_query(array("pv" => $page_previous))."\"><img src=\"".ENTRADA_RELATIVE."/images/record-previous-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Back to page ".$page_previous.".\" title=\"Back to page ".$page_previous.".\" style=\"vertical-align: middle\" /></a>\n";
-        } else {
-            echo "<img src=\"".ENTRADA_RELATIVE."/images/record-previous-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
-        }
-        echo "</span>";
-        echo "<span style=\"vertical-align: middle\">\n";
-        echo "<select name=\"pv\" onchange=\"$('pageSelector').submit();\"".(($total_pages <= 1) ? " disabled=\"disabled\"" : "").">\n";
-        for($i = 1; $i <= $total_pages; $i++) {
-            echo "<option value=\"".$i."\"".(($i == $page_current) ? " selected=\"selected\"" : "").">".(($i == $page_current) ? " Viewing" : "Jump To")." Page ".$i."</option>\n";
-        }
-        echo "</select>\n";
-        echo "</span>\n";
-        echo "<span style=\"width: 20px; vertical-align: middle; margin-left: 3px; text-align: right\">\n";
-        if ($page_current < $total_pages) {
-            echo "<a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?".replace_query(array("pv" => $page_next))."\"><img src=\"".ENTRADA_RELATIVE."/images/record-next-on.gif\" border=\"0\" width=\"11\" height=\"11\" alt=\"Forward to page ".$page_next.".\" title=\"Forward to page ".$page_next.".\" style=\"vertical-align: middle\" /></a>";
-        } else {
-            echo "<img src=\"".ENTRADA_RELATIVE."/images/record-next-off.gif\" width=\"11\" height=\"11\" alt=\"\" title=\"\" style=\"vertical-align: middle\" />";
-        }
-        echo "</span>\n";
-        echo "</form>\n";
-        echo "</div>";
-    }
-
-    echo "<div class=\"clear\"></div>";
-
-	$query = "  SELECT a.*, COUNT(DISTINCT c.`qquestion_id`) AS `question_total`, IF(a.`quiz_active` = '1', 'Active', 'Disabled') AS `quiz_status`
-				FROM `quizzes` AS a
-				LEFT JOIN `quiz_contacts` AS b
-				ON a.`quiz_id` = b.`quiz_id`
-				LEFT JOIN `quiz_questions` AS c
-				ON a.`quiz_id` = c.`quiz_id`
-				AND c.`question_active` = 1
-				WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-                AND a.`quiz_active` = 1
-				GROUP BY a.`quiz_id`
-				ORDER BY %s LIMIT %s, %s";
-
-	/**
-	 * Provides the first parameter of MySQLs LIMIT statement by calculating which row to start results from.
-	 */
-	$limit_parameter = (int) (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"] * $page_current) - $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-
-	$query = sprintf($query, $sort_by, $limit_parameter, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"]);
-	$results = $db->GetAll($query);
-	if ($results) {
-		?>
-		<form action="<?php echo ENTRADA_RELATIVE; ?>/admin/<?php echo $MODULE; ?>?section=delete" method="post">
-            <table class="tableList" cellspacing="0" summary="List of Quizzes">
-                <colgroup>
-                    <col class="modified" />
-                    <col class="title" />
-                    <col class="general" />
-                </colgroup>
-                <thead>
-                    <tr>
-                        <td class="modified">&nbsp;</td>
-                        <td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "title") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("title", "Quiz Title"); ?></td>
-                        <td class="general<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "questions") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("questions", "Questions"); ?></td>
-                    </tr>
-                </thead>
-                <tfoot>
-                    <tr>
-                        <td></td>
-                        <td style="padding-top: 10px" colspan="2">
-                            <input type="submit" class="btn btn-danger" value="Delete Selected" />
-                        </td>
-                    </tr>
-                </tfoot>
-                <tbody>
-                    <?php
-                    foreach ($results as $result) {
-                        echo "<tr id=\"quiz-".$result["quiz_id"]."\"".((!$result["quiz_active"]) ? " class=\"disabled\"" : "").">\n";
-                        echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"delete[]\" value=\"".(int) $result["quiz_id"]."\" /></td>\n";
-                        echo "	<td class=\"title\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$result["quiz_id"]."\">".html_encode($result["quiz_title"])."</a></td>\n";
-                        echo "	<td class=\"general\">".html_encode($result["question_total"])."</td>\n";
-                        echo "</tr>\n";
-                    }
-                    ?>
-                </tbody>
-            </table>
-		</form>
-        <?php
-	} else {
-		?>
-		<div class="display-generic">
-			The Manage Quizzes tool allows you to author and deliver quizzes online directly within <?php echo APPLICATION_NAME; ?>.
-			<br /><br />
-			Creating quizzes is easy; to begin simply click the <strong>Create Quiz</strong> link above and follow the on-screen instructions.
+	<form action="<?php echo ENTRADA_RELATIVE; ?>/admin/<?php echo $MODULE; ?>?section=delete" method="post">
+		<table class="table table-striped table-bordered" id="quiz-list" summary="List of Quizzes">
+			<thead>
+				<tr>
+					<th width="5%">&nbsp;</th>
+					<th width="30%">Quiz Title</th>
+					<th width="25%">Author</th>
+					<th width="15%">Questions</th>
+					<th width="25%">Last Updated</th>
+				</tr>
+			</thead>
+			<tbody>
+				
+			</tbody>
+		</table>
+		<?php
+		if ($quizzes) { ?>
+		<div class="row-fluid">
+			<input id="delete-quizzes" type="submit" class="btn btn-danger" value="Delete Selected" />
 		</div>
 		<?php
-	}
+		}
+		?>
+	</form>
+    <?php
 }

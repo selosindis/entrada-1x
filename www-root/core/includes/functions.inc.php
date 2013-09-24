@@ -4287,60 +4287,29 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
     if (!$toolbar_groups || (is_scalar($toolbar_groups) && ($toolbar_groups = clean_input($toolbar_groups, "alpha")))) {
         switch ($toolbar_groups) {
             case "full" :
-                $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard")),
-                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
-                    array("name" => "links"),
-                    array("name" => "insert"),
-                    array("name" => "forms"),
-                    array("name" => "tools"),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
-                    "/",
-                    array("name" => "basicstyles", "groups" => array("basicstyles", "cleanup")),
-                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
-                    array("name" => "styles"),
-                    array("name" => "colors"),
-                );
-            break;
             case "communityadvanced" :
             case "communitybasic" :
             case "advanced" :
                 $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard")),
-                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
+                    array("name" => "clipboard", "groups" => array("clipboard", "spellchecker")),
                     array("name" => "links"),
-                    array("name" => "insert"),
-                    array("name" => "forms"),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
-                    "/",
+                    array("name" => "insert", "groups" => array("mediaembed", "insert")),
+                    array("name" => "styles"),
                     array("name" => "basicstyles", "groups" => array("basicstyles", "cleanup")),
-                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
-                    array("name" => "colors"),
+                    array("name" => "paragraph", "groups" => array("colors", "list", "indent", "blocks", "align")),
+                    array("name" => "mode"),
                 );
             break;
             case "community" :
-            case "minimal" :
             case "mspr" :
-                $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard")),
-                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
-                    array("name" => "links"),
-                    array("name" => "insert"),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
-                    "/",
-                    array("name" => "basicstyles", "groups" => array("basicstyles", "cleanup")),
-                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
-                );
-            break;
+            case "minimal" :
             case "basic" :
             default :
                 $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard")),
-                    array("name" => "editing", "groups" => array("find", "selection", "spellchecker")),
+                    array("name" => "clipboard", "groups" => array("clipboard", "spellchecker")),
                     array("name" => "links"),
-                    array("name" => "insert"),
-                    array("name" => "document", "groups" => array("mode", "document", "doctools")),
+                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
+                    array("name" => "mode"),
                 );
             break;
         }
@@ -4350,6 +4319,7 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
 	$output .= "<script type=\"text/javascript\" defer=\"defer\">\n";
     $output .= "CKEDITOR.editorConfig = function( config ) {\n";
     $output .= "    config.customConfig = '';\n";
+    $output .= "    config.allowedContent = true;\n";
     $output .= "    config.baseHref = '".ENTRADA_URL."';\n";
     $output .= "    config.forcePasteAsPlainText = true;\n";
     $output .= "    config.autoParagraph = false;\n";
@@ -6256,13 +6226,13 @@ function communities_pages_inlists($identifier = 0, $indent = 0, $options = arra
 				$output .= "	<span class=\"".(((int) $result["page_visible"]) == 0 ? "hidden-page " : "")."next off\">".
 								html_encode($result["menu_title"])."</span>\n";
 			} else {
-				$output .= "	<span class=\"delete\">".(array_search($result["cpage_id"], $locked_ids) === false ? "<input type=\"checkbox\" id=\"delete_".$result["cpage_id"]."\" name=\"delete[]\" value=\"".$result["cpage_id"]."\"".(($selected == $result["cpage_id"]) ? " checked=\"checked\"" : "")." />" : "<div class=\"locked-spacer\">&nbsp;</div>")."</span>\n";
+				$output .= "	<span class=\"delete\">".(!in_array($result["cpage_id"], $locked_ids) ? "<input type=\"checkbox\" id=\"delete_".$result["cpage_id"]."\" name=\"delete[]\" value=\"".$result["cpage_id"]."\"".(($selected == $result["cpage_id"]) ? " checked=\"checked\"" : "")." />" : "<div class=\"locked-spacer\">&nbsp;</div>")."</span>\n";
 				$output .= "	<span class=\"".(((int) $result["page_visible"]) == 0 ? "hidden-page " : "")."next\">
 								<a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":pages?".replace_query(array("action" => "edit", "step" => 1, "page" => $result["cpage_id"]))."\">".
 								html_encode($result["menu_title"])."</a></span>\n";
 			}
 			$output .= "</div>";
-			$output .= communities_pages_inlists($result["cpage_id"], $indent + 1, $options);
+			$output .= communities_pages_inlists($result["cpage_id"], $indent + 1, $options, $locked_ids);
 			$output .= "</li>\n";
 
 		}
@@ -7383,7 +7353,7 @@ function google_create_id() {
 						try {
 							$client		= Zend_Gdata_ClientLogin::getHttpClient($GOOGLE_APPS["admin_username"], $GOOGLE_APPS["admin_password"], Zend_Gdata_Gapps::AUTH_SERVICE_NAME);
 							$service	= new Zend_Gdata_Gapps($client, $GOOGLE_APPS["domain"]);
-							$service->createUser($google_id, $firstname, $lastname, $password, "MD5");
+							$service->createUser($google_id, $firstname, $lastname, $password, "SHA-1");
 
 							$search		= array("%FIRSTNAME%", "%LASTNAME%", "%GOOGLE_APPS_DOMAIN%", "%GOOGLE_ID%", "%GOOGLE_APPS_QUOTA%", "%APPLICATION_NAME%", "%ADMINISTRATOR_NAME%", "%ADMINISTRATOR_EMAIL%");
 							$replace	= array($firstname, $lastname, $GOOGLE_APPS["domain"], $google_id, $GOOGLE_APPS["quota"], APPLICATION_NAME, $AGENT_CONTACTS["administrator"]["name"], $AGENT_CONTACTS["administrator"]["email"]);
@@ -9441,19 +9411,22 @@ function courses_subnavigation($course_details, $tab="details") {
 	echo "<div class=\"no-printing\">\n";
     echo "    <ul class=\"nav nav-tabs\">\n";
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-        echo "<li".($tab=="details"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" >Details</a></li>\n";
+        echo "<li".($tab=="details"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" >Details</a></li>\n";
 	}
-	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-        echo "<li".($tab=="content"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\" >Content</a></li>\n";
-	}
-	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-		echo "<li".($tab=="enrolment"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" >Enrolment</a></li>\n";
+	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read") && $ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read", true)) {
+        echo "<li".($tab=="content"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\" >Content</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-        echo "<li".($tab=="groups"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\">Groups</a></li>\n";
+		echo "<li".($tab=="enrolment"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/enrolment?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" >Enrolment</a></li>\n";
+	}
+	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
+        echo "<li".($tab=="groups"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/groups?".replace_query(array("section" => false, "assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\">Groups</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
-        echo "<li".($tab=="gradebook"?" class=\"active\"":"")." style=\"width:20%;\"><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\">Gradebook</a></li>";
+        echo "<li".($tab=="gradebook"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/gradebook?section=view&amp;id=".$course_details["course_id"]."\">Gradebook</a></li>";
+	}
+	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"], true), "update")) {
+		echo "<li".($tab=="reports"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/reports?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" >Reports</a></li>\n";
 	}
 	echo "	</ul>\n";
 
@@ -9750,6 +9723,21 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
 				$objectives["objectives"][$result["objective_id"]]["description"] = (isset($objectives["objectives"][$result["objective_id"]]["objective_details"]) && $objectives["objectives"][$result["objective_id"]]["objective_details"] ? $objectives["objectives"][$result["objective_id"]]["objective_details"] : $result["objective_description"]);
 				$objectives["objectives"][$result["objective_id"]]["parent"] = $top_level_id;
 				$objectives["objectives"][$result["objective_id"]]["parent_ids"] = array();
+				if (is_array($objectives["primary_ids"]) && array_search($result["objective_id"], $objectives["primary_ids"]) !== false) {
+					$objectives["objectives"][$result["objective_id"]]["primary"] = true;
+				} else {
+					$objectives["objectives"][$result["objective_id"]]["primary"] = false;
+				}
+				if (is_array($objectives["secondary_ids"]) && array_search($result["objective_id"], $objectives["secondary_ids"]) !== false) {
+					$objectives["objectives"][$result["objective_id"]]["secondary"] = true;
+				} else {
+					$objectives["objectives"][$result["objective_id"]]["secondary"] = false;
+				}
+				if (is_array($objectives["tertiary_ids"]) && array_search($result["objective_id"], $objectives["tertiary_ids"]) !== false) {
+					$objectives["objectives"][$result["objective_id"]]["tertiary"] = true;
+				} else {
+					$objectives["objectives"][$result["objective_id"]]["tertiary"] = false;
+				}
 			} else {
 				$objectives["objectives"][$result["objective_id"]]["objective_primary_children"] = 0;
 				$objectives["objectives"][$result["objective_id"]]["objective_secondary_children"] = 0;
@@ -9931,9 +9919,8 @@ function course_objective_child_recursive($objectives,$objective_id,$course_id,$
  * @param type $hierarchical
  * @return string
  */
-function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = false, $full_objective_list = false, $org_id = 0) {
+function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_importance = false, $parent_active = false, $importance = 1, $selected_only = false, $top = true, $display_importance = "primary", $hierarchical = true, $full_objective_list = false, $org_id = 0) {
 	global $ENTRADA_USER;
-
 	$output = "";
 	$active = array("primary" => false, "secondary" => false, "tertiary" => false);
 	$org_id = ($org_id == 0 ? $ENTRADA_USER->getActiveOrganisation() : (int) $org_id );
@@ -10003,7 +9990,7 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 	$flat_objective_list = events_flatten_objectives($full_objective_list);
 
 	if ((is_array($objectives)) && (count($objectives))) {
-		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"])) || $hierarchical) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
+		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"])) || ($hierarchical && (!$selected_only || isset($objective["event_objective"]) && $objective["event_objective"] && (isset($objective[$display_importance]) && $objective[$display_importance])))) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
 			$output .= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".(((count($objectives[$parent_id]["parent_ids"]) < 2 && !$hierarchical) || ($hierarchical && $parent_id == $top_level_id)) ? " style=\"padding-left: 0; margin-top: 0\"" : "").">\n";
 		}
 		$iterated = false;
@@ -10024,33 +10011,31 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 
 				foreach ($flat_objective_list as $objective_id => $objective_active) {
 					$objective = $objectives[$objective_id];
-					if (($objective["parent"] == $parent_id) && (($objective["objective_".$display_importance."_children"]) || ((isset($objective[$display_importance]) && $objective[$display_importance]) || ($parent_active && count($objective["parent_ids"]) > 2) && !$selected_only) || ($selected_only && isset($objective["event_objective"]) && $objective["event_objective"] && (isset($objective[$display_importance]) && $objective[$display_importance])))) {
+					if (($objective["parent"] == $parent_id) && (((($objective["objective_".$display_importance."_children"]) || ((isset($objective[$display_importance]) && $objective[$display_importance]) || $parent_active)) && !$selected_only) || ($selected_only && isset($objective["event_objective"]) && $objective["event_objective"] && (isset($objective[$display_importance]) && $objective[$display_importance])))) {
 						$importance = ((isset($objective["primary"]) && $objective["primary"]) ? 1 : ((isset($objective["secondary"]) && $objective["secondary"]) ? 2 : ((isset($objective["tertiary"]) && $objective["tertiary"]) ? 3 : $importance)));
-						if ((count($objective["parent_ids"]) > 1) || $hierarchical) {
-							$output .= "<li".((($parent_active) || (isset($objective[$display_importance]) && $objective[$display_importance])) && (count($objective["parent_ids"]) > 2) ? " class=\"\"" : "")." id=\"objective_".$objective_id."_row\">\n";
-							if (($edit_importance) && (isset($objective[$display_importance]) && $objective[$display_importance])) {
-								$output .= "<select onchange=\"javascript: moveObjective('".$objective_id."', this.value);\" style=\"float: right; margin: 5px\">\n";
-								$output .= "	<option value=\"primary\"".(($objective["primary"]) ? " selected=\"selected\"" : "").">Primary</option>\n";
-								$output .= "	<option value=\"secondary\"".(($objective["secondary"]) ? " selected=\"selected\"" : "").">Secondary</option>\n";
-								$output .= "	<option value=\"tertiary\"".(($objective["tertiary"]) ? " selected=\"selected\"" : "").">Tertiary</option>\n";
-								$output .= "</select>";
-							}
-							if (count($objective["parent_ids"]) == 3) {
-								$output .= "	<div><div class=\"objective-title\">".$objective["name"]."</div>";
-								$output .= "	<div class=\"objective-description content-small\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])."</div>";
-							} else {
-								$output .= "	<div class=\"objective-title\" id=\"objective_".$objective_id."\">".$objective["name"]."</div>\n";
-								$output .= "	<div class=\"objective-description content-small\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"]);
-							}
-							if (isset($objective["event_objective_details"]) && $objective["event_objective_details"]) {
-								$output .= "	<div class=\"objective-description content-small\"><em>".$objective["event_objective_details"]."</em></div>";
-							}
-							$output .= "	</div>";
-							$output .= "</li>";
-						}
+                        $output .= "<li".((($parent_active) || (isset($objective[$display_importance]) && $objective[$display_importance])) && (count($objective["parent_ids"]) > 2) ? " class=\"\"" : "")." id=\"objective_".$objective_id."_row\">\n";
+                        if (($edit_importance) && (isset($objective[$display_importance]) && $objective[$display_importance])) {
+                            $output .= "<select onchange=\"javascript: moveObjective('".$objective_id."', this.value);\" style=\"float: right; margin: 5px\">\n";
+                            $output .= "	<option value=\"primary\"".(($objective["primary"]) ? " selected=\"selected\"" : "").">Primary</option>\n";
+                            $output .= "	<option value=\"secondary\"".(($objective["secondary"]) ? " selected=\"selected\"" : "").">Secondary</option>\n";
+                            $output .= "	<option value=\"tertiary\"".(($objective["tertiary"]) ? " selected=\"selected\"" : "").">Tertiary</option>\n";
+                            $output .= "</select>";
+                        }
+                        if (count($objective["parent_ids"]) == 3) {
+                            $output .= "	<div><div class=\"objective-title\">".$objective["name"]."</div>";
+                            $output .= "	<div class=\"objective-description content-small\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])."</div>";
+                        } else {
+                            $output .= "	<div class=\"objective-title\" id=\"objective_".$objective_id."\">".$objective["name"]."</div>\n";
+                            $output .= "	<div class=\"objective-description content-small\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"]);
+                        }
+                        if (isset($objective["event_objective_details"]) && $objective["event_objective_details"]) {
+                            $output .= "	<div class=\"objective-description content-small\"><em>".$objective["event_objective_details"]."</em></div>";
+                        }
+                        $output .= "	</div>";
+                        $output .= "</li>";
 					}
 					if ($objective["parent"] == $parent_id) {
-						$output .= course_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_importance, ((isset($objective[$display_importance]) && $objective[$display_importance]) ? true : false), $importance, $selected_only, false, $display_importance, $hierarchical, $full_objective_list);
+						$output .= course_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_importance, ((isset($objective[$display_importance]) && $objective[$display_importance]) || $parent_active ? true : false), $importance, $selected_only, false, $display_importance, $hierarchical, $full_objective_list);
 					}
 				}
 
@@ -10062,7 +10047,7 @@ function course_objectives_in_list($objectives, $parent_id, $top_level_id, $edit
 			$iterated = true;
 		} while ((($display_importance != "tertiary") && ($display_importance != "secondary" || $active["tertiary"]) && ($display_importance != "primary" || $active["secondary"] || $active["tertiary"])) && $top);
 
-		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"])) || $hierarchical) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
+		if (((isset($objectives[$parent_id]) && count($objectives[$parent_id]["parent_ids"])) || ($hierarchical && (!$selected_only || isset($objective["event_objective"]) && $objective["event_objective"] && (isset($objective[$display_importance]) && $objective[$display_importance])))) && (!isset($objectives[$parent_id]["parent_ids"]) || count($objectives[$parent_id]["parent_ids"]) < 3)) {
 			$output .= "</ul>";
 		}
 	}
@@ -10122,7 +10107,7 @@ function course_fetch_course_audience($course_id = 0, $organisation_id = false,$
 				switch ($result["audience_type"]) {
 					case "cohort" :	// Cohorts
 					case "group_id" : // Course Groups
-						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname, d.`eattendance_id` AS `has_attendance`
+						$query = "	SELECT u.*,u.`id` AS proxy_id, CONCAT_WS(', ',u.`lastname`,u.`firstname`) AS fullname
 									FROM `group_members` a
 									JOIN `".AUTH_DATABASE."`.`user_data` u
 									ON a.`proxy_id` = u.`id`
@@ -10157,8 +10142,6 @@ function course_fetch_course_audience($course_id = 0, $organisation_id = false,$
 						application_log("notice", "audience_type [".$result["audience_type"]."] is no longer supported, but is used in event_id [".$event_id."].");
 					break;
 				}
-
-
 			}
 			$course_audience = array_unique($course_audience,SORT_REGULAR);
 			usort($course_audience,"audience_sort");
@@ -12855,6 +12838,11 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 					LEFT JOIN `event_objectives` c
 					ON c.`objective_id` = a.`objective_id`
 					AND c.`event_id` = ".$db->qstr($event_id)."
+                    JOIN `courses` AS d
+                    ON d.`course_id` = ".$db->qstr($course_id)."
+                    JOIN `objective_organisation` AS e
+                    ON a.`objective_id` = e.`objective_id`
+                    AND d.`organisation_id` = e.`organisation_id`
 					WHERE a.`objective_active` = '1'
 					AND a.`objective_parent` = ".$db->qstr($objective["objective_id"])."
 					GROUP BY a.`objective_id`
@@ -13201,6 +13189,26 @@ function events_flatten_objectives ($objectives) {
 	return $flat_objectives;
 }
 
+/**
+ * This function is used in conjunction with the output of events_fetch_objectives_structure and is used to
+ * find all the active objectives by objective name.
+ *
+ * @param type $objs - an array containing an objective set as produced by events_fetch_objectives_structure.
+ * @param type $output - an array of objective names of all the active objectives as accumlated by recursive call.
+ * @return type - an array of objective names of all the active objectives.
+ */
+function events_all_active_objectives($objs, $output = array()) {
+	foreach($objs as $obj_id => $details) {
+		if ($details["objective_active"]) {
+			$output[] = $details["objective_name"];
+		}
+		if ($details["children_active"]) {
+			$output = events_all_active_objectives($details["children"], $output);
+		}
+	}
+	return $output;
+}
+
 function events_fetch_objectives_structure($parent_id, $used_ids, $org_id = 0) {
 	global $db, $ENTRADA_USER;
 
@@ -13219,6 +13227,7 @@ function events_fetch_objectives_structure($parent_id, $used_ids, $org_id = 0) {
 	if ($objective_children) {
 		foreach ($objective_children as $objective) {
 			$full_objective_list[$objective["objective_id"]] = array(
+																		"objective_name" => $objective["objective_name"],
 																		"objective_active" => (is_array($used_ids) && array_search($objective["objective_id"], $used_ids) !== false ? true : false),
 																		"children_active" => false,
 																		"children" => array()
@@ -13300,10 +13309,10 @@ function regionaled_apartment_notification($type, $to = array(), $keywords = arr
 		 */
 		$mail = new Zend_Mail();
 		$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
-		$mail->addHeader("X-Section", "Regional Education Module", true);
+		$mail->addHeader("X-Section", $keywords["department_tile"] . " Accommodations Module", true);
 		$mail->clearFrom();
 		$mail->clearSubject();
-		$mail->setFrom($AGENT_CONTACTS["agent-regionaled"]["email"], APPLICATION_NAME." Regional Education System");
+		$mail->setFrom($AGENT_CONTACTS["agent-regionaled"][$keywords["department_id"]]["email"], APPLICATION_NAME. $keywords["department_tile"] . " Accommodation System");
 		$mail->setSubject($subject);
 		$mail->setBodyText(clean_input($message, "emailcontent"));
 
@@ -15539,41 +15548,6 @@ function displayARYearReported($year_reported, $AR_CUR_YEAR, $AR_PAST_YEARS, $AR
 }
 
 /**
- * Adds the task sidebar, and populates it, only if there are tasks to be completed
- */
-function add_task_sidebar () {
-	require_once("Models/users/User.class.php");
-	require_once("Models/tasks/TaskCompletions.class.php");
-	global $ENTRADA_ACL, $ENTRADA_USER;
-
-	$proxy_id = $ENTRADA_USER->getActiveId();
-	$user = User::get($proxy_id);
-
-
-	$tasks_completions = TaskCompletions::getByRecipient($user, array('order_by'=>array(array('deadline', 'asc')), 'limit' => 5, 'where' => 'completed_date IS NULL'));
-
-	foreach ($tasks_completions as $completion) {
-		$tasks[] = $completion->getTask();
-	}
-	if (isset($tasks) && $tasks) {
-
-		$sidebar_html = "<ul>";
-		foreach ($tasks as $task) {
-			$sidebar_html .= "
-			<li>
-				<a href='".ENTRADA_URL."/tasks?section=details&id=".$task->getID()."'>".html_encode($task->getTitle())."</a>
-				<span class='content-small'>".(($task->getDeadline()) ? date(DEFAULT_DATE_FORMAT,$task->getDeadline()) : "")."</span>
-			</li>";
-		}
-		$sidebar_html .= "</ul>";
-
-		$sidebar_html .= "<a class='see-all' href='".ENTRADA_URL."/tasks'>See all tasks</a>";
-
-		new_sidebar_item("Upcoming Tasks", $sidebar_html, "task-list", "open");
-	}
-}
-
-/**
  * Adds an error message
  * @param string $message
  */
@@ -15954,7 +15928,7 @@ function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessme
 				WHERE `assessments`.`course_id` = ".$db->qstr($course_id)."
 				AND `assessments`.`cohort` = ".$db->qstr($cohort).
 				($assessment_id ? " AND `assessments`.`assessment_id` = ".$db->qstr($assessment_id) : ($assessment_ids_string ? " AND `assessments`.`assessment_id` IN (".$assessment_ids_string.")" : ""));
-				
+
 	$assessments = $db->GetAll($query);
 	if($assessments) {
 		$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, c.`role`";
@@ -17054,7 +17028,7 @@ function fetch_objective_parents($objective_id, $level = 0) {
 	}
 }
 
-function count_objective_child_events($objective_id = 0, $start = NULL, $end = NULL, $course_id = NULL, $level = 0) {
+function count_objective_child_events($objective_id = 0, $start = NULL, $end = NULL, $course_id = NULL, $group_id = NULL, $level = 0) {
 	global $db, $ENTRADA_USER;
 	if ($level >= 99) {
 		application_log("error", "Recursion depth out of bounds in [count_objective_child_events].");
@@ -17068,9 +17042,13 @@ function count_objective_child_events($objective_id = 0, $start = NULL, $end = N
 				FROM `event_objectives` AS a
 				JOIN `events` AS b
 				ON a.`event_id` = b.`event_id`
+				JOIN `event_audience` AS c
+				ON a.`event_id` = c.`event_id`
+				AND c.`audience_type` = 'cohort'
 				WHERE `objective_id` = ".$db->qstr($objective_id).
 				($start != NULL ? " AND (IF (b.`event_id` IS NOT NULL, b.`event_start` BETWEEN ".$db->qstr($start)." AND ".$db->qstr($end).", '1' = '1'))" : "").
-				($course_id != NULL ? " AND b.`course_id` = ".$db->qstr($course_id) : "");
+				($course_id != NULL ? " AND b.`course_id` = ".$db->qstr($course_id) : "").
+				($group_id != NULL ? " AND c.`audience_value` = ".$db->qstr($group_id) : "");
 	$output[$objective_id] = $db->GetOne($query);
 
 	/* Fetch objective children */
@@ -17084,7 +17062,7 @@ function count_objective_child_events($objective_id = 0, $start = NULL, $end = N
 	$children = $db->GetAll($query);
 	if ($children) {
 		foreach ($children as $child) {
-			$child_count = count_objective_child_events($child["objective_id"], $start, $end, $course_id, $level++);
+			$child_count = count_objective_child_events($child["objective_id"], $start, $end, $course_id, $group_id, $level++);
 
 			if (is_array($child_count)) {
 					$return = array_sum($child_count);

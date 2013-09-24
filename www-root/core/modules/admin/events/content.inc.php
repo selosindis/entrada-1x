@@ -242,9 +242,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					if ((is_array($event_types)) && (count($event_types))) {
 						foreach ($event_types as $order => $eventtype_id) {
 							if (($eventtype_id = clean_input($eventtype_id, array("trim", "int"))) && ($duration = clean_input($eventtype_durations[$order], array("trim", "int")))) {
-								if (!($duration >= 30)) {
+								if (!($duration >= LEARNING_EVENT_MIN_DURATION)) {
 									$ERROR++;
-									$ERRORSTR[] = "Event type <strong>durations</strong> may not be less than 30 minutes.";
+									$ERRORSTR[] = "Event type <strong>durations</strong> may not be less than ".LEARNING_EVENT_MIN_DURATION." minutes.";
 								}
 
 								$query	= "SELECT `eventtype_title` FROM `events_lu_eventtypes` WHERE `eventtype_id` = ".$db->qstr($eventtype_id);
@@ -328,13 +328,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 
 								/**
-								 * Teacher's Message
+								 * Required Preparation
 								 */
 								if (event_text_change($EVENT_ID,"event_message")) {
 									if (strlen($history_texts)>2) {
 										$history_texts .= ":";
 									}
-									$history_texts .= "teacher's message";
+									$history_texts .= "Required Preparation";
 								}
 								if ((isset($_POST["event_message"])) && (clean_input($_POST["event_message"], array("notags", "nows")))) {
 									$event_message = clean_input($_POST["event_message"], array("allowedtags"));
@@ -690,6 +690,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					jQuery("#delay_release").on("click", function() {
 						jQuery("#delay_release_controls").toggle(this.checked);
 					});
+					
+					jQuery(".remove-hottopic").on("click", function(e) {
+						jQuery("#topic_"+jQuery(this).attr("data-id")+"_major").removeAttr("checked");
+						jQuery("#topic_"+jQuery(this).attr("data-id")+"_minor").removeAttr("checked");
+						e.preventDefault();
+					});
 				});
 				
 				var ajax_url = '';
@@ -721,6 +727,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							onComplete: function(transport) {
 								modalDialog.container.update(transport.responseText);
 								modalDialog.open();
+								var windowHeight = jQuery(window).outerHeight();
+								var modalHeight = jQuery("#placeholder.modal").outerHeight();
+								if (modalHeight >= windowHeight) {
+									jQuery(document).scrollTop(0);
+								}
 							}
 						});
 					} else {
@@ -945,7 +956,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 							<tr>
 								<td colspan="2">
-                                    <label for="event_message" class="form-nrequired">Teacher's Message:</label><br />
+                                    <label for="event_message" class="form-nrequired">Required Preparation:</label><br />
 									<textarea id="event_message" name="event_message" style="width: 100%; height: 100px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_message"], array("font")))); ?></textarea>
 								</td>
 							</tr>
@@ -1083,7 +1094,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<a href="javascript:void(0)" class="mapping-toggle btn btn-success btn-small pull-right" data-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Map Additional Objectives</a>
 						</div>
 						<p class="well well-small content-small">
-							<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left and it will be mapped to the event.
+							<strong>Helpful Tip:</strong> Click <strong>Map Additional Objectives</strong> to view the list of available objectives. Select an objective from the list on the left and it will be mapped to the event.
 						</p>
                         <?php
 						if ($hierarchical_objectives) {
@@ -1094,7 +1105,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             ?>
                             <div id="clinical-list-wrapper">
                                 <a name="clinical-objective-list"></a>
-                                <h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed list-heading">Other Objectives</h2>
+                                <h2 id="flat-toggle"  title="Clinical Objective List" class="<?php echo empty($objective_name["cp"]["global_lu_objectives_name"]) ? "collapsed" : ""; ?> list-heading"><?php echo $objective_name["cp"]["global_lu_objectives_name"] ? $objective_name["cp"]["global_lu_objectives_name"] : "Other Objectives"; ?></h2>
                                 <div id="clinical-objective-list">
                                     <ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
                                         <?php
@@ -1240,10 +1251,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</div>
                         <table style="width: 100%" cellspacing="0" summary="List of ED10">
                             <colgroup>
-                                <col style="width: 55%" />
-                                <col style="width: 15%" />
-                                <col style="width: 15%" />
-                                <col style="width: 15%" />
+                                <col style="width: 76%" />
+                                <col style="width: 8%" />
+                                <col style="width: 8%" />
+                                <col style="width: 8%" />
                             </colgroup>
                             <tfoot>
                                 <tr>
@@ -1252,19 +1263,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             </tfoot>
 							<tr>
                                 <td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
-                                <td><span style="font-weight: bold; color: #003366;">Major</span></td>
-                                <td><span style="font-weight: bold; color: #003366;">Minor</span></td>
+                                <td align="center"><span style="font-weight: bold; color: #003366;">Major</span></td>
+                                <td align="center"><span style="font-weight: bold; color: #003366;">Minor</span></td>
+								<td align="center"><span style="font-weight: bold; color: #003366;">Remove</span></td>
                             </tr>
                             <?php
                             foreach ($topic_results as $topic_result) {
                                 echo "<tr>\n";
                                 echo "	<td>".html_encode($topic_result["topic_name"])."</td>\n";
-                                echo "	<td>";
+                                echo "	<td align=\"center\">";
                                 echo "		<input type=\"radio\" id=\"topic_".$topic_result["topic_id"]."_major\" name=\"event_topic[".$topic_result["topic_id"]."]\" value=\"major\" onclick=\"updateEdChecks(this)\"".(($topic_result["topic_coverage"] == "major") ? " checked=\"checked\"" : "")." />";
                                 echo "	</td>\n";
-                                echo "	<td>";
+                                echo "	<td align=\"center\">";
                                 echo "		<input type=\"radio\" id=\"topic_".$topic_result["topic_id"]."_minor\" name=\"event_topic[".$topic_result["topic_id"]."]\" value=\"minor\" ".(($topic_result["topic_coverage"] == "minor") ? " checked=\"checked\"" : "")."/>";
                                 echo "	</td>\n";
+								echo "  <td align=\"center\"><a href=\"#\" class=\"remove-hottopic\" data-id=\"".$topic_result["topic_id"]."\"><i class=\"icon-remove\"></i></a></td>";
                                 echo "</tr>\n";
                             }
                             echo "<tr><td colspan=\"3\">&nbsp;</td></tr>";

@@ -1,6 +1,12 @@
 function renderDOM(jsonResponse, link) {
 	if (jsonResponse.child_objectives.length > 0) {
 		var new_list = jQuery(document.createElement("ul"));
+		
+		if (jsonResponse.objective_parent != jQuery("#objective-breadcrumb .objective-link").first().attr("data-id")) {
+			var back = jQuery(document.createElement("li"));
+			back.append("<a href=\"#\" data-id=\""+jsonResponse.objective_parent+"\" class=\"back objective-link\"><span style=\"margin-top:0px;\"><i style=\"margin-top:0px;\" class=\"icon-chevron-left\"></i></span>Back</a>")
+			new_list.append(back);
+		}
 		for (var i=0; i < jsonResponse.child_objectives.length; i++) {
 			var new_list_item = jQuery(document.createElement("li"));
 			var count;
@@ -34,6 +40,9 @@ function renderDOM(jsonResponse, link) {
 	var events = false;
 	jQuery("#objective-details").html("");
 	jQuery("#objective-details").append("<h1>"+link.html()+"</h1>");
+	if (jsonResponse.objective_description != null && jsonResponse.objective_description.length > 0) {
+		jQuery("#objective-details").append("<p>"+jsonResponse.objective_description+"</p>");
+	}
 	if (jsonResponse.courses != null) {
 	if (jsonResponse.courses.length > 0 && COURSE == "") {
 		jQuery("#objective-details").append(jQuery(document.createElement("h2")).html("Mapped Courses"));
@@ -80,7 +89,12 @@ function renderDOM(jsonResponse, link) {
 	}
 
 	if (courses == false && events == false) {
-		jQuery("#objective-details").append("<div class=\"display-generic\">Please select an objective from the menu on the left.</div>");
+		if (jsonResponse.child_objectives.length > 0) {
+			jQuery("#objective-details").append("<div class=\"display-generic\">Please select an objective from the menu on the left.</div>");
+		} else {
+			jQuery("#objective-details").append("<div class=\"display-generic\">There are no objectives or events at this level.</div>");
+		}
+		
 	}
 
 	if (typeof jsonResponse.breadcrumb != "undefined") {
@@ -89,23 +103,27 @@ function renderDOM(jsonResponse, link) {
 }
 jQuery(function(){
 	jQuery(".objective-link").live("click", function(){
-		jQuery("#objective-list .objective-link.active").removeClass("active");
-		jQuery(this).addClass("active");
-		var link = jQuery(this).clone();
-		link.children("span").remove();
-		jQuery("#objective-details").html("<h1>"+link.html()+"</h1>" + "<div class=\"loading display-generic\">Loading...<br /><img src=\""+SITE_URL+"/images/loading.gif\" /></div>");
-		jQuery.ajax({
-			url: SITE_URL + "/curriculum/explorer?mode=ajax&objective_parent=" + jQuery(this).attr("data-id") + "&year=" + YEAR + "&course_id=" + COURSE + "&count=" + COUNT,
-			success: function(data) {
-				var jsonResponse = JSON.parse(data);
-				current_total = 0;
-				jQuery.each(jsonResponse.child_objectives, function (i, v) {
-					current_total = current_total + v.event_count + v.course_count;
-				});
-				renderDOM(jsonResponse, link);
-			}
-		})
-		location.hash = "id-" + jQuery(this).attr("data-id");
+		if (jQuery(this).hasClass("back")) {
+			jQuery("#objective-breadcrumb .objective-link").last().click();
+		} else {
+			jQuery("#objective-list .objective-link.active").removeClass("active");
+			jQuery(this).addClass("active");
+			var link = jQuery(this).clone();
+			link.children("span").remove();
+			jQuery("#objective-details").html("<h1>"+link.html()+"</h1>" + "<div class=\"loading display-generic\">Loading...<br /><img src=\""+SITE_URL+"/images/loading.gif\" /></div>");
+			jQuery.ajax({
+				url: SITE_URL + "/curriculum/explorer?mode=ajax&objective_parent=" + jQuery(this).attr("data-id") + "&year=" + YEAR + "&course_id=" + COURSE + "&count=" + COUNT + "&group_id=" + COHORT,
+				success: function(data) {
+					var jsonResponse = JSON.parse(data);
+					current_total = 0;
+					jQuery.each(jsonResponse.child_objectives, function (i, v) {
+						current_total = current_total + v.event_count + v.course_count;
+					});
+					renderDOM(jsonResponse, link);
+				}
+			})
+			location.hash = "id-" + jQuery(this).attr("data-id");
+		}
 		return false;
 	});
 });

@@ -778,7 +778,33 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					echo "<li><h3>".html_encode($term["curriculum_type_name"])."</h3>\n";
 					echo "	<ul class=\"course-list\">\n";
 					foreach ($courses as $course) {
-						echo "<li><a href=\"".ENTRADA_URL."/courses?id=".$course["course_id"]."\">".html_encode($course["course_code"]." - ".$course["course_name"])."</a></li>\n";
+						$query = "	SELECT b.`community_url` FROM `community_courses` AS a
+									JOIN `communities` AS b
+									ON a.`community_id` = b.`community_id`
+									WHERE a.`course_id` = ".$db->qstr($course["course_id"]);
+						$course_community = $db->GetOne($query);
+						
+						if ($course_community) {
+							$syllabi = glob(ENTRADA_ABSOLUTE."/core/storage/syllabi/".$course["course_code"]."-syllabus-" . ($year != 0 ? $year : date("Y", time())). "*");
+							if ($syllabi) {
+								$syllabus_month = 0;
+								foreach ($syllabi as $syllabus) {
+									$month = substr($syllabus, strrpos($syllabus, "-") + 1, strlen($syllabus));
+									$month = substr($month, 0, strrpos($month, ".pdf"));
+									if ($month > $syllabus_month) {
+										$syllabus_month = $month;
+									}
+								}
+							}
+
+							$file_realpath = ENTRADA_ABSOLUTE."/core/storage/syllabi/".$course["course_code"]."-syllabus-". ($year != 0 ? $year : date("Y", time())) . "-".$syllabus_month.".pdf";
+							if (file_exists($file_realpath)) {
+								$syllabi[$course["course_code"]] = array(
+									"url" => ENTRADA_URL."/community".$course_community."?id=".$course["course_id"]."&method=serve-syllabus&course_code=".$course["course_code"]."&month=".$syllabus_month
+								);
+							}
+						}
+						echo "<li><a href=\"".ENTRADA_URL."/courses?id=".$course["course_id"]."\">".html_encode($course["course_code"]." - ".$course["course_name"])."</a>".(isset($syllabi[$course["course_code"]]) ? " <a href=\"".$syllabi[$course["course_code"]]["url"]."\" title=\"Download Syllabus\"><i class=\"icon-file\"></i></a>" : "")."</li>\n";
 					}
 					echo "	</ul>\n";
 					echo "</li>\n";

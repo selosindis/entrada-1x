@@ -53,9 +53,12 @@ if (!defined("IN_APARTMENTS")) {
 
 	$query		= "	SELECT a.*, b.*
 					FROM `".CLERKSHIP_DATABASE."`.`apartments` AS a
-					LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS b
+					JOIN `".CLERKSHIP_DATABASE."`.`regions` AS b
 					ON b.`region_id` = a.`region_id`
+					JOIN `".CLERKSHIP_DATABASE."`.`apartment_contacts` c
+					ON c.`apartment_id` = a.`apartment_id`
 					WHERE (a.`available_finish` = 0 OR a.`available_finish` > ".$db->qstr(time()).")
+					AND c.`proxy_id` = " . $db->qstr($ENTRADA_USER->getId()) . "
 					ORDER BY b.`region_name`, a.`apartment_title` ASC";
 	$results	= $db->GetAll($query);
 	if ($results) {
@@ -115,7 +118,10 @@ if (!defined("IN_APARTMENTS")) {
 					FROM `".CLERKSHIP_DATABASE."`.`apartments` AS a
 					LEFT JOIN `".CLERKSHIP_DATABASE."`.`regions` AS b
 					ON b.`region_id` = a.`region_id`
+					JOIN `".CLERKSHIP_DATABASE."`.`apartment_contacts` c
+					ON c.`apartment_id` = a.`apartment_id`
 					WHERE (a.`available_finish` > 0 AND a.`available_finish` <= ".$db->qstr(time()).")
+					AND c.`proxy_id` = " . $db->qstr($ENTRADA_USER->getId()) . "
 					ORDER BY b.`region_name`, a.`apartment_title` ASC";
 	$results	= $db->GetAll($query);
 	if ($results) {

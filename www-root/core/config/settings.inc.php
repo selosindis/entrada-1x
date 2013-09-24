@@ -508,7 +508,6 @@ $MODULES["groups"] = array("title" => "Manage Cohorts", "resource" => "group", "
 $MODULES["events"] = array("title" => "Manage Events", "resource" => "eventcontent", "permission" => "update");
 $MODULES["gradebook"] = array("title" => "Manage Gradebook", "resource" => "gradebook", "permission" => "update");
 $MODULES["mspr"] = array("title" => "Manage MSPRs", "resource" => "mspr", "permission" => "create");
-$MODULES["tasks"] = array("title" => "Manage Tasks", "resource" => "task", "permission" => "create");
 $MODULES["notices"] = array("title" => "Manage Notices", "resource" => "notice", "permission" => "update");
 $MODULES["polls"] = array("title" => "Manage Polls", "resource" => "poll", "permission" => "update");
 $MODULES["quizzes"] = array("title" => "Manage Quizzes", "resource" => "quiz", "permission" => "update");
@@ -622,43 +621,6 @@ define("MSPR_CLERKSHIP_MERGE_DISTANCE", "+1 week");     // defines how close tog
 
 define("AUTO_APPROVE_ADMIN_MSPR_EDITS", true);          // if true, the comment will be cleared, and the entry approved.
 define("AUTO_APPROVE_ADMIN_MSPR_SUBMISSIONS", true);    // when adding to student submissions, admin contributions in these areas are automatically approved, if true.
-
-/**
- * Defines for Tasks Module
- *
- */
-define("TASK_OWNER_USER", "user");
-define("TASK_OWNER_COURSE", "course");
-define("TASK_OWNER_EVENT", "event");
-
-// Audience
-define("TASK_RECIPIENT_USER", "user");
-define("TASK_RECIPIENT_CLASS", "cohort");
-define("TASK_RECIPIENT_ORGANISATION", "organisation");
-
-define("TASK_VERIFICATION_NONE", "none");
-define("TASK_VERIFICATION_FACULTY","faculty");
-define("TASK_VERIFICATION_OTHER","other");
-
-define("TASK_VERIFICATION_NOTIFICATION_OFF", 0);
-define("TASK_VERIFICATION_NOTIFICATION_EMAIL", 1);
-define("TASK_VERIFICATION_NOTIFICATION_DASHBOARD", 2);
-
-define("TASK_COMMENT_NONE", "no_comments");
-define("TASK_COMMENT_ALLOW", "allow_comments");
-define("TASK_COMMENT_REQUIRE", "require_comments");
-
-define("TASK_FACULTY_SELECTION_ALLOW","allow");
-define("TASK_FACULTY_SELECTION_REQUIRE", "require");
-define("TASK_FACULTY_SELECTION_OFF", "off");
-
-// Defaults
-define("TASK_DEFAULT_RECIPIENT_TYPE", TASK_RECIPIENT_USER);
-define("TASK_DEFAULT_VERIFICATION_TYPE", TASK_VERIFICATION_NONE);
-define("TASK_DEFAULT_VERIFICATION_NOTIFICATION", TASK_VERIFICATION_NOTIFICATION_OFF);
-define("TASK_DEFAULT_COMPLETE_COMMENT", TASK_COMMENT_ALLOW);
-define("TASK_DEFAULT_REJECT_COMMENT", TASK_COMMENT_ALLOW);
-define("TASK_DEFAULT_FACULTY_SELECTION", TASK_FACULTY_SELECTION_ALLOW);
 
 define("PDF_PASSWORD", "MyPassword");                   // Used to set the owner password of the some PDF files.
 

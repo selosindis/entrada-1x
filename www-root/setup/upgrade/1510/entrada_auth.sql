@@ -10,3 +10,5 @@ VALUES
 	('gradebook', NULL, 'group:role', 'staff:admin', 1, NULL, 1, 1, NULL, 'GradebookDropbox'),
 	('gradebook', NULL, 'group:role', 'staff:admin', 1, NULL, 1, NULL, NULL, NULL),
 	('gradebook', NULL, 'group', 'faculty', 1, NULL, 1, NULL, NULL, NULL);
+
+DELETE FROM `acl_permissions` WHERE `resource_type` IN ('task', 'taskverification', 'tasktab');

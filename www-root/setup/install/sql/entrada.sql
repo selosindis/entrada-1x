@@ -4519,64 +4519,6 @@ CREATE TABLE IF NOT EXISTS `users_online` (
   KEY `timestamp` (`timestamp`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE IF NOT EXISTS `tasks` (
-  `task_id` int(12) unsigned NOT NULL auto_increment,
-  `title` varchar(255) NOT NULL,
-  `description` text,
-  `release_start` bigint(64) default NULL,
-  `release_finish` bigint(64) default NULL,
-  `duration` bigint(64) default NULL,
-  `updated_date` bigint(64) default NULL,
-  `updated_by` int(12) unsigned default NULL,
-  `deadline` bigint(64) default NULL,
-  `organisation_id` int(12) unsigned NOT NULL,
-  `verification_type` enum('faculty','other','none') NOT NULL default 'none',
-  `faculty_selection_policy` enum('off','allow','require') NOT NULL default 'allow',
-  `completion_comment_policy` enum('no_comments','require_comments','allow_comments') NOT NULL default 'allow_comments',
-  `rejection_comment_policy` enum('no_comments','require_comments','allow_comments') NOT NULL default 'allow_comments',
-  `verification_notification_policy` smallint(5) unsigned NOT NULL default '0',
-  PRIMARY KEY (`task_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_associated_faculty` (
-  `task_id` int(12) unsigned NOT NULL,
-  `faculty_id` int(12) unsigned NOT NULL,
-  PRIMARY KEY (`task_id`,`faculty_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_completion` (
-  `task_id` int(12) unsigned NOT NULL,
-  `verifier_id` int(12) unsigned default NULL,
-  `verified_date` bigint(64) default NULL,
-  `recipient_id` int(12) unsigned NOT NULL,
-  `completed_date` bigint(64) default NULL,
-  `faculty_id` int(12) unsigned default NULL,
-  `completion_comment` text,
-  `rejection_comment` text,
-  `rejection_date` bigint(64) default NULL,
-  PRIMARY KEY (`task_id`,`recipient_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_owners` (
-  `task_id` int(12) unsigned NOT NULL default '0',
-  `owner_id` int(12) unsigned NOT NULL default '0',
-  `owner_type` enum('course','event','user') NOT NULL default 'course',
-  PRIMARY KEY (`task_id`,`owner_id`,`owner_type`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_recipients` (
-  `task_id` int(12) unsigned NOT NULL,
-  `recipient_type` enum('user','group','grad_year','cohort','organisation') NOT NULL,
-  `recipient_id` int(12) unsigned NOT NULL,
-  PRIMARY KEY (`task_id`,`recipient_type`,`recipient_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_verifiers` (
-  `task_id` int(12) unsigned NOT NULL,
-  `verifier_id` int(12) unsigned NOT NULL,
-  PRIMARY KEY (`task_id`,`verifier_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
 CREATE TABLE IF NOT EXISTS `meta_types` (
   `meta_type_id` int(10) unsigned NOT NULL auto_increment,
   `label` varchar(255) NOT NULL,

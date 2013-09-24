@@ -13178,19 +13178,19 @@ function events_flatten_objectives ($objectives) {
 /**
  * This function is used in conjunction with the output of events_fetch_objectives_structure and is used to
  * find all the active objectives by objective name.
- * 
+ *
  * @param type $objs - an array containing an objective set as produced by events_fetch_objectives_structure.
  * @param type $output - an array of objective names of all the active objectives as accumlated by recursive call.
  * @return type - an array of objective names of all the active objectives.
  */
 function events_all_active_objectives($objs, $output = array()) {
-	foreach($objs as $obj_id => $details) {				
-		if ($details["objective_active"]) {	
-			$output[] = $details["objective_name"];				
+	foreach($objs as $obj_id => $details) {
+		if ($details["objective_active"]) {
+			$output[] = $details["objective_name"];
 		}
-		if ($details["children_active"]) {				
+		if ($details["children_active"]) {
 			$output = events_all_active_objectives($details["children"], $output);
-		}			
+		}
 	}
 	return $output;
 }
@@ -15531,41 +15531,6 @@ function displayARYearReported($year_reported, $AR_CUR_YEAR, $AR_PAST_YEARS, $AR
 	?>
 	</td>
 	<?php
-}
-
-/**
- * Adds the task sidebar, and populates it, only if there are tasks to be completed
- */
-function add_task_sidebar () {
-	require_once("Models/users/User.class.php");
-	require_once("Models/tasks/TaskCompletions.class.php");
-	global $ENTRADA_ACL, $ENTRADA_USER;
-
-	$proxy_id = $ENTRADA_USER->getActiveId();
-	$user = User::get($proxy_id);
-
-
-	$tasks_completions = TaskCompletions::getByRecipient($user, array('order_by'=>array(array('deadline', 'asc')), 'limit' => 5, 'where' => 'completed_date IS NULL'));
-
-	foreach ($tasks_completions as $completion) {
-		$tasks[] = $completion->getTask();
-	}
-	if (isset($tasks) && $tasks) {
-
-		$sidebar_html = "<ul>";
-		foreach ($tasks as $task) {
-			$sidebar_html .= "
-			<li>
-				<a href='".ENTRADA_URL."/tasks?section=details&id=".$task->getID()."'>".html_encode($task->getTitle())."</a>
-				<span class='content-small'>".(($task->getDeadline()) ? date(DEFAULT_DATE_FORMAT,$task->getDeadline()) : "")."</span>
-			</li>";
-		}
-		$sidebar_html .= "</ul>";
-
-		$sidebar_html .= "<a class='see-all' href='".ENTRADA_URL."/tasks'>See all tasks</a>";
-
-		new_sidebar_item("Upcoming Tasks", $sidebar_html, "task-list", "open");
-	}
 }
 
 /**

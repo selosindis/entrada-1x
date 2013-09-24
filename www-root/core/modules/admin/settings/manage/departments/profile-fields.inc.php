@@ -37,6 +37,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 } else {
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/settings/manage/departments?" . replace_query(array("section" => "profile-fields")) . "&amp;org=" . $ORGANISATION_ID, "title" => "Custom Profile Fields");
+	
+	$field_types = array(
+		"richtext"	=> "Rich Text",
+		"textarea"	=> "Plain Text",
+		"textinput" => "One Line Text",
+		"checkbox"	=> "Checkbox",
+		"link"		=> "External URL"
+	);
 
 	if ((isset($_GET["department_id"])) && ($department_id = clean_input($_GET["department_id"], array("notags", "trim")))) {
 		$PROCESSED["department_id"] = $department_id;
@@ -162,7 +170,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	?>
 	<script type="text/javascript">
 	jQuery(function(){
-		jQuery(".field-action").tooltip();
+		var fieldTypes = JSON.parse('<?php echo json_encode($field_types); ?>');
+//		jQuery(".field-action").tooltip();
 		jQuery("#delete_btn").on("click", function() {
 			var data_id = jQuery("#delete_field").attr("data-id");
 			jQuery.ajax({
@@ -171,6 +180,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				type : "post",
 				success : function(data) {
 					jQuery("tr[data-id="+data_id+"]").remove();
+					if (jQuery("#field-list tbody tr").length <= 0) {
+						var no_fields = document.createElement("tr");
+						jQuery(no_fields).addClass("no-fields");
+						var no_fields_td = document.createElement("td");
+						jQuery(no_fields_td).attr("colspan", 6).html("There are currently no customized fields for this department. Please use the Add Field button above to create a new custom field for this department.");
+						jQuery(no_fields).append(no_fields_td);
+						jQuery("#field-list tbody").append(no_fields);
+					}
 					jQuery("#delete_field").attr("data-id", "").modal("hide");
 				}
 			})
@@ -251,7 +268,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							jQuery(title).html(json_data.data.title);
 
 							var type = document.createElement("td");
-							jQuery(type).html(json_data.data.type.toLowerCase());
+							var typeID = json_data.data.type.toLowerCase();
+							jQuery(type).html(fieldTypes[typeID]);
 
 							var length = document.createElement("td");
 							jQuery(length).html(json_data.data.length);
@@ -266,6 +284,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 							jQuery(new_row).append(title).append(type).append(length).append(required).append(edit);
 
+							if (jQuery(".no-fields").length > 0) {
+								jQuery(".no-fields").remove();
+							}
 							jQuery("#field-list tbody").append(new_row);
 						} else {
 							jQuery("tr[data-id="+json_data.data.id+"] .title").html(json_data.data.title);
@@ -280,6 +301,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				}
 			});
 			return false;
+		});
+		jQuery("#field_type").on("change", function() {
+			if (jQuery(this).val() == "checkbox") {
+				jQuery("input[name=length]").parent().parent().hide();
+			} else {
+				jQuery("input[name=length]").parent().parent().show();
+			}
 		});
 		jQuery(".row-fluid").delegate(".field-action", "click", function() {
 			var id = jQuery(this).parent().parent().attr("data-id");
@@ -321,9 +349,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		<a href="#add_field" class="btn btn-primary pull-right" data-toggle="modal" id="add_field_btn">Add Field</a>
 	</div>
 	<br />
-	<?php
-	if ($custom_fields) {
-		?>
+	
 		<table width="100%" cellpadding="0" cellspacing="0" border="0" class="table table-striped table-hover table-bordered" id="field-list">
 			<thead>
 				<tr>
@@ -335,26 +361,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				</tr>
 			</thead>
 			<tbody>
-		<?php foreach ($custom_fields as $field) { ?>
-				<tr data-id="<?php echo html_encode($field["id"]); ?>">
-					<td class="title"><?php echo html_encode($field["title"]); ?></td>
-					<td class="type"><?php echo html_encode(strtolower($field["type"])); ?></td>
-					<td class="length"><?php echo html_encode($field["length"]); ?></td>
-					<td class="required" style="text-align:center!important;"><i class="<?php echo $field["required"] == 1 ? "icon-ok-sign" : "icon-remove-sign" ; ?>"></i></td>
-					<td class="action">
-						<a href="#" class="field-action edit-field" data-toggle="tooltip" title="Edit Field"><i class="icon-edit"></i></a>
-						<a href="#" class="field-action delete-field" data-toggle="tooltip" title="Delete Field"><i class="icon-trash"></i></a>
-					</td>
+			<?php 
+			if ($custom_fields) {
+				foreach ($custom_fields as $field) { ?>
+						<tr data-id="<?php echo html_encode($field["id"]); ?>">
+							<td class="title"><?php echo html_encode($field["title"]); ?></td>
+							<td class="type"><?php echo $field_types[strtolower($field["type"])]; ?></td>
+							<td class="length"><?php echo html_encode($field["length"]); ?></td>
+							<td class="required" style="text-align:center!important;"><i class="<?php echo $field["required"] == 1 ? "icon-ok-sign" : "icon-remove-sign" ; ?>"></i></td>
+							<td class="action">
+								<a href="#" class="field-action edit-field" data-toggle="tooltip" title="Edit Field"><i class="icon-edit"></i></a>
+								<a href="#" class="field-action delete-field" data-toggle="tooltip" title="Delete Field"><i class="icon-trash"></i></a>
+							</td>
+						</tr>
+			<?php 
+				}
+			} else { ?>
+				<tr class="no-fields">
+					<td colspan="6">There are currently no customized fields for this department. Please use the Add Field button above to create a new custom field for this department.</td>
 				</tr>
-		<?php } ?>
+			<?php } ?>
 			</tbody>
 		</table>
-		<?php
-	} else {
-		add_notice("There are currently no customized fields for this department. Please use the Add Field button above to create a new custom field for this department.");
-		echo display_notice();	
-	}
-	?>
+		
 	<div id="delete_field" class="modal hide fade">
 		<div class="modal-header">
 			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
@@ -391,8 +420,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							<option value="textarea">Plain Text</option>
 							<option value="textinput">One Line Text</option>
 							<option value="checkbox">Checkbox</option>
-							<option value="twitter">Twitter</option>
-							<option value="link">Link</option>
+							<option value="link">External URL</option>
 						</select>
 						<span class="help-inline"><?php echo html_encode($result["firstname"]." ".$result["lastname"]); ?></span>
 					</div>

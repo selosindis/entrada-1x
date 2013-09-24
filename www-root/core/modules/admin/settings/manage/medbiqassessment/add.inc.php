@@ -95,7 +95,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQASSESSMENT"))) {
 					if (!$ERROR) {
 						$url = ENTRADA_URL . "/admin/settings/manage/medbiqassessment?org=".$ORGANISATION_ID;
 						$SUCCESS++;
-						$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["assessment_method"])."</strong> to the system.<br /><br />You will now be redirected to the Event Types index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+						$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["assessment_method"])."</strong> to the system.<br /><br />You will now be redirected to the Medbiquitos Assessment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 						$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 						
 						application_log("success", "New Medbiquitous Assessment Method [".$PROCESSED["assessment_method"]."] added to the system.");

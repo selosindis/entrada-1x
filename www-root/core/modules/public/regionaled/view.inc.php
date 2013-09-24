@@ -50,7 +50,7 @@ if (!defined("PARENT_INCLUDED")) {
 		}
 
 		if ($ASCHEDULE_ID) {
-	 		$query = "	SELECT a.*, b.*, c.`region_name`, d.`province`, e.`country`
+	 		$query = "	SELECT a.*, b.*, c.`region_name`, d.`province`, e.`country`, g.`department_id`, g.`department_title`
 						FROM `".CLERKSHIP_DATABASE."`.`apartments` AS a
 						LEFT JOIN `".CLERKSHIP_DATABASE."`.`apartment_schedule` AS b
 						ON b.`apartment_id` = a.`apartment_id`
@@ -60,6 +60,8 @@ if (!defined("PARENT_INCLUDED")) {
 						ON d.`province_id` = a.`province_id`
 						LEFT JOIN `global_lu_countries` AS e
 						ON e.`countries_id` = a.`countries_id`
+						LEFT JOIN `".AUTH_DATABASE."`.`departments` AS g
+						ON a.`department_id` = g.`department_id`
 						WHERE b.`aschedule_id` = ".$db->qstr($ASCHEDULE_ID)."
 						AND b.`aschedule_status` = 'published'";
 			$APARTMENT_INFO = $db->GetRow($query);
@@ -99,7 +101,7 @@ if (!defined("PARENT_INCLUDED")) {
 				}
 			} else {
 				$NOTICE++;
-				$NOTICESTR[] = "The accommodation schedule that you are attempting to view no longer exists.<br /><br />If you have further inquiries please contact the <a href=\"mailto:".$AGENT_CONTACTS["agent-regionaled"]["email"]."\">Regional Education office</a> directly.";
+				$NOTICESTR[] = "The accommodation schedule that you are attempting to view no longer exists.<br /><br />If you have further inquiries please contact the <a href=\"mailto:".$AGENT_CONTACTS["agent-regionaled"][$APARTMENT_INFO["department_id"]]["email"]."\">" . $APARTMENT_INFO["department_title"] . " Office</a> directly.";
 
 				echo display_notice();
 

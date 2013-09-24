@@ -177,7 +177,7 @@ if (!defined("IN_MANAGE")) {
 						if ((int) $PROCESSED["event_id"]) {
 							if (!$db->AutoExecute(CLERKSHIP_DATABASE.".events", array("requires_apartment" => 0), "UPDATE", "event_id=".$db->qstr($PROCESSED["event_id"]))) {
 								$NOTICE++;
-								$NOTICESSTR[] = "We were unable to remove this learners entry from the Regional Education dashboard.";
+								$NOTICESSTR[] = "We were unable to remove this learners entry from the " . $APARTMENT_INFO["department_title"] . " dashboard.";
 
 								application_log("error", "Unable to set requires_apartment to 0 for event_id [".$PROCESSED["event_id"]."] after an apartment had been assigned. Database said: ".$db->ErrorMsg());
 							}
@@ -200,7 +200,9 @@ if (!defined("IN_MANAGE")) {
 								"from_lastname" => $_SESSION["details"]["lastname"],
 								"region" => $APARTMENT_INFO["region_name"],
 								"confirmation_url" => ENTRADA_URL."/regionaled/view?id=".$aschedule_id,
-								"application_name" => APPLICATION_NAME
+								"application_name" => APPLICATION_NAME,
+								"department_title" => $APARTMENT_INFO["department_title"],
+								"department_id" => $APARTMENT_INFO["department_id"]
 							);
 
 							regionaled_apartment_notification("confirmation", $recipient, $message_variables);

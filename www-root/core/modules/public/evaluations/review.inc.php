@@ -365,7 +365,16 @@ if ($RECORD_ID) {
 			} else {
 				$content_type_name = "evaluation";
 			}
-			echo "<h1 style=\"font-weight: regular;\">".ucwords($content_type_name)." Results for:</h1><h2>".$selected_target["target_title"]."</h2>\n";
+            $query = "SELECT `evaluation_title` FROM `evaluations` 
+						WHERE `evaluation_id` = ".$db->qstr($RECORD_ID);
+			$evalution_title = $db->GetOne($query);
+            if (!$evalution_title) {
+				$evalution_title =  "Untitled";
+			}
+			
+			echo "<h1>Evaluation Details</h1>";
+            echo "<h2>".ucwords($content_type_name)." Results for: ".$selected_target["target_title"]."</h2>";
+            echo "<h3>".$evalution_title."</h3>";
 			$count = 0;
 			foreach ($questions as $question) {
 				$count++;

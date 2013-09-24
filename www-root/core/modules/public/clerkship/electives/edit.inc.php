@@ -305,15 +305,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						$ERRORSTR[] = "The <strong>Prov / State</strong> field is required.";
 					}
 					
-					/**
-					 * Required field "city" / City.
-					 */
-					if ((isset($_POST["city"])) && ($city = clean_input($_POST["city"], array("notags", "trim")))) {
-						$PROCESSED["city"] = $city;
-					} else {
-						$ERROR++;
-						$ERRORSTR[] = "The <strong>City</strong> field is required.";
-					}
+                    /**
+                     * Required field "city" / City.
+                     */
+                    if ((isset($_POST["city"])) && ($city = clean_input($_POST["city"], array("notags", "trim"))) && strpos($city, ",") === false) {
+                        $PROCESSED["city"] = $city;
+                    } else {
+                        $ERROR++;
+                        $ERRORSTR[] = "The <strong>City</strong> field is required, and should not contain either the province/state or any commas.";
+                    }
 			
 					/**
 					 * Non-required field "postal_zip_code" / Postal / Zip Code.

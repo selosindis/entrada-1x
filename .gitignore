@@ -2,6 +2,7 @@
 nbproject
 .tmproj
 .DS_Store
+.htaccess
 www-root/core/config/config.inc.php
 www-root/core/storage
 www-root/calendars

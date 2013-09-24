@@ -46,7 +46,7 @@ if ($RECORD_ID) {
 						ON f.`quiztype_id` = b.`quiztype_id`
 						WHERE a.`qprogress_id` = ".$db->qstr($RECORD_ID)."
 						AND c.`quiz_active` = '1'";
-	$quiz_record	= $db->GetRow($query); echo $db->ErrorMsg();
+	$quiz_record	= $db->GetRow($query);
 	if ($quiz_record) {
 		$is_administrator = false;
 		if ($QUIZ_TYPE == "event") {

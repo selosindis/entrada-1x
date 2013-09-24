@@ -59,7 +59,7 @@ class Models_Notice {
      * @param type $include_read_notices
      * @return type
      */
-    public static function fetchUserNotices($include_read_notices = false) {
+    public static function fetchUserNotices($include_read_notices = false, $only_read_notices = false) {
         global $db, $ENTRADA_USER;
 
         $include_read_notices = (bool) $include_read_notices;
@@ -107,7 +107,7 @@ class Models_Notice {
                 $query .= "     (
                                     a.`organisation_id` = ".$db->qstr($organisation_id)."
                                     AND (
-                                        c.`audience_type` = 'all'
+                                        c.`audience_type` = 'all:all'
                                         OR c.`audience_type` IN ('".implode("', '", $all_audience_types)."')
                                         OR (
                                             c.`audience_type` IN ('".implode("', '", $all_groups)."')
@@ -147,13 +147,47 @@ class Models_Notice {
             $results = $db->GetAll($query);
             if ($results) {
                 foreach ($results as $result) {
-                    if ($include_read_notices || !$result["statistic_id"] || ($result["last_read"] <= $result["updated_date"])) {
-                        $output[] = $result;
-                    }
+					if ($only_read_notices) {
+						if (($result["statistic_id"]) || !($result["last_read"] <= $result["updated_date"])) {
+							$output[] = $result;
+						}
+					} else {
+						if ($include_read_notices || !$result["statistic_id"] || ($result["last_read"] <= $result["updated_date"])) {
+							$output[] = $result;
+						}
+					}
                 }
             }
         }
 
         return $output;
     }
+	
+	public static function fetchNotice($notice_id = 0) {
+		global $db;
+		$query = "SELECT * FROM `notices` WHERE `notice_id` = ?";
+		$result = $db->GetRow($query, array($notice_id));
+		return $result;
+	}
+	
+	public static function fetchOrganisationNotices () {
+		global $db, $ENTRADA_USER;
+		$output = array();
+		$query = "	SELECT a.*, b.`organisation_title`, CONCAT(c.`firstname`, ' ', c.`lastname`) AS notice_author
+					FROM `notices` AS a
+					JOIN `".AUTH_DATABASE."`.`organisations` AS b
+					ON b.`organisation_id` = a.`organisation_id`
+					JOIN `".AUTH_DATABASE."`.`user_data` AS c
+					ON a.`created_by` = c.`id`
+					WHERE a.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+					AND a.`display_until` > '".strtotime("-5 days 00:00:00")."'
+					ORDER BY a.`display_until` ASC";
+		$results = $db->GetAll($query);
+		if ($results) {
+			foreach ($results as $result) {
+				$output[] = $result;
+			}
+		}
+		return $output;
+	}
 }

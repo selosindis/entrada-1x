@@ -118,6 +118,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						} else {
 							$PROCESSED["community_description"] = "";
 						}
+
+                        if ((isset($_POST["course_ids"])) && (is_array($_POST["course_ids"])) ) {
+                            $PROCESSED["course_ids"] = $_POST["course_ids"];
+                        } else {
+                            $PROCESSED["course_ids"] = array();
+                        }
 						
 						/**
 						 * Not Required: Contact E-Mail / community_email
@@ -155,15 +161,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							$ERRORSTR[] = "You must specify the Access Permissions for this new community.";
 						}
 						
-						if (isset($_POST["template_selection"])) {
-							if ($template_selection = clean_input($_POST["template_selection"], array("trim", "int"))) {
+						if (isset($_POST["community_template"])) {
+							if ($template_selection = clean_input($_POST["community_template"], array("trim", "int"))) {
 								$query = "SELECT * FROM `community_templates` WHERE `template_id` = ". $db->qstr($template_selection);
 								$results = $db->GetRow($query);
 								if ($results) {
 									$PROCESSED["community_template"] = $results["template_name"];
-									$db->AutoExecute("communities", $PROCESSED, "UPDATE", "`community_id` = " . $db->qstr($COMMUNITY_ID));
-								}
+								} else {
+                                    $ERROR++;
+                                    $ERRORSTR[] = "An invalid Template was provided for this community, please try again.";
+                                }
 							}		
+						} else {
+							$ERROR++;
+							$ERRORSTR[] = "You must specify the Template for this community.";
 						}
 						
 						/**
@@ -264,55 +275,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 							$ERRORSTR[] = "You must specify the Registration Options for this new community.";
 						}
 
-						/**
-						 * Required: Available Modules / community_modules
-						 */
-						if ((is_array($_POST["community_modules"])) && (count($_POST["community_modules"]))) {
-							$community_modules_selected 	= array();
-							$community_modules_current		= array();
-
-							$community_modules_activate		= array();	// List of modules that need to be activated.
-							$community_modules_deactivate	= array();	// List of modules that need to be deactivated.
-
-							foreach ($_POST["community_modules"] as $module_id) {
-								if ($module_id = (int) $module_id) {
-									$query	= "SELECT * FROM `communities_modules` WHERE `module_id` = ".$db->qstr($module_id)." AND `module_active` = '1'";
-									$result	= $db->GetRow($query);
-									if ($result) {
-										$community_modules_selected[] = $module_id;
-									}
-								}
-							}
-
-							if (count($community_modules_selected)) {
-								$query = "  SELECT * FROM `community_modules` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `module_active` = '1'";
-								$results	= $db->GetAll($query);
-								if ($results) {
-									foreach ($results as $result) {
-										$query = "  SELECT * FROM `communities_modules` WHERE `module_id` = ".$db->qstr($result["module_id"]);
-										$module = $db->GetRow($query);
-										if ($module["module_shortname"] != "default" && $module["module_visible"] != 0) {
-											$community_modules_current[] = (int) $result["module_id"];
-										}
-									}
-								}
-
-								/**
-								 * Check for modules to activate / deactivate.
-								 */
-								if ($community_modules_selected != $community_modules_current) {
-									$community_modules_activate		= array_diff($community_modules_selected, $community_modules_current);
-									$community_modules_deactivate	= array_diff($community_modules_current, $community_modules_selected);
-								}
-							} else {
-								$ERROR++;
-								$ERRORSTR[] = "You must enable at least one module in your new community, otherwise there will be nothing to do in this community.";
-							}
-						} else {
-							$ERROR++;
-							$ERRORSTR[] = "You must enable at least one module in your new community, otherwise there will be nothing to do in this community.";
-						}
-
 						if ($ERROR) {
 							$PROCESSED	= $_POST;
 							$STEP		= 1;
@@ -321,18 +283,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 					case 1 :
 					default :
 						$PROCESSED						= $community_details;
-						$PROCESSED["community_modules"]	= array();
+                        $query = "SELECT `community_type_options` FROM `org_community_types`
+                                    WHERE `octype_id` = ".$db->qstr($community_details["octype_id"]);
+                        $type_options_serialized = $db->GetOne($query);
+                        if ($type_options_serialized && ($type_options = json_decode($type_options_serialized)) && @count($type_options)) {
+                            foreach ($type_options as $type_option => $active) {
+                                if ($type_option == "course_website" && $active && $ENTRADA_ACL->amIAllowed("course", "create", false)) {
+                                    $PROCESSED["course_ids"] = array();
+                                    $query = "SELECT `course_id` FROM `community_courses` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID);
+                                    $courses = $db->GetAll($query);
+                                    foreach ($courses as $course) {
+                                        $PROCESSED["course_ids"][] = $course["course_id"];
+                                    }
+                                }
+                            }
+                        }
 						$COMMUNITY_PARENT				= $community_details["community_parent"];
 						$community_groups				= array();
 						$community_communities			= array();
-
-						$query = "SELECT `module_id` FROM `community_modules` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `module_active` = '1'";
-						$results = $db->GetAll($query);
-						if ($results) {
-							foreach ($results as $result) {
-								$PROCESSED["community_modules"][] = (int) $result["module_id"];
-							}
-						}
 
 						$community_template = $PROCESSED["community_template"];
 						$query = "SELECT * FROM `community_templates` WHERE `template_name` =".$db->qstr($community_template);
@@ -358,8 +326,54 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
+						if ($_POST["community_template"] && $tmp_input = clean_input($_POST["community_template"], array("trim", "striptags"))) {
+							$PROCESSED["community_template"] = $tmp_input;
+						}
 
 						if ($db->AutoExecute("communities", $PROCESSED, "UPDATE", "`community_id` = ".$db->qstr($COMMUNITY_ID))) {
+                            
+                            $query = "SELECT `community_type_options` FROM `org_community_types`
+                                        WHERE `octype_id` = ".$db->qstr($community_details["octype_id"]);
+                            $type_options_serialized = $db->GetOne($query);
+                            if ($type_options_serialized && ($type_options = json_decode($type_options_serialized)) && @count($type_options)) {
+                                foreach ($type_options as $type_option => $active) {
+                                    if ($type_option == "course_website" && $active && $ENTRADA_ACL->amIAllowed("course", "create", false)) {
+                                        $query = "SELECT b.`course_id`, b.`organisation_id` FROM `community_courses` AS a
+                                                    JOIN `courses` AS b
+                                                    ON a.`course_id` = b.`course_id`
+                                                    WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID);
+                                        $courses = $db->GetAll($query);
+                                        if ($courses) {
+                                            foreach ($courses as $course) {
+                                                if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course["course_id"], $course["organisation_id"]), "update")) {
+                                                    $query = "DELETE FROM `community_courses` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `course_id` = ".$db->qstr($course["course_id"]);
+                                                    if (!$db->Execute($query)) {
+                                                        application_log("error", "Unable to remove `community_courses` record from the database. Database said: ".$db->ErrorMsg());
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        if (isset($PROCESSED["course_ids"]) && $PROCESSED["course_ids"]) {
+                                            foreach ($PROCESSED["course_ids"] as $course_id) {
+                                                $query = "SELECT * FROM `courses` 
+                                                            WHERE `course_id` = ".$db->qstr($course_id)."
+                                                            AND `course_active` = 1
+                                                            AND `course_id` NOT IN (
+                                                                SELECT `course_id` FROM `community_courses` WHERE `course_id` = ".$db->qstr($course_id)."
+                                                            )";
+                                                $course = $db->GetRow($query);
+                                                if ($course && $ENTRADA_ACL->amIAllowed(new CourseContentResource($course["course_id"], $course["organisation_id"]), "update")) {
+                                                    if (!$db->AutoExecute("community_courses", array("community_id" => $COMMUNITY_ID, "course_id" => $course["course_id"]), "INSERT")) {
+                                                        $ERROR++;
+                                                        $ERRORSTR[] = "An issue was encountered while attempting to attach a course to this community.";
+                                                        application_log("error", "Could not connect a course [".$course["course_id"]."] to an existing community [".$community_id."]. Database said: ".$db->ErrorMsg());
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
 							if ($MAILING_LISTS["active"] && array_key_exists("community_list_mode", $PROCESSED) && $PROCESSED["community_list_mode"] != $mailing_list->type) {
 								$mailing_list->mode_change($PROCESSED["community_list_mode"]);
 							}
@@ -370,32 +384,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 
 							if ($community_details["community_title"] != $PROCESSED["community_title"]) {
 								communities_log_history($COMMUNITY_ID, 0, 0, "community_history_rename_community", 1);
-							}
-						}
-
-						/**
-						 * Process modules that need to be activated.
-						 */
-						if ((is_array($community_modules_activate)) && (count($community_modules_activate))) {
-							foreach ($community_modules_activate as $module_id) {
-								if (communities_module_activate($COMMUNITY_ID, $module_id)) {
-									$module_details = communities_module_details($module_id, array("module_shortname", "module_title"));
-
-									communities_log_history($COMMUNITY_ID, 0, $module_id, "community_history_activate_module", 1);
-								} else {
-									application_log("error", "Failed to activate module id ".$module_id." during a community update.");
-								}
-							}
-						}
-
-						/**
-						 * Process modules that need to be deactivated.
-						 */
-						if ((is_array($community_modules_deactivate)) && (count($community_modules_deactivate))) {
-							foreach ($community_modules_deactivate as $module_id) {
-								if (!communities_module_deactivate($COMMUNITY_ID, $module_id)) {
-									application_log("error", "Failed to activate module id ".$module_id." during a community update.");
-								}
 							}
 						}
 
@@ -418,19 +406,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						</div>
 						<form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("action" => "modify", "step" => 3)); ?>" method="post">
 							<?php
-							if (is_array($community_modules_selected)) {
-								foreach ($community_modules_selected as $key => $value) {
-									echo "<input type=\"hidden\" name=\"community_modules[]\" value=\"".html_encode($value)."\" />\n";
-								}
-							}
 
-							if (is_array($community_groups)) {
+							if (isset($community_groups) && @count($community_groups)) {
 								foreach ($community_groups as $key => $value) {
 									echo "<input type=\"hidden\" name=\"community_registration_groups[]\" value=\"".html_encode($value)."\" />\n";
 								}
 							}
 
-							if (is_array($community_communities)) {
+							if (isset($community_communities) && @count($community_communities)) {
 								foreach ($community_communities as $key => $value) {
 									echo "<input type=\"hidden\" name=\"community_registration_communities[]\" value=\"".html_encode($value)."\" />\n";
 								}
@@ -479,7 +462,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 										<td><span class="form-required">Community Name</span></td>
 										<td><?php echo html_encode($PROCESSED["community_title"]); ?></td>
 									</tr>
-								<?php
+                                    <?php
 								}
 								if ($PROCESSED["community_keywords"] != $community_details["community_keywords"]) {
 									?>
@@ -488,8 +471,72 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 										<td><span class="form-nrequired">Community Keywords</span></td>
 										<td><?php echo html_encode($PROCESSED["community_keywords"]); ?></td>
 									</tr>
-								<?php
+                                    <?php
 								}
+                                $historical_course_ids = array();
+                                $query = "SELECT `community_type_options` FROM `org_community_types`
+                                            WHERE `octype_id` = ".$db->qstr($community_details["octype_id"]);
+                                $type_options_serialized = $db->GetOne($query);
+                                if ($type_options_serialized && ($type_options = json_decode($type_options_serialized)) && @count($type_options)) {
+                                    foreach ($type_options as $type_option => $active) {
+                                        if ($type_option == "course_website" && $active && $ENTRADA_ACL->amIAllowed("course", "create", false)) {
+                                            $query = "SELECT b.`course_id`, b.`organisation_id` FROM `community_courses` AS a
+                                                        JOIN `courses` AS b
+                                                        ON a.`course_id` = b.`course_id`
+                                                        WHERE a.`community_id` = ".$db->qstr($COMMUNITY_ID);
+                                            $courses = $db->GetAll($query);
+                                            if ($courses) {
+                                                foreach ($courses as $course) {
+                                                    if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course["course_id"], $course["organisation_id"]), "update")) {
+                                                        $historical_course_ids[] = $course["course_id"];
+                                                    }
+                                                }
+                                            }
+                                            $added_course_ids = array_diff($PROCESSED["course_ids"], $historical_course_ids);
+                                            $removed_course_ids = array_diff($historical_course_ids, $PROCESSED["course_ids"]);
+                                            if (@count($added_course_ids) || @count($removed_course_ids)) {
+                                                ?>
+                                                <tr>
+                                                    <td style="vertical-align: top">&nbsp;</td>
+                                                    <td style="vertical-align: top"><span class="form-nrequired">Community Courses</span></td>
+                                                    <td>
+                                                    <?php
+                                                        if (@count($added_course_ids)) {
+                                                            echo "<div>\n";
+                                                            echo "  <div>The following courses will be added: </div>\n";
+                                                            echo "  <ul>\n";
+                                                            foreach ($added_course_ids as $added_course_id) {
+                                                                $query = "SELECT `course_name`, `course_code` FROM `courses` WHERE `course_id` = ".$db->qstr($added_course_id);
+                                                                $course = $db->GetRow($query);
+                                                                if ($course) {
+                                                                    echo "<li>".html_encode((isset($course["course_code"]) && $course["course_code"] ? $course["course_code"]." - " : "").$course["course_name"])."</li>\n";
+                                                                }
+                                                            }
+                                                            echo "  </ul>\n";
+                                                            echo "</div>\n";
+                                                        }
+                                                        if (@count($removed_course_ids)) {
+                                                            echo "<div>\n";
+                                                            echo "  <div>The following courses will be removed: </div>\n";
+                                                            echo "  <ul>\n";
+                                                            foreach ($removed_course_ids as $removed_course_ids) {
+                                                                $query = "SELECT `course_name`, `course_code` FROM `courses` WHERE `course_id` = ".$db->qstr($removed_course_ids);
+                                                                $course = $db->GetRow($query);
+                                                                if ($course) {
+                                                                    echo "<li>".html_encode((isset($course["course_code"]) && $course["course_code"] ? $course["course_code"]." - " : "").$course["course_name"])."</li>\n";
+                                                                }
+                                                            }
+                                                            echo "  </ul>\n";
+                                                            echo "</div>\n";
+                                                        }
+                                                    ?>
+                                                    </td>
+                                                </tr>
+                                                <?php
+                                            }
+                                        }
+                                    }
+                                }
 								if ($PROCESSED["community_description"] != $community_details["community_description"]) {
 									?>
 									<tr>
@@ -519,43 +566,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								<?php
 								}
 								*/
-								if ((is_array($community_modules_activate)) && (count($community_modules_activate))) {
-									?>
-									<tr>
-										<td></td>
-										<td style="vertical-align: top"><span class="form-nrequired">Activated Modules</span></td>
-										<td style="vertical-align: top">
-											The following modules will be activated once the changes are confirmed.
-											<ul style="list-style-image: url('<?php echo ENTRADA_URL; ?>/images/list-success.gif'); color: #333333; font-weight: bold">
-											<?php
-											foreach ($community_modules_activate as $module_id) {
-												echo "<li>".communities_module_title($module_id)."</li>\n";
-											}
-											?>
-											</ul>
-										</td>
-									</tr>
-								<?php
-								}
-
-								if ((is_array($community_modules_deactivate)) && (count($community_modules_deactivate))) {
-									?>
-									<tr>
-										<td></td>
-										<td style="vertical-align: top"><span class="form-nrequired">Deactivated Modules</span></td>
-										<td style="vertical-align: top">
-											The following modules will be deactivated once the changes are confirmed.
-											<ul style="list-style-image: url('<?php echo ENTRADA_URL; ?>/images/list-error.gif'); color: #333333; font-weight: bold">
-											<?php
-											foreach ($community_modules_deactivate as $module_id) {
-												echo "<li>".communities_module_title($module_id)."</li>\n";
-											}
-											?>
-											</ul>
-										</td>
-									</tr>
-									<?php
-								}
 
 								if ($PROCESSED["sub_communities"] != $community_details["sub_communities"]) {
 									?>
@@ -682,6 +692,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 					case 1 :
 					default :
 						$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/livepipe/progressbar.js?release=".APPLICATION_VERSION."\"></script>";
+                        $HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/chosen.jquery.min.js\"></script>\n";
+                        $HEAD[]	= "<link rel=\"stylesheet\" type=\"text/css\"  href=\"".ENTRADA_RELATIVE."/css/jquery/chosen.css\"></script>\n";
+                        $ONLOAD[] = "jQuery('.chosen-select').chosen({no_results_text: 'No courses found matching'})";
 
 						/**
 						 * Information used for the community statistics tab.
@@ -750,7 +763,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 						if ($ERROR) {
 							echo display_error();
 						}
-							?>
+                        ?>
 						<form action="<?php echo ENTRADA_URL."/".$MODULE."?".replace_query(array("action" => "modify", "step" => 2)); ?>" method="post">
 							<div class="tab-pane" id="community-modify-tabs">
 								<div class="tab-page">
@@ -837,118 +850,120 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 								</div>
 								<div class="tab-page">
 									<script type="text/javascript">
-										jQuery(function() {
-											jQuery( ".large-view-1" ).click(function() {
-												jQuery(".default-large").dialog({ 
-													 width: 792 , 
-													 height: 720,
-													 position: 'center',
-													 draggable: false,
-													 resizable: false,
-													 modal : true, 
-													 show: 'fade',
-													 hide: 'fade',
-													 title: 'Default Template',
-													 buttons: {
-													'Select': function() {
-													   jQuery('#template_option_1').attr('checked', 'checked');
-													   jQuery(this).dialog('close');
-													},
-													'Close': function() {
-													   jQuery(this).dialog('close');
-													}
-												  }
-												});
-											});
-											jQuery( ".large-view-2" ).click(function() {
-												jQuery(".committee-large").dialog({
-													 width: 792 , 
-													 height: 720,
-													 position: 'center',
-													 draggable: false,
-													 resizable: false,
-													 modal : true,
-													 show: 'fade',
-													 hide: 'fade',
-													 title: 'Committee Template',
-													 buttons: {
-													'Select': function() {
-													   jQuery('#template_option_2').attr('checked', 'checked');
-													   jQuery(this).dialog('close');
-													},
-													'Close': function() {
-													   jQuery(this).dialog('close');
-													}
-												  }
-												});
-											});
-											jQuery( ".large-view-3" ).click(function() {
-												jQuery(".vp-large").dialog({
-													 width: 792 , 
-													 height: 720,
-													 position: 'center',
-													 draggable: false,
-													 resizable: false,
-													 modal : true,
-													 show: 'fade',
-													 hide: 'fade',
-													 title: 'Virtual Patient Template',
-													 buttons: {
-													'Select': function() {
-													   jQuery('#template_option_3').attr('checked', 'checked');
-													   jQuery(this).dialog('close');
-													},
-													'Close': function() {
-													   jQuery(this).dialog('close');
-													}
-												  }
-												});
-											});
-											jQuery( ".large-view-4" ).click(function() {
-												jQuery(".learningModule-large").dialog({
-													 width: 792, 
-													 height: 720,
-													 position: 'center',
-													 draggable: false,
-													 resizable: false,
-													 modal : true,
-													 show: 'fade',
-													 hide: 'fade',
-													 title: 'Learning Module Template',
-													 buttons: {
-													'Select': function() {
-													   jQuery('#template_option_4').attr('checked', 'checked');
-													   jQuery(this).dialog('close');
-													},
-													'Close': function() {
-													   jQuery(this).dialog('close');
-													}
-												  }
-												});
-											});
-											jQuery( ".large-view-5" ).click(function() {
-												jQuery(".course-large").dialog({
-													 width: 792, 
-													 height: 720,
-													 position: 'center',
-													 draggable: false,
-													 resizable: false,
-													 modal : true,
-													 show: 'fade',
-													 hide: 'fade',
-													 title: 'Course Template',
-													 buttons: {
-													'Select': function() {
-													   jQuery('#template_option_5').attr('checked', 'checked');
-													   jQuery(this).dialog('close');
-													},
-													'Close': function() {
-													   jQuery(this).dialog('close');
-													}
-												  }
-												});
-											});
-										});
+                                        function show_default_large() {
+                                            jQuery(".default-large").dialog({ 
+                                                 width: 792 , 
+                                                 height: 720,
+                                                 position: 'center',
+                                                 draggable: false,
+                                                 resizable: false,
+                                                 modal : true, 
+                                                 show: 'fade',
+                                                 hide: 'fade',
+                                                 title: 'Default Template',
+                                                 buttons: {
+                                                'Select': function() {
+                                                   jQuery('#template_option_1').attr('checked', 'checked');
+                                                   jQuery(this).dialog('close');
+                                                },
+                                                'Close': function() {
+                                                   jQuery(this).dialog('close');
+                                                }
+                                              }
+                                            });
+                                        }
+
+                                        function show_committee_large() {
+                                            jQuery(".committee-large").dialog({
+                                                 width: 792 , 
+                                                 height: 720,
+                                                 position: 'center',
+                                                 draggable: false,
+                                                 resizable: false,
+                                                 modal : true,
+                                                 show: 'fade',
+                                                 hide: 'fade',
+                                                 title: 'Committee Template',
+                                                 buttons: {
+                                                'Select': function() {
+                                                   jQuery('#template_option_2').attr('checked', 'checked');
+                                                   jQuery(this).dialog('close');
+                                                },
+                                                'Close': function() {
+                                                   jQuery(this).dialog('close');
+                                                }
+                                              }
+                                            });
+                                        }
+
+                                        function show_virtualpatient_large() {
+                                            jQuery(".virtualpatient-large").dialog({
+                                                 width: 792 , 
+                                                 height: 720,
+                                                 position: 'center',
+                                                 draggable: false,
+                                                 resizable: false,
+                                                 modal : true,
+                                                 show: 'fade',
+                                                 hide: 'fade',
+                                                 title: 'Virtual Patient Template',
+                                                 buttons: {
+                                                'Select': function() {
+                                                   jQuery('#template_option_3').attr('checked', 'checked');
+                                                   jQuery(this).dialog('close');
+                                                },
+                                                'Close': function() {
+                                                   jQuery(this).dialog('close');
+                                                }
+                                              }
+                                            });
+                                        }
+
+                                        function show_learningmodule_large() {
+                                            jQuery(".learningmodule-large").dialog({
+                                                 width: 792, 
+                                                 height: 720,
+                                                 position: 'center',
+                                                 draggable: false,
+                                                 resizable: false,
+                                                 modal : true,
+                                                 show: 'fade',
+                                                 hide: 'fade',
+                                                 title: 'Learning Module Template',
+                                                 buttons: {
+                                                'Select': function() {
+                                                   jQuery('#template_option_4').attr('checked', 'checked');
+                                                   jQuery(this).dialog('close');
+                                                },
+                                                'Close': function() {
+                                                   jQuery(this).dialog('close');
+                                                }
+                                              }
+                                            });
+                                        }
+
+                                        function show_course_large() {
+                                            jQuery(".course-large").dialog({
+                                                 width: 792, 
+                                                 height: 908,
+                                                 position: 'center',
+                                                 draggable: false,
+                                                 resizable: false,
+                                                 modal : true,
+                                                 show: 'fade',
+                                                 hide: 'fade',
+                                                 title: 'Course Template',
+                                                 buttons: {
+                                                'Select': function() {
+                                                   jQuery('#template_option_5').attr('checked', 'checked');
+                                                   jQuery(this).dialog('close');
+                                                },
+                                                'Close': function() {
+                                                   jQuery(this).dialog('close');
+                                                }
+                                              }
+                                            });
+                                        }
 										
 									</script>
 									<h3 class="tab">Details</h3>
@@ -1008,6 +1023,43 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 													<input type="text" id="community_keywords" name="community_keywords" value="<?php echo html_encode($PROCESSED["community_keywords"]); ?>" maxlength="255" style="width: 500px" />
 												</td>
 											</tr>
+                                            <?php
+                                            $query = "SELECT `community_type_options` FROM `org_community_types`
+                                                        WHERE `octype_id` = ".$db->qstr($community_details["octype_id"]);
+                                            $type_options_serialized = $db->GetOne($query);
+                                            if ($type_options_serialized && ($type_options = json_decode($type_options_serialized)) && @count($type_options)) {
+                                            ?>
+                                            <tr>
+												<td style="padding-top:6px; vertical-align: top">&nbsp;</td>
+												<td style="padding-top:6px; vertical-align: top"><label for="community_template" class="form-nrequired">Select course(s)</label></td>
+                                                <td>
+                                                <?php
+                                                    foreach ($type_options as $type_option => $active) {
+                                                        if ($type_option == "course_website" && $active && $ENTRADA_ACL->amIAllowed("course", "create", false)) {
+                                                            $query = "SELECT `course_id`, `course_code`, `course_name` FROM `courses` 
+                                                                        WHERE `course_active` = 1
+                                                                        AND `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+                                                                        AND `course_id` NOT IN (
+                                                                            SELECT `course_id` FROM `community_courses` WHERE `community_id` != ".$db->qstr($COMMUNITY_ID)."
+                                                                        )";
+                                                            $courses = $db->GetAll($query);
+                                                            if ($courses) {
+                                                                echo "<select multiple=\"multiple\" name=\"course_ids[]\" id=\"course_ids\" class=\"chosen-select\">";
+                                                                foreach ($courses as $course) {
+                                                                    if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course["course_id"], $ENTRADA_USER->getActiveOrganisation()), "update")) {
+                                                                        echo "<option value=\"".((int)$course["course_id"])."\"".(in_array($course["course_id"], $PROCESSED["course_ids"]) ? " selected=\"selected\"" : "").">".html_encode(($course["course_code"] ? $course["course_code"]." - " : "").$course["course_name"])."</option>";
+                                                                    }
+                                                                }
+                                                                echo "</select>";
+                                                            }
+                                                        }
+                                                    }
+                                                ?>
+                                                </td>
+                                            </tr>
+                                            <?php
+                                            }
+                                            ?>
 											<tr>
 												<td style="vertical-align: top"><?php echo help_create_button("Community Description", ""); ?></td>
 												<td style="vertical-align: top"><label for="community_description" class="form-nrequired">Community Description</label></td>
@@ -1035,7 +1087,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 																AND b.`type_scope` = 'organisation'"; 
 													$results = $db->GetAll($query);
 													if ($results) {
-													?>
+                                                        ?>
 														<ul class="community-themes">
 														<?php
 														$default_templates = array();
@@ -1043,72 +1095,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 														$category = array();
 														$default_categories = array();
 														$default_groups = array();
-														
+														$large_template_images = "";
 														foreach($results as $community_template) {
-															$permissions_query = "SELECT * FROM `communities_template_permissions` WHERE `template`=". $db->qstr($community_template["template_name"]);
-															$template_permissions = $db->GetAll($permissions_query);
-															if ($template_permissions) {
-																foreach ($template_permissions as $template_permission) {
-																	if ($template_permission["permission_type"] == "group") {
-																		$groups = explode(",",$template_permission["permission_value"]);
-																	}
-																	if (($template_permission["permission_type"] == null && $template_permission["permission_value"] == null)) {
-																		$default_templates[] = $template_permission["template"];
-																	}
-																	if (($template_permission["permission_type"] == "category_id" && $template_permission["permission_value"] != null)) {
-																		$category = explode(",",$template_permission["permission_value"]);
-																	}
-																	if (($template_permission["permission_type"] == "category_id" && $template_permission["permission_value"] == null)) {
-																		$category_permissions_query = " SELECT * FROM `communities_template_permissions` 
-																										WHERE `permission_type`= 'group' 
-																										AND `template`=". $db->qstr($template_permission["template"]);
-																		$category_permissions = $db->GetAll($category_permissions_query);
-																		if($category_permissions) {
-																			foreach ($category_permissions as $category_permission) {
-																				$default_categories = explode(",", $category_permission["permission_value"]);
-																				if (in_array($creator_group, $default_categories)) {
-																					$default_categories[] = $category_permission["template"];
-																				}
-
-																			}
-																		}
-																	}
-																	?>
-																	<?php
-																}
-																if ((in_array($creator_group, $groups) && in_array($CATEGORY_ID, $category)) || (in_array($community_template["template_name"], $default_templates)) || (in_array($community_template["template_name"], $default_categories))) {
-																?>
-																<li id="<?php echo $community_template["template_name"]."-template"; ?>">
-																	<div class="template-rdo">
-																		<input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="template_selection" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
-																	</div>
-																	<div class="large-view">
-																		<a href="#" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
-																	</div>
-																	<label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
-																</li>
-																<?php
-																}
-															} 
+                                                            ?>
+                                                            <li id="<?php echo $community_template["template_name"]."-template"; ?>" style="background: url('images/<?php echo $community_template["template_name"]; ?>-thumb.jpg')">
+                                                                <div class="template-rdo">
+                                                                    <input type="radio" id="<?php echo "template_option_".$community_template["template_id"] ?>" name="community_template" value="<?php echo $community_template["template_id"]; ?>"<?php echo ((($template_selection == 0) && ($community_template["template_id"] == 1) || ($template_selection == $community_template["template_id"])) ? " checked=\"checked\"" : ""); ?> />
+                                                                </div>
+                                                                <div class="large-view">
+                                                                    <a href="#" onclick="show_<?php echo $community_template["template_name"]; ?>_large()" class="<?php echo "large-view-".$community_template["template_id"]; ?>"><img src="<?php echo ENTRADA_URL. "/images/icon-magnify.gif"  ?>" /></a>
+                                                                </div>
+                                                                <label for="<?php echo "template_option_".$community_template["template_id"]; ?>"><?php echo ucfirst($community_template["template_name"]. " Template"); ?></label>
+                                                            </li>
+                                                            <?php
+                                                            $large_template_images .= " <div class=\"".$community_template["template_name"]."-large\" style=\"display:none;\">\n";
+                                                            $large_template_images .= "     <img src=\"".ENTRADA_URL."/images/template-".$community_template["template_name"]."-large.gif\" alt=\"".ucfirst($community_template["template_name"])." Template Screen shot\" />\n";
+                                                            $large_template_images .= " </div>\n";
 														}
 														?>
 														</ul>
-														<div class="default-large" style="display:none;">
-															<img src="<?php echo ENTRADA_URL."/images/template-default-large.gif" ?>" alt="Default Template Screen shot" />
-														</div>
-														<div class="committee-large" style="display:none;">
-															<img src="<?php echo ENTRADA_URL."/images/template-meeting-large.gif" ?>" alt="Committee Template Screen shot" />
-														</div> 
-														<div class="vp-large" style="display:none;">
-															<img src="<?php echo ENTRADA_URL."/images/template-vp-large.gif" ?>" alt="Virtual Patient Template Screen shot" />
-														</div> 
-														<div class="learningModule-large" style="display:none;">
-															<img src="<?php echo ENTRADA_URL."/images/template-education-large.gif" ?>" alt="Learning Template Screen shot" />
-														</div>
-														<div class="course-large" style="display:none;">
-															<img src="<?php echo ENTRADA_URL."/images/template-course-large.gif" ?>" alt="Course Template Screen shot" />
-														</div> 
-													<?php
+                                                        <?php
+                                                        echo (isset($large_template_images) && $large_template_images ? $large_template_images : "");
 													}
 													?>					
 													</div>
@@ -1130,61 +1137,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
 											</tr>
 											*/ ?>
 										</tbody>
-									</table>
-								</div>
-								<div class="tab-page">
-									<h3 class="tab">Modules</h3>
-									<h2 style="margin-top: 0px">Community Modules</h2>
-									<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Modifying Community Modules">
-										<colgroup>
-											<col style="width: 3%" />
-											<col style="width: 20%" />
-											<col style="width: 77%" />
-										</colgroup>
-										<tr>
-											<td style="vertical-align: top"><?php echo help_create_button("Available Modules", ""); ?></td>
-											<td style="vertical-align: top"><span class="form-required">Available Modules</span></td>
-											<td style="padding-bottom: 15px">
-											<?php
-											$query		= "SELECT * FROM `communities_modules` WHERE `module_active` = '1' AND `module_visible` = '1' ORDER BY `module_title` ASC";
-											$results	= $db->GetAll($query);
-											if ($results) {
-												?>
-												<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Setting Available Modules">
-													<colgroup>
-														<col style="width: 3%" />
-														<col style="width: 97%" />
-													</colgroup>
-													<tbody>
-													<?php
-													foreach ($results as $result) {
-														if ($result["module_shortname"] != "default") {
-														?>
-														<tr>
-															<td style="padding-bottom: 5px; vertical-align: top"><input type="checkbox" name="community_modules[]" id="community_modules_<?php echo $result["module_id"]; ?>" value="<?php echo $result["module_id"]; ?>" style="vertical-align: middle"<?php echo (((!isset($PROCESSED["community_modules"])) || ((isset($PROCESSED["community_modules"])) && (is_array($PROCESSED["community_modules"])) && (in_array($result["module_id"], $PROCESSED["community_modules"])))) ? " checked=\"checked\"" : ""); ?> /></td>
-															<td style="padding-bottom: 5px; vertical-align: top">
-																<label for="community_modules_<?php echo $result["module_id"]; ?>" class="normal-green"><?php echo html_encode($result["module_title"]); ?></label>
-																<div class="content-small"><?php echo html_encode($result["module_description"]); ?></div>
-															</td>
-														</tr>
-														<?php
-														}
-													}
-													?>
-													</tbody>
-												</table>
-												<?php
-											} else {
-												$ERROR++;
-												$ERRORSTR[] = "There has been an error obtaining the required Community Modules from the database. The MEdTech Unit has been informed of the issue, please try again later.";
-
-												echo display_error();
-
-												application_log("error", "Unable to fetch Community Modules from database. Database said: ".$db->ErrorMsg());
-											}
-											?>
-											</td>
-										</tr>
 									</table>
 								</div>
 								<div class="tab-page">

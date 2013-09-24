@@ -103,7 +103,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			if ((isset($_POST["course_name"])) && ($course_name = clean_input($_POST["course_name"], array("notags", "trim")))) {
 				$PROCESSED["course_name"] = $course_name;
 			} else {
-				add_error("The <strong>" . $module_singular_name .  "Name</strong> field is required.");
+				add_error("The <strong>" . $module_singular_name .  " Name</strong> field is required.");
 			}
 
 			/**
@@ -243,6 +243,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 			}
 
+			if (isset($_POST["course_report_ids"])) {						
+				$PROCESSED["course_report_ids"] = array();
+				foreach ($_POST["course_report_ids"] as $index => $tmp_input) {
+					if ($course_report_id = clean_input($tmp_input, "int")) {								
+						$PROCESSED["course_report_ids"][] = $course_report_id;
+					}
+				}
+			}
+
 			if (!has_error()) {
 				$PROCESSED["updated_date"] = time();
 				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
@@ -314,6 +323,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										add_error("An error occurred while adding the student with id ".$member." as an audience member.");
 									}
 								}
+							}
+						}
+						if (isset($PROCESSED["course_report_ids"]) && count($PROCESSED["course_report_ids"]) > 0) {							
+							foreach ($PROCESSED["course_report_ids"] as $index => $course_report_id) {									
+								$PROCESSED["course_report_id"] = $course_report_id;		
+								$PROCESSED["course_id"] = $COURSE_ID;								
+
+								if ($db->AutoExecute("course_reports", $PROCESSED, "INSERT")) {											
+									add_statistic("Course Edit", "edit", "course_reports.course_report_id", $PROCESSED["course_report_id"], $ENTRADA_USER->getID());
+								} else {
+									add_error("An error occurred while adding course reports.  The system administrator was informed of this error; please try again later.");
+									application_log("error", "Error inserting course reports for course id: " . $COURSE_ID);
+								}									
 							}
 						}
 
@@ -394,8 +416,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			?>
 			</script>
 			<?php
-
-			$LASTUPDATED	= $course_details["updated_date"];
 
 			$course_directors	= array();
 			$curriculum_coordinators = array();
@@ -551,16 +571,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                     </div>
                 </div>
                 <div class="control-group">
-                    <label for="course_name" class="control-label form-required"><?php echo $module_singular_name; ?>Name:</label>
+                    <label for="course_name" class="control-label form-required"><?php echo $module_singular_name; ?> Name:</label>
                     <div class="controls">
-                        <input type="text" id="course_name" name="course_name" value="<?php echo html_encode($PROCESSED["course_name"]); ?>" />
+                        <input type="text" id="course_name" name="course_name" value="<?php echo html_encode((isset($PROCESSED["course_name"]) && $PROCESSED["course_name"] ? $PROCESSED["course_name"] : "")); ?>" />
                     </div>
                 </div>
 
                 <div class="control-group">
-                    <label for="course_code" class="control-label form-required"><?php echo $module_singular_name; ?>Code:</label>
+                    <label for="course_code" class="control-label form-required"><?php echo $module_singular_name; ?> Code:</label>
                     <div class="controls">
-                        <input type="text" id="course_code" name="course_code" value="<?php echo html_encode($PROCESSED["course_code"]); ?>"/>
+                        <input type="text" id="course_code" name="course_code" value="<?php echo html_encode((isset($PROCESSED["course_code"]) && $PROCESSED["course_code"] ? $PROCESSED["course_code"] : "")); ?>"/>
                     </div>
                 </div>
 
@@ -573,7 +593,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                 </div>
 
                 <div class="control-group">
-                    <label class="control-label form-nrequired"><?php echo $module_singular_name; ?>Permissions:</label>
+                    <label class="control-label form-nrequired"><?php echo $module_singular_name; ?> Permissions:</label>
                     <div class="controls">
                         <input type="radio" name="permission" id="visibility_on" value="open"<?php echo (((!isset($PROCESSED["permission"])) || ((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "open"))) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_on">This course is <strong>open</strong> and visible to all logged in users.</label><br />
                                 <input type="radio" name="permission" id="visibility_off" value="closed"<?php echo (((isset($PROCESSED["permission"])) && ($PROCESSED["permission"] == "closed")) ? " checked=\"checked\"" : ""); ?> /> <label for="visibility_off">This course is <strong>private</strong> and only visible to logged in users enrolled in the course.</label>
@@ -581,9 +601,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                 </div>
 
                 <div class="control-group">
-                    <label class="control-label form-nrequired"><?php echo $module_singular_name; ?>Audience Sync:</label>
+                    <label class="control-label form-nrequired"><?php echo $module_singular_name; ?> Audience Sync:</label>
                     <div class="controls">
-                        <input type="radio" name="sync_ldap" id="sync_off" value="0"<?php echo ((((!isset($PROCESSED["sync_ldap"])) || isset($PROCESSED["sync_ldap"])) && (!(int)$PROCESSED["sync_ldap"])) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_off">The audience will be managed manually and <strong>should not</strong> be synced with the LDAP server.</label><br />
+                        <input type="radio" name="sync_ldap" id="sync_off" value="0"<?php echo ((((!isset($PROCESSED["sync_ldap"])) || (isset($PROCESSED["sync_ldap"])) && (!(int)$PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_off">The audience will be managed manually and <strong>should not</strong> be synced with the LDAP server.</label><br />
                         <input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> <label for="sync_on">This course <strong>should</strong> have its audience synced with the LDAP server.</label><br />
                         <br />
                         <div class="content-small"><strong>Note:</strong> Even if the audience is synced, additional individuals and groups can be added as audience members below.</div>
@@ -730,7 +750,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                         <span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
                         <ul id="coordinator_list" class="menu" style="margin-top: 15px">
                             <?php
-                            if (is_array($chosen_ccoordinators) && count($chosen_ccoordinators)) {
+                            if (isset($chosen_ccoordinators) && @count($chosen_ccoordinators)) {
                                 foreach ($chosen_ccoordinators as $coordinator) {
                                     if ((array_key_exists($coordinator, $COORDINATOR_LIST)) && is_array($COORDINATOR_LIST[$coordinator])) {
                                         ?>
@@ -1030,7 +1050,46 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				</div>
 					<?php 	} 	?>	
 
-
+				<h2 title="Course Reports Section"><?php echo $module_singular_name; ?> Reports</h2>
+				<div id="course-reports-section">
+					<div class="control-group">
+						<label for="course_report_ids" class="control-label form-nrequired">Report Types:</label>
+						<div class="controls">
+							<?php
+							$query = "	SELECT *
+										FROM `course_report_organisations` a
+										JOIN `course_lu_reports` b
+										ON a.`course_report_id` = b.`course_report_id`
+										WHERE a.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation());							
+							$results = $db->GetAll($query);
+							if ($results) {
+								?>
+								<select id="course_report_ids" name="course_report_ids[]" multiple data-placeholder="Choose reports..." class="chosen-select">
+									<?php
+									foreach($results as $result) {
+										$selected = false;
+										if (isset($PROCESSED["course_report_ids"]) && $PROCESSED["course_report_ids"] && in_array($result["course_report_id"], $PROCESSED["course_report_ids"])) {
+											$selected = true;
+										}
+										echo build_option($result["course_report_id"], $result["course_report_title"], $selected);
+									}
+								?>
+								</select>
+								<?php
+							} 
+							?>                               
+							<?php
+							if (is_array($PROCESSED["course_reports"])) {
+								foreach ($PROCESSED["course_reports"] as $course_report) {
+									echo "<li id=\"type_".$course_report[0]."\" class=\"\">".$course_report[2]."
+											<a href=\"#\" onclick=\"$(this).up().remove(); cleanupList(); return false;\" class=\"remove\"><img src=\"".ENTRADA_URL."/images/action-delete.gif\"></a>                                                
+											</li>";
+								}
+							}
+							?>                               
+						</div>
+					</div>
+				</div>
                 <!-- Course Audience-->
                 <h2><?php echo $module_singular_name; ?> Enrollment</h2>
                 <div class="control-group">
@@ -1038,7 +1097,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                     <div class="controls">
                         <div id="curriculum_type_periods">
                             <?php
-                            if ($PROCESSED["curriculum_type_id"]) {
+                            if (isset($PROCESSED["curriculum_type_id"]) && $PROCESSED["curriculum_type_id"]) {
                                 $query = "SELECT * FROM `curriculum_periods` WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"]." AND `active` = 1 AND `finish_date` >= ".$db->qstr(time()));
                                 if ($periods = $db->GetAll($query)) {
                                     ?>
@@ -1147,6 +1206,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                 </div>
 
                 <script type="text/javascript">
+					jQuery(function($) {						
+						$('.chosen-select').chosen({no_results_text: 'No Reports Available.'});	
+					});
                 var updaters = new Array();
                 function addPeriod(period_id,period_text,index){
                     jQuery("#period_select option[value='"+period_id+"']").attr('disabled','disabled');

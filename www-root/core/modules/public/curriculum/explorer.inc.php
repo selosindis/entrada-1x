@@ -53,6 +53,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 		$query = "SELECT * FROM `global_lu_objectives` WHERE `objective_id` = ".$db->qstr($PROCESSED["id"]);
 		$objective_info = $db->GetRow($query);
 		$objective_name = $objective_info["objective_name"];
+		$objective_description = $objective_info["objective_description"];
 	}
 
 	if (isset($MODE) && $MODE == "ajax") {
@@ -70,12 +71,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 		if ($_GET["course_id"] && ($tmp_input = clean_input($_GET["course_id"], array("int")))) {
 			$PROCESSED["course_id"] = $tmp_input;
 		}
+		if ($_GET["group_id"] && ($tmp_input = clean_input($_GET["group_id"], array("int")))) {
+			$PROCESSED["group_id"] = $tmp_input;
+		}
 		if ($_GET["count"] && ($tmp_input = clean_input($_GET["count"], array("int")))) {
 			$PROCESSED["count"] = $tmp_input;
 		}
 
 		ob_clear_open_buffers();
-
+		
 		if ($PROCESSED["count"] == 1 || $PROCESSED["count"] == 2) {
 			$query = "	SELECT b.`course_id`, b.`course_name`, `course_code`
 						FROM `course_objectives` AS a
@@ -91,7 +95,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 		}
 
 		if ($PROCESSED["count"] == 1 || $PROCESSED["count"] == 3) {
-			$query = "	SELECT c.`event_id`, c.`event_title`, c.`event_start`, d.`objective_name`, e.`course_code`, e.`course_name`
+			$query = "	SELECT c.`event_id`, c.`event_title`, c.`event_start`, d.`objective_name`, e.`course_code`, e.`course_name`, d.`objective_description`
 						FROM `event_objectives` AS a
 						JOIN `objective_organisation` AS b
 						ON a.`objective_id` = b.`objective_id`
@@ -101,10 +105,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 						ON a.`objective_id` = d.`objective_id`
 						JOIN `courses` AS e
 						ON c.`course_id` = e.`course_id`
+						JOIN `event_audience` AS f
+						ON c.`event_id` = f.`event_id`
+						AND f.`audience_type` = 'cohort'
 						WHERE a.`objective_id` = ".$db->qstr($PROCESSED["objective_parent"])."
 						AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation()).
 						($PROCESSED["year"] ? " AND (IF (c.`event_id` IS NOT NULL, c.`event_start` BETWEEN ".$db->qstr($SEARCH_DURATION["start"])." AND ".$db->qstr($SEARCH_DURATION["end"]).", '1' = '1'))" : "").
-						($PROCESSED["course_id"] ? " AND (IF (c.`course_id` IS NOT NULL, c.`course_id` = " . $db->qstr($PROCESSED["course_id"]).", '1' = '1'))" : "")."
+						($PROCESSED["course_id"] ? " AND (IF (c.`course_id` IS NOT NULL, c.`course_id` = " . $db->qstr($PROCESSED["course_id"]).", '1' = '1'))" : "").
+						($PROCESSED["group_id"] ? " AND f.`audience_value` = " . $db->qstr($PROCESSED["group_id"]) : "")."
 						ORDER BY c.`course_id`, c.`event_start` DESC";
 			$event_objectives = $db->GetAll($query);
 		}
@@ -134,7 +142,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 				$child_objectives[$i]["course_count"] = $course_count;
 
 				if ($PROCESSED["count"] == 1 || $PROCESSED["count"] == 3) {
-					$event_count = array_sum(count_objective_child_events($child["objective_id"], $SEARCH_DURATION["start"], $SEARCH_DURATION["end"], $PROCESSED["course_id"]));
+					$event_count = array_sum(count_objective_child_events($child["objective_id"], $SEARCH_DURATION["start"], $SEARCH_DURATION["end"], $PROCESSED["course_id"], $PROCESSED["group_id"]));
 				} else {
 					$event_count = 0;
 				}
@@ -147,15 +155,16 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 		$objective_parents = fetch_objective_parents($PROCESSED["objective_parent"]);
 		if ($objective_parents) {
 			$flattened_objectives = flatten_array($objective_parents);
-
 			for ($i = 0; $i <= count($flattened_objectives); $i++) {
 				if ($i % 2 == 0 && (!empty($flattened_objectives[$i]) && ($flattened_objectives[$i] != $PROCESSED["objective_parent"] || count($objective_parents) == 2))) {
 					$o_breadcrumb[] = "<a class=\"objective-link\" href=\"".ENTRADA_RELATIVE. "/curriculum/explorer?objective_parent=".($flattened_objectives[$i+2] ? $flattened_objectives[$i+2] : 0)."&id=" . $flattened_objectives[$i]."&step=2\" data-id=\"".$flattened_objectives[$i]."\">".$flattened_objectives[$i+1]."</a>";
+				} else if ($i % 2 == 0) {
+					$o_breadcrumb[] = $flattened_objectives[$i+1];
 				}
 			}
 
 			if ($o_breadcrumb) {
-				$breadcrumb = implode(" &gt; ", array_reverse($o_breadcrumb));
+				$breadcrumb = implode(" / ", array_reverse($o_breadcrumb));
 			} else {
 				$breadcrumb = null;
 			}
@@ -164,15 +173,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 		if ($event_objectives) {
 			if (!$objective_name) {
 				$objective_name = $event_objectives[0]["objective_name"];
+				$objective_description = $event_objectives[0]["objective_description"];
 			}
 			foreach ($event_objectives as $objective) {
 				$events[$objective["course_code"] . ": " . $objective["course_name"]][] = $objective;
 			}
-		} else {
-			echo $db->ErrorMsg();
 		}
 
-		echo json_encode(array("status" => "success", "objective_parent" => $PROCESSED["objective_parent"], "events" => $events, "courses" => $mapped_courses, "child_objectives" => $child_objectives, "objective_name" => $objective_name, "breadcrumb" => $breadcrumb));
+		echo json_encode(array("status" => "success", "objective_parent" => $PROCESSED["objective_parent"], "events" => $events, "courses" => $mapped_courses, "child_objectives" => $child_objectives, "objective_name" => $objective_name, "objective_description" => $objective_description, "breadcrumb" => $breadcrumb));
 
 		exit;
 
@@ -208,6 +216,10 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 			 */
 			if (isset($_GET["count"]) && ($tmp_input = clean_input($_GET["count"], array("int")))) {
 				$PROCESSED["count"] = $tmp_input;
+			}
+			
+			if (isset($_GET["group_id"]) && $tmp_input = clean_input($_GET["group_id"], "int")) {
+				$PROCESSED["group_id"] = $tmp_input;
 			}
 		break;
 		case 1 :
@@ -304,7 +316,31 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 					</td>
 				</tr>
 				<tr>
-					<td colspan="5" align="right"><br /><input type="submit" class="btn btn-primary" value="Browse" /></td>
+					<td><label for="cohort" style="font-weight: bold; margin-right: 5px; white-space: nowrap">Cohort:</label></td>
+					<td>
+						<select id="cohort" name="group_id" >
+							<option value="0">-- All Cohorts --</option>
+							<?php
+							$query = "	SELECT a.*
+										FROM `groups` AS a
+										JOIN `group_organisations` AS b
+										ON a.`group_id` = b.`group_id`
+										WHERE b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+										AND a.`group_active` = 1
+										ORDER BY `group_name` DESC";
+							$cohorts = $db->GetAll($query);
+							if ($cohorts) {
+								foreach ($cohorts as $cohort) {
+									?>
+                                    <option value="<?php echo $cohort["group_id"]; ?>" <?php echo ($cohort["group_id"] == $PROCESSED["group_id"]) ? " selected=\"selected\"" : "" ; ?>><?php echo $cohort["group_name"]; ?></option>
+									<?php
+								}
+							}
+							?>
+						</select>
+					</td>
+					<td>&nbsp;</td>
+					<td colspan="2" align="right"><input type="submit" class="btn btn-primary" value="Browse" /></td>
 				</tr>
 			</tbody>
 		</table>
@@ -314,6 +350,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
     var SITE_URL = "<?php echo ENTRADA_URL; ?>";
     var YEAR = "<?php echo $PROCESSED["year"]; ?>";
     var COURSE = "<?php echo $PROCESSED["course_id"]; ?>";
+	var COHORT = "<?php echo $PROCESSED["group_id"]; ?>";
     var OBJECTIVE_PARENT = "<?php echo $PROCESSED["objective_parent"]; ?>";
     var COUNT = "<?php echo $PROCESSED["count"]; ?>";
 	var BADGE_SUCCESS = "<?php echo $badge_settings["badge-success"]; ?>";
@@ -328,7 +365,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 			location.hash = "id-"+OBJECTIVE_PARENT;
 		}
 		var id = parseInt(location.hash.substring(4, location.hash.length));
-		jQuery.getJSON("<?php echo ENTRADA_RELATIVE; ?>/curriculum/explorer?mode=ajax&id="+id + "&year=" + YEAR + "&course_id=" + COURSE + "&count=" + COUNT, function(data) {
+		jQuery.getJSON("<?php echo ENTRADA_RELATIVE; ?>/curriculum/explorer?mode=ajax&id="+id + "&year=" + YEAR + "&course_id=" + COURSE + "&count=" + COUNT + "&group_id=" + COHORT, function(data) {
 			var link = jQuery(document.createElement("a")).addClass(".objective-link").attr("data-id", "<?php echo $PROCESSED["id"]; ?>").html(data.objective_name);
 			current_total = 0;
 			jQuery.each(data.child_objectives, function (i, v) {
@@ -336,7 +373,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 			});
 			renderDOM(data, link);
 			if (jQuery(".objective-link[data-id="+id+"]").length > 0) {
-				jQuery(".objective-link[data-id="+id+"]").addClass("active");
+				jQuery(".objective-link[data-id="+id+"]").not(".back").addClass("active");
 			}
 		});
 	});

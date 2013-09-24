@@ -40,17 +40,11 @@ if (!defined("PARENT_INCLUDED")) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-	/**
-	 * Add the accommodation issue sidebar item.
-	 */
-	$sidebar_html = "<strong>Having issues?</strong> If you are having any problems with your accommodations that you would like to report please <a href=\"javascript:sendAccommodation('".ENTRADA_URL."/agent-regionaled.php')\" style=\"font-size: 11px; font-weight: bold\">click here</a> to let us know.\n";
-
-	new_sidebar_item("Having issues?", $sidebar_html, "page-regional-accommodations", "open");
 	?>
 
 	<h1>Regional Accommodations</h1>
 	<div class="display-generic">
-		The Regional Education office has assigned you the following regional accommodations.
+		The <?php echo $APARTMENT_INFO["department_title"]; ?> Office has assigned you the following regional accommodations.
 	</div>
 	<?php
 	$query = "	SELECT a.*, b.`apartment_title`, c.`region_name`, d.`id` AS `proxy_id`, d.`firstname`, d.`lastname`, IF(e.`group` = 'student', 'Clerk', 'Resident') AS `learner_type`
@@ -110,6 +104,6 @@ if (!defined("PARENT_INCLUDED")) {
 		<?php
 	} else {
 		$NOTICE++;
-		$NOTICESTR[] = "The Regional Education office has not yet assigned you any accommodations.";
+		$NOTICESTR[] = "The " . $APARTMENT_INFO["department_title"] . " Office has not yet assigned you any accommodations.";
 	}
 }

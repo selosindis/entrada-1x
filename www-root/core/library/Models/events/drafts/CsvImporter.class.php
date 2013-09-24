@@ -81,6 +81,7 @@ class CsvImporter {
 		* 15	Audience (Student numbers)
 		* 16	Teacher Numbers
 		* 17	Teacher Names
+		* 18	Objectives Release Date
 		*/
 
 		$event_id				= ((isset($row[0]) ? clean_input($row[0], "int") : 0 ));
@@ -102,6 +103,7 @@ class CsvImporter {
 		$event_teachers			= ((isset($row[16]) && !empty($row[16]) ? explode(";", clean_input($row[16], array("nows", "striptags"))) : 0 ));
 		$teacher_names			= ((isset($row[17]) && !empty($row[17]) ? explode(";", $row[17]) : 0 ));
 		$event_duration			= 0;
+		$objectives_release_date = ((isset($row[18]) ? clean_input($row[18], array("trim","striptags")) : 0 ));
 
 		// check draft for existing event_id and get the devent_id if found
 		if ($event_id != 0) {
@@ -113,6 +115,9 @@ class CsvImporter {
 			if ($result = $db->GetRow($query)) {
 				$output[$event_id]["devent_id"] = $result["devent_id"];
 			}
+			
+			$query = "	SELECT * FROM `events` WHERE `event_id` = ".$db->qstr($event_id);
+			$old_event_data = $db->GetRow($query);
 		}
 
 		// set the output event_id
@@ -203,14 +208,22 @@ class CsvImporter {
 			$skip_row = true;
 		}
 
-		// event location, not required
-		if (!empty($event_description)) {
+		// event description, not required
+		if (strlen($event_description) > 0) {
 			$output[$event_id]["event_description"] = $event_description;
+		} else {
+			if ($old_event_data) {
+				$output[$event_id]["event_description"] = $old_event_data["event_description"];
+			}
 		}
 
 		// event location, not required
-		if ($event_location !== 0) {
+		if (strlen($event_location) > 0) {
 			$output[$event_id]["event_location"] = $event_location;
+		} else {
+			if ($old_event_data) {
+				$output[$event_id]["event_location"] = $old_event_data["event_location"];
+			}
 		}
 
 		// event audience, not required	but needs to be verified

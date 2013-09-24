@@ -52,7 +52,7 @@ if (!defined("IN_SCHEDULE")) {
 				 */
 				if (!$db->AutoExecute(CLERKSHIP_DATABASE.".events", array("requires_apartment" => 1), "UPDATE", "event_id=".$db->qstr($ASCHEDULE_INFO["event_id"]))) {
 					$NOTICE++;
-					$NOTICESSTR[] = "We were unable to add this learners event back onto the Regional Education dashboard as a todo task.";
+					$NOTICESSTR[] = "We were unable to add this learners event back onto the " . $APARTMENT_INFO["department_title"] . " dashboard as a todo task.";
 
 					application_log("error", "Unable to set requires_apartment to 1 for event_id [".$ASCHEDULE_INFO["event_id"]."] after proxy_id [".$ASCHEDULE_INFO["proxy_id"]."] had been removed from aschedule_id [".$ASCHEDULE_ID."]. Database said: ".$db->ErrorMsg());
 				}
@@ -72,7 +72,9 @@ if (!defined("IN_SCHEDULE")) {
 					"apartment_address" => $apartment_address,
 					"inhabiting_start" => date(DEFAULT_DATE_FORMAT, $ASCHEDULE_INFO["inhabiting_start"]),
 					"inhabiting_finish" => date(DEFAULT_DATE_FORMAT, $ASCHEDULE_INFO["inhabiting_finish"]),
-					"application_name" => APPLICATION_NAME
+					"application_name" => APPLICATION_NAME,
+					"department_title" => $APARTMENT_INFO["department_title"],
+					"department_id" => $APARTMENT_INFO["department_id"]
 				);
 
 				$recipient = array (

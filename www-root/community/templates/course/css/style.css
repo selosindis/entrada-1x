@@ -23,6 +23,7 @@ h1{
   margin-bottom:28px;
 }
 .banner h1{
+  font-size:20px;
   margin-bottom:0;
 }
 h2{
@@ -102,14 +103,17 @@ header#main-header .banner{
 }
 .navbar-inner {
   background:#1b3842;
-  /*border-top:1px solid #FFF;*/
+  border: 0;
   border-top:1px solid rgba(255,255,255,0.1);
   border-bottom:4px solid #d1ceb1;
+  border-left:none;
+  border-right:none;
   -moz-box-shadow:0 -4px 7px rgba(0, 0, 0, 0.075);
   -webkit-box-shadow:0 -4px 7px rgba(0, 0, 0, 0.075);
   box-shadow:0 -4px 7px rgba(0, 0, 0, 0.075);
   min-height:34px;
   border-radius:0;
+  filter: 0;
 }
 .navbar .nav > li {
   background:url("../images/nav-separator.png") right bottom no-repeat transparent;
@@ -120,6 +124,9 @@ header#main-header .banner{
   color:#d3e9f0;
   padding:7px 16px 9px;
   text-shadow:1px 1px 0 rgba(0,0,0,0.1);
+}
+.navbar .nav > li > a:hover {
+  color:#99b7dc;
 }
 .navbar .nav > li.current > a{
   background:#162d35;
@@ -140,6 +147,62 @@ header#main-header .banner{
   height:0;
   left:45%;
 }
+.dropdown-menu > li > a {
+  color:#0a2240;
+}
+.dropdown-menu > li > a:hover {
+  background:#11345e;
+  color:#fff;
+}
+.navbar .nav li.dropdown > .dropdown-toggle .caret {
+border-top-color: #fff;
+border-bottom-color: #fff;
+}
+.navbar .nav li.dropdown:hover > .dropdown-toggle .caret {
+border-top-color: #99b7dc;
+border-bottom-color: #99b7dc;
+}
+.navbar .nav li.dropdown.open > .dropdown-toggle .caret {
+  border-top-color: #0a2240;
+  border-bottom-color: #0a2240;
+}
+.navbar .nav li.dropdown.open > .dropdown-toggle {
+  background:#99b7dc;
+  color:#0a2240;
+}
+#navigator {
+background-color:#0a2240;
+background-color:rgba(23,48,57,0.96);
+height:375px;
+overflow:hidden;
+margin:0;
+padding:0;
+}
+#navigator-tab {
+border-top:4px solid #0a2240;
+text-align:center;
+display:block;
+-moz-box-shadow:1px 1px 0 rgba(255,255,255,0.05) inset;
+-webkit-box-shadow:1px 1px 0 rgba(255,255,255,0.05) inset;
+box-shadow:1px 1px 0 rgba(255,255,255,0.05) inset;
+}
+a.toc{
+  display:inline-block;
+  color:#fff;
+  text-transform:uppercase;
+  font-weight:bold;
+  padding:0 10px;
+  border-radius:0 0 5px 5px;
+  background:#0a2240;
+  box-shadow:1px 1px 0 rgba(255,255,255,0.05);
+  font-size:0.75em;
+  vertical-align:top;
+}
+a.toc:hover{
+  text-decoration:none;
+  color:#99b7dc;
+}
+
 a.log-out{
   border-radius:20px;
   background:#18323b;
@@ -181,6 +244,7 @@ a.log-out:hover{
   font-size:12px;
   text-shadow:1px 1px 0 rbga(0,0,0,0.75);
   padding:3px 10px;
+  margin-top:0px;
 }
 .panel-body{
   background:#FFF;
@@ -248,6 +312,9 @@ a.log-out:hover{
   color:#7dbedc;
   font-size:11px;
 }
+.welcome-area .userAvatar {
+    float: left;
+}
 .welcome-area .userAvatar img{
   padding:2px;
   background:#FFF;
@@ -264,6 +331,16 @@ a.log-out:hover{
   color:#D3E9F0;
   font-weight:bold;
 }
+.welcome-area .welcome-block {
+    float: right;
+}
+.welcome-area a {
+    color: #EEEEEE;
+}
+.welcome-area a:hover {
+    color: #CCCCCC;
+    text-decoration: none;
+}
 ul.legend-list{
   list-style:none;
   margin-left:0;
@@ -278,6 +355,7 @@ span.bread-separator{
   color:#999;
   margin:0 3px;
 }
+
 /*** Departamental Clerkship Schedule ***/
 .select-dep form{
   padding:15px;
@@ -346,6 +424,10 @@ ul.quiz-questions-list {
 footer#main-footer .container{
   text-align:center;
   margin:18px auto;
+}
+
+.container {
+	width: 960px !important;
 }
 
 ul.public-announcements {

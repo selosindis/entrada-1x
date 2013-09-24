@@ -68,11 +68,14 @@ if (!defined("IN_REGIONALED")) {
 
 			$apartment_ids = array();
 			
-			$query = "	SELECT `apartment_id`
-						FROM `".CLERKSHIP_DATABASE."`.`apartments`
-						WHERE `region_id` = ".$db->qstr($event_info["region_id"])."
-						AND (`available_start` = '0' OR `available_start` <= ".$db->qstr(time()).")
-						AND (`available_finish` = '0' OR `available_finish` > ".$db->qstr(time()).")";
+			$query = "	SELECT a.`apartment_id`
+						FROM `".CLERKSHIP_DATABASE."`.`apartments` a						
+						JOIN `".CLERKSHIP_DATABASE."`.`apartment_contacts` b
+						ON b.`apartment_id` = a.`apartment_id`
+						WHERE a.`region_id` = ".$db->qstr($event_info["region_id"])."
+						AND (a.`available_start` = '0' OR a.`available_start` <= ".$db->qstr(time()).")
+						AND (a.`available_finish` = '0' OR a.`available_finish` > ".$db->qstr(time()).")
+						AND b.`proxy_id` = " . $db->qstr($ENTRADA_USER->getId());
 			$apartments = $db->GetAll($query);
 			if ($apartments) {
 				foreach ($apartments as $apartment) {
@@ -91,12 +94,17 @@ if (!defined("IN_REGIONALED")) {
 					if (isset($_POST["apartment_id"]) && ($tmp_input = clean_input($_POST["apartment_id"], "int"))) {
 						$PROCESSED["apartment_id"] = $tmp_input;
 
-						$query = "	SELECT *
-									FROM `".CLERKSHIP_DATABASE."`.`apartments`
-									WHERE `apartment_id` = ".$db->qstr($PROCESSED["apartment_id"]);
-						$apartment_info = $db->GetRow($query);
-						if ($apartment_info) {
-							if ($apartment_info["region_id"] == $event_info["region_id"]) {
+						$query = "	SELECT a.*, g.`department_id`, g.`department_title`
+									FROM `".CLERKSHIP_DATABASE."`.`apartments` a
+									JOIN `".CLERKSHIP_DATABASE."`.`apartment_contacts` AS f
+									ON a.`apartment_id` = f.`apartment_id`
+									JOIN `".AUTH_DATABASE."`.`departments` AS g
+									ON f.`department_id` = g.`department_id`
+									WHERE a.`apartment_id` = ".$db->qstr($PROCESSED["apartment_id"]) . "
+									AND f.`proxy_id` = " . $db->qstr($ENTRADA_USER->getId());
+						$APARTMENT_INFO = $db->GetRow($query);
+						if ($APARTMENT_INFO) {
+							if ($APARTMENT_INFO["region_id"] == $event_info["region_id"]) {
 								$availability = regionaled_apartment_availability($PROCESSED["apartment_id"], $event_info["event_start"], $event_info["event_finish"]);
 								if ($availability["openings"] <= 0) {
 									$ERROR++;
@@ -127,7 +135,7 @@ if (!defined("IN_REGIONALED")) {
 						if ($db->AutoExecute(CLERKSHIP_DATABASE.".apartment_schedule", $PROCESSED, "INSERT") && ($aschedule_id = $db->Insert_Id())) {
 							if (!$db->AutoExecute(CLERKSHIP_DATABASE.".events", array("requires_apartment" => 0), "UPDATE", "event_id=".$db->qstr($event_info["event_id"]))) {
 								$NOTICE++;
-								$NOTICESSTR[] = "We were unable to remove this learners entry from the Regional Education dashboard.";
+								$NOTICESSTR[] = "We were unable to remove this learners entry from the " . $APARTMENT_INFO["department_title"] . " dashboard.";
 
 								application_log("error", "Unable to set requires_apartment to 0 for event_id [".$PROCESSED["event_id"]."] after an apartment had been assigned. Database said: ".$db->ErrorMsg());
 							}
@@ -149,7 +157,9 @@ if (!defined("IN_REGIONALED")) {
 									"from_lastname" => $_SESSION["details"]["lastname"],
 									"region" => $event_info["region_name"],
 									"confirmation_url" => ENTRADA_URL."/regionaled/view?id=".$aschedule_id,
-									"application_name" => APPLICATION_NAME
+									"application_name" => APPLICATION_NAME,
+									"department_title" => $APARTMENT_INFO["department_title"],
+									"department_id" => $APARTMENT_INFO["department_id"]
 								);
 
 								regionaled_apartment_notification("confirmation", $recipient, $message_variables);
@@ -178,7 +188,7 @@ if (!defined("IN_REGIONALED")) {
 					$ONLOAD[] = "setTimeout('window.location=\'".ENTRADA_URL."/admin/regionaled\'', 5000)";
 
 					$SUCCESS++;
-					$SUCCESSSTR[] = "You have successfully assigned <strong>".html_encode($event_info["firstname"]." ".$event_info["lastname"])."</strong> to <strong>".html_encode($apartment_info["apartment_title"])."</strong> during the <strong>".html_encode($event_info["event_title"])."</strong> rotation.<br /><br />You will be automatically redirected back to the Regional Education dashboard in 5 seconds, or <a href=\"".ENTRADA_URL."/admin/regionaled\">click here</a> if you do not wish to wait.";
+					$SUCCESSSTR[] = "You have successfully assigned <strong>".html_encode($event_info["firstname"]." ".$event_info["lastname"])."</strong> to <strong>".html_encode($APARTMENT_INFO["apartment_title"])."</strong> during the <strong>".html_encode($event_info["event_title"])."</strong> rotation.<br /><br />You will be automatically redirected back to the " . $APARTMENT_INFO["department_title"] . " dashboard in 5 seconds, or <a href=\"".ENTRADA_URL."/admin/regionaled\">click here</a> if you do not wish to wait.";
 
 					echo display_success();
 				break;
@@ -377,7 +387,7 @@ if (!defined("IN_REGIONALED")) {
 			$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 5000)";
 
 			$ERROR++;
-			$ERRORSTR[] = "The event id that was provided was not found. Please select a new event from the Regional Education dashboard.";
+			$ERRORSTR[] = "The event id that was provided was not found. Please select a new event from the " . $APARTMENT_INFO["department_title"] . " dashboard.";
 
 			echo display_error();
 

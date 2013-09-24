@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS `apartments` (
   `province_id` int(12) NOT NULL DEFAULT '0',
   `apartment_province` varchar(24) NOT NULL DEFAULT '',
   `region_id` int(12) NOT NULL DEFAULT '0',
+  `department_id` int(12) NOT NULL DEFAULT '0',
   `apartment_title` varchar(86) NOT NULL DEFAULT '',
   `apartment_number` varchar(12) NOT NULL DEFAULT '',
   `apartment_address` varchar(86) NOT NULL DEFAULT '',
@@ -58,6 +59,17 @@ CREATE TABLE IF NOT EXISTS `apartment_accounts` (
   KEY `account_status` (`account_status`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `apartment_contacts` (
+  `acontact_id` int(12) NOT NULL AUTO_INCREMENT,
+  `apartment_id` int(12) NOT NULL DEFAULT '0',
+  `proxy_id` int(12) NOT NULL DEFAULT '0',
+  `department_id` int(12) NOT NULL DEFAULT '0',
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`acontact_id`),
+  KEY `apartment_id` (`apartment_id`,`proxy_id`,`department_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
 CREATE TABLE IF NOT EXISTS `apartment_photos` (
   `aphoto_id` int(12) NOT NULL AUTO_INCREMENT,
   `apartment_id` int(12) NOT NULL DEFAULT '0',
@@ -69,6 +81,13 @@ CREATE TABLE IF NOT EXISTS `apartment_photos` (
   KEY `apartment_id` (`apartment_id`),
   KEY `aphoto_name` (`aphoto_name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `apartment_regionaled_users` (
+  `aregionaled_id` int(12) NOT NULL AUTO_INCREMENT,
+  `proxy_id` int(12) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`aregionaled_id`),
+  KEY `proxy_id` (`proxy_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
 
 CREATE TABLE IF NOT EXISTS `apartment_schedule` (
   `aschedule_id` int(12) NOT NULL AUTO_INCREMENT,

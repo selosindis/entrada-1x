@@ -44,7 +44,12 @@ if (!defined("IN_APARTMENTS")) {
 
 		foreach ($_POST["delete"] as $apartment_id) {
 			if ($tmp_input = clean_input($apartment_id, array("nows", "int"))) {
-				$query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`apartments` WHERE `apartment_id` = ".$db->qstr($tmp_input);
+				$query = "	SELECT * 
+							FROM `".CLERKSHIP_DATABASE."`.`apartments` a
+							JOIN `".CLERKSHIP_DATABASE."`.`apartment_contacts` b
+							ON b.`apartment_id` = a.`apartment_id`
+							WHERE a.`apartment_id` = ".$db->qstr($tmp_input) . "
+							AND b.`proxy_id` = " . $db->qstr($ENTRADA_USER->getId());
 				$result = $db->GetRow($query);
 				if ($result) {
 					$apartment_ids[] = $tmp_input;
@@ -62,7 +67,7 @@ if (!defined("IN_APARTMENTS")) {
 			switch ($STEP) {
 				case 2 :
 					$url = ENTRADA_URL."/admin/regionaled/apartments";
-					$msg = "You will now be redirected back to the Regional Education Apartment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+					$msg = "You will now be redirected back to the " . $APARTMENT_INFO["department_title"] . " Apartment index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 					$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
@@ -171,7 +176,7 @@ if (!defined("IN_APARTMENTS")) {
 						</form>
 						<?php
 					} else {
-						application_log("notice", "The regional education apartment expiration page was accessed without providing any valid apartment_ids to remove.");
+						application_log("notice", "The " . $APARTMENT_INFO["department_title"] . " apartment expiration page was accessed without providing any valid apartment_ids to remove.");
 
 						header("Location: ".ENTRADA_URL."/admin/regionaled/apartments");
 						exit;
@@ -179,13 +184,13 @@ if (!defined("IN_APARTMENTS")) {
 				break;
 			}
 		} else {
-			application_log("notice", "The regional education apartment expiration page was accessed without providing any valid apartment_ids to remove.");
+			application_log("notice", "The " . $APARTMENT_INFO["department_title"] . " apartment expiration page was accessed without providing any valid apartment_ids to remove.");
 
 			header("Location: ".ENTRADA_URL."/admin/regionaled/apartments");
 			exit;
 		}
 	} else {
-		application_log("notice", "The regional education apartment expiration page was accessed without providing any apartment_ids to remove.");
+		application_log("notice", "The " . $APARTMENT_INFO["department_title"] . " apartment expiration page was accessed without providing any apartment_ids to remove.");
 
 		header("Location: ".ENTRADA_URL."/admin/regionaled/apartments");
 		exit;

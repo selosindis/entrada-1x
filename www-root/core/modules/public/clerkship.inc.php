@@ -161,7 +161,7 @@ if(!defined("PARENT_INCLUDED")) {
 		/**
 		 * Add the student search sidebar item.
 		 */
-		$sidebar_html  = "<form action=\"".ENTRADA_URL."/clerkship?section=search\" method=\"post\" style=\"display: inline\">\n";
+		$sidebar_html  = "<form action=\"".ENTRADA_URL."/clerkship?section=results\" method=\"post\" style=\"display: inline\">\n";
 		$sidebar_html .= "<label for=\"name\" class=\"form-nrequired\">Student Search:</label><br />";
 		$sidebar_html .= "<input type=\"text\" id=\"name\" name=\"name\" value=\"\" style=\"width: 95%\" /><br />\n";
 		$sidebar_html .= "<input type=\"hidden\" name=\"action\" value=\"results\" />";

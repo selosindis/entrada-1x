@@ -57,6 +57,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
 		$event_info	= $db->GetRow($query);
 		if ($event_info) {
+			$PROCESSED["objectives_release_date"] = $event_info["objectives_release_date"];
 			$COURSE_ID = $event_info["course_id"];
 			if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), "update")) {
 				application_log("error", "Someone attempted to modify content for an event [".$EVENT_ID."] that they were not the coordinator for.");
@@ -80,7 +81,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 				if (!$history) { // Create the first history record of the event's creation when another user updates the event
 					if(count($_POST) && ($ENTRADA_USER->getID() != $event_info["updated_by"])) {	// Ignore starting history when it's the sole author initially adding content.
-                                            history_log($EVENT_ID, 'created this learning event.', $event_info["updated_by"], $event_info["updated_date"]);
+						history_log($EVENT_ID, 'created this learning event.', $event_info["updated_by"], $event_info["updated_date"]);
 					}
 				}
 
@@ -166,11 +167,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     $clinical_presentations = array();
                 }
 
-				/**
+                /**
 				 * Fetch the Curriculum Objective details.
 				 */
 				list($curriculum_objectives_list,$top_level_id) = courses_fetch_objectives($event_info["organisation_id"],array($event_info["course_id"]),-1, 1, false, false, $EVENT_ID, true);
-
 				$curriculum_objectives = array();
 
 				if (isset($_POST["checked_objectives"]) && ($checked_objectives = $_POST["checked_objectives"]) && (is_array($checked_objectives))) {
@@ -242,9 +242,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					if ((is_array($event_types)) && (count($event_types))) {
 						foreach ($event_types as $order => $eventtype_id) {
 							if (($eventtype_id = clean_input($eventtype_id, array("trim", "int"))) && ($duration = clean_input($eventtype_durations[$order], array("trim", "int")))) {
-								if (!($duration >= 30)) {
+								if (!($duration >= LEARNING_EVENT_MIN_DURATION)) {
 									$ERROR++;
-									$ERRORSTR[] = "Event type <strong>durations</strong> may not be less than 30 minutes.";
+									$ERRORSTR[] = "Event type <strong>durations</strong> may not be less than ".LEARNING_EVENT_MIN_DURATION." minutes.";
 								}
 
 								$query	= "SELECT `eventtype_title` FROM `events_lu_eventtypes` WHERE `eventtype_id` = ".$db->qstr($eventtype_id);
@@ -275,9 +275,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					}
 				}
 
+				
+
 				if (isset($_POST["type"])) {
 					switch ($_POST["type"]) {
 						case "content" :
+							
+							/**
+							* Event objective release date
+							*/
+							$PROCESSED["objectives_release_date"] = 0;
+							if (isset($_POST["delay_release"]) && $tmp_input = clean_input($_POST["delay_release"], array("int"))) {
+								$PROCESSED["delay_release"] = $tmp_input;
+								$release_date = validate_calendar("Delay release until", "delay_release_option", true, true);
+								if (!$ERROR) {
+									if ($release_date >= time()) {
+										$PROCESSED["objectives_release_date"] = (int) $release_date;
+									} else {
+										add_error("<strong>Objective release date</strong> must on or after the current date and time.");
+									}
+								}
+							}
+							
 							if(!$ERROR) {
 								
 								$history_texts = " [";
@@ -309,13 +328,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 
 								/**
-								 * Teacher's Message
+								 * Required Preparation
 								 */
 								if (event_text_change($EVENT_ID,"event_message")) {
 									if (strlen($history_texts)>2) {
 										$history_texts .= ":";
 									}
-									$history_texts .= "teacher's message";
+									$history_texts .= "Required Preparation";
 								}
 								if ((isset($_POST["event_message"])) && (clean_input($_POST["event_message"], array("notags", "nows")))) {
 									$event_message = clean_input($_POST["event_message"], array("allowedtags"));
@@ -334,7 +353,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								/**
 								 * Update base Learning Event.
 								 */
-								if ($db->AutoExecute("events", array("event_objectives" => $event_objectives, "event_description" => $event_description, "event_message" => $event_message, "event_finish" => $event_finish, "event_duration" => $event_duration, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
+								if ($db->AutoExecute("events", array("event_objectives" => $event_objectives, "objectives_release_date" => $PROCESSED["objectives_release_date"] , "event_description" => $event_description, "event_message" => $event_message, "event_finish" => $event_finish, "event_duration" => $event_duration, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
 									$SUCCESS++;
 									$SUCCESSSTR[] = "You have successfully updated the event details for this learning event.";
 
@@ -432,14 +451,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 												$squery		= "SELECT * FROM `events_lu_topics` WHERE `topic_id` = ".$db->qstr($topic_id);
 												$sresult	= $db->GetRow($squery);
 												if ($sresult) {
-													if ((isset($value["major_topic"])) && ($value["major_topic"] == "major")) {
+													if ($value == "major") {
 														if (!$db->AutoExecute("event_topics", array("event_id" => $EVENT_ID, "topic_id" => $topic_id, "topic_coverage" => "major", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 															$ERROR++;
 															$ERRORSTR[] = "There was an error when trying to insert an Event Topic response into the system. System administrators have been informed of this error; please try again later.";
 
 															application_log("error", "Unable to insert a new event_topic entry into the database while modifying event contents. Database said: ".$db->ErrorMsg());
 														}
-													} elseif ((isset($value["minor_topic"])) && ($value["minor_topic"] == "minor")) {
+													} elseif ($value == "minor") {
 														if (!$db->AutoExecute("event_topics", array("event_id" => $EVENT_ID, "topic_id" => $topic_id, "topic_coverage" => "minor", "topic_time" => "0", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 															$ERROR++;
 															$ERRORSTR[] = "There was an error when trying to insert an Event Topic response into the system. System administrators have been informed of this error; please try again later.";
@@ -623,6 +642,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				<a id="false-link" href="#placeholder"></a>
 				<div id="placeholder" style="display: none"></div>
 				<script type="text/javascript">
+				jQuery(document).ready(function () {
+					jQuery("#delay_release_option_date").css("margin", "0");
+					jQuery("#delay_release").is(":checked") ? jQuery("#delay_release_controls").show() : jQuery("#delay_release_controls").hide();
+					jQuery("#delay_release").on("click", function() {
+						jQuery("#delay_release_controls").toggle(this.checked);
+					});
+					
+					jQuery(".remove-hottopic").on("click", function(e) {
+						jQuery("#topic_"+jQuery(this).attr("data-id")+"_major").removeAttr("checked");
+						jQuery("#topic_"+jQuery(this).attr("data-id")+"_minor").removeAttr("checked");
+						e.preventDefault();
+					});
+				});
+				
 				var ajax_url = '';
 				var modalDialog;
 				document.observe('dom:loaded', function() {
@@ -652,6 +685,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							onComplete: function(transport) {
 								modalDialog.container.update(transport.responseText);
 								modalDialog.open();
+								var windowHeight = jQuery(window).outerHeight();
+								var modalHeight = jQuery("#placeholder.modal").outerHeight();
+								if (modalHeight >= windowHeight) {
+									jQuery(document).scrollTop(0);
+								}
 							}
 						});
 					} else {
@@ -866,7 +904,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 							<tr>
 								<td colspan="2">
-                                    <label for="event_message" class="form-nrequired">Teacher's Message:</label><br />
+                                    <label for="event_message" class="form-nrequired">Required Preparation:</label><br />
 									<textarea id="event_message" name="event_message" style="width: 100%; height: 100px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_message"], array("font")))); ?></textarea>
 								</td>
 							</tr>
@@ -876,6 +914,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				<a name="event-objectives-section"></a>
 				<h2 title="Event Objectives Section">Event Objectives</h2>
 				<div id="event-objectives-section">
+					<div class="row-fluid">
+						<label class="checkbox">
+							<input type="checkbox" id="delay_release" name="delay_release" value="1" <?php echo ($event_info["objectives_release_date"] != 0 || isset($PROCESSED["delay_release"]) ? " checked=\"checked\"" : "") ?> />
+							Delay the release of all objectives
+						</label>	
+						<div id="delay_release_controls" class="space-below">
+							<?php echo generate_calendar("delay_release_option", "Delay release until", true, $PROCESSED["objectives_release_date"], true, false, false, false, false); ?>
+						</div>
+					</div>
+					
                     <label for="event_objectives" class="form-nrequired">Free-Text Objectives</label><br />
                     <textarea id="event_objectives" name="event_objectives" style="width: 100%; height: 100px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_objectives"], array("font")))); ?></textarea>
 
@@ -994,7 +1042,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<a href="javascript:void(0)" class="mapping-toggle btn btn-success btn-small pull-right" data-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Map Additional Objectives</a>
 						</div>
 						<p class="well well-small content-small">
-							<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left and it will be mapped to the event.
+							<strong>Helpful Tip:</strong> Click <strong>Map Additional Objectives</strong> to view the list of available objectives. Select an objective from the list on the left and it will be mapped to the event.
 						</p>
                         <?php
 						if ($hierarchical_objectives) {
@@ -1005,7 +1053,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             ?>
                             <div id="clinical-list-wrapper">
                                 <a name="clinical-objective-list"></a>
-                                <h2 id="flat-toggle"  title="Clinical Objective List" class="collapsed list-heading">Other Objectives</h2>
+                                <h2 id="flat-toggle"  title="Clinical Objective List" class="<?php echo empty($objective_name["cp"]["global_lu_objectives_name"]) ? "collapsed" : ""; ?> list-heading"><?php echo $objective_name["cp"]["global_lu_objectives_name"] ? $objective_name["cp"]["global_lu_objectives_name"] : "Other Objectives"; ?></h2>
                                 <div id="clinical-objective-list">
                                     <ul class="objective-list mapped-list" id="mapped_flat_objectives" data-importance="flat">
                                         <?php
@@ -1151,10 +1199,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</div>
                         <table style="width: 100%" cellspacing="0" summary="List of ED10">
                             <colgroup>
-                                <col style="width: 55%" />
-                                <col style="width: 15%" />
-                                <col style="width: 15%" />
-                                <col style="width: 15%" />
+                                <col style="width: 76%" />
+                                <col style="width: 8%" />
+                                <col style="width: 8%" />
+                                <col style="width: 8%" />
                             </colgroup>
                             <tfoot>
                                 <tr>
@@ -1163,19 +1211,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             </tfoot>
 							<tr>
                                 <td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
-                                <td><span style="font-weight: bold; color: #003366;">Major</span></td>
-                                <td><span style="font-weight: bold; color: #003366;">Minor</span></td>
+                                <td align="center"><span style="font-weight: bold; color: #003366;">Major</span></td>
+                                <td align="center"><span style="font-weight: bold; color: #003366;">Minor</span></td>
+								<td align="center"><span style="font-weight: bold; color: #003366;">Remove</span></td>
                             </tr>
                             <?php
                             foreach ($topic_results as $topic_result) {
                                 echo "<tr>\n";
                                 echo "	<td>".html_encode($topic_result["topic_name"])."</td>\n";
-                                echo "	<td>";
-                                echo "		<input type=\"checkbox\" id=\"topic_".$topic_result["topic_id"]."_major\" name=\"event_topic[".$topic_result["topic_id"]."][major_topic]\" value=\"major\" onclick=\"updateEdChecks(this)\"".(($topic_result["topic_coverage"] == "major") ? " checked=\"checked\"" : "")." />";
+                                echo "	<td align=\"center\">";
+                                echo "		<input type=\"radio\" id=\"topic_".$topic_result["topic_id"]."_major\" name=\"event_topic[".$topic_result["topic_id"]."]\" value=\"major\" onclick=\"updateEdChecks(this)\"".(($topic_result["topic_coverage"] == "major") ? " checked=\"checked\"" : "")." />";
                                 echo "	</td>\n";
-                                echo "	<td>";
-                                echo "		<input type=\"checkbox\" id=\"topic_".$topic_result["topic_id"]."_minor\" name=\"event_topic[".$topic_result["topic_id"]."][minor_topic]\" value=\"minor\" ".(($topic_result["topic_coverage"] == "minor") ? " checked=\"checked\"" : "")."/>";
+                                echo "	<td align=\"center\">";
+                                echo "		<input type=\"radio\" id=\"topic_".$topic_result["topic_id"]."_minor\" name=\"event_topic[".$topic_result["topic_id"]."]\" value=\"minor\" ".(($topic_result["topic_coverage"] == "minor") ? " checked=\"checked\"" : "")."/>";
                                 echo "	</td>\n";
+								echo "  <td align=\"center\"><a href=\"#\" class=\"remove-hottopic\" data-id=\"".$topic_result["topic_id"]."\"><i class=\"icon-remove\"></i></a></td>";
                                 echo "</tr>\n";
                             }
                             echo "<tr><td colspan=\"3\">&nbsp;</td></tr>";

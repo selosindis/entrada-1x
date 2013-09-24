@@ -112,16 +112,6 @@ padding-left:17px;
 background:transparent url(../images/list-download.gif) no-repeat 0 3px;
 }
 
-body {
-margin:0;
-}
-
-body,p,td,a {
-color:#000;
-font-family:'Lucida Grande', Geneva, Verdana, Arial, Helvetica, sans-serif;
-font-size:12px;
-}
-
 a:hover {
 color:#C03;
 text-decoration:underline;
@@ -193,24 +183,25 @@ padding:0 4px;
 }
 
 div.bread-crumb-trail {
-margin-bottom:5px;
-border-bottom:1px #999 dotted;
-padding:2px 2px 2px 5px;
+margin-bottom:15px;
+border-bottom:1px dotted #DDDDDD;
+padding-bottom:8px;
+margin-top:-10px;
 }
 
 div.bread-crumb-trail ul {
 list-style:none;
 list-style-type:none;
 margin:0;
-padding:4px 0 0;
+padding:0;
 }
 
 div.bread-crumb-trail ul li {
 display:inline;
 list-style-type:none;
-padding-left:13px;
+/*padding-left:15px;*/
 vertical-align:middle;
-background:transparent url(../images/breadcrumb-arrow.gif) no-repeat center left;
+/*background:transparent url(../images/record-next-on.gif) no-repeat center left;*/
 }
 
 div.details {
@@ -463,6 +454,7 @@ background:transparent url(../images/checkbox-on.gif) no-repeat;
 
 ul.menu li.nav {
 background:transparent url(../images/nav_arrow.gif) no-repeat;
+margin-bottom: 0px;
 }
 
 ul.menu li.community {
@@ -1093,7 +1085,7 @@ margin-left:3px;
 color:#3C3C3C;
 font-size:11px;
 padding:5px 9px 4px 4px;
-width: 134px; 
+width: 134px;
 }
 
 #tabs li:hover .drop_options li {
@@ -1698,8 +1690,8 @@ div.community-page-container {
 	background-image: url(../../../../images/record-next-off.gif);
 }
 div.community-page-list.home {
-	background: url(../../../../images/record-next-on.gif) no-repeat 29px 6px;
-	padding: 4px 0px 4px 46px;
+	background: url(../../../../images/record-next-on.gif) no-repeat 21px 6px;
+	padding: 4px 0px 4px 38px;
 	border-bottom: 1px solid #CCC;
 }
 #pagelists > li > div {
@@ -1768,8 +1760,8 @@ The solution is using selectors for the elements inside them to move them around
 ul.community-page-list ul span.delete {
 	padding-right: 25px;
 }
-div.course-spacer {
-	width: 24px;
+div.locked-spacer {
+	width: 16px;
 	float: left;
 }
 ul.community-page-list ul ul span.delete {

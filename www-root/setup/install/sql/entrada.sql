@@ -2240,6 +2240,7 @@ INSERT INTO `curriculum_lu_types` (`curriculum_type_id`, `parent_id`, `curriculu
 CREATE TABLE IF NOT EXISTS `curriculum_periods`(
 	`cperiod_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	`curriculum_type_id` INT NOT NULL,
+	`curriculum_period_title` VARCHAR(200) NOT NULL DEFAULT '',
 	`start_date` BIGINT(64) NOT NULL,
 	`finish_date` BIGINT(64) NOT NULL,
 	`active` INT(1) NOT NULL DEFAULT 1

@@ -2135,6 +2135,7 @@ CREATE TABLE IF NOT EXISTS `course_lti_consumers` (
   `launch_url` text NOT NULL,
   `lti_key` varchar(300) NOT NULL,
   `lti_secret` varchar(300) NOT NULL,
+  `lti_params` text NOT NULL,
   `lti_title` varchar(300) NOT NULL,
   `lti_notes` text NOT NULL,
   `updated_date` bigint(64) NOT NULL,
@@ -2823,9 +2824,9 @@ CREATE TABLE IF NOT EXISTS `event_lti_consumers` (
   `launch_url` text NOT NULL,
   `lti_key` varchar(300) NOT NULL,
   `lti_secret` varchar(300) NOT NULL,
+  `lti_params` text NOT NULL,
   `lti_title` varchar(300) NOT NULL,
   `lti_notes` text NOT NULL,
-  `lti_params` text NOT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
   PRIMARY KEY (`id`)

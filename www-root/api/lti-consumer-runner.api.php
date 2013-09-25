@@ -31,18 +31,18 @@
  */
 require_once("init.inc.php");
 
-require_once LTI_DIR . '/oauth/oauth-utils.class.php';
-require_once LTI_DIR . '/oauth/oauth-exception.class.php';
-require_once LTI_DIR . '/oauth/oauth-request.class.php';
-require_once LTI_DIR . '/oauth/oauth-token.class.php';
-require_once LTI_DIR . '/oauth/oauth-consumer.class.php';
-require_once LTI_DIR . '/oauth/oauth-signature-method.interface.php';
-require_once LTI_DIR . '/oauth/method/oauth-signature-method-hmac-sha1.class.php';
-require_once LTI_DIR . '/LTIConsumer.class.php';
+require_once 'Entrada/lti/oauth/oauth-utils.class.php';
+require_once 'Entrada/lti/oauth/oauth-exception.class.php';
+require_once 'Entrada/lti/oauth/oauth-request.class.php';
+require_once 'Entrada/lti/oauth/oauth-token.class.php';
+require_once 'Entrada/lti/oauth/oauth-consumer.class.php';
+require_once 'Entrada/lti/oauth/oauth-signature-method.interface.php';
+require_once 'Entrada/lti/oauth/method/oauth-signature-method-hmac-sha1.class.php';
+require_once 'Entrada/lti/LTIConsumer.class.php';
 
 ob_start("on_checkout");
 
-if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
     echo "<div id=\"scripts-on-open\" style=\"display: none;\">\n";
     echo "alert('It appears as though your session has expired; you will now be taken back to the login page.');\n";
     echo "if(window.opener) {\n";
@@ -62,44 +62,95 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
     $HEIGHT = 400;
     $IS_EVENT = false;
 
-    if((isset($_GET["ltiid"])) && ((int) trim($_GET["ltiid"]))) {
+    if ((isset($_GET["ltiid"])) && ((int) trim($_GET["ltiid"]))) {
         $LTI_ID = (int) trim($_GET["ltiid"]);
     }
 
-    if((isset($_GET["width"])) && ((int) trim($_GET["width"]))) {
+    if ((isset($_GET["width"])) && ((int) trim($_GET["width"]))) {
         $WIDTH = (int) trim($_GET["width"]);
     }
 
-    if((isset($_GET["height"])) && ((int) trim($_GET["height"]))) {
+    if ((isset($_GET["height"])) && ((int) trim($_GET["height"]))) {
         $HEIGHT = (int) trim($_GET["height"]);
     }
 
-    if((isset($_GET["event"])) && ((int) trim($_GET["event"]))) {
+    if ((isset($_GET["event"])) && ((int) trim($_GET["event"]))) {
         $IS_EVENT = true;
     }
 
-    if($WIDTH <= 0)  { $WIDTH = 400; }
-    if($HEIGHT <= 0) { $HEIGHT = 400; }
+    if ($WIDTH <= 0)  { $WIDTH = 400; }
+    if ($HEIGHT <= 0) { $HEIGHT = 400; }
 
     $WIDTH  = $WIDTH - 1;
     $HEIGHT = $HEIGHT - 70;
 
-    if($LTI_ID) {
-        $query	= $IS_EVENT ? 'SELECT * FROM `event_lti_consumers` WHERE `id` = ' . $db->qstr($LTI_ID)
-                            : 'SELECT * FROM `course_lti_consumers` WHERE `id` = ' . $db->qstr($LTI_ID);
+    if ($LTI_ID) {
+        if ($IS_EVENT) {
+            $query = "SELECT a.*, c.`course_id`, c.`course_name`, c.`course_code`
+                        FROM `event_lti_consumers` AS a
+                        JOIN `events` AS b
+                        ON b.`event_id` = a.`event_id`
+                        JOIN `courses` AS c
+                        ON c.`course_id` = b.`course_id`
+                        WHERE a.`id` = " . $db->qstr($LTI_ID);
+        } else {
+            $query = "SELECT a.*, b.`course_id`, b.`course_name`, b.`course_code`
+                        FROM `course_lti_consumers` AS a
+                        JOIN `courses` AS b
+                        ON b.`course_id` = a.`course_id`
+                        WHERE a.`id` = " . $db->qstr($LTI_ID);
+        }
         $result	= $db->GetRow($query);
-        if($result) {
+        if ($result) {
             add_statistic('LTI Module', 'Run lti consumer "' . $result['lti_title'] . '"');
-            $parameters = array();
-            if($result['lti_params']) {
+
+            switch ($ENTRADA_USER->getActiveGroup()) {
+                case "faculty" :
+                    $lti_role = "Instructor";
+                break;
+                case "staff" :
+                    $lti_role = "ContentDeveloper";
+                break;
+                case "student" :
+                default :
+                    $lti_role = "Learner";
+                break;
+            }
+
+            $parameters = array(
+                "resource_link_id" => (($IS_EVENT) ? "event" : "course") . "-" . $LTI_ID,
+                "resource_link_title" => $result["lti_title"],
+                "resource_link_description" => "",
+                "user_id" => $ENTRADA_USER->getId(),
+                "roles" => $lti_role,
+                "lis_person_name_full" => $ENTRADA_USER->getFirstname() . " " . $ENTRADA_USER->getLastname(),
+                "lis_person_name_family" => $ENTRADA_USER->getLastname(),
+                "lis_person_name_given" => $ENTRADA_USER->getFirstname(),
+                "lis_person_contact_email_primary" => $ENTRADA_USER->getEmail(),
+                "context_id" => $result["course_id"],
+                "context_title" => $result["course_name"],
+                "context_label" => $result["course_code"],
+                "tool_consumer_info_product_family_code" => APPLICATION_NAME,
+                "tool_consumer_info_version" => APPLICATION_VERSION,
+                "tool_consumer_instance_guid" => ENTRADA_URL,
+//              "tool_consumer_instance_description" => "",
+                "launch_presentation_locale" => "en-US",
+                "launch_presentation_document_target" => "iframe",
+//                "launch_presentation_width" => "",
+//                "launch_presentation_height" => "",
+//                "launch_presentation_css_url" => ""
+            );
+
+
+            if ($result['lti_params']) {
                 $paramsList = explode(';', $result['lti_params']);
-                if($paramsList != null && count($paramsList) > 0) {
-                    foreach($paramsList as $param) {
+                if ($paramsList != null && count($paramsList) > 0) {
+                    foreach ($paramsList as $param) {
                         $parts = explode('=', $param);
                         $key   = trim($parts[0]);
                         $value = parseParameterValue(trim($parts[1]), $constValues);
 
-                        if($key && $value) {
+                        if ($key && $value) {
                             $parameters[$key] = $value;
                         }
                     }
@@ -112,8 +163,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
             <div id="ltiContainer">
             <form id="ltiSubmitForm" name="ltiSubmitForm" method="POST" action="<?php echo $result['launch_url']; ?>" target="ltiTestFrame" enctype="application/x-www-form-urlencoded">
                 <?php
-                if($signedParams && count($signedParams) > 0) {
-                    foreach($signedParams as $key => $value) {
+                if ($signedParams && count($signedParams) > 0) {
+                    foreach ($signedParams as $key => $value) {
                         $key   = htmlspecialchars($key);
                         $value = htmlspecialchars($value);
 

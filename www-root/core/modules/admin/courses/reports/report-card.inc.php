@@ -163,8 +163,9 @@ if (!defined("IN_COURSE_REPORTS")) {
 											AND b.`objective_id` = " . $db->qstr($obj_id) . "
 											AND a.`event_finish` <= " . $db->qstr(time()) . "
 											AND a.`event_finish` BETWEEN '" . $curr_period["start_date"] . "' AND '" . $curr_period["finish_date"] . "'
-											AND c.`eventtype_id` = " . $db->qstr($etype_id);										
-								$events = $db->getAll($query);									
+											AND c.`eventtype_id` = " . $db->qstr($etype_id) . "
+											GROUP BY a.`event_id`, d.`audience_type`";									
+								$events = $db->getAll($query);																	
 								$procedure_total = 0;
 								
 								foreach ($events as $event) {
@@ -172,8 +173,10 @@ if (!defined("IN_COURSE_REPORTS")) {
 										case "proxy_id":
 											$query = "	SELECT count(*)
 														FROM `event_audience` a														
-														WHERE a.`audience_value` = " . $db->qstr($PROCESSED["student_proxy_id"]);											
-											$procedure_total += $db->getOne($query);									
+														WHERE a.`audience_value` = " . $db->qstr($PROCESSED["student_proxy_id"]) . "
+														AND a.`audience_type` = 'proxy_id'
+														AND a.`event_id` = " . $db->qstr($event["event_id"]);																																		
+											$procedure_total += $db->getOne($query);												
 											break;										
 										case "course_id":
 											$query = "	SELECT *
@@ -192,7 +195,8 @@ if (!defined("IN_COURSE_REPORTS")) {
 													case "proxy_id":
 														$query = "	SELECT count(*)
 																	FROM `course_audience` a														
-																	WHERE a.`audience_value` = " .$db->qstr($PROCESSED["student_proxy_id"]);																	
+																	WHERE a.`audience_value` = " . $db->qstr($PROCESSED["student_proxy_id"]) . "
+																	AND a.`course_id` = " . $db->qstr($ca["course_id"]);																	
 														$procedure_total += $db->getOne($query);
 														break;
 													default:

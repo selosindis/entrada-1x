@@ -33,10 +33,10 @@ require_once("init.inc.php");
 
 ob_start("on_checkout");
 
-if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
     echo "<div id=\"scripts-on-open\" style=\"display: none;\">\n";
     echo "alert('It appears as though your session has expired; you will now be taken back to the login page.');\n";
-    echo "if(window.opener) {\n";
+    echo "if (window.opener) {\n";
     echo "	window.opener.location = '".ENTRADA_URL.((isset($_SERVER["REQUEST_URI"])) ? "?url=".rawurlencode(clean_input($_SERVER["REQUEST_URI"], array("nows", "url"))) : "")."';\n";
     echo "	top.window.close();\n";
     echo "} else {\n";
@@ -50,32 +50,32 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
     $LTI_ID			    = 0;
     $JS_INITSTEP		= 1;
 
-    if(isset($_GET["action"])) {
+    if (isset($_GET["action"])) {
         $ACTION	= trim($_GET["action"]);
     }
 
-    if((isset($_GET["step"])) && ((int) trim($_GET["step"]))) {
+    if ((isset($_GET["step"])) && ((int) trim($_GET["step"]))) {
         $STEP = (int) trim($_GET["step"]);
     }
 
-    if((isset($_GET["id"])) && ((int) trim($_GET["id"]))) {
+    if ((isset($_GET["id"])) && ((int) trim($_GET["id"]))) {
         $EVENT_ID	= (int) trim($_GET["id"]);
     }
 
-    if((isset($_GET["ltiid"])) && ((int) trim($_GET["ltiid"]))) {
+    if ((isset($_GET["ltiid"])) && ((int) trim($_GET["ltiid"]))) {
         $LTI_ID = (int) trim($_GET["ltiid"]);
     }
 
     $modal_onload = array();
 
-    if($EVENT_ID) {
+    if ($EVENT_ID) {
         $query	= "	SELECT a.*, b.`organisation_id`
 					FROM `events` AS a
 					LEFT JOIN `courses` AS b
 					ON b.`course_id` = a.`course_id`
 					WHERE a.`event_id` = ".$db->qstr($EVENT_ID);
         $result	= $db->GetRow($query);
-        if($result) {
+        if ($result) {
             $access_allowed = false;
             if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($EVENT_ID, $result["course_id"], $result["organisation_id"]), "update")) {
                 $query = "SELECT * FROM `events` WHERE `parent_id` = ".$db->qstr($EVENT_ID);
@@ -89,24 +89,25 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
             } else {
                 $access_allowed = true;
             }
+
             if (!$access_allowed) {
                 $modal_onload[]	= "closeWizard()";
 
                 $ERROR++;
-                $ERRORSTR[]	= "Your MEdTech account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact the MEdTech Unit at 613-533-6000 x74918 and we can assist you.";
+                $ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module. If you believe you are receiving this message in error please contact the MEdTech Unit at 613-533-6000 x74918 and we can assist you.";
 
                 echo display_error();
 
                 application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to the file wizard.");
             } else {
-                switch($ACTION) {
-                    case "edit":
-                        if($LTI_ID) {
+                switch ($ACTION) {
+                    case "edit" :
+                        if ($LTI_ID) {
                             $query	= "SELECT * FROM `event_lti_consumers` WHERE `event_id` = ".$db->qstr($EVENT_ID)." AND `id` = ".$db->qstr($LTI_ID);
                             $result	= $db->GetRow($query);
-                            if($result) {
-                                switch($STEP) {
-                                    case 2:
+                            if ($result) {
+                                switch ($STEP) {
+                                    case 2 :
                                         /**
                                          * In this error checking we are working backwards along the internal javascript
                                          * steps timeline. This is so the JS_INITSTEP variable is set to the lowest page
@@ -120,10 +121,10 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                          * Because this unsets the $ERRORSTR array, only do this if there is not already an error.
                                          * PITA, I know.
                                          */
-                                        if((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) {
+                                        if ((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) {
                                             $timed_release = validate_calendars("valid", false, false);
 
-                                            if($ERROR) {
+                                            if ($ERROR) {
                                                 $modal_onload[]		= "alert('".addslashes($ERRORSTR[0])."')";
 
                                                 $ERROR			= 0;
@@ -134,89 +135,89 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                                 $JS_INITSTEP	= 2;
                                             }
 
-                                            if((isset($timed_release["start"])) && ((int) $timed_release["start"])) {
+                                            if ((isset($timed_release["start"])) && ((int) $timed_release["start"])) {
                                                 $PROCESSED["valid_from"]	= (int) $timed_release["start"];
                                             }
 
-                                            if((isset($timed_release["finish"])) && ((int) $timed_release["finish"])) {
+                                            if ((isset($timed_release["finish"])) && ((int) $timed_release["finish"])) {
                                                 $PROCESSED["valid_until"] = (int) $timed_release["finish"];
                                             }
                                         }
 
-                                        if(!$ERROR) {
+                                        if (!$ERROR) {
                                             /**
                                              * Step 3 Error Checking
                                              */
-                                            if((isset($_POST["launch_url"])) && (trim($_POST["launch_url"])) && (trim($_POST["launch_url"]) != "https://")) {
-                                                $PROCESSED["launch_url"]	= trim($_POST["launch_url"]);
+                                            if ((isset($_POST["lti_title"])) && (trim($_POST["lti_title"]))) {
+                                                $PROCESSED["lti_title"]	= trim($_POST["lti_title"]);
                                             } else {
                                                 $ERROR++;
                                                 $ERRORSTR[]		= "q4";
                                                 $JS_INITSTEP	= 3;
                                             }
 
-                                            if((isset($_POST["lti_key"])) && (trim($_POST["lti_key"]))) {
-                                                $PROCESSED["lti_key"]	= trim($_POST["lti_key"]);
+                                            if ((isset($_POST["lti_notes"])) && (trim($_POST["lti_notes"]))) {
+                                                $PROCESSED["lti_notes"]	= trim($_POST["lti_notes"]);
                                             } else {
                                                 $ERROR++;
                                                 $ERRORSTR[]		= "q5";
                                                 $JS_INITSTEP	= 3;
                                             }
 
-                                            if((isset($_POST["lti_secret"])) && (trim($_POST["lti_secret"]))) {
-                                                $PROCESSED["lti_secret"]	= trim($_POST["lti_secret"]);
+                                            if ((isset($_POST["launch_url"])) && (trim($_POST["launch_url"])) && (trim($_POST["launch_url"]) != "https://")) {
+                                                $PROCESSED["launch_url"]	= trim($_POST["launch_url"]);
                                             } else {
                                                 $ERROR++;
                                                 $ERRORSTR[]		= "q6";
                                                 $JS_INITSTEP	= 3;
                                             }
 
-                                            if((isset($_POST["lti_title"])) && (trim($_POST["lti_title"]))) {
-                                                $PROCESSED["lti_title"]	= trim($_POST["lti_title"]);
+                                            if ((isset($_POST["lti_key"])) && (trim($_POST["lti_key"]))) {
+                                                $PROCESSED["lti_key"]	= trim($_POST["lti_key"]);
                                             } else {
                                                 $ERROR++;
                                                 $ERRORSTR[]		= "q7";
                                                 $JS_INITSTEP	= 3;
                                             }
 
-                                            if((isset($_POST["lti_notes"])) && (trim($_POST["lti_notes"]))) {
-                                                $PROCESSED["lti_notes"]	= trim($_POST["lti_notes"]);
+                                            if ((isset($_POST["lti_secret"])) && (trim($_POST["lti_secret"]))) {
+                                                $PROCESSED["lti_secret"]	= trim($_POST["lti_secret"]);
                                             } else {
                                                 $ERROR++;
                                                 $ERRORSTR[]		= "q8";
                                                 $JS_INITSTEP	= 3;
                                             }
 
-                                            if((isset($_POST["lti_params"])) && (trim($_POST["lti_params"]))) {
+                                            if ((isset($_POST["lti_params"])) && (trim($_POST["lti_params"]))) {
                                                 $PROCESSED["lti_params"] = trim($_POST["lti_params"]);
                                             } else {
-                                                $PROCESSED["lti_params"] = '';
+                                                $PROCESSED["lti_params"] = "";
                                             }
 
                                             /**
                                              * Step 1 Error Checking
                                              */
-                                            if((isset($_POST["required"])) && ($_POST["required"] == "yes")) {
+                                            if ((isset($_POST["required"])) && ($_POST["required"] == "yes")) {
                                                 $PROCESSED["required"] = 1;
                                             } else {
                                                 $PROCESSED["required"] = 0;
                                             }
 
-                                            if((isset($_POST["timeframe"])) && (@array_key_exists(trim($_POST["timeframe"]), $RESOURCE_TIMEFRAMES["event"]))) {
+                                            if ((isset($_POST["timeframe"])) && (@array_key_exists(trim($_POST["timeframe"]), $RESOURCE_TIMEFRAMES["event"]))) {
                                                 $PROCESSED["timeframe"] = trim($_POST["timeframe"]);
                                             }
 
                                             $PROCESSED["updated_date"]	= time();
                                             $PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
-                                            if(!$ERROR) {
-                                                if($db->AutoExecute("event_lti_consumers", $PROCESSED, "UPDATE", "id = ".$db->qstr($LTI_ID)." AND event_id = ".$db->qstr($EVENT_ID))) {
+                                            if (!$ERROR) {
+                                                if ($db->AutoExecute("event_lti_consumers", $PROCESSED, "UPDATE", "id = ".$db->qstr($LTI_ID)." AND event_id = ".$db->qstr($EVENT_ID))) {
                                                     application_log("success", "LTI Provider ID ".$LTI_ID." was successfully update to the database for event [".$EVENT_ID."].");
                                                 } else {
                                                     $modal_onload[]		= "alert('This update was not successfully saved. The MEdTech Unit has been informed of this error, please try again later.')";
 
                                                     $ERROR++;
-                                                    $ERRORSTR[]		= "q4";
+                                                    $ERRORSTR[]		= "q6";
                                                     $JS_INITSTEP	= 3;
 
                                                     application_log("error", "Unable to update this record in the database for event ID [".$EVENT_ID."] and LTI Provider ID [".$LTI_ID."]. Database said: ".$db->ErrorMsg());
@@ -224,22 +225,22 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                             }
                                         }
 
-                                        if($ERROR) {
+                                        if ($ERROR) {
                                             $STEP = 1;
                                         }
-                                        break;
+                                    break;
                                     case 1 :
                                     default :
                                         $PROCESSED = $result;
 
-                                        if(((int) $PROCESSED["valid_from"]) || ((int) $PROCESSED["valid_until"])) {
+                                        if (((int) $PROCESSED["valid_from"]) || ((int) $PROCESSED["valid_until"])) {
                                             $show_timed_release	= true;
                                         } else {
                                             $show_timed_release = false;
                                         }
                                 }
 
-                                switch($STEP) {
+                                switch ($STEP) {
                                     case 2 :
                                         $modal_onload[] = "parentReload()";
                                         ?>
@@ -262,135 +263,135 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                             </div>
                                         </div>
                                         <?php
-                                        break;
-                                    case 1:
-                                    default:
+                                    break;
+                                    case 1 :
+                                    default :
                                         $modal_onload[] = "initStep(".$JS_INITSTEP.")";
 
-                                        if((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) {
+                                        if ((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) {
                                             $modal_onload[] = "timedRelease('block')";
                                         } else {
                                             $modal_onload[] = "timedRelease('none')";
                                         }
                                         ?>
-                                            <div class="modal-dialog" id="lti-edit-wizard-<?php echo $LTI_ID; ?>">
-                                                <div id="wizard">
-                                                    <form target="upload-frame" id="wizard-form" action="<?php echo ENTRADA_URL; ?>/api/lti-wizard-event.api.php?action=edit&amp;id=<?php echo $EVENT_ID; ?>&amp;ltiid=<?php echo $LTI_ID; ?>&amp;step=2" method="post" style="display: inline">
-                                                        <h3 class="border-below">LTI Provider Wizard <span class="content-small space-left large"><strong>Editing</strong> <?php echo html_encode($PROCESSED["lti_title"]); ?></span></h3>
-                                                        <div id="body">
-                                                            <h2 id="step-title"></h2>
-                                                            <div id="step1" style="display: none">
-                                                                <div id="q1" class="wizard-question<?php echo ((in_array("q1", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                                    <div style="font-size: 14px">Is the use of this resource required or optional by the learner?</div>
-                                                                    <div style="padding-left: 65px">
-                                                                        <input type="radio" id="required_no" name="required" value="no"<?php echo (((!isset($PROCESSED["required"])) || (!$PROCESSED["required"])) ? " checked=\"checked\"" : ""); ?> /> <label for="required_no">optional</label><br />
-                                                                        <input type="radio" id="required_yes" name="required" value="yes"<?php echo (($PROCESSED["required"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">required</label><br />
-                                                                    </div>
+                                        <div class="modal-dialog" id="lti-edit-wizard-<?php echo $LTI_ID; ?>">
+                                            <div id="wizard">
+                                                <form target="upload-frame" id="wizard-form" action="<?php echo ENTRADA_URL; ?>/api/lti-wizard-event.api.php?action=edit&amp;id=<?php echo $EVENT_ID; ?>&amp;ltiid=<?php echo $LTI_ID; ?>&amp;step=2" method="post" style="display: inline">
+                                                    <h3 class="border-below">LTI Provider Wizard <span class="content-small space-left large"><strong>Editing</strong> <?php echo html_encode($PROCESSED["lti_title"]); ?></span></h3>
+                                                    <div id="body">
+                                                        <h2 id="step-title"></h2>
+                                                        <div id="step1" style="display: none">
+                                                            <div id="q1" class="wizard-question<?php echo ((in_array("q1", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                                <div style="font-size: 14px">Is the use of this resource required or optional by the learner?</div>
+                                                                <div style="padding-left: 65px">
+                                                                    <input type="radio" id="required_no" name="required" value="no"<?php echo (((!isset($PROCESSED["required"])) || (!$PROCESSED["required"])) ? " checked=\"checked\"" : ""); ?> /> <label for="required_no">optional</label><br />
+                                                                    <input type="radio" id="required_yes" name="required" value="yes"<?php echo (($PROCESSED["required"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">required</label><br />
                                                                 </div>
-
-                                                                <div id="q2" class="wizard-question<?php echo ((in_array("q2", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                                    <div style="font-size: 14px">When should this resource be used by the learner?</div>
-                                                                    <div style="padding-left: 65px">
-                                                                        <?php
-                                                                        if(@count($RESOURCE_TIMEFRAMES["event"])) {
-                                                                            foreach($RESOURCE_TIMEFRAMES["event"] as $key => $value) {
-                                                                                echo "<input type=\"radio\" id=\"timeframe_".$key."\" name=\"timeframe\" value=\"".$key."\" style=\"vertical-align: middle\"".((isset($PROCESSED["timeframe"])) ? (($PROCESSED["timeframe"] == $key) ? " checked=\"checked\"" : "") : (($key == "none") ? " checked=\"checked\"" : ""))." /> <label for=\"timeframe_".$key."\">".$value."</label><br />";
-                                                                            }
+                                                            </div>
+                                                            <div id="q2" class="wizard-question<?php echo ((in_array("q2", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                                <div style="font-size: 14px">When should this resource be used by the learner?</div>
+                                                                <div style="padding-left: 65px">
+                                                                    <?php
+                                                                    if (@count($RESOURCE_TIMEFRAMES["event"])) {
+                                                                        foreach ($RESOURCE_TIMEFRAMES["event"] as $key => $value) {
+                                                                            echo "<input type=\"radio\" id=\"timeframe_".$key."\" name=\"timeframe\" value=\"".$key."\" style=\"vertical-align: middle\"".((isset($PROCESSED["timeframe"])) ? (($PROCESSED["timeframe"] == $key) ? " checked=\"checked\"" : "") : (($key == "none") ? " checked=\"checked\"" : ""))." /> <label for=\"timeframe_".$key."\">".$value."</label><br />";
                                                                         }
-                                                                        ?>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <div id="step2" style="display: none">
-                                                                <div id="q3" class="wizard-question<?php echo ((in_array("q3", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                                    <div style="font-size: 14px">Would you like to add timed release dates to this LTI Provider?</div>
-                                                                    <div style="padding-left: 65px">
-                                                                        <input type="radio" id="timedrelease_no" name="timedrelease" value="no" onclick="timedRelease('none')"<?php echo (((!isset($_POST["timedrelease"])) || ($_POST["timedrelease"] == "no")) ? " checked=\"checked\"" : ""); ?> /> <label for="timedrelease_no">No, this LTI Provider is accessible any time.</label><br />
-                                                                        <input type="radio" id="timedrelease_yes" name="timedrelease" value="yes" onclick="timedRelease('block')"<?php echo (((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) ? " checked=\"checked\"" : ""); ?> /> <label for="timedrelease_yes">Yes, this LTI Provider has timed release information.</label><br />
-                                                                    </div>
-
-                                                                    <div id="timed-release-info" style="display: none">
-                                                                        <br />
-                                                                        By checking the box on the left, you will enable the ability to select release / revoke dates and times for this link.
-                                                                        <br /><br />
-                                                                        <table style="width: 100%" cellspacing="0" cellpadding="4" border="0" summary="Timed Release Information">
-                                                                            <colgroup>
-                                                                                <col style="width: 3%" />
-                                                                                <col style="width: 30%" />
-                                                                                <col style="width: 67%" />
-                                                                            </colgroup>
-                                                                            <?php echo generate_calendars("valid", "Accessible", true, false, ((isset($PROCESSED["valid_from"])) ? $PROCESSED["valid_from"] : 0), true, false, ((isset($PROCESSED["valid_until"])) ? $PROCESSED["valid_until"] : 0), true, true); ?>
-                                                                        </table>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-
-                                                            <div id="step3" style="display: none">
-                                                                <div id="q4" class="wizard-question<?php echo ((in_array("q4", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                                    <div style="font-size: 14px">Please provide the full external LTI launch URL:</div>
-                                                                    <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
-                                                                        <label for="launch_url" class="form-required">LTI Launch URL:</label> <span class="content-small"><strong>Example:</strong> https://meds.queensu.ca</span><br />
-                                                                        <input type="text" id="launch_url" name="launch_url" value="<?php echo ((isset($PROCESSED["launch_url"])) ? html_encode($PROCESSED["launch_url"]) : "https://"); ?>" maxlength="500" style="width: 350px;" />
-                                                                    </div>
-                                                                </div>
-                                                                <div id="q5" class="wizard-question<?php echo ((in_array("q5", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                                    <div style="font-size: 14px">Please provide the LTI Key / Username:</div>
-                                                                    <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
-                                                                        <label for="lti_key" class="form-required">LTI Key:</label><br />
-                                                                        <input type="text" id="lti_key" name="lti_key" value="<?php echo ((isset($PROCESSED["lti_key"])) ? html_encode($PROCESSED["lti_key"]) : ""); ?>" maxlength="128" style="width: 350px;" />
-                                                                    </div>
-                                                                </div>
-                                                                <div id="q6" class="wizard-question<?php echo ((in_array("q6", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                                    <div style="font-size: 14px">Please provide the LTI Secret / Password:</div>
-                                                                    <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
-                                                                        <label for="lti_secret" class="form-required">LTI Secret:</label><br />
-                                                                        <input type="text" id="lti_secret" name="lti_secret" value="<?php echo ((isset($PROCESSED["lti_secret"])) ? html_encode($PROCESSED["lti_secret"]) : ""); ?>" maxlength="128" style="width: 350px;" />
-                                                                    </div>
-                                                                </div>
-                                                                <div id="q7" class="wizard-question<?php echo ((in_array("q7", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                                    <div style="font-size: 14px">Please provide a title for this LTI Provider:</div>
-                                                                    <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
-                                                                        <label for="lti_title" class="form-required">LTI Provider Title:</label><br />
-                                                                        <input type="text" id="lti_title" name="lti_title" value="<?php echo ((isset($PROCESSED["lti_title"])) ? html_encode($PROCESSED["lti_title"]) : ""); ?>" maxlength="128" style="width: 350px;" />
-                                                                    </div>
-                                                                </div>
-                                                                <div id="q8" class="wizard-question<?php echo ((in_array("q8", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                                    <div style="font-size: 14px">You <span style="font-style: oblique">must</span> provide a description for this LTI Provider</div>
-                                                                    <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
-                                                                        <label for="lti_notes" class="form-required">LTI Provider Description:</label><br />
-                                                                        <textarea id="lti_notes" name="lti_notes" style="width: 350px; height: 75px"><?php echo ((isset($PROCESSED["lti_notes"])) ? html_encode($PROCESSED["lti_notes"]) : ""); ?></textarea>
-                                                                    </div>
-                                                                </div>
-                                                                <div id="q9" class="wizard-question<?php echo ((in_array("q9", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                                    <div style="font-size: 14px">Please provide a additional parameters for this LTI Provider</div>
-                                                                    <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
-                                                                        <label for="lti_params" class="form-nrequired">Additional parameters:</label><br />
-                                                                        <textarea id="lti_params" name="lti_params" style="width: 350px; height: 75px"><?php echo ((isset($PROCESSED["lti_params"])) ? html_encode($PROCESSED["lti_params"]) : ""); ?></textarea>
-                                                                    </div>
+                                                                    }
+                                                                    ?>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div id="footer">
-                                                            <input type="button" class="btn" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
-                                                            <input type="button" class="btn btn-primary" id="next-button" value="Next Step" onclick="nextStep()" style="float: right; margin: 4px 10px 4px 0px" />
-                                                            <input type="button" class="btn" id="back-button" value="Previous Step" onclick="prevStep()" style="display: none; float: right; margin: 4px 10px 4px 0px" />
-                                                        </div>
-                                                        <div id="uploading-window" style="width: 100%; height: 100%;">
-                                                            <div style="display: table; width: 100%; height: 100%; _position: relative; overflow: hidden">
-                                                                <div style=" _position: absolute; _top: 50%;display: table-cell; vertical-align: middle;">
-                                                                    <div style="_position: relative; _top: -50%; width: 100%; text-align: center">
-														<span style="color: #003366; font-size: 18px; font-weight: bold">
-															<img src="<?php echo ENTRADA_URL; ?>/images/loading.gif" width="32" height="32" alt="Link Uploading" title="Please wait while this link is being added." style="vertical-align: middle" /> Please Wait: this link is being added.
-														</span>
-                                                                    </div>
+
+                                                        <div id="step2" style="display: none">
+                                                            <div id="q3" class="wizard-question<?php echo ((in_array("q3", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                                <div style="font-size: 14px">Would you like to add timed release dates to this LTI Provider?</div>
+                                                                <div style="padding-left: 65px">
+                                                                    <input type="radio" id="timedrelease_no" name="timedrelease" value="no" onclick="timedRelease('none')"<?php echo (((!isset($_POST["timedrelease"])) || ($_POST["timedrelease"] == "no")) ? " checked=\"checked\"" : ""); ?> /> <label for="timedrelease_no">No, this LTI Provider is accessible any time.</label><br />
+                                                                    <input type="radio" id="timedrelease_yes" name="timedrelease" value="yes" onclick="timedRelease('block')"<?php echo (((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) ? " checked=\"checked\"" : ""); ?> /> <label for="timedrelease_yes">Yes, this LTI Provider has timed release information.</label><br />
+                                                                </div>
+
+                                                                <div id="timed-release-info" style="display: none">
+                                                                    <br />
+                                                                    By checking the box on the left, you will enable the ability to select release / revoke dates and times for this link.
+                                                                    <br /><br />
+                                                                    <table style="width: 100%" cellspacing="0" cellpadding="4" border="0" summary="Timed Release Information">
+                                                                        <colgroup>
+                                                                            <col style="width: 3%" />
+                                                                            <col style="width: 30%" />
+                                                                            <col style="width: 67%" />
+                                                                        </colgroup>
+                                                                        <?php echo generate_calendars("valid", "Accessible", true, false, ((isset($PROCESSED["valid_from"])) ? $PROCESSED["valid_from"] : 0), true, false, ((isset($PROCESSED["valid_until"])) ? $PROCESSED["valid_until"] : 0), true, true); ?>
+                                                                    </table>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                    </form>
-                                                </div>
+
+                                                        <div id="step3" style="display: none">
+                                                            <div id="q4" class="wizard-question<?php echo ((in_array("q4", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                                <div style="font-size: 14px">Please provide a title for this LTI Provider:</div>
+                                                                <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
+                                                                    <label for="lti_title" class="form-required">LTI Provider Title:</label><br />
+                                                                    <input type="text" id="lti_title" name="lti_title" value="<?php echo ((isset($PROCESSED["lti_title"])) ? html_encode($PROCESSED["lti_title"]) : ""); ?>" maxlength="128" style="width: 350px;" />
+                                                                </div>
+                                                            </div>
+                                                            <div id="q5" class="wizard-question<?php echo ((in_array("q5", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                                <div style="font-size: 14px">You <span style="font-style: oblique">must</span> provide a description for this LTI Provider</div>
+                                                                <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
+                                                                    <label for="lti_notes" class="form-required">LTI Provider Description:</label><br />
+                                                                    <textarea id="lti_notes" name="lti_notes" style="width: 350px; height: 75px"><?php echo ((isset($PROCESSED["lti_notes"])) ? html_encode($PROCESSED["lti_notes"]) : ""); ?></textarea>
+                                                                </div>
+                                                            </div>
+                                                            <div id="q6" class="wizard-question<?php echo ((in_array("q6", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                                <div style="font-size: 14px">Please provide the full external LTI launch URL:</div>
+                                                                <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
+                                                                    <label for="launch_url" class="form-required">LTI Launch URL:</label><br />
+                                                                    <input type="text" id="launch_url" name="launch_url" value="<?php echo ((isset($PROCESSED["launch_url"])) ? html_encode($PROCESSED["launch_url"]) : "https://"); ?>" maxlength="500" style="width: 350px;" />
+                                                                </div>
+                                                            </div>
+                                                            <div id="q7" class="wizard-question<?php echo ((in_array("q7", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                                <div style="font-size: 14px">Please provide the LTI Key / Username:</div>
+                                                                <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
+                                                                    <label for="lti_key" class="form-required">LTI Key:</label><br />
+                                                                    <input type="text" id="lti_key" name="lti_key" value="<?php echo ((isset($PROCESSED["lti_key"])) ? html_encode($PROCESSED["lti_key"]) : ""); ?>" maxlength="128" style="width: 350px;" />
+                                                                </div>
+                                                            </div>
+                                                            <div id="q8" class="wizard-question<?php echo ((in_array("q8", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                                <div style="font-size: 14px">Please provide the LTI Secret / Password:</div>
+                                                                <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
+                                                                    <label for="lti_secret" class="form-required">LTI Secret:</label><br />
+                                                                    <input type="text" id="lti_secret" name="lti_secret" value="<?php echo ((isset($PROCESSED["lti_secret"])) ? html_encode($PROCESSED["lti_secret"]) : ""); ?>" maxlength="128" style="width: 350px;" />
+                                                                </div>
+                                                            </div>
+                                                            <div id="q9" class="wizard-question<?php echo ((in_array("q9", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                                <div style="font-size: 14px">Please provide a additional parameters for this LTI Provider</div>
+                                                                <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
+                                                                    <label for="lti_params" class="form-nrequired">Additional parameters:</label><br />
+                                                                    <textarea id="lti_params" name="lti_params" style="width: 350px; height: 75px"><?php echo ((isset($PROCESSED["lti_params"])) ? html_encode($PROCESSED["lti_params"]) : ""); ?></textarea>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div id="footer">
+                                                        <input type="button" class="btn" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
+                                                        <input type="button" class="btn btn-primary" id="next-button" value="Next Step" onclick="nextStep()" style="float: right; margin: 4px 10px 4px 0px" />
+                                                        <input type="button" class="btn" id="back-button" value="Previous Step" onclick="prevStep()" style="display: none; float: right; margin: 4px 10px 4px 0px" />
+                                                    </div>
+                                                    <div id="uploading-window" style="width: 100%; height: 100%;">
+                                                        <div style="display: table; width: 100%; height: 100%; _position: relative; overflow: hidden">
+                                                            <div style=" _position: absolute; _top: 50%;display: table-cell; vertical-align: middle;">
+                                                                <div style="_position: relative; _top: -50%; width: 100%; text-align: center">
+                                                    <span style="color: #003366; font-size: 18px; font-weight: bold">
+                                                        <img src="<?php echo ENTRADA_URL; ?>/images/loading.gif" width="32" height="32" alt="Link Uploading" title="Please wait while this link is being added." style="vertical-align: middle" /> Please Wait: this link is being added.
+                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </form>
                                             </div>
+                                        </div>
                                         <?php
+                                    break;
                                 }
                             } else {
                                 $ERROR++;
@@ -408,22 +409,22 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 
                             application_log("error", "LTI Provider wizard was accessed without any LTI Provider id.");
                         }
-                        break;
-                    case "add":
-                    default:
-                        switch($STEP) {
+                    break;
+                    case "add" :
+                    default :
+                        switch ($STEP) {
                             case 2 :
-                                $PROCESSED['event_id'] = $EVENT_ID;
+                                $PROCESSED["event_id"] = $EVENT_ID;
 
                                 /**
                                  * Step 2 Error Checking
                                  * Because this unsets the $ERRORSTR array, only do this if there is not already an error.
                                  * PITA, I know.
                                  */
-                                if((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) {
+                                if ((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) {
                                     $timed_release = validate_calendars("valid", false, false);
 
-                                    if($ERROR) {
+                                    if ($ERROR) {
                                         $modal_onload[]		= "alert('".addslashes($ERRORSTR[0])."')";
 
                                         $ERROR			= 0;
@@ -434,82 +435,82 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                         $JS_INITSTEP	= 2;
                                     }
 
-                                    if((isset($timed_release["start"])) && ((int) $timed_release["start"])) {
+                                    if ((isset($timed_release["start"])) && ((int) $timed_release["start"])) {
                                         $PROCESSED["valid_from"]	= (int) $timed_release["start"];
                                     }
 
-                                    if((isset($timed_release["finish"])) && ((int) $timed_release["finish"])) {
+                                    if ((isset($timed_release["finish"])) && ((int) $timed_release["finish"])) {
                                         $PROCESSED["valid_until"] = (int) $timed_release["finish"];
                                     }
                                 }
 
-                                if(!$ERROR) {
+                                if (!$ERROR) {
                                     /**
                                      * Step 3 Error Checking
                                      */
-                                    if((isset($_POST["launch_url"])) && (trim($_POST["launch_url"])) && (trim($_POST["launch_url"]) != "https://")) {
-                                        $PROCESSED["launch_url"]	= trim($_POST["launch_url"]);
+                                    if ((isset($_POST["lti_title"])) && (trim($_POST["lti_title"]))) {
+                                        $PROCESSED["lti_title"]	= trim($_POST["lti_title"]);
                                     } else {
                                         $ERROR++;
                                         $ERRORSTR[]		= "q4";
                                         $JS_INITSTEP	= 3;
                                     }
 
-                                    if((isset($_POST["lti_key"])) && (trim($_POST["lti_key"]))) {
-                                        $PROCESSED["lti_key"]	= trim($_POST["lti_key"]);
+                                    if ((isset($_POST["lti_notes"])) && (trim($_POST["lti_notes"]))) {
+                                        $PROCESSED["lti_notes"]	= trim($_POST["lti_notes"]);
                                     } else {
                                         $ERROR++;
                                         $ERRORSTR[]		= "q5";
                                         $JS_INITSTEP	= 3;
                                     }
 
-                                    if((isset($_POST["lti_secret"])) && (trim($_POST["lti_secret"]))) {
-                                        $PROCESSED["lti_secret"]	= trim($_POST["lti_secret"]);
+                                    if ((isset($_POST["launch_url"])) && (trim($_POST["launch_url"])) && (trim($_POST["launch_url"]) != "https://")) {
+                                        $PROCESSED["launch_url"]	= trim($_POST["launch_url"]);
                                     } else {
                                         $ERROR++;
                                         $ERRORSTR[]		= "q6";
                                         $JS_INITSTEP	= 3;
                                     }
 
-                                    if((isset($_POST["lti_title"])) && (trim($_POST["lti_title"]))) {
-                                        $PROCESSED["lti_title"]	= trim($_POST["lti_title"]);
+                                    if ((isset($_POST["lti_key"])) && (trim($_POST["lti_key"]))) {
+                                        $PROCESSED["lti_key"]	= trim($_POST["lti_key"]);
                                     } else {
                                         $ERROR++;
                                         $ERRORSTR[]		= "q7";
                                         $JS_INITSTEP	= 3;
                                     }
 
-                                    if((isset($_POST["lti_notes"])) && (trim($_POST["lti_notes"]))) {
-                                        $PROCESSED["lti_notes"]	= trim($_POST["lti_notes"]);
+                                    if ((isset($_POST["lti_secret"])) && (trim($_POST["lti_secret"]))) {
+                                        $PROCESSED["lti_secret"]	= trim($_POST["lti_secret"]);
                                     } else {
                                         $ERROR++;
                                         $ERRORSTR[]		= "q8";
                                         $JS_INITSTEP	= 3;
                                     }
 
-                                    if((isset($_POST["lti_params"])) && (trim($_POST["lti_params"]))) {
+                                    if ((isset($_POST["lti_params"])) && (trim($_POST["lti_params"]))) {
                                         $PROCESSED["lti_params"] = trim($_POST["lti_params"]);
                                     } else {
-                                        $PROCESSED["lti_params"] = '';
+                                        $PROCESSED["lti_params"] = "";
                                     }
 
                                     /**
                                      * Step 1 Error Checking
                                      */
-                                    if((isset($_POST["required"])) && ($_POST["required"] == "yes")) {
+                                    if ((isset($_POST["required"])) && ($_POST["required"] == "yes")) {
                                         $PROCESSED["required"] = 1;
                                     } else {
                                         $PROCESSED["required"] = 0;
                                     }
 
-                                    if((isset($_POST["timeframe"])) && (@array_key_exists(trim($_POST["timeframe"]), $RESOURCE_TIMEFRAMES["event"]))) {
+                                    if ((isset($_POST["timeframe"])) && (@array_key_exists(trim($_POST["timeframe"]), $RESOURCE_TIMEFRAMES["event"]))) {
                                         $PROCESSED["timeframe"] = trim($_POST["timeframe"]);
                                     }
 
                                     $PROCESSED["updated_date"]	= time();
                                     $PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
-                                    if(!$ERROR) {
+                                    if (!$ERROR) {
                                         //Add new LTI Provider
                                         $query	= "SELECT * FROM `event_lti_consumers` WHERE `event_id` = ".$db->qstr($EVENT_ID)."
                                                    AND `launch_url` = ".$db->qstr($PROCESSED["launch_url"])."
@@ -517,18 +518,18 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                                    AND `lti_secret` = ".$db->qstr($PROCESSED["lti_secret"])."
                                                    AND `lti_title` = ".$db->qstr($PROCESSED["lti_title"]);
                                         $result	= $db->GetRow($query);
-                                        if($result) {
+                                        if ($result) {
                                             $modal_onload[]	= "alert('A LTI Provider to ".addslashes($PROCESSED["lti_title"])." already exists in this event.')";
 
                                             $ERROR++;
-                                            $ERRORSTR[]	= "q4";
+                                            $ERRORSTR[]	= "q6";
                                             $JS_INITSTEP = 3;
                                         } else {
-                                            if((!$db->AutoExecute("event_lti_consumers", $PROCESSED, "INSERT")) || (!$LTI_ID = $db->Insert_Id())) {
+                                            if ((!$db->AutoExecute("event_lti_consumers", $PROCESSED, "INSERT")) || (!$LTI_ID = $db->Insert_Id())) {
                                                 $modal_onload[]	= "alert('The new LTI Provider was not successfully saved. The MEdTech Unit has been informed of this error, please try again later.')";
 
                                                 $ERROR++;
-                                                $ERRORSTR[]	= "q6";
+                                                $ERRORSTR[]	= "q8";
                                                 $JS_INITSTEP = 3;
 
                                                 application_log("error", "Unable to insert the LTI Provider into the database for event ID [".$EVENT_ID."]. Database said: ".$db->ErrorMsg());
@@ -537,19 +538,19 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                     }
                                 }
 
-                                if($ERROR) {
+                                if ($ERROR) {
                                     $STEP = 1;
                                 }
 
-                                break;
+                            break;
                             case 1 :
                             default :
                                 continue;
-                                break;
+                            break;
                         }
 
-                        switch($STEP) {
-                            case 2:
+                        switch ($STEP) {
+                            case 2 :
                                 $modal_onload[] = "parentReload()";
                                 ?>
                                 <div class="modal-dialog" id="link-add-wizard">
@@ -571,144 +572,146 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                     </div>
                                 </div>
                                 <?php
-                                break;
-                            case 1:
-                            default:
+                            break;
+                            case 1 :
+                            default :
                                 $modal_onload[] = "initStep(".$JS_INITSTEP.")";
 
-                                if((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) {
+                                if ((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) {
                                     $modal_onload[] = "timedRelease('block')";
                                 } else {
                                     $modal_onload[] = "timedRelease('none')";
                                 }
                                 ?>
-                                    <div class="modal-dialog" id="lti-add-wizard">
-                                        <div id="wizard">
-                                            <form target="upload-frame" id="wizard-form" action="<?php echo ENTRADA_URL; ?>/api/lti-wizard-event.api.php?action=add&amp;id=<?php echo $EVENT_ID; ?>&amp;step=2" method="post" style="display: inline">
-                                                <h3 class="border-below">LTI Provider Wizard <span class="content-small space-left large"><strong>Adding</strong> new LTI Provider</span></h3>
-                                                <div id="body">
-                                                    <h2 id="step-title"></h2>
-                                                    <div id="step1" style="display: none">
-                                                        <div id="q1" class="wizard-question<?php echo ((in_array("q1", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                            <div style="font-size: 14px">Is the use of this resource required or optional by the learner?</div>
-                                                            <div style="padding-left: 65px">
-                                                                <input type="radio" id="required_no" name="required" value="no"<?php echo (((!isset($PROCESSED["required"])) || (!$PROCESSED["required"])) ? " checked=\"checked\"" : ""); ?> /> <label for="required_no">optional</label><br />
-                                                                <input type="radio" id="required_yes" name="required" value="yes"<?php echo (($PROCESSED["required"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">required</label><br />
-                                                            </div>
+                                <div class="modal-dialog" id="lti-add-wizard">
+                                    <div id="wizard">
+                                        <form target="upload-frame" id="wizard-form" action="<?php echo ENTRADA_URL; ?>/api/lti-wizard-event.api.php?action=add&amp;id=<?php echo $EVENT_ID; ?>&amp;step=2" method="post" style="display: inline">
+                                            <h3 class="border-below">LTI Provider Wizard <span class="content-small space-left large"><strong>Adding</strong> new LTI Provider</span></h3>
+                                            <div id="body">
+                                                <h2 id="step-title"></h2>
+                                                <div id="step1" style="display: none">
+                                                    <div id="q1" class="wizard-question<?php echo ((in_array("q1", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                        <div style="font-size: 14px">Is the use of this resource required or optional by the learner?</div>
+                                                        <div style="padding-left: 65px">
+                                                            <input type="radio" id="required_no" name="required" value="no"<?php echo (((!isset($PROCESSED["required"])) || (!$PROCESSED["required"])) ? " checked=\"checked\"" : ""); ?> /> <label for="required_no">optional</label><br />
+                                                            <input type="radio" id="required_yes" name="required" value="yes"<?php echo (($PROCESSED["required"] == 1) ? " checked=\"checked\"" : ""); ?> /> <label for="required_yes">required</label><br />
                                                         </div>
+                                                    </div>
 
-                                                        <div id="q2" class="wizard-question<?php echo ((in_array("q2", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                            <div style="font-size: 14px">When should this resource be used by the learner?</div>
-                                                            <div style="padding-left: 65px">
-                                                                <?php
-                                                                if(@count($RESOURCE_TIMEFRAMES["event"])) {
-                                                                    foreach($RESOURCE_TIMEFRAMES["event"] as $key => $value) {
-                                                                        echo "<input type=\"radio\" id=\"timeframe_".$key."\" name=\"timeframe\" value=\"".$key."\" style=\"vertical-align: middle\"".((isset($PROCESSED["timeframe"])) ? (($PROCESSED["timeframe"] == $key) ? " checked=\"checked\"" : "") : (($key == "none") ? " checked=\"checked\"" : ""))." /> <label for=\"timeframe_".$key."\">".$value."</label><br />";
-                                                                    }
+                                                    <div id="q2" class="wizard-question<?php echo ((in_array("q2", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                        <div style="font-size: 14px">When should this resource be used by the learner?</div>
+                                                        <div style="padding-left: 65px">
+                                                            <?php
+                                                            if (@count($RESOURCE_TIMEFRAMES["event"])) {
+                                                                foreach ($RESOURCE_TIMEFRAMES["event"] as $key => $value) {
+                                                                    echo "<input type=\"radio\" id=\"timeframe_".$key."\" name=\"timeframe\" value=\"".$key."\" style=\"vertical-align: middle\"".((isset($PROCESSED["timeframe"])) ? (($PROCESSED["timeframe"] == $key) ? " checked=\"checked\"" : "") : (($key == "none") ? " checked=\"checked\"" : ""))." /> <label for=\"timeframe_".$key."\">".$value."</label><br />";
                                                                 }
-                                                                ?>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div id="step2" style="display: none">
-                                                        <div id="q3" class="wizard-question<?php echo ((in_array("q3", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                            <div style="font-size: 14px">Would you like to add timed release dates to this LTI Provider?</div>
-                                                            <div style="padding-left: 65px">
-                                                                <input type="radio" id="timedrelease_no" name="timedrelease" value="no" onclick="timedRelease('none')"<?php echo (((!isset($_POST["timedrelease"])) || ($_POST["timedrelease"] == "no")) ? " checked=\"checked\"" : ""); ?> /> <label for="timedrelease_no">No, this LTI Provider is accessible any time.</label><br />
-                                                                <input type="radio" id="timedrelease_yes" name="timedrelease" value="yes" onclick="timedRelease('block')"<?php echo (((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) ? " checked=\"checked\"" : ""); ?> /> <label for="timedrelease_yes">Yes, this LTI Provider has timed release information.</label><br />
-                                                            </div>
-
-                                                            <div id="timed-release-info" style="display: none">
-                                                                <br />
-                                                                By checking the box on the left, you will enable the ability to select release / revoke dates and times for this link.
-                                                                <br /><br />
-                                                                <table style="width: 100%" cellspacing="0" cellpadding="4" border="0" summary="Timed Release Information">
-                                                                    <colgroup>
-                                                                        <col style="width: 3%" />
-                                                                        <col style="width: 30%" />
-                                                                        <col style="width: 67%" />
-                                                                    </colgroup>
-                                                                    <?php echo generate_calendars("valid", "Accessible", true, false, ((isset($PROCESSED["valid_from"])) ? $PROCESSED["valid_from"] : 0), true, false, ((isset($PROCESSED["valid_until"])) ? $PROCESSED["valid_until"] : 0), true, true); ?>
-                                                                </table>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div id="step3" style="display: none">
-                                                        <div id="q4" class="wizard-question<?php echo ((in_array("q4", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                            <div style="font-size: 14px">Please provide the full external LTI launch URL:</div>
-                                                            <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
-                                                                <label for="launch_url" class="form-required">LTI Launch URL:</label> <span class="content-small"><strong>Example:</strong> https://meds.queensu.ca</span><br />
-                                                                <input type="text" id="launch_url" name="launch_url" value="<?php echo ((isset($PROCESSED["launch_url"])) ? html_encode($PROCESSED["launch_url"]) : "https://"); ?>" maxlength="500" style="width: 350px;" />
-                                                            </div>
-                                                        </div>
-                                                        <div id="q5" class="wizard-question<?php echo ((in_array("q5", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                            <div style="font-size: 14px">Please provide the LTI Key / Username:</div>
-                                                            <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
-                                                                <label for="lti_key" class="form-required">LTI Key:</label><br />
-                                                                <input type="text" id="lti_key" name="lti_key" value="<?php echo ((isset($PROCESSED["lti_key"])) ? html_encode($PROCESSED["lti_key"]) : ""); ?>" maxlength="128" style="width: 350px;" />
-                                                            </div>
-                                                        </div>
-                                                        <div id="q6" class="wizard-question<?php echo ((in_array("q6", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                            <div style="font-size: 14px">Please provide the LTI Secret / Password:</div>
-                                                            <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
-                                                                <label for="lti_secret" class="form-required">LTI Secret:</label><br />
-                                                                <input type="text" id="lti_secret" name="lti_secret" value="<?php echo ((isset($PROCESSED["lti_secret"])) ? html_encode($PROCESSED["lti_secret"]) : ""); ?>" maxlength="128" style="width: 350px;" />
-                                                            </div>
-                                                        </div>
-                                                        <div id="q7" class="wizard-question<?php echo ((in_array("q7", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                            <div style="font-size: 14px">Please provide a title for this LTI Provider:</div>
-                                                            <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
-                                                                <label for="lti_title" class="form-required">LTI Provider Title:</label><br />
-                                                                <input type="text" id="lti_title" name="lti_title" value="<?php echo ((isset($PROCESSED["lti_title"])) ? html_encode($PROCESSED["lti_title"]) : ""); ?>" maxlength="128" style="width: 350px;" />
-                                                            </div>
-                                                        </div>
-                                                        <div id="q9" class="wizard-question<?php echo ((in_array("q8", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                            <div style="font-size: 14px">You <span style="font-style: oblique">must</span> provide a description for this LTI Provider</div>
-                                                            <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
-                                                                <label for="lti_notes" class="form-required">LTI Provider Description:</label><br />
-                                                                <textarea id="lti_notes" name="lti_notes" style="width: 350px; height: 75px"><?php echo ((isset($PROCESSED["lti_notes"])) ? html_encode($PROCESSED["lti_notes"]) : ""); ?></textarea>
-                                                            </div>
-                                                        </div>
-                                                        <div id="q9" class="wizard-question<?php echo ((in_array("q9", $ERRORSTR)) ? " display-error" : ""); ?>">
-                                                            <div style="font-size: 14px">Please provide a additional parameters for this LTI Provider</div>
-                                                            <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
-                                                                <label for="lti_params" class="form-nrequired">Additional parameters:</label><br />
-                                                                <textarea id="lti_params" name="lti_params" style="width: 350px; height: 75px"><?php echo ((isset($PROCESSED["lti_params"])) ? html_encode($PROCESSED["lti_params"]) : ""); ?></textarea>
-                                                            </div>
+                                                            }
+                                                            ?>
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <div id="footer">
-                                                    <input type="button" class="btn" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
-                                                    <input type="button" class="btn btn-primary" id="next-button" value="Next Step" onclick="nextStep()" style="float: right; margin: 4px 10px 4px 0px" />
-                                                    <input type="button" class="btn" id="back-button" value="Previous Step" onclick="prevStep()" style="display: none; float: right; margin: 4px 10px 4px 0px" />
-                                                </div>
-                                                <div id="uploading-window" style="width: 100%; height: 100%;">
-                                                    <div style="display: table; width: 100%; height: 100%; _position: relative; overflow: hidden">
-                                                        <div style=" _position: absolute; _top: 50%;display: table-cell; vertical-align: middle;">
-                                                            <div style="_position: relative; _top: -50%; width: 100%; text-align: center">
-														<span style="color: #003366; font-size: 18px; font-weight: bold">
-															<img src="<?php echo ENTRADA_URL; ?>/images/loading.gif" width="32" height="32" alt="Link Uploading" title="Please wait while this link is being added." style="vertical-align: middle" /> Please Wait: this link is being added.
-														</span>
-                                                            </div>
+
+                                                <div id="step2" style="display: none">
+                                                    <div id="q3" class="wizard-question<?php echo ((in_array("q3", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                        <div style="font-size: 14px">Would you like to add timed release dates to this LTI Provider?</div>
+                                                        <div style="padding-left: 65px">
+                                                            <input type="radio" id="timedrelease_no" name="timedrelease" value="no" onclick="timedRelease('none')"<?php echo (((!isset($_POST["timedrelease"])) || ($_POST["timedrelease"] == "no")) ? " checked=\"checked\"" : ""); ?> /> <label for="timedrelease_no">No, this LTI Provider is accessible any time.</label><br />
+                                                            <input type="radio" id="timedrelease_yes" name="timedrelease" value="yes" onclick="timedRelease('block')"<?php echo (((isset($_POST["timedrelease"])) && ($_POST["timedrelease"] == "yes")) ? " checked=\"checked\"" : ""); ?> /> <label for="timedrelease_yes">Yes, this LTI Provider has timed release information.</label><br />
+                                                        </div>
+
+                                                        <div id="timed-release-info" style="display: none">
+                                                            <br />
+                                                            By checking the box on the left, you will enable the ability to select release / revoke dates and times for this link.
+                                                            <br /><br />
+                                                            <table style="width: 100%" cellspacing="0" cellpadding="4" border="0" summary="Timed Release Information">
+                                                                <colgroup>
+                                                                    <col style="width: 3%" />
+                                                                    <col style="width: 30%" />
+                                                                    <col style="width: 67%" />
+                                                                </colgroup>
+                                                                <?php echo generate_calendars("valid", "Accessible", true, false, ((isset($PROCESSED["valid_from"])) ? $PROCESSED["valid_from"] : 0), true, false, ((isset($PROCESSED["valid_until"])) ? $PROCESSED["valid_until"] : 0), true, true); ?>
+                                                            </table>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </form>
-                                        </div>
+
+                                                <div id="step3" style="display: none">
+                                                    <div id="q4" class="wizard-question<?php echo ((in_array("q4", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                        <div style="font-size: 14px">Please provide a title for this LTI Provider:</div>
+                                                        <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
+                                                            <label for="lti_title" class="form-required">LTI Provider Title:</label><br />
+                                                            <input type="text" id="lti_title" name="lti_title" value="<?php echo ((isset($PROCESSED["lti_title"])) ? html_encode($PROCESSED["lti_title"]) : ""); ?>" maxlength="128" style="width: 350px;" />
+                                                        </div>
+                                                    </div>
+                                                    <div id="q5" class="wizard-question<?php echo ((in_array("q5", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                        <div style="font-size: 14px">You <span style="font-style: oblique">must</span> provide a description for this LTI Provider</div>
+                                                        <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
+                                                            <label for="lti_notes" class="form-required">LTI Provider Description:</label><br />
+                                                            <textarea id="lti_notes" name="lti_notes" style="width: 350px; height: 75px"><?php echo ((isset($PROCESSED["lti_notes"])) ? html_encode($PROCESSED["lti_notes"]) : ""); ?></textarea>
+                                                        </div>
+                                                    </div>
+                                                    <div id="q6" class="wizard-question<?php echo ((in_array("q6", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                        <div style="font-size: 14px">Please provide the full external LTI launch URL:</div>
+                                                        <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
+                                                            <label for="launch_url" class="form-required">LTI Launch URL:</label><br />
+                                                            <input type="text" id="launch_url" name="launch_url" value="<?php echo ((isset($PROCESSED["launch_url"])) ? html_encode($PROCESSED["launch_url"]) : "https://"); ?>" maxlength="500" style="width: 350px;" />
+                                                        </div>
+                                                    </div>
+                                                    <div id="q7" class="wizard-question<?php echo ((in_array("q7", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                        <div style="font-size: 14px">Please provide the LTI Key / Username:</div>
+                                                        <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
+                                                            <label for="lti_key" class="form-required">LTI Key:</label><br />
+                                                            <input type="text" id="lti_key" name="lti_key" value="<?php echo ((isset($PROCESSED["lti_key"])) ? html_encode($PROCESSED["lti_key"]) : ""); ?>" maxlength="128" style="width: 350px;" />
+                                                        </div>
+                                                    </div>
+                                                    <div id="q8" class="wizard-question<?php echo ((in_array("q8", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                        <div style="font-size: 14px">Please provide the LTI Secret / Password:</div>
+                                                        <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
+                                                            <label for="lti_secret" class="form-required">LTI Secret:</label><br />
+                                                            <input type="text" id="lti_secret" name="lti_secret" value="<?php echo ((isset($PROCESSED["lti_secret"])) ? html_encode($PROCESSED["lti_secret"]) : ""); ?>" maxlength="128" style="width: 350px;" />
+                                                        </div>
+                                                    </div>
+                                                    <div id="q9" class="wizard-question<?php echo ((in_array("q9", $ERRORSTR)) ? " display-error" : ""); ?>">
+                                                        <div style="font-size: 14px">Please provide a additional parameters for this LTI Provider</div>
+                                                        <div style="padding-left: 65px; padding-right: 10px; padding-top: 10px">
+                                                            <label for="lti_params" class="form-nrequired">Additional parameters:</label><br />
+                                                            <textarea id="lti_params" name="lti_params" style="width: 350px; height: 75px"><?php echo ((isset($PROCESSED["lti_params"])) ? html_encode($PROCESSED["lti_params"]) : ""); ?></textarea>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div id="footer">
+                                                <input type="button" class="btn" value="Close" onclick="closeWizard()" style="float: left; margin: 4px 0px 4px 10px" />
+                                                <input type="button" class="btn btn-primary" id="next-button" value="Next Step" onclick="nextStep()" style="float: right; margin: 4px 10px 4px 0px" />
+                                                <input type="button" class="btn" id="back-button" value="Previous Step" onclick="prevStep()" style="display: none; float: right; margin: 4px 10px 4px 0px" />
+                                            </div>
+                                            <div id="uploading-window" style="width: 100%; height: 100%;">
+                                                <div style="display: table; width: 100%; height: 100%; _position: relative; overflow: hidden">
+                                                    <div style=" _position: absolute; _top: 50%;display: table-cell; vertical-align: middle;">
+                                                        <div style="_position: relative; _top: -50%; width: 100%; text-align: center">
+                                                    <span style="color: #003366; font-size: 18px; font-weight: bold">
+                                                        <img src="<?php echo ENTRADA_URL; ?>/images/loading.gif" width="32" height="32" alt="Link Uploading" title="Please wait while this link is being added." style="vertical-align: middle" /> Please Wait: this link is being added.
+                                                    </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </form>
                                     </div>
+                                </div>
                                 <?php
+                            break;
                         }
+                    break;
                 }
                 ?>
                 <div id="scripts-on-open" style="display: none;">
-                    <?php
-                    foreach ($modal_onload as $string) {
-                        echo $string.";\n";
-                    }
-                    ?>
+                <?php
+                foreach ($modal_onload as $string) {
+                    echo $string.";\n";
+                }
+                ?>
                 </div>
                 <?php
             }

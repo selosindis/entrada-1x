@@ -275,12 +275,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					}
 				}
 
-				
+
 
 				if (isset($_POST["type"])) {
 					switch ($_POST["type"]) {
 						case "content" :
-							
+
 							/**
 							* Event objective release date
 							*/
@@ -296,9 +296,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									}
 								}
 							}
-							
+
 							if(!$ERROR) {
-								
+
 								$history_texts = " [";
 								/**
 								 * Event Description
@@ -690,14 +690,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					jQuery("#delay_release").on("click", function() {
 						jQuery("#delay_release_controls").toggle(this.checked);
 					});
-					
+
 					jQuery(".remove-hottopic").on("click", function(e) {
 						jQuery("#topic_"+jQuery(this).attr("data-id")+"_major").removeAttr("checked");
 						jQuery("#topic_"+jQuery(this).attr("data-id")+"_minor").removeAttr("checked");
 						e.preventDefault();
 					});
 				});
-				
+
 				var ajax_url = '';
 				var modalDialog;
 				document.observe('dom:loaded', function() {
@@ -970,12 +970,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						<label class="checkbox">
 							<input type="checkbox" id="delay_release" name="delay_release" value="1" <?php echo ($event_info["objectives_release_date"] != 0 || isset($PROCESSED["delay_release"]) ? " checked=\"checked\"" : "") ?> />
 							Delay the release of all objectives
-						</label>	
+						</label>
 						<div id="delay_release_controls" class="space-below">
 							<?php echo generate_calendar("delay_release_option", "Delay release until", true, $PROCESSED["objectives_release_date"], true, false, false, false, false); ?>
 						</div>
 					</div>
-					
+
                     <label for="event_objectives" class="form-nrequired">Free-Text Objectives</label><br />
                     <textarea id="event_objectives" name="event_objectives" style="width: 100%; height: 100px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($event_info["event_objectives"], array("font")))); ?></textarea>
 
@@ -1361,7 +1361,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							echo "<tr>\n";
 							echo "	<td colspan=\"6\">\n";
 							echo "		<div class=\"display-generic\">\n";
-							echo "			There have been no files added to this event. To <strong>add a new file</strong>, simply click the Add File button.\n";
+							echo "			There have been no files added to this event. To <strong>add a new file</strong> simpson click the Add File button.\n";
 							echo "		</div>\n";
 							echo "	</td>\n";
 							echo "</tr>\n";
@@ -1434,7 +1434,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							echo "<tr>\n";
 							echo "	<td colspan=\"5\">\n";
 							echo "		<div class=\"display-generic\">\n";
-							echo "			There have been no links added to this event. To <strong>add a new link</strong>, simply click the Add Link button.\n";
+							echo "			There have been no links added to this event. To <strong>add a new link</strong> simpson click the Add Link button.\n";
 							echo "		</div>\n";
 							echo "	</td>\n";
 							echo "</tr>\n";
@@ -1556,23 +1556,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     <col class="date" />
                                 </colgroup>
                                 <thead>
-                                <tr>
-                                    <td class="modified">&nbsp;</td>
-                                    <td class="title sortedASC"><div class="noLink">LTI Provider Title</div></td>
-                                    <td class="title">Launch URL</td>
-                                    <td class="date-small">Accessible Start</td>
-                                    <td class="date-small">Accessible Finish</td>
-                                </tr>
+                                    <tr>
+                                        <td class="modified">&nbsp;</td>
+                                        <td class="title sortedASC"><div class="noLink">LTI Provider Title</div></td>
+                                        <td class="title">Launch URL</td>
+                                        <td class="date-small">Accessible Start</td>
+                                        <td class="date-small">Accessible Finish</td>
+                                    </tr>
                                 </thead>
                                 <tfoot>
-                                <tr>
-                                    <td>&nbsp;</td>
-                                    <td colspan="4">
-                                        <?php
-                                        echo (($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Delete Selected\" onclick=\"confirmLTIDelete()\" />" : "&nbsp;")."\n";
-                                        ?>
-                                    </td>
-                                </tr>
+                                    <tr>
+                                        <td>&nbsp;</td>
+                                        <td colspan="4" style="padding-top: 10px">
+                                            <?php
+                                            echo (($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Delete Selected\" onclick=\"confirmLTIDelete()\" />" : "&nbsp;")."\n";
+                                            ?>
+                                        </td>
+                                    </tr>
                                 </tfoot>
                                 <tbody>
                                 <?php
@@ -1585,7 +1585,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             <td class="title">
                                                 <a 	href="#"
                                                       onclick="openDialog('<?php echo ENTRADA_URL;?>/api/lti-wizard-event.api.php?action=edit&id=<?php echo $EVENT_ID."&ltiid=".$result["id"];?>')"
-                                                      title="Click to edit <?php echo html_encode($result["lti_title"]);?>">
+                                                      title="Click to edit <?php echo html_encode($result["lti_title"]); ?>">
                                                     <strong>
                                                         <?php echo (($result["lti_title"] != "") ? html_encode($result["lti_title"]) : $result["lti_title"]);?>
                                                     </strong>
@@ -1595,14 +1595,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 <?php echo (($result["launch_url"] != "") ? html_encode($result["launch_url"]) : $result["launch_url"]);?>
                                             </td>
                                             <td class="date-small">
-											<span class="content-date">
-												<?php echo (((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions");?>
-											</span>
+                                                <span class="content-date">
+                                                    <?php echo (((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions");?>
+                                                </span>
                                             </td>
                                             <td class="date-small">
-											<span class="content-date">
-												<?php echo (((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions");?>
-											</span>
+                                                <span class="content-date">
+                                                    <?php echo (((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions");?>
+                                                </span>
                                             </td>
                                         </tr>
                                     <?php
@@ -1610,8 +1610,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 } else { ?>
                                     <tr>
                                         <td colspan="5">
-                                            <div class="display-generic">
-                                                There have been no LTI Providers added to this <?php echo strtolower($module_singular_name);?>. To <strong>add a new LTI Provider</strong>, simply click the Add LTI Provider button.
+                                            <div class="display-generic" style="white-space: normal">
+                                                There have been no LTI Providers added to this event. To <strong>add a new LTI Provider</strong> simply click the Add LTI Provider button.
                                             </div>
                                         </td>
                                     </tr>

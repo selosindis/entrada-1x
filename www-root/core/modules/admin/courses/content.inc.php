@@ -684,7 +684,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<tfoot>
 									<tr class="space-above">
 										<td>&nbsp;</td>
-										<td colspan="5">
+										<td colspan="5" style="padding-top: 10px">
 										<?php
 										echo (($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Delete Selected\" onclick=\"confirmFileDelete()\" />" : "&nbsp;");
 										?>
@@ -796,7 +796,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								<tfoot>
 									<tr>
 										<td>&nbsp;</td>
-										<td colspan="4">
+										<td colspan="4" style="padding-top: 10px">
 											<?php
 											echo (($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Delete Selected\" onclick=\"confirmLinkDelete()\" />" : "&nbsp;")."\n";
 											?>
@@ -897,7 +897,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                 <tfoot>
                                 <tr>
                                     <td>&nbsp;</td>
-                                    <td colspan="4">
+                                    <td colspan="4" style="padding-top: 10px">
                                         <?php
                                         echo (($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Delete Selected\" onclick=\"confirmLTIDelete()\" />" : "&nbsp;")."\n";
                                         ?>

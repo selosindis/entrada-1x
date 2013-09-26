@@ -31,18 +31,18 @@
  */
 require_once("init.inc.php");
 
-require_once 'Entrada/lti/oauth/oauth-utils.class.php';
-require_once 'Entrada/lti/oauth/oauth-exception.class.php';
-require_once 'Entrada/lti/oauth/oauth-request.class.php';
-require_once 'Entrada/lti/oauth/oauth-token.class.php';
-require_once 'Entrada/lti/oauth/oauth-consumer.class.php';
-require_once 'Entrada/lti/oauth/oauth-signature-method.interface.php';
-require_once 'Entrada/lti/oauth/method/oauth-signature-method-hmac-sha1.class.php';
-require_once 'Entrada/lti/LTIConsumer.class.php';
+require_once "Entrada/lti/oauth/oauth-utils.class.php";
+require_once "Entrada/lti/oauth/oauth-exception.class.php";
+require_once "Entrada/lti/oauth/oauth-request.class.php";
+require_once "Entrada/lti/oauth/oauth-token.class.php";
+require_once "Entrada/lti/oauth/oauth-consumer.class.php";
+require_once "Entrada/lti/oauth/oauth-signature-method.interface.php";
+require_once "Entrada/lti/oauth/method/oauth-signature-method-hmac-sha1.class.php";
+require_once "Entrada/lti/LTIConsumer.class.php";
 
 ob_start("on_checkout");
 
-if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+if (!isset($_SESSION["isAuthorized"]) || !(bool) $_SESSION["isAuthorized"]) {
     echo "<div id=\"scripts-on-open\" style=\"display: none;\">\n";
     echo "alert('It appears as though your session has expired; you will now be taken back to the login page.');\n";
     echo "if(window.opener) {\n";
@@ -54,11 +54,8 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
     echo "</div>\n";
     exit;
 } else {
-    $constValues = array('USER_ID'    => $ENTRADA_USER->getID(),
-                         'USER_EMAIL' => $ENTRADA_USER->getEmail());
-
     $LTI_ID = 0;
-    $WIDTH  = 400;
+    $WIDTH = 400;
     $HEIGHT = 400;
     $IS_EVENT = false;
 
@@ -86,7 +83,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 
     if ($LTI_ID) {
         if ($IS_EVENT) {
-            $query = "SELECT a.*, c.`course_id`, c.`course_name`, c.`course_code`
+            $query = "SELECT a.*, c.`course_id`, c.`course_name`, c.`course_code`, c.`organisation_id`
                         FROM `event_lti_consumers` AS a
                         JOIN `events` AS b
                         ON b.`event_id` = a.`event_id`
@@ -94,7 +91,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                         ON c.`course_id` = b.`course_id`
                         WHERE a.`id` = " . $db->qstr($LTI_ID);
         } else {
-            $query = "SELECT a.*, b.`course_id`, b.`course_name`, b.`course_code`
+            $query = "SELECT a.*, b.`course_id`, b.`course_name`, b.`course_code`, b.`organisation_id`
                         FROM `course_lti_consumers` AS a
                         JOIN `courses` AS b
                         ON b.`course_id` = a.`course_id`
@@ -102,19 +99,20 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
         }
         $result	= $db->GetRow($query);
         if ($result) {
-            add_statistic('LTI Module', 'Run lti consumer "' . $result['lti_title'] . '"');
+			add_statistic((($IS_EVENT) ? "events" : "courses"), "launch_lti", "lti_id", $LTI_ID);
 
-            switch ($ENTRADA_USER->getActiveGroup()) {
-                case "faculty" :
-                    $lti_role = "Instructor";
-                break;
-                case "staff" :
-                    $lti_role = "ContentDeveloper";
-                break;
-                case "student" :
-                default :
-                    $lti_role = "Learner";
-                break;
+            $lti_role = "Learner";
+
+            if ($ENTRADA_USER->getActiveGroup() != "student") {
+                if ($IS_EVENT) {
+                    if ($ENTRADA_ACL->amIAllowed(new EventContentResource($result["event_id"], $result["course_id"], $result["organisation_id"]), "update")) {
+                        $lti_role = "Instructor";
+                    }
+                } else {
+                    if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($result["course_id"], $result["organisation_id"]), "update")) {
+                        $lti_role = "Instructor";
+                    }
+                }
             }
 
             $parameters = array(
@@ -133,87 +131,67 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                 "tool_consumer_info_product_family_code" => APPLICATION_NAME,
                 "tool_consumer_info_version" => APPLICATION_VERSION,
                 "tool_consumer_instance_guid" => ENTRADA_URL,
-//              "tool_consumer_instance_description" => "",
+                "tool_consumer_instance_description" => "",
                 "launch_presentation_locale" => "en-US",
                 "launch_presentation_document_target" => "iframe",
-//                "launch_presentation_width" => "",
-//                "launch_presentation_height" => "",
-//                "launch_presentation_css_url" => ""
+                "launch_presentation_width" => "",
+                "launch_presentation_height" => "",
+                "launch_presentation_css_url" => ""
             );
 
-
-            if ($result['lti_params']) {
-                $paramsList = explode(';', $result['lti_params']);
-                if ($paramsList != null && count($paramsList) > 0) {
+            if ($result["lti_params"]) {
+                $paramsList = explode(";", $result["lti_params"]);
+                if ($paramsList && count($paramsList) > 0) {
                     foreach ($paramsList as $param) {
-                        $parts = explode('=', $param);
-                        $key   = trim($parts[0]);
-                        $value = parseParameterValue(trim($parts[1]), $constValues);
+                        $parts = explode("=", $param);
+                        if ($parts && (count($parts) == 2)) {
+                            $key = clean_input($parts[0], array("trim", "notags"));
+                            $value = clean_input($parts[1], array("trim", "notags"));
 
-                        if ($key && $value) {
-                            $parameters[$key] = $value;
+                            if ($key) {
+                                $parameters["custom_".$key] = $value;
+                            }
                         }
                     }
                 }
             }
 
-            $ltiConsumer  = new LTIConsumer();
-            $signedParams = $ltiConsumer->sign($parameters, $result['launch_url'], 'POST', $result['lti_key'], $result['lti_secret']);
+            $ltiConsumer = new LTIConsumer();
+            $signedParams = $ltiConsumer->sign($parameters, $result["launch_url"], "POST", $result["lti_key"], $result["lti_secret"]);
             ?>
             <div id="ltiContainer">
-            <form id="ltiSubmitForm" name="ltiSubmitForm" method="POST" action="<?php echo $result['launch_url']; ?>" target="ltiTestFrame" enctype="application/x-www-form-urlencoded">
-                <?php
-                if ($signedParams && count($signedParams) > 0) {
-                    foreach ($signedParams as $key => $value) {
-                        $key   = htmlspecialchars($key);
-                        $value = htmlspecialchars($value);
+                <form id="ltiSubmitForm" name="ltiSubmitForm" method="POST" action="<?php echo html_encode($result["launch_url"]); ?>" target="ltiTestFrame" enctype="application/x-www-form-urlencoded">
+                    <?php
+                    if ($signedParams && count($signedParams) > 0) {
+                        foreach ($signedParams as $key => $value) {
+                            $key = htmlspecialchars($key);
+                            $value = htmlspecialchars($value);
 
-                        echo '<input type="hidden" name="' . $key . '" value="' . $value . '"/>';
+                            echo "<input type=\"hidden\" name=\"" . $key . "\" value=\"" . $value . "\"/>";
+                        }
                     }
-                }
-                ?>
-                <input id="ltiSubmitBtn" type="submit" style="display: none;"/>
-            </form>
-            <h3 class="border-below" style="margin-top: -30px;">LTI Provider - <?php echo $result['lti_title']; ?></h3>
-            <iframe name="ltiTestFrame" id="ltiTestFrame" src="" width="<?php echo $WIDTH; ?>" height="<?php echo $HEIGHT; ?>" scrolling="auto" style="border: 1px solid rgba(0, 0, 0, 0.075);" transparency=""></iframe>
-            <div>
-                <input type="button" class="btn" value="Close" onclick="closeLTIDialog()" />
-            </div>
-            <div id="scripts-on-open" style="display: none;">
-                submitLTIForm();
-            </div>
+                    ?>
+                    <input id="ltiSubmitBtn" type="submit" style="display: none;"/>
+                </form>
+                <h3 class="border-below" style="margin-top: -30px;">LTI Provider - <?php echo html_encode($result["lti_title"]); ?></h3>
+                <iframe name="ltiTestFrame" id="ltiTestFrame" src="" width="<?php echo $WIDTH; ?>" height="<?php echo $HEIGHT; ?>" scrolling="auto" style="border: 1px solid rgba(0, 0, 0, 0.075);" transparency=""></iframe>
+                <div>
+                    <input type="button" class="btn" value="Close" onclick="closeLTIDialog()" />
+                </div>
+                <div id="scripts-on-open" style="display: none;">
+                    submitLTIForm();
+                </div>
             </div>
             <?php
         } else {
-            $ERROR++;
-            $ERRORSTR[]	= "Can't get LTI Provider from database" . $query;
+            add_error("Unable to locate the requested LTI Provider at this time.");
 
             echo display_error();
         }
 
     } else {
-        $ERROR++;
-        $ERRORSTR[]	= "You must set LTI Provider identifier";
+        add_error("You must specify an LTI Provider identifier to run");
 
         echo display_error();
     }
-}
-
-function parseParameterValue($value, $constValues) {
-    $result = $value;
-
-    switch($value) {
-        case '%USER_ID%':
-            if(isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] && isset($constValues['USER_ID'])) {
-                $result = $constValues['USER_ID'];
-            }
-            break;
-        case '%USER_EMAIL%':
-            if(isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] && isset($constValues['USER_EMAIL'])) {
-                $result = $constValues['USER_EMAIL'];
-            }
-            break;
-    }
-
-    return $result;
 }

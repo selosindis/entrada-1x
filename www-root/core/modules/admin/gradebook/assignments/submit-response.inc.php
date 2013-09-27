@@ -29,7 +29,7 @@ if(isset($_GET["fid"]) && $tmp_fid = (int)$_GET["fid"]){
 }
 
 if(!$RECORD_ID){
-	if(isset($_GET["id"]) && $tmp_id = (int)$_GET["id"]){
+	if(isset($_GET["assignment_id"]) && $tmp_id = (int)$_GET["assignment_id"]){
 		$RECORD_ID = $tmp_id;
 	}	
 }
@@ -125,7 +125,7 @@ if ($RECORD_ID) {
 
 										if (assignments_process_file($_FILES["uploaded_file"]["tmp_name"], $VERSION_ID)) {										
 
-											$url = ENTRADA_URL."/profile/gradebook/assignments?section=view&id=".$RECORD_ID."&pid=".$file_record["proxy_id"];
+											$url = ENTRADA_URL."/profile/gradebook/assignments?section=view&assignment_id=".$RECORD_ID."&pid=".$file_record["proxy_id"];
 											$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 											$SUCCESS++;
@@ -205,7 +205,7 @@ if ($RECORD_ID) {
 					?>
 
 
-					<form id="upload-file-form" action="<?php echo ENTRADA_URL."/admin/gradebook/assignments?section=submit-response&id=".$RECORD_ID."&fid=".$FILE_ID."&step=2"; ?>" method="post" enctype="multipart/form-data">
+					<form id="upload-file-form" action="<?php echo ENTRADA_URL."/admin/gradebook/assignments?section=submit-response&id=".$COURSE_ID."&assignment_id=".$RECORD_ID."&fid=".$FILE_ID."&step=2"; ?>" method="post" enctype="multipart/form-data">
 					<input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo MAX_UPLOAD_FILESIZE; ?>" />
 					<table style="width: 420px;" cellspacing="0" cellpadding="2" border="0" summary="Upload File">
 					<colgroup>

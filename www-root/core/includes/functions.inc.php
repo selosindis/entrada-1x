@@ -3003,6 +3003,9 @@ function clean_input($string, $rules = array()) {
 					$string = preg_replace('/\<br\s*\/?\>/i', "\n", $string);
 					$string = str_replace("&nbsp;", " ", $string);
 				break;
+                case "utf8_convert" :
+                    $string = preg_replace_callback("/(&#[0-9]+;)/", function($m) { return mb_convert_encoding($m[1], "UTF-8", "HTML-ENTITIES"); }, $string);
+                break;
 				case "html_decode" :
 				case "decode" :			// Returns the output of the html_decode() function.
 					$string = html_decode($string);
@@ -9413,7 +9416,7 @@ function courses_subnavigation($course_details, $tab="details") {
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
         echo "<li".($tab=="details"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "edit", "id" => $course_details["course_id"], "step" => false))."\" >Details</a></li>\n";
 	}
-	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
+	if($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read") && $ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "read", true)) {
         echo "<li".($tab=="content"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses?".replace_query(array("section" => "content", "id" => $course_details["course_id"], "step" => false))."\" >Content</a></li>\n";
 	}
 	if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
@@ -12455,6 +12458,7 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 	$fetch_quizzes = false;
 	$fetch_discussions = false;
 	$fetch_types = false;
+    $fetch_lti = false;
 
 	$output = array();
 
@@ -12487,6 +12491,7 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 			$fetch_quizzes = true;
 			$fetch_discussions = true;
 			$fetch_types = true;
+            $fetch_lti = true;
 		}
 
 		if (in_array("files", $options)) {
@@ -12528,6 +12533,10 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 		if (in_array("types", $exclude)) {
 			$fetch_types = false;
 		}
+
+        if (in_array("lti", $exclude)) {
+            $fetch_lti = false;
+        }
 
 		if ($fetch_files) {
 			/**
@@ -12609,6 +12618,14 @@ function events_fetch_event_resources($event_id = 0, $options = array(), $exclud
 						ORDER BY a.`eeventtype_id` ASC";
 			$output["types"] = $db->GetAll($query);
 		}
+
+        if ($fetch_lti) {
+            $query	= "	SELECT *
+						FROM `event_lti_consumers`
+						WHERE `event_id` = ".$db->qstr($event_id)."
+						ORDER BY `lti_title` ASC";
+            $output["lti"] = $db->GetAll($query);
+        }
 	}
 
 	return $output;
@@ -13246,19 +13263,19 @@ function events_flatten_objectives ($objectives) {
 /**
  * This function is used in conjunction with the output of events_fetch_objectives_structure and is used to
  * find all the active objectives by objective name.
- * 
+ *
  * @param type $objs - an array containing an objective set as produced by events_fetch_objectives_structure.
  * @param type $output - an array of objective names of all the active objectives as accumlated by recursive call.
  * @return type - an array of objective names of all the active objectives.
  */
 function events_all_active_objectives($objs, $output = array()) {
-	foreach($objs as $obj_id => $details) {				
-		if ($details["objective_active"]) {	
-			$output[] = $details["objective_name"];				
+	foreach($objs as $obj_id => $details) {
+		if ($details["objective_active"]) {
+			$output[] = $details["objective_name"];
 		}
-		if ($details["children_active"]) {				
+		if ($details["children_active"]) {
 			$output = events_all_active_objectives($details["children"], $output);
-		}			
+		}
 	}
 	return $output;
 }
@@ -15599,41 +15616,6 @@ function displayARYearReported($year_reported, $AR_CUR_YEAR, $AR_PAST_YEARS, $AR
 	?>
 	</td>
 	<?php
-}
-
-/**
- * Adds the task sidebar, and populates it, only if there are tasks to be completed
- */
-function add_task_sidebar () {
-	require_once("Models/users/User.class.php");
-	require_once("Models/tasks/TaskCompletions.class.php");
-	global $ENTRADA_ACL, $ENTRADA_USER;
-
-	$proxy_id = $ENTRADA_USER->getActiveId();
-	$user = User::get($proxy_id);
-
-
-	$tasks_completions = TaskCompletions::getByRecipient($user, array('order_by'=>array(array('deadline', 'asc')), 'limit' => 5, 'where' => 'completed_date IS NULL'));
-
-	foreach ($tasks_completions as $completion) {
-		$tasks[] = $completion->getTask();
-	}
-	if (isset($tasks) && $tasks) {
-
-		$sidebar_html = "<ul>";
-		foreach ($tasks as $task) {
-			$sidebar_html .= "
-			<li>
-				<a href='".ENTRADA_URL."/tasks?section=details&id=".$task->getID()."'>".html_encode($task->getTitle())."</a>
-				<span class='content-small'>".(($task->getDeadline()) ? date(DEFAULT_DATE_FORMAT,$task->getDeadline()) : "")."</span>
-			</li>";
-		}
-		$sidebar_html .= "</ul>";
-
-		$sidebar_html .= "<a class='see-all' href='".ENTRADA_URL."/tasks'>See all tasks</a>";
-
-		new_sidebar_item("Upcoming Tasks", $sidebar_html, "task-list", "open");
-	}
 }
 
 /**

@@ -2105,7 +2105,6 @@ CREATE TABLE IF NOT EXISTS `course_group_contacts` (
   KEY `proxy_id` (`proxy_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-
 CREATE TABLE IF NOT EXISTS `course_links` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `course_id` int(12) NOT NULL DEFAULT '0',
@@ -2126,6 +2125,23 @@ CREATE TABLE IF NOT EXISTS `course_links` (
   KEY `valid_from` (`valid_from`),
   KEY `valid_until` (`valid_until`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `course_lti_consumers` (
+  `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `course_id` int(12) NOT NULL,
+  `is_required` int(1) NOT NULL DEFAULT '0',
+  `valid_from` bigint(64) NOT NULL,
+  `valid_until` bigint(64) NOT NULL,
+  `launch_url` text NOT NULL,
+  `lti_key` varchar(300) NOT NULL,
+  `lti_secret` varchar(300) NOT NULL,
+  `lti_params` text NOT NULL,
+  `lti_title` varchar(300) NOT NULL,
+  `lti_notes` text NOT NULL,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `course_objectives` (
   `cobjective_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -2225,6 +2241,7 @@ INSERT INTO `curriculum_lu_types` (`curriculum_type_id`, `parent_id`, `curriculu
 CREATE TABLE IF NOT EXISTS `curriculum_periods`(
 	`cperiod_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	`curriculum_type_id` INT NOT NULL,
+	`curriculum_period_title` VARCHAR(200) NOT NULL DEFAULT '',
 	`start_date` BIGINT(64) NOT NULL,
 	`finish_date` BIGINT(64) NOT NULL,
 	`active` INT(1) NOT NULL DEFAULT 1
@@ -2797,6 +2814,24 @@ CREATE TABLE IF NOT EXISTS `event_links` (
   KEY `required` (`required`),
   KEY `release_date` (`release_date`,`release_until`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `event_lti_consumers` (
+  `id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `event_id` int(12) NOT NULL,
+  `is_required` int(1) NOT NULL,
+  `valid_from` bigint(64) NOT NULL,
+  `valid_until` bigint(64) NOT NULL,
+  `timeframe` varchar(64) NOT NULL,
+  `launch_url` text NOT NULL,
+  `lti_key` varchar(300) NOT NULL,
+  `lti_secret` varchar(300) NOT NULL,
+  `lti_params` text NOT NULL,
+  `lti_title` varchar(300) NOT NULL,
+  `lti_notes` text NOT NULL,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `event_objectives` (
   `eobjective_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -4296,8 +4331,8 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1504'),
-('version_entrada', '1.5.0.1');
+('version_db', '1510'),
+('version_entrada', '1.5.1');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -4517,64 +4552,6 @@ CREATE TABLE IF NOT EXISTS `users_online` (
   KEY `ip_address` (`ip_address`),
   KEY `proxy_id` (`proxy_id`),
   KEY `timestamp` (`timestamp`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `tasks` (
-  `task_id` int(12) unsigned NOT NULL auto_increment,
-  `title` varchar(255) NOT NULL,
-  `description` text,
-  `release_start` bigint(64) default NULL,
-  `release_finish` bigint(64) default NULL,
-  `duration` bigint(64) default NULL,
-  `updated_date` bigint(64) default NULL,
-  `updated_by` int(12) unsigned default NULL,
-  `deadline` bigint(64) default NULL,
-  `organisation_id` int(12) unsigned NOT NULL,
-  `verification_type` enum('faculty','other','none') NOT NULL default 'none',
-  `faculty_selection_policy` enum('off','allow','require') NOT NULL default 'allow',
-  `completion_comment_policy` enum('no_comments','require_comments','allow_comments') NOT NULL default 'allow_comments',
-  `rejection_comment_policy` enum('no_comments','require_comments','allow_comments') NOT NULL default 'allow_comments',
-  `verification_notification_policy` smallint(5) unsigned NOT NULL default '0',
-  PRIMARY KEY (`task_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_associated_faculty` (
-  `task_id` int(12) unsigned NOT NULL,
-  `faculty_id` int(12) unsigned NOT NULL,
-  PRIMARY KEY (`task_id`,`faculty_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_completion` (
-  `task_id` int(12) unsigned NOT NULL,
-  `verifier_id` int(12) unsigned default NULL,
-  `verified_date` bigint(64) default NULL,
-  `recipient_id` int(12) unsigned NOT NULL,
-  `completed_date` bigint(64) default NULL,
-  `faculty_id` int(12) unsigned default NULL,
-  `completion_comment` text,
-  `rejection_comment` text,
-  `rejection_date` bigint(64) default NULL,
-  PRIMARY KEY (`task_id`,`recipient_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_owners` (
-  `task_id` int(12) unsigned NOT NULL default '0',
-  `owner_id` int(12) unsigned NOT NULL default '0',
-  `owner_type` enum('course','event','user') NOT NULL default 'course',
-  PRIMARY KEY (`task_id`,`owner_id`,`owner_type`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_recipients` (
-  `task_id` int(12) unsigned NOT NULL,
-  `recipient_type` enum('user','group','grad_year','cohort','organisation') NOT NULL,
-  `recipient_id` int(12) unsigned NOT NULL,
-  PRIMARY KEY (`task_id`,`recipient_type`,`recipient_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8;
-
-CREATE TABLE IF NOT EXISTS `task_verifiers` (
-  `task_id` int(12) unsigned NOT NULL,
-  `verifier_id` int(12) unsigned NOT NULL,
-  PRIMARY KEY (`task_id`,`verifier_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `meta_types` (

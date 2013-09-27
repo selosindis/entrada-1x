@@ -12,3 +12,4 @@ VALUES
 	('gradebook', NULL, 'group', 'faculty', 1, NULL, 1, NULL, NULL, NULL);
 
 DELETE FROM `acl_permissions` WHERE `resource_type` IN ('task', 'taskverification', 'tasktab');
+

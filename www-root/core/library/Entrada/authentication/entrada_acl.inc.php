@@ -33,11 +33,11 @@ class Entrada_ACL extends ACL_Factory {
 					"evaluationformquestion"
 				),
 				"evaluationquestion"
-			),
-			"gradebook" => array (
-				"assessment"
-			),
-			"assignment",
+			),			
+			"gradebook" => array(
+				"assessment",
+				"assignment"
+			),						
 			"regionaled" => array (
 				"apartments",
 				"regions",
@@ -2204,37 +2204,40 @@ class GradebookResource extends CourseResource {
 	}
 }
 
-class AssessmentResource extends EntradaAclResource {
+class AssessmentResource extends GradebookResource {
 	var $assessment_id;
-
-	function __construct($assessment_id, $assert = null) {
+	
+	function __construct($course_id, $organisation_id, $assessment_id, $assert = null) {		
 		$this->assessment_id = $assessment_id;
-
+		parent::__construct($course_id, $organisation_id, $assert);
 		if (isset($assert)) {
 			$this->assert = $assert;
 		}
 	}
-
+	
 	public function getResourceId() {
 		return "assessment".($this->specific ? $this->assessment_id : "");
 	}
 }
 
-class AssignmentResource extends EntradaAclResource {
+class AssignmentResource extends GradebookResource {
 	var $assignment_id;
-
-	function __construct($assignment_id, $assert = null) {
+	
+	function __construct($course_id, $organisation_id, $assignment_id, $assert = null) {		
 		$this->assignment_id = $assignment_id;
-
+		
+		parent::__construct($course_id, $organisation_id, $assert);
+		
 		if (isset($assert)) {
 			$this->assert = $assert;
 		}
 	}
-
+	
 	public function getResourceId() {
 		return "assignment".($this->specific ? $this->assignment_id : "");
 	}
 }
+
 
 /**
  * Creates a photo resource.

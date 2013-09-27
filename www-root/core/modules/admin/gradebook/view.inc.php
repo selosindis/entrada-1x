@@ -312,7 +312,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                 <?php
             }
             echo "  </div>\n";
-            if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false)) { 
+            if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false) && $ENTRADA_ACL->amIAllowed(new CourseContentResource($COURSE_ID, $course_details["organisation_id"]), "update")) { 
                 ?>
                 <div class="pull-right">
                     <a id="gradebook_assessment_add" href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "add", "step" => false)); ?>" class="btn btn-primary">Add New Assessment</a>
@@ -470,46 +470,61 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								$total_grade_weight = 0;
 								$count = 0;
 								foreach ($results as $result) {
-									if ($ENTRADA_ACL->amIAllowed(new AssessmentResource($result["assessment_id"]), "update")) {
-										$count ++;
-										$total_grade_weight += $result["grade_weighting"];
-
-										$url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&amp;id=".$COURSE_ID."&amp;assessment_id=".$result["assessment_id"];
-										echo "<tr id=\"assessment-".$result["assessment_id"]."\" class=\"assessment\">";
-										if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
-											echo "	<td class=\"modified\"><input type=\"hidden\" name=\"order[".$result['assessment_id']."][]\" value=\"".$result["order"]."\" class=\"order\" /><input class=\"delete\" type=\"checkbox\" name=\"delete[]\" value=\"".$result["assessment_id"]."\" /></td>\n";
-										} else {
-											echo "	<td class=\"modified\" width=\"20\"><input type=\"hidden\" name=\"order[".$result["assessment_id"]."][]\" value=\"sortorder\" class=\"order\" /><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
-										}
-										if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-											echo "<td><a href=\"$url\">".$result["name"]."</a></td>";
-											echo "<td><a href=\"$url\">".$result["grade_weighting"]. "%</a></td>";
-										} else {
-											echo "<td>".$result["name"]."</td>";
-											echo "<td>".$result["grade_weighting"]. "%</td>";
-										}
+									if ($ENTRADA_ACL->amIAllowed(new AssessmentResource($course_details["course_id"], $course_details["organisation_id"], $result["assessment_id"]), "update")) {
+										//Display this row if the user is a Dropbox Contact for an assignment associated with this assessment or if they are the Course Owner.
 										$query =  "	SELECT a.`course_id`, a.`assignment_id`, a.`assignment_title` 
 													FROM `assignments` a
-													WHERE a.`assessment_id` = ".$db->qstr($result["assessment_id"])."
+													JOIN `assignment_contacts`	b
+													ON a.`assignment_id` = b.`assignment_id`
+													WHERE a.`assessment_id` = " . $db->qstr($result["assessment_id"]) . "
+													AND b.`proxy_id` = " . $db->qstr($ENTRADA_USER->getActiveId()) . "
 													AND a.`assignment_active` = 1";
+										$assignment_contact = $db->GetRow($query);	
+										if ($assignment_contact || $ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
+											$count++;
+											$total_grade_weight += $result["grade_weighting"];
 
-										$assignment = $db->GetRow($query);																		
-
-										if ($assignment && $ENTRADA_ACL->amIAllowed(new AssignmentResource($assignment["assignment_id"]), "update")) {
-											$url = ENTRADA_URL."/admin/gradebook/assignments?section=grade&amp;id=".$COURSE_ID."&amp;assignment_id=".$assignment["assignment_id"];
-											echo "<td id=\"assignment-".$assignment["assignment_id"]."\">";
-											echo "<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=download-submissions&assignment_id=".$assignment["assignment_id"]."\"><i class=\"icon-download-alt\"></i></a>";
-											if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-												echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=delete&id=".$COURSE_ID."&delete=".$assignment["assignment_id"]."\"><i class=\"icon-minus-sign\"></i></a>";
+											$url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&amp;id=".$COURSE_ID."&amp;assessment_id=".$result["assessment_id"];
+											echo "<tr id=\"assessment-".$result["assessment_id"]."\" class=\"assessment\">";
+											if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
+												echo "	<td class=\"modified\"><input type=\"hidden\" name=\"order[".$result['assessment_id']."][]\" value=\"".$result["order"]."\" class=\"order\" /><input class=\"delete\" type=\"checkbox\" name=\"delete[]\" value=\"".$result["assessment_id"]."\" /></td>\n";
+											} else {
+												echo "	<td class=\"modified\" width=\"20\"><input type=\"hidden\" name=\"order[".$result["assessment_id"]."][]\" value=\"sortorder\" class=\"order\" /><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
 											}
-											echo "&nbsp;<a href=\"".$url."\">".$assignment["assignment_title"]."</a>";																						
-											echo "</td>";
-										} else {
-											echo "<td>\n";
-											echo "<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=add&id=".$COURSE_ID."&assessment_id=".$result["assessment_id"]."\"><i class=\"icon-plus-sign\"></i> Add New Assignment</a>";
-											echo "</td>\n";
+											if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
+												echo "<td><a href=\"$url\">".$result["name"]."</a></td>";
+												echo "<td><a href=\"$url\">".$result["grade_weighting"]. "%</a></td>";
+											} else {
+												echo "<td>".$result["name"]."</td>";
+												echo "<td>".$result["grade_weighting"]. "%</td>";
+											}
+											
+											$query =  "	SELECT a.`course_id`, a.`assignment_id`, a.`assignment_title` 
+														FROM `assignments` a
+														WHERE a.`assessment_id` = ".$db->qstr($result["assessment_id"])."
+														AND a.`assignment_active` = 1";
+											$assignment = $db->GetRow($query);	
+											
+											if ($assignment && $ENTRADA_ACL->amIAllowed(new AssignmentResource($course_details["course_id"], $course_details["organisation_id"], $assignment["assignment_id"]), "update")) {
+												$url = ENTRADA_URL."/admin/gradebook/assignments?section=grade&amp;id=".$COURSE_ID."&amp;assignment_id=".$assignment["assignment_id"];
+												echo "<td id=\"assignment-".$assignment["assignment_id"]."\">";
+												echo "<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=download-submissions&assignment_id=".$assignment["assignment_id"]."\"><i class=\"icon-download-alt\"></i></a>";
+												if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
+													echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=delete&id=".$COURSE_ID."&delete=".$assignment["assignment_id"]."\"><i class=\"icon-minus-sign\"></i></a>";
+												}
+												echo "&nbsp;<a href=\"".$url."\">".$assignment["assignment_title"]."</a>";																						
+												echo "</td>";
+											} else {
+												echo "<td>\n";
+												if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
+													echo "<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=add&id=".$COURSE_ID."&assessment_id=".$result["assessment_id"]."\"><i class=\"icon-plus-sign\"></i> Add New Assignment</a>";
+												} else {
+													echo "Not a Dropbox Contact";
+												}
+												echo "</td>\n";
+											}
+											echo "</tr>";											
 										}
-										echo "</tr>";
 									}
 								}
 								if ($count == 0) {
@@ -562,8 +577,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				<?php
 			}
 		} else {
+			$url = ENTRADA_URL."/admin/gradebook";
+			$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
+			
 			$ERROR++;
-			$ERRORSTR[] = "In order to edit a course you must provide a valid course identifier. The provided ID does not exist in this system.";
+			$ERRORSTR[] = "You do not have permission to view this Gradebook.<br /><br />You will now be redirected to the <strong>Gradebook index</strong> page.  This will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
 			echo display_error();
 

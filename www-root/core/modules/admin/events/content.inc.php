@@ -58,7 +58,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		$event_info	= $db->GetRow($query);
 		if ($event_info) {
             if ($event_info["recurring_id"]) {
-                $query = "SELECT * FROM `events` 
+                $query = "SELECT * FROM `events`
                             WHERE `recurring_id` = ".$db->qstr($event_info["recurring_id"])."
                             AND `event_id` != ".$db->qstr($EVENT_ID);
                 $recurring_events = $db->GetAll($query);
@@ -150,7 +150,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						$clinical_presentations_list[$result["objective_id"]] = $result["objective_name"];
 					}
 				}
-                
+
                 if (((isset($_POST["clinical_presentations"])) && (is_array($_POST["clinical_presentations"])) && (count($_POST["clinical_presentations"])))) {
                     foreach ($_POST["clinical_presentations"] as $objective_id) {
                         if ($objective_id = clean_input($objective_id, array("trim", "int"))) {
@@ -283,11 +283,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					}
 				}
 
-				
+
 
 				if (isset($_POST["type"])) {
 					switch ($_POST["type"]) {
 						case "content" :
+
                             /**
                             * Event objective release date
                             */
@@ -497,8 +498,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         case "cascade" :
                             if ($event_info && isset($_POST["recurring_event_ids"]) && @count($_POST["recurring_event_ids"])) {
                                 $recurring_events = array();
-                                $query = "SELECT * FROM `events` 
-                                            WHERE `recurring_id` = ".$db->qstr($event_info["recurring_id"])." 
+                                $query = "SELECT * FROM `events`
+                                            WHERE `recurring_id` = ".$db->qstr($event_info["recurring_id"])."
                                             AND `event_id` != ".$db->qstr($EVENT_ID)."
                                             ORDER BY `event_start` ASC";
                                 $temp_recurring_events = $db->GetAll($query);
@@ -532,7 +533,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             }
                                         }
                                     }
-                                    
+
                                     foreach ($recurring_events as $order => $recurring_event) {
                                         if (isset($PROCESSED["mapped_objectives"])) {
                                             $query = "DELETE FROM `event_objectives` WHERE `event_id` = ".$db->qstr($recurring_event["event_id"]);
@@ -600,9 +601,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                 $event_duration += $event_type[1];
                                             }
 
-                                            $PROCESSED_RECURRING_EVENT = array(     "event_title" => $recurring_event_title, 
-                                                                                    "event_start" => $recurring_event_date, 
-                                                                                    "event_finish" => $event_finish, 
+                                            $PROCESSED_RECURRING_EVENT = array(     "event_title" => $recurring_event_title,
+                                                                                    "event_start" => $recurring_event_date,
+                                                                                    "event_finish" => $event_finish,
                                                                                     "event_duration" => $event_duration);
                                         } else {
                                             add_error("One of the <strong>recurring events</strong> did not have a valid title, please fill out a title for <strong>Event ".($order+1)."</strong> under the Recurring Events now.");
@@ -643,7 +644,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             $PAGE_ID = $result["cpage_id"];
                                             communities_log_history($COMMUNITY_ID, $PAGE_ID, $event_info["recurring_id"], "community_history_edit_recurring_events", 1);
                                         }
-                                        
+
                                         $SUCCESS++;
                                         $SUCCESSSTR[] = "You have successfully edited the recurring events associated with <strong>".html_encode($event_info["event_title"])."</strong> in the system.";
 
@@ -791,6 +792,48 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								}
 							}
 						break;
+                        case "lti" :
+                            $LTI_IDS = array();
+
+                            if((!isset($_POST["delete"])) || (!is_array($_POST["delete"])) || (!@count($_POST["delete"]))) {
+                                $ERROR++;
+                                $ERRORSTR[] = "You must select at least 1 LTI Provider to delete by checking the checkbox to the left the LTI Provider.";
+
+                                application_log("notice", "User pressed the Delete LTI Provider button without selecting any files to delete.");
+                            } else {
+                                foreach($_POST["delete"] as $lti_id) {
+                                    $lti_id = (int) trim($lti_id);
+                                    if($lti_id) {
+                                        $LTI_IDS[] = (int) trim($lti_id);
+                                    }
+                                }
+
+                                if(!@count($LTI_IDS)) {
+                                    $ERROR++;
+                                    $ERRORSTR[] = "There were no valid LTI Provider identifiers provided to delete.";
+                                } else {
+                                    foreach($LTI_IDS as $lti_id) {
+                                        $query	= "SELECT * FROM `event_lti_consumers` WHERE `id`=".$db->qstr($lti_id)." AND `event_id`=".$db->qstr($EVENT_ID);
+                                        $sresult	= $db->GetRow($query);
+                                        if($sresult) {
+                                            $query = "DELETE FROM `event_lti_consumers` WHERE `id`=".$db->qstr($lti_id)." AND `event_id`=".$db->qstr($EVENT_ID);
+                                            if($db->Execute($query)) {
+                                                if($db->Affected_Rows()) {
+                                                    application_log("success", "Deleted course ".$sresult["lti_title"]." [ID: ".$lti_id."] from database.");
+                                                } else {
+                                                    application_log("error", "Trying to delete course ".$sresult["lti_title"]." [ID: ".$lti_id."] from database, but there were no rows affected. Database said: ".$db->ErrorMsg());
+                                                }
+                                            } else {
+                                                $ERROR++;
+                                                $ERRORSTR[] = "We are unable to delete ".$sresult["lti_title"]." from the course at this time. The system administrator has been informed of the error, please try again later.";
+
+                                                application_log("error", "Trying to delete course ".$sresult["lti_title"]." [ID: ".$link_id."] from database, but the execute statement returned false. Database said: ".$db->ErrorMsg());
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            break;
 						default :
 							continue;
 						break;
@@ -818,12 +861,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         jQuery("#delay_release").on("click", function() {
                             jQuery("#delay_release_controls").toggle(this.checked);
                         });
-                    });
-                    jQuery(".remove-hottopic").on("click", function(e) {
-                        jQuery("#topic_"+jQuery(this).attr("data-id")+"_major").removeAttr("checked");
-                        jQuery("#topic_"+jQuery(this).attr("data-id")+"_minor").removeAttr("checked");
-                        e.preventDefault();
-                    });
+
+                        jQuery(".remove-hottopic").on("click", function(e) {
+                            jQuery("#topic_"+jQuery(this).attr("data-id")+"_major").removeAttr("checked");
+                            jQuery("#topic_"+jQuery(this).attr("data-id")+"_minor").removeAttr("checked");
+                            e.preventDefault();
+                        });
+				    });
 
                     var ajax_url = '';
                     var modalDialog;
@@ -897,6 +941,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         }
                     }
 
+                    function confirmLTIDelete() {
+                        ask_user = confirm("Press OK to confirm that you would like to delete the selected LTI Provider or LTI Providers from this event, otherwise press Cancel.");
+
+                        if (ask_user == true) {
+                            $('lti-listing').submit();
+                        } else {
+                            return false;
+                        }
+                    }
+
                     function updateEdChecks(obj) {
                         return true;
                     }
@@ -922,7 +976,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             }
                         }
                     }
-                    
+
                     function submitAndCascade() {
                         jQuery('#cascade').val(1);
                         jQuery('#content_form').submit();
@@ -975,7 +1029,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                         <li><a href="#" onclick="submitAndCascade()">and update recurring events</a></li>
                                                     </ul>
                                                 </div>
-                                                <?php 
+                                                <?php
                                             } else {
                                                 ?>
                                                 <input type="submit" class="btn btn-primary" value="Save" />
@@ -1113,7 +1167,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 <label class="checkbox">
                                     <input type="checkbox" id="delay_release" name="delay_release" value="1" <?php echo ($event_info["objectives_release_date"] != 0 || isset($PROCESSED["delay_release"]) ? " checked=\"checked\"" : "") ?> />
                                     Delay the release of all objectives
-                                </label>	
+                                </label>
                                 <div id="delay_release_controls" class="space-below">
                                     <?php echo generate_calendar("delay_release_option", "Delay release until", true, $PROCESSED["objectives_release_date"], true, false, false, false, false); ?>
                                 </div>
@@ -1373,7 +1427,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             <li><a href="#" onclick="submitAndCascade()">and update recurring events</a></li>
                                         </ul>
                                     </div>
-                                    <?php 
+                                    <?php
                                 } else {
                                     ?>
                                     <input type="submit" class="btn btn-primary" value="Save" />
@@ -1432,7 +1486,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                             <li><a href="#" onclick="submitAndCascade()">and update recurring events</a></li>
                                                         </ul>
                                                     </div>
-                                                    <?php 
+                                                    <?php
                                                 } else {
                                                     ?>
                                                     <input type="submit" class="btn btn-primary" value="Save" />
@@ -1710,6 +1764,98 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             echo "</form>\n";
                             ?>
                         </div>
+
+                        <div style="margin-bottom: 15px">
+                            <div style="float: left; margin-bottom: 5px">
+                                <h3>Attached LTI Providers</h3>
+                            </div>
+                            <div class="pull-right">
+                                <a href="#page-top" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/lti-wizard-event.api.php?action=add&id=<?php echo $EVENT_ID; ?>')" class="btn">Add LTI Provider</a>
+                            </div>
+                            <div class="clear"></div>
+                            <?php
+                            $query		= "SELECT *
+                                           FROM `event_lti_consumers`
+                                           WHERE `event_id` = ".$db->qstr($EVENT_ID)."
+                                           ORDER BY `lti_title` ASC";
+                            $results	= $db->GetAll($query);
+                            ?>
+                            <form id="lti-listing" action="<?php echo ENTRADA_URL; ?>/admin/events?<?php echo replace_query(); ?>" method="post">
+                                <input type="hidden" name="type" value="lti" />
+                                <table class="tableList" cellspacing="0" summary="List of Attached LTI Providers">
+                                    <colgroup>
+                                        <col class="modified wide"/>
+                                        <col class="title" />
+                                        <col class="title" />
+                                        <col class="date" />
+                                        <col class="date" />
+                                    </colgroup>
+                                    <thead>
+                                        <tr>
+                                            <td class="modified">&nbsp;</td>
+                                            <td class="title sortedASC"><div class="noLink">LTI Provider Title</div></td>
+                                            <td class="title">Launch URL</td>
+                                            <td class="date-small">Accessible Start</td>
+                                            <td class="date-small">Accessible Finish</td>
+                                        </tr>
+                                    </thead>
+                                    <tfoot>
+                                        <tr>
+                                            <td>&nbsp;</td>
+                                            <td colspan="4" style="padding-top: 10px">
+                                                <?php
+                                                echo (($results) ? "<input type=\"button\" class=\"btn btn-danger\" value=\"Delete Selected\" onclick=\"confirmLTIDelete()\" />" : "&nbsp;")."\n";
+                                                ?>
+                                            </td>
+                                        </tr>
+                                    </tfoot>
+                                    <tbody>
+                                    <?php
+                                    if($results) {
+                                        foreach($results as $result) { ?>
+                                            <tr>
+                                                <td class="modified wide">
+                                                    <input type="checkbox" name="delete[]" value="<?php echo $result["id"];?>"/>
+                                                </td>
+                                                <td class="title">
+                                                    <a 	href="#"
+                                                          onclick="openDialog('<?php echo ENTRADA_URL;?>/api/lti-wizard-event.api.php?action=edit&id=<?php echo $EVENT_ID."&ltiid=".$result["id"];?>')"
+                                                          title="Click to edit <?php echo html_encode($result["lti_title"]); ?>">
+                                                        <strong>
+                                                            <?php echo (($result["lti_title"] != "") ? html_encode($result["lti_title"]) : $result["lti_title"]);?>
+                                                        </strong>
+                                                    </a>
+                                                </td>
+                                                <td class="title">
+                                                    <?php echo (($result["launch_url"] != "") ? html_encode($result["launch_url"]) : $result["launch_url"]);?>
+                                                </td>
+                                                <td class="date-small">
+                                                    <span class="content-date">
+                                                        <?php echo (((int) $result["valid_from"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_from"]) : "No Restrictions");?>
+                                                    </span>
+                                                </td>
+                                                <td class="date-small">
+                                                    <span class="content-date">
+                                                        <?php echo (((int) $result["valid_until"]) ? date(DEFAULT_DATE_FORMAT, $result["valid_until"]) : "No Restrictions");?>
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                        <?php
+                                        }
+                                    } else { ?>
+                                        <tr>
+                                            <td colspan="5">
+                                                <div class="display-generic" style="white-space: normal">
+                                                    There have been no LTI Providers added to this event. To <strong>add a new LTI Provider</strong> simply click the Add LTI Provider button.
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php
+                                    } ?>
+                                    </tbody>
+                                </table>
+                            </form>
+                        </div>
                     </div>
 
                     <script type="text/javascript">
@@ -1732,7 +1878,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     new_sidebar_item("Page Anchors", $sidebar_html, "page-anchors", "open", "1.9");
                 } else {
                     display_status_messages();
-                        
+
                     echo "<h1>Select which events to update:</h1>";
 
                     $query = "	SELECT a.*, b.`organisation_id`
@@ -1742,8 +1888,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 WHERE `event_id` = ".$db->qstr($EVENT_ID);
                     $event_info	= $db->GetRow($query);
 
-                   $query = "SELECT * FROM `events` 
-                                WHERE `recurring_id` = ".$db->qstr($event_info["recurring_id"])." 
+                   $query = "SELECT * FROM `events`
+                                WHERE `recurring_id` = ".$db->qstr($event_info["recurring_id"])."
                                 AND `event_id` != ".$db->qstr($EVENT_ID)."
                                 ORDER BY `event_start` ASC";
                     $recurring_events = $db->getAll($query);
@@ -1858,7 +2004,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     <?php
                                 }
                                 ?>
-                            </div>    
+                            </div>
                             <?php
 
                             echo "<h1>Select which fields to update:</h1>";

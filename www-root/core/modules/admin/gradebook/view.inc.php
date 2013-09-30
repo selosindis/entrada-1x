@@ -140,10 +140,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				default :
 					$sort_by = "`assessments`.`order` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
 				break;
-			}
+			}			
 
-			$query	= "	SELECT COUNT(*) AS `total_rows` FROM `assessments` WHERE `course_id` = ".$db->qstr($COURSE_ID);
-			$result	= $db->GetRow($query);
+			/**
+			 * Check if cohort variable is set, otherwise a default is used.
+			 */
+			if (isset($_GET["cohort"]) && ((int)$_GET["cohort"])) {
+				$selected_cohort = (int) $_GET["cohort"];
+			} elseif ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"]) {
+                $selected_cohort = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"];
+            }
+			
+			if (isset($_GET["course_list"]) && ((int)$_GET["course_list"])) {
+				$selected_classlist = (int) $_GET["course_list"];
+			} elseif ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_list"]) {
+                $selected_classlist = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_list"];
+            }
+			if ($selected_cohort) {
+				$query	= "	SELECT COUNT(*) AS `total_rows` 
+							FROM `assessments` a
+							JOIN `groups` AS b
+							ON a.`cohort` = b.`group_id`
+							JOIN `group_organisations` AS c
+							ON b.`group_id` = c.`group_id`
+							AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+							AND b.`group_active` = 1
+							AND b.`group_id` = " . $db->qstr($selected_cohort) . "
+							WHERE a.`course_id` = ".$db->qstr($COURSE_ID);
+				$result	= $db->GetRow($query);
+			} 
 			if ($result) {
 				$total_rows	= $result["total_rows"];
 
@@ -171,21 +196,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			} else {
 				$page_current = 1;
 			}
-
-			/**
-			 * Check if cohort variable is set, otherwise a default is used.
-			 */
-			if (isset($_GET["cohort"]) && ((int)$_GET["cohort"])) {
-				$selected_cohort = (int) $_GET["cohort"];
-			} elseif ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"]) {
-                $selected_cohort = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"];
-            }
-			
-			if (isset($_GET["course_list"]) && ((int)$_GET["course_list"])) {
-				$selected_classlist = (int) $_GET["course_list"];
-			} elseif ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_list"]) {
-                $selected_classlist = $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["course_list"];
-            }
 
 			if ($total_pages > 1) {
 				$pagination = new Pagination($page_current, $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["pp"], $total_rows, ENTRADA_URL."/admin/".$MODULE, replace_query());

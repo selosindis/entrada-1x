@@ -103,8 +103,10 @@ if ($ASSIGNMENT_ID) {
 
 			}
 			if ((!$ERROR) && (!$NOTICE)) {
-				$ERROR++;
-				$ERRORSTR[] = "<strong>Unable to download the selected file.</strong><br /><br />The file you have selected cannot be downloaded at this time, ".((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"]) ? "please try again later." : "Please log in to continue.");
+				$url = ENTRADA_URL."/admin/gradebook/?".replace_query(array("step" => false, "section" => "view", "id" => $COURSE_ID));
+				$NOTICE++;
+				$NOTICESTR[] = "<strong>No assignment files to download yet.</strong><br /><br />You will now be redirected to the <strong>Gradebook</strong> page; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+				$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 			}
 
 			if ($NOTICE) {

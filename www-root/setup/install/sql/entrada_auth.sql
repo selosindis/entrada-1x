@@ -126,14 +126,14 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('evaluationquestion', NULL, 'group:role', 'staff:admin', 1, 1, 1, 1, 1, NULL),
 ('encounter_tracking', NULL, 'group', 'student', NULL, NULL, 1, NULL, NULL, 'LoggableFound'),
 ('encounter_tracking', NULL, 'role', 'admin', NULL, NULL, 0, NULL, NULL, NULL),
-('coursecontent', NULL, 'group:role', 'staff:admin', 1, NULL, 0, NULL, NULL, 'NotCourseOwner'),
-('coursecontent', NULL, 'group', 'faculty', 1, NULL, 0, NULL, NULL, 'NotCourseOwner'),
-('gradebook', NULL, 'group', 'faculty', 1, NULL, 1, 1, NULL, 'GradebookDropbox'),
-('assignment', NULL, 'group', 'faculty', 1, NULL, 1, 1, NULL, 'AssignmentContact'),
-('assessment', NULL, 'group', 'faculty', 1, NULL, NULL, 1, NULL, 'AssessmentContact'),
-('assignment', NULL, 'group:role', 'staff:admin', 1, NULL, 1, 1, NULL, 'AssignmentContact'),
-('assessment', NULL, 'group:role', 'staff:admin', 1, NULL, NULL, 1, NULL, 'AssessmentContact'),
-('gradebook', NULL, 'group:role', 'staff:admin', 1, NULL, 1, 1, NULL, 'GradebookDropbox');
+('coursecontent', NULL, 'group:role', 'staff:admin', NULL, NULL, 0, NULL, NULL, 'NotCourseOwner'),
+('coursecontent', NULL, 'group', 'faculty', NULL, NULL, 0, NULL, NULL, 'NotCourseOwner'),
+('gradebook', NULL, 'group', 'faculty', NULL, NULL, 1, 1, NULL, 'GradebookDropbox'),
+('gradebook', NULL, 'group:role', 'staff:admin', NULL, NULL, 1, 1, NULL, 'GradebookDropbox'),
+('assignment', NULL, 'group', 'faculty', NULL, NULL, 1, 1, NULL, 'AssignmentContact'),
+('assessment', NULL, 'group', 'faculty', NULL, NULL, NULL, 1, NULL, 'AssessmentContact'),
+('assignment', NULL, 'group:role', 'staff:admin', NULL, NULL, 1, 1, NULL, 'AssignmentContact'),
+('assessment', NULL, 'group:role', 'staff:admin', NULL, NULL, NULL, 1, NULL, 'AssessmentContact');
 
 CREATE TABLE IF NOT EXISTS `departments` (
   `department_id` int(12) unsigned NOT NULL AUTO_INCREMENT,

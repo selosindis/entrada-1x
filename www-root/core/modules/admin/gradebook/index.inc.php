@@ -285,6 +285,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					WHERE b.`proxy_id` = " . $db->qstr($ENTRADA_USER->getActiveId()) . "
 					AND bb.`assignment_active` = 1
 					) x
+					GROUP BY `course_id`
 					ORDER BY %s LIMIT %s, %s";
 	} 
 	

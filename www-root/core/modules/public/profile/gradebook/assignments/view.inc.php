@@ -388,7 +388,7 @@ if ($RECORD_ID) {
 								echo "</colgroup>\n";
 								echo "<tbody>\n";
 								echo "	<tr>\n";
-								echo "		<td style=\"vertical-align: top\"><a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=latest\"><img src=\"".ENTRADA_URL."/templates/default/images/btn_save.gif\" width=\"32\" height=\"32\" alt=\"Save Latest Version\" title=\"Save Latest Version\" align=\"left\" style=\"margin-right: 15px; border: 0px\" /></a></td>";
+								echo "		<td style=\"vertical-align: top\"><a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;file_id=".$file_record["afile_id"]."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=latest\"><img src=\"".ENTRADA_URL."/templates/default/images/btn_save.gif\" width=\"32\" height=\"32\" alt=\"Save Latest Version\" title=\"Save Latest Version\" align=\"left\" style=\"margin-right: 15px; border: 0px\" /></a></td>";
 								echo "		<td style=\"vertical-align: top\">\n";
 								echo "			<div id=\"file-download-latest\">\n";
 								echo "				<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$file_record["afile_id"]."&amp;download=latest\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "").">".(((int) $file_record["access_method"]) ? " View" : "Download")." Latest (v".$results[0]["file_version"].")</a>\n";
@@ -460,7 +460,7 @@ if ($RECORD_ID) {
 								echo "</colgroup>\n";
 								echo "<tbody>\n";
 								echo "	<tr>\n";
-								echo "		<td style=\"vertical-align: top\"><a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=latest\"><img src=\"".ENTRADA_URL."/templates/default/images/btn_save.gif\" width=\"32\" height=\"32\" alt=\"Save Latest Version\" title=\"Save Latest Version\" align=\"left\" style=\"margin-right: 15px; border: 0px\" /></a></td>";
+								echo "		<td style=\"vertical-align: top\"><a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$TEACHER_FILE_RECORD."&amp;download=latest\"><img src=\"".ENTRADA_URL."/templates/default/images/btn_save.gif\" width=\"32\" height=\"32\" alt=\"Save Latest Version\" title=\"Save Latest Version\" align=\"left\" style=\"margin-right: 15px; border: 0px\" /></a></td>";
 								echo "		<td style=\"vertical-align: top\">\n";
 								echo "			<div id=\"file-download-latest\">\n";
 								echo "				<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$TEACHER_FILE_RECORD."&amp;download=latest\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "").">".(((int) $file_record["access_method"]) ? " View" : "Download")." Latest (v".$results[0]["file_version"].")</a>\n";

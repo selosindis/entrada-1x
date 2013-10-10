@@ -395,8 +395,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 							$('#add_period').click(function(){
 								var today = new Date();
-								var month = ((today.getMonth()+1)/10 > 1)?today.getMonth()+1:"0"+(today.getMonth()+1);
-								var day = (today.getDate()/10 > 1)?today.getDate():"0"+(today.getDate());
+								var month = ((today.getMonth()+1).toString().length > 1) ? today.getMonth()+1 : "0"+(today.getMonth()+1);
+								var day = (today.getDate().toString().length > 1) ? today.getDate() : "0"+(today.getDate());
 								var date = today.getFullYear()+"-"+month+"-"+day;
 								var formattedRow = rowTemplate.replace(/:id/g,'add-' + currentIdx).replace(/:date/g,date);
 								$('#curriculum_periods').append(formattedRow);

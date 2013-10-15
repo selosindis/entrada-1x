@@ -61,9 +61,9 @@ class Models_Eportfolio_Advisor {
 		
 		$query = "SELECT a.`padvisor_id`, b.`id` AS `proxy_id`, b.`firstname`, b.`lastname`
 					FROM `portfolio-advisors` AS a
-					JOIN `entrada-gh-auth`.`user_data` AS b
+					JOIN `".AUTH_DATABASE."`.`user_data` AS b
 					ON a.`proxy_id` = b.`id`
-					JOIN `entrada-gh-auth`.`user_access` AS c
+					JOIN `".AUTH_DATABASE."`.`user_access` AS c
 					ON a.`proxy_id` = c.`user_id`
 					AND c.`organisation_id` = ".$db->qstr($organisation_id)."
 					WHERE a.`proxy_id` = ".$db->qstr($proxy_id)."
@@ -87,9 +87,9 @@ class Models_Eportfolio_Advisor {
 		
 		$query = "SELECT a.`padvisor_id`, b.`id` AS `proxy_id`, b.`firstname`, b.`lastname`
 					FROM `portfolio-advisors` AS a
-					JOIN `entrada-gh-auth`.`user_data` AS b
+					JOIN `".AUTH_DATABASE."`.`user_data` AS b
 					ON a.`proxy_id` = b.`id`
-					JOIN `entrada-gh-auth`.`user_access` AS c
+					JOIN `".AUTH_DATABASE."`.`user_access` AS c
 					ON a.`proxy_id` = c.`user_id`
 					AND c.`organisation_id` = ".$db->qstr($organisation_id)."
 					GROUP BY a.`proxy_id`";

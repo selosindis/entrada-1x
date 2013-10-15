@@ -1178,7 +1178,9 @@ if (!defined("PARENT_INCLUDED")) {
 							<li><a href="#manage-modal" data-toggle="modal" class="delete-portfolio"><i class="icon-trash" title="Delete"></i> Delete Portfolio</a></li> 
 						</ul>
 					</div>
-					<div id="artifacts"></div>
+					<div id="artifacts">
+						<?php echo display_notice("Please select an eportfolio from the left to get started, or use the New Portfolio item to create one."); ?>
+					</div>
 				</div>
 				<div id="manage-modal" class="modal hide">
 					<div class="modal-header">
@@ -1211,7 +1213,8 @@ if (!defined("PARENT_INCLUDED")) {
 					</ul>
 				</div>
 				<div class="right-pane span9">
-					<?php echo display_notice(); ?>
+					<h1>Manage Advisors</h1>
+					<?php echo display_notice("Please select an advisor from the list on the left, or please add an advisor with the button above."); ?>
 				</div>
 			</div>
 			<div id="add-advisor-modal" class="modal hide">

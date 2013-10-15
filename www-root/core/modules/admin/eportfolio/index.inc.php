@@ -634,12 +634,12 @@ if (!defined("PARENT_INCLUDED")) {
 				$("#display-error-box-modal").remove();
 				if (btn.hasClass("delete-artifact")) {
 					$("#manage-modal .modal-header h3").html("Delete Artifact");
-					var modal_btn = $("#manage-modal .modal-footer .btn-primary");
+					var modal_btn = $("#manage-modal .modal-footer .save-btn");
 					modal_btn.removeClass("btn-primary").addClass("btn-danger delete-artifact-modal").html("Delete").attr("data-pfartifact-id", btn.data("id"));
 					display_error(["<strong>Warning</strong>, you have clicked the delete artifact button. <br/><br /> Please confirm you wish to delete the artifact by clicking on the button below."], "#manage-modal .modal-body", "append");
 				} else if (btn.hasClass("delete-folder")) {
 					$("#manage-modal .modal-header h3").html("Delete Folder");
-					var modal_btn = $("#manage-modal .modal-footer .btn-primary");
+					var modal_btn = $("#manage-modal .modal-footer .save-btn");
 					modal_btn.removeClass("btn-primary").addClass("btn-danger delete-artifact-modal").html("Delete").attr("data-pfolder-id", btn.data("pfolder-id"));
 					display_error(["<strong>Warning</strong>, you have clicked the delete folder button. <br/><br /> Please confirm you wish to delete the folder by clicking on the button below. All artifacts will also be deleted."], "#manage-modal .modal-body", "append");
 				}

@@ -563,10 +563,16 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						add_error("Invalid advisor id");
 					}
 					if (!$ERROR) {
+						$i = 0;
 						foreach ($s as $student_id) {
 							Models_Eportfolio_Advisor::addRelation($PROCESSED["advisor_id"], $student_id);
+							$tmp_student = User::get($student_id);
+							$students[$i]["advisor"]	= $PROCESSED["advisor_id"];
+							$students[$i]["id"]			= $student_id;
+							$students[$i]["firstname"]	= $tmp_student->getFirstname();
+							$students[$i]["lastname"]	= $tmp_student->getLastname();
 						}
-						echo json_encode(array("status" => "success", "data" => array("student_id" => implode(",", $s))));
+						echo json_encode(array("status" => "success", "data" => $students));
 					}
 				break;
 				case "add-advisors" :

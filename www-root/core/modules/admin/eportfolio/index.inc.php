@@ -732,7 +732,7 @@ if (!defined("PARENT_INCLUDED")) {
 				$("#portfolio-form").empty();
 				var cloned_form = $("#portfolio-form").clone();
 				$("#manage-modal .modal-body").empty().append(cloned_form);
-				$(".save-btn").removeClass("edit-artifact-modal");
+				$(".save-btn").removeClass("edit-artifact-modal").removeClass("add-artifact-modal").removeClass("add-folder-modal").removeClass("delete-artifact-modal");
 			});
 			$("#advisors").on("click", ".advisor", function(e) {
 				var btn = $(this);

@@ -117,6 +117,7 @@ if (!defined("PARENT_INCLUDED")) {
 		function adminArtifactForm(btn) {
 			artifactForm();
 			
+			/*
 			var reviewers_control_group = document.createElement("div");
 			jQuery(reviewers_control_group).addClass("control-group");
 			var reviewers_label = document.createElement("label");
@@ -128,6 +129,7 @@ if (!defined("PARENT_INCLUDED")) {
 			jQuery(reviewers_input).attr("type", "text").attr("name", "reviewers[]").attr("id", "reviewers");
 			jQuery(reviewers_controls).append(reviewers_input);
 			jQuery(reviewers_control_group).append(reviewers_controls);
+			*/
 
 			var start_date_control_group = document.createElement("div");
 			jQuery(start_date_control_group).addClass("control-group");
@@ -167,14 +169,14 @@ if (!defined("PARENT_INCLUDED")) {
 			var enable_commenting_controls = document.createElement("div");
 			jQuery(enable_commenting_controls).addClass("controls");
 			var enable_commenting_input = document.createElement("input");
-			jQuery(enable_commenting_input).attr("type", "checkbox").attr("name", "allow_commenting");
+			jQuery(enable_commenting_input).attr("type", "checkbox").attr({"name": "allow_commenting", "id": "allow_commenting"});
 			jQuery(enable_commenting_controls).append(enable_commenting_input);
 			jQuery(enable_commenting_control_group).append(enable_commenting_controls);
 
 			var pfolder_id_input = document.createElement("input");
 			jQuery(pfolder_id_input).attr({"type" : "hidden", "name" : "pfolder_id", "value" : btn.data("pfolder-id")});
 
-			jQuery("#portfolio-form").append(pfolder_id_input).append("<input type=\"hidden\" name=\"method\" value=\"create-artifact\" />").append(reviewers_control_group).append(start_date_control_group).append(finish_date_control_group).append(enable_commenting_control_group).attr("action", api_url);
+			jQuery("#portfolio-form").append(pfolder_id_input).append("<input type=\"hidden\" name=\"method\" value=\"create-artifact\" />").append(start_date_control_group).append(finish_date_control_group).append(enable_commenting_control_group).attr("action", api_url);
 			jQuery("#start_date").datepicker({ dateFormat: "yy-mm-dd" });
 			jQuery("#finish_date").datepicker({ dateFormat: "yy-mm-dd" });
 //			jQuery("#artifact-description").ckeditor()
@@ -595,7 +597,7 @@ if (!defined("PARENT_INCLUDED")) {
 				e.preventDefault();
 			});
 			$("#manage").on("click", ".edit-artifact", function(e) {
-				$("#manage-modal .modal-footer .save-btn").addClass("btn-primary").removeClass("btn-danger").html("Save");
+				$("#manage-modal .modal-footer .save-btn").addClass("btn-primary edit-artifact-modal").removeClass("btn-danger add-artifact-modal").html("Save").attr({"data-artifact": ""});
 				var btn = $(this);
 				$("#portfolio-form").empty()
 				$("#display-error-box-modal").remove();
@@ -711,10 +713,26 @@ if (!defined("PARENT_INCLUDED")) {
 					}
 				});
 			});
+			$("#manage-modal .modal-footer").on("click", ".edit-artifact-modal", function(e) {
+				$.ajax({
+					url : api_url,
+					type: "POST",
+					data : $(".admin-portfolio-form").serialize(),
+					success: function(data) {
+						var jsonResponse = JSON.parse(data);
+						if (jsonResponse.status == "success") {
+							$("li[data-id="+ jsonResponse.data.pfartifact_id +"] strong").html(jsonResponse.data.title);
+							$("li[data-id="+ jsonResponse.data.pfartifact_id +"] div").html(jsonResponse.data.description);
+							$("#manage-modal").modal("hide");
+						}
+					}
+				});
+			});
 			$("#manage-modal").on("hide", function(e) {
 				$("#portfolio-form").empty();
 				var cloned_form = $("#portfolio-form").clone();
 				$("#manage-modal .modal-body").empty().append(cloned_form);
+				$(".save-btn").removeClass("edit-artifact-modal");
 			});
 			$("#advisors").on("click", ".advisor", function(e) {
 				var btn = $(this);

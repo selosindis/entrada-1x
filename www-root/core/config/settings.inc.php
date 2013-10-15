@@ -297,6 +297,7 @@ define("STORAGE_USER_PHOTOS", $config->entrada_storage . "/user-photos");		// Fu
 define("FILE_STORAGE_PATH", $config->entrada_storage . "/event-files");			// Full directory path where off-line files are stored without trailing slash.
 define("MSPR_STORAGE",$config->entrada_storage . "/msprs");						//Full directory path where student Medical School Performance Reports should be sotred
 define("SEARCH_INDEX_PATH",$config->entrada_storage . "/search-indexes");		//Full directory path where student Medical School Performance Reports should be sotred
+define("EPORTFOLIO_STORAGE_PATH", $config->entrada_storage . "/eportfolio");	// Full directory path where eportfolio files should be sotred 
 
 define("SENDMAIL_PATH", "/usr/sbin/sendmail -t -i");							// Full path and parametres to sendmail.
 

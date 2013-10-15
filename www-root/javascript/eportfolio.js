@@ -64,7 +64,7 @@ jQuery(function($) {
 						if (jQuery("#artifact-" + pfartifact_id + " .no-entries").length) {
 							jQuery(".no-entries").remove();
 						}
-						
+						updateArtifactList(pfolder_id);
 					} else {
 						display_error(jsonResponse.data, "#modal-msg", "append");
 					}
@@ -206,7 +206,6 @@ jQuery(function($) {
 		if (jQuery("#save-button").hasClass("btn-danger")) {
 			jQuery("#save-button").removeClass("btn-danger").addClass("btn-primary").html("Save changes");
 		}
-		updateArtifactList(pfolder_id);
 	});
 	
 	jQuery(".artifact-container").on("click", ".edit-entry", function (e) {
@@ -374,6 +373,7 @@ function getFolderArtifacts (pfolder_id) {
 			} else {
 				display_notice([jsonResponse.data], "#msgs");
 			}
+			updateArtifactList(pfolder_id);
 		},
 		error: function () {
 			jQuery(".artifact-container").removeClass("loading");
@@ -576,6 +576,9 @@ function appendContent (type, jsonResponse, pfartifact_id, pfolder_id) {
 			
 			if (jQuery("#artifact-" +jsonResponse.pfartifact_id).is(":empty")) {	
 				jQuery(".artifact-group[data-id="+ jsonResponse.pfartifact_id +"]").remove();
+			}
+			
+			if (!jQuery(".artifact-group").length) {
 				var alert_div = document.createElement("div");
 				var alert_button = document.createElement("button");
 
@@ -601,6 +604,7 @@ function appendContent (type, jsonResponse, pfartifact_id, pfolder_id) {
 			jQuery("#msgs").append(confirmation_div);
 		break;
 	}
+	updateArtifactList(pfolder_id);
 }
 
 function populateEntryForm(pentry_id) {
@@ -825,7 +829,6 @@ function appendArtifactItem(artifact) {
 }
 
 function updateArtifactList (pfolder_id) {
-	
 	var proxy_id = PROXY_ID;
 	
 	if (jQuery(".artifact-list-item").length) {

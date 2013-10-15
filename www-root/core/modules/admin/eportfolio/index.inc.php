@@ -563,7 +563,7 @@ if (!defined("PARENT_INCLUDED")) {
 				$(allow_artifact_input_container).append(folder_allow_artifact);
 				$(allow_artifact_row).append(allow_artifact_input_container);
 				$("#portfolio-form").append(allow_artifact_row);
-				$("#portfolio-form").append("<input type=\"hidden\" name=\"" + (btn.hasClass("add-folder") ? "portfolio_id" : "pfolder_id") + "\" value=\""+btn.data("pfolder-id")+"\" />");
+				$("#portfolio-form").append("<input type=\"hidden\" name=\"" + (btn.hasClass("add-folder") ? "portfolio_id" : "pfolder_id") + "\" value=\""+btn.data("id")+"\" />");
 				
 				if (btn.hasClass("edit-folder")) {
 					$("#portfolio-form").append("<input type=\"hidden\" name=\"method\" value=\"edit-folder\" />");

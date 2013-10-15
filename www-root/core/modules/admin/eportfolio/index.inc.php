@@ -1159,9 +1159,12 @@ if (!defined("PARENT_INCLUDED")) {
 				<div class="left-pane span3">
 					<ul>
 						<li><a href="#manage-modal" data-toggle="modal" class="add-portfolio"><i class="icon-plus-sign"></i> New Portfolio</a></li>
-					<?php foreach ($eportfolios as $eportfolio) { ?>
-						<li><a href="#" class="portfolio-item" data-portfolio-id="<?php echo $eportfolio->getID(); ?>"><?php echo $eportfolio->getPortfolioName(); ?></a></li>
-					<?php } ?>
+					<?php 
+					if ($eportfolios) {
+						foreach ($eportfolios as $eportfolio) { ?>
+							<li><a href="#" class="portfolio-item" data-portfolio-id="<?php echo $eportfolio->getID(); ?>"><?php echo $eportfolio->getPortfolioName(); ?></a></li>
+						<?php } 
+					}?>
 					</ul>
 				</div>
 				<div class="right-pane span9">

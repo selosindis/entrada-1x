@@ -91,7 +91,9 @@ class Entrada_ACL extends ACL_Factory {
 			"mydepartment",
 			"myowndepartment",
 			"group",
-            "encounter_tracking"
+            "encounter_tracking",
+			"eportfolio",
+			"eportfolio-artifact"
 		)
 	);
 	/**

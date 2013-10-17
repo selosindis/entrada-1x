@@ -70,7 +70,11 @@ class Models_Eportfolio_Advisor {
 					GROUP BY a.`proxy_id`";
 		$result = $db->GetRow($query);
 		if ($result) {
-			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_relations` WHERE `from` = ".$db->qstr($proxy_id);
+			$query = "SELECT a.* FROM `".AUTH_DATABASE."`.`user_relations` AS a
+						JOIN `".AUTH_DATABASE."`.`user_access` AS b
+						ON a.`to` = b.`user_id` 
+						WHERE a.`from` = ".$db->qstr($proxy_id)."
+						AND b.`organisation_id` = ".$db->qstr($organisation_id);
 			$related = $db->GetAll($query);
 			if ($related) {
 				$result["related"] = $related;
@@ -97,7 +101,11 @@ class Models_Eportfolio_Advisor {
 		if ($results) {
 			$advisors = array();
 			foreach ($results as $result) {
-				$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_relations` WHERE `from` = ".$db->qstr($result["proxy_id"]);
+				$query = "SELECT a.* FROM `".AUTH_DATABASE."`.`user_relations` AS a
+							JOIN `".AUTH_DATABASE."`.`user_access` AS b
+							ON a.`to` = b.`user_id` 
+							WHERE a.`from` = ".$db->qstr($proxy_id)."
+							AND b.`organisation_id` = ".$db->qstr($organisation_id);
 				$related = $db->GetAll($query);
 				if ($related) {
 					$result["related"] = $related;

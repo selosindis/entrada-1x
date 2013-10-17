@@ -1206,7 +1206,7 @@ if (!defined("PARENT_INCLUDED")) {
 				<div class="left-pane span3">
 					<ul>
 						<?php
-						$eportfolio_advisors = Models_Eportfolio_Advisor::fetchAll();
+						$eportfolio_advisors = Models_Eportfolio_Advisor::fetchAll($ENTRADA_USER->getActiveOrganisation());
 						if ($eportfolio_advisors) {
 							foreach ($eportfolio_advisors as $advisor) {
 								?><li><a href="#" data-id="<?php echo $advisor->getProxyID(); ?>" class="advisor"><?php echo $advisor->getFirstName() . " " . $advisor->getLastName(); ?></a></li><?php

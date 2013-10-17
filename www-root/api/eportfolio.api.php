@@ -929,7 +929,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					}
 					
 					if ($PROCESSED["padvisor_proxy_id"]) {
-						$advisor = Models_Eportfolio_Advisor::fetchRow($PROCESSED["padvisor_proxy_id"]);
+						$advisor = Models_Eportfolio_Advisor::fetchRow($PROCESSED["padvisor_proxy_id"], $ENTRADA_USER->getActiveOrganisation());
 						if ($advisor) {
 							$related_users = $advisor->getRelated();
 							if ($related_users) {

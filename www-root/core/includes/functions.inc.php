@@ -17114,8 +17114,8 @@ function count_objective_child_events($objective_id = 0, $start = NULL, $end = N
 				JOIN `events` AS b
 				ON a.`event_id` = b.`event_id`
 				JOIN `event_audience` AS c
-				ON a.`event_id` = c.`event_id`
-				AND c.`audience_type` = 'cohort'
+				ON a.`event_id` = c.`event_id`".
+				($group_id != NULL ? " AND c.`audience_type` = 'cohort' " : "")."
 				WHERE `objective_id` = ".$db->qstr($objective_id).
 				($start != NULL ? " AND (IF (b.`event_id` IS NOT NULL, b.`event_start` BETWEEN ".$db->qstr($start)." AND ".$db->qstr($end).", '1' = '1'))" : "").
 				($course_id != NULL ? " AND b.`course_id` = ".$db->qstr($course_id) : "").

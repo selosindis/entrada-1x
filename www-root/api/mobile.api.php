@@ -36,6 +36,10 @@ if (isset($_POST["notice_id"]) && $tmp_input = clean_input($_POST["notice_id"], 
 	$notice_id = $tmp_input;
 }
 
+if (isset($_POST["message_id"]) && $tmp_input = clean_input($_POST["message_id"], "alphanumeric")) {
+	$message_id = $tmp_input;
+}
+
 if (isset($_POST["group"]) && $tmp_input = clean_input($_POST["group"], "alphanumeric")) {
 	$group = $tmp_input;
 }
@@ -54,6 +58,14 @@ if (isset($_POST["evaluation_id"]) && $tmp_input = clean_input($_POST["evaluatio
 
 if (isset($_POST["total_evaluations"]) && $tmp_input = clean_input($_POST["total_evaluations"], "alphanumeric")) {
 	$total_evaluations = $tmp_input;
+}
+
+if (isset($_POST["device_token"]) && $tmp_input = clean_input($_POST["device_token"], "alphanumeric")) {
+	$device_token = $tmp_input;
+}
+
+if (isset($_POST["max_notice_id"]) && $tmp_input = clean_input($_POST["max_notice_id"], "int")) {
+	$new_max_notice_id = $tmp_input;
 }
 
 if (isset($_POST["username"]) && isset($_POST["password"]) && !empty($_POST["username"]) && !empty($_POST["password"])) {
@@ -169,6 +181,40 @@ if ($isAuthenticated) {
 		case "credentials" :
 			echo true;
 			break;
+		case "registertoken" :
+			if (isset($device_token)) {
+				$query = "SELECT * FROM `". AUTH_DATABASE ."`.`apns_device_tokens` WHERE `proxy_id` = ?";
+				$results = $db->GetAll($query, array($ENTRADA_USER->getId()));
+				if ($results) {
+					$user_device_tokens = array();
+					foreach ($results as $result) {
+						$user_device_tokens[] = $result["device_token"];
+					}
+					if (!in_array($device_token, $user_device_tokens)) {
+						if (!$db->AutoExecute(AUTH_DATABASE . ".apns_device_tokens", array("proxy_id"=> $result["proxy_id"], "device_token" => $device_token, "max_notice_id" => $result["max_notice_id"], "new_notices" => $result["new_notices"], "updated_date" => time()), "INSERT")) { 
+							application_log("error", "An error occured while attempting to update the user device id in the apns_device_token table, proxy_id: " . $ENTRADA_USER->getId() . " device_token: " . $device_token . " Database said: ".$db->ErrorMsg());
+							echo json_encode(array("staus" => "error"));
+						}
+					}
+					echo json_encode(array("staus" => "success"));
+				} else {
+					if (!$db->AutoExecute(AUTH_DATABASE . ".apns_device_tokens", array("proxy_id" => $user_details["id"], "device_token" => $device_token, "updated_date" => time()), "INSERT")) { 
+						application_log("error", "An error occured while attempting to insert the user device id into the apns_device_token table, proxy_id: " . $ENTRADA_USER->getId() . " device_token: " . $device_token . " Database said: ".$db->ErrorMsg());
+						echo json_encode(array("staus" => "error"));
+					} else {
+						echo json_encode(array("staus" => "success"));
+					}
+				}
+			}
+			break;
+		case "updatenoticeid" :
+				if (!$db->AutoExecute(AUTH_DATABASE . ".apns_device_tokens", array("max_notice_id" => $new_max_notice_id, "new_notices" => "0", "updated_date" => time()), "UPDATE", "proxy_id = ".$db->qstr($ENTRADA_USER->getId()))) { 
+					application_log("error", "An error occured while attempting to update the user device id in the apns_device_token table, proxy_id: " . $ENTRADA_USER->getId() . " device_token: " . $device_token . " Database said: ".$db->ErrorMsg());
+					echo json_encode(array("staus" => "error"));
+				} else {
+					echo json_encode(array("staus" => "success"));
+				}
+			break;
 		case "agenda":
 			
 			$user_proxy_id = $user_details["id"];
@@ -224,27 +270,35 @@ if ($isAuthenticated) {
 			echo json_encode($events);
 			break;
 		case "notices" :
-			
+			$query = "SELECT `max_notice_id` FROM `". AUTH_DATABASE ."`.`apns_device_tokens` WHERE `proxy_id` = ?";
+			$max_notice_id = $db->GetRow($query, array($ENTRADA_USER->getId()));
 			$notices_to_display = Models_Notice::fetchUserNotices(true);
-			
 			if ($notices_to_display) {
 				$rows = 0;
+				$output = array();
 				foreach ($notices_to_display as $result) {
 					if ((!$result["statistic_id"]) || ($result["last_read"] <= $result["updated_date"])) {
 						$result['notice_status'] = 'new';
 						$result["updated_date"] = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
-						$notices_to_display[] = $result;
+						$output[] = $result;
 					} else {
 						$result['notice_status'] = 'read';
 						$result["updated_date"] = date(DEFAULT_DATE_FORMAT, $result["updated_date"]);
-						$notices_to_display[] = $result;
+						$output[] = $result;
 					}
 					$rows ++;
 				}
-			
-				echo json_encode($notices_to_display, JSON_FORCE_OBJECT);	
+				echo json_encode(array("status" => "success", "data" => $output, "max_notice_id" => $max_notice_id["max_notice_id"], "rows" => $rows));
 			}
 			
+			break;
+		case "notice" :
+			$notice = Models_Notice::fetchNotice($message_id);
+			if ($notice) {
+				echo json_encode(array("status" => "success", "data" => $notice));
+			} else {
+				echo json_encode(array("status" => "error"));
+			}
 			break;
 		case "evaluations" :
 			

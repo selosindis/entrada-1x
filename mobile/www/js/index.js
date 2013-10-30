@@ -26,6 +26,9 @@ var entrada = {
 				s.firstname = response.firstname;
 				s.lastname = response.lastname;
 				entrada.buildGroupsMenu('user-groups-roles-agenda');
+                if ($.mobile.activePage.is("#evaluation-attempt")) {
+                    $.mobile.changePage('#evaluations', {transition: 'slideup'});
+                }
 			} else {
 				$.mobile.changePage('#settings', {transition: 'slideup'});
 				$('.open-panel').hide();
@@ -149,10 +152,8 @@ var entrada = {
 		});
 		
 		$('#evaluation-attempt').on('pagebeforeshow', function () {
-			
 			entrada.buildGroupsMenu('user-groups-roles-evaluation-attempt');
-			entrada.loadMenu(window.localStorage.getItem('selected_group'), 'menu-list-evaluation-attempt');
-			
+			entrada.loadMenu(window.localStorage.getItem('selected_group'), 'menu-list-evaluation-attempt');			
 		});
 		
 		$('#settings').on('pagebeforeshow', function () {
@@ -203,6 +204,8 @@ var entrada = {
 		$(menu_element).append(element_agenda);
 		var element_notices = $('<li/>').append($('<a/>', {'href': '#events', 'text': 'My Notices', 'class': (current_page == 'events') ? 'ui-btn-active' : ''}));
 		$(menu_element).append(element_notices);
+		var element_evaluations = $('<li/>').append($('<a/>', {'href': '#evaluations', 'text': 'My Evaluations', 'class': (current_page == 'evaluations') ? 'ui-btn-active' : ''}));
+		$(menu_element).append(element_evaluations);
 		//var element_redbook = $('<li/>').append($('<a/>', {'href': '#objectives', 'text': 'Redbook Objectives', 'class': (current_page == 'objectives') ? 'ui-btn-active' : ''}));
 		//$(menu_element).append(element_redbook);
 		var element_settings = $('<li/>').append($('<a/>', {'href': '#settings', 'text': 'My Settings', 'class': (current_page == 'settings') ? 'ui-btn-active' : ''}));

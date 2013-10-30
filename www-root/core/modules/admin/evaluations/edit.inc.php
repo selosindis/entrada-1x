@@ -212,12 +212,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					/**
 					 * Required field "max_submittable" / Max Submittable
 					 */
-					if (isset($_POST["max_submittable"]) && ($max_submittable = clean_input($_POST["max_submittable"], "int")) && ($max_submittable <= 99)) {
+					if (isset($_POST["max_submittable"]) && (($max_submittable = clean_input($_POST["max_submittable"], "int")) || ($max_submittable === 0)) && ($max_submittable <= 999)) {
 						$PROCESSED["max_submittable"] = $max_submittable;
 					} elseif ($evaluation_target_type == "peer") {
 						$PROCESSED["max_submittable"] = 0;
 					} else {
-						add_error("The evaluation <strong>Max Submittable</strong> field is required and must be less than 99.");
+						add_error("The evaluation <strong>Max Submittable</strong> field is required and must be less than 999.");
 					}
 
 					if ($PROCESSED["min_submittable"] > $PROCESSED["max_submittable"]) {

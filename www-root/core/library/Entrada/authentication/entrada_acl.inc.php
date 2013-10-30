@@ -2526,8 +2526,9 @@ class QuizQuestionResource extends QuizResource {
 class EvaluationResource extends EntradaAclResource {
 	var $evaluation_id;
 
-	function __construct($evaluation_id, $assert = null) {
+	function __construct($evaluation_id, $organisation_id, $assert = null) {
 		$this->evaluation_id = $evaluation_id;
+		$this->organisation_id = $organisation_id;
 	}
 
 	public function getResourceId() {
@@ -2646,8 +2647,9 @@ class EvaluationResultResource extends EvaluationResource {
 class EvaluationFormResource extends EvaluationResource {
 	var $eform_id;
 
-	function __construct($eform_id, $assert = null) {
+	function __construct($eform_id, $organisation_id, $assert = null) {
 		$this->eform_id = $eform_id;
+		$this->organisation_id = $organisation_id;
 	}
 	public function getResourceId() {
 		return "evaluationform".($this->specific ? $this->evaluation_id : "");
@@ -2657,8 +2659,9 @@ class EvaluationFormResource extends EvaluationResource {
 class EvaluationQuestionResource extends EvaluationResource {
 	var $equestion_id;
 
-	function __construct($equestion_id, $assert = null) {
+	function __construct($equestion_id, $organisation_id, $assert = null) {
 		$this->equestion_id = $equestion_id;
+		$this->organisation_id = $organisation_id;
 	}
 	public function getResourceId() {
 		return "evaluationquestion".($this->specific ? $this->equestion_id : "");

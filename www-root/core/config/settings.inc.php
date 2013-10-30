@@ -105,6 +105,9 @@ define("CLERKSHIP_EVALUATION_LOCKOUT", 0);
 define("CLERKSHIP_TOP_CATEGORY_ID", 1);
 define("CLERKSHIP_SETTINGS_REQUIREMENTS", false);
 
+
+define("EVALUATION_LOCKOUT", ONE_WEEK);
+
 $CLERKSHIP_REQUIRED_WEEKS = 14;
 $CLERKSHIP_CATEGORY_TYPE_ID = 13;
 $CLERKSHIP_EVALUATION_FORM = "http://url_of_your_schools_precptor_evaluation_of_clerk_form.pdf";

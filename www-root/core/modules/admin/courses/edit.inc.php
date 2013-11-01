@@ -1272,12 +1272,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<p class="well well-small content-small">
 								<strong>Helpful Tip:</strong> Click <strong>Show All Objectives</strong> to view the list of available objectives. Select an objective from the list on the left to map it to the course.
 							</p>
-								<?php   $query = "	SELECT a.*,b.`objective_type`, b.`importance`
+								<?php   $query = "	SELECT a.*,b.`objective_type`, b.`importance`, c.`objective_active` AS `parent_active`
 													FROM `global_lu_objectives` a
 													JOIN `course_objectives` b
 													ON a.`objective_id` = b.`objective_id`
 													AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+												 	JOIN `global_lu_objectives` AS c
+												 	ON a.`objective_parent` = c.`objective_id`
 													WHERE a.`objective_active` = '1'
+													AND c.`objective_active` = '1'
 													GROUP BY a.`objective_id`
 													ORDER BY b.`importance` ASC";
 										$mapped_objectives = $db->GetAll($query);

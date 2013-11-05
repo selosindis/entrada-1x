@@ -50,7 +50,7 @@ if (!defined("PARENT_INCLUDED")) {
 	<?php
 	
 	$is_advisor = false;
-	if ($ENTRADA_USER->getRole() != "admin") {
+	if ($ENTRADA_USER->getRole() != "admin" && $ENTRADA_USER->getRole() != "director") {
 		$is_advisor = true;
 	}
 	$eportfolios = Models_Eportfolio::fetchAll($ENTRADA_USER->getActiveOrganisation(), $is_advisor ? $ENTRADA_USER->GetID() : NULL);

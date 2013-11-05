@@ -277,7 +277,7 @@ if (!defined("PARENT_INCLUDED")) {
 													}
 													if (typeof v.entry._edata.filename != 'undefined' && v.entry._edata.filename.length > 0) {
 														var entry_link = document.createElement("a");
-														$(entry_link).attr("href", "#").html(v.entry._edata.filename);
+														$(entry_link).attr("href", ENTRADA_URL + "/serve-eportfolio-entry.php?entry_id=" + v.entry.pentry_id).html(v.entry._edata.filename);
 														$(entry_row).append(entry_link);
 													}
 													if (typeof v.entry._edata.description != 'undefined' && v.entry._edata.description.length > 0) {

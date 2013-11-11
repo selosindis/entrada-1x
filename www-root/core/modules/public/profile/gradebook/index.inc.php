@@ -92,6 +92,9 @@ $query = "	SELECT a.*, COUNT(b.`assessment_id`) AS `assessments`
 			AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
 			AND (b.`release_until` = '0' OR b.`release_until` > ".$db->qstr(time()).")
 			AND b.`show_learner` = '1'
+            JOIN `assessment_grades` AS c
+            ON b.`assessment_id` = c.`assessment_id`
+            AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
 			GROUP BY a.`course_id`
 			ORDER BY ".$sort_by;
 $results = $db->GetAll($query);

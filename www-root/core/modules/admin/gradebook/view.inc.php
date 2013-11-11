@@ -353,7 +353,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	                            ids.push(jQuery(this).val());
 	                        });
 	                        if(ids.length > 0) {
-	                            window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&assessment_ids='+ids.join(',');
+	                            window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false, "cohort" => (isset($selected_cohort) && $selected_cohort ? $selected_cohort : "0"))); ?>&assessment_ids='+ids.join(',');
 	                        } else {
 	                            var cohort = jQuery('#cohort-quick-select').val();
 	                            window.location = '<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "io", "download" => "csv", "assessment_ids" => false)); ?>&cohort='+cohort;

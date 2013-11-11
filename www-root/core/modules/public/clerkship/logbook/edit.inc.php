@@ -287,7 +287,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
                                             AND a.`event_type` = 'clinical'";
                                 $found	= ($db->GetRow($query) ? true : false);
                                 ?>
-                                <select id="rotation_id" name="rotation_id" style="width: 100%<?php echo ($found ? "; display: none" : ""); ?>" onchange="$('allow_save').value = '0';$('addEncounterForm').submit();">
+                                <select id="rotation_id" name="event_id" style="width: 100%<?php echo ($found ? "; display: none" : ""); ?>" onchange="$('allow_save').value = '0';$('addEncounterForm').submit();">
                                 <option value="0">-- Select Rotation --</option>
                                 <?php
                                 $query		= "SELECT a.* FROM `".CLERKSHIP_DATABASE."`.`events` AS a 

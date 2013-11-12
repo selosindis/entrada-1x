@@ -87,7 +87,7 @@ if ($RECORD_ID) {
 						LEFT JOIN `evaluations_lu_targets` AS e
 						ON ef.`target_id` = e.`target_id`
 						WHERE a.`evaluation_id` = ".$db->qstr($RECORD_ID)."
-                        ".(defined("EVALUATION_LOCKOUT") && EVALUATION_LOCKOUT ? "AND a.`evaluation_finish` > ".$db->qstr(time() + EVALUATION_LOCKOUT) : "")."
+                        ".(defined("EVALUATION_LOCKOUT") && EVALUATION_LOCKOUT ? "AND a.`evaluation_finish` > ".$db->qstr(time() - EVALUATION_LOCKOUT) : "")."
 						AND 
 						(
 							(

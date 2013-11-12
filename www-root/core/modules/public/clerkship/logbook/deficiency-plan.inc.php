@@ -333,7 +333,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CLERKSHIP"))) {
 						</tr>
 						<?php
 						$grad_year = get_account_data("grad_year", $PROXY_ID);
-						
+						$objective_ids = "";
+                        
 						$query = "SELECT `objective_id`, `lmobjective_id`, MAX(`number_required`) AS `required`
 									FROM `".CLERKSHIP_DATABASE."`.`logbook_mandatory_objectives`
 									WHERE `rotation_id` = ".$db->qstr($ROTATION_ID)."

@@ -83,8 +83,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         $preserved_input = $temp_value;
                         $temp_value = clean_input($temp_value, $clean_parameters);
                         $valid_value = false;
-                        if (array_search($assessment["handler"], array("Boolean", "CompleteIncomplete"))) {
-                            if (array_search(strtolower($temp_value), array("p", "pass", "c", "complete", "true", "t")) !== false || ((int)$temp_value)) {
+                        if (in_array($assessment["handler"], array("Boolean", "CompleteIncomplete"))) {
+                            if (in_array(strtolower($temp_value), array("p", "pass", "c", "complete", "true", "t")) !== false || ((int)$temp_value)) {
                                 $temp_value = 100;
                                 $valid_value = true;
                             }

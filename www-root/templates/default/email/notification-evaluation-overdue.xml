@@ -19,8 +19,9 @@ Description: %CONTENT_BODY%
 The %CONTENT_TYPE_SHORTNAME% can be found here: 
 %URL%
 
+%CONTENT_LOCKOUT%
+
 Please complete all remaining required attempts as soon as possible.
-%LOCKOUT_STRING%
 
 Regards,
 

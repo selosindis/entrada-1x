@@ -239,7 +239,6 @@ class Notification {
                                             "%MANDATORY_STRING%",
                                             "%URL%",
                                             "%APPLICATION_NAME%",
-                                            "%LOCKOUT_STRING%",
                                             "%ENTRADA_URL%");
                             if (strpos($notification_user->getContentTypeName(), "assessment") !== false) {
                                 $content_type_shortname = "assessment";
@@ -284,11 +283,10 @@ class Notification {
                                                 html_encode($notification_user->getContentBody($record_id)),
                                                 html_encode($evaluation_start),
                                                 html_encode($evaluation_finish),
-                                                html_encode($evaluation_lockout),
+                                                html_encode(($evaluation_lockout ? "\nAccess to this evaluation will be closed as of ".$evaluation_lockout."." : "")),
                                                 html_encode((isset($mandatory) && $mandatory ? "mandatory" : "non-mandatory")),
                                                 html_encode($content_url),
                                                 html_encode(APPLICATION_NAME),
-                                                html_encode(($evaluation_lockout ? "\nAccess to this evaluation will be closed as of ".$evaluation_lockout."." : "")),
                                                 html_encode(ENTRADA_URL));
                             if ($evaluation["target_shortname"] == "rotation_core") {
                                 $notification_body = file_get_contents($ENTRADA_TEMPLATE->absolute()."/email/notification-rotation-core-evaluation-".($evaluation["evaluation_finish"] >= time() || $evaluation["evaluation_start"] >= strtotime("-1 day") ? "release" : "overdue").".xml");

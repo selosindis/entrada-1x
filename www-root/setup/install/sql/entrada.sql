@@ -2270,6 +2270,7 @@ CREATE TABLE IF NOT EXISTS `evaluation_requests` (
 CREATE TABLE IF NOT EXISTS `evaluations` (
   `evaluation_id` int(12) NOT NULL AUTO_INCREMENT,
   `eform_id` int(12) NOT NULL,
+  `organisation_id` int(12) unsigned NOT NULL DEFAULT '0',
   `evaluation_title` varchar(128) NOT NULL,
   `evaluation_description` text NOT NULL,
   `evaluation_active` tinyint(1) NOT NULL,
@@ -2297,6 +2298,7 @@ CREATE TABLE IF NOT EXISTS `evaluations` (
 
 CREATE TABLE IF NOT EXISTS `evaluations_lu_questions` (
   `equestion_id` int(12) NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(12) unsigned NOT NULL DEFAULT '0',
   `efquestion_id` int(12) NOT NULL DEFAULT '0',
   `question_parent_id` int(12) NOT NULL DEFAULT '0',
   `questiontype_id` int(12) NOT NULL,
@@ -2334,11 +2336,14 @@ CREATE TABLE IF NOT EXISTS `evaluations_lu_questiontypes` (
   PRIMARY KEY (`questiontype_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `evaluations_lu_questiontypes` (`questiontype_id`, `questiontype_shortname`, `questiontype_title`, `questiontype_description`, `questiontype_active`) VALUES
-(1, 'matrix_single', 'Choice Matrix (single response)', 'The rating scale allows evaluators to rate each question based on the scale you provide (i.e. 1 = Not Demonstrated, 2 = Needs Improvement, 3 = Satisfactory, 4 = Above Average).', 1),
+INSERT INTO `evaluations_lu_questiontypes` (`questiontype_id`, `questiontype_shortname`, `questiontype_title`, `questiontype_description`, `questiontype_active`)
+VALUES
+(1, 'matrix_single', 'Horizontal Choice Matrix (single response)', 'The rating scale allows evaluators to rate each question based on the scale you provide (i.e. 1 = Not Demonstrated, 2 = Needs Improvement, 3 = Satisfactory, 4 = Above Average).', 1),
 (2, 'descriptive_text', 'Descriptive Text', 'Allows you to add descriptive text information to your evaluation form. This could be instructions or other details relevant to the question or series of questions.', 1),
 (3, 'rubric', 'Rubric', 'The rating scale allows evaluators to rate each question based on the scale you provide, while also providing a short description of the requirements to meet each level on the scale (i.e. Level 1 to 4 of \\\"Professionalism\\\" for an assignment are qualified with what traits the learner is expected to show to meet each level, and while the same scale is used for \\\"Collaborator\\\", the requirements at each level are defined differently).', 1),
-(4, 'free_text', 'Free Text Comments', 'Allows the user to be asked for a simple free-text response. This can be used to get additional details about prior questions, or to simply ask for any comments from the evaluator regarding a specific topic.', 1);
+(4, 'free_text', 'Free Text Comments', 'Allows the user to be asked for a simple free-text response. This can be used to get additional details about prior questions, or to simply ask for any comments from the evaluator regarding a specific topic.', 1),
+(5, 'selectbox', 'Drop Down (single response)', 'The dropdown allows evaluators to answer each question by choosing one of up to 100 options which have been provided to populate a select box.', 1),
+(6, 'vertical_matrix', 'Vertical Choice Matrix (single response)', 'The rating scale allows evaluators to rate each question based on the scale you provide (i.e. 1 = Not Demonstrated, 2 = Needs Improvement, 3 = Satisfactory, 4 = Above Average).', 1);
 
 CREATE TABLE IF NOT EXISTS `evaluations_lu_rubrics` (
   `erubric_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -2429,6 +2434,7 @@ CREATE TABLE IF NOT EXISTS `evaluation_form_contacts` (
 
 CREATE TABLE IF NOT EXISTS `evaluation_forms` (
   `eform_id` int(12) NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(12) unsigned NOT NULL DEFAULT '0',
   `target_id` int(12) NOT NULL,
   `form_parent` int(12) NOT NULL,
   `form_title` varchar(64) NOT NULL,

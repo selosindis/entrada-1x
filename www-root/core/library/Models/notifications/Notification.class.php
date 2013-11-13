@@ -246,7 +246,7 @@ class Notification {
                             } else {
                                 $content_type_shortname = "evaluation";
                             }
-                            if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $subcontent_id) {
+                            if (array_search($evaluation["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false && $subcontent_id && defined("CLERKSHIP_EVALUATION_LOCKOUT") && CLERKSHIP_EVALUATION_LOCKOUT) {
                                 $query = "SELECT * FROM `".CLERKSHIP_DATABASE."`.`events` WHERE `event_id` = ".$db->qstr($subcontent_id);
                                 $clerkship_event = $db->GetRow($query);
                                 if ($clerkship_event) {
@@ -260,14 +260,18 @@ class Notification {
                                     $event_title = "";
                                     $evaluation["evaluation_lockout"] = $evaluation["evaluation_finish"];
                                 }
-                            } else {
+                            } elseif (defined("EVALUATION_LOCKOUT") && EVALUATION_LOCKOUT) {
                                 $event_title = "";
                                 $evaluation["evaluation_lockout"] = $evaluation["evaluation_finish"] + (defined('EVALUATION_LOCKOUT') && EVALUATION_LOCKOUT ? EVALUATION_LOCKOUT : 0);
                             }
                             $mandatory = $evaluation["evaluation_mandatory"];
                             $evaluation_start = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_start"]);
                             $evaluation_finish = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_finish"]);
-                            $evaluation_lockout = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_lockout"]);
+                            if (isset($evaluation["evaluation_lockout"])) {
+                                $evaluation_lockout = date(DEFAULT_DATE_FORMAT, $evaluation["evaluation_lockout"]);
+                            } else {
+                                $evaluation_lockout = false;
+                            }
                             $organisation_id = get_account_data("organisation_id", $proxy_id);
                             $content_url = $notification_user->getContentURL();
                             $replace = array(	html_encode(ucwords($notification_user->getContentTypeName())),
@@ -284,7 +288,7 @@ class Notification {
                                                 html_encode((isset($mandatory) && $mandatory ? "mandatory" : "non-mandatory")),
                                                 html_encode($content_url),
                                                 html_encode(APPLICATION_NAME),
-                                                html_encode((defined('EVALUATION_LOCKOUT') && EVALUATION_LOCKOUT ? "\nAccess to this evaluation will be closed as of ".$evaluation_lockout."." : "")),
+                                                html_encode(($evaluation_lockout ? "\nAccess to this evaluation will be closed as of ".$evaluation_lockout."." : "")),
                                                 html_encode(ENTRADA_URL));
                             if ($evaluation["target_shortname"] == "rotation_core") {
                                 $notification_body = file_get_contents($ENTRADA_TEMPLATE->absolute()."/email/notification-rotation-core-evaluation-".($evaluation["evaluation_finish"] >= time() || $evaluation["evaluation_start"] >= strtotime("-1 day") ? "release" : "overdue").".xml");

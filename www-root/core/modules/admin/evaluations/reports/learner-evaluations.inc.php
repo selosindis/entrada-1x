@@ -666,7 +666,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                     var min_date = parseInt(jQuery('#report_start').val() ? (new Date(jQuery('#report_start').val()).getTime() / 1000) : default_min_date);
                     var max_date = buildDate(min_date, jQuery('#report_period').val(), false, default_max_date);
                     min_date = buildDate(min_date, jQuery('#report_period').val(), true);
-                    alert(timeConverter(min_date)+" to "+timeConverter(max_date));
                     jQuery('#evaluation-question-breadcrumb').html('');
                     jQuery('#evaluation-question-title').html('');
                     if (typeof row_type === 'undefined' || typeof row_id === 'undefined') {
@@ -966,7 +965,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                     <button class="btn period" value="week">Week</button>
                                     <button class="btn period" value="month">Month</button>
                                     <button class="btn period" value="year">Year</button>
-                                    <button class="btn active" value="full">Full Period</button>
+                                    <button class="btn period active" value="full">Full Period</button>
                                     <button class="btn next"><i class="icon-chevron-right"></i></button>
                                 </div>
                                 <input type="hidden" id="report_period" value="full" />

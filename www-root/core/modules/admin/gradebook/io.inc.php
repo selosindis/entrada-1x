@@ -100,7 +100,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
 							AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
 
-				
 				if (isset($COHORT)) {
 					$query .= " WHERE c.`group` = 'student' AND d.`group_id` = ".$db->qstr($COHORT);
 				} else {					
@@ -113,6 +112,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					}
 					$query .= " WHERE c.`group` = 'student' AND d.`group_id` IN (".implode(",", $groups).")";
 				}
+                $query .= " GROUP BY b.`id`";
+                $query .= " ORDER BY `fullname`";
 				$students = $db->GetAll($query);
 				
 				ob_start();

@@ -66,13 +66,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			if (!empty($ASSESSMENT_IDS)) {
 				$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`
 							FROM `assessments`
-							LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-							WHERE `assessments`.`assessment_id` IN (".implode(",", $ASSESSMENT_IDS).") AND `assessments`.`course_id` = ".$db->qstr($COURSE_ID);
+							LEFT JOIN `assessment_marking_schemes` 
+                            ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
+							WHERE `assessments`.`assessment_id` IN (".implode(",", $ASSESSMENT_IDS).") 
+                            AND `assessments`.`course_id` = ".$db->qstr($COURSE_ID)."
+                            AND (`assessments`.`release_date` = '0' OR `assessments`.`release_date` <= ".$db->qstr(time()).")
+                            AND (`assessments`.`release_until` = '0' OR `assessments`.`release_until` > ".$db->qstr(time()).")";
 			} else {
 				$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`
 							FROM `assessments`
-							LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-							WHERE `assessments`.`cohort` = ".$db->qstr($COHORT)." AND `assessments`.`course_id` = ".$db->qstr($COURSE_ID);
+							LEFT JOIN `assessment_marking_schemes` 
+                            ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
+							WHERE `assessments`.`cohort` = ".$db->qstr($COHORT)." 
+                            AND `assessments`.`course_id` = ".$db->qstr($COURSE_ID)."
+                            AND (`assessments`.`release_date` = '0' OR `assessments`.`release_date` <= ".$db->qstr(time()).")
+                            AND (`assessments`.`release_until` = '0' OR `assessments`.`release_until` > ".$db->qstr(time()).")";
 			}
 			$assessments = $db->GetAll($query);
 			if ($assessments) {
@@ -165,7 +173,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							$cols[] = trim(format_retrieved_grade($s_assessments[$assessment_id]["grade"], $s_assessments[$assessment_id]) . assessment_suffix($s_assessments[$assessment_id]));							
 						}
 						if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL && isset($COHORT)) {
-                            $weight = gradebook_get_weighted_grades($COURSE_ID, $COHORT, $student["proxy_id"], false, $assessment_ids_string);
+                            $weight = gradebook_get_weighted_grades($COURSE_ID, $COHORT, $student["proxy_id"], false, $assessment_ids_string, false);
 							$cols[] = round($weight["grade"], 2);
 							if($weight["total"] != 100){							
 								$cols[] = "[WARNING]: Your weighting totals do not equal 100% or this student is missing a weighted assessment. Current weighted total worth ".$weighted_total_max."% of total course mark.";

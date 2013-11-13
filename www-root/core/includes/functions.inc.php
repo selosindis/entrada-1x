@@ -15987,7 +15987,7 @@ function evaluation_generate_description($min_submittable = 0, $evaluation_quest
 	return sprintf($output, $string_1, $string_2, $string_3, $string_4);
 }
 
-function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessment_id = false, $assessment_ids_string = false) {
+function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessment_id = false, $assessment_ids_string = false, $learner = true) {
 	global $db;
 	$weighted_grade = 0;
 	$weighted_total = 0;
@@ -15997,44 +15997,35 @@ function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessme
 				LEFT JOIN `assessment_marking_schemes`
 				ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
 				WHERE `assessments`.`course_id` = ".$db->qstr($course_id)."
+                AND (`assessments`.`release_date` = '0' OR `assessments`.`release_date` <= ".$db->qstr(time()).")
+                AND (`assessments`.`release_until` = '0' OR `assessments`.`release_until` > ".$db->qstr(time()).")
+                ".(!isset($learner) || $learner ? "AND `assessments`.`show_learner` = '1'" : "")."
 				AND `assessments`.`cohort` = ".$db->qstr($cohort).
 				($assessment_id ? " AND `assessments`.`assessment_id` = ".$db->qstr($assessment_id) : ($assessment_ids_string ? " AND `assessments`.`assessment_id` IN (".$assessment_ids_string.")" : ""));
 
 	$assessments = $db->GetAll($query);
 	if($assessments) {
-		$query	= 	"SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`, c.`role`";
-		foreach($assessments as $key => $assessment) {
-			$query 	.= ", g$key.`grade_id` AS `grade_".$key."_id`, g$key.`value` AS `grade_".$key."_value`, h$key.`grade_weighting` AS `grade_".$key."_weighting`";
-		}
-		$query 	.=" FROM `".AUTH_DATABASE."`.`user_data` AS b
-					LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS c
-					ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
-					AND c.`account_active`='true'
-					AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
-					AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
-		foreach($assessments as $key => $assessment) {
-			$query .= "LEFT JOIN `assessment_grades` AS g$key ON b.`id` = g$key.`proxy_id` AND g$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
-			$query .= "LEFT JOIN `assessment_exceptions` AS h$key ON b.`id` = h$key.`proxy_id` AND h$key.`assessment_id` = ".$db->qstr($assessment["assessment_id"])."\n";
-		}
-
-		$query .= 	" WHERE b.`id` = ".$db->qstr($proxy_id);
-		$query .=	" GROUP BY b.`id`";
-		$student = $db->GetRow($query);
-
-		if ($student) {
-			foreach($assessments as $key2 => $assessment) {
-				if ($student["grade_".$key2."_weighting"] !== NULL) {
-					$grade_weighting = $student["grade_".$key2."_weighting"];
-				} else {
-					$grade_weighting = $assessment["grade_weighting"];
-				}
-				if(isset($student["grade_".$key2."_value"])) {
-					$grade_value = format_retrieved_grade($student["grade_".$key2."_value"], $assessment);
-					$weighted_total += $grade_weighting;
-					$weighted_grade += (($assessment["handler"] == "Numeric" ? ($grade_value / $assessment["numeric_grade_points_total"]) : (($assessment["handler"] == "Percentage" ? ((float)$grade_value / 100.0) : $grade_value)))) * $grade_weighting;
-				}
-			}
-		}
+        foreach ($assessments as $assessment) {
+            $query = "SELECT a.`value`, b.`grade_weighting` FROM `assessment_grades` AS a
+                        LEFT JOIN `assessment_exceptions` AS b
+                        ON a.`assessment_id` = b.`assessment_id`
+                        AND b.`proxy_id` = a.`proxy_id`
+                        WHERE a.`proxy_id` = ".$db->qstr($proxy_id)."
+                        AND a.`assessment_id` = ".$db->qstr($assessment["assessment_id"]);
+            $grade = $db->GetRow($query);
+            if ($grade) {
+                if ($grade["grade_weighting"] !== NULL) {
+                    $grade_weighting = $grade["grade_weighting"];
+                } else {
+                    $grade_weighting = $assessment["grade_weighting"];
+                }
+                if(isset($grade["value"])) {
+                    $grade_value = format_retrieved_grade($grade["value"], $assessment);
+                    $weighted_total += $grade_weighting;
+                    $weighted_grade += (($assessment["handler"] == "Numeric" ? ($grade_value / $assessment["numeric_grade_points_total"]) : (($assessment["handler"] == "Percentage" ? ((float)$grade_value / 100.0) : $grade_value)))) * $grade_weighting;
+                }
+            }
+        }
 	}
 	if ($weighted_grade && $weighted_total) {
 		$weighted_percent = number_format(($weighted_grade / $weighted_total) * 100, 2);

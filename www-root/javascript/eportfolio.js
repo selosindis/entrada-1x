@@ -8,7 +8,7 @@ jQuery(function($) {
 	
 	getFolder(pfolder_id);
 	
-	$("#create-artifact").on("click", function () {	
+	$("#create-artifact").on("click", function () {
 		$(".modal-header h3").html("Create Artifact");
 		$("#save-button").html("Save Artifact").attr("data-type", "artifact");
 		artifactForm();
@@ -21,8 +21,8 @@ jQuery(function($) {
 			var xhr = new XMLHttpRequest();
 			var fd = new FormData();
 			var file = $("#file-upload").prop("files");
-			var pfartifact_id = jQuery("#save-button").data("artifact");
-
+			var pfartifact_id = jQuery("#save-button").attr("data-artifact");
+			
 			fd.append("method", "create-entry");
 			fd.append("type", "file");
 			fd.append("title", jQuery("#entry-title").val());
@@ -39,9 +39,22 @@ jQuery(function($) {
 				if (xhr.readyState == 4 && xhr.status == 200) {
 					var jsonResponse = JSON.parse(xhr.responseText);
 					if (jsonResponse.status == "success") {
+						if (!jQuery("#artifact-" + pfartifact_id).length) {
+							// Elements for artifact-entries-list
+							var artifact_div = document.createElement("div");
+							var artifact_title_h2 = document.createElement("h2");
+							var artifact_list = document.createElement("ul");
+
+							jQuery(artifact_list).attr({"id": "artifact-" + pfartifact_id}).addClass("unstyled");
+							jQuery(artifact_title_h2).html(jQuery("a[data-id=" + pfartifact_id + "] span").html());
+							jQuery(artifact_div).attr({"data-id": pfartifact_id}).append(artifact_title_h2).append(artifact_list).addClass("artifact-group");
+							jQuery("#artifact-container").append(artifact_div);
+						}
+				
 						var content = "";
 						var entry_li = document.createElement("li");
 						var entry_li_a = document.createElement("a");
+						var entry_delete_a = document.createElement("a");
 						var entry_div = document.createElement("div");
 						var date = new Date(jsonResponse.data.submitted_date * 1000);
 
@@ -57,9 +70,9 @@ jQuery(function($) {
 
 						jQuery(entry_li_a).attr({"href": "#", "data-toggle": "modal", "data-target": "#portfolio-modal", "data-artifact": pfartifact_id, "data-entry": jsonResponse.data.pentry_id, "data-type": jsonResponse.data.type}).html(content).addClass("edit-entry");
 						jQuery(entry_div).html("Submitted: " + date.getFullYear() + "-" + (date.getMonth() <= 9 ? "0" : "") + (date.getMonth() + 1) + "-" +  (date.getDate() <= 9 ? "0" : "") + date.getDate() + ", Entry Type: " + jsonResponse.data.type).addClass("muted");
-						jQuery(entry_li).append(entry_li_a).append(entry_div);
+						jQuery(entry_delete_a).attr({"href": "#", "data-toggle": "modal", "data-target": "#portfolio-modal", "data-id": jsonResponse.data.pentry_id}).addClass("delete-entry").html("<i class=\"icon-trash\"></i>");
+						jQuery(entry_li).append(entry_li_a).append(entry_delete_a).append(entry_div);
 						jQuery("#artifact-" + pfartifact_id).append(entry_li);
-						
 						jQuery("#portfolio-modal").modal("hide");
 						if (jQuery("#artifact-" + pfartifact_id + " .no-entries").length) {
 							jQuery(".no-entries").remove();
@@ -204,7 +217,7 @@ jQuery(function($) {
 		}
 		
 		if (jQuery("#save-button").hasClass("btn-danger")) {
-			jQuery("#save-button").removeClass("btn-danger").addClass("btn-primary").html("Save changes");
+			jQuery("#save-button").removeClass("btn-danger").addClass("btn-primary").html("Save Entry");
 		}
 	});
 	
@@ -271,7 +284,7 @@ jQuery(function($) {
 	});
 	
 	jQuery(".artifact-container").on("click", ".delete-entry", function () {
-		var pentry_id = jQuery(this).data("id");
+		var pentry_id = jQuery(this).attr("data-id");
 		var entry_title = jQuery("a[data-entry="+ pentry_id +"]").html();
 		jQuery("#save-button").attr("data-entry", pentry_id);
 		jQuery("#save-button").html("Delete Entry");
@@ -281,7 +294,7 @@ jQuery(function($) {
 	
 	jQuery("#artifact-list").on("click", ".artifact", function () {
 		var pfartifact_id = jQuery(this).data("id");
-		jQuery("#save-button").attr({"data-artifact": pfartifact_id});
+		jQuery("#save-button").attr({"data-artifact": pfartifact_id}).html("Save Entry");
 		entryForm(pfartifact_id);
 	});
 	

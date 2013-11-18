@@ -110,12 +110,6 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						add_error("<strong>Title</strong> is a Required field.");
 					}
 					
-					/*if(isset(${$request_var}["url"]) && $tmp_input = clean_input(${$request_var}["url"], array("trim", "striptags"))) {
-						$PROCESSED["url"] = $tmp_input;
-					} else {
-						add_error("<strong>URL</strong> is a required field.");
-					}*/
-					
 					if (isset($_FILES) && $_FILES["file"]["name"] && $tmp_input = clean_input($_FILES["file"]["name"], array("trim", "striptags"))) {
 						$PROCESSED["filename"] = preg_replace('/[^a-zA-Z0-9-_\.]/', '', str_replace(" ", "-", trim($tmp_input)));
 						
@@ -124,7 +118,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							"application/x-pdf", "application/excel", 
 							"application/vnd.ms-excel", "application/msword", 
 							"application/mspowerpoint", "application/vnd.ms-powerpoint", 
-							"text/richtext", "application/rtf", "application/x-rtf"
+							"text/richtext", "application/rtf", "application/x-rtf", 
+							"application/zip"
 						);
 						
 						$finfo = new finfo(FILEINFO_MIME);
@@ -212,14 +207,16 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						$PROCESSED["pfartifact_id"] = $tmp_input;
 					}
 					
-					if(${$request_var}["description"] && $tmp_input = clean_input(${$request_var}["description"], array("trim"))) {
-						$PROCESSED["description"] = $tmp_input;
-					}
-					
 					if(${$request_var}["title"] && $tmp_input = clean_input(${$request_var}["title"], array("trim", "striptags"))) {
 						$PROCESSED["title"] = $tmp_input;
 					} else {
 						add_error("You must provide a <strong>Title</strong> for this Artifact.");
+					}
+					
+					if(${$request_var}["description"] && $tmp_input = clean_input(${$request_var}["description"], array("trim"))) {
+						$PROCESSED["description"] = $tmp_input;
+					} else {
+						add_error("<strong>Description</strong> is a required field.");
 					}
 					
 					if(${$request_var}["start_date"] && $tmp_input = strtotime(clean_input(${$request_var}["start_date"], array("trim", "striptags")))) {
@@ -264,14 +261,14 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 							if ($pfartifact->fromArray($PROCESSED)->update()) { 
 								echo json_encode(array("status" => "success", "data" => array("pfartifact_id" => $pfartifact->getID(), "pfolder_id" => $pfartifact->getPfolderID(), "title" => $pfartifact->getTitle(), "description" => $pfartifact->getDescription())));
 							} else {
-								echo json_encode(array("error" => "error", "data" => "Unable to create folder artifact. DB said:"));
+								echo json_encode(array("error" => "error", "data" => "Unable to create folder artifact."));
 							}
 						} else {
 							$pfartifact = new Models_Eportfolio_Folder_Artifact();
 							if ($pfartifact->fromArray($PROCESSED)->insert()) {
 								echo json_encode(array("status" => "success", "data" => array("pfartifact_id" => $pfartifact->getID(), "pfolder_id" => $pfartifact->getPfolderID(), "title" => $pfartifact->getTitle(), "description" => $pfartifact->getDescription())));
 							} else {
-								echo json_encode(array("error" => "error", "data" => "Unable to create portfolio entry."));
+								echo json_encode(array("error" => "error", "data" => array("Unable to create portfolio entry.")));
 							}
 						}
 						

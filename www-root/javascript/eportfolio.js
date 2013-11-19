@@ -101,6 +101,10 @@ jQuery(function($) {
 			jQuery("#msgs .alert-success").remove();
 		}
 		
+		if (jQuery("#msgs .alert-info").length) {
+			jQuery("#msgs .alert-info").remove();
+		}
+		
 		e.preventDefault();
 	});
 
@@ -592,12 +596,7 @@ function appendContent (type, jsonResponse, pfartifact_id, pfolder_id) {
 			}
 			
 			if (!jQuery(".artifact-group").length) {
-				var alert_div = document.createElement("div");
-				var alert_button = document.createElement("button");
-
-				jQuery(alert_button).html("&times;").attr({"data-dismiss": "alert", "type": "button"}).addClass("close");
-				jQuery(alert_div).addClass("alert alert-info").html("There are currently no portfolio artifacts with entries attached to them. To add an entry to an artifact, select an artifact from the <strong>My Artifacts</strong> list.").prepend(alert_button);
-				jQuery("#msgs").append(alert_div);
+				display_generic(["There are currently no portfolio artifacts with entries attached to them. To add an entry to an artifact, select an artifact from the <strong>My Artifacts</strong> list."], "#msgs", "append");
 			}
 			
 			if (jQuery("#msgs .alert-success").length) {

@@ -216,6 +216,10 @@ jQuery(function($) {
 			jQuery("#display-error-box-modal").remove();
 		}
 		
+		if (jQuery("#pfartifact_id").length) {
+			jQuery("#pfartifact_id").remove();
+		}
+		
 		if (jQuery("#save-button").hasClass("btn-danger")) {
 			jQuery("#save-button").removeClass("btn-danger").addClass("btn-primary").html("Save Entry");
 		}
@@ -302,7 +306,7 @@ jQuery(function($) {
 		jQuery("#portfolio-modal .modal-header h3").html("Remove Artifact");
 		display_error(["<strong>Warning</strong> You have chosen to remove an artifact you have created.<br /><br />Please use the button below to remove the artifact."], "#portfolio-form", "prepend");
 		jQuery("#save-button").addClass("btn-danger").removeClass("btn-primary").html("Remove").attr("data-type", "delete-artifact");
-		jQuery("#portfolio-form").append("<input type=\"hidden\" name=\"pfartifact_id\" value=\""+jQuery(this).data("id")+"\" />")
+		jQuery("#portfolio-form").append("<input id=\"pfartifact_id\" type=\"hidden\" name=\"pfartifact_id\" value=\""+jQuery(this).data("id")+"\" />")
 		e.preventDefault();
 	});
 	
@@ -352,8 +356,8 @@ function getFolderArtifacts (pfolder_id) {
 			jQuery(".artifact-container").removeClass("loading");
 			jQuery(".artifact-container").empty();
 			if (jsonResponse.status == "success") {
-				if (jQuery("#msgs .alert-info")) {
-					jQuery("#msgs .alert-info").remove();
+				if (jQuery("#msgs > .alert-notice").length) {
+					jQuery("#msgs .alert-notice").remove();
 				}
 				
 				jQuery.each(jsonResponse.data, function (key, artifact) {
@@ -373,15 +377,8 @@ function getFolderArtifacts (pfolder_id) {
 					getEntries(pfartifact_id);
 				});
 				
-				if (!jQuery(".artifact-group").length) {
-					var alert_div = document.createElement("div");
-					var alert_button = document.createElement("button");
-					
-					if (!jQuery("#msgs .alert-info").length) {
-						jQuery(alert_button).html("&times;").attr({"data-dismiss": "alert", "type": "button"}).addClass("close");
-						jQuery(alert_div).addClass("alert alert-info").html("There are currently no portfolio artifacts with entries attached to them. To add an entry to an artifact, select an artifact from the <strong>My Artifacts</strong> list.").prepend(alert_button);
-						jQuery("#msgs").append(alert_div);
-					}
+				if (!jQuery(".artifact-group").length) {	
+					display_generic(["There are currently no portfolio artifacts with entries attached to them. To add an entry to an artifact, select an artifact from the <strong>My Artifacts</strong> list."], "#msgs", "append");
 				}
 			} else {
 				display_notice([jsonResponse.data], "#msgs");
@@ -528,7 +525,10 @@ function appendContent (type, jsonResponse, pfartifact_id, pfolder_id) {
 	
 	switch (type) {
 		case "artifact" :
-			//appendArtifactItem(jsonResponse);
+			display_success(["Successfully created artifact titled <strong>" + jsonResponse.title + "</strong>"], "#msgs", "append");
+		break;
+		case "delete-artifact" :
+			display_success(["Successfully removed artifact titled <strong>" + jsonResponse.title + "</strong>"], "#msgs", "append");
 		break;
 		case "artifact-edit" :
 			jQuery("span[data-artifact="+ jsonResponse.pentry_id + "]").html(jsonResponse.title);
@@ -603,18 +603,8 @@ function appendContent (type, jsonResponse, pfartifact_id, pfolder_id) {
 			if (jQuery("#msgs .alert-success").length) {
 				jQuery("#msgs .alert-success").remove();
 			}
-			
-			var confirmation_div = document.createElement("div");
-			var confirmation_button = document.createElement("button");
-			var confirmation_ul = document.createElement("ul");
-			var confirmation_li = document.createElement("li");
-			
-			jQuery(confirmation_div).addClass("alert alert-success");
-			jQuery(confirmation_button).attr({"type": "button", "data-dismiss": "alert"}).html("&times;").addClass("close");
-			jQuery(confirmation_li).html("Successfully removed entry titled: <strong>" + jsonResponse._edata.title + "</strong>");
-			jQuery(confirmation_ul).append(confirmation_li);
-			jQuery(confirmation_div).append(confirmation_button).append(confirmation_ul);
-			jQuery("#msgs").append(confirmation_div);
+
+			display_success(["Successfully removed entry titled: <strong>" + jsonResponse._edata.title + "</strong>"], "#msgs", "append");
 		break;
 	}
 	updateArtifactList(pfolder_id);
@@ -687,7 +677,7 @@ function populateDeleteForm (pentry_id, entry_title) {
 	
 	jQuery(warning_div).addClass("alert alert-block alert-danger");
 	jQuery(warning_button).addClass("close").html("&times;");
-	jQuery(warning_li).html("Please confirm that you wish to remove the entry labeled <strong>" + entry_title + "</strong>.");
+	jQuery(warning_li).html("Please confirm that you wish to remove the entry titled <strong>" + entry_title + "</strong>.");
 	jQuery(warning_ul).append(warning_li);
 	jQuery(warning_div).append(warning_button).append(warning_ul);
 	jQuery("#portfolio-form").append(warning_div);
@@ -903,12 +893,13 @@ function updateArtifactList (pfolder_id) {
 							}
 						}
 					} else {
-						jQuery(artifact_li).addClass("entries-user").append("<i class=\"icon-trash remove-artifact\" data-toggle=\"modal\" data-target=\"#portfolio-modal\" data-id=\""+artifact.pfartifact_id+"\"></i>");
+						jQuery(artifact_li).addClass("entries-user").append("<span class=\"label label-important remove-artifact\" data-toggle=\"modal\" data-target=\"#portfolio-modal\" data-id=\""+artifact.pfartifact_id+"\"><i class=\"icon-trash icon-white\"></i></span>");
 						jQuery("#entries-user").after(artifact_li);
 					}
 				});
 
 			} else {
+				jQuery("#msgs").empty();
 				display_notice([jsonResponse.data], "#msgs");
 			}
 

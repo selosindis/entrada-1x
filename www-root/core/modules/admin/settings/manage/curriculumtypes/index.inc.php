@@ -27,73 +27,68 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	header("Location: ".ENTRADA_URL);
 	exit;
-} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "read",false)) {
+} elseif (!$ENTRADA_ACL->amIAllowed("configuration", "read", false)) {
 	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
-?>
+    ?>
 	<h1>Manage Curriculum Types</h1>
-	<div class="clearfix">
-		<div class="pull-right">
-			<a href="<?php echo ENTRADA_URL; ?>/admin/settings/manage/curriculumtypes?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="btn btn-primary">Add New Curriculum Type</a>
-		</div>
-	</div>
-	<?php
 
-	/*
-	 * To change this template, choose Tools | Templates
-	 * and open the template in the editor.
-	 */
-
-	$query = "	SELECT a.* FROM `curriculum_lu_types` AS a 
-				LEFT JOIN `curriculum_type_organisation` AS b
+    <div class="row-fluid">
+        <span class="pull-right">
+            <a class="btn btn-success" href="<?php echo ENTRADA_RELATIVE; ?>/admin/settings/manage/curriculumtypes?section=add&amp;org=<?php echo $ORGANISATION_ID;?>"><i class="icon-plus-sign icon-white"></i> Add New Curriculum Type</a>
+        </span>
+    </div>
+    <br />
+    <?php
+	$query = "SELECT a.*
+	            FROM `curriculum_lu_types` AS a
+				JOIN `curriculum_type_organisation` AS b
 				ON a.`curriculum_type_id` = b.`curriculum_type_id` 
-				WHERE b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)." 
-				ORDER BY a.`curriculum_type_name` ASC";
-
+				WHERE b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+				AND a.`curriculum_type_active` = '1'
+				ORDER BY a.`curriculum_type_order` ASC, a.`curriculum_type_name` ASC";
 	$results = $db->GetAll($query);
-
-	if($results){
-	?>
-	<form action ="<?php echo ENTRADA_URL;?>/admin/settings/manage/curriculumtypes?section=delete&amp;org=<?php echo $ORGANISATION_ID;?>" method="post">
-	<table class="tableList" cellspacing="0" cellpadding="1" border="0" summary="List of Organisations">
-		<colgroup>
-			<col class="modified"/>
-			<col class="title" />
-			<col class="active" />
-		</colgroup>
-		<thead>
-			<tr>
-				<td class="modified">&nbsp;</td>
-				<td class="title" width="650">Curriculum Type</td>
-				<td class="title">Active</td>
-			</tr>
-		</thead>
-		<tbody>
-			<?php
-				foreach($results as $result){
-					echo "<tr><td><input type=\"checkbox\" name = \"remove_ids[]\" value=\"".$result["curriculum_type_id"]."\"/></td>";
-					echo"<td><a href=\"".ENTRADA_URL."/admin/settings/manage/curriculumtypes?section=edit&amp;org=".$ORGANISATION_ID."&amp;type_id=".$result["curriculum_type_id"]."\">".$result["curriculum_type_name"]."</a></td><td>".(($result["curriculum_type_active"] == 1)?"Active":"Inactive")."</td></tr>";
-				}
-			?>
-		</tbody>
-	</table>
-	<br />
-	<input type="submit" class="btn btn-danger" value="Delete Selected" />
-	</form>
-	<?php
-
+	if ($results) {
+        ?>
+        <form action ="<?php echo ENTRADA_URL;?>/admin/settings/manage/curriculumtypes?section=delete&amp;org=<?php echo $ORGANISATION_ID;?>" method="post">
+            <table class="table table-striped" summary="Curriculum Types">
+                <colgroup>
+                    <col style="width: 3%" />
+                    <col style="width: 97%" />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>&nbsp;</td>
+                        <th>Curriculum Type</td>
+                    </tr>
+                </thead>
+                <tfoot>
+                    <tr>
+                        <td colspan="2">
+                            <input type="submit" class="btn btn-danger" value="Delete Selected" />
+                        </td>
+                    </tr>
+                </tfoot>
+                <tbody>
+                    <?php
+                    foreach ($results as $result) {
+                        echo "<tr>\n";
+                        echo "  <td><input type=\"checkbox\" name = \"remove_ids[]\" value=\"".$result["curriculum_type_id"]."\"/></td>\n";
+                        echo "  <td><a href=\"".ENTRADA_RELATIVE."/admin/settings/manage/curriculumtypes?section=edit&amp;org=".$ORGANISATION_ID."&amp;type_id=".$result["curriculum_type_id"]."\">".$result["curriculum_type_name"]."</a></td>\n";
+                        echo "</tr>\n";
+                    }
+                    ?>
+                </tbody>
+            </table>
+        </form>
+        <?php
+	} else {
+		add_notice("There are currently no Curriculum Types.");
+		echo display_notice();
 	}
-	else{
-		$NOTICE++;
-		$NOTICESTR[] = "There are currently no Curriculum Types assigned to this Organisation";
-		echo "<br />".display_notice();
-
-	}
-
-
 }
 

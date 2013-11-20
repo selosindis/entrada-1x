@@ -36,11 +36,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 } else {
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/curriculumtypes?".replace_query(array("section" => "add"))."&amp;org=".$ORGANISATION_ID, "title" => "Add");
-	//$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+
 	// Error Checking
 	switch ($STEP) {
 		case 2 :
-			
 			/**
 			 * Required field "objective_name" / Objective Name
 			 */
@@ -150,9 +149,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			}
 		break;
 		case 1 :
-			
 		default :
-
+			continue;
 		break;
 	}
 
@@ -172,7 +170,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			}
 		break;
 		case 1 :
-			
 		default:	
 			if ($ERROR) {
 				echo display_error();
@@ -186,7 +183,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			} else {
 				$PROCESSED["org_id"] = 0;
 			}
-
 			?>
 			<form action="<?php echo ENTRADA_URL."/admin/settings/manage/curriculumtypes"."?".replace_query(array("action" => "add", "step" => 2))."&org=".$ORGANISATION_ID; ?>" id="curriculum_form" method="post">
 			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Page">
@@ -201,11 +197,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			</thead>
 			<tfoot>
 				<tr>
-					<td></td>
-					<td style="padding-top: 15px; text-align: right">
-						<input type="button" class="btn btn-danger pull-left" id="delete_selected" value="Delete Selected" />  
-						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/curriculumtypes?org=<?php echo $ORGANISATION_ID;?>'" />
-                        <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+					<td colspan="2" style="padding-top: 15px;">
+						<div class="pull-right">
+							<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/curriculumtypes?org=<?php echo $ORGANISATION_ID;?>'" />
+    	                    <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+						</div>
 					</td>
 				</tr>
 			</tfoot>
@@ -254,57 +250,64 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 					<td colspan="2">&nbsp;</td>
 				</tr>
 				<tr>
-					<td style="vertical-align: top;"><label for="curriculum_type_periods" class="form-nrequired">Curriculum Type Periods: </label></td>
-					<td>
-						<div style="float: right">
-							<ul class="page-action">
-								<li><a class="strong-green" id="add_period" style="cursor:pointer;">Add Curriculum Period</a></li>
-							</ul>
-						</div><br />
+                    <td colspan="2">
+                        <h2>Curriculum Type Periods</h2>
+                        <div class="row-fluid">
+                            <span class="pull-right">
+                                <a class="btn btn-small btn-success" href="#" id="add_period"><i class="icon-plus-sign icon-white"></i> Add Curriculum Period</a>
+                            </span>
+                        </div>
+                        <br />
 						<div id="curriculum_periods_table">
-							<table class="tableList" cellspacing="0" cellpadding="1" border="0" summary="List of Organisations">
-								<colgroup>
-									<col class="modified" style="width: 5%" />
-									<col class="start" style="width: 25%" />
-									<col class="end" style="width: 25%" />
-									<col style="width: 25%" />
-									<col class="active" style="width: 20%" />
-								</colgroup>
+							<table class="table table-striped" summary="Curriculum Type Periods">
 								<thead>
 									<tr>
-										<td class="modified">&nbsp;</td>
-										<td class="start">Start Date</td>
-										<td class="end">Finish Date</td>
-										<td>Title</td>
-										<td class="active">Active</td></tr>
+										<th>&nbsp;</th>
+										<th>Start Date</th>
+										<th>Finish Date</th>
+										<th>Title</th>
+										<th>Active</th>
 									</tr>
 								</thead>
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="5">
+                                            <input type="button" class="btn btn-danger" id="delete_selected" value="Remove Selected" />
+                                        </td>
+                                    </tr>
+                                </tfoot>
 								<tbody id="curriculum_periods">
 									<?php
-										if($PROCESSED["periods"]){
-											$currentIdx = 1;
-											foreach($PROCESSED["periods"] as $key=>$period){
-											?>	<tr id="period_<?php echo $currentIdx;?>" class="curriculum_period">
-												<td>
-													<input type="checkbox" class="remove_checkboxes" id="remove_<?php echo $currentIdx;?>" value="<?php echo $currentIdx;?>"/>
-												</td>
-												<td>
-													<input type="text" name="curriculum_start_date[]" id="start_<?php echo $currentIdx;?>" class="start_date" disabled = "disabled" value="<?php echo date("Y-m-d",$period["start_date"]);?>" style="border:none;"/><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" alt="Select Start Date" class="calendar" id="start_calendar_<?php echo $currentIdx;?>" style="float:right;cursor:pointer;"/>
-												</td>
-												<td>
-													<input type="text" name="curriculum_finish_date[]" id="finish_<?php echo $currentIdx;?>" class="end_date" disabled = "disabled" value="<?php echo date("Y-m-d",$period["finish_date"]);?>" style="border:none;"/><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" alt="Select End Date" class="calendar" id="finish_calendar_<?php echo $currentIdx;?>" style="float:right;cursor:pointer;"/>
-												</td>
-												<td>
-													<input type="text" name="curriculum_period_title[]" id="curriculum_period_title_<?php echo $currentIdx;?>" value="<?php echo $period["curriculum_period_title"];?>" />
-												</td>
-												<td>
-													<select id="curriculum_active_<?php echo $currentIdx;?>" name="curriculum_active[]">
-														<option value="1" selected="selected">Active</option>
-														<option value="0" <?php echo (($period["active"] == 0)?"selected=\"selected\"":"");?>>Inactive</option>
-													</select>
-												</td>
-											</tr><?php
-											$currentIdx++;
+										if ($PROCESSED["periods"]) {
+											foreach ($PROCESSED["periods"] as $currentIdx => $period) {
+												?>
+												<tr id="period_<?php echo $currentIdx;?>" class="curriculum_period">
+													<td>
+														<input type="checkbox" class="remove_checkboxes" id="remove_<?php echo $currentIdx;?>" value="<?php echo $currentIdx;?>"/>
+													</td>
+													<td>
+                                                        <div class="input-append">
+															<input type="text" name="curriculum_start_date[<?php echo $currentIdx;?>]" id="start_<?php echo $currentIdx;?>" class="start_date input-small" value="<?php echo date("Y-m-d", $period["start_date"]); ?>" />
+                                                            <button class="btn calendar" type="button" id="start_calendar_<?php echo $currentIdx;?>"><i class="icon-calendar"></i></button>
+                                                        </div>
+													</td>
+													<td>
+                                                        <div class="input-append">
+															<input type="text" name="curriculum_finish_date[<?php echo $currentIdx;?>]" id="finish_<?php echo $currentIdx;?>" class="end_date input-small" value="<?php echo date("Y-m-d", $period["finish_date"]); ?>" />
+                                                            <button class="btn calendar" type="button" id="finish_calendar_<?php echo $currentIdx;?>"><i class="icon-calendar"></i></button>
+                                                        </div>
+													</td>
+													<td>
+														<input type="text" name="curriculum_period_title[<?php echo $currentIdx;?>]" id="curriculum_period_title_<?php echo $currentIdx;?>" value="<?php echo $period["curriculum_period_title"];?>" class="input-small" />
+													</td>
+													<td>
+														<select name="curriculum_active[<?php echo $currentIdx;?>]" id="curriculum_active_<?php echo $currentIdx;?>" class="input-small">
+															<option value="1" selected="selected">Active</option>
+															<option value="0" <?php echo (($period["active"] == 0)?"selected=\"selected\"":"");?>>Inactive</option>
+														</select>
+													</td>
+												</tr>
+												<?php
 											}
 										}
 									?>	
@@ -312,43 +315,42 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							</table>
 						</div>
 						<div id="no_period_msg">
-						<?php 
-									add_notice("There are no active periods for this curriculum type.");
-									echo display_notice();
-						?>
+							<?php 
+							add_notice("There are no active periods for this curriculum type.");
+							echo display_notice();
+							?>
 						</div>
-						<style type="text/css">
-							[id^="curriculum_active"]	 {
-								width: 100px; margin-bottom: 10px;
-							}
-							[id^="curriculum_period_title"] {
-								width: 110px;
-							}
-							input[id^="start_"] {
-								width: 80px;
-							}
-							input[id^="finish_"] {
-								width: 80px;
-							}
-						</style>
 						<script type="text/javascript">
-							var rowTemplate = '<tr id="period_:id" class="curriculum_period">\n\
-													<td><input type="checkbox" class="remove_checkboxes" id="remove_:id" value=":id"/></td>\n\
-													<td><input type="text" name="curriculum_start_date[]" id="start_:id" class="start_date" disabled = "disabled" value=":date" style="border:none;"/><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" alt="Select Start Date" class="calendar" id="start_calendar_:id" style="float:right;cursor:pointer;"/></td>\n\
-													<td><input type="text" name="curriculum_finish_date[]" id="finish_:id" class="end_date" disabled = "disabled" value=":date" style="border:none;"/><img src="<?php echo ENTRADA_URL; ?>/images/cal-calendar.gif" alt="Select End Date" class="calendar" id="finish_calendar_:id" style="float:right;cursor:pointer;"/></td>\n\\n\
-													<td><input type="text" name="curriculum_period_title[]" id="curriculum_period_title_:id" /></td>\n\
-													<td><select id="curriculum_active_:id" name="curriculum_active[]"><option value="1">Active</option><option value="0">Inactive</option></select></td>\n\
-												</tr>';
-
+						var rowTemplate = ' <tr id="period_:id" class="curriculum_period success">\n\
+												<td><input type="checkbox" class="remove_checkboxes" id="remove_:id" value=":id"/></td>\n\
+												<td>\
+												    <div class="input-append">\
+    												    <input type="text" name="curriculum_start_date[:id]" id="start_:id" class="start_date input-small" value=":date" />\
+                                                        <button class="btn calendar" type="button" id="start_calendar_:id"><i class="icon-calendar"></i></button>\
+												    </div>\
+												</td>\n\
+												<td>\
+												    <div class="input-append">\
+												        <input type="text" name="curriculum_finish_date[:id]" id="finish_:id" class="end_date input-small" value=":date" />\
+                                                        <button class="btn calendar" type="button" id="finish_calendar_:id"><i class="icon-calendar"></i></button>\
+												    </div>\
+												</td>\n\
+												<td><input type="text" name="curriculum_period_title[:id]" id="curriculum_period_title_:id" class="input-small" /></td>\n\
+												<td>\
+												    <select id="curriculum_active_:id" name="curriculum_active[:id]" class="input-small">\
+												        <option value="1">Active</option>\
+												        <option value="0">Inactive</option>\
+												    </select>\
+												</td>\n\
+											</tr>';
 
 							var currentIdx = 1;
 							var numRows = 0;
+
 							jQuery(function($){
 								$(document).ready(function(){
-									$('#delete_btn_row').hide();
 									$(".calendar").live('click',function(e){
 										var info = e.target.id.split("_");
-										$('#'+info[0]+'_'+info[2]).disabled = false;
 										showCalendar('', document.getElementById(info[0]+'_'+info[2]), document.getElementById(info[0]+'_'+info[2]), '', 'Title', 0, 20, 1);
 									});
 
@@ -358,24 +360,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 									});
 
 									if(currentIdx>1){
-										$('#delete_btn_row').show();
+										$('#curriculum_periods_table').show();
 										$('#no_period_msg').hide();									
+									} else {
+										$('#curriculum_periods_table').hide();
+										$('#no_period_msg').show();
 									}
 
 								});
 
 								$('#add_period').click(function(){										
+                               		$('#curriculum_periods_table').show();
+                                	$('#no_period_msg').hide();
+
 									var today = new Date();
 									var month = ((today.getMonth()+1).toString().length > 1) ? today.getMonth()+1 : "0"+(today.getMonth()+1);
 									var day = (today.getDate().toString().length > 1) ? today.getDate() : "0"+(today.getDate());
 									var date = today.getFullYear()+"-"+month+"-"+day;
-									var formattedRow = rowTemplate.replace(/:id/g,currentIdx).replace(/:date/g,date);
+									var formattedRow = rowTemplate.replace(/:id/g,'add-' + currentIdx).replace(/:date/g,date);
 									$('#curriculum_periods').append(formattedRow);
+
+                               	 	$('html, body').animate({ scrollTop: $('#period_add-' + currentIdx).offset().top }, 1000 );
 
 									currentIdx++;
 									numRows++;
-									$('#delete_btn_row').show();
-									$('#no_period_msg').hide();
 								});
 
 
@@ -383,14 +391,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 									$('.remove_checkboxes:checked').each(function(){
 										var id = $(this).attr('value');
 										$('#period_'+id).remove();
+
 										numRows--;
+
 										if(numRows == 0){
-											$('#delete_btn_row').hide();
+                                        	$('#curriculum_periods_table').hide();
 											$('#no_period_msg').show();
 										}
 									});
 								});
-
 
 								$('#curriculum_form').submit(function(){
 									$('.start_date').each(function(){
@@ -406,7 +415,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						</script>						
 					</td>
 				</tr>
-
 			</tbody>
 			</table>
 			</form>

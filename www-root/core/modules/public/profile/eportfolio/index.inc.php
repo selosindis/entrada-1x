@@ -58,7 +58,7 @@ if (!defined("PARENT_INCLUDED")) {
 		.remove-artifact {
 			cursor:pointer;
 			position:absolute;
-			top:6px;
+			top:7px;
 			right:6px;
 			z-index:1010;
 		}
@@ -110,18 +110,9 @@ if (!defined("PARENT_INCLUDED")) {
 		</div>
 		<div class="folder-container">
 			<h2 id="folder-title"></h2>
-			<div class="row">
-				<!--<a href="#" class="btn btn-primary pull-right space-below" data-toggle="modal" data-target="#portfolio-modal" id="create-artifact">Create Artifact</a>-->
-			</div>
 			<div id="msgs"></div>
-			<div id="artifact-container" class="artifact-container loading">
-			</div>
+			<div id="artifact-container" class="artifact-container loading"></div>
 		</div>
-		<!--
-		<div class="pull-right">
-			<a href="<?php echo ENTRADA_URL; ?>/profile/eportfolio?section=export-portfolio" class="btn btn-primary">Export My Portfolio</a>
-		</div>
-		-->
 		<div class="modal hide fade" id="portfolio-modal" style="width:700px;">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>

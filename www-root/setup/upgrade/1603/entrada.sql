@@ -26,4 +26,6 @@ VALUES
 	
 UPDATE `evaluations_lu_questiontypes` SET `questiontype_title` = 'Horizontal Choice Matrix (single response)' WHERE `questiontype_shortname` = 'question_matrix';
 
+ALTER TABLE `curriculum_periods` CHANGE `curriculum_period_title` `curriculum_period_title` VARCHAR(200)  CHARACTER SET utf8  NULL  DEFAULT '';
+
 UPDATE `settings` SET `value` = '1603' WHERE `shortname` = 'version_db';

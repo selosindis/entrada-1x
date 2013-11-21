@@ -769,7 +769,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 		$terms	= $db->GetAll($query);
 		$course_flag = false;
 		if ($terms) {
-		//	echo "<h2>". $module_singular_name . " Listing</h2>\n";
 			echo "<ol class=\"curriculum-layout\">\n";
 			foreach ($terms as $term) {
 				$courses = courses_fetch_courses(true, true, $term["curriculum_type_id"]);
@@ -804,7 +803,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								);
 							}
 						}
-						echo "<li><a href=\"".ENTRADA_URL."/courses?id=".$course["course_id"]."\">".html_encode($course["course_code"]." - ".$course["course_name"])."</a>".(isset($syllabi[$course["course_code"]]) ? " <a href=\"".$syllabi[$course["course_code"]]["url"]."\" title=\"Download Syllabus\"><i class=\"icon-file\"></i></a>" : "")."</li>\n";
+						echo "<li><a href=\"".ENTRADA_URL."/courses?id=".$course["course_id"]."\">".html_encode($course["course_code"].": ".$course["course_name"])."</a>".(isset($syllabi[$course["course_code"]]) ? " <a href=\"".$syllabi[$course["course_code"]]["url"]."\" title=\"Download Syllabus\"><i class=\"icon-file\"></i></a>" : "")."</li>\n";
 					}
 					echo "	</ul>\n";
 					echo "</li>\n";

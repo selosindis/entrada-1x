@@ -13,23 +13,26 @@
  * to license@zend.com so we can send you a copy immediately.
  *
  * @category   Zend
- * @package    Zend_Service
- * @subpackage Amazon
+ * @package    Zend_Service_WindowsAzure
+ * @subpackage Exception
+ * @version    $Id: Exception.php 25285 2013-03-09 10:30:20Z frosch $
  * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
- * @version    $Id: Exception.php 24593 2012-01-05 20:35:02Z matthew $
  */
 
 /**
- * Zend_Service_Exception
+ * @see Zend_Service_WindowsAzure_Exception
  */
-require_once 'Zend/Service/Exception.php';
+require_once 'Zend/Service/WindowsAzure/Exception.php';
 
 /**
  * @category   Zend
- * @package    Zend_Service
+ * @package    Zend_Service_WindowsAzure
+ * @subpackage Log
  * @copyright  Copyright (c) 2005-2012 Zend Technologies USA Inc. (http://www.zend.com)
  * @license    http://framework.zend.com/license/new-bsd     New BSD License
  */
-class Zend_Service_Amazon_Exception extends Zend_Service_Exception
-{}
+class Zend_Service_WindowsAzure_Log_Exception
+    extends Zend_Service_WindowsAzure_Exception
+{
+}

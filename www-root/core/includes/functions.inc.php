@@ -1606,9 +1606,9 @@ function fetch_organisation_title($organisation_id = 0) {
 }
 
 /**
- * This functio returns the full path of the course, including the name (i.e. Term 1 > Unit 3 > FooBar 101).
+ * This function returns the full path of the course, including the name (i.e. Term 1 > Unit 3 > FooBar 101).
  *
- * @param type $course_id
+ * @param int $course_id
  * @return string
  */
 function fetch_course_path($course_id = 0) {
@@ -1617,9 +1617,9 @@ function fetch_course_path($course_id = 0) {
 	$course_id = (int) $course_id;
 
 	if ($course_id) {
-		$curriculum_path = curriculum_hierarchy($course_id);
+		$curriculum_path = curriculum_hierarchy($course_id, true, true);
 
-		if ((is_array($curriculum_path)) && (!empty($curriculum_path))) {
+		if (is_array($curriculum_path) && !empty($curriculum_path)) {
 			$output = implode(" &gt; ", $curriculum_path);
 		}
 	}
@@ -3368,11 +3368,11 @@ function getmicrotime() {
  * @example Semester 1 > Course Name
  *
  * @param int $course_id
- * @param bool $return_course_name
  * @param bool $return_course_code
+ * @param bool $return_course_link
  * @return array
  */
-function curriculum_hierarchy($course_id = 0, $return_course_code = false) {
+function curriculum_hierarchy($course_id = 0, $return_course_code = false, $return_course_link = false) {
 	global $db;
 
 	if ($course_id = (int) $course_id) {
@@ -3385,7 +3385,7 @@ function curriculum_hierarchy($course_id = 0, $return_course_code = false) {
 		$result	= $db->GetRow($query);
 
 		if ($result) {
-			$output[] = $result["course_name"].(($return_course_code) ? " (".$result["course_code"].")" : "");
+			$output[] = ($return_course_link ? "<a href=\"".ENTRADA_RELATIVE."/courses?id=".$course_id."\">" : "").(($return_course_code) ? $result["course_code"].": " : "").$result["course_name"].($return_course_link ? "</a>" : "");
 
 			$query	= "SELECT * FROM `curriculum_lu_types` WHERE `curriculum_type_id` = ".$db->qstr($result["curriculum_type_id"]);
 			$result	= $db->GetRow($query);

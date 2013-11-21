@@ -313,11 +313,6 @@ if (!defined("PARENT_INCLUDED")) {
                             </div>
                         </div>
                         <?php
-
-						/**
-						 * Add swipe functionality if swipe is supported.
-						 */
-						navigator_swipe(array("next" => $next_click, "back" => $back_click));
 					}
 
 					echo "	<div style=\"text-align: right; margin-top: 8px\">\n";

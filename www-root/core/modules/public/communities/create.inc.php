@@ -379,7 +379,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                                                                 `page_title` = ".$db->qstr($PROCESSED["community_title"])." 
                                                             WHERE `cpage_id` = ".$db->qstr($cpage_id);
                                                 if (!$db->Execute($query)) {
-                                                    application_log("Unable to set `page_title` and `menu_title` for a community page [".$cpage_id."] to that of the `community_title`.");
+                                                    application_log("error", "Unable to set `page_title` and `menu_title` for a community page [".$cpage_id."] to that of the `community_title`.");
                                                 }
                                             } else {
                                                 $page_option["cpage_id"] = $cpage_id;

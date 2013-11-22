@@ -1499,7 +1499,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     <tr>
                                         <td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
                                         <td align="center"><span style="font-weight: bold; color: #003366;">Major</span></td>
-                                        <td align="center"><span style="font-weight: bold; color: #003366;">Major</span></td>
+                                        <td align="center"><span style="font-weight: bold; color: #003366;">Minor</span></td>
                                         <td align="center"><span style="font-weight: bold; color: #003366;">Remove</span></td>
                                     </tr>
                                     <?php

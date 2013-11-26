@@ -216,7 +216,7 @@ if (!defined("IN_PROFILE")) {
 
 	}
 
-	$PAGE_META["title"]			= "My Profile";
+	$PAGE_META["title"]			= "My ".APPLICATION_NAME." Profile";
 	$PAGE_META["description"]	= "";
 	$PAGE_META["keywords"]		= "";
 
@@ -270,8 +270,8 @@ if (!defined("IN_PROFILE")) {
 	$ONLOAD[] = "provStateFunction(\$F($('profile-update')['country_id']))";
 
 	$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `".AUTH_DATABASE."`.`user_data`.`id`=".$db->qstr($ENTRADA_USER->getID());
-	$result	= $db->GetRow($query);
-	if ($result) {
+	$user_data	= $db->GetRow($query);
+	if ($user_data) {
 		/*
 		 * Get the user departments and the custom fields for the departments.
 		 */
@@ -290,7 +290,7 @@ if (!defined("IN_PROFILE")) {
 				if ($PROCESSED["province"] || $PROCESSED["province_id"]) {
 					$source_arr = $PROCESSED;
 				} else {
-					$source_arr = $result;
+					$source_arr = $user_data;
 				}
 				$province = $source_arr["province"];
 				$province_id = $source_arr["province_id"];
@@ -326,27 +326,38 @@ if (!defined("IN_PROFILE")) {
 
 		</script>
 
-		<h1 style="margin-top: 0px">Personal Information</h1>
-		<div id="msgs">
-			
-		</div>
+		<h1>My <?php echo APPLICATION_NAME; ?> Profile</h1>
+		<div id="msgs"></div>
 		This section allows you to update your <?php echo APPLICATION_NAME; ?> user profile information. Please note that this information does not necessarily reflect any information stored at the main University. <span style="background-color: #FFFFCC; padding-left: 5px; padding-right: 5px">This is not your official university contact information.</span>
 		<br /><br />
 		<div id="profile-wrapper">
 		<script src="<?php echo ENTRADA_URL; ?>/javascript/jquery/jquery.imgareaselect.min.js" type="text/javascript"></script>
 		<link href='<?php echo ENTRADA_URL; ?>/css/imgareaselect-default.css' rel='stylesheet' type='text/css' />
 		<style type="text/css">
-			.table-nowrap {white-space:nowrap;}
-			#profile-wrapper {position:relative;}
-			#upload_profile_image_form {margin:0px;float:left;}
-			#profile-image-container {position:absolute;right:0px;}
+			.table-nowrap {
+                white-space: nowrap;
+            }
+            #profile-image-container {
+                position: absolute;
+                right: 0;
+                top: 60px;
+            }
+			#profile-wrapper {
+                position:relative;
+            }
+			#upload_profile_image_form {
+                margin: 0;
+                float: left;
+            }
 			#upload-image-modal-btn {position:absolute;right:7px;top:7px;display:none;outline:none;}
 			#btn-toggle {position:absolute;right:7px;bottom:7px;display:none;outline:none;}
 			#btn-toggle .btn {outline:none;}
 			.profile-image-preview {text-align:center;max-width:275px;margin:auto;}
 			.modal-body {max-height:none;}
 		</style>
-		<?php $profile_image = ENTRADA_ABSOLUTE . '/../public/images/' . $ENTRADA_USER->getID() . '/' . $ENTRADA_USER->getID() . '-large.png'; ?>
+		<?php
+        $profile_image = ENTRADA_ABSOLUTE . '/../public/images/' . $ENTRADA_USER->getID() . '/' . $ENTRADA_USER->getID() . '-large.png';
+        ?>
 		<script type="text/javascript">
 		function dataURItoBlob(dataURI) {
 			var byteString = atob(dataURI.split(',')[1]);
@@ -594,217 +605,232 @@ if (!defined("IN_PROFILE")) {
 			});
 		});
 		</script>
-		<div id="profile-image-container">
+
+		<div id="profile-image-container" class="pull-right">
 			<a href="#upload-image" id="upload-image-modal-btn" data-toggle="modal" class="btn btn-primary" id="upload-profile-image">Upload Photo</a>
 			<?php
-			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($result["id"]);
+			$query = "SELECT * FROM `".AUTH_DATABASE."`.`user_photos` WHERE `proxy_id` = ".$db->qstr($user_data["id"]);
 			$uploaded_photo = $db->GetRow($query);
 			?>
-			<span><img src="<?php echo webservice_url("photo", array($ENTRADA_USER->getID(), $uploaded_photo ? "upload" : "official"))."/".time(); ?>" width="192" height="250" class="img-polaroid" /></span>
-			<div class="btn-group" id="btn-toggle" class=" <?php echo $uploaded_photo ? "uploaded" : "official"; ?>">
+			<span>
+                <img src="<?php echo webservice_url("photo", array($ENTRADA_USER->getID(), $uploaded_photo ? "upload" : "official"))."/".time(); ?>" width="192" height="250" class="img-polaroid" />
+            </span>
+			<div class="btn-group" id="btn-toggle" class="<?php echo $uploaded_photo ? "uploaded" : "official"; ?>">
 				<a href="#" class="btn btn-small <?php echo $uploaded_photo["photo_active"] == "0" ? "active" : ""; ?>" id="image-nav-left">Official</a>
-				<?php if ($uploaded_photo) { ?><a href="#" class="btn btn-small <?php echo $uploaded_photo["photo_active"] == "1" ? "active" : ""; ?>" id="image-nav-right">Uploaded</a><?php } ?>
+				<?php
+                if ($uploaded_photo) {
+                    ?>
+                    <a href="#" class="btn btn-small <?php echo $uploaded_photo["photo_active"] == "1" ? "active" : ""; ?>" id="image-nav-right">Uploaded</a>
+                    <?php
+                }
+                ?>
 			</div>
 		</div>
 
-		<form class="form-horizontal" name="profile-update" id="profile-update" action="<?php echo ENTRADA_URL; ?>/profile" method="post" enctype="multipart/form-data" accept="<?php echo ((@is_array($VALID_MIME_TYPES)) ? implode(",", array_keys($VALID_MIME_TYPES)) : ""); ?>">
-			<input type="hidden" name="action" value="profile-update" />
-			<div class="control-group">
-				<label class="control-label">Last Login:</label>
-				<div class="controls">
-					<span class="input-xlarge uneditable-input"><?php echo ((!$_SESSION["details"]["lastlogin"]) ? "Your first login" : date(DEFAULT_DATE_FORMAT, $_SESSION["details"]["lastlogin"])); ?></span>
-				</div>
-			</div>
-			<div class="control-group"></div>
-			<div class="control-group">
-				<label class="control-label">Username:</label>
-				<div class="controls">
-					<span class="input-xlarge uneditable-input"><?php echo html_encode($_SESSION["details"]["username"]); ?></span>
-				</div>
-			</div>
-			<div class="control-group">
-				<label class="control-label">Password:</label>
-				<div class="controls">
-					<a class="btn btn-link" href="#password-change-modal" data-toggle="modal">Click here to change password</a>
-				</div>
-			</div>
-			<div class="control-group">
-				<label class="control-label">Private Hash:</label>
-				<div class="controls">
-					<div class="input-append">
-						<span class="input-large uneditable-input" id="hash-value"><?php echo $_SESSION["details"]["private_hash"]; ?></span><a class="add-on" href="#reset-hash-modal" data-toggle="modal"><i class="icon-repeat"></i></a>
-					</div>
+		<form class="form-horizontal" name="profile-update" id="profile-update" action="<?php echo ENTRADA_RELATIVE; ?>/profile" method="post" enctype="multipart/form-data" accept="<?php echo ((@is_array($VALID_MIME_TYPES)) ? implode(",", array_keys($VALID_MIME_TYPES)) : ""); ?>">
+		    <input type="hidden" name="action" value="profile-update" />
 
-				</div>
-			</div>
-			<div class="control-group">
-				<label class="control-label">Account Type:</label>
-				<div class="controls">
-					<span class="input-xlarge uneditable-input"><?php echo ucwords($_SESSION["details"]["group"])." <i class=\"icon-arrow-right\"></i> ".ucwords($_SESSION["details"]["role"]); ?></span>
-				</div>
-			</div>
-			<div class="control-group"></div>
-			<div class="control-group">
-				<label class="control-label">Organisation:</label>
-				<div class="controls">
-					<span class="input-xlarge uneditable-input">
-						<?php
-							$query		= "SELECT `organisation_title` FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = ".$_SESSION['details']['organisation_id'];
-							$oresult	= $db->GetRow($query);
-							if($oresult) {
-								echo $oresult['organisation_title'];
-							}
-						?>
-					</span>
-				</div>
-			</div>
-			<?php if (isset($_SESSION["details"]["grad_year"])) { ?>
-			<div class="control-group">
-				<label class="control-label">Graduating Year:</label>
-				<div class="controls">
-					<span class="input-xlarge uneditable-input">Class of <?php echo html_encode($_SESSION["details"]["grad_year"]); ?></span>
-				</div>
-			</div>
-			<?php } ?>
-			<div class="control-group"></div>
-			<div class="control-group">
-				<label class="control-label" for="prefix">Full Name:</label>
-				<div class="controls">
-					<select class="inline" id="prefix" name="prefix" style="width: 55px; vertical-align: middle; margin-right: 5px">
-						<option value=""<?php echo ((!$result["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
-						<?php
-						if ((@is_array($PROFILE_NAME_PREFIX)) && (@count($PROFILE_NAME_PREFIX))) {
-							foreach ($PROFILE_NAME_PREFIX as $key => $prefix) {
-								echo "<option value=\"".html_encode($prefix)."\"".(($result["prefix"] == $prefix) ? " selected=\"selected\"" : "").">".html_encode($prefix)."</option>\n";
-							}
-						}
-						?>
-					</select>
-					<span class="help-inline"><?php echo html_encode($result["firstname"]." ".$result["lastname"]); ?></span>
-				</div>
-			</div>
-			<div class="control-group"></div>
-			<div class="control-group">
-				<label class="control-label" for="email">Primary E-mail:</label>
-				<div class="controls">
-					<?php if($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] == "faculty") { ?>
-					<input type="text" class="input-xlarge" id="email" name="email" value="<?php echo html_encode($result["email"]); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
-					<?php } else { ?>
-					<span class="input-xlarge uneditable-input"><?php echo html_encode($result["email"]); ?></span>
-					<?php } ?>
-				</div>
-			</div>
-			<div class="control-group">
-				<label class="control-label" for="email_alt">Secondary E-mail:</label>
-				<div class="controls">
-					<input class="input-xlarge" name="email_alt" id="email_alt" type="text" placeholder="example@email.com" value="<?php echo html_encode($result["email_alt"]); ?>" />
-				</div>
-			</div>
-			<div class="control-group"></div>
-			<?php if (((bool) $GOOGLE_APPS["active"]) && $result["google_id"]) { ?>
-			<div class="control-group">
-				<label class="control-label">Google Account:</label>
-				<div class="controls">
+            <fieldset>
+                <legend>Personal Information</legend>
 
-						<?php
-						if (($result["google_id"] == "") || ($result["google_id"] == "opt-out") || ($result["google_id"] == "opt-in") || ($_SESSION["details"]["google_id"] == "opt-in")) {
-							?>
-							Your <?php echo $GOOGLE_APPS["domain"]; ?> account is <strong>not active</strong>. ( <a href="javascript: create_google_account()" class="action">create my account</a> )
-							<script type="text/javascript">
-							function create_google_account() {
-								$('google-account-details').update('<img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif\" width=\"16\" height=\"16\" alt=\"Please wait\" border=\"0\" style=\"margin-right: 2px; vertical-align: middle\" /> <span class=\"content-small\">Please wait while your account is created ...</span>');
-								new Ajax.Updater('google-account-details', '<?php echo ENTRADA_URL; ?>/profile', { method: 'post', parameters: { 'action' : 'google-update', 'google_account' : 1, 'ajax' : 1 }});
-							}
-							</script>
-							<?php
-						} else {
-							$google_address = html_encode($result["google_id"]."@".$GOOGLE_APPS["domain"]);
-							?>
-							<span class="input-xlarge uneditable-input"><?php echo $google_address; ?></span>
-							<?php
-						}
-						?>
+                <div class="control-group">
+                    <?php
+                    /*
+                     * Only if there are prefixes defined in settings.
+                     */
+                    if (isset($PROFILE_NAME_PREFIX) && is_array($PROFILE_NAME_PREFIX) && !empty($PROFILE_NAME_PREFIX)) {
+                        /*
+                         * Only if the user is not a student, or is a student and already has a prefix set.
+                         */
+                        if (($ENTRADA_USER->getGroup() != "student") || trim($user_data["prefix"])) {
+                            /**
+                             * @todo Don't forget to set the $ORIGINAL_PREFIX_VALUE somewhere.
+                             */
+                            ?>
+                            <label class="control-label" style="padding-top:0">
+                                <select class="input-small" id="prefix" name="prefix">
+                                    <option value=""<?php echo ((!$user_data["prefix"]) ? " selected=\"selected\"" : ""); ?>></option>
+                                    <?php
+                                    foreach ($PROFILE_NAME_PREFIX as $key => $prefix) {
+                                        echo "<option value=\"".html_encode($prefix)."\"".(($user_data["prefix"] == $prefix) ? " selected=\"selected\"" : "").">".html_encode($prefix)."</option>\n";
+                                    }
+                                    ?>
+                                </select>
+                            </label>
+                            <?php
+                        }
+                    } else {
+                        ?>
+                        <input type="hidden" name="prefix" value="" />
+                        <?php
+                    }
+                    ?>
+                    <div class="controls">
+                        <span class="input-large lead"><?php echo html_encode($user_data["firstname"]." ".$user_data["lastname"]); ?></span>
+                    </div>
+                </div>
 
-				</div>
-			</div>
-			<?php if ($google_address) { ?>
-			<div class="control-group">
-				<label class="control-label"></label>
-				<div class="controls">
-					<a href="#reset-google-password-box" id="reset-google-password" class="btn" data-toggle="modal">Reset my <strong><?php echo $GOOGLE_APPS["domain"]; ?></strong> password</a> <a href="http://webmail.<?php echo $GOOGLE_APPS["domain"]; ?>" class="btn" target="_blank">visit <?php echo html_encode($GOOGLE_APPS["domain"]); ?> webmail</a>
-				</div>
-			</div>
-			<?php } ?>
-			<div class="control-group"></div>
-			<?php } ?>
-			<div class="control-group">
-				<label class="control-label" for="telephone">Telephone Number:</label>
-				<div class="controls">
-					<input class="input-xlarge" name="telephone" id="telephone" type="text" placeholder="Example: 613-533-6000 x74918" value="<?php echo html_encode($result["telephone"]); ?>" />
-				</div>
-			</div>
-			<div class="control-group">
-				<label class="control-label" for="fax">Fax Number:</label>
-				<div class="controls">
-					<input class="input-xlarge" name="fax" id="fax" type="text" placeholder="Example: 613-533-3204" value="<?php echo html_encode($result["fax"]); ?>" />
-				</div>
-			</div>
-			<div class="control-group"></div>
-			<div class="control-group">
-				<label class="control-label" for="country_id">Country:</label>
-				<div class="controls">
-					<?php
-						$countries = fetch_countries();
-						if ((is_array($countries)) && (count($countries))) {
+                <div class="control-group">
+                    <label class="control-label" for="email">Primary E-mail:</label>
+                    <div class="controls">
+                        <?php
+                        if($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] == "faculty") {
+                            ?>
+                            <input type="text" class="input-large" id="email" name="email" value="<?php echo html_encode($user_data["email"]); ?>" style="width: 250px; vertical-align: middle" maxlength="128" />
+                            <?php
+                        } else {
+                            ?>
+                            <span class="input-large uneditable-input"><?php echo html_encode($user_data["email"]); ?></span>
+                            <?php
+                        }
+                        ?>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="email_alt">Secondary E-mail:</label>
+                    <div class="controls">
+                        <input class="input-large" name="email_alt" id="email_alt" type="text" placeholder="example@email.com" value="<?php echo html_encode($user_data["email_alt"]); ?>" />
+                    </div>
+                </div>
+                <?php
+                if ((bool) $GOOGLE_APPS["active"] && $user_data["google_id"]) {
+                    ?>
+                    <div class="control-group">
+                        <label class="control-label">Google Account:<br /><a href="http://webmail.<?php echo $GOOGLE_APPS["domain"]; ?>" target="_blank">visit <?php echo html_encode($GOOGLE_APPS["domain"]); ?> webmail</a></label>
+                        <div class="controls">
+                            <?php
+                            if (($user_data["google_id"] == "") || ($user_data["google_id"] == "opt-out") || ($user_data["google_id"] == "opt-in") || ($_SESSION["details"]["google_id"] == "opt-in")) {
+                                ?>
+                                Your <?php echo $GOOGLE_APPS["domain"]; ?> account is <strong>not active</strong>. ( <a href="javascript: create_google_account()" class="action">create my account</a> )
+                                <script type="text/javascript">
+                                function create_google_account() {
+                                    $('google-account-details').update('<img src="<?php echo ENTRADA_RELATIVE; ?>/images/indicator.gif\" width=\"16\" height=\"16\" alt=\"Please wait\" border=\"0\" style=\"margin-right: 2px; vertical-align: middle\" /> <span class=\"content-small\">Please wait while your account is created ...</span>');
+                                    new Ajax.Updater('google-account-details', '<?php echo ENTRADA_URL; ?>/profile', { method: 'post', parameters: { 'action' : 'google-update', 'google_account' : 1, 'ajax' : 1 }});
+                                }
+                                </script>
+                                <?php
+                            } else {
+                                $google_address = html_encode($user_data["google_id"]."@".$GOOGLE_APPS["domain"]);
+                                ?>
+                                <span class="input-large uneditable-input"><?php echo $google_address; ?></span>
+                                <?php
+                                if ($google_address) {
+                                    ?>
+                                    <div style="margin-top: 10px">
+                                        <a href="#reset-google-password-box" id="reset-google-password" class="btn" data-toggle="modal">Change My <strong><?php echo ucwords($GOOGLE_APPS["domain"]); ?></strong> Password</a>
+                                    </div>
+                                    <?php
+                                }
+                            }
+                            ?>
+                        </div>
+                    </div>
+                    <?php
+                }
+                ?>
+                <div class="control-group"></div>
+                <div class="control-group">
+                    <label class="control-label" for="telephone">Telephone Number:</label>
+                    <div class="controls">
+                        <input class="input-large" name="telephone" id="telephone" type="text" placeholder="Example: 613-533-6000 x74918" value="<?php echo html_encode($user_data["telephone"]); ?>" />
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="fax">Fax Number:</label>
+                    <div class="controls">
+                        <input class="input-large" name="fax" id="fax" type="text" placeholder="Example: 613-533-3204" value="<?php echo html_encode($user_data["fax"]); ?>" />
+                    </div>
+                </div>
+                <div class="control-group"></div>
+                <div class="control-group">
+                    <label class="control-label" for="country_id">Country:</label>
+                    <div class="controls">
+                        <?php
+                            $countries = fetch_countries();
+                            if ((is_array($countries)) && (count($countries))) {
 
-							$country_id = ($PROCESSED["country_id"])?$PROCESSED["country_id"]:$result["country_id"];
+                                $country_id = ($PROCESSED["country_id"])?$PROCESSED["country_id"]:$user_data["country_id"];
 
-							echo "<select id=\"country_id\" name=\"country_id\" style=\"width: 256px\" onchange=\"provStateFunction(this.value);\">\n";
-							echo "<option value=\"0\"".((!country_id) ? " selected=\"selected\"" : "").">-- Select Country --</option>\n";
-							foreach ($countries as $country) {
-								echo "<option value=\"".(int) $country["countries_id"]."\"".(($country_id == $country["countries_id"]) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
-							}
-							echo "</select>\n";
-						} else {
-							echo "<input type=\"hidden\" id=\"country_id\" name=\"country_id\" value=\"0\" />\n";
-							echo "Country information not currently available.\n";
-						}
-					?>
-				</div>
-			</div>
-			<div class="control-group">
-				<label class="control-label" for="prov_state">Province:</label>
-				<div class="controls">
-					<div id="prov_state_div" class="padding5v">Please select a <strong>Country</strong> from above first.</div>
-				</div>
-			</div>
-			<div class="control-group">
-				<label class="control-label" for="city">City:</label>
-				<div class="controls">
-					<input class="input-xlarge" name="city" id="city" type="text" value="<?php echo html_encode($result["city"]); ?>" />
-				</div>
-			</div>
-			<div class="control-group">
-				<label class="control-label" for="address">Address:</label>
-				<div class="controls">
-					<input class="input-xlarge" name="address" id="address" type="text" value="<?php echo html_encode($result["address"]); ?>" />
-				</div>
-			</div>
-			<div class="control-group">
-				<label class="control-label" for="postcode">Postal Code:</label>
-				<div class="controls">
-					<input class="input-xlarge" name="postcode" id="postcode" type="text" placeholder="Example: K7L 3N6" value="<?php echo html_encode($result["postcode"]); ?>" />
-				</div>
-			</div>
-			<?php if ($ENTRADA_USER->getGroup() != "student") { ?>
-			<div class="control-group">
-				<label class="control-label" for="hours">Office Hours:</label>
-				<div class="controls">
-					<textarea id="office_hours" name="office_hours" class="expandable input-xlarge" maxlength="100"><?php echo html_encode($result["office_hours"]); ?></textarea>
-				</div>
-			</div>
-			<?php } ?>
-
+                                echo "<select id=\"country_id\" name=\"country_id\" class=\"input-large\" onchange=\"provStateFunction(this.value);\">\n";
+                                echo "<option value=\"0\"".((!country_id) ? " selected=\"selected\"" : "").">-- Select Country --</option>\n";
+                                foreach ($countries as $country) {
+                                    echo "<option value=\"".(int) $country["countries_id"]."\"".(($country_id == $country["countries_id"]) ? " selected=\"selected\"" : "").">".html_encode($country["country"])."</option>\n";
+                                }
+                                echo "</select>\n";
+                            } else {
+                                echo "<input type=\"hidden\" id=\"country_id\" name=\"country_id\" value=\"0\" />\n";
+                                echo "Country information not currently available.\n";
+                            }
+                        ?>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="prov_state">Province:</label>
+                    <div class="controls">
+                        <div id="prov_state_div" class="padding5v">Please select a <strong>Country</strong> from above first.</div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="city">City:</label>
+                    <div class="controls">
+                        <input class="input-large" name="city" id="city" type="text" value="<?php echo html_encode($user_data["city"]); ?>" />
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="address">Address:</label>
+                    <div class="controls">
+                        <input class="input-large" name="address" id="address" type="text" value="<?php echo html_encode($user_data["address"]); ?>" />
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="postcode">Postal Code:</label>
+                    <div class="controls">
+                        <input class="input-large" name="postcode" id="postcode" type="text" placeholder="Example: K7L 3N6" value="<?php echo html_encode($user_data["postcode"]); ?>" />
+                    </div>
+                </div>
+                <?php
+                if ($ENTRADA_USER->getGroup() != "student") {
+                    ?>
+                    <div class="control-group">
+                        <label class="control-label" for="hours">Office Hours:</label>
+                        <div class="controls">
+                            <textarea id="office_hours" name="office_hours" class="expandable input-large" maxlength="100"><?php echo html_encode($user_data["office_hours"]); ?></textarea>
+                        </div>
+                    </div>
+                    <?php
+                }
+                ?>
+            </fieldset>
+            <fieldset>
+                <legend><?php echo APPLICATION_NAME; ?> Account Information</legend>
+                <div class="control-group">
+                    <label class="control-label">Username:</label>
+                    <div class="controls">
+                        <span class="input-large uneditable-input"><?php echo html_encode($_SESSION["details"]["username"]); ?></span>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Password:</label>
+                    <div class="controls">
+                        <a class="btn" href="#password-change-modal" data-toggle="modal">Change My Password</a>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Private Hash:</label>
+                    <div class="controls">
+                        <div class="input-append">
+                            <span class="input-large uneditable-input" id="hash-value"><?php echo $_SESSION["details"]["private_hash"]; ?></span>
+                            <a class="add-on" href="#reset-hash-modal" data-toggle="modal"><i class="icon-repeat"></i></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Last Login:</label>
+                    <div class="controls">
+                        <span class="input-large uneditable-input"><?php echo ((!$_SESSION["details"]["lastlogin"]) ? "Your first login" : date(DEFAULT_DATE_FORMAT, $_SESSION["details"]["lastlogin"])); ?></span>
+                    </div>
+                </div>
+            </fieldset>
 			<?php
 			load_rte();
 			if ($custom_fields) {
@@ -841,7 +867,7 @@ if (!defined("IN_PROFILE")) {
 										switch ($field["type"]) {
 											case "textarea" :
 												?>
-												<textarea id="<?php echo $field["name"]; ?>" class="input-xlarge expandable expanded" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>"><?php echo $field["value"]; ?></textarea>
+												<textarea id="<?php echo $field["name"]; ?>" class="input-large expandable expanded" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>"><?php echo $field["value"]; ?></textarea>
 												<?php
 											break;
 											case "textinput" :
@@ -853,7 +879,7 @@ if (!defined("IN_PROFILE")) {
 											break;
 											case "richtext" :
 												?>
-												<textarea id="<?php echo $field["name"]; ?>" class="input-xlarge" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>"><?php echo $field["value"]; ?></textarea>
+												<textarea id="<?php echo $field["name"]; ?>" class="input-large" name="custom[<?php echo $department_id; ?>][<?php echo $field["id"]; ?>]" maxlength="<?php echo $field["length"]; ?>"><?php echo $field["value"]; ?></textarea>
 												<?php
 											break;
 											case "checkbox" :
@@ -926,7 +952,7 @@ if (!defined("IN_PROFILE")) {
 			?>
 			<div>
 				<div class="pull-right">
-					<input type="submit" class="btn btn-primary right" value="Save Profile" />
+					<input type="submit" class="btn btn-primary btn-large" value="Save Profile" />
 				</div>
 			</div>
 		</form>
@@ -959,7 +985,7 @@ if (!defined("IN_PROFILE")) {
 			</div>
 			<div class="modal-body">
 				<div class="alert alert-info">
-					<strong>Please note:</strong> You are about to reset your private hash. Please confirm below that you would like to proceed with the reset.
+					<strong>Please Note:</strong> You are about to reset your <?php echo APPLICATION_NAME; ?> account private hash. If you have active links to your <?php echo APPLICATION_NAME; ?> calendar or podcasting feeds from an external application suchas  Google Calendar or iTunes, don't forget to update those links accordingly.
 				</div>
 			</div>
 			<div class="modal-footer">
@@ -1001,7 +1027,7 @@ if (!defined("IN_PROFILE")) {
 			</div>
 		</div>
 		<?php
-		if (((bool) $GOOGLE_APPS["active"]) && $result["google_id"] && !in_array($result["google_id"], array("opt-out", "opt-in"))) {
+		if (((bool) $GOOGLE_APPS["active"]) && $user_data["google_id"] && !in_array($user_data["google_id"], array("opt-out", "opt-in"))) {
 			?>
 			<div id="reset-google-password-box" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 				<div class="modal-header">

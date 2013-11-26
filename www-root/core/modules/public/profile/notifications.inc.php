@@ -26,9 +26,9 @@ if (!defined("IN_PROFILE")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
-	$PROXY_ID					= $ENTRADA_USER->getID();
+	$PROXY_ID	    = $ENTRADA_USER->getID();
 	
-	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/profile?section=notifications", "title" => "Community Notifications");
+	$BREADCRUMB[]	= array("url" => ENTRADA_URL."/profile?section=notifications", "title" => "Notification Preferences");
 
 	$PROCESSED		= array();
 
@@ -66,7 +66,7 @@ if (!defined("IN_PROFILE")) {
 		echo display_notice();
 	}
 	require_once("Models/notifications/NotificationUser.class.php");
-	echo "<h1>Your ".APPLICATION_NAME." Notifications</h1>";
+	echo "<h1>Notification Preferences</h1>";
 	$query = "SELECT `nuser_id` FROM `notification_users` WHERE `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 	$notification_user_ids = $db->GetAll($query);
 	if ($notification_user_ids) {
@@ -187,8 +187,8 @@ if (!defined("IN_PROFILE")) {
 				}
 			);
 		}
-		
 		</script>
+        <h2>Active Notifications</h2>
 		<table id="notificationsTable" class="tableList" style="width: 100%; margin: 10px 0px 10px 0px" cellspacing="0" cellpadding="0" border="0">
 			<thead>
 				<tr>
@@ -217,16 +217,12 @@ if (!defined("IN_PROFILE")) {
 			</tbody>
 		</table>
 		<?php
-	} else {
-		$NOTICES++;
-		$NOTICESTR[] = "No content was found in the system which you have requested to be notified of changes or new comments on.";
-		echo display_notice();
 	}
 	
 	
 	if ((defined("COMMUNITY_NOTIFICATIONS_ACTIVE")) && ((bool) COMMUNITY_NOTIFICATIONS_ACTIVE)) {
 		?>
-		<h1>Community Notifications</h1>
+		<h2>Community Notifications</h2>
 		<?php
 		$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `".AUTH_DATABASE."`.`user_data`.`id`=".$db->qstr($ENTRADA_USER->getID());
 		$result	= $db->GetRow($query);
@@ -273,8 +269,11 @@ if (!defined("IN_PROFILE")) {
 			<tbody id="notifications-toggle"<?php echo (($result["notifications"]) ? "" : " style=\"display: none\""); ?>>
 				<tr>
 					<td>
-						<h2>Notification Options</h2>
-						Please select which notifications you would like to receive for each community you are a member of. If you are a community administrator, then you will also have the option of being notified when members join or leave your community.
+                        <hr />
+
+                        <div class="alert alert-info">
+						    Please select the notifications you would like to receive for each community you are a member of. If you are a community administrator, then you will also have the option of being notified when members join or leave your community.
+                        </div>
 						<?php
 						$query = "	SELECT DISTINCT(a.`community_id`), a.`member_acl`, e.`community_title`, b.`notify_active` AS `announcements`, c.`notify_active` AS `events`, d.`notify_active` AS `polls`, f.`notify_active` AS `members`
 									FROM `community_members` AS a
@@ -301,7 +300,7 @@ if (!defined("IN_PROFILE")) {
 						$community_notifications = $db->GetAll($query);
 						if ($community_notifications) {
 							?>
-							<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+							<table>
 							<tbody>
 								<tr>
 									<td style="width: 50%; vertical-align: top;">

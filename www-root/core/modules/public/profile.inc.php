@@ -101,21 +101,21 @@ function add_profile_sidebar () {
 	global $ENTRADA_ACL, $ENTRADA_USER, $db;
 
 	$sidebar_html  = "<ul class=\"menu\">";
-	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile\">Personal Information</a></li>\n";
-	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=privacy\">Privacy Settings</a></li>\n";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile\">Personal Information</a></li>\n";
+	$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile?section=privacy\">Privacy Preferences</a></li>\n";
 	if (((defined("COMMUNITY_NOTIFICATIONS_ACTIVE")) && ((bool) COMMUNITY_NOTIFICATIONS_ACTIVE)) || ((defined("NOTIFICATIONS_ACTIVE")) && ((bool) NOTIFICATIONS_ACTIVE))) {
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=notifications\">Manage My Notifications</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile?section=notifications\">Notification Preferences</a></li>\n";
 	}
 	if ($ENTRADA_ACL->isLoggedInAllowed('assistant_support', 'create')) {
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=assistants\">My Admin Assistants</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile?section=assistants\">My Admin Assistants</a></li>\n";
 	}
 
 	if ($_SESSION["details"]["group"] == "student") {
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile?section=mspr\">My MSPR</a></li>\n";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile/observerships\">My Observerships</a></li>\n";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile/gradebook\">My Gradebooks</a></li>\n";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile/gradebook/assignments\">My Assignments</a></li>\n";
-		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_URL."/profile/eportfolio\">My ePortfolio</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile?section=mspr\">My MSPR</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile/observerships\">My Observerships</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile/gradebook\">My Gradebooks</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile/gradebook/assignments\">My Assignments</a></li>\n";
+		$sidebar_html .= "	<li class=\"link\"><a href=\"".ENTRADA_RELATIVE."/profile/eportfolio\">My ePortfolio</a></li>\n";
 	}
 	
 	$sidebar_html .= "</ul>";
@@ -172,9 +172,25 @@ function profile_update_personal_info() {
 			}
 		}
 	}
-	
-	if ((isset($_POST["prefix"])) && (@in_array(trim($_POST["prefix"]), $PROFILE_NAME_PREFIX))) {
-		$PROCESSED["prefix"] = trim($_POST["prefix"]);
+
+    if (isset($PROFILE_NAME_PREFIX) && is_array($PROFILE_NAME_PREFIX) && isset($_POST["prefix"]) && in_array($_POST["prefix"], $PROFILE_NAME_PREFIX)) {
+        /*
+         * To prevent students from providing a prefix when they shouldn't be setting
+         * one I need to know if they already have one or not.
+         */
+        if ($ENTRADA_USER->getGroup() == "student") {
+            $query = "SELECT `prefix` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($ENTRADA_USER->GetProxyId());
+            $prefix = $db->GetOne($query);
+        } else {
+            $prefix = false;
+        }
+
+        if (($ENTRADA_USER->getGroup() != "student") || $prefix) {
+            /*
+             * Doing this safe because we are checking that the value of $_POST["prefix"] is set in the $PROFILE_NAME_PREFIX array above.
+             */
+            $PROCESSED["prefix"] = $_POST["prefix"];
+        }
 	} else {
 		$PROCESSED["prefix"] = "";
 	}
@@ -187,7 +203,7 @@ function profile_update_personal_info() {
 		
 	if($_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"] == "faculty") {
 		if ((isset($_POST["email"])) && ($email = clean_input($_POST["email"], "trim", "lower"))) {
-			if (@valid_address($email)) {
+			if (valid_address($email)) {
 				$PROCESSED["email"] = $email;
 			} else {
 				$ERROR++;
@@ -200,7 +216,7 @@ function profile_update_personal_info() {
 	}
 	
 	if ((isset($_POST["email_alt"])) && ($_POST["email_alt"] != "")) {
-		if (@valid_address(trim($_POST["email_alt"]))) {
+		if (valid_address(trim($_POST["email_alt"]))) {
 			$PROCESSED["email_alt"] = strtolower(trim($_POST["email_alt"]));
 		} else {
 			$ERROR++;

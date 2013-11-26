@@ -41,7 +41,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 		$query		= "SELECT * FROM `global_lu_provinces` WHERE `country_id` = ".$db->qstr($countries_id)." ORDER BY `province` ASC";
 		$results	= $db->GetAll($query);
 		if ($results) {
-			echo "<select id=\"prov_state\" name=\"prov_state\">\n";
+			echo "<select id=\"prov_state\" name=\"prov_state\" class=\"input-large\">\n";
 			echo "<option value=\"0\"".((!$province_id) ? " selected=\"selected\"" : "").">-- Select Province / State --</option>\n";
 			foreach($results as $result) {
 				echo "<option value=\"".clean_input($result["province_id"], array("notags", "specialchars"))."\"".(($province_id == $result["province_id"]) ? " selected=\"selected\"" : ($province == clean_input($result["province"], array("notags", "specialchars")) ? " selected=\"selected\"" : "")).">".clean_input($result["province"], array("notags", "specialchars"))."</option>\n";

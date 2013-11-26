@@ -161,8 +161,8 @@ if ($ACTION == "login") {
 
 	if (($ERROR === 0) && ($result["STATUS"] == "success")) {
 		if (isset($USER_ACCESS_ID)) {
-			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_access` SET `login_attempts` = NULL WHERE `id` = ".(int) $USER_ACCESS_ID." AND `app_id` = ".$db->qstr(AUTH_APP_ID))) {
-				application_log("error", "Unable to incrememnt the login attempt counter for user [".$username."]. Database said ".$db->ErrorMsg());
+			if (!$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_access` SET `login_attempts` = NULL, `last_login` = ".$db->qstr(time()).", `last_ip` = ".$db->qstr((isset($_SERVER["REMOTE_ADDR"]) ? $_SERVER["REMOTE_ADDR"] : 0))." WHERE `id` = ".(int) $USER_ACCESS_ID." AND `app_id` = ".$db->qstr(AUTH_APP_ID))) {
+				application_log("error", "Unable to reset the login attempt counter for user [".$username."]. Database said ".$db->ErrorMsg());
 			}
 		}
 

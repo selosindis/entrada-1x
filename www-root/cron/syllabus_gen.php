@@ -28,85 +28,6 @@ if (isset($argv[1])) {
 	$org_id = (int) $argv[1];
 }
 
-$mode =	clean_input($_GET["mode"], "nows");
-
-if ($mode == "graph") {
-	ob_clear_open_buffers();
-
-	require_once("library/Models/utility/SimpleCache.class.php");
-	require_once("library/Models/courses/Course.class.php");
-
-	require_once ('library/Entrada/jpgraph/jpgraph.php');
-	require_once ('library/Entrada/jpgraph/jpgraph_pie.php');
-
-	$course_id	= (int) $_GET["course_id"];
-	$start_date = (int) $_GET["start_date"];
-	$end_date	= (int) $_GET["end_date"];
-
-	$course = Course::get($course_id);
-
-	$query = "	SELECT a.* FROM `events_lu_eventtypes` AS a 
-				LEFT JOIN `eventtype_organisation` AS c 
-				ON a.`eventtype_id` = c.`eventtype_id` 
-				LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS b
-				ON b.`organisation_id` = c.`organisation_id` 
-				WHERE b.`organisation_id` = ".$db->qstr($course->getOrganisationID())."
-				AND a.`eventtype_active` = '1' 
-				ORDER BY a.`eventtype_order`";
-	$event_types = $db->GetAll($query);
-	if ($event_types) {
-		foreach ($event_types as $event_type) {
-			$query = "	SELECT a.`event_id`, b.`course_name`, a.`event_title`, a.`event_start`, c.`duration`, d.`eventtype_title`
-						FROM `events` AS a
-						LEFT JOIN `courses` AS b
-						ON b.`course_id` = a.`course_id`
-						LEFT JOIN `event_eventtypes` AS c
-						ON c.`event_id` = a.`event_id`
-						LEFT JOIN `events_lu_eventtypes` AS d
-						ON d.`eventtype_id` = c.`eventtype_id`
-						WHERE c.`eventtype_id` = ".$db->qstr($event_type["eventtype_id"])."
-						AND (a.`parent_id` IS NULL OR a.`parent_id` = 0)
-						AND (a.`event_start` BETWEEN ".$db->qstr($start_date)." AND ".$db->qstr($end_date).")
-						AND a.`course_id` = ".$db->qstr($course_id)."
-						ORDER BY d.`eventtype_order` ASC, b.`course_name` ASC, a.`event_start` ASC";
-			$results = $db->GetAll($query);
-			if ($results) {
-				foreach ($results as $result) {
-					$course_events[$event_type["eventtype_title"]]["duration"] += $result["duration"];
-				}
-			}
-		}
-	}
-
-	foreach ($course_events as $event_title => $event_duration) {
-		$data[] = $event_duration["duration"];
-		$labels[] = $event_title."\n(%d%%)";
-	}
-
-	// Create the Pie Graph. 
-	$graph = new PieGraph(600,450);
-
-	// Create
-	$p1 = new PiePlot($data);
-	$graph->Add($p1);
-
-	$p1->SetSize(0.35);
-	$p1->SetCenter(0.4,0.5);
-	$p1->SetSliceColors(array('#37557d','#476c9f','#5784bf','#7b9ece','#9eb7db','#bfcfe7'));
-
-	$p1->SetLabels($labels);
-	$p1->SetLabelPos(1);
-	$p1->SetLabelType(PIE_VALUE_ADJPER);
-
-	// Enable and set policy for guide-lines. Make labels line up vertically
-	$p1->SetGuideLines(true,true);
-	$p1->SetGuideLinesAdjust(1.1);
-
-	$graph->Stroke();
-
-	exit;
-}
-
 if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 	/**
 	 * Lock present: application busy: quit
@@ -126,22 +47,26 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 					if (!is_null($syllabus->getID())) {
 
 						unset($pages_html);
-//						$g_start = time();
-//						$s_start = mktime(0, 0, 0, $syllabus->getStart());
-//						$s_end	 = mktime(0, 0, 0, $syllabus->getFinish());
-//
-//						$start_string = date("F", $s_start)." 1, ".date("Y", time());
-//						$end_string = date("F", $s_end)." ".date("t", $s_end).", ".date("Y", time());
 
 						$course = $syllabus->getCourse();
 						$course_contacts = $course->getContacts();
 
+						$query = "SELECT c.`curriculum_period_title` AS `curriculum_type_name`, c.`start_date`, c.`finish_date`
+									FROM `courses` AS a 
+									JOIN `course_audience` AS b
+									ON a.`course_id` = b.`course_id`
+									JOIN `curriculum_periods` AS c
+									ON b.`cperiod_id` = c.`cperiod_id`
+									WHERE a.`course_id` = ".$db->qstr($result["course_id"]);
+						$eperiod_data = $db->GetRow($query);
+						$enrolment_period = !empty($eperiod_data["curriculum_type_name"]) ? $eperiod_data["curriculum_type_name"] : date("F jS, Y", $eperiod_data["start_date"]) . " to " . date("F jS, Y", $eperiod_data["finish_date"]);
+						
 						if(file_exists($ENTRADA_TEMPLATE->absolute()."/syllabus/cover.html")) {
 							$cover_template = file_get_contents($ENTRADA_TEMPLATE->absolute()."/syllabus/cover.html");
 							$cover_search_terms = array(
 								"%COURSE_CODE%",
 								"%COURSE_NAME%",
-								"%GENERATED%",
+								"%E_PERIOD%",
 								"%AGENT_CONTACT_NAME%",
 								"%AGENT_CONTACT_EMAIL%",
 								"%YEAR%",
@@ -150,7 +75,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 							$cover_replace_values = array(
 								$course->getCourseCode(),
 								$course->getCourseName(),
-								date("l, F jS, Y g:iA"),
+								$enrolment_period,
 								$AGENT_CONTACTS["general-contact"]["name"],
 								$AGENT_CONTACTS["general-contact"]["email"],
 								date("Y"),
@@ -164,6 +89,10 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 							$template = file_get_contents($ENTRADA_TEMPLATE->absolute()."/syllabus/".$syllabus->getTemplate().".php");
 							if (!empty($page_whitelist[$course->getOrganisationID()][$syllabus->getTemplate()])) {
 								$whitelist = array_keys($page_whitelist[$course->getOrganisationID()][$syllabus->getTemplate()]);
+								$cc_key = array_search("course_calendar", $whitelist);
+								if ($cc_key) {
+									unset($whitelist[$cc_key]);
+								}
 								$search_terms = $page_whitelist[$course->getOrganisationID()][$syllabus->getTemplate()];
 							} else {
 								$whitelist = $page_whitelist[$course->getOrganisationID()]["default"];
@@ -423,8 +352,9 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 						if (is_null($pages_html["learning_event_types"]) && in_array("%LEARNING_EVENT_TYPES%", $search_terms)) {
 							$pages_html["learning_event_types"] = $eventtypes_html;
 						}
-
-						if (empty($pages_html["course_calendar"]) && in_array("%COURSE_CALENDAR%", $search_terms)) {
+						
+						$pages_html["course_calendar"] = "";
+						if (!empty($calendar_html) && in_array("%COURSE_CALENDAR%", $search_terms)) {
 							if ($calendar_html) {
 								$pages_html["course_calendar"] .= "<div class=\"page ".($level == 1 ? "break" : "")."\">";
 								$pages_html["course_calendar"] .= "<h1>Course Calendar</h1>";

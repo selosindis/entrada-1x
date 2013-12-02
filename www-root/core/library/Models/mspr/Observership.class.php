@@ -458,10 +458,10 @@ class Observership extends ModelBase implements Editable, Validation {
 		}
 	}
 	
-	public function delete($id = false) {		
+	public function delete($id = false) {
 		global $db;
 		$id = (int) $id ? $id : $this->id;
-		if ($this->status == "pending") {
+		if ($this->status == "pending" || $this->status == "approved" || $this->status == "rejected") {
 			$query = "DELETE FROM `student_observerships` where `id`=".$db->qstr($id);
 			if(!$db->Execute($query)) {
 				application_log("error", "Unable to delete a student_observerships record. Database said: ".$db->ErrorMsg());

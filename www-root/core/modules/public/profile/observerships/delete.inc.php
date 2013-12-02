@@ -53,11 +53,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_OBSERVERSHIPS"))) {
 			case 2 :
 				foreach ($valid_observerships as $observership) {
 					$title = $observership->getTitle();
-					if ($observership->delete()) {
-						$deleted[] = $title;
+					if ($observership->getStatus() == "pending" || $observership->getStatus() == "approved" || $observership->getStatus() == "rejected") {
+						if ($observership->delete()) {
+							$deleted[] = $title;
+						} else {
+							add_error("An error ocurred while attempting to delete the observership <strong>".$title."</strong>. An administrator has been informed, please try again later.
+										<br />You will be automatically redirected to the My Observerships page in 5 seconds, or you can <a href=\"".ENTRADA_URL."/profile/observerships\">click here</a>.");
+						}
 					} else {
-						add_error("An error ocurred while attempting to delete the observership <strong>".$title."</strong>. An administrator has been informed, please try again later.
-									<br />You will be automatically redirected to the My Observerships page in 5 seconds, or you can <a href=\"".ENTRADA_URL."/profile/observerships\">click here</a>.");
+						add_error("Unable to delete the observership <strong>".$title."</strong>, the status is ".$observership->getStatus().".");
 					}
 				}
 				if ($deleted) {

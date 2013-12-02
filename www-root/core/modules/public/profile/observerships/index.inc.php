@@ -218,7 +218,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_OBSERVERSHIPS"))) {
 				$editable = ($observership->getEnd() >= time() && ($observership->getStatus() == "pending" || $observership->getStatus() == "rejected") ? true : false);
 
 				echo "<tr class=\"observership ".($i <= 8 && $observership->getStatus() == "confirmed" ? "active" : "")."\" data-id=\"".$observership->getID()."\">\n";
-				echo "\t<td class=\"modified\">" . ($editable ? "<input type=\"checkbox\" class=\"delete\" name=\"delete[]\" value=\"".$observership->getID()."\" />" : "") . "</td>\n";
+				echo "\t<td class=\"modified\">" . ($observership->getStatus() == "pending" || $observership->getStatus() == "approved" || $observership->getStatus() == "rejected" ? "<input type=\"checkbox\" class=\"delete\" name=\"delete[]\" value=\"".$observership->getID()."\" />" : "") . "</td>\n";
 				echo "\t<td><a href=\"".ENTRADA_URL."/profile/observerships?section=review&id=".$observership->getID()."\">".$observership->getTitle()."</a></td>\n";
 				echo "\t<td class=\"status\">".ucwords(strtolower($observership->getStatus()))."</td>\n";
 				echo "\t<td>".date("Y-m-d", $observership->getStart())."</td>\n";

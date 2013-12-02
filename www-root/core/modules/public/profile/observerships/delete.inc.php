@@ -43,7 +43,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_OBSERVERSHIPS"))) {
 		if (is_array($_POST["delete"])) {
 			foreach ($_POST["delete"] as $observership_id) {
 				$observership = Observership::get($observership_id);
-				if ($observership->getStatus() == "pending") {
+				if ($observership->getStatus() == "pending" || $observership->getStatus() == "approved" || $observership->getStatus() == "rejected") {
 					$valid_observerships[] = $observership;
 				}
 			}

@@ -84,7 +84,7 @@ class Observership extends ModelBase implements Editable, Validation {
 				$res->VALID = false;				
 			}
 			
-			if (($ENTRADA_USER->getGroup() != "staff" && $ENTRADA_USER->getGroup() != "medtech") && date("z", $res->start) < date("z", time())) {
+			if (($ENTRADA_USER->getGroup() != "staff" && $ENTRADA_USER->getGroup() != "medtech") && $res->start < strtotime(date("Y-m-d", time()))) {
 				add_error("Entry of historical observerships is not available, any entered observership must start tomorrow or later.");
 				$res->VALID = false;
 			}
@@ -220,7 +220,7 @@ class Observership extends ModelBase implements Editable, Validation {
 	}	
 
 	public function getTitle(){
-		return $this->title;
+		return ucwords($this->title);
 	}
 
 	public function getAddressLine1(){
@@ -314,8 +314,8 @@ class Observership extends ModelBase implements Editable, Validation {
 		$preceptor = trim(($this->getPreceptorPrefix() ? $this->getPreceptorPrefix() . " " : "") . $this->getPreceptorFirstname() . " " . $this->getPreceptorLastname());
 		
 		$elements = array();
-		$elements[] = $this->title;
-		$elements[] = $this->site . ", " . $this->location;
+		$elements[] = ucwords($this->title);
+		$elements[] = (!is_null($this->site) ? $this->site : $this->organisation) . ", " . (!is_null($this->location) ? $this->location : (!is_null($this->city) ? $this->city . ", " : "") . (!is_null($this->prov) ? $this->prov . ", " : ""). (!is_null($this->country) ? $this->country : ""));
 		$elements[] = $preceptor;
 		$details = implode("\n", $elements);
 		return $details;
@@ -444,7 +444,7 @@ class Observership extends ModelBase implements Editable, Validation {
 		if ($this->activity_type == "ipobservership") {
 			$this->title = $this->clinical_discipline . " " . $this->observership_details;
 		} else {
-		    $this->title = $this->clinical_discipline . " " . $this->activity_type;
+			$this->title = $this->clinical_discipline . " " . $this->activity_type;
 		}
 		$data = $this->toArray();
 		

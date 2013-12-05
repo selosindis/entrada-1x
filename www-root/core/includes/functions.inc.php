@@ -1591,6 +1591,20 @@ function fetch_template($template_file = "", $fetch_style = "filesystem") {
 	return false;
 }
 
+function fetch_organisation_installation($organisation_id = 0) {
+    global $db;
+
+    if ($organisation_id = (int) $organisation_id) {
+        $query = "SELECT `organisation_installation` FROM `".AUTH_DATABASE."`.`organisations` WHERE `organisation_id` = ".$db->qstr($organisation_id);
+        $result	= $db->GetRow($query);
+        if ($result) {
+            return $result["organisation_installation"];
+        }
+    }
+
+    return false;
+}
+
 function fetch_organisation_title($organisation_id = 0) {
 	global $db;
 

@@ -495,14 +495,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                                         }
                                     }
 
-                                    if (@count($PROCESSED_DEPARTMENTS)) {
+                                    if (isset($PROCESSED_DEPARTMENTS) && is_array($PROCESSED_DEPARTMENTS)) {
                                         foreach($PROCESSED_DEPARTMENTS as $department_id) {
-                                            if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROCESSED_ACCESS["user_id"], "dep_id" => $department_id), "INSERT")) {
-                                                application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into department [".$department_id."]. Database said: ".$db->ErrorMsg());
+                                            if((int) $department_id != 0) {
+                                                if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROCESSED_ACCESS["user_id"], "dep_id" => $department_id, "entrada_only" => '1'), "INSERT")) {
+                                                    application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into department [".$department_id."]. Database said: ".$db->ErrorMsg());
+                                                }
                                             }
                                         }
                                     }
-
 
                                     /**
                                      * Add user to cohort if they're a student
@@ -721,12 +722,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                                                     }
                                                 }
 
-                                                if (@count($PROCESSED_DEPARTMENTS)) {
+                                                if (isset($PROCESSED_DEPARTMENTS) && is_array($PROCESSED_DEPARTMENTS)) {
                                                     foreach($PROCESSED_DEPARTMENTS as $key => $department_id) {
-                                                        if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROCESSED_ACCESS["user_id"], "dep_id" => $department_id), "INSERT")) {
+                                                        if((int) $department_id != 0) {
+                                                        if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROCESSED_ACCESS["user_id"], "dep_id" => $department_id, "entrada_only" => '1'), "INSERT")) {
                                                             application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into department [".$department_id."]. Database said: ".$db->ErrorMsg());
                                                         }
                                                     }
+                                                  }
                                                 }
 
                                                 $url			= ENTRADA_URL."/admin/users";

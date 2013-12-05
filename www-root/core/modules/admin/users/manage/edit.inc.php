@@ -203,10 +203,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					 */
 					if ((isset($_POST["password"])) && ($password = clean_input($_POST["password"], "trim"))) {
 						if ((strlen($password) >= 6) && (strlen($password) <= 48)) {
-                            $PROCESSED["salt"] = hash("sha256", (uniqid(rand(), 1) . time() . $PROXY_ID));
+                                   $PROCESSED["salt"] = hash("sha256", (uniqid(rand(), 1) . time() . $PROXY_ID));
 							$PROCESSED["password"] = sha1($password.$PROCESSED["salt"]);
 						} else {
-                            add_error("The new password must be between 6 and 48 characters in length.");
+                                   add_error("The new password must be between 6 and 48 characters in length.");
 						}
 					}
 
@@ -530,10 +530,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							} //end if delete user_access records
 
 							/**
-							 * This section of code handles updating the users departmental data.
+							 * This section of code handles updating the users departmental data. Should CHECK to see if a department is set before removing the record from
+                             * user departments as this is set nightly by a cronjob for users who have not explicitly had a department set in entrada / central
 							 */
-							$query = "DELETE FROM `".AUTH_DATABASE."`.`user_departments` WHERE `user_id` = ".$db->qstr($PROXY_ID);
-							if ($db->Execute($query)) {
 								if (isset($_POST["my_departments"]) && $in_departments = json_decode($_POST["my_departments"], true)) {
 									$in_departments = json_decode($in_departments["dept_list"], true);
 									if (is_array($in_departments)) {
@@ -544,16 +543,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 											}
 										}
 									}
-								}
-
-								if(count($PROCESSED_DEPARTMENTS)) {
+                                $query = "DELETE FROM `".AUTH_DATABASE."`.`user_departments` WHERE `user_id` = ".$db->qstr($PROXY_ID)." AND `entrada_only` = '1'";
+                                if ($db->Execute($query)) {
+                                    if (isset($PROCESSED_DEPARTMENTS) && is_array($PROCESSED_DEPARTMENTS) && $PROCESSED_DEPARTMENTS[0] != '0') {
 									foreach ($PROCESSED_DEPARTMENTS as $department_id) {
-										if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROXY_ID, "dep_id" => $department_id), "INSERT")) {
+                                            if((int) $department_id != 0) {
+                                                if (!$db->AutoExecute(AUTH_DATABASE.".user_departments", array("user_id" => $PROXY_ID, "dep_id" => $department_id, "entrada_only" => '1'), "INSERT")) {
 											application_log("error", "Unable to insert proxy_id [".$PROCESSED_ACCESS["user_id"]."] into department [".$department_id."]. Database said: ".$db->ErrorMsg());
 										}
 									}
 								}
 							}
+                                }
+                            }
 
                             /**
                              * Remove the user from any cohorts they may reside in.

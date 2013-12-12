@@ -50,6 +50,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			 * Required field "form_title" / Form Title.
 			 */
 			if ((isset($_POST["form_title"])) && ($tmp_input = clean_input($_POST["form_title"], array("notags", "trim")))) {
+				$PROCESSED["organisation_id"] = $ENTRADA_USER->getActiveOrganisation();
 				$PROCESSED["target_id"] = $form_record["target_id"];
 				$PROCESSED["form_title"] = $tmp_input;
 				$PROCESSED["form_description"] = $form_record["form_description"];

@@ -228,6 +228,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$cohorts = $course_lists;
 				if (count($course_lists) == 1) {										
 					$output_cohort = $course_lists[0];
+					$selected_cohort = $output_cohort["group_id"];
 					?>
 					<h2 class="pull-left"><?php echo $course_list["group_name"];?></h2>				
 		<?php

@@ -23,18 +23,7 @@
  * @copyright Copyright 2014 Queen's University. All Rights Reserved.
  *
  */
-
-@set_include_path(implode(PATH_SEPARATOR, array(
-    dirname(__FILE__) . "/../../../www-root/core",
-    dirname(__FILE__) . "/../../../www-root/core/includes",
-    dirname(__FILE__) . "/../../../www-root/core/library",
-    get_include_path(),
-)));
-
-/**
- * Include the Entrada init code.
- */
-require_once("init.inc.php");
+require_once(dirname(__FILE__) . "/../BaseTestCase.php");
 
 /**
  * Class FunctionsTest
@@ -46,47 +35,22 @@ require_once("init.inc.php");
  * @author Developer: Don Zuiker <don.zuiker@queensu.ca>
  * @copyright Copyright 2014 Queen's University. All Rights Reserved.
  */
-class FunctionsTest extends PHPUnit_Extensions_Database_TestCase
+class FunctionsTest extends BaseTestCase
 {
     /**
-     * Setup function required by PHP Unit.
+     * Setup and Teardown functions required by PHP Unit.
      */
     public function setup() {
-
+        parent::setUp();
     }
-
-    /**
-     * Required function to return a connection.
-     *
-     * @return PHPUnit_Extensions_Database_DB_IDatabaseConnection
-     */
-    public function getConnection() {
-        $config = new Zend_Config(require "config/config.inc.php");
-        $dsn = "mysql:host={$config->database->host};dbname={$config->database->entrada_database}";
-        $pdo = new PDO($dsn, $config->database->username, $config->database->password);
-
-        return $this->createDefaultDBConnection($pdo);
-    }
-
-    /**
-     * Required function to return a data set.
-     *
-     * @return PHPUnit_Extensions_Database_DataSet_IDataSet
-     */
-    public function getDataSet() {
-        $ds1 = $this->createMySQLXMLDataSet(dirname(__FILE__) . '/../fixtures/entrada.xml');
-        $ds2 = $this->createMySQLXMLDataSet(dirname(__FILE__) . '/../fixtures/entrada_auth.xml');
-
-        $composite_ds = new PHPUnit_Extensions_Database_DataSet_CompositeDataSet(array());
-        $composite_ds->addDataSet($ds1);
-        $composite_ds->addDataSet($ds2);
-
-        return $composite_ds;
+    public function tearDown() {
+        parent::tearDown();
     }
 
     /**
      * Tests that the events_fetch_event_attendance_for_user function returns the expected
      * results.
+     *
      */
     public function test_events_fetch_event_attendance_for_user() {
         //expected
@@ -99,6 +63,8 @@ class FunctionsTest extends PHPUnit_Extensions_Database_TestCase
 
     /**
      * Serves as a failing test for the continuous integration server.
+     *
+     * @coversNothing
      */
     public function test_failing_test() {
         $this->assertEquals(0, 1);

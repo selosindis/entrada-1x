@@ -12,19 +12,19 @@ abstract class BaseTestCase extends PHPUnit_Extensions_Database_TestCase {
     protected $db;
 
     public function setUp() {
+        parent::setUp();
+
         self::prevent_redundant_ADOdbLib_include();
 
-        $ADODB_QUOTE_FIELDNAMES = true;	// Whether or not you want ADOdb to backtick field names in AutoExecute, GetInsertSQL and GetUpdateSQL.
-        define("ADODB_QUOTE_FIELDNAMES", $ADODB_QUOTE_FIELDNAMES);
+        if (!defined("ADODB_QUOTE_FIELDNAMES")) {
+            $ADODB_QUOTE_FIELDNAMES = true;	// Whether or not you want ADOdb to backtick field names in AutoExecute, GetInsertSQL and GetUpdateSQL.
+            define("ADODB_QUOTE_FIELDNAMES", $ADODB_QUOTE_FIELDNAMES);
+        }
         $this->db = NewADOConnection(DATABASE_TYPE);
         $this->db->Connect(DATABASE_HOST, DATABASE_USER, DATABASE_PASS, DATABASE_NAME);
         $this->db->SetFetchMode(ADODB_FETCH_ASSOC);
         global $db;
         $db = $this->db;
-    }
-
-    public function tearDown() {
-
     }
 
     public static function setUpBeforeClass() {
@@ -36,10 +36,6 @@ abstract class BaseTestCase extends PHPUnit_Extensions_Database_TestCase {
         require_once("Entrada/adodb/adodb.inc.php");
         require_once("functions.inc.php");
      }
-
-    public static function tearDownAfterClass() {
-
-    }
 
     static function prevent_redundant_ADOdbLib_include() {
         require_once('Entrada/adodb/adodb-lib.inc.php');
@@ -66,14 +62,7 @@ abstract class BaseTestCase extends PHPUnit_Extensions_Database_TestCase {
      * @return PHPUnit_Extensions_Database_DataSet_IDataSet
      */
     final public function getDataSet() {
-        $ds1 = $this->createMySQLXMLDataSet(dirname(__FILE__) . '/fixtures/entrada.xml');
-        $ds2 = $this->createMySQLXMLDataSet(dirname(__FILE__) . '/fixtures/entrada_auth.xml');
-
-        $composite_ds = new PHPUnit_Extensions_Database_DataSet_CompositeDataSet(array());
-        $composite_ds->addDataSet($ds1);
-        $composite_ds->addDataSet($ds2);
-
-        return $composite_ds;
+        return $this->createMySQLXMLDataSet(dirname(__FILE__) . '/fixtures/entrada.xml');
     }
 }
 

@@ -38,11 +38,13 @@ require_once(dirname(__FILE__) . "/../../BaseTestCase.php");
 
 class AdvisorTest extends BaseTestCase
 {
+    protected $data;
     /**
      * Setup and Teardown functions required by PHP Unit.
      */
     public function setup() {
         parent::setUp();
+        $this->data = $this->getDataSet()->getTable("portfolio-advisors")->getRow(0);
     }
     public function tearDown() {
         parent::tearDown();
@@ -53,16 +55,17 @@ class AdvisorTest extends BaseTestCase
      *
      * @covers Models_Eportfolio_Advisor::fetchRow
      */
-    public function test_fetch_row() {
-        //expected
-        $data = array("padvisor_id" => "1", "proxy_id" => "2", "eportfolio_id" => "", "active" => "1");
-        $test_padvisor = new Models_Eportfolio_Advisor($data);
-        //database has 0 advisors in it at first.
-        $test_padvisor->insert();
+    public function test_fetchRow() {
+        //expected\
+        $test_padvisor = new Models_Eportfolio_Advisor($this->data);
         //actual
-        $advisor = Models_Eportfolio_Advisor::fetchRow($test_padvisor->getProxyID());
+        $advisor = Models_Eportfolio_Advisor::fetchRow(2);
+        //Set the fields to empty that involve relationships to other data until we figure out how to mock this.
+        $advisor->setRelated("");
+        $advisor->setFirstname("");
+        $advisor->setLastname("");
 
-        $this->assertEquals($test_padvisor->getProxyID(), $advisor->getProxyID(), "The expected advisor was not found in the database.");
+        $this->assertEquals($test_padvisor, $advisor, "The expected advisor was not found in the database.");
     }
 
     /**
@@ -71,13 +74,13 @@ class AdvisorTest extends BaseTestCase
      * @covers Models_Eportfolio_Advisor::update
      */
     public function test_update() {
-        $data = array("padvisor_id" => "1", "proxy_id" => "3", "eportfolio_id" => "", "active" => "1");
-        $test_padvisor = new Models_Eportfolio_Advisor($data);
+        $test_padvisor = new Models_Eportfolio_Advisor($this->data);
+        $test_padvisor->setActive(0);
         $test_padvisor->update();
 
-        $expected_proxy_id = 3;
+        $expected_active = 0;
 
-        $this->assertEquals($expected_proxy_id, $test_padvisor->getProxyID(), "The expected proxy id did not match the actual proxy id after update.");
+        $this->assertEquals($expected_active, $test_padvisor->getActive(), "The expected active value did not match the actual active value after update.");
     }
 }
 ?>

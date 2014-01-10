@@ -30,6 +30,7 @@ class Models_Eportfolio_Advisor {
 			$firstname,
 			$lastname,
 			$related,
+            $portfolio_id,
 			$active = 1;
 	
 	public function __construct($arr = NULL) {
@@ -149,10 +150,30 @@ class Models_Eportfolio_Advisor {
 	public function getFirstName() {
 		return $this->firstname;
 	}
+
+    /**
+     * Sets the firstname.
+     *
+     * @param string $firstname
+     */
+    public function setFirstname($firstname)
+    {
+        $this->firstname = $firstname;
+    }
 	
 	public function getLastName() {
 		return $this->lastname;
 	}
+
+    /**
+     * Sets the lastname.
+     *
+     * @param string $lastname
+     */
+    public function setLastname($lastname)
+    {
+        $this->lastname = $lastname;
+    }
 	
 	public function getID() {
 		return $this->padvisor_id;
@@ -165,7 +186,56 @@ class Models_Eportfolio_Advisor {
 	public function getRelated() {
 		return $this->related;
 	}
-	
+
+    /**
+     * Sets the related array;
+     *
+     * @param $related Array
+     */
+    public function setRelated($related) {
+        $this->related = $related;
+    }
+
+    /**
+     * Set the portfolio_id.
+     *
+     * @param int $portfolio_id
+     */
+    public function setPortfolioID($portfolio_id)
+    {
+        $this->portfolio_id = $portfolio_id;
+    }
+
+    /**
+     * Get the portfolio_id.
+     *
+     * @return int
+     */
+    public function getPortfolioID()
+    {
+        return $this->portfolio_id;
+    }
+
+    /**
+     * Set the Active value.
+     *
+     * @param int $active
+     */
+    public function setActive($active)
+    {
+        $this->active = $active;
+    }
+
+    /**
+     * Get the Active value.
+     *
+     * @return int
+     */
+    public function getActive()
+    {
+        return $this->active;
+    }
+
 	public static function deleteRelation($advisor_id, $student_id) {
 		global $db;
 		$query = "DELETE FROM `".AUTH_DATABASE."`.`user_relations` WHERE `from` = ".$db->qstr($advisor_id)." AND `to` = ".$db->qstr($student_id);

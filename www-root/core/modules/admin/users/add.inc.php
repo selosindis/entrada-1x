@@ -402,6 +402,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
             if (!$ERROR) {
                 if ($ENTRADA_ACL->amIAllowed(new UserResource(null, $PROCESSED["organisation_id"]), 'create')) {
                     if ($permissions_only) {
+						$clinical_set = false;
                         foreach ($permissions as $perm) {
                             if (!$perm["org_id"]) {
                                 $ERROR++;
@@ -423,9 +424,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                                 $PROCESSED_ACCESS["role"] = $group_role["role_name"];
                                 $PROCESSED_ACCESS["organisation_id"] = $perm["org_id"];
 
-                                if ($PROCESSED_ACCESS["group"] == "faculty") {
+                                if ($PROCESSED_ACCESS["group"] == "faculty" && !$clinical_set) {
                                     if (isset($perm["clinical"])) {
                                         $PROCESSED["clinical"] = clean_input($perm["clinical"], array("trim", "int"));
+										$clinical_set = true;
                                         $query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
                                                     SET `clinical` = " . $PROCESSED["clinical"] . "
                                                     WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "
@@ -578,6 +580,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                             $PROCESSED["password"] = sha1($PROCESSED["password"].$PROCESSED["salt"]);
                             $PROCESSED["email_updated"] = time();
                             if (($db->AutoExecute(AUTH_DATABASE.".user_data", $PROCESSED, "INSERT")) && ($PROCESSED_ACCESS["user_id"] = $db->Insert_Id())) {
+								$clinical_set = false;
                                 foreach ($permissions as $perm) {
                                     if (!$perm["org_id"]) {
                                         $ERROR++;
@@ -631,9 +634,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                                             }
                                         }
 
-                                        if ($PROCESSED_ACCESS["group"] == "faculty") {
+                                        if ($PROCESSED_ACCESS["group"] == "faculty" && !$clinical_set) {
                                             if (isset($perm["clinical"])) {
                                                 $PROCESSED["clinical"] = clean_input($perm["clinical"], array("trim", "int"));
+												$clinical_set = true;
                                                 $query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
                                                             SET `clinical` = " . $PROCESSED["clinical"] . "
                                                             WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "

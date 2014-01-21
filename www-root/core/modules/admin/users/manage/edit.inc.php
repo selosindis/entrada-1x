@@ -433,6 +433,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 							if ($db->Execute($query)) {
 								if (is_array($permissions)){
 									$index = 0;
+									$clinical_set = false;
 									foreach ($permissions as $perm) {
 										if (!$perm["org_id"]) {
 											$ERROR++;
@@ -498,9 +499,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 												}
 											}
 
-											if ($PROCESSED_ACCESS["group"] == "faculty") {
+											if ($PROCESSED_ACCESS["group"] == "faculty" && !$clinical_set) {
 												if (isset($perm["clinical"])) {
 													$PROCESSED["clinical"] = clean_input($perm["clinical"], array("trim", "int"));
+													$clinical_set = true;
 													$query = "	UPDATE `" . AUTH_DATABASE . "`.`user_data`
 																SET `clinical` = " . $PROCESSED["clinical"] . "
 																WHERE `id` = " . $PROCESSED_ACCESS["user_id"] . "

@@ -339,3 +339,7 @@ input.numeric {
 	position:fixed;
 	top:50px!important;
 }
+
+.clear_both {
+    clear:both;
+}

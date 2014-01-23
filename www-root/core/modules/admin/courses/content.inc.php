@@ -621,7 +621,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 					<?php
 					} ?>
-
+                        <div class="clear_both"></div>
 						<div id="objectives_list">
 							<h3>Curriculum Objectives</h3>
 							<strong>The learner will be able to:</strong>

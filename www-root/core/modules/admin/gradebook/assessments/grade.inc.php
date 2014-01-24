@@ -530,7 +530,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							<select name="student_exceptions" id="student_exceptions" style="width: 210px;" onchange="add_exception(this.options[this.selectedIndex].value, '<?php echo $assessment["assessment_id"]; ?>')">
 							<option value="0">-- Select A Student --</option>
 								<?php
-								foreach ($students as $student) {
+								foreach ($students as $key => &$student) {
 									if (!isset($student["grade_weighting"]) || $student["grade_weighting"] == NULL) {
 										echo "<option value=\"".$student["proxy_id"]."\">".$student["fullname"]."</option>";
 									}

@@ -104,6 +104,7 @@ class CsvImporter {
 		$teacher_names			= ((isset($row[17]) && !empty($row[17]) ? explode(";", $row[17]) : 0 ));
 		$event_duration			= 0;
 		$objectives_release_date = ((isset($row[18]) ? clean_input($row[18], array("trim","striptags")) : 0 ));
+		$event_tutors			= ((isset($row[19]) && !empty($row[19]) ? explode(";", clean_input($row[19], array("nows", "striptags"))) : 0 ));
 
 		// check draft for existing event_id and get the devent_id if found
 		if ($event_id != 0) {
@@ -291,14 +292,15 @@ class CsvImporter {
 		}
 
 		if (!empty($event_teachers)) {
+            $e_teachers = array();
 			foreach ($event_teachers as $teacher) {
-				if (!empty($teacher)) {
-					$event_teachers[$teacher] = $db->qstr((int) $teacher);
+				if (!empty($teacher) && $teacher != "0") {
+					$e_teachers[$teacher] = $db->qstr((int) $teacher);
 				}
 			}
 			$query = "	SELECT `id`
 						FROM `".AUTH_DATABASE."`.`user_data`
-						WHERE `number` IN (".implode(", ", $event_teachers).")";
+						WHERE `number` IN (".implode(", ", $e_teachers).")";
 			$results = $db->GetAll($query);
 			if ($results) {
 				foreach ($results as $result) {
@@ -307,6 +309,24 @@ class CsvImporter {
 			}
 		}
 
+		if (!empty($event_tutors)) {
+            $e_tutors = array();
+			foreach ($event_tutors as $teacher) {
+				if (!empty($teacher) && $teacher != "0") {
+					$e_tutors[$teacher] = $db->qstr((int) $teacher);
+				}
+			}
+			$query = "	SELECT `id`
+						FROM `".AUTH_DATABASE."`.`user_data`
+						WHERE `number` IN (".implode(", ", $e_tutors).")";
+			$results = $db->GetAll($query);
+			if ($results) {
+				foreach ($results as $result) {
+					$output[$event_id]["tutors"][] = $result["id"];
+				}
+			}
+		}
+		
 		if (!$skip_row) {
 			return $output;
 		} else {
@@ -380,6 +400,17 @@ class CsvImporter {
                     foreach ($row["teachers"] as $teacher) {
                         $query =	$mode." `draft_contacts` (`devent_id`, `proxy_id`, `contact_role`, `contact_order`, `updated_date`, `updated_by`)
                                     VALUES (".$db->qstr($devent_id).", ".$db->qstr($teacher).", 'teacher', ".$db->qstr($i).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")".
+                                    $where;
+                        $result = $db->Execute($query);
+                        $i++;
+                    }
+                }
+				
+				if (isset($row["tutors"])) {
+                    $i = 0;
+                    foreach ($row["tutors"] as $tutor) {
+                        $query =	$mode." `draft_contacts` (`devent_id`, `proxy_id`, `contact_role`, `contact_order`, `updated_date`, `updated_by`)
+                                    VALUES (".$db->qstr($devent_id).", ".$db->qstr($tutor).", 'tutor', ".$db->qstr($i).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")".
                                     $where;
                         $result = $db->Execute($query);
                         $i++;

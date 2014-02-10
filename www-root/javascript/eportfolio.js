@@ -460,8 +460,8 @@ function artifactForm () {
 	jQuery(description_controls).addClass("controls");
 	jQuery(title_input).attr({type: "text", name: "title", id: "artifact-title"}).addClass("input-large");
 	jQuery(description_textarea).attr({name: "description", id: "artifact-description"}).addClass("input-large");
-	jQuery(title_label).html("Title:").attr("for", "artifact-title").addClass("control-label");
-	jQuery(description_label).html("Description:").attr("for", "artifact-description").addClass("control-label");
+	jQuery(title_label).html("Title:<br /><em class=\"content-small muted\">required</em>").attr("for", "artifact-title").addClass("control-label form-required");
+	jQuery(description_label).html("Description:<br /><em class=\"content-small muted\">required</em>").attr("for", "artifact-description").addClass("control-label form-required");
 
 	// Put it all together
 	jQuery(title_controls).append(title_input);

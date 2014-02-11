@@ -37,6 +37,98 @@ if(!defined("PARENT_INCLUDED")) {
 } else {
 	define("IN_ASSESSMENTS", true);
 
+    if (isset($_POST["ajax"]) && $_POST["ajax"] === "ajax") {
+		
+		ob_clear_open_buffers();
+		
+			$method = clean_input($_POST["method"], array("trim", "striptags"));
+
+			switch ($method) {
+				case "store-resubmit" :
+					
+					if (isset($_POST["aovalue_id"]) && $tmp_input = clean_input($_POST["aovalue_id"], "int")) {
+						$PROCESSED["aovalue_id"] = $tmp_input;
+						$MODE = "UPDATE";
+						$WHERE = "`aovalue_id` = ".$db->qstr($tmp_input);
+					} else {
+						$MODE = "INSERT";
+						$WHERE = "'1' = '1'";
+					}
+					if (isset($_POST["proxy_id"]) && $tmp_input = clean_input($_POST["proxy_id"], "int")) {
+						$PROCESSED["proxy_id"] = $tmp_input;
+					} else {
+						add_error("Invalid proxy ID supplied.");
+					}
+					if (isset($_POST["aoption_id"]) && $tmp_input = clean_input($_POST["aoption_id"], "int")) {
+						$PROCESSED["aoption_id"] = $tmp_input;
+					} else {
+						add_error("Invalid assessment option ID provided.");
+					}
+					if (isset($_POST["value"]) && $tmp_input = clean_input($_POST["value"], "int")) {
+						$PROCESSED["value"] = clean_input($_POST["value"], "int");
+					} else {
+						$PROCESSED["value"] = 0;
+					}
+					
+					if (!$ERROR) {
+						if ($db->AutoExecute("assessment_option_values", $PROCESSED, $MODE, $WHERE)) {
+							if (!isset($PROCESSED["aovalue_id"])) {
+								$PROCESSED["aovalue_id"] = $db->Insert_ID();
+							}
+							echo json_encode(array("status" => "success", "data" => $PROCESSED));
+						} else {
+							echo json_encode(array("status" => "error", "data" => $ERRORSTR));
+						}
+					} else {
+						echo json_encode(array("status" => "error", "data" => $ERRORSTR));
+					}
+					
+				break;
+				case "store-late" :
+					
+					if (isset($_POST["aovalue_id"]) && $tmp_input = clean_input($_POST["aovalue_id"], "int")) {
+						$PROCESSED["aovalue_id"] = $tmp_input;
+						$MODE = "UPDATE";
+						$WHERE = "`aovalue_id` = ".$db->qstr($tmp_input);
+					} else {
+						$MODE = "INSERT";
+						$WHERE = "'1' = '1'";
+					}
+					if (isset($_POST["proxy_id"]) && $tmp_input = clean_input($_POST["proxy_id"], "int")) {
+						$PROCESSED["proxy_id"] = $tmp_input;
+					} else {
+						add_error("Invalid proxy ID supplied.");
+					}
+					if (isset($_POST["aoption_id"]) && $tmp_input = clean_input($_POST["aoption_id"], "int")) {
+						$PROCESSED["aoption_id"] = $tmp_input;
+					} else {
+						add_error("Invalid assessment option ID provided.");
+					}
+					if (isset($_POST["value"]) && $_POST["value"] == "1") {
+						$PROCESSED["value"] = 1;
+					} else {
+						$PROCESSED["value"] = 0;
+					}
+					
+					if (!$ERROR) {
+						if ($db->AutoExecute("assessment_option_values", $PROCESSED, $MODE, $WHERE)) {
+							if (!isset($PROCESSED["aovalue_id"])) {
+								$PROCESSED["aovalue_id"] = $db->Insert_ID();
+							}
+							echo json_encode(array("status" => "success", "data" => $PROCESSED));
+						} else {
+							echo json_encode(array("status" => "error", "data" => $ERRORSTR));
+						}
+					} else {
+						echo json_encode(array("status" => "error", "data" => $ERRORSTR));
+					}
+					
+				break;
+			}
+		
+		exit;
+	}
+    
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "id" => $COURSE_ID, "step" => false)), "title" => "Assessments");
 
 	if (($router) && ($router->initRoute())) {

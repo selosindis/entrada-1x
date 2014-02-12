@@ -444,6 +444,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						setDateValue(document.getElementById("cEvent_date"),start);
 						document.getElementById('cEvent_hour').value = hour;
 						document.getElementById('cEvent_min').value = min;
+                        updateTime("cEvent");
 						return;
 					}
 					function deleteNewEvent(rVal) {

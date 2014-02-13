@@ -2473,6 +2473,32 @@ function preferences_load($module) {
 }
 
 /**
+ * This function loads the preferances for specified user into an array
+ * 
+ * @global object $db
+ * @param string $module
+ * @param int $proxy_id
+ * @return array $preferences
+ * 
+ */
+function preferences_load_user($module, $proxy_id) {
+	global $db;
+    
+    if (isset($module) && isset($proxy_id)) {
+		$query	= "SELECT `preferences` FROM `".AUTH_DATABASE."`.`user_preferences` WHERE `app_id`=".$db->qstr(AUTH_APP_ID)." AND `proxy_id`=".$db->qstr($proxy_id)." AND `module`=".$db->qstr($module);
+		$result	= $db->GetRow($query);
+		if($result) {
+			if($result["preferences"]) {
+				$preferences = @unserialize($result["preferences"]);
+				if(@is_array($preferences)) {
+					return $preferences;
+				}
+			}
+		}
+    }
+}
+
+/**
  * This function will gather any associated permissions assigned by other individuals to this
  * user's account.
  *
@@ -2816,6 +2842,41 @@ function preferences_update($module, $original_preferences = array()) {
 
 	return true;
 }
+
+/**
+ * This function updates the preferances for a specified user if needed.
+ * @global object $db
+ * @param type $module
+ * @param type $proxy_id
+ * @param type $original_preferences
+ * @param type $new_preferences
+ * @return boolean
+ */
+function preferences_update_user($module, $proxy_id, $original_preferences = array(), $new_preferences = array()) {
+	global $db;
+	if(isset($new_preferences)) {
+		if (serialize($new_preferences) != serialize($original_preferences)) {
+			$query	= "SELECT `preference_id` FROM `".AUTH_DATABASE."`.`user_preferences` WHERE `app_id`=".$db->qstr(AUTH_APP_ID)." AND `proxy_id`=".$db->qstr($proxy_id)." AND `module`=".$db->qstr($module);
+			$result	= $db->GetRow($query);
+			if($result) {
+				if(!$db->AutoExecute("`".AUTH_DATABASE."`.`user_preferences`", array("preferences" => @serialize($new_preferences), "updated" => time()), "UPDATE", "preference_id = ".$db->qstr($result["preference_id"]))) {
+					application_log("error", "Unable to update the users database preferences for this module. Database said: ".$db->ErrorMsg());
+
+					return false;
+				}
+			} else {
+				if(!$db->AutoExecute(AUTH_DATABASE.".user_preferences", array("app_id" => AUTH_APP_ID, "proxy_id" => $proxy_id, "module" => $module, "preferences" => @serialize($new_preferences), "updated" => time()), "INSERT")) {
+					application_log("error", "Unable to insert the users database preferences for this module. Database said: ".$db->ErrorMsg());
+
+					return false;
+				}
+			}
+		}
+	}
+
+	return true;
+}
+
 
 /**
  * This function handles basic logging for the application. You provide it with the entry type and message

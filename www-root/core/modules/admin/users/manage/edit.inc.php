@@ -426,6 +426,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									$private_hashes[$result["app_id"]][$result["organisation_id"]][$result["group"]][$result["role"]] = $result["private_hash"];
 								}
 							}
+                            
+                            //loads current user preferences to check if the roles being changes is currently selected.
+                            //if it's selected we'll change it to the first role listed for the user
+                            $current_user_preferences = preferences_load_user('organisation_switcher', $PROXY_ID);
+                            if ($current_user_preferences['access_id']) {
+                                $current_access_id = $current_user_preferences['access_id'];
+                            }
+                            
+                            //gets current role/groups
+                            $current_group_role = load_org_group_role($PROXY_ID, $current_access_id);
+                            $current_role = $current_group_role[$current_access_id]['role'];
+                            $current_group = $current_group_role[$current_access_id]['group'];
 
 							$query = "DELETE FROM `".AUTH_DATABASE."`.`user_access`
 									  WHERE `user_id` = ".$db->qstr($PROXY_ID) . "
@@ -516,6 +528,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 
 											if (!$ERROR) {
 												if ($db->AutoExecute(AUTH_DATABASE.".user_access", $PROCESSED_ACCESS, "INSERT")) {
+                                                    if (($PROCESSED_ACCESS["group"] == $current_group) && ($PROCESSED_ACCESS["role"] == $current_role)) {
+                                                        $new_access_id = $db->Insert_Id();
+                                                        //update the user preferance to the new ID
+                                                        $current_user_preferences['access_id'] = $new_access_id;
+                                                    } else {
+                                                        unset($current_user_preferences['access_id']);
+                                                    }
+
 													if (($PROCESSED_ACCESS["group"] == "medtech") || ($PROCESSED_ACCESS["role"] == "admin")) {
 														application_log("error", "USER NOTICE: A new user (".$PROCESSED["firstname"]." ".$PROCESSED["lastname"].") was added to ".APPLICATION_NAME." as ".$PROCESSED_ACCESS["group"]." > ".$PROCESSED_ACCESS["role"].".");
 													}
@@ -530,6 +550,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									} //end for each org_id
 								} //end if is_array
 							} //end if delete user_access records
+                            
+                            //updates user prefereances for organisation_switcher if needed
+                            $old_user_preferences = preferences_load_user('organisation_switcher', $PROXY_ID);
+                            preferences_update_user('organisation_switcher', $PROXY_ID, $old_user_preferences, $current_user_preferences);
+                            
+                            //removes the users cache file
+                            $ENTRADA_CACHE->remove("user_" . AUTH_APP_ID . "_" . $PROXY_ID);
 
 							/**
 							 * This section of code handles updating the users departmental data. Should CHECK to see if a department is set before removing the record from

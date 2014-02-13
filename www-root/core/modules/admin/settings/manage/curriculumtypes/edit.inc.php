@@ -407,8 +407,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 						jQuery(function($){
 							$(document).ready(function(){
-								$(".calendar").live('click',function(e){
-									var info = e.target.id.split("_");
+								$(".calendar").on('click',function(e){
+									var info = $(this).attr('id').split("_");
 									showCalendar('', document.getElementById(info[0]+'_'+info[2]), document.getElementById(info[0]+'_'+info[2]), '', 'Title', 0, 20, 1);
 								});
 

@@ -82,7 +82,55 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 	$HEAD[$i] .= "</script>\n";
 
 	$ONLOAD[] = "initListGroup('account_type', $('group'), $('role'))";
+	
+	/**
+	 * Set default sort values
+	 */
+	if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "fullname";
+	}
+	if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"])) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = "asc";
+	}
 
+	/**
+	 * Update with custom sort values if given
+	 */
+	if (isset($_GET["sb"])) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = $_GET["sb"];
+	}
+	if (isset($_GET["so"])) {
+		$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = $_GET["so"];
+	}
+	
+	switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
+		case "fullname":
+			$order_by = "ORDER BY `fullname` ";
+		break;
+		case "username":
+			$order_by = "ORDER BY a.`username` ";
+		break;
+		case "role":
+			$order_by = "ORDER BY CONCAT(b.`group`, b.`role`) ";
+		break;
+		case "login":
+			$order_by = "ORDER BY b.`last_login` ";
+		break;
+		default:
+			$order_by = "ORDER BY a.`id` ";
+		break;
+	}
+	
+	switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) {
+		case "desc":
+			$order_by .= "DESC";
+		break;
+		case "asc":
+		default:
+			$order_by .= "ASC";
+		break;
+	}
+	
 	switch ($search_type) {
 		case "browse-group" :
 			$browse_group	= false;
@@ -122,8 +170,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 									".(($browse_role) ? "AND b.`role` = ".$db->qstr($browse_role) : "")."
 									GROUP BY a.`id`
-									ORDER BY `fullname` ASC
-									LIMIT %s, %s";
+									$order_by
+									LIMIT %d, %d";
 			}
 		break;
 		case "browse-dept" :
@@ -164,13 +212,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
 									AND c.`dep_id` = ".$db->qstr($browse_department)."
 									GROUP BY a.`id`
-									ORDER BY `fullname` ASC
-									LIMIT %s, %s";
+									$order_by
+									LIMIT %d, %d";
 			}
 		break;
 		case "browse-newest" :
 			if ((isset($_GET["n"])) && ($number = clean_input($_GET["n"], array("trim", "int"))) && ($number > 0) && ($number <= 100)) {
 				$browse_number = $number;
+				$results_per_page = $browse_number;
 			}
 
 			if (!$ERROR) {
@@ -224,8 +273,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										OR a.`firstname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
 										GROUP BY a.`id`
-										ORDER BY `fullname` ASC
-										LIMIT %s, %s";
+										$order_by
+										LIMIT %d, %d";
 				} elseif ($_GET["search-type"] == "active") {
 					$query_counter	= "	SELECT count(*) as `total_rows` FROM (SELECT COUNT(a.`id`) AS `total_rows`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -257,8 +306,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										OR a.`firstname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
 										GROUP BY a.`id`
-										ORDER BY `fullname` ASC
-										LIMIT %s, %s";
+										$order_by
+										LIMIT %d, %d";
 				} elseif ($_GET["search-type"] == "inactive") {
 					$query_counter	= "	SELECT count(*) as `total_rows` FROM (SELECT COUNT(a.`id`) AS `total_rows`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -290,8 +339,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										OR a.`firstname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
 										GROUP BY a.`id`
-										ORDER BY `fullname` ASC
-										LIMIT %s, %s";
+										$order_by
+										LIMIT %d, %d";
 				} elseif ($_GET["search-type"] == "new") {
 					$query_counter	= "	SELECT count(*) as `total_rows` FROM (SELECT COUNT(a.`id`) AS `total_rows`
 										FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -317,8 +366,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 										OR a.`firstname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%")."
 										OR a.`lastname` LIKE ".$db->qstr("%%".str_replace("%", "", $search_query)."%%").")
 										GROUP BY a.`id`
-										ORDER BY `fullname` ASC
-										LIMIT %s, %s";
+										$order_by
+										LIMIT %d, %d";
 				}
 
 				$sidebar_html  = "<div style=\"margin: 2px 0px 10px 3px; font-size: 10px\">\n";
@@ -617,10 +666,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 			<thead>
 				<tr>
 					<td class="modified">&nbsp;</td>
-					<td class="title sortedASC" style="font-size: 12px"><div class="noLink">Full Name</div></td>
-					<td class="general" style="font-size: 12px">Username</td>
-					<td class="general" style="font-size: 12px">Group &amp; Role</td>
-					<td class="date" style="font-size: 12px">Last Login</td>
+					<?php if ($search_type == "browse-newest"): ?>
+						<td class="title" style="font-size: 12px">Full Name</td>
+						<td class="username" style="font-size: 12px">Username</td>
+						<td class="role" style="font-size: 12px">Group &amp; Role</td>
+						<td class="last-login" style="font-size: 12px">Last Login</td>
+					<?php else: ?>
+						<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "fullname") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>" style="font-size: 12px"><?php echo admin_order_link("fullname", "Full Name"); ?></td>
+						<td class="username<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "username") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>" style="font-size: 12px"><?php echo admin_order_link("username", "Username"); ?></td>
+						<td class="role<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "role") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>" style="font-size: 12px"><?php echo admin_order_link("role", "Group &amp; Role"); ?></td>
+						<td class="last-login<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "login") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>" style="font-size: 12px"><?php echo admin_order_link("login", "Last Login"); ?></td>
+					<?php endif; ?>
 				</tr>
 			</thead>
 			<tfoot>

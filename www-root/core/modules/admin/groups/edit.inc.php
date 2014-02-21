@@ -143,8 +143,40 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				$group_name = $group["group_name"];
 				$PROCESSED = $group;
 			}
+			
+			/**
+			 * Update requested order to sort by.
+			 * Valid: asc, desc
+			 */
+			if(isset($_GET["so"])) {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = ((strtolower($_GET["so"]) == "desc") ? "DESC" : "ASC");
+			} else if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"])) {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"] = "ASC";
+			}
+			
+			/**
+			 * Update requested column to sort by.
+			 */
+			if (isset($_GET["sb"])) {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = $_GET["sb"];
+			} else if (!isset($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"])) {
+				$_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] = "fullname";
+			}
 
-			$emembers_query	= "	SELECT c.`gmember_id`, CONCAT_WS(' ', a.`firstname`, a.`lastname`) AS `fullname`, c.`member_active`,
+			/**
+			 * Provide the queries with the columns to order by.
+			 */
+			switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
+				case "grouprole" :
+					$order_by = "ORDER BY `grouprole` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
+				break;
+				case "fullname" :
+				default :
+					$order_by = "ORDER BY `fullname` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
+				break;
+			}
+
+			$emembers_query	= "	SELECT c.`gmember_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, c.`member_active`,
 								a.`username`, a.`organisation_id`, a.`username`, CONCAT_WS(':', b.`group`, b.`role`) AS `grouprole`
 								FROM `".AUTH_DATABASE."`.`user_data` AS a
 								LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
@@ -156,7 +188,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 								AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 								AND c.`group_id` = ".$db->qstr($GROUP_ID)."
 								GROUP BY a.`id`
-								ORDER BY a.`lastname` ASC, a.`firstname` ASC";
+								$order_by";
 			$ONLOAD[]	= "showgroup('".$group_name."',".$GROUP_ID.")";
 
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/groups?section=edit", "title" => "Edit");
@@ -223,10 +255,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 					</colgroup>
 					<thead>
 						<tr>
-							<td></td>
-							<td>Full Name</td>
-							<td>Group &amp; Role</td>
-							<td></td>
+							<td>&nbsp;</td>
+							<td class="title<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "fullname") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("fullname", "Full Name"); ?></td>
+							<td class="grouprole<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "grouprole") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>"><?php echo admin_order_link("grouprole", "Group &amp; Role"); ?></td>
+							<td>&nbsp;</td>
 						</tr>
 					</thead>
 					<tbody>

@@ -12088,7 +12088,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 							$dates_array[$event_last_visited["event_id"]] = $event_last_visited["last_visited"];
 						}
 						foreach ($learning_events as &$event) {
-							if (key_exists($event["event_id"], $dates_array)) {
+							if (array_key_exists($event["event_id"], $dates_array)) {
 								$event["last_visited"] = $dates_array[$event["event_id"]];
 							}
 						}

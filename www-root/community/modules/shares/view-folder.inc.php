@@ -255,7 +255,7 @@ if ($RECORD_ID) {
 					?>
 					<div style="float: right; padding-top: 10px;">
 						<ul class="page-action">
-							<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-file&id=<?php echo $RECORD_ID; ?>">Upload File</a></li>
+							<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-file&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Upload File</a></li>
 						</ul>
 					</div>
 					<div style="clear: both"></div>

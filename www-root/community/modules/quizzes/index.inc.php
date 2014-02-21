@@ -68,18 +68,18 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 		}
 	}
 </script>
+<div style="float: right; margin-bottom: 5px">
+    <ul class="page-action">
+        <li><a href="<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Create New Quiz</a></li>
+        <li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?type=community_page&action=add&id=<?php echo $PAGE_ID; ?>')" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Attach Existing Quiz</a></li>
+    </ul>
+</div>
+<div class="clear"></div>
 <div style="padding-top: 10px; clear: both">
 	<?php
 	if ($COMMUNITY_ADMIN && $ENTRADA_ACL->amIAllowed($MODULES["quizzes"]["resource"], $MODULES["quizzes"]["permission"], false)) {
 		?>
-		<div style="float: right; margin-bottom: 5px">
-			<ul class="page-action">
-				<li><a href="<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add">Create New Quiz</a></li>
-				<li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?type=community_page&action=add&id=<?php echo $PAGE_ID; ?>')">Attach Existing Quiz</a></li>
-			</ul>
-		</div>
-		<div class="clear"></div>
-		<br /><br />
+
 		<?php
 	}
 	/**

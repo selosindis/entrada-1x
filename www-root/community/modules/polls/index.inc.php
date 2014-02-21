@@ -101,9 +101,9 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 		?>
 		<div style="float: right">
 			<ul class="page-action">
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll">Add Poll</a></li>
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll&term=vote">Add Vote</a></li>
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll&term=survey">Add Survey</a></li>
+				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Poll</a></li>
+				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll&term=vote" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Vote</a></li>
+				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-poll&term=survey" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Survey</a></li>
 			</ul>
 		</div>
 		<div style="clear: both"></div>

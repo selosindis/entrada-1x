@@ -210,7 +210,7 @@ if ($RECORD_ID) {
 					?>
 					<div style="float: right; padding-top: 10px;">
 						<ul class="page-action">
-							<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-post&id=<?php echo $RECORD_ID; ?>">New Post</a></li>
+                            <li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-post&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> New Post</a></li>
 						</ul>
 					</div>
 					<div style="clear: both"></div>

@@ -58,7 +58,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-forum")) {
 		?>
 		<div style="float: right">
 			<ul class="page-action">
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-forum">Add Discussion Forum</a></li>
+				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-forum" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Discussion Forum</a></li>
 			</ul>
 		</div>
 		<div style="clear: both"></div>

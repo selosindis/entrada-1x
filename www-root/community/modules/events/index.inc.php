@@ -229,7 +229,7 @@ function setDateValue(field, date) {
 		?>
 		<div style="float: right">
 			<ul class="page-action">
-				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add">Add Event</a></li>
+				<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Event</a></li>
 			</ul>
 		</div>
 		<div style="clear: both"></div>

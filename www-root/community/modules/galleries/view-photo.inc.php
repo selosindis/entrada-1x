@@ -273,7 +273,7 @@ if ($RECORD_ID) {
 								?>
 
 								<ul class="page-action">
-									<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>">Add Photo Comment</a></li>
+									<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Photo Comment</a></li>
 								</ul>
 								<?php
 							}
@@ -328,7 +328,7 @@ if ($RECORD_ID) {
 						if ($ADD_COMMENT) {
 							?>
 							<ul class="page-action">
-								<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>">Add Photo Comment</a></li>
+								<li><a href="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-comment&id=<?php echo $RECORD_ID; ?>" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Add Photo Comment</a></li>
 								<li class="top"><a href="#top">Top Of Page</a></li>
 							</ul>
 							<?php

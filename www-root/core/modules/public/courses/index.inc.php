@@ -386,6 +386,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
                 ?>
 				</div>
+                <div class="clear_both"></div>
                 <?php
 				} ?>
 				<a name="course-resources-section"></a>

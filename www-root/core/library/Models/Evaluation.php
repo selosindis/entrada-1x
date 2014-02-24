@@ -543,7 +543,7 @@ class Models_Evaluation {
 
 	public static function getQuestionResponseList($question_data, $questiontype) {
         global $HEAD, $ONLOAD;
-        
+
 		if ($question_data) {
             switch ($questiontype) {
                 case "selectbox" :
@@ -565,7 +565,7 @@ class Models_Evaluation {
                             new_response += '        </td>';
                             new_response += '    </tr>';
                             jQuery('#response_list').append(new_response);
-                            
+
                             responses[number] = new Ajax.InPlaceEditor('response_text_' + number, '".ENTRADA_RELATIVE."/api/evaluation-selectbox-responses.api.php', { okText: 'Save Changes', cancelText: 'Cancel Changes', externalControl: 'edit_mode_' + number, callback: function(form, value) { return 'action=edit&sid=".session_id()."&id=' + number + '&response='+escape(value) } });
                             responses[number].enterEditMode();
                         }
@@ -2822,11 +2822,11 @@ class Models_Evaluation {
 			if (isset($evaluation["allow_repeat_targets"]) && $evaluation["allow_repeat_targets"] == 1) {
 				$available_only = false;
 			}
-            
+
             if (!$evaluation["max_submittable"] && $evaluation["target_shortname"] != "peer" && $evaluation["allow_repeat_targets"]) {
                 $evaluation["max_submittable"] = 2147483647;
             }
-            
+
 			if ($evaluator_id) {
 				$query = "SELECT * FROM `evaluation_evaluators`
 							WHERE `eevaluator_id` = ".$db->qstr($evaluator_id)."
@@ -3364,15 +3364,15 @@ class Models_Evaluation {
                 }
             }
         }
-        
+
 		return $evaluation_targets;
 	}
-	
+
 	public static function getTargetRequests ($proxy_id, $evaluation_id = false, $request_id = false, $codes_only = false) {
 		global $db;
-        
+
         $output_requests = array();
-        
+
         $query = "SELECT * FROM `evaluation_requests` AS a
              JOIN `evaluations` AS b
              ON a.`evaluation_id` = b.`evaluation_id`
@@ -3388,7 +3388,7 @@ class Models_Evaluation {
          $evaluation_request = $db->GetRow($query);
          if ($evaluation_request) {
              $output_requests[] = $evaluation_request;
-         } 
+         }
 		if (!$codes_only) {
             $query = "SELECT * FROM `evaluation_requests` AS a
                 JOIN `evaluations` AS b
@@ -3932,7 +3932,14 @@ class Models_Evaluation {
 								}
 							}
 							if (!$skip_evaluator_check) {
-								$permissions[] = array("target_record_id" => $ENTRADA_USER->getID(), "contact_type" => "target");
+                                $query = "SELECT `eprogress_id` FROM `evaluation_progress`
+                                            WHERE `progress_value` = 'complete'
+                                            AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+                                            AND `evaluation_id` = ".$db->qstr($evaluation_id);
+                                $completed_evaluation = $db->getRow($query);
+                                if ($completed_evaluation) {
+                                    $permissions[] = array("target_record_id" => $ENTRADA_USER->getID(), "contact_type" => "target");
+                                }
 							}
 						break;
 					}
@@ -4218,12 +4225,12 @@ class Models_Evaluation {
 		}
 		return false;
 	}
-	
+
 	public static function getEvaluatorEvaluations($proxy_id, $organisation_id) {
 		global $db;
-		
+
 		$evaluations = array();
-		
+
 		$cohort = groups_get_cohort($proxy_id, $organisation_id, true);
 
 		$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
@@ -4285,10 +4292,10 @@ class Models_Evaluation {
 		}
 		return $evaluations;
 	}
-    
+
     public static function getEvaluationDetails ($evaluation, $proxy_id) {
         global $db;
-        
+
         if ($evaluation["max_submittable"]) {
             $evaluation["base_max_submittable"] = $evaluation["max_submittable"];
         }
@@ -4375,7 +4382,7 @@ class Models_Evaluation {
             } else {
                 $evaluation["completed_attempts"] = 0;
             }
-			
+
 			if (defined("EVALUATION_LOCKOUT") && EVALUATION_LOCKOUT && ($evaluation["evaluation_finish"] + EVALUATION_LOCKOUT) < time()) {
 				$evaluation["max_submittable"] = $evaluation["completed_attempts"];
 			}
@@ -4390,7 +4397,7 @@ class Models_Evaluation {
                 return $evaluation;
             }
         }
-        
+
         return false;
     }
 
@@ -4539,10 +4546,10 @@ class Models_Evaluation {
 		}
 		return (($return_count_only) ? count($evaluations) : $evaluations);
 	}
-	
+
     public static function getEvaluationRequests($evaluation_id, $proxy_id) {
         global $db;
-        
+
         $query = "SELECT * FROM `evaluation_requests`
                     WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
                     AND `target_proxy_id` = ".$db->qstr($proxy_id)."
@@ -4714,7 +4721,7 @@ class Models_Evaluation {
 
 		return $presentations;
 	}
-	
+
 	public static function getMobileQuestionAnswerControls($questions, $form_id, $eprogress_id = 0) {
 		global $db;
 		$output = "";
@@ -4743,7 +4750,7 @@ class Models_Evaluation {
             }
             switch ($questiontype["questiontype_shortname"]) {
                 case "rubric" :
-                    $query = "SELECT * FROM `evaluation_rubric_questions` AS a 
+                    $query = "SELECT * FROM `evaluation_rubric_questions` AS a
                                 JOIN `evaluations_lu_rubrics` AS b
                                 ON a.`erubric_id` = b.`erubric_id`
                                 WHERE a.`equestion_id` = ".$db->qstr($question["equestion_id"]);
@@ -4867,7 +4874,7 @@ class Models_Evaluation {
                         $original_question_id = 0;
                         $comments_enabled = false;
                         $output .= "</li>";
-                    } 
+                    }
                     $question_number = ($key + 1);
 
                     $output .= "<li id=\"question_".$question["equestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">";
@@ -4900,7 +4907,7 @@ class Models_Evaluation {
                         $original_question_id = 0;
                         $comments_enabled = false;
                         $output .= "</li>";
-                    } 
+                    }
                     $question_number = ($key + 1);
 
                     $output .= "<li id=\"question_".$question["equestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">";
@@ -4958,7 +4965,7 @@ class Models_Evaluation {
                         $original_question_id = 0;
                         $comments_enabled = false;
                         $output .= "</li>";
-                    } 
+                    }
                     $question_number = ($key + 1);
 
                     $output .= "<li id=\"question_".$question["equestion_id"]."\"".(($modified_count % 2) ? " class=\"odd\"" : "").">";
@@ -5006,13 +5013,13 @@ class Models_Evaluation {
                 $output .= "<input data-theme=\"b\" type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
             }
             $output .= "</li>";
-        } 
+        }
 
         $output .= "    </ol>\n";
         $output .= "</div>\n";
         return $output;
 	}
-    
+
     public static function getQuestionParents ($equestion_id) {
         global $db;
         $question_parents = array();
@@ -5025,13 +5032,13 @@ class Models_Evaluation {
                 $question_parents[$question_grandparent["equestion_id"]] = $question_grandparent;
             }
         }
-        
+
         return $question_parents;
     }
-    
+
     public static function getQuestionObjectives ($equestion_id) {
         global $db, $translate;
-        
+
         $objective_name = $translate->_("events_filter_controls");
         $objective_name = $objective_name["co"]["global_lu_objectives_name"];
         $question_objectives = array();

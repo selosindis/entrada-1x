@@ -240,6 +240,7 @@ if ($ACTION == "login") {
 			} else {
 				$ENTRADA_ACL = new Entrada_Acl($_SESSION["details"]);
 			}
+            add_statistic("index", "login", "access_id", $ENTRADA_USER->getAccessId(), $ENTRADA_USER->getID());
 
 			if (isset($result["PRIVATE-ALLOW_PODCASTING"])) {
 				if ((int) trim($result["PRIVATE-ALLOW_PODCASTING"])) {

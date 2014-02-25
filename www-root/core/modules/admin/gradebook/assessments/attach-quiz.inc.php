@@ -181,7 +181,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                     </div>
                     <div class="clear"></div>
                     <?php
-                    $query	= "	SELECT a.*, d.*, COUNT(c.`quiz_id`) AS `question_total`, 
+                    $query	= "	SELECT a.*, d.*, COUNT(DISTINCT c.`qquestion_id`) AS `question_total`,
                                     CASE
                                         WHEN f.`event_title` IS NOT NULL 
                                             THEN CONCAT('Event [', f.`event_title`, ' - ', DATE(FROM_UNIXTIME(f.`event_start`)), ']')

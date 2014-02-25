@@ -715,7 +715,7 @@ class Models_Evaluation {
 									echo "	<div class=\"clear\"></div>\n";
 									echo "	<div class=\"comments\">\n";
 									echo "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
-									echo "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
+									echo "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"".($attempt ? " onblur=\"((this.value.length > 1) ? storeResponse('".$original_question_id."', '0', $('".$original_question_id."_comment').value) : false)\"" : "").">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
 									echo "	</div>\n";
 								} else {
 									echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
@@ -803,7 +803,7 @@ class Models_Evaluation {
 								echo "	<div class=\"clear\"></div>\n";
 								echo "	<div class=\"comments\">\n";
 								echo "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
-								echo "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
+								echo "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"".($attempt ? " onblur=\"((this.value.length > 1) ? storeResponse('".$original_question_id."', '0', $('".$original_question_id."_comment').value) : false)\"" : "").">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
 								echo "	</div>\n";
 							} else {
 								echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
@@ -830,7 +830,7 @@ class Models_Evaluation {
 						echo "	<div class=\"clear\"></div>";
 						if ($questiontype["questiontype_shortname"] == "free_text") {
 							echo "	<div class=\"comments\">";
-							echo "	<textarea name=\"comments[".$question["equestion_id"]."]\" id=\"".$question["equestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["comments"]) ? $current_progress_record[$question["equestion_id"]]["comments"] : "")."</textarea>";
+							echo "	<textarea name=\"comments[".$question["equestion_id"]."]\" id=\"".$question["equestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"".($attempt ? " onblur=\"((this.value.length > 1) ? storeResponse('".$question["equestion_id"]."', '0', $('".$question["equestion_id"]."_comment').value) : false)\"" : "").">".($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["comments"]) ? $current_progress_record[$question["equestion_id"]]["comments"] : "")."</textarea>";
 							echo "	</div>";
 						}
 						echo "</li>\n";
@@ -846,7 +846,7 @@ class Models_Evaluation {
 								echo "	<div class=\"clear\"></div>\n";
 								echo "	<div class=\"comments\">\n";
 								echo "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
-								echo "	<textarea id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
+								echo "	<textarea id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"".($attempt ? " onblur=\"((this.value.length > 1) ? storeResponse('".$original_question_id."', '0', $('".$original_question_id."_comment').value) : false)\"" : "").">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
 								echo "	</div>\n";
 							} else {
 								echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
@@ -892,7 +892,7 @@ class Models_Evaluation {
 							echo "	<div class=\"clear\"></div>";
 							echo "	<div class=\"comments\">";
 							echo "	<label for=\"".$question["equestion_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
-							echo "	<textarea name=\"comments[".$question["equestion_id"]."]\" id=\"".$question["equestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["comments"]) ? $current_progress_record[$question["equestion_id"]]["comments"] : "")."</textarea>";
+							echo "	<textarea name=\"comments[".$question["equestion_id"]."]\" id=\"".$question["equestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"".($attempt ? " onblur=\"((this.value.length > 1) ? storeResponse('".$question["equestion_id"]."', '0', $('".$question["equestion_id"]."_comment').value) : false)\"" : "").">".($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["comments"]) ? $current_progress_record[$question["equestion_id"]]["comments"] : "")."</textarea>";
 							echo "	</div>";
 						} else {
 							echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
@@ -909,7 +909,7 @@ class Models_Evaluation {
 								echo "	<div class=\"clear\"></div>\n";
 								echo "	<div class=\"comments\">\n";
 								echo "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
-								echo "	<textarea id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
+								echo "	<textarea id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"".($attempt ? " onblur=\"((this.value.length > 1) ? storeResponse('".$original_question_id."', '0', $('".$original_question_id."_comment').value) : false)\"" : "").">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
 								echo "	</div>\n";
 							} else {
 								echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
@@ -954,7 +954,7 @@ class Models_Evaluation {
 							echo "	<div class=\"clear\"></div>";
 							echo "	<div class=\"comments\">";
 							echo "	<label for=\"".$question["equestion_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
-							echo "	<textarea name=\"comments[".$question["equestion_id"]."]\" id=\"".$question["equestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["comments"]) ? $current_progress_record[$question["equestion_id"]]["comments"] : "")."</textarea>";
+							echo "	<textarea name=\"comments[".$question["equestion_id"]."]\" id=\"".$question["equestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"".($attempt ? " onblur=\"((this.value.length > 1) ? storeResponse('".$question["equestion_id"]."', '0', $('".$question["equestion_id"]."_comment').value) : false)\"" : "").">".($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["comments"]) ? $current_progress_record[$question["equestion_id"]]["comments"] : "")."</textarea>";
 							echo "	</div>";
 						} else {
 							echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
@@ -971,7 +971,7 @@ class Models_Evaluation {
 								echo "	<div class=\"clear\"></div>\n";
 								echo "	<div class=\"comments\">\n";
 								echo "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
-								echo "	<textarea id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
+								echo "	<textarea id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"".($attempt ? " onblur=\"((this.value.length > 1) ? storeResponse('".$original_question_id."', '0', $('".$original_question_id."_comment').value) : false)\"" : "").">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
 								echo "	</div>\n";
 							} else {
 								echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
@@ -1017,7 +1017,7 @@ class Models_Evaluation {
 							echo "	<div class=\"clear\"></div>";
 							echo "	<div class=\"comments\">";
 							echo "	<label for=\"".$question["equestion_id"]."_comment\" class=\"form-nrequired\">Comments:</label>";
-							echo "	<textarea name=\"comments[".$question["equestion_id"]."]\" id=\"".$question["equestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["comments"]) ? $current_progress_record[$question["equestion_id"]]["comments"] : "")."</textarea>";
+							echo "	<textarea name=\"comments[".$question["equestion_id"]."]\" id=\"".$question["equestion_id"]."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"".($attempt ? " onblur=\"((this.value.length > 1) ? storeResponse('".$question["equestion_id"]."', '0', $('".$question["equestion_id"]."_comment').value) : false)\"" : "").">".($current_progress_record && isset($current_progress_record[$question["equestion_id"]]["comments"]) ? $current_progress_record[$question["equestion_id"]]["comments"] : "")."</textarea>";
 							echo "	</div>";
 						} else {
 							echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";
@@ -1033,7 +1033,7 @@ class Models_Evaluation {
 					echo "	<div class=\"clear\"></div>\n";
 					echo "	<div class=\"comments\">\n";
 					echo "	<label for=\"".$original_question_id."_comment\" class=\"form-nrequired\">Comments:</label>\n";
-					echo "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
+					echo "	<textarea name=\"comments[".$original_question_id."]\" id=\"".$original_question_id."_comment\" class=\"expandable\" style=\"width:95%; height:40px;\"".($attempt ? " onblur=\"((this.value.length > 1) ? storeResponse('".$original_question_id."', '0', $('".$original_question_id."_comment').value) : false)\"" : "").">".($current_progress_record && isset($current_progress_record[$original_question_id]["comments"]) ? $current_progress_record[$original_question_id]["comments"] : "")."</textarea>\n";
 					echo "	</div>\n";
 				} else {
 					echo "<input type=\"hidden\" value=\"\" id=\"".$original_question_id."_comment\" />\n";

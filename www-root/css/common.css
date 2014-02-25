@@ -4580,3 +4580,31 @@ Evaluation Question Browser CSS
 	text-align:center;
 	font-size:1.2em;
 }
+
+th.sorting_desc {
+    background:transparent url(../images/sort_desc.gif)  right center no-repeat;
+}
+
+th.sorting_asc {
+    background:transparent url(../images/sort_asc.gif)  right 7px no-repeat;
+}
+
+th.sorting {
+    background:transparent url(../images/sort_both.png)  right 7px no-repeat;
+}
+
+.resize {
+    resize:both;
+}
+
+.resize-vertical {
+    resize:vertical;
+}
+
+.resize-horizontal {
+    resize:horizontal;
+}
+
+.question-notice {
+    background-color: #FCF8E3 !important;
+}

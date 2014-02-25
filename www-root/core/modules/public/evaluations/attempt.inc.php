@@ -776,26 +776,44 @@ if ($RECORD_ID) {
 											parameters: { 'section' : 'save-response', 'id' : '<?php echo $RECORD_ID; ?>', 'qid' : qid, 'rid' : rid, 'comments' : comments},
 											onSuccess: function(transport) {
 												if (transport.responseText.match(200)) {
-													$('question_' + qid).removeClassName('notice');
+                                                    if (jQuery('tr#question_' + qid).length > 0) {
+                                                        jQuery('tr#question_' + qid).removeClass('question-notice');
+                                                    } else if (jQuery('li#question_' + qid).length > 0) {
+                                                        jQuery('li#question_' + qid).removeClass('question-notice');
+                                                    } else {
+                                                        jQuery('#question_' + qid).removeClass('question-notice');
+                                                    }
 
-													if ($$('#evaluation-questions-list li.notice').length <= 0) {
+                                                    if ($$('#evaluation-questions-list li.notice').length <= 0) {
 														$('display-unsaved-warning').fade({ duration: 0.5 });
 													}
 												} else {
-													$('question_' + qid).addClassName('notice');
+                                                    if (jQuery('tr#question_' + qid).length > 0) {
+                                                        jQuery('tr#question_' + qid).addClass('question-notice');
+                                                    } else if (jQuery('li#question_' + qid).length > 0) {
+                                                        jQuery('li#question_' + qid).addClass('question-notice');
+                                                    } else {
+                                                        jQuery('#question_' + qid).addClass('question-notice');
+                                                    }
 
-													if ($('display-unsaved-warning').style.display == 'none') {
+                                                    if ($('display-unsaved-warning').style.display == 'none') {
 														$('display-unsaved-warning').appear({ duration: 0.5 });
 													}
 												}
 											},
 											onError: function() {
-													$('question_' + qid).addClassName('notice');
+                                                if (jQuery('tr#question_' + qid).length > 0) {
+                                                    jQuery('tr#question_' + qid).addClass('question-notice');
+                                                } else if (jQuery('li#question_' + qid).length > 0) {
+                                                    jQuery('li#question_' + qid).addClass('question-notice');
+                                                } else {
+                                                    jQuery('#question_' + qid).addClass('question-notice');
+                                                }
 
-													if ($('display-unsaved-warning').style.display == 'none') {
-														$('display-unsaved-warning').appear({ duration: 0.5 });
-													}
-											}
+                                                if ($('display-unsaved-warning').style.display == 'none') {
+                                                    $('display-unsaved-warning').appear({ duration: 0.5 });
+                                                }
+                                            }
 										});
 									}
 									function loadPreceptors(event_id) {

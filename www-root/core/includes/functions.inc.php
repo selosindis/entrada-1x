@@ -15960,7 +15960,7 @@ function evaluation_save_response($eprogress_id, $eform_id, $equestion_id, $eqre
 	if ($eqresponse_id !== 0) {
 		$query	= "SELECT * FROM `evaluations_lu_question_responses` WHERE `eqresponse_id` = ".$db->qstr($eqresponse_id)." AND `equestion_id` = ".$db->qstr($equestion_id);
 	} else {
-		$query	= "SELECT * FROM `evaluation_form_questions` AS a JOIN `evaluations_lu_questions` AS b ON a.`equestion_id` = b.`equestion_id` WHERE a.`equestion_id` = ".$db->qstr($equestion_id)." AND a.`eform_id` = ".$db->qstr($eform_id)." AND b.`questiontype_id` = 4";
+		$query	= "SELECT * FROM `evaluation_form_questions` AS a JOIN `evaluations_lu_questions` AS b ON a.`equestion_id` = b.`equestion_id` WHERE a.`equestion_id` = ".$db->qstr($equestion_id)." AND a.`eform_id` = ".$db->qstr($eform_id)." AND b.`allow_comments` = 1";
 	}
 	$result	= $db->GetRow($query);
 	if ($result) {
@@ -15993,11 +15993,14 @@ function evaluation_save_response($eprogress_id, $eform_id, $equestion_id, $eqre
 						ORDER BY c.`question_order` ASC
 						LIMIT 0, 1";
 			$comment_response_id = $db->GetOne($query);
-		/**
-		 * Checks to see if the response is different from what was previously
-		 * stored in the event_evaluation_responses table.
-		 */
+            /**
+             * Checks to see if the response is different from what was previously
+             * stored in the event_evaluation_responses table.
+             */
 			if ($eqresponse_id != $result["eqresponse_id"] || $comments != $result["comments"]) {
+                if ($eqresponse_id != $result["eqresponse_id"] && $eqresponse_id == 0) {
+                    $eqresponse_id = $result["eqresponse_id"];
+                }
 				$evaluation_response_array	= array (
 					"eqresponse_id" => $eqresponse_id,
 					"efquestion_id" => $efquestion_id,

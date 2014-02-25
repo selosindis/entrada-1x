@@ -98,7 +98,10 @@ if ($RECORD_ID) {
 
 						if ((isset($_POST["rid"])) && ($tmp_input = clean_input($_POST["rid"], "int"))) {
 							$qqresponse_id = $tmp_input;
-
+                        } elseif ((isset($_POST["comments"])) && clean_input($_POST["comments"], array("trim", "notags"))) {
+                            $qqresponse_id = 0;
+                        }
+                        if (isset($qqresponse_id)) {
 							if ((isset($_POST["comments"])) && clean_input($_POST["comments"], array("trim", "notags"))) {
 								$comments = clean_input($_POST["comments"], array("trim", "notags"));
 							} else {
@@ -115,7 +118,7 @@ if ($RECORD_ID) {
 								exit;
 							}
 						} else {
-							application_log("error", "A rid variable was not provided when attempting to submit a response to a question.");
+							application_log("error", "A rid variable was not provided when attempting to submit a response to a question with no comments attached.");
 
 							/**
 							 * @exception 408: Quiz Question Response ID was not provided.

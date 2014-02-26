@@ -199,6 +199,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					}
 
 					/**
+					 * Non-required field "identify_comments" / Identify Comments
+					 */
+					if (isset($_POST["identify_comments"]) && ($_POST["identify_comments"])) {
+						$PROCESSED["identify_comments"] = true;
+					} else {
+						$PROCESSED["identify_comments"] = false;
+					}
+
+					/**
 					 * Required field "min_submittable" / Min Submittable
 					 */
 					if (isset($_POST["min_submittable"]) && ($min_submittable = clean_input($_POST["min_submittable"], "int")) && ($min_submittable >= 1)) {
@@ -1116,7 +1125,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                             </tbody>
                         </table>
                         <div class="control-group">
-                            <label for="evaluation_mandatory" class="form-required control-label">Evaluation Mandatory:</label>
+                            <label for="evaluation_mandatory" class="form-nrequired control-label">Evaluation Mandatory:</label>
                             <div class="controls">
                                 <label class="checkbox">
                                     <input type="checkbox" id="evaluation_mandatory" name="evaluation_mandatory"<?php echo (!isset($PROCESSED["evaluation_mandatory"]) || $PROCESSED["evaluation_mandatory"] ? " checked=\"checked\"" : ""); ?> />
@@ -1125,7 +1134,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                             </div>
                         </div>
                         <div class="control-group">
-                            <label for="allow_target_review" class="form-required control-label">Allow Target Review:</label>
+                            <label for="allow_target_review" class="form-nrequired control-label">Allow Target Review:</label>
                             <div class="controls">
                                 <label class="checkbox">
                                     <input type="checkbox" id="allow_target_review" name="allow_target_review"<?php echo (isset($PROCESSED["allow_target_review"]) && $PROCESSED["allow_target_review"] ? " checked=\"checked\"" : ""); ?> />
@@ -1134,7 +1143,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                             </div>
                         </div>
                         <div class="control-group">
-                            <label for="allow_target_request" class="form-required control-label">Allow Target Request:</label>
+                            <label for="allow_target_request" class="form-nrequired control-label">Allow Target Request:</label>
                             <div class="controls">
                                 <label class="checkbox">
                                     <input type="checkbox" onclick="$('evaluation_requests').toggle(this.checked);" id="allow_target_request" name="allow_target_request"<?php echo (isset($PROCESSED["allow_target_request"]) && $PROCESSED["allow_target_request"] ? " checked=\"checked\"" : ""); ?> />
@@ -1187,7 +1196,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                             </div>
                         </div>
                         <div class="control-group">
-                            <label for="allow_repeat_targets" class="form-required control-label">Allow Multiple Attempts on Each Target:</label>
+                            <label for="allow_repeat_targets" class="form-nrequired control-label">Allow Multiple Attempts on Each Target:</label>
                             <div class="controls">
                                 <label class="checkbox">
                                     <input type="checkbox" id="allow_repeat_targets" name="allow_repeat_targets"<?php echo (isset($PROCESSED["allow_repeat_targets"]) && $PROCESSED["allow_repeat_targets"] ? " checked=\"checked\"" : ""); ?> />
@@ -1196,7 +1205,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                             </div>
                         </div>
                         <div class="control-group">
-                            <label for="show_comments" class="form-required control-label">Show Comments in Review:</label>
+                            <label for="show_comments" class="form-nrequired control-label">Show Comments in Review:</label>
                             <div class="controls">
                                 <label class="checkbox">
                                     <input type="checkbox" onclick="$('identify_comments_holder').toggle(this.checked);" id="show_comments" name="show_comments"<?php echo (!isset($PROCESSED["show_comments"]) || $PROCESSED["show_comments"] ? " checked=\"checked\"" : ""); ?> />
@@ -1207,7 +1216,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                         <div class="control-group">
                             <div class="controls">
                                 <div class="control-group" id="identify_comments_holder"<?php echo (!isset($PROCESSED["show_comments"]) || $PROCESSED["show_comments"] ? "\"" : " style=\"display: none;\""); ?>>
-                                    <label for="identify_comments" class="form-required control-label">Identify Comments:</label>
+                                    <label for="identify_comments" class="form-nrequired control-label">Identify Comments:</label>
                                     <div class="controls">
                                         <label class="checkbox">
                                             <input type="checkbox" id="identify_comments" name="identify_comments"<?php echo (isset($PROCESSED["identify_comments"]) && $PROCESSED["identify_comments"] ? " checked=\"checked\"" : ""); ?> />

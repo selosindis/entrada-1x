@@ -218,7 +218,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_GROUPS"))) {
 				$PROCESSED["active"] = 1;
 
 				if ($number_of_groups == 1) {
-					$result = $db->GetRow("SELECT `cgroup_id` FROM `course_groups` WHERE `group_name` = ".$db->qstr($PROCESSED["group_name"]));
+					$result = $db->GetRow("SELECT `cgroup_id` FROM `course_groups` WHERE `group_name` = ".$db->qstr($PROCESSED["group_name"])." AND `course_id` = ".$db->qstr($COURSE_ID));
 					if ($result) {
 						$ERROR++;
 						$ERRORSTR[] = "The <strong>Group name</strong> already exists. The group was not created";

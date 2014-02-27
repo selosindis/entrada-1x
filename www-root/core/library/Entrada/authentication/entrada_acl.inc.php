@@ -832,7 +832,6 @@ class NotEventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
                         }
                         break;
                     case "cohort":
-                    case "group_id":
 						$query = "  SELECT a.*
 									FROM `group_members` AS a
 									JOIN `groups` AS b
@@ -850,11 +849,14 @@ class NotEventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
                             return true;
                         }
                         break;
+                    case "group_id":
                     case "cgroup_id":
-                        $query = "    SELECT *
+                        $query = "  SELECT *
                                     FROM `course_group_audience` cga
+                                    JOIN `course_audience` AS ca
+                                    ON `ca`.`course_id` = " .$db->qstr($course_id) ."
                                     JOIN `curriculum_periods` cp
-                                    ON cga.`cperiod_id` = cp.`cperiod_id`
+                                    ON `ca`.`cperiod_id` = cp.`cperiod_id`
                                     WHERE cga.`cgroup_id` = ".$db->qstr($result["audience_value"]) . "
                                     AND cga.`proxy_id` = " . $db->qstr($user_id) . "
                                     AND    cga.`active` = 1
@@ -1008,7 +1010,6 @@ class EventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
                             return true;
                         }
                         break;
-                    case "group_id":
                     case "cohort":
 						$query = "  SELECT a.*
 									FROM `group_members` AS a
@@ -1027,11 +1028,14 @@ class EventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
                             return true;
                         }
                         break;
+                    case "group_id":
                     case "cgroup_id":
-                        $query = "    SELECT *
+                        $query = "  SELECT *
                                     FROM `course_group_audience` cga
+                                    JOIN `course_audience` AS ca
+                                    ON `ca`.`course_id` = " .$db->qstr($course_id) ."
                                     JOIN `curriculum_periods` cp
-                                    ON cga.`cperiod_id` = cp.`cperiod_id`
+                                    ON `ca`.`cperiod_id` = cp.`cperiod_id`
                                     WHERE cga.`cgroup_id` = ".$db->qstr($result["audience_value"]) . "
                                     AND cga.`proxy_id` = " . $db->qstr($user_id) . "
                                     AND    cga.`active` = 1

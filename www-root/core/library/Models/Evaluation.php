@@ -1661,15 +1661,7 @@ class Models_Evaluation {
 													 * Compiles the list of groups from groups table (known as Cohorts).
 													 */
 													$COHORT_LIST = array();
-													$query = "	SELECT a.*
-																FROM `groups` AS a
-																JOIN `group_organisations` AS b
-																ON a.`group_id` = b.`group_id`
-																WHERE a.`group_active` = '1'
-																AND a.`group_type` = 'cohort'
-																AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-																ORDER BY LENGTH(a.`group_name`), a.`group_name` ASC";
-													$results = $db->GetAll($query);
+													$results = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
 													if ($results) {
 														foreach($results as $result) {
 															$COHORT_LIST[$result["group_id"]] = $result;
@@ -2277,7 +2269,6 @@ class Models_Evaluation {
 									if ($group_id = clean_input(preg_replace("/[a-z_]/", "", $target_id), array("trim", "int"))) {
 										$query = "	SELECT * FROM `groups`
 													WHERE `group_id` = ".$db->qstr($group_id)."
-													AND `group_type` = 'cohort'
 													AND `group_active` = 1";
 										$result	= $db->GetRow($query);
 										if ($result) {
@@ -2290,16 +2281,7 @@ class Models_Evaluation {
 					}
 
 					$groups = $organisation;
-
-					$query = "	SELECT a.*
-								FROM `groups` AS a
-								JOIN `group_organisations` AS b
-								ON b.`group_id` = a.`group_id`
-								WHERE a.`group_active` = '1'
-								AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-								AND a.`group_type` = 'cohort'
-								ORDER BY a.`group_name` DESC";
-					$groups_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
+					$groups_results = groups_get_active_cohorts($ENTRADA_USER->getActiveOrganisation());
 					if ($groups_results) {
 						foreach ($groups_results as $group) {
 							if (isset($target_data["associated_cohort_ids"]) && is_array($target_data["associated_cohort_ids"]) && in_array($group["group_id"], $target_data["associated_cohort_ids"])) {
@@ -2611,7 +2593,6 @@ class Models_Evaluation {
 									$query = "	SELECT *
 												FROM `groups`
 												WHERE `group_id` = ".$db->qstr($group_id)."
-												AND `group_type` = 'cohort'
 												AND `group_active` = 1";
 									$result	= $db->GetRow($query);
 									if ($result) {
@@ -2627,7 +2608,6 @@ class Models_Evaluation {
 								JOIN `evaluation_targets` AS b
 								ON b.`target_value` = a.`group_id`
 								AND b.`target_type` = 'group_id'
-								WHERE `group_type` = 'cohort'
 								AND b.`evaluation_id` = ".$db->qstr($target_data["evaluation_id"])."
 								AND `group_active` = 1";
 					$results	= $db->GetAll($query);
@@ -3823,7 +3803,13 @@ class Models_Evaluation {
 							}
 
 							if (!$skip_evaluator_check) {
-								$cohort = groups_get_cohort($ENTRADA_USER->getID());
+								$cohort_ids = groups_get_enrolled_group_ids($ENTRADA_USER->getID(), false, $ENTRADA_USER->getActiveOrganisation(), false);
+                                $cohort_ids_string = "";
+                                if (isset($cohort_ids) && is_array($cohort_ids)) {
+                                    foreach ($cohort_ids as $cohort_id) {
+                                        $cohort_ids_string .= ($cohort_ids_string ? ", " : "").$db->qstr($cohort_id);
+                                    }
+                                }
 
 								$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
 											JOIN `course_groups` AS b
@@ -3852,9 +3838,9 @@ class Models_Evaluation {
 													b.`evaluator_type` = 'proxy_id'
 													AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getID())."
 												)
-												".(isset($cohort["group_id"]) && $cohort["group_id"] ? " OR (
+												".(isset($cohort_ids_string) && $cohort_ids_string ? " OR (
 													b.`evaluator_type` = 'cohort'
-													AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
+													AND b.`evaluator_value` IN (".$cohort_ids_string.")
 												)" : "").($cgroup_ids_string ? " OR (
 													b.`evaluator_type` = 'cgroup_id'
 													AND b.`evaluator_value` IN (".$cgroup_ids_string.")
@@ -4018,7 +4004,13 @@ class Models_Evaluation {
 	public static function getTargetEvaluations() {
 		global $db, $ENTRADA_USER, $ENTRADA_ACL;
 
-		$cohort = groups_get_cohort($ENTRADA_USER->getID());
+        $cohort_ids = groups_get_enrolled_group_ids($ENTRADA_USER->getID(), false, $ENTRADA_USER->getActiveOrganisation(), false);
+        $cohort_ids_string = "";
+        if (isset($cohort_ids) && is_array($cohort_ids)) {
+            foreach ($cohort_ids as $cohort_id) {
+                $cohort_ids_string .= ($cohort_ids_string ? ", " : "").$db->qstr($cohort_id);
+            }
+        }
 
 		$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
 					JOIN `course_groups` AS b
@@ -4052,9 +4044,9 @@ class Models_Evaluation {
 							b.`target_type` = 'proxy_id'
 							AND b.`target_value` = ".$db->qstr($ENTRADA_USER->getID())."
 						)
-						".($ENTRADA_USER->getActiveGroup() == "student" ? " OR (
+						".(isset($cohort_ids_string) && $cohort_ids_string ? " OR (
 							b.`target_type` = 'cohort'
-							AND b.`target_value` = ".$db->qstr($cohort["group_id"])."
+							AND b.`target_value` IN (".$cohort_ids_string.")
 						)" : "").($cgroup_ids_string ? " OR (
 							b.`target_type` = 'cgroup_id'
 							AND b.`target_value` IN (".$cgroup_ids_string.")
@@ -4231,7 +4223,13 @@ class Models_Evaluation {
 
 		$evaluations = array();
 
-		$cohort = groups_get_cohort($proxy_id, $organisation_id, true);
+        $cohort_ids = groups_get_enrolled_group_ids($proxy_id, false, $organisation_id, false);
+        $cohort_ids_string = "";
+        if (isset($cohort_ids) && is_array($cohort_ids)) {
+            foreach ($cohort_ids as $cohort_id) {
+                $cohort_ids_string .= ($cohort_ids_string ? ", " : "").$db->qstr($cohort_id);
+            }
+        }
 
 		$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
 					JOIN `course_groups` AS b
@@ -4269,9 +4267,9 @@ class Models_Evaluation {
 						(
 							b.`evaluator_type` = 'organisation_id'
 							AND b.`evaluator_value` = ".$db->qstr($organisation_id)."
-						)".(isset($cohort) && $cohort ? " OR (
+						)".(isset($cohort_ids_string) && $cohort_ids_string ? " OR (
 							b.`evaluator_type` = 'cohort'
-							AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
+							AND b.`evaluator_value` IN (".$cohort_ids_string.")
 						)" : "").($cgroup_ids_string ? " OR (
 							b.`evaluator_type` = 'cgroup_id'
 							AND b.`evaluator_value` IN (".$cgroup_ids_string.")
@@ -4406,7 +4404,13 @@ class Models_Evaluation {
 
 		$evaluations = array();
 
-		$cohort = groups_get_cohort($proxy_id, $organisation_id, true);
+        $cohort_ids = groups_get_enrolled_group_ids($proxy_id, false, $organisation_id, false);
+        $cohort_ids_string = "";
+        if (isset($cohort_ids) && is_array($cohort_ids)) {
+            foreach ($cohort_ids as $cohort_id) {
+                $cohort_ids_string .= ($cohort_ids_string ? ", " : "").$db->qstr($cohort_id);
+            }
+        }
 
 		$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
 					JOIN `course_groups` AS b
@@ -4444,9 +4448,9 @@ class Models_Evaluation {
 						(
 							b.`evaluator_type` = 'organisation_id'
 							AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
-						)".($cohort ? " OR (
+						)".(isset($cohort_ids_string) && $cohort_ids_string ? " OR (
 							b.`evaluator_type` = 'cohort'
-							AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
+							AND b.`evaluator_value` IN (".$cohort_ids_string.")
 						)" : "").($cgroup_ids_string ? " OR (
 							b.`evaluator_type` = 'cgroup_id'
 							AND b.`evaluator_value` IN (".$cgroup_ids_string.")

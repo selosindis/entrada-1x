@@ -16749,29 +16749,30 @@ function groups_get_explicitly_enrolled_course_ids($proxy_id = 0, $only_active_g
  * @param int $proxy_id
  * @return array $group
  */
-function groups_get_enrolled_group_ids($proxy_id = 0, $only_active_groups = false) {
+function groups_get_enrolled_group_ids($proxy_id = 0, $only_active_groups = false, $organisation_id = 0, $organisation_specific = true) {
 	global $db, $ENTRADA_USER;
 
 	$proxy_id = (int) $proxy_id;
 	$only_active_groups = (bool) $only_active_groups;
+    if (!$organisation_id) {
+        $organisation_id = $ENTRADA_USER->getActiveOrganisation();
+    }
 
 	$group_ids = array();
 
 	if ($proxy_id) {
-		$query = "			SELECT a.group_id FROM `groups` AS a
-							JOIN `group_members` AS b
-							ON b.`group_id` = a.`group_id`
-							JOIN `group_organisations` AS c
-							ON c.`group_id` = a.`group_id`
-							WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
-							AND (b.`start_date` = 0
-							OR b.`start_date` <= UNIX_TIMESTAMP())
-							AND (b.`finish_date` = 0 OR b.`finish_date` >= UNIX_TIMESTAMP())
-							AND b.`member_active` = '1'
-							AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
-
-
-
+		$query = "SELECT a.group_id FROM `groups` AS a
+                    JOIN `group_members` AS b
+                    ON b.`group_id` = a.`group_id`
+                    JOIN `group_organisations` AS c
+                    ON c.`group_id` = a.`group_id`
+                    WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
+                    AND (b.`start_date` = 0
+                    OR b.`start_date` <= UNIX_TIMESTAMP())
+                    AND (b.`finish_date` = 0 OR b.`finish_date` >= UNIX_TIMESTAMP())
+                    AND b.`member_active` = '1'
+                    ".($only_active_groups ? "AND a.`group_active` = 1" : "")."
+                    ".($organisation_specific ? "AND c.`organisation_id` = ".$db->qstr($organisation_id) : "");
 		$group_list = $db->CacheGetAll(CACHE_TIMEOUT, $query);
 		if ($group_list) {
 			foreach ($group_list as $group) {

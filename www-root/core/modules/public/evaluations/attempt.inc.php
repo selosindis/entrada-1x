@@ -48,8 +48,14 @@ if (isset($_POST["request_code"]) && ($code = clean_input($_POST["request_code"]
     $code = false;
 }
 
-if ($RECORD_ID) {							
-	$cohort = groups_get_cohort($ENTRADA_USER->getID());
+if ($RECORD_ID) {
+    $cohort_ids = groups_get_enrolled_group_ids($ENTRADA_USER->getID(), false, $ENTRADA_USER->getActiveOrganisation(), false);
+    $cohort_ids_string = "";
+    if (isset($cohort_ids) && is_array($cohort_ids)) {
+        foreach ($cohort_ids as $cohort_id) {
+            $cohort_ids_string .= ($cohort_ids_string ? ", " : "").$db->qstr($cohort_id);
+        }
+    }
 	
 	$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
 				JOIN `course_groups` AS b
@@ -98,9 +104,9 @@ if ($RECORD_ID) {
 							(
 								b.`evaluator_type` = 'organisation_id'
 								AND b.`evaluator_value` = ".$db->qstr($_SESSION["details"]["organisation_id"])."
-							)".($_SESSION["details"]["group"] == "student" ? " OR (
+							)".(isset($cohort_ids_string) && $cohort_ids_string ? " OR (
 								b.`evaluator_type` = 'cohort'
-								AND b.`evaluator_value` = ".$db->qstr($cohort["group_id"])."
+								AND b.`evaluator_value` IN (".$cohort_ids_string.")
 							)" : "").($cgroup_ids_string ? " OR (
 								b.`evaluator_type` = 'cgroup_id'
 								AND b.`evaluator_value` IN (".$cgroup_ids_string.")

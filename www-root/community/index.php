@@ -110,16 +110,15 @@ if (isset($_SERVER["PATH_INFO"])) {
 	}
 }
 
-if (isset($PAGE_URL) && $PAGE_URL) {
-    $query = "	SELECT a.`community_protected`, b.`allow_public_view`
-                FROM `communities` AS a
-                LEFT JOIN `community_pages` AS b
-                ON b.`community_id` = a.`community_id`
-                WHERE `community_url` = ".$db->qstr($COMMUNITY_URL)."
-                AND `page_url` = ".$db->qstr($PAGE_URL);
-    $page_permissions = $db->GetRow($query);
-}
-$PAGE_PROTECTED = (isset($page_permissions) && $page_permissions && $page_permissions["community_protected"] == 1 && $page_permissions["allow_public_view"] == 0 ? true : false);
+$query = "	SELECT a.`community_protected`, b.`allow_public_view`
+            FROM `communities` AS a
+            LEFT JOIN `community_pages` AS b
+            ON b.`community_id` = a.`community_id`
+            WHERE `community_url` = ".$db->qstr($COMMUNITY_URL)."
+            AND `page_url` = ".$db->qstr((isset($PAGE_URL) && $PAGE_URL ? $PAGE_URL : ""));
+$page_permissions = $db->GetRow($query);
+
+$PAGE_PROTECTED = (isset($page_permissions) && $page_permissions && ($page_permissions["community_protected"] == 1 || $page_permissions["allow_public_view"] == 0) ? true : false);
 
 if (!$LOGGED_IN && (isset($_GET["auth"]) && $_GET["auth"] == "true")) {
 	if (!isset($_SERVER["PHP_AUTH_USER"])) {
@@ -265,7 +264,7 @@ if ($COMMUNITY_URL) {
 
 			}
 
-			if (isset($PAGE_URL)) {
+            if (isset($PAGE_URL) && $PAGE_URL) {
 				switch ($PAGE_URL) {
 					case "pages" :
 						$COMMUNITY_MODULE = "pages";

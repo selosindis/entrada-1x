@@ -2105,6 +2105,17 @@ CREATE TABLE IF NOT EXISTS `course_group_contacts` (
   KEY `proxy_id` (`proxy_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `course_keywords` (
+  `ckeyword_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `course_id` int(12) NOT NULL,
+  `keyword_id` varchar(12) NOT NULL DEFAULT '',
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`ckeyword_id`),
+  KEY `course_id` (`course_id`),
+  KEY `keyword_id` (`keyword_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `course_links` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `course_id` int(12) NOT NULL DEFAULT '0',
@@ -2712,6 +2723,17 @@ CREATE TABLE IF NOT EXISTS `event_topics` (
   KEY `topic_coverage` (`topic_coverage`),
   KEY `topic_time` (`topic_time`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `event_keywords` (
+  `ekeyword_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `event_id` int(12) NOT NULL,
+  `keyword_id` varchar(12) NOT NULL DEFAULT '',
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`ekeyword_id`),
+  KEY `event_id` (`event_id`),
+  KEY `keyword_id` (`keyword_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `event_eventtypes` (
   `eeventtype_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -4296,8 +4318,8 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1510'),
-('version_entrada', '1.5.1');
+('version_db', '1604'),
+('version_entrada', '1.6.0DEV');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,

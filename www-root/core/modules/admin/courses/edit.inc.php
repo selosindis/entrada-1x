@@ -46,6 +46,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_course.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/keywords_course.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Editing " . $module_singular_name);
 
@@ -450,6 +451,44 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									}
 								}
 							}
+
+                            // Update MeSH keywords
+                            if (isset($_POST["delete_keywords"])) {
+                                if (trim($_POST["delete_keywords"][0]) !== ""){                                                                        
+                                    $lis = explode(",", $_POST["delete_keywords"][0]);
+                                    $count = count($lis);                                                                 
+
+                                    if ($count > 0){
+                                        // Removed the keywords in the delete array.
+                                        for ($i=0; $i<$count; $i++){
+                                            if (trim($lis[$i]) != ""){
+                                                $query = "  DELETE 
+                                                            FROM `course_keywords` 
+                                                            WHERE keyword_id = ". $db->qstr($lis[$i])." AND course_id = ".$db->qstr($COURSE_ID);
+                                                $db->Execute($query);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            if (isset($_POST["add_keywords"][0])){
+                                if (trim($_POST["add_keywords"][0]) !== ""){                                                                        
+                                    $lis = explode(",", $_POST["add_keywords"][0]);
+                                    $count = count($lis);                                                                 
+
+                                    if ($count > 0){
+                                        // Add the keywords n the add array.
+                                        for ($i=0; $i<$count; $i++){
+                                            if (trim($lis[$i]) != ""){
+                                                $query = "  INSERT INTO `course_keywords` (course_id, keyword_id, updated_date, updated_by) 
+                                                            VALUES (".$db->qstr($COURSE_ID).", ". $db->qstr($lis[$i]).", ". $db->qstr(time()). ", ". $db->qstr($ENTRADA_USER->getID()).")";
+                                                $db->Execute($query);
+                                            }
+                                        }
+                                    }
+                                }                                                                                                                             
+                            }
 
 							$query = "SELECT * FROM `course_objectives` WHERE `objective_type` = 'course' AND `course_id` = ".$db->qstr($COURSE_ID);
 							$course_objectives = $db->GetAll($query);
@@ -1202,6 +1241,62 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						    }
 						});
 					</script>
+                    
+                    <a name="course-keywords-section"></a>
+					<h2 title="Course Keywords Section"><?php echo $module_singular_name; ?> Keywords</h2>
+					<div id="course-keywords-section">
+                        <div class="keywords half left">
+                            <h3>Keyword Search</h3>
+                            <div>Search MeSH Keywords 
+                                <input id="search" autocomplete="off" type="text" name="keyword">
+                                <input id="course_id" type="hidden" name="course_id" value="<?php echo $COURSE_ID?>" >
+                            </div>
+
+                            <div id="search_results">
+                                <div id="inserted"></div>
+                                    <div id="results"><ul></ul></div>
+                            </div>
+                        </div>
+                        <div class="mapped_keywords right">
+                            <h3>Attached Keywords</h3>
+                            <div class="clearfix">
+                                <ul class="page-action" style="float: right">
+                                    <div class="row-fluid space-below">
+                                        <a href="javascript:void(0)" class="keyword-toggle btn btn-success btn-small pull-right" keyword-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Show Keyword Search</a>
+                                    </div>
+                               </ul>
+                            </div>
+                            <p class="well well-small content-small">
+                                <strong>Helpful Tip:</strong> Click <strong>Show Keyword Search</strong> to search from the MeSH keyword database. Click + to add to, - to remove from, the course.
+                            </p>
+
+                            <div id="tagged">
+                                <div id="right1">
+                                    <ul>
+                                    <?php
+                                        $query = "  SELECT ck.`keyword_id`, d.`descriptor_name` 
+                                                    FROM `course_keywords` AS ck
+                                                    JOIN `mesh_descriptors` AS d 
+                                                    ON ck.`keyword_id` = d.`descriptor_ui`
+                                                    AND ck.`course_id` = " . $db->qstr($COURSE_ID) . "
+                                                    ORDER BY `descriptor_name`";
+
+                                        $results = $db->GetAll($query);
+                                        if ($results) {
+                                            foreach($results as $result) {
+                                                echo "<li data-dui=\"" . $result['keyword_id'] . "\" data-dname=\"" . $result['descriptor_name'] . "\" id=\"tagged_keyword\" onclick=\"removeval(this, '" . $result['keyword_id'] . "')\"><i class=\"icon-minus-sign \"></i> " . $result['descriptor_name'] . "</li>";
+                                            }
+                                        }
+                                    ?>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <input type="hidden" name="delete_keywords[]" id="delete_keywords" value=""/>
+                        <input type="hidden" name="add_keywords[]" id="add_keywords" value=""/>
+                    </div>
+                    <div style="clear:both;"></div>
+
 					<?php
 						$ONLOAD[] = "Sortable.create('director_list', {onUpdate : function() {updateOrder('director')}})";
 						$ONLOAD[] = "$('associated_director').value = Sortable.sequence('director_list')";
@@ -1264,9 +1359,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							<h3>Mapped Objectives</h3>
 							<div class="clearfix">
 								<ul class="page-action" style="float: right">
-									<li class="last">
-										<a href="javascript:void(0)" class="mapping-toggle strong-green" data-toggle="show" id="toggle_sets">Show Objective Sets</a>
-									</li>
+                                    <div class="row-fluid space-below">
+                                        <a href="javascript:void(0)" class="mapping-toggle btn btn-success btn-small pull-right" data-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Show Objective Sets</a>
+                                    </div>
 								</ul>
 							</div>
 							<p class="well well-small content-small">

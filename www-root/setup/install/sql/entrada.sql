@@ -4297,11 +4297,14 @@ CREATE TABLE IF NOT EXISTS `reports_aamc_ci` (
   `organisation_id` int(12) NOT NULL,
   `report_title` varchar(255) NOT NULL,
   `report_date` bigint(64) NOT NULL DEFAULT '0',
-  `report_start` bigint(64) NOT NULL DEFAULT '0',
-  `report_finish` bigint(64) NOT NULL DEFAULT '0',
+  `report_start` varchar(10) NOT NULL DEFAULT '',
+  `report_finish` varchar(10) NOT NULL DEFAULT '',
+  `collection_start` bigint(64) NOT NULL DEFAULT '0',
+  `collection_finish` bigint(64) NOT NULL DEFAULT '0',
   `report_langauge` varchar(12) NOT NULL DEFAULT 'en-us',
   `report_description` text NOT NULL,
   `report_supporting_link` text NOT NULL,
+  `report_params` text NOT NULL,
   `report_active` tinyint(1) NOT NULL DEFAULT '1',
   `report_status` enum('draft','published') NOT NULL DEFAULT 'draft',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
@@ -4318,7 +4321,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1604'),
+('version_db', '1605'),
 ('version_entrada', '1.6.0DEV');
 
 CREATE TABLE IF NOT EXISTS `statistics` (

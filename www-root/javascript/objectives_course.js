@@ -130,7 +130,7 @@
 			var state = $(this).attr('data-toggle');
 			if(state == "show"){
 				$(this).attr('data-toggle','hide');
-				$(this).html('Hide Objective Sets');
+				$(this).html('<i class="icon-minus-sign icon-white"></i> Hide Objective Sets');
 				jQuery('.mapped_objectives').animate({width:'60%'},400,'swing',function(){
 					//jQuery('.objectives').animate({display:'block'},400,'swing');											
 					jQuery('.objectives').css({width:'0%'});
@@ -139,7 +139,7 @@
 				});										
 			}else{
 				$(this).attr('data-toggle','show');
-				$(this).html('Show Objective Sets');
+				$(this).html('<i class="icon-plus-sign icon-white"></i> Show Objective Sets');
 				jQuery('.objectives').animate({width:'0%'},400,'linear',function(){
 					jQuery('.objectives').hide();
 					jQuery('.mapped_objectives').animate({width:'100%'},400,'swing');

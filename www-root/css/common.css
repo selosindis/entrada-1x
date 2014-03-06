@@ -4273,6 +4273,39 @@ select.mini {
     line-height: 14px;
 }
 
+/**
+* MeSH search
+*/
+
+.keywords{
+  float: left;
+  width: 400px;
+  width: 100%;
+}
+
+.mapped_keywords{
+  float: right;  
+  width: 100%;
+  
+}
+
+#search_results {
+    padding-top: 10px;
+    float: left;
+    overflow: auto;
+    height: 180px;
+    width: 100%!important;
+}
+
+#course-keywords-section{
+    height: auto;
+}
+
+#tagged_keyword, #keyword{
+    padding: 0;
+    list-style: none; 
+    cursor: pointer;
+}
 
 /**
 * Utility Classes/Bootstrap Overrides

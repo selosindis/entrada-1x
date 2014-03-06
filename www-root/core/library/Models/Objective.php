@@ -158,7 +158,73 @@ class Models_Objective {
 
         return $parent;
     }
-    
+
+    public static function fetchObjectives($parent_id = 0, &$objectives, $active_only = true) {
+        global $db;
+
+        $parent_id = (int) $parent_id;
+
+        $active_only = (bool) $active_only;
+
+        $query = "SELECT a.*
+                    FROM `global_lu_objectives` AS a
+                    WHERE a.`objective_parent` = ?
+                    ".($active_only ? "AND a.`objective_active` = '1'" : "")."
+                    ORDER BY a.`objective_order` ASC";
+        $results = $db->GetAll($query, array($parent_id));
+        if ($results) {
+            foreach ($results as $result) {
+                $objectives[] = $result;
+
+                self::fetchObjectives($result["objective_id"], $objectives, $active_only);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public static function fetchObjectivesMappedTo($objective_id = 0) {
+        global $db;
+
+        $objective_id = (int) $objective_id;
+
+        $output = array();
+
+        if ($objective_id) {
+            $query = "SELECT b.*
+                        FROM linked_objectives AS a
+                        JOIN global_lu_objectives AS b
+                        ON b.objective_id = a.target_objective_id
+                        WHERE a.objective_id = ?
+                        ORDER BY b.objective_order ASC";
+            $output = $db->GetAll($query, array($objective_id));
+        }
+
+        return $output;
+    }
+
+    public static function fetchObjectivesMappedFrom($objective_id = 0) {
+        global $db;
+
+        $objective_id = (int) $objective_id;
+
+        $output = array();
+
+        if ($objective_id) {
+            $query = "SELECT b.*
+                        FROM linked_objectives AS a
+                        JOIN global_lu_objectives AS b
+                        ON b.objective_id = a.objective_id
+                        WHERE a.target_objective_id = ?
+                        ORDER BY b.objective_order ASC";
+            $output = $db->GetAll($query, array($objective_id));
+        }
+
+        return $output;
+    }
+
     public static function descendantInArray($objective_id, $objective_ids_array, $first_level = false) {
         global $db;
         if (!$first_level && in_array($objective_id, $objective_ids_array)) {

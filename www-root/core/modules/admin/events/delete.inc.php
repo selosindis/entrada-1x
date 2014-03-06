@@ -197,30 +197,30 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 									}
 
 									/**
-									* Remove all records from event_ed10 table.
+									* Remove all records from event_topics table.
 									*/
-									$query		= "SELECT * FROM `event_ed10` WHERE `event_id` = ".$db->qstr($event_id);
+									$query		= "SELECT * FROM `event_topics` WHERE `event_id` = ".$db->qstr($event_id);
 									$results	= $db->GetAll($query);
 									if($results) {
 										foreach($results as $result) {
-											$removed[$event_id]["ed10_id"][] = $result["ed10_id"];
+											$removed[$event_id]["etopic_id"][] = $result["etopic_id"];
 										}
 
-										$query = "DELETE FROM `event_ed10` WHERE `event_id` = ".$db->qstr($event_id);
+										$query = "DELETE FROM `event_topics` WHERE `event_id` = ".$db->qstr($event_id);
 										$db->Execute($query);
 									}
 
 									/**
-									* Remove all records from event_ed11 table.
+									* Remove all records from event_lti_consumers table.
 									*/
-									$query		= "SELECT * FROM `event_ed11` WHERE `event_id` = ".$db->qstr($event_id);
+									$query		= "SELECT * FROM `event_lti_consumers` WHERE `event_id` = ".$db->qstr($event_id);
 									$results	= $db->GetAll($query);
 									if($results) {
 										foreach($results as $result) {
-											$removed[$event_id]["ed11_id"][] = $result["ed11_id"];
+//											$removed[$event_id]["ed11_id"][] = $result["ed11_id"];
 										}
 
-										$query = "DELETE FROM `ed11_id` WHERE `event_id` = ".$db->qstr($event_id);
+										$query = "DELETE FROM `event_lti_consumers` WHERE `event_id` = ".$db->qstr($event_id);
 										$db->Execute($query);
 									}
 

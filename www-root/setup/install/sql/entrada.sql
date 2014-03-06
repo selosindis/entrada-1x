@@ -2105,6 +2105,17 @@ CREATE TABLE IF NOT EXISTS `course_group_contacts` (
   KEY `proxy_id` (`proxy_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `course_keywords` (
+  `ckeyword_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `course_id` int(12) NOT NULL,
+  `keyword_id` varchar(12) NOT NULL DEFAULT '',
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`ckeyword_id`),
+  KEY `course_id` (`course_id`),
+  KEY `keyword_id` (`keyword_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
 CREATE TABLE IF NOT EXISTS `course_links` (
   `id` int(12) NOT NULL AUTO_INCREMENT,
   `course_id` int(12) NOT NULL DEFAULT '0',
@@ -2712,6 +2723,17 @@ CREATE TABLE IF NOT EXISTS `event_topics` (
   KEY `topic_coverage` (`topic_coverage`),
   KEY `topic_time` (`topic_time`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `event_keywords` (
+  `ekeyword_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `event_id` int(12) NOT NULL,
+  `keyword_id` varchar(12) NOT NULL DEFAULT '',
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  PRIMARY KEY (`ekeyword_id`),
+  KEY `event_id` (`event_id`),
+  KEY `keyword_id` (`keyword_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `event_eventtypes` (
   `eeventtype_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
@@ -4275,11 +4297,14 @@ CREATE TABLE IF NOT EXISTS `reports_aamc_ci` (
   `organisation_id` int(12) NOT NULL,
   `report_title` varchar(255) NOT NULL,
   `report_date` bigint(64) NOT NULL DEFAULT '0',
-  `report_start` bigint(64) NOT NULL DEFAULT '0',
-  `report_finish` bigint(64) NOT NULL DEFAULT '0',
+  `report_start` varchar(10) NOT NULL DEFAULT '',
+  `report_finish` varchar(10) NOT NULL DEFAULT '',
+  `collection_start` bigint(64) NOT NULL DEFAULT '0',
+  `collection_finish` bigint(64) NOT NULL DEFAULT '0',
   `report_langauge` varchar(12) NOT NULL DEFAULT 'en-us',
   `report_description` text NOT NULL,
   `report_supporting_link` text NOT NULL,
+  `report_params` text NOT NULL,
   `report_active` tinyint(1) NOT NULL DEFAULT '1',
   `report_status` enum('draft','published') NOT NULL DEFAULT 'draft',
   `updated_date` bigint(64) NOT NULL DEFAULT '0',
@@ -4296,8 +4321,8 @@ CREATE TABLE IF NOT EXISTS `settings` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1510'),
-('version_entrada', '1.5.1');
+('version_db', '1605'),
+('version_entrada', '1.6.0DEV');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,

@@ -3415,7 +3415,7 @@ function attachment_check($event_id = 0, $side = "public") {
 			$grand_total += $total_links;
 		}
 
-		$query	= "SELECT COUNT(*) AS `total_quizzes` FROM `attached_quizzes` WHERE a.`content_type` = 'event' AND a.`content_id` = ".$db->qstr($event_id).(($side == "public") ? " AND (`release_date` = '0' OR `release_date` <= '".time()."') AND (`release_until` = '0' OR `release_until` >= '".time()."')" : "");
+		$query	= "SELECT COUNT(*) AS `total_quizzes` FROM `attached_quizzes` WHERE `content_type` = 'event' AND `content_id` = ".$db->qstr($event_id).(($side == "public") ? " AND (`release_date` = '0' OR `release_date` <= '".time()."') AND (`release_until` = '0' OR `release_until` >= '".time()."')" : "");
 		$result	= ((USE_CACHE) ? $db->CacheGetRow(LONG_CACHE_TIMEOUT, $query) : $db->GetRow($query));
 		if ($result) {
 			$total_quizzes = $result["total_quizzes"];
@@ -12009,6 +12009,9 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 					break;
 				}
 				$event_ids_string .= ($event_ids_string ? ", " : "").$db->qstr($result_ids_map[$i]);
+			}
+			if (!strlen($event_ids_string)) {
+			 $event_ids_string = "0";
 			}
 
 			$query_events = "	SELECT `events`.`event_id`,

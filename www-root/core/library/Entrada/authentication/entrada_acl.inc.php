@@ -859,8 +859,7 @@ class NotEventEnrollmentAssertion implements Zend_Acl_Assert_Interface {
                                     ON `ca`.`cperiod_id` = cp.`cperiod_id`
                                     WHERE cga.`cgroup_id` = ".$db->qstr($result["audience_value"]) . "
                                     AND cga.`proxy_id` = " . $db->qstr($user_id) . "
-                                    AND    cga.`active` = 1
-                                    AND UNIX_TIMESTAMP() BETWEEN cp.`start_date` AND cp.`finish_date`";
+                                    AND    cga.`active` = 1";
                         $result = $db->GetRow($query);
                         if ($result) {
                             return true;

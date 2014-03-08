@@ -525,7 +525,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							}
 			
 							if ($administrator) {
-								$url	= "javascript:newEventDate(". $result["event_id"]. ", '". $result["event_title"]. "', '".date('Y-m-d', $result["event_start"]). "', '".date('H', $result["event_start"]). "', '".date('i', $result["event_start"])."')";
+								//Escape event title by replacing double quotes with &quot; and single quotes with \'
+								$event_title_escaped = str_replace(array('"', "'"), array('&quot;', "\\'"), $result["event_title"]);
+								$url	= "javascript:newEventDate(". $result["event_id"]. ", '". $event_title_escaped . "', '".date('Y-m-d', $result["event_start"]). "', '".date('H', $result["event_start"]). "', '".date('i', $result["event_start"])."')";
 								echo "<tr id=\"rEvent-".$result["event_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
 								echo "	<td class=\"modified\"><a href=\"$url\"><img src=\"".ENTRADA_URL."/images/btn_add.gif\" alt=\"Copy Event and Content\" title=\"Copy Event and Content\" border=\"0\" /></a></td>\n";
 								echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["event_start"]).(($url) ? "</a>" : "")."</td>\n";

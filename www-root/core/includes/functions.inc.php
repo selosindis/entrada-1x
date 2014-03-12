@@ -11724,11 +11724,13 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 										$where_student_course_ids = $course_ids;
 									}
 
-									// Students' cohort events
-									$cohort = groups_get_cohort((int) $filter_value);
-									if ($cohort) {
-										$where_student_cohorts[] = $cohort["group_id"];
-									}
+                                    // Students' cohort events
+                                    $cohorts = groups_get_cohorts((int) $filter_value);
+                                    if ($cohorts) {
+                                        foreach ($cohorts as $cohort) {
+                                            $where_student_cohorts[] = $cohort["group_id"];
+                                        }
+                                    }
 
 									// Students' indivdual events
 									$where_student_proxy_ids[] = (int) $filter_value;
@@ -16509,6 +16511,50 @@ function groups_get_name($group_id = 0) {
 
 	return false;
 }
+
+/**
+ * This function returns each of the cohort group ids associated with the provided proxy id
+ *
+ * @param int $proxy_id
+ * @return array $group
+ */
+function groups_get_cohorts($proxy_id = 0, $organisation_id = 0, $strict = false) {
+    global $db, $ENTRADA_USER;
+
+    $proxy_id = (int) $proxy_id;
+
+    if ($proxy_id) {
+        $query = "	SELECT a.*
+					FROM `groups` AS a
+					JOIN `group_members` AS b
+					ON b.`group_id` = a.`group_id`
+					JOIN `group_organisations` AS c
+					ON c.`group_id` = a.`group_id`
+					WHERE b.`proxy_id` = ".$db->qstr($proxy_id)."
+					AND b.`member_active` = '1'
+					AND a.`group_type` = 'cohort'
+					AND c.`organisation_id` = ".$db->qstr((isset($organisation_id) && ((int)$organisation_id) ? ((int) $organisation_id) : $ENTRADA_USER->getActiveOrganisation()));
+        $cohorts = $db->CacheGetAll(CACHE_TIMEOUT, $query);
+        if ($cohorts) {
+            return $cohorts;
+        } elseif (!$strict) {
+            $query = "	SELECT a.*
+						FROM `groups` AS a
+						JOIN `group_organisations` AS b
+						ON a.`group_id` = b.`group_id`
+						WHERE b.`organisation_id` = ".$db->qstr((isset($organisation_id) && ((int)$organisation_id) ? ((int) $organisation_id) : $ENTRADA_USER->getActiveOrganisation()))."
+						AND a.`group_type` = 'cohort'
+						ORDER BY a.`group_id` DESC";
+            $cohorts = $db->CacheGetAll(CACHE_TIMEOUT,$query);
+            if ($cohorts) {
+                return $cohorts;
+            }
+        }
+    }
+
+    return false;
+}
+
 
 /**
  * This function returns the first cohort record related to the given proxy_id

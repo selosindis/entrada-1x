@@ -27,7 +27,11 @@ if ($RECORD_ID) {
 	if ($submission	= $db->GetRow($query)) {
 		header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=view&assignment_id=".$RECORD_ID);
 	}
-	$query			= "SELECT * FROM `assignments` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `assignment_active` = '1' AND (`due_date` = 0 OR `due_date` > UNIX_TIMESTAMP())";
+	$query			= "SELECT * FROM `assignments`
+	                    WHERE `assignment_id` = ".$db->qstr($RECORD_ID)."
+	                    AND `assignment_active` = '1'
+	                    AND (`release_date` = 0 OR `release_date` < ".$db->qstr(time()).")
+	                    AND (`release_until` = 0 OR `release_until` > ".$db->qstr(time()).")";
 	$folder_record	= $db->GetRow($query);
 	if ($folder_record){// || true) {
 		$course_ids = groups_get_enrolled_course_ids($ENTRADA_USER->getID());

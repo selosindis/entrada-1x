@@ -199,111 +199,93 @@ if ($RECORD_ID) {
 						?>
 						<script type="text/javascript">
 
-						jQuery(document).ready(function(){
-							jQuery('.delete').click(function(){
-								id = jQuery(this).attr('id').substring(7);
-								jQuery("#dialog-confirm").dialog({
-									resizable: false,
-									height:180,
-									modal: true,
-									buttons: {
-										'Delete': function() {
-											var url = '<?php echo ENTRADA_URL."/profile/gradebook/assignments";?>?section=delete-comment&acomment_id='+id;												
-											window.location = url;
-											return true;
-										},
-										Cancel: function() {
-											jQuery(this).dialog('close');
-										}
-									}
-									});
-							});
-							jQuery('.delete-version').click(function(){
-								id = jQuery(this).attr('id').substring(7);
-								jQuery("#dialog-confirm").dialog({
-									resizable: false,
-									height:180,
-									modal: true,
-									buttons: {
-										'Delete': function() {
-											window.location = '<?php echo ENTRADA_URL."/profile/gradebook/assignments";?>?section=delete-version&afversion_id='+id;
-											return true;
-										},
-										Cancel: function() {
-											jQuery(this).dialog('close');
-										}
-									}
-									});
-							});
-						});
+                            jQuery(document).ready(function(){
+                                jQuery('.delete').click(function(){
+                                    id = jQuery(this).attr('id').substring(7);
+                                    jQuery("#dialog-confirm").dialog({
+                                        resizable: false,
+                                        height:180,
+                                        modal: true,
+                                        buttons: {
+                                            'Delete': function() {
+                                                var url = '<?php echo ENTRADA_URL."/profile/gradebook/assignments";?>?section=delete-comment&acomment_id='+id;
+                                                window.location = url;
+                                                return true;
+                                            },
+                                            Cancel: function() {
+                                                jQuery(this).dialog('close');
+                                            }
+                                        }
+                                        });
+                                });
+                                jQuery('.delete-version').click(function(){
+                                    id = jQuery(this).attr('id').substring(7);
+                                    jQuery("#dialog-confirm").dialog({
+                                        resizable: false,
+                                        height:180,
+                                        modal: true,
+                                        buttons: {
+                                            'Delete': function() {
+                                                window.location = '<?php echo ENTRADA_URL."/profile/gradebook/assignments";?>?section=delete-version&afversion_id='+id;
+                                                return true;
+                                            },
+                                            Cancel: function() {
+                                                jQuery(this).dialog('close');
+                                            }
+                                        }
+                                        });
+                                });
+                            });
 
-						<?php if ($community_shares_select != "") { ?>
-						function fileMove(id) {
-							Dialog.confirm('Do you really wish to move the '+ $('file-' + id + '-title').innerHTML +' file?<br /><br />If you confirm this action, you will be moving the file and all comments to the selected folder.<br /><br /><?php echo $community_shares_select; ?>',
-								{
-									id:				'requestDialog',
-									width:			350,
-									height:			165,
-									title:			'Delete Confirmation',
-									className:		'medtech',
-									okLabel:		'Yes',
-									cancelLabel:	'No',
-									closable:		'true',
-									buttonClass:	'btn',
-									ok:				function(win) {
-														window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=move-file&id='+id+'&share_id='+$F('share_id');
-														return true;
-													}
-								}
-							);
-						}
-						<?php
-						}
-						if (false){//shares_file_module_access($RECORD_ID, "delete-revision")) {
-							?>
+                            <?php if ($community_shares_select != "") { ?>
+                            function fileMove(id) {
+                                Dialog.confirm('Do you really wish to move the '+ $('file-' + id + '-title').innerHTML +' file?<br /><br />If you confirm this action, you will be moving the file and all comments to the selected folder.<br /><br /><?php echo $community_shares_select; ?>',
+                                    {
+                                        id:				'requestDialog',
+                                        width:			350,
+                                        height:			165,
+                                        title:			'Delete Confirmation',
+                                        className:		'medtech',
+                                        okLabel:		'Yes',
+                                        cancelLabel:	'No',
+                                        closable:		'true',
+                                        buttonClass:	'btn',
+                                        ok:				function(win) {
+                                                            window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=move-file&id='+id+'&share_id='+$F('share_id');
+                                                            return true;
+                                                        }
+                                    }
+                                );
+                            }
+                            <?php
+                            }
+                            if (false){//shares_file_module_access($RECORD_ID, "delete-revision")) {
+                                ?>
 
-							function revisionDelete(id) {
-								Dialog.confirm('Do you really wish to deactivate the '+ $('file-version-' + id + '-title').innerHTML +' revision?<br /><br />If you confirm this action, you will no longer be able to download this version of the file.',
-									{
-										id:				'requestDialog',
-										width:			350,
-										height:			125,
-										title:			'Delete Confirmation',
-										className:		'medtech',
-										okLabel:		'Yes',
-										cancelLabel:	'No',
-										closable:		'true',
-										buttonClass:	'btn',
-										ok:				function(win) {
-															window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=delete-revision&id='+id;
-															return true;
-														}
-									}
-								);
-							}
-							<?php
-						}
-							?>
-							</script>
-							<?php
-						/**
-							* If there is time release properties, display them to the browsing users.
-							*/
-						if (($release_date = (int) $file_record["release_date"]) && ($release_date > time())) {
-							$NOTICE++;
-							$NOTICESTR[] = "This file will not be accessible to others until <strong>".date(DEFAULT_DATE_FORMAT, $release_date)."</strong>.";
-						} elseif ($release_until = (int) $file_record["release_until"]) {
-							if ($release_until > time()) {
-								$NOTICE++;
-								$NOTICESTR[] = "This file will be accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong>.";
-							} else {
-								/**
-									* Only administrators or people who wrote the post will get this.
-									*/
-								$NOTICE++;
-								$NOTICESTR[] = "This file was only accessible until <strong>".date(DEFAULT_DATE_FORMAT, $release_until)."</strong> by others.";
-							}
-						}
+                                function revisionDelete(id) {
+                                    Dialog.confirm('Do you really wish to deactivate the '+ $('file-version-' + id + '-title').innerHTML +' revision?<br /><br />If you confirm this action, you will no longer be able to download this version of the file.',
+                                        {
+                                            id:				'requestDialog',
+                                            width:			350,
+                                            height:			125,
+                                            title:			'Delete Confirmation',
+                                            className:		'medtech',
+                                            okLabel:		'Yes',
+                                            cancelLabel:	'No',
+                                            closable:		'true',
+                                            buttonClass:	'btn',
+                                            ok:				function(win) {
+                                                                window.location = '<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=delete-revision&id='+id;
+                                                                return true;
+                                                            }
+                                        }
+                                    );
+                                }
+                                <?php
+                            }
+                            ?>
+                        </script>
+                        <?php
 
 						if ($NOTICE) {
 							echo display_notice();

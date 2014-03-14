@@ -219,7 +219,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						break;
 						case 1 :
 						default :
-							$query = "	SELECT *, b.`name` as `assessment_name` 
+							$query = "	SELECT a.*, b.`name` as `assessment_name`
 										FROM `assignments` a
 										JOIN `assessments` b
 										ON a.`assessment_id` = b.`assessment_id`

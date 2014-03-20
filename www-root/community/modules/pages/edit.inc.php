@@ -84,8 +84,61 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 	if (!isset($PAGE_TYPE) || !$PAGE_TYPE) {
 		$PAGE_TYPE= $page_type;
 	}
-
+	
+	if ($home_page || $PAGE_TYPE == "events" || $PAGE_TYPE == "announcements") {
+		$query		= "SELECT * FROM `community_page_options` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `cpage_id` = ".$db->qstr($PAGE_ID);
+		$results	= $db->GetAll($query);
+		if ($results) {
+			foreach ($results as $result) {
+						$page_options[$result["option_title"]] = $result;
+			}
+		}
+	}
+	
 	if ($home_page) {
+		/**
+		 * If these options are not already records in the database, insert them so they can be updated.
+		 */
+		if (!key_exists("show_announcements", $page_options)) {
+			$db->Execute("INSERT INTO `community_page_options` 
+				(`community_id`, `cpage_id`, `option_title`, `option_value`)
+				VALUES (".$db->qstr($COMMUNITY_ID).", ".$db->qstr($PAGE_ID).", 'show_announcements', 0)");
+			$page_options["show_announcements"] =	array ('cpoption_id' 	=> $db->insert_id(),
+												   'community_id'	=> $COMMUNITY_ID,
+												   'cpage_id'		=> $PAGE_ID,
+												   'option_title'	=> "show_announcements",
+												   'option_value'	=> 0,
+												   'proxy_id'		=> 0,
+												   'updated_date'	=> 0
+												  );
+		}
+		if (!key_exists("show_events", $page_options)) {
+			$db->Execute("INSERT INTO `community_page_options` 
+				(`community_id`, `cpage_id`, `option_title`, `option_value`)
+				VALUES (".$db->qstr($COMMUNITY_ID).", ".$db->qstr($PAGE_ID).", 'show_events', 0)");
+			$page_options["show_events"] =	array ('cpoption_id' 	=> $db->insert_id(),
+												   'community_id'	=> $COMMUNITY_ID,
+												   'cpage_id'		=> $PAGE_ID,
+												   'option_title'	=> "show_events",
+												   'option_value'	=> 0,
+												   'proxy_id'		=> 0,
+												   'updated_date'	=> 0
+												  );
+		}
+		if (!key_exists("show_history", $page_options)) {
+			$db->Execute("INSERT INTO `community_page_options` 
+				(`community_id`, `cpage_id`, `option_title`, `option_value`)
+				VALUES (".$db->qstr($COMMUNITY_ID).", ".$db->qstr($PAGE_ID).", 'show_history', 0)");
+			$page_options["show_history"] =	array ('cpoption_id' 	=> $db->insert_id(),
+												   'community_id'	=> $COMMUNITY_ID,
+												   'cpage_id'		=> $PAGE_ID,
+												   'option_title'	=> "show_history",
+												   'option_value'	=> 0,
+												   'proxy_id'		=> 0,
+												   'updated_date'	=> 0
+												  );
+		}
+		
 		$query		= "SELECT * FROM `community_page_options` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID);//." AND `cpage_id` = '0'";
 		$results	= $db->GetAll($query);
 		if ($results) {
@@ -108,13 +161,6 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 		}
 	} else {
 		if ($PAGE_TYPE == "announcements" || $PAGE_TYPE == "events") {
-			$query		= "SELECT * FROM `community_page_options` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `cpage_id` = ".$db->qstr($PAGE_ID);
-			$results	= $db->GetAll($query);
-			if ($results) {
-				foreach ($results as $result) {
-							$page_options[$result["option_title"]] = $result;
-				}
-			}
 			if (!key_exists('allow_member_posts', $page_options)) {
 			$db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'allow_member_posts', `option_value` = '0'");
 			$page_options["allow_member_posts"] = Array ('cpoption_id' 	=> $db->insert_id(),

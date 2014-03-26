@@ -4379,6 +4379,14 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
                 );
             break;
             case "community" :
+                $toolbar_groups = array (
+                    array("name" => "clipboard", "groups" => array("clipboard", "spellchecker")),
+                    array("name" => "links"),
+					array("name" => "insert", "groups" => array("mediaembed", "insert")),
+                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
+                    array("name" => "mode")
+                );
+			break;
             case "mspr" :
             case "minimal" :
             case "basic" :

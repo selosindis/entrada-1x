@@ -2712,7 +2712,7 @@ CREATE TABLE IF NOT EXISTS `event_resources` (
 CREATE TABLE IF NOT EXISTS `event_topics` (
   `etopic_id` int(12) NOT NULL AUTO_INCREMENT,
   `event_id` int(12) NOT NULL DEFAULT '0',
-  `topic_id` tinyint(1) DEFAULT '0',
+  `topic_id` int(12) NOT NULL DEFAULT '0',
   `topic_coverage`  enum('major','minor') NOT NULL,
   `topic_time` varchar(25) DEFAULT NULL,
   `updated_date` bigint(64) NOT NULL,

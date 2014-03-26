@@ -93,7 +93,8 @@ class Entrada_ACL extends ACL_Factory {
 			"group",
             "encounter_tracking",
 			"eportfolio",
-			"eportfolio-artifact"
+			"eportfolio-artifact",
+			"masquerade"
 		)
 	);
 	/**

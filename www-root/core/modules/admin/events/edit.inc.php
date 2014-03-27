@@ -1674,8 +1674,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								if ($(element)) {
 									$(element).checked = false;
 								}
-                                var tr_element = $(element).parentNode.parentNode;
-                                tr_element.removeClassName('selected');
+                                if (multiselect[audience_type]) {
+                                    var tr_element = $(element).parentNode.parentNode;
+                                    tr_element.removeClassName('selected');
+                                }
 								var audience = $('event_audience_'+audience_id).value.split(',');
 								for (var i = 0; i < audience.length; i++) {
 									if (audience[i] == element) {

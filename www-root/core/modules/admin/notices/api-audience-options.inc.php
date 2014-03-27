@@ -136,7 +136,6 @@ if (!defined("IN_NOTICES")) {
 								AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 								AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 								AND b.`group` = 'faculty'
-								AND a.`grad_year` >= '".(date("Y") - ((date("m") < 7) ?  2 : 1))."'
 								ORDER BY a.`grad_year` ASC, a.`lastname` ASC, a.`firstname` ASC";
 					$results = $db->GetAll($query);
 					if ($results) {

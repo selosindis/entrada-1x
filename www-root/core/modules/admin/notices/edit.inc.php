@@ -298,8 +298,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 											parameters: {
 												'options_for' : audience_type,
 												'org_id' : org_id,
-												'associated_cohort' : $('associated_cohort').value,
-												'associated_student' : $('associated_student').value
+												'associated_cohort' : jQuery('#associated_cohort').val(),
+												'associated_student' : jQuery('#associated_student').val(),
+												'associated_faculty' : jQuery('#associated_faculty').val(),
+												'associated_staff' : jQuery('#associated_staff').val(),
+												'associated_course_list' : jQuery('#associated_course_list').val()
 											},
 											method: 'post',
 											onLoading: function() {

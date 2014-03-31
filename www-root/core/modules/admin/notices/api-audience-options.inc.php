@@ -197,7 +197,7 @@ if (!defined("IN_NOTICES")) {
 				 * Process students.
 				 */
 				if ((isset($_POST["associated_student"]) && $use_ajax)) {
-					$associated_audience = explode(',', $_POST["event_audience_students"]);
+					$associated_audience = explode(',', $_POST["associated_student"]);
 					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
 						foreach($associated_audience as $audience_id) {
 							if (strpos($audience_id, "student") !== false) {

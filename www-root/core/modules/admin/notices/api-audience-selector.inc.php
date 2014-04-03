@@ -64,8 +64,8 @@ if (!defined("IN_NOTICES")) {
 				/**
 				 * Cohorts.
 				 */
-				if ((isset($_POST["event_audience_cohorts"]))) {
-					$associated_audience = explode(',', $_POST["event_audience_cohorts"]);
+				if ((isset($_POST["associated_cohort"]))) {
+					$associated_audience = explode(',', $_POST["associated_cohort"]);
 					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
 						foreach($associated_audience as $audience_id) {
 							if (strpos($audience_id, "group") !== false) {
@@ -118,8 +118,8 @@ if (!defined("IN_NOTICES")) {
 				/**
 				 * Course Groups
 				 */
-				if (isset($_POST["event_audience_course_lists"]) && isset($PROCESSED["course_id"]) && $PROCESSED["course_id"]) {
-					$associated_audience = explode(',', $_POST["event_audience_course_lists"]);
+				if (isset($_POST["associated_course_list"]) && isset($PROCESSED["course_id"]) && $PROCESSED["course_id"]) {
+					$associated_audience = explode(',', $_POST["associated_course_list"]);
 					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
 						foreach($associated_audience as $audience_id) {
 							if (strpos($audience_id, "cgroup") !== false) {
@@ -173,8 +173,8 @@ if (!defined("IN_NOTICES")) {
 				/**
 				 * Learners
 				 */
-				if ((isset($_POST["event_audience_students"]))) {
-					$associated_audience = explode(',', $_POST["event_audience_students"]);
+				if ((isset($_POST["associated_student"]))) {
+					$associated_audience = explode(',', $_POST["associated_student"]);
 					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
 						foreach($associated_audience as $audience_id) {
 							if (strpos($audience_id, "student") !== false) {
@@ -237,11 +237,11 @@ if (!defined("IN_NOTICES")) {
 				/**
 				 * Learners
 				 */
-				if ((isset($_POST["event_audience_faculty"]))) {
-					$associated_audience = explode(',', $_POST["event_audience_faculty"]);
+				if ((isset($_POST["associated_faculty"]))) {
+					$associated_audience = explode(',', $_POST["associated_faculty"]);
 					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
 						foreach($associated_audience as $audience_id) {
-							if (strpos($audience_id, "student") !== false) {
+							if (strpos($audience_id, "faculty") !== false) {
 								if ($proxy_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
 									$query = "	SELECT a.*
 												FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -298,11 +298,11 @@ if (!defined("IN_NOTICES")) {
 				/**
 				 * Learners
 				 */
-				if ((isset($_POST["event_audience_faculty"]))) {
-					$associated_audience = explode(',', $_POST["event_audience_faculty"]);
+				if ((isset($_POST["associated_staff"]))) {
+					$associated_audience = explode(',', $_POST["associated_staff"]);
 					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
 						foreach($associated_audience as $audience_id) {
-							if (strpos($audience_id, "student") !== false) {
+							if (strpos($audience_id, "staff") !== false) {
 								if ($proxy_id = clean_input(preg_replace("/[a-z_]/", "", $audience_id), array("trim", "int"))) {
 									$query = "	SELECT a.*
 												FROM `".AUTH_DATABASE."`.`user_data` AS a

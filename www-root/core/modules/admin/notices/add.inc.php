@@ -105,7 +105,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 						$id = explode("_",$proxy_id);
 						$id = $id[1];
 						if ($proxy_id = clean_input($id, array("trim", "int"))) {
-							$PROCESSED["associated_audience"][] =  array("audience_type"=>"students","audience_value"=>$proxy_id);
+							$PROCESSED["associated_audience"][] =  array("audience_type"=>"student","audience_value"=>$proxy_id);
 						}
 					}
 				}
@@ -366,7 +366,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 
 				function addAudience(element, audience_id) {
 					if (!$('audience_'+element)) {
-						$('audience_list').innerHTML += '<li class="' + ((audience_id == 'students' || audience_id == 'faculty' || audience_id == 'staff' )? 'user' : 'group') + '" id="audience_'+element+'" style="cursor: move;">'+$($(element).value+'_label').innerHTML+'<img src="<?php echo ENTRADA_RELATIVE; ?>/images/action-delete.gif" onclick="removeAudience(\''+element+'\', \''+audience_id+'\');" class="list-cancel-image" /></li>';
+						$('audience_list').innerHTML += '<li class="' + ((audience_id == 'student' || audience_id == 'faculty' || audience_id == 'staff' )? 'user' : 'group') + '" id="audience_'+element+'" style="cursor: move;">'+$($(element).value+'_label').innerHTML+'<img src="<?php echo ENTRADA_RELATIVE; ?>/images/action-delete.gif" onclick="removeAudience(\''+element+'\', \''+audience_id+'\');" class="list-cancel-image" /></li>';
 						$$('#audience_list div').each(function (e) { e.hide(); });
 
 						Sortable.destroy('audience_list');

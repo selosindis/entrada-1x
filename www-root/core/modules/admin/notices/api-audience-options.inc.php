@@ -136,7 +136,6 @@ if (!defined("IN_NOTICES")) {
 								AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 								AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
 								AND b.`group` = 'faculty'
-								AND a.`grad_year` >= '".(date("Y") - ((date("m") < 7) ?  2 : 1))."'
 								ORDER BY a.`grad_year` ASC, a.`lastname` ASC, a.`firstname` ASC";
 					$results = $db->GetAll($query);
 					if ($results) {
@@ -198,7 +197,7 @@ if (!defined("IN_NOTICES")) {
 				 * Process students.
 				 */
 				if ((isset($_POST["associated_student"]) && $use_ajax)) {
-					$associated_audience = explode(',', $_POST["event_audience_students"]);
+					$associated_audience = explode(',', $_POST["associated_student"]);
 					if ((isset($associated_audience)) && (is_array($associated_audience)) && (count($associated_audience))) {
 						foreach($associated_audience as $audience_id) {
 							if (strpos($audience_id, "student") !== false) {

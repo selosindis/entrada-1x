@@ -217,7 +217,8 @@ if ($RECORD_ID) {
 					<?php
 				}
 
-				$query		= "	SELECT a.*, COUNT(b.`cdtopic_id`) AS `total_replies`, IF(MAX(b.`updated_date`) IS NOT NULL, MAX(b.`updated_date`), a.`updated_date`) AS `latest_activity`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `original_poster_fullname`, c.`username` AS `original_poster_username`, CONCAT_WS(' ', d.`firstname`, d.`lastname`) AS `latest_poster_fullname`, d.`username` AS `latest_poster_username`, b.`anonymous` AS `latest_poster_anonymous`
+				$query		= "	SELECT a.*, COUNT(b.`cdtopic_id`) AS `total_replies`, IF(MAX(b.`updated_date`) IS NOT NULL, MAX(b.`updated_date`), a.`updated_date`) AS `latest_activity`,
+                                c.`firstname`, c.`lastname`, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `original_poster_fullname`, c.`username` AS `original_poster_username`
 								FROM `community_discussion_topics` AS a
 								LEFT JOIN `community_discussion_topics` AS b
 								ON a.`cdtopic_id` = b.`cdtopic_parent`
@@ -263,24 +264,38 @@ if ($RECORD_ID) {
 						if ((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {
 							$accessible = false;
 						}
+                        
+                        //get the last poster user info
+                        if ($result['total_replies'] > 0) {
+                            $query = "  SELECT cdt.`updated_date`, cdt.`updated_by`, cdt.`anonymous`, cdt.`proxy_id`, user_data.`firstname`, user_data.`lastname`, user_data.`username`
+                                        FROM `community_discussion_topics` as cdt
+                                        LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS user_data
+                                        ON cdt.`proxy_id` = user_data.`id`
+                                        WHERE cdt.`cdtopic_parent` = " . $db->qstr($result['cdtopic_id']) . "
+                                        ORDER BY cdt.`updated_date` DESC
+                                        LIMIT 1";
+                            $last_poster = $db->GetRow($query);
+                        }
 
 						if(defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && !$COMMUNITY_ADMIN && isset($result["anonymous"]) && $result["anonymous"]){
 							$original_display = "Anonymous";
 						} else {
 							$original_display = '<a href="'.ENTRADA_URL.'/people?profile='.html_encode($result["original_poster_username"]).'" style="font-size: 10px">'.html_encode($result["original_poster_fullname"]).'</a>';
 						}
-						if ((!$latest_activity = trim($result["latest_activity"])) || (!$latest_poster_username = trim($result["latest_poster_username"])) || (!$latest_poster_fullname = trim($result["latest_poster_fullname"]))) {
-							$latest_poster_username = $result["original_poster_username"];
-							$latest_poster_fullname = $result["original_poster_fullname"];
-							$latest_activity		= $result["updated_date"];
-							$latest_poster_display = $original_display;
-						}elseif(defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && !$COMMUNITY_ADMIN && isset($result["latest_poster_anonymous"]) && $result["latest_poster_anonymous"]){
-							$latest_poster_display = "Anonymous";
-						} else {
-							$latest_poster_display = '<a href="'.ENTRADA_URL.'/people?profile='.html_encode($result["latest_poster_username"]).'" style="font-size: 10px">'.html_encode($result["latest_poster_fullname"]).'</a>';
-						}
-
-
+                        
+                        if ($result['total_replies'] > 0) {
+                            $latest_activity = trim($result["updated_date"]);
+                            if (!$last_poster['anonymous']) {
+                                //last post
+                                $latest_poster_display = '<a href="'.ENTRADA_URL.'/people?profile='.html_encode($last_poster['username']).'" style="font-size: 10px">'.html_encode($last_poster['firstname'] . ' ' . $last_poster['lastname']).'</a>';
+                            } elseif (defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && !$COMMUNITY_ADMIN ) {
+                                //anoymous
+                                $latest_poster_display = "Anonymous";
+                            }
+                        } else {
+                            //orginal post
+                            $latest_poster_display = $original_display;
+                        }
 
 						echo "<tr".((!$accessible) ? " class=\"na\"" : "").">\n";
 						echo "	<td>\n";

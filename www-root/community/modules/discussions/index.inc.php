@@ -119,7 +119,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-forum")) {
 					}										
 					echo "	<strong>Time:</strong> ".date("M d Y, g:ia", $topics["updated_date"])."<br />\n";
 					echo "	<strong>Topic:</strong> <a href=\"".COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-post&amp;id=".$topics["cdtopic_id"]."\">".limit_chars(html_encode($topics["topic_title"]), 25, true)."</a><br />\n";
-					echo "	<strong>By:</strong>".$display."\n";
+					echo "	<strong>By: </strong>".$display."\n";
 				} else {
 					echo "	No topics in this forum.\n";
 				}

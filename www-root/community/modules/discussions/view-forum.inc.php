@@ -277,14 +277,14 @@ if ($RECORD_ID) {
                             $last_poster = $db->GetRow($query);
                         }
 
-						if(defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && !$COMMUNITY_ADMIN && isset($result["anonymous"]) && $result["anonymous"]){
+						if (defined('COMMUNITY_DISCUSSIONS_ANON') && COMMUNITY_DISCUSSIONS_ANON && !$COMMUNITY_ADMIN && isset($result["anonymous"]) && $result["anonymous"]){
 							$original_display = "Anonymous";
 						} else {
 							$original_display = '<a href="'.ENTRADA_URL.'/people?profile='.html_encode($result["original_poster_username"]).'" style="font-size: 10px">'.html_encode($result["original_poster_fullname"]).'</a>';
 						}
                         
                         if ($result['total_replies'] > 0) {
-                            $latest_activity = trim($result["updated_date"]);
+                            $latest_activity = trim($last_poster["updated_date"]);
                             if (!$last_poster['anonymous']) {
                                 //last post
                                 $latest_poster_display = '<a href="'.ENTRADA_URL.'/people?profile='.html_encode($last_poster['username']).'" style="font-size: 10px">'.html_encode($last_poster['firstname'] . ' ' . $last_poster['lastname']).'</a>';
@@ -294,6 +294,7 @@ if ($RECORD_ID) {
                             }
                         } else {
                             //orginal post
+                            $latest_activity = trim($result["updated_date"]);
                             $latest_poster_display = $original_display;
                         }
 

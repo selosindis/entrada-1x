@@ -265,7 +265,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					 * Required field "email" / Primary E-Mail.
 					 */
 					if ((isset($_POST["email"])) && ($email = clean_input($_POST["email"], "trim", "lower"))) {
-						if (@valid_address($email)) {
+						if (valid_address($email)) {
 							$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `email` = ".$db->qstr($email);
 							$result	= $db->GetRow($query);
 							if ($result) {

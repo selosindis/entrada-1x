@@ -288,7 +288,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 					 */
 					if ((isset($_POST["email"])) && ($email = clean_input($_POST["email"], "trim", "lower"))) {
 						if (valid_address($email)) {
-							$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `email` = ".$db->qstr($email);
+							$query	= "SELECT * FROM `".AUTH_DATABASE."`.`user_data` WHERE `email` = ".$db->qstr($email)."
+									   AND `id` != ".$db->qstr($PROXY_ID);
 							$result	= $db->GetRow($query);
 							if ($result) {
 								$ERROR++;

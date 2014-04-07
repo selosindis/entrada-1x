@@ -470,6 +470,39 @@ undergrad@yourschool.ca
 USERNOTIFICATION;
 
 /**
+ * This is the default notification message that is used in the Manage Users
+ * module when someone is updating a user in the system. It can be changed
+ * by the admin that is adding the user via a textarea when the new user
+ * is created.
+ */
+$DEFAULT_EDIT_USER_NOTIFICATION = <<<USERNOTIFICATION
+Dear %firstname% %lastname%,
+
+Your account has been updated in %application_name%, our web-based integrated teaching and learning system.
+
+Before logging in, you may need to reset your password. You can do this by clicking the following link:
+
+%password_reset_url%
+
+You can log into %application_name% by visiting the following link:
+
+%application_url%
+
+Username: %username%
+
+If you require any assistance with this system, please do not hesitate to contact us:
+
+Central Education Office
+E-Mail: undergrad@yourschool.ca
+Telephone: +1 (613) 533-6000 x2494
+
+Sincerely,
+
+Central Education Office
+undergrad@yourschool.ca
+USERNOTIFICATION;
+
+/**
  * This is the default notification message that is sent to a new community guest user when the are imported
  * using the import-community-guests.php tool.
  */

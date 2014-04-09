@@ -258,5 +258,22 @@ return array (
 		"badge-success" => "0.3",
 		"badge-warning" => "0.1",
 		"badge-important" => "0.05"
+	),
+
+	/*
+	 * Copyright Notice
+	 */
+	"copyright" => array(
+		"copyright-version" => "",    /* Latest version date */
+		"copyright-firstlogin" => "<b>USE OF COPYRIGHT MATERIALS IN ".APPLICATION_NAME."</b>
+			<br>&nbsp;<br>Copyright protects the form in which literary, artistic, musical and dramatic works are expressed. In &lt;COUNTRY&gt;, copyright exists once a work is expressed in fixed form;
+			no special registration needs to take place. Copyright usually resides with the creator of the work. Copyright exists in most work for 50 years after the death of the creator.
+			<br>&nbsp;<br>The University of Entrada encourages access to works while ensuring that the rights of creators are respected in accordance with the Copyright Act, (see...)<br>
+			It is the responsibility of each individual to ensure compliance with copyright regulations.<br>To proceed, you accept to comply with the copyright policy.",
+		"copyright-uploads" => "<b>USE OF COPYRIGHT MATERIALS IN ".APPLICATION_NAME."</b>
+			<br>&nbsp;<br>Copyright protects the form in which literary, artistic, musical and dramatic works are expressed. In &lt;COUNTRY&gt;, copyright exists once a work is expressed in fixed form;
+			no special registration needs to take place. Copyright usually resides with the creator of the work. Copyright exists in most work for 50 years after the death of the creator.
+			<br>&nbsp;<br>The University of Entrada encourages access to works while ensuring that the rights of creators are respected in accordance with the Copyright Act, (see...)<br>
+			It is the responsibility of each individual to ensure compliance with copyright regulations.<br>You agree to comply, to continue to upload this material.",
 	)
 );

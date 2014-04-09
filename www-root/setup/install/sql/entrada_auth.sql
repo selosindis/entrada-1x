@@ -368,6 +368,7 @@ CREATE TABLE IF NOT EXISTS `user_data` (
   `notes` text NOT NULL,
   `office_hours` text,
   `privacy_level` int(1) DEFAULT '0',
+  `copyright` bigint(64) NOT NULL DEFAULT '0',
   `notifications` int(1) NOT NULL DEFAULT '0',
   `entry_year` int(11) DEFAULT NULL,
   `grad_year` int(11) DEFAULT NULL,

@@ -194,13 +194,13 @@ div.community-page-container {
 .community-page-list li span.next {
 	margin-left: 5px;
 	padding-left: 15px;
-	background: url(../../../../images/record-next-on.gif) no-repeat top left;
+	background: url(../images/record-next-on.gif) no-repeat top left;
 }
 .community-page-list li span.next.off {
-	background-image: url(../../../../images/record-next-off.gif);
+	background-image: url(../images/record-next-off.gif);
 }
 div.community-page-list.home {
-	background: url(../../../../images/record-next-on.gif) no-repeat 29px 6px;
+	background: url(../images/record-next-on.gif) no-repeat 29px 6px;
 	padding: 4px 0px 4px 46px;
 	border-bottom: 1px solid #CCC;
 }ul.community-page-list ul span.delete {

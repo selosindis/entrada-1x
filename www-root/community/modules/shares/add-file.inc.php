@@ -29,7 +29,7 @@ if ($RECORD_ID) {
 	$query			= "SELECT * FROM `community_shares` WHERE `cshare_id` = ".$db->qstr($RECORD_ID)." AND `cpage_id` = ".$db->qstr($PAGE_ID)." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
 	$folder_record	= $db->GetRow($query);
 	if ($folder_record) {
-		
+
 		$query = "SELECT COUNT(*) FROM `community_share_files` WHERE `cshare_id` = ".$db->qstr($RECORD_ID)." AND `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())." AND `file_active` = 1";
 		
 		
@@ -39,6 +39,13 @@ if ($RECORD_ID) {
 				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-file&id=".$RECORD_ID, "title" => "Upload File");
 	
 				$file_uploads = array();
+
+                if ((array_count_values($copyright_settings = (array) $translate->_("copyright")) > 1) && strlen($copyright_settings["copyright-uploads"])) {
+                    $COPYRIGHT = true;
+                } else {
+                    $COPYRIGHT = false;
+                }
+
 				// Error Checking
 				switch($STEP) {
 					case 2 :
@@ -352,7 +359,7 @@ if ($RECORD_ID) {
 								<td colspan="3">
 									<div id="file_list">
 										<?php foreach($file_uploads as $tmp_file_id=>$file_upload){
-											if($file_uplaod["success"]){
+											if($file_upload["success"]){
 												
 											}
 											else{
@@ -434,7 +441,7 @@ if ($RECORD_ID) {
 					</table>
 					<div class="row-fluid space-above">
 						<div id="display-upload-button" class="pull-right">
-							<input type="button" class="btn btn-primary" value="Upload File(s)" onclick ="uploadFile()" />
+							<input type="button" class="btn btn-primary" id="upload-button" value="Upload File(s)" onclick ="uploadFile()" <?php echo $COPYRIGHT?"disabled":""?>/>
 						</div>
 					</div>
 					</form>
@@ -447,7 +454,15 @@ if ($RECORD_ID) {
 								This can take time depending on your connection speed and the filesize.
 							</div>
 						</div>
+                        <?php
+                            if ($COPYRIGHT) {
+                        ?>
+                            <div class="row-fluid space-above"><br /><hr>
+                                <?php echo $copyright_settings["copyright-uploads"]; ?>
+                                <div  style="text-align: right">Accept&nbsp;<input type="checkbox" value="1" onchange="acceptButton(this)"></div>
+                            </div>
 						<?php
+                            }
 					break;
 				}
 			} else {

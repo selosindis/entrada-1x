@@ -30,9 +30,27 @@ if (!defined("PARENT_INCLUDED")) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 	?>
+
+	<script type="text/javascript">
+		function acceptButton(cb) {
+			if(cb.checked)
+			{
+				$('proceed-button').disabled = false;
+			}
+			else
+			{
+				$('proceed-button').disabled = true;
+			}
+			return;
+		}
+	</script>
+
 	<form action="<?php echo ENTRADA_URL; ?>/profile" method="post">
 	<?php
-	echo "<input type=\"hidden\" name=\"action\" value=\"".((!(int) $_SESSION["details"]["privacy_level"]) ? (($_SESSION["details"]["google_id"] == "opt-in") ? "privacy-google-update" : "privacy-update") : (($_SESSION["details"]["google_id"] == "opt-in") ? "google-update" : ""))."\" />\n";
+	echo "<input type=\"hidden\" name=\"action\" value=\"".((!(int) $_SESSION["details"]["privacy_level"]) ? ($COPYRIGHT ? (($_SESSION["details"]["google_id"] == "opt-in") ? "privacy-copyright-google-update" : "privacy-copyright-update") : (($_SESSION["details"]["google_id"] == "opt-in") ? "privacy-google-update" : "privacy-update"))
+			: ($COPYRIGHT ? (($_SESSION["details"]["google_id"] == "opt-in") ? "copyright-google-update" : "copyright-update") :  (($_SESSION["details"]["google_id"] == "opt-in") ? "google-update" : "")))."\" />\n";
+
+
 	echo (($PROCEED_TO) ? "<input type=\"hidden\" name=\"redirect\" value=\"".rawurlencode($PROCEED_TO)."\" />\n" : "");
 	?>
 	<h1>Welcome To <?php echo APPLICATION_NAME; ?>!</h1>
@@ -48,7 +66,7 @@ if (!defined("PARENT_INCLUDED")) {
 		</tr>
 		<tr>
 			<td colspan="2" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-				<input type="submit" class="btn btn-primary" value="Proceed" />
+				<input type="submit" class="btn btn-primary" id="proceed-button" value="Proceed"  <?php echo $COPYRIGHT?"disabled":""?>/>
 			</td>
 		</tr>
 	</tfoot>
@@ -147,7 +165,39 @@ if (!defined("PARENT_INCLUDED")) {
 		</tr>
 		<?php
 	}
+
+	/**
+	 * Copyright check
+	 */
+	if ($COPYRIGHT) {
+		?>
+		<tr>
+			<td colspan="2">
+			<table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="My <?php echo APPLICATION_NAME;?> Copyright">
+				<colgroup>
+					<col style="width: 25%" />
+					<col style="width: 75%" />
+				</colgroup>
+				<tbody>
+				<tr>
+					<td colspan="2">
+						<h2>Copyright</h2>
+							<div class="display-error"><br />
+								<?php echo $copyright_settings["copyright-firstlogin"]; ?>
+								<div  style="text-align: right">Accept to continue&nbsp;<input type="checkbox" value="1" onchange="acceptButton(this)"></div>
+							</div>
+					</td>
+				</tr>
+				</tbody>
+			</table>
+			</td>
+		</tr>
+		<?php
+		echo "<input type=\"hidden\" name=\"copyright\" value=\"1\" />\n";
+
+		}
 	?>
+
 	</tbody>
 	</table>
 	</form>

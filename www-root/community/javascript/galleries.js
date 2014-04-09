@@ -66,3 +66,15 @@ function fetchPhotoFilename(photoNumber) {
 		$('photo_title_'+photoNumber).focus();
 	}
 }
+
+function acceptButton(cb) {
+    if(cb.checked)
+    {
+        $('upload-button').disabled = false;
+    }
+    else
+    {
+        $('upload-button').disabled = true;
+    }
+    return;
+}

@@ -34,6 +34,11 @@ if ($RECORD_ID) {
 			$BREADCRUMB[]	= array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-photo&id=".$RECORD_ID, "title" => "Upload Photo");
 
 			$photo_uploads	= array();
+            if ((array_count_values($copyright_settings = (array) $translate->_("copyright")) > 1) && strlen($copyright_settings["copyright-uploads"])) {
+                $COPYRIGHT = true;
+            } else {
+                $COPYRIGHT = false;
+            }
 
 			// Error Checking
 			switch($STEP) {
@@ -361,7 +366,7 @@ if ($RECORD_ID) {
 						<tr>
 							<td colspan="3" style="padding-top: 15px; text-align: right">
 								<div id="display-upload-button">
-									<input type="button" class="btn btn-primary" value="Upload" onclick="uploadPhotos()" />
+									<input type="button" class="btn btn-primary" id="upload-button" value="Upload" onclick="uploadPhotos()"  <?php echo $COPYRIGHT?"disabled":"";?>/>
 								</div>
 							</td>
 						</tr>
@@ -488,6 +493,14 @@ if ($RECORD_ID) {
 						</div>
 					</div>
 					<?php
+                    if ($COPYRIGHT) {
+                        ?>
+                        <div class="row-fluid space-above"><br /><hr>
+                            <?php echo $copyright_settings["copyright-uploads"]; ?>
+                            <div  style="text-align: right">Accept&nbsp;<input type="checkbox" value="1" onchange="acceptButton(this)"></div>
+                        </div>
+                    <?php
+                    }
 				break;
 			}
 		} else {

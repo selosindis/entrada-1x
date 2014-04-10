@@ -4410,6 +4410,7 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
     $output .= "    config.forcePasteAsPlainText = true;\n";
     $output .= "    config.autoParagraph = false;\n";
     $output .= "    config.toolbarGroups = ".json_encode($toolbar_groups).";\n";
+    $output .= "    config.skin = 'bootstrapck';\n";    
     $output .= "}\n";
 
 	$output .= "window.onload = function() {\n";

@@ -47,6 +47,7 @@ class Models_Event {
             $updated_date,
             $updated_by,
             $draft_id,
+            $audience_visible = 1,
             $eventtype_id,
             $course_num;
     
@@ -209,6 +210,10 @@ class Models_Event {
     
     public function getEventAudience() {
         return Models_Event_Audience::fetchAllByEventID($this->event_id);
+    }
+    
+    public function getAudienceVisible() {
+        return $this->audience_visible;
     }
 }
 

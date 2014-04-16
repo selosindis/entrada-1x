@@ -2563,6 +2563,7 @@ CREATE TABLE IF NOT EXISTS `events` (
   `event_duration` int(64) NOT NULL,
   `release_date` bigint(64) NOT NULL,
   `release_until` bigint(64) NOT NULL,
+  `audience_visible` tinyint(1) DEFAULT 1,
   `draft_id` int(11) DEFAULT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,

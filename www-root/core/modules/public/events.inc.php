@@ -509,6 +509,7 @@ if (!defined("PARENT_INCLUDED")) {
                                     <tr class="spacer">
                                         <td colspan="2"><hr></td>
                                     </tr>
+                                    <?php if (($ENTRADA_USER->getActiveGroup() == "student" && $event->getAudienceVisible()) || $ENTRADA_USER->getActiveGroup() != "student") { ?>
                                     <tr>
                                         <th>Audience</th>
                                         <td>
@@ -585,6 +586,7 @@ if (!defined("PARENT_INCLUDED")) {
                                     <tr class="spacer">
                                         <td colspan="2"><hr></td>
                                     </tr>
+                                    <?php } ?>
                                     <?php
                                     /**
                                      * @todo simpson This needs to be fixed as $event_audience_type is no longer for grad_year.

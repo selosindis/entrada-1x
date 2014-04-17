@@ -787,7 +787,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                         $questions_array = array();
                                                         $query = "SELECT * FROM `quiz_questions`
                                                                     WHERE `quiz_id` = ".$db->qstr($attached_quiz["quiz_id"])."
-                                                                    AND `questiontype_id` = 1";
+                                                                    AND `questiontype_id` = 1
+                                                                    AND `question_active` = 1";
                                                         $quiz_questions = $db->GetAll($query);
                                                         if ($quiz_questions) {
                                                             foreach ($quiz_questions as $quiz_question) {
@@ -797,7 +798,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                                         LEFT JOIN `assessment_quiz_questions` AS b
                                                                         ON a.`qquestion_id` = b.`qquestion_id`
                                                                         WHERE b.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
-                                                                        AND a.`questiontype_id` = 1";
+                                                                        AND a.`questiontype_id` = 1
+                                                                        AND a.`question_active` = 1";
                                                             $quiz_questions = $db->GetAll($query);
                                                             if ($quiz_questions) {
                                                                 foreach ($quiz_questions as $quiz_question) {
@@ -828,7 +830,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                             </div>
                                                             <?php
                                                         } else {
-                                                            add_error($query."No valid questions were found associated with this quiz.");
+                                                            add_error("No valid questions were found associated with this quiz.");
                                                             echo display_error();
                                                         }
                                                         echo "          </div>\n";

@@ -345,7 +345,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 			</tbody>
 		</table>
 	</form>
-	<?php $badge_settings = (array) $translate->_("curriculum_explorer"); ?>
 	<script type="text/javascript">
     var SITE_URL = "<?php echo ENTRADA_URL; ?>";
     var YEAR = "<?php echo $PROCESSED["year"]; ?>";
@@ -353,9 +352,6 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 	var COHORT = "<?php echo $PROCESSED["group_id"]; ?>";
     var OBJECTIVE_PARENT = "<?php echo $PROCESSED["objective_parent"]; ?>";
     var COUNT = "<?php echo $PROCESSED["count"]; ?>";
-	var BADGE_SUCCESS = "<?php echo $badge_settings["badge-success"]; ?>";
-	var BADGE_WARNING = "<?php echo $badge_settings["badge-warning"]; ?>";
-	var BADGE_IMPORTANT = "<?php echo $badge_settings["badge-important"]; ?>";
 	var current_total = 0;
 	</script>
 	<script type="text/javascript" src="<?php echo ENTRADA_URL; ?>/javascript/curriculumexplorer.js" /></script>

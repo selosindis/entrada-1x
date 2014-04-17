@@ -17,14 +17,8 @@ function renderDOM(jsonResponse, link) {
 				count = parseInt((jsonResponse.courses != null ? jsonResponse.courses.length : 0)) + parseInt((jsonResponse.events != null ? jsonResponse.events.length : 0));
 			}
 			var percent = count / current_total;
-			var color = "";
-			if (percent <= parseFloat(BADGE_IMPORTANT)) {
-				color = "badge badge-important";
-			} else if (percent > parseFloat(BADGE_IMPORTANT) && percent < parseFloat(BADGE_SUCCESS)) {
-				color = "badge badge-warning";
-			} else {
-				color = "badge badge-success";
-			}
+			var color = "badge";
+			
 			new_list_item.append(
 				jQuery(document.createElement("a"))
 					.addClass("objective-link")

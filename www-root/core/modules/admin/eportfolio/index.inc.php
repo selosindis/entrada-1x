@@ -1114,10 +1114,12 @@ if (!defined("PARENT_INCLUDED")) {
 	
 	<div class="tab-content visible">
 		<div class="tab-pane <?php echo $is_advisor ? "active" : ""; ?>" id="review">
+            <?php if ($eportfolios) { ?>
 			<div class="row-fluid space-below">
 				<div class="btn-group">
 					<a class="btn btn-primary">Portfolio</a>
 					<a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#"><span class="caret"></span></a>
+                    
 					<ul class="dropdown-menu" id="portfolio-list">
 					<?php foreach ($eportfolios as $eportfolio) { ?>
 						<li>
@@ -1152,6 +1154,12 @@ if (!defined("PARENT_INCLUDED")) {
 					<a href="#" class="btn btn-primary">Save</a>
 				</div>
 			</div>
+            <?php } else { ?>
+                <?php 
+                    echo display_notice("Before any portfolios can be reviewed they must be set up by an administrator via the portfolio management interface. If you are receiving this message in error please use the feedback submission form to notify an administrator.");
+                    application_log("notice", "User [".$ENTRADA_USER->getID()."] attempted to review eportfolios but no active eportfolios exist in the system.");
+                ?>
+            <?php } ?>
 		</div>
 		<?php if (!$is_advisor) { ?>
 		<div class="tab-pane active" id="manage">

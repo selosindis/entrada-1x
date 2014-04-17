@@ -111,8 +111,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					}
 
 					/**
-					 * Non-required field "release_date" / Viewable Start (validated through validate_calendars function).
-					 * Non-required field "release_until" / Viewable Finish (validated through validate_calendars function).
+					 * Non-required field "evaluation_start" / Evaluation Start (validated through validate_calendars function).
+					 * Non-required field "evaluation_finish" / Evaluation Finish (validated through validate_calendars function).
 					 */
 					$viewable_date = validate_calendars("evaluation", false, false);
 					if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
@@ -231,22 +231,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 					if ($PROCESSED["min_submittable"] > $PROCESSED["max_submittable"]) {
 						add_error("Your <strong>Min Submittable</strong> value may not be greater than your <strong>Max Submittable</strong> value.");
-					}
-
-					/**
-					 * Non-required field "release_date" / Viewable Start (validated through validate_calendars function).
-					 * Non-required field "release_until" / Viewable Finish (validated through validate_calendars function).
-					 */
-					$viewable_date = validate_calendars("viewable", false, false);
-					if ((isset($viewable_date["start"])) && ((int) $viewable_date["start"])) {
-						$PROCESSED["release_date"] = (int) $viewable_date["start"];
-					} else {
-						$PROCESSED["release_date"] = 0;
-					}
-					if ((isset($viewable_date["finish"])) && ((int) $viewable_date["finish"])) {
-						$PROCESSED["release_until"] = (int) $viewable_date["finish"];
-					} else {
-						$PROCESSED["release_until"] = 0;
 					}
 					
 					/**
@@ -1320,12 +1304,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                                 <strong>Note</strong>: When set to a value other than Disabled, notifications will be sent out to the identified user(s) whenever an evaluation is submitted in which a question is answered below the <strong>Minimum Pass</strong> set for that question.
                                             </div>
                             </div>
-                        </div>
-                        <h2>Time Release Options</h2>
-                        <div class="control-group">
-                            <table>
-                                <?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), 1); ?>
-                            </table>
                         </div>
                         <div class="form-actions">
                             <input type="submit" class="btn btn-primary" value="Proceed" />

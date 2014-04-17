@@ -75,7 +75,9 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		$qu_arr[1] = "	LEFT JOIN `global_lu_objectives` AS b
 						ON a.`objective_id` = b.`objective_id`";
 		$qu_arr[3] = "	AND b.`objective_id` IN (".$objective_ids_string.")";	
-	}	
+	} else {
+        $qu_arr[1] = "";
+    }
 	$qu_arr[1] .= "		JOIN `objective_organisation` AS c ON a.`objective_id` = c.`objective_id` ";
 	$qu_arr[2] = "		WHERE a.`objective_parent` = ".$db->qstr($id)." 
 						AND a.`objective_active` = '1'

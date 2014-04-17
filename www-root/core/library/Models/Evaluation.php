@@ -44,7 +44,7 @@ class Models_Evaluation {
 	}
 
 	public static function getEditQuestionControls($question_data) {
-		global $db, $PROCESSED, $ENTRADA_USER, $translate;
+		global $db, $HEAD, $PROCESSED, $ENTRADA_USER, $translate;
 		if (isset($question_data["questiontype_id"]) && $question_data["questiontype_id"]) {
 			$query = "SELECT * FROM `evaluations_lu_questiontypes`
 						WHERE `questiontype_id` = ".$db->qstr($question_data["questiontype_id"]);
@@ -117,12 +117,14 @@ class Models_Evaluation {
 						<table class="form-question" cellspacing="0" cellpadding="2" border="0" summary="Form Question Responses">
 						<colgroup>
 							<col style="width: 3%" />
-							<col style="width: 77%" />
+							<col style="width: 57%" />
+							<col style="width: 20%" />
 							<col style="width: 20%" />
 						</colgroup>
 						<thead>
 							<tr>
 								<td colspan="2">&nbsp;</td>
+								<td class="center" style="font-weight: bold; font-size: 11px">Descriptor</td>
 								<td class="center" style="font-weight: bold; font-size: 11px">Minimum Pass</td>
 							</tr>
 						</thead>
@@ -477,6 +479,10 @@ class Models_Evaluation {
 					<td style="padding-top: 10px">
 						<input type="text" class="response_text" id="response_text_<?php echo $number; ?>" name="response_text[<?php echo $number; ?>]" style="width: 99%" value="<?php echo ((isset($question_data["evaluation_question_responses"][$number]["response_text"])) ? clean_input($question_data["evaluation_question_responses"][$number]["response_text"], "encode") : ""); ?>" />
 					</td>
+                    <td class="minimumPass center" style="padding-top: 10px">
+                        <a href="javascript: openDescriptorDialog(<?php echo $number; ?>, jQuery('#response_descriptor_<?php echo $number; ?>').val())"><i class="icon-tag"></i></a>
+                        <input type="hidden" id="response_descriptor_<?php echo $number; ?>" name="response_descriptor_id[<?php echo $number; ?>]" value="<?php echo ((isset($question_data["evaluation_question_responses"][$number]["erdescriptor_id"])) ? clean_input($question_data["evaluation_question_responses"][$number]["erdescriptor_id"], "int") : ""); ?>" />
+                    </td>
 					<td class="minimumPass center" style="padding-top: 10px">
 						<input type="radio" name="minimum_passing_level" id="fail_indicator_<?php echo $number; ?>" value="<?php echo $number; ?>"<?php echo (($minimum_passing_level) ? " checked=\"true\"" : ""); ?> />
 					</td>
@@ -561,6 +567,10 @@ class Models_Evaluation {
                             new_response += '            <span class=\"response_text\" id=\"response_text_' + number + '\" name=\"response_text[' + number + ']\" style=\"width: 99%\"></span>';
                             new_response += '        </td>';
                             new_response += '        <td class=\"minimumPass center\" style=\"padding-top: 10px\">';
+                            new_response += '            <a href=\"javascript: openDescriptorDialog(' + number + ', 0)\"><i class=\"icon-tag\"></i></a>';
+                            new_response += '            <input type=\"hidden\" id=\"response_descriptor_' + number + '\" name=\"response_descriptor_id[' + number + ']\" value=\"\" />';
+                            new_response += '        </td>';
+                            new_response += '        <td class=\"minimumPass center\" style=\"padding-top: 10px\">';
                             new_response += '            <input type=\"radio\" name=\"minimum_passing_level\" id=\"fail_indicator_' + number + '\" value=\"' + number + '\" />';
                             new_response += '        </td>';
                             new_response += '    </tr>';
@@ -574,7 +584,8 @@ class Models_Evaluation {
                     ?>
                     <colgroup>
                         <col style="width: 3%" />
-                        <col style="width: 77%" />
+                        <col style="width: 57%" />
+                        <col style="width: 20%" />
                         <col style="width: 20%" />
                     </colgroup>
                     <thead>
@@ -589,6 +600,7 @@ class Models_Evaluation {
                         </tr>
                         <tr>
                             <td colspan="2">&nbsp;</td>
+                            <td class="center" style="font-weight: bold; font-size: 11px">Descriptor</td>
                             <td class="center" style="font-weight: bold; font-size: 11px">Minimum Pass</td>
                         </tr>
                     </thead>
@@ -609,6 +621,10 @@ class Models_Evaluation {
                                         <span class="response_text" id="response_text_<?php echo $number; ?>" style="width: 99%"><?php echo ((isset($question_data["evaluation_question_responses"][$number]["response_text"])) ? clean_input($question_data["evaluation_question_responses"][$number]["response_text"], "encode") : ""); ?><input type="hidden" value="<?php echo ((isset($question_data["evaluation_question_responses"][$number]["response_text"])) ? clean_input($question_data["evaluation_question_responses"][$number]["response_text"], "encode") : ""); ?>" name="response_text[<?php echo $number; ?>]" /></span>
                                     </td>
                                     <td class="minimumPass center" style="padding-top: 10px">
+                                        <a href="javascript: openDescriptorDialog(<?php echo $number; ?>, jQuery('#response_descriptor_<?php echo $number; ?>').val())"><i class="icon-tag"></i></a>
+                                        <input type="hidden" id="response_descriptor_<?php echo $number; ?>" name="response_descriptor_id[<?php echo $number; ?>]" value="<?php echo ((isset($question_data["evaluation_question_responses"][$number]["erdescriptor_id"])) ? clean_input($question_data["evaluation_question_responses"][$number]["erdescriptor_id"], "int") : ""); ?>" />
+                                    </td>
+                                    <td class="minimumPass center" style="padding-top: 10px">
                                         <input type="radio" name="minimum_passing_level" id="fail_indicator_<?php echo $number; ?>" value="<?php echo $number; ?>"<?php echo (($minimum_passing_level) ? " checked=\"true\"" : ""); ?> />
                                     </td>
                                 </tr>
@@ -627,7 +643,8 @@ class Models_Evaluation {
                     ?>
                     <colgroup>
                         <col style="width: 3%" />
-                        <col style="width: 77%" />
+                        <col style="width: 57%" />
+                        <col style="width: 20%" />
                         <col style="width: 20%" />
                     </colgroup>
                     <thead>
@@ -647,6 +664,10 @@ class Models_Evaluation {
                                 </td>
                                 <td style="padding-top: 10px">
                                     <input type="text" class="response_text" id="response_text_<?php echo $number; ?>" name="response_text[<?php echo $number; ?>]" style="width: 99%" value="<?php echo ((isset($question_data["evaluation_question_responses"][$number]["response_text"])) ? clean_input($question_data["evaluation_question_responses"][$number]["response_text"], "encode") : ""); ?>" />
+                                </td>
+                                <td class="minimumPass center" style="padding-top: 10px">
+                                    <a href="javascript: openDescriptorDialog(<?php echo $number; ?>, jQuery('#response_descriptor_<?php echo $number; ?>').val())"><i class="icon-tag"></i></a>
+                                    <input type="hidden" id="response_descriptor_<?php echo $number; ?>" name="response_descriptor_id[<?php echo $number; ?>]" value="<?php echo ((isset($question_data["evaluation_question_responses"][$number]["erdescriptor_id"])) ? clean_input($question_data["evaluation_question_responses"][$number]["erdescriptor_id"], "int") : ""); ?>" />
                                 </td>
                                 <td class="minimumPass center" style="padding-top: 10px">
                                     <input type="radio" name="minimum_passing_level" id="fail_indicator_<?php echo $number; ?>" value="<?php echo $number; ?>"<?php echo (($minimum_passing_level) ? " checked=\"true\"" : ""); ?> />
@@ -1538,7 +1559,7 @@ class Models_Evaluation {
 									LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 									ON b.`user_id` = a.`id`
 									WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-									AND b.`group` = 'resident'
+									AND b.`group` = 'student'
 									GROUP BY a.`id`
 									ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 						$results = $db->GetAll($query);
@@ -1559,8 +1580,8 @@ class Models_Evaluation {
 						<tr>
 							<td></td>
 							<td style="vertical-align: top">
-								<label for="PickList" class="form-required">Select Residents</label>
-								<div class="content-small"><strong>Hint:</strong> Select the resident or residents you would like to have evaluated.</div>
+								<label for="PickList" class="form-required">Select Learners</label>
+								<div class="content-small"><strong>Hint:</strong> Select the learner(s) you would like to have evaluated.</div>
 							</td>
 							<td style="vertical-align: top">
 								<select class="multi-picklist" id="PickList" name="resident_ids[]" multiple="multiple" size="4" style="width: 100%; margin-bottom: 5px">
@@ -1582,7 +1603,7 @@ class Models_Evaluation {
 									<input type="button" id="residents_list_add_btn" class="btn btn-success" onclick="addIt()" style="display: none" value="Add" />
 								</div>
 								<div id="residents_list" style="clear: both; padding-top: 3px; display: none">
-									<h2>Resident List</h2>
+									<h2>Learner List</h2>
 									<select class="multi-picklist" id="SelectList" name="other_residents_list" multiple="multiple" size="15" style="width: 100%">
 									<?php
 									foreach ($residents_list as $proxy_id => $resident_name) {
@@ -2452,8 +2473,7 @@ class Models_Evaluation {
 								AND b.`account_active` = 'true'
 								AND (b.`access_starts` = '0' OR b.`access_starts` <= ".$db->qstr(time()).")
 								AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
-								AND b.`group` = 'resident'".
-								(($ENTRADA_USER->getGroup() == "resident") ? " AND a.`id` = ".$db->qstr($ENTRADA_USER->getID()) : "")."
+								AND b.`group` = 'student'
 								GROUP BY a.`id`
 								ORDER BY a.`grad_year` DESC, a.`lastname` ASC, a.`firstname` ASC";
 					$resident_results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
@@ -2465,7 +2485,7 @@ class Models_Evaluation {
 								$checked = "";
 							}
 
-							$residents[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $resident["fullname"], "value" => "resident_".$resident["proxy_id"], "checked" => $checked);
+							$residents[$ENTRADA_USER->getActiveOrganisation()]["options"][] = array("text" => $resident["fullname"], "value" => "resident_".$g["proxy_id"], "checked" => $checked);
 						}
 
 						echo lp_multiple_select_popup("residents", $residents, array("title" => "Select Individual Learners:", "submit_text" => "Close", "submit" => true));
@@ -2563,7 +2583,7 @@ class Models_Evaluation {
 										LEFT JOIN `".AUTH_DATABASE."`.`user_access` AS b
 										ON b.`user_id` = a.`id`
 										WHERE b.`app_id` = ".$db->qstr(AUTH_APP_ID)."
-										AND b.`group` = 'resident'
+										AND b.`group` = 'student'
 										AND a.`id` = ".$db->qstr($proxy_id);
 							$result = $db->GetOne($query);
 							if ($result) {
@@ -2573,7 +2593,7 @@ class Models_Evaluation {
 					}
 
 					if (empty($PROCESSED["evaluation_targets"])) {
-						add_error("You must select at least one <strong>resident</strong> that you would like to have evaluated.");
+						add_error("You must select at least one <strong>learner</strong> that you would like to have evaluated.");
 					}
 				} else {
 					add_error("You must select <strong>which residents</strong> you would like to have evaluated.");
@@ -3158,6 +3178,95 @@ class Models_Evaluation {
                     }
 				break;
 				case "teacher" :
+                    if (isset($cgroup_id) && $cgroup_id) {
+                        if ($evaluator_proxy_id && $available_only) {
+                            $unavailable_proxy_ids_string = "";
+                            $query = "SELECT `etarget_id` FROM `evaluation_progress`
+                                        WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+                                        AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                        AND `progress_value` = 'complete'";
+                            $unavailable_proxy_ids = $db->GetAll($query);
+                            if ($unavailable_proxy_ids) {
+                                foreach ($unavailable_proxy_ids as $unavailable_proxy_id) {
+                                    $unavailable_proxy_ids_string .= ($unavailable_proxy_ids_string ? ", " : "").$db->qstr($unavailable_proxy_id["etarget_id"]);
+                                }
+                            }
+                        }
+                        $query = "SELECT ".($simple ? "a.`target_value` as `proxy_id`" : "*, a.`target_value` as `proxy_id`")." FROM `evaluation_targets` AS a
+                                    JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                    ON a.`target_value` = b.`id`
+                                    AND a.`target_type` = 'proxy_id'
+                                    JOIN `course_group_contacts` AS c
+                                    ON c.`proxy_id` = b.`id`
+                                    WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                    ".($evaluator_proxy_id && $available_only && $unavailable_proxy_ids_string ? "AND a.`etarget_id` NOT IN (".$unavailable_proxy_ids_string.")" : "")."
+                                    AND c.`cgroup_id` = ".$db->qstr($cgroup_id)."
+                                    AND a.`target_active` = 1";
+                        $evaluation_target_users = $db->GetAll($query);
+                        if ($evaluation_target_users) {
+                            $target_found = true;
+                            foreach ($evaluation_target_users as $evaluation_target_user) {
+                                    if ($simple) {
+                                            $evaluation_targets[] = $evaluation_target_user["proxy_id"];
+                                    } else {
+                                            $evaluation_targets[] = $evaluation_target_user;
+                                    }
+                            }
+                            if (!$simple) {
+                                $sort_lastname = array();
+                                $sort_firstname = array();
+                                foreach ($evaluation_targets as $temp_target) {
+                                        $sort_lastname[] = $temp_target["lastname"];
+                                        $sort_firstname[] = $temp_target["firstname"];
+                                }
+                                array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
+                            }
+                        } else {
+                            $target_found = false;
+                        }
+                    }
+                    if (!isset($target_found) || !$target_found) {
+                        if ($evaluator_proxy_id && $available_only) {
+                            $unavailable_proxy_ids_string = "";
+                            $query = "SELECT `etarget_id` FROM `evaluation_progress`
+                                        WHERE `proxy_id` = ".$db->qstr($evaluator_proxy_id)."
+                                        AND `evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                        AND `progress_value` = 'complete'";
+                            $unavailable_proxy_ids = $db->GetAll($query);
+                            if ($unavailable_proxy_ids) {
+                                foreach ($unavailable_proxy_ids as $unavailable_proxy_id) {
+                                    $unavailable_proxy_ids_string .= ($unavailable_proxy_ids_string ? ", " : "").$db->qstr($unavailable_proxy_id["etarget_id"]);
+                                }
+                            }
+                        }
+                        $query = "SELECT ".($simple ? "a.`target_value` as `proxy_id`" : "*, a.`target_value` as `proxy_id`")." FROM `evaluation_targets` AS a
+                                    JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                    ON a.`target_value` = b.`id`
+                                    AND a.`target_type` = 'proxy_id'
+                                    WHERE a.`evaluation_id` = ".$db->qstr($evaluation["evaluation_id"])."
+                                    ".($evaluator_proxy_id && $available_only && $unavailable_proxy_ids_string ? "AND a.`etarget_id` NOT IN (".$unavailable_proxy_ids_string.")" : "")."
+                                    AND a.`target_active` = 1";
+                        $evaluation_target_users = $db->GetAll($query);
+                        if ($evaluation_target_users) {
+                            foreach ($evaluation_target_users as $evaluation_target_user) {
+                                if ($simple) {
+                                    $evaluation_targets[] = $evaluation_target_user["proxy_id"];
+                                } else {
+                                    $evaluation_targets[] = $evaluation_target_user;
+                                }
+                            }
+                        }
+                        if (!$simple) {
+                            $sort_lastname = array();
+                            $sort_firstname = array();
+                            foreach ($evaluation_targets as $temp_target) {
+                                $sort_lastname[] = $temp_target["lastname"];
+                                $sort_firstname[] = $temp_target["firstname"];
+                            }
+                            array_multisort($sort_lastname, SORT_ASC, $sort_firstname, SORT_ASC, $evaluation_targets);
+                        }
+                    }
+				break;
 				case "resident" :
                     if (isset($cgroup_id) && $cgroup_id) {
                         if ($evaluator_proxy_id && $available_only) {
@@ -4385,7 +4494,7 @@ class Models_Evaluation {
 				$evaluation["max_submittable"] = $evaluation["completed_attempts"];
 			}
 
-            if (($evaluation["release_date"] <= time() || !$evaluation["release_date"]) && $evaluation["max_submittable"] > $evaluation["completed_attempts"]) {
+            if ($evaluation["max_submittable"] > $evaluation["completed_attempts"]) {
                 $evaluation["click_url"] = ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"];
             } else {
                 $evaluation["click_url"] = "";
@@ -4535,7 +4644,7 @@ class Models_Evaluation {
                             $evaluation["evaluation_progress"] = 0;
                         }
 
-                        if (($evaluation["release_date"] <= time() || !$evaluation["release_date"]) && $evaluation["max_submittable"] > $evaluation["completed_attempts"]) {
+                        if ($evaluation["max_submittable"] > $evaluation["completed_attempts"]) {
                             $evaluation["click_url"] = ENTRADA_URL."/evaluations?section=attempt&id=".$evaluation["evaluation_id"];
                         } else {
                             $evaluation["click_url"] = "";

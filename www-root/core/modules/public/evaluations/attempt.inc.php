@@ -165,6 +165,18 @@ if ($RECORD_ID) {
 								$etarget_id = $db->GetOne($query);
 								$PROCESSED["target_record_id"] = $event_id;
 							}
+                            $PROCESSED_PATIENT_ENCOUNTER = array();
+                            if ($PROCESSED["target_shortname"] == "resident") {
+                                if ((isset($_POST["encounter_complexity"])) && ($encounter_complexity = clean_input($_POST["encounter_complexity"], array("trim", "int"))) && in_array($encounter_complexity, array(1, 2, 3))) {
+                                    $PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"] = $encounter_complexity;
+                                    if (isset($_POST["encounter_name"]) && ($encounter_name = clean_input($_POST["encounter_name"], array("trim", "notags")))) {
+                                        $PROCESSED_PATIENT_ENCOUNTER["encounter_name"] = $encounter_name;
+                                    }
+                                } else {
+                                    $ERROR++;
+                                    $ERRORSTR[] = "Please ensure you select an encounter complexity for the patient encounter being evaluated.";
+                                }
+                            }
 							if ($PROCESSED["target_shortname"] == "preceptor") {
 								if (isset($_POST["preceptor_proxy_id"]) && ($preceptor_proxy_id = clean_input($_POST["preceptor_proxy_id"], "trim", "alphanumeric")) && ((int)$preceptor_proxy_id || ($preceptor_proxy_id == "other"))) {
                                     if ($preceptor_proxy_id !== "other") {
@@ -313,6 +325,7 @@ if ($RECORD_ID) {
 							if ($progress_record) {
 								$eprogress_id		= $progress_record["eprogress_id"];
 								$PROCESSED_CLERKSHIP_EVENT["eprogress_id"] = $eprogress_id;
+								$PROCESSED_PATIENT_ENCOUNTER["eprogress_id"] = $eprogress_id;
 
 								if (((isset($_POST["responses"])) && (is_array($_POST["responses"])) && (count($_POST["responses"]) > 0)) || (isset($_POST["comments"]) && (count($_POST["comments"]) > 0))) {
 									$questions_found = false;
@@ -453,6 +466,7 @@ if ($RECORD_ID) {
 											}
 											if (array_search($PROCESSED["target_shortname"], array("preceptor", "rotation_core", "rotation_elective")) !== false) {
 												if (!$db->AutoExecute("evaluation_progress_clerkship_events", $PROCESSED_CLERKSHIP_EVENT, "INSERT")) {
+                                                    $db->Execute("UPDATE `evaluation_progress` SET `progress_value` = 'inprogress' WHERE `eprogress_id` = ".$db->qstr($PROCESSED["eprogress_id"]));
 													application_log("error", "Unable to record the final clerkship event details for eprogress_id [".$eprogress_id."] in the evaluation_progress_clerkship_events table. Database said: ".$db->ErrorMsg());
 
 													$ERROR++;
@@ -472,7 +486,29 @@ if ($RECORD_ID) {
 
 													$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 15000)";
 												}
-											} else {
+											} elseif ($PROCESSED["target_shortname"] == "resident") {
+                                                if (!$db->AutoExecute("evaluation_progress_patient_encounters", $PROCESSED_PATIENT_ENCOUNTER, "INSERT")) {
+                                                    $db->Execute("UPDATE `evaluation_progress` SET `progress_value` = 'inprogress' WHERE `eprogress_id` = ".$db->qstr($PROCESSED["eprogress_id"]));
+                                                    application_log("error", "Unable to record the final patient encounter details for eprogress_id [".$eprogress_id."] in the evaluation_progress_patient_encounters table. Database said: ".$db->ErrorMsg());
+
+                                                    $ERROR++;
+                                                    $ERRORSTR[] = "We were unable to record the final results for this evaluation at this time. Please be assured that your responses are saved, but you will need to come back to this evaluation to re-submit it. This problem has been reported to a system administrator; please try again later.";
+                                                } else {
+                                                    /**
+                                                     * Add a completed evaluation statistic.
+                                                     */
+                                                    add_statistic("evaluations", "evaluation_complete", "evaluation_id", $RECORD_ID);
+
+                                                    application_log("success", "Proxy_id [".$ENTRADA_USER->getID()."] has completed evaluation_id [".$RECORD_ID."].");
+
+                                                    $url = ENTRADA_URL."/evaluations";
+
+                                                    $SUCCESS++;
+                                                    $SUCCESSSTR[] = "Thank-you for completing the <strong>".html_encode($evaluation_record["evaluation_title"])."</strong> evaluation.<br /><br />You will now be redirected back to the evaluations index; this will happen <strong>automatically</strong> in 15 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+
+                                                    $ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 15000)";
+                                                }
+                                            } else {
 												/**
 												 * Add a completed evaluation statistic.
 												 */
@@ -630,7 +666,18 @@ if ($RECORD_ID) {
                                                     echo "<div id=\"preceptor_select\">\n";
                                                     echo Models_Evaluation::getPreceptorSelect($RECORD_ID, $evaluation_targets[0]["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
                                                     echo "</div>\n";
-                                                } 
+                                                } elseif ($PROCESSED["target_shortname"] == "resident") {
+                                                    echo "<div id=\"encounter_select\" class=\"row-fluid\">\n";
+                                                    echo "  <label for=\"encounter\" class=\"span5\">Encounter:\n";
+                                                    echo "      <input type=\"text\" name=\"encounter\" />\n";
+                                                    echo "  </label>\n";
+                                                    echo "  <label for=\"complexity\" class=\"span6\">Complexity:\n";
+                                                    echo "      <select name=\"complexity\">\n";
+                                                    echo "          <option></option>\n";
+                                                    echo "      </select>\n";
+                                                    echo "  </label>\n";
+                                                    echo "</div>\n";
+                                                }
 											}
 										} elseif ($PROCESSED["target_shortname"] == "teacher") {
 											echo "<div class=\"content-small\">Please choose a teacher to evaluate: \n";
@@ -689,16 +736,42 @@ if ($RECORD_ID) {
 											echo "</select>";
 											echo "</div>";
 										} elseif ($PROCESSED["target_shortname"] == "resident") {
-											echo "<div class=\"content-small\">Please choose a resident to evaluate: \n";
-											echo "<select id=\"evaluation_target\" name=\"evaluation_target\">";
-											echo "<option value=\"0\">-- Select a resident --</option>\n";
+											echo "<div class=\"content-small row-fluid\">\n";
+                                            echo "  <label for=\"evaluation_target\" class=\"span7\">\n";
+                                            echo "      Please choose a resident to evaluate:\n";
+                                            echo "  </label>\n";
+                                            echo "  <span class=\"span5\">\n";
+                                            echo "      <select id=\"evaluation_target\" name=\"evaluation_target\">";
+											echo "          <option value=\"0\">-- Select a resident --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
-													echo "<option value=\"".$evaluation_target["etarget_id"]."\"".(($PROCESSED["etarget_id"] == $evaluation_target["etarget_id"] || $PROCESSED["target_record_id"] == $evaluation_target["proxy_id"]) || (((!isset($PROCESSED["etarget_id"]) || !$PROCESSED["etarget_id"]) || (!isset($PROCESSED["target_record_id"]) || !$PROCESSED["target_record_id"])) && isset($evaluation_target["requested"]) && $evaluation_target["requested"]) ? " selected=\"selected\"" : "").">".$evaluation_target["firstname"]." ".$evaluation_target["lastname"]."</option>\n";
+													echo "          <option value=\"".$evaluation_target["etarget_id"]."\"".(($PROCESSED["etarget_id"] == $evaluation_target["etarget_id"] || $PROCESSED["target_record_id"] == $evaluation_target["proxy_id"]) || (((!isset($PROCESSED["etarget_id"]) || !$PROCESSED["etarget_id"]) || (!isset($PROCESSED["target_record_id"]) || !$PROCESSED["target_record_id"])) && isset($evaluation_target["requested"]) && $evaluation_target["requested"]) ? " selected=\"selected\"" : "").">".$evaluation_target["firstname"]." ".$evaluation_target["lastname"]."</option>\n";
 												}
 											}
-											echo "</select>";
-											echo "</div>";
+											echo "      </select>";
+                                            echo "  </span>\n";
+                                            echo "</div>";
+                                            echo "<div class=\"content-small row-fluid\">\n";
+                                            echo "  <label for=\"encounter_complexity\" class=\"span7\">\n";
+                                            echo "      Please choose the complexity of this encounter:\n";
+                                            echo "  </label>\n";
+                                            echo "  <span class=\"span5\">\n";
+                                            echo "      <select id=\"encounter_complexity\" name=\"encounter_complexity\">\n";
+                                            echo "          <option value=\"0\"".(!isset($PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"]) || !$PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"] ? " selected=\"selected\"" : "").">-- Select the encounter complexity --</option>\n";
+                                            echo "          <option value=\"1\"".(isset($PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"]) && $PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"] == 1 ? " selected=\"selected\"" : "").">Simple</option>\n";
+                                            echo "          <option value=\"2\"".(isset($PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"]) && $PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"] == 2 ? " selected=\"selected\"" : "").">Complex, but frequently encountered</option>\n";
+                                            echo "          <option value=\"3\"".(isset($PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"]) && $PROCESSED_PATIENT_ENCOUNTER["encounter_complexity"] == 3 ? " selected=\"selected\"" : "").">Complex</option>\n";
+                                            echo "      </select>\n";
+                                            echo "  </span>\n";
+                                            echo "</div>";
+                                            echo "<div class=\"content-small row-fluid\">\n";
+                                            echo "  <label for=\"encounter\" class=\"span7\">\n";
+                                            echo "      Additionally, you may indicate the name of this encounter:\n";
+                                            echo "  </label>\n";
+                                            echo "  <span class=\"span5\">\n";
+                                            echo "      <input type=\"text\" id=\"encounter_name\" name=\"encounter_name\" style=\"margin-bottom: 0px;\" value=\"".(isset($PROCESSED_PATIENT_ENCOUNTER["encounter_name"]) && $PROCESSED_PATIENT_ENCOUNTER["encounter_name"] ? html_encode($PROCESSED_PATIENT_ENCOUNTER["encounter_name"]) : "")."\"/>\n";
+                                            echo "  </span>\n";
+                                            echo "</div>";
 										}
 									}
                                     if ($PROCESSED["target_shortname"] == "preceptor") {

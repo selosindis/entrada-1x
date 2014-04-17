@@ -116,7 +116,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							$PROCESSED["evaluation_rubric_category_criteria"][$index + 1] = array();
 							$PROCESSED["columns_count"] = count($columns);
 							foreach ($columns as $cindex => $column) {
-
+                                $query = "SELECT `erdescriptor_id` FROM `evaluation_question_response_descriptors`
+                                                WHERE `eqresponse_id` = ".$db->qstr($column["eqresponse_id"]);
+                                $erdescriptor_id = $db->getOne($query);
+                                if ($erdescriptor_id) {
+                                    $column["erdescriptor_id"] = $erdescriptor_id;
+                                }
 								$PROCESSED["evaluation_question_responses"][$cindex + 1] = $column;
 
 								$query = "SELECT * FROM `evaluations_lu_question_response_criteria`
@@ -294,6 +299,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
 								$PROCESSED["evaluation_question_responses"][$i]["response_text"] = $response_text;
 								$PROCESSED["evaluation_question_responses"][$i]["response_order"] = $i;
+
+                                if (isset($_POST["response_descriptor_id"][$response_key]) && clean_input($_POST["response_descriptor_id"][$response_key], "int")) {
+                                    $PROCESSED["evaluation_question_responses"][$i]["erdescriptor_id"] = clean_input($_POST["response_descriptor_id"][$response_key], "int");
+                                }
 
 								/**
 								 * Check if this is the selected minimum passing level or not.
@@ -481,6 +490,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 																	);
 													$eqresponse_id = 0;
 													if ($db->AutoExecute("evaluations_lu_question_responses", $PROCESSED_RESPONSE, "INSERT") && ($eqresponse_id = $db->Insert_Id())) {
+                                                        $db->Execute("DELETE FROM `evaluation_question_response_descriptors` WHERE `eqresponse_id` = ".$db->qstr($eqresponse_id));
+                                                        if (isset($question_response["erdescriptor_id"]) && $question_response["erdescriptor_id"]) {
+                                                            $PROCESSED_RESPONSE_DESCRIPTOR = array(
+                                                                "eqresponse_id" => $eqresponse_id,
+                                                                "erdescriptor_id" => $question_response["erdescriptor_id"]
+                                                            );
+                                                            if (!$db->AutoExecute("evaluation_question_response_descriptors", $PROCESSED_RESPONSE_DESCRIPTOR, "INSERT")) {
+                                                                add_error("There was an error while trying to attach a <strong>Response Descriptor</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
+
+                                                                application_log("error", "Unable to insert a new evaluation_question_response_descriptors record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
+                                                            }
+                                                        }
 														/**
 														 * Add the responses criteria to the evaluation_rubric_criteria table.
 														 */
@@ -589,7 +610,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 															"minimum_passing_level"	=> $question_response["minimum_passing_level"]
 															);
 
-											if (!$db->AutoExecute("evaluations_lu_question_responses", $PROCESSED_RESPONSE, "INSERT")) {
+											if ($db->AutoExecute("evaluations_lu_question_responses", $PROCESSED_RESPONSE, "INSERT") && ($eqresponse_id = $db->Insert_Id())) {
+                                                $db->Execute("DELETE FROM `evaluation_question_response_descriptors` WHERE `eqresponse_id` = ".$db->qstr($eqresponse_id));
+                                                if (isset($question_response["erdescriptor_id"]) && $question_response["erdescriptor_id"]) {
+                                                    $PROCESSED_RESPONSE_DESCRIPTOR = array(
+                                                        "eqresponse_id" => $eqresponse_id,
+                                                        "erdescriptor_id" => $question_response["erdescriptor_id"]
+                                                    );
+                                                    if (!$db->AutoExecute("evaluation_question_response_descriptors", $PROCESSED_RESPONSE_DESCRIPTOR, "INSERT")) {
+                                                        add_error("There was an error while trying to attach a <strong>Response Descriptor</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
+
+                                                        application_log("error", "Unable to insert a new evaluation_question_response_descriptors record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
+                                                    }
+                                                }
+                                            } else {
 												add_error("There was an error while trying to attach a <strong>Question Response</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
 
 												application_log("error", "Unable to insert a new evaluations_lu_question_responses record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
@@ -748,6 +782,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 																	);
 													$eqresponse_id = 0;
 													if ($db->AutoExecute("evaluations_lu_question_responses", $PROCESSED_RESPONSE, "INSERT") && ($eqresponse_id = $db->Insert_Id())) {
+                                                        $db->Execute("DELETE FROM `evaluation_question_response_descriptors` WHERE `eqresponse_id` = ".$db->qstr($eqresponse_id));
+                                                        if (isset($question_response["erdescriptor_id"]) && $question_response["erdescriptor_id"]) {
+                                                            $PROCESSED_RESPONSE_DESCRIPTOR = array(
+                                                                "eqresponse_id" => $eqresponse_id,
+                                                                "erdescriptor_id" => $question_response["erdescriptor_id"]
+                                                            );
+                                                            if (!$db->AutoExecute("evaluation_question_response_descriptors", $PROCESSED_RESPONSE_DESCRIPTOR, "INSERT")) {
+                                                                add_error("There was an error while trying to attach a <strong>Response Descriptor</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
+
+                                                                application_log("error", "Unable to insert a new evaluation_question_response_descriptors record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
+                                                            }
+                                                        }
 														/**
 														 * Add the responses criteria to the evaluation_rubric_criteria table.
 														 */
@@ -833,7 +879,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 															"minimum_passing_level"	=> $question_response["minimum_passing_level"]
 															);
 
-											if (!$db->AutoExecute("evaluations_lu_question_responses", $PROCESSED_RESPONSE, "INSERT")) {
+											if ($db->AutoExecute("evaluations_lu_question_responses", $PROCESSED_RESPONSE, "INSERT") && ($eqresponse_id = $db->Insert_Id())) {
+                                                $db->Execute("DELETE FROM `evaluation_question_response_descriptors` WHERE `eqresponse_id` = ".$db->qstr($eqresponse_id));
+                                                if (isset($question_response["erdescriptor_id"]) && $question_response["erdescriptor_id"]) {
+                                                    $PROCESSED_RESPONSE_DESCRIPTOR = array(
+                                                        "eqresponse_id" => $eqresponse_id,
+                                                        "erdescriptor_id" => $question_response["erdescriptor_id"]
+                                                    );
+                                                    if (!$db->AutoExecute("evaluation_question_response_descriptors", $PROCESSED_RESPONSE_DESCRIPTOR, "INSERT")) {
+                                                        add_error("There was an error while trying to attach a <strong>Response Descriptor</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
+
+                                                        application_log("error", "Unable to insert a new evaluation_question_response_descriptors record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
+                                                    }
+                                                }
+                                            } else {
 												add_error("There was an error while trying to attach a <strong>Question Response</strong> to this evaluation question.<br /><br />The system administrator was informed of this error; please try again later.");
 
 												application_log("error", "Unable to insert a new evaluations_lu_question_responses record while adding a new evaluation question [".$equestion_id."]. Database said: ".$db->ErrorMsg());
@@ -931,6 +990,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						$PROCESSED["evaluation_question_responses"][$i]["response_correct"] = ($minimum_passed ? true : false);
 						$PROCESSED["evaluation_question_responses"][$i]["response_is_html"] = $result["response_is_html"];
 						$PROCESSED["evaluation_question_responses"][$i]["minimum_passing_level"] = $result["minimum_passing_level"];
+                        $query = "SELECT `erdescriptor_id` FROM `evaluation_question_response_descriptors`
+                                                WHERE `eqresponse_id` = ".$db->qstr($result["eqresponse_id"]);
+                        $erdescriptor_id = $db->getOne($query);
+                        if ($erdescriptor_id) {
+                            $PROCESSED["evaluation_question_responses"][$i]["erdescriptor_id"] = $erdescriptor_id;
+                        }
 
 						if ($result["response_is_html"]) {
 							$response_text = clean_input($result["response_text"], array("trim", "allowedtags"));
@@ -1052,6 +1117,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								fadeDuration:	0.30,
 								width: 755
 							});
+                            modalDescriptorDialog = new Control.Modal($('false-link'), {
+                                position:		'center',
+                                overlayOpacity:	0.75,
+                                closeOnClick:	'overlay',
+                                className:		'modal',
+                                fade:			true,
+                                fadeDuration:	0.30,
+                                width: 455
+                            });
 						});
 
 						function openDialog (equestion_id) {
@@ -1062,6 +1136,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								modalDialog.open();
 							}
 						}
+
+                        function openDescriptorDialog(response_number, erdescriptor_id) {
+                            var url = '".ENTRADA_URL."/admin/evaluations/questions?section=api-descriptors&response_number='+response_number+'&organisation_id=".$ENTRADA_USER->getActiveOrganisation()."&erdescriptor_id='+erdescriptor_id;
+                            new Ajax.Request(url, {
+                                method: 'get',
+                                onComplete: function(transport) {
+                                    loaded = [];
+                                    modalDescriptorDialog.container.update(transport.responseText);
+                                    modalDescriptorDialog.open();
+                                }
+                            });
+                        }
 						</script>";
 						?>
 						<div style="float: right;">

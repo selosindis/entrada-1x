@@ -421,7 +421,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 												FROM `global_lu_objectives` AS a
 												JOIN `course_objectives` AS b
 												ON b.`course_id` = ".$COURSE_ID."
-												AND a.`objective_id` = b.`objective_id`
+                                                AND a.`objective_id` = b.`objective_id`
+                                                AND b.`active` = '1'
 												JOIN `objective_organisation` AS c
 												ON a.`objective_id` = c.`objective_id`
 												WHERE a.`objective_id` = ".$db->qstr($objective_id)."
@@ -441,7 +442,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$query	 = "SELECT `objective_id`
 									FROM `course_objectives`
 									WHERE `course_id` = ".$COURSE_ID."
-									AND `objective_type` = 'event'";
+									AND `objective_type` = 'event'
+                                    AND `active` = '1'";
 						$results = $db->GetAll($query);
 						if ($results) {
 							foreach ($results as $result) {
@@ -894,6 +896,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                             LEFT JOIN `course_objectives` b
                                             ON a.`objective_id` = b.`objective_id`
                                             AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+                                            AND b.`active` = '1'
                                             WHERE a.`objective_active` = '1'
                                             AND b.`course_id` = ".$db->qstr($COURSE_ID)."
                                             GROUP BY a.`objective_id`

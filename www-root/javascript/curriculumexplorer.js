@@ -38,22 +38,22 @@ function renderDOM(jsonResponse, link) {
 		jQuery("#objective-details").append("<p>"+jsonResponse.objective_description+"</p>");
 	}
 	if (jsonResponse.courses != null) {
-	if (jsonResponse.courses.length > 0 && COURSE == "") {
-		jQuery("#objective-details").append(jQuery(document.createElement("h2")).html("Mapped Courses"));
-		for (var i=0; i < jsonResponse.courses.length; i++) {
-			var new_course = jQuery(document.createElement("div"));
-			new_course.addClass("course-container").attr("data-id", jsonResponse.courses[i].course_id);
-			new_course.append(
-				jQuery(document.createElement("p")).append(
-					jQuery(document.createElement("a"))
-							.attr("href", SITE_URL+"/courses?id="+jsonResponse.courses[i].course_id)
-							.html("<strong>"+jsonResponse.courses[i].course_code+":</strong> " + jsonResponse.courses[i].course_name)
-				)
-			);
-			jQuery("#objective-details").append(new_course);
-		}
-		courses = true;
-	}
+        if (jsonResponse.courses.length > 0 && COURSE == "") {
+            jQuery("#objective-details").append(jQuery(document.createElement("h2")).html("Mapped Courses"));
+            for (var i=0; i < jsonResponse.courses.length; i++) {
+                var new_course = jQuery(document.createElement("div"));
+                new_course.addClass("course-container").attr("data-id", jsonResponse.courses[i].course_id);
+                new_course.append(
+                    jQuery(document.createElement("p")).append(
+                        jQuery(document.createElement("a"))
+                                .attr("href", SITE_URL+"/courses?id="+jsonResponse.courses[i].course_id)
+                                .html("<strong>"+jsonResponse.courses[i].course_code+":</strong> " + jsonResponse.courses[i].course_name)
+                    )
+                );
+                jQuery("#objective-details").append(new_course);
+            }
+            courses = true;
+        }
 	}
 
 	if (jsonResponse.events != null) {

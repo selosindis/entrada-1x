@@ -90,7 +90,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 						WHERE a.`objective_id` = ".$db->qstr($PROCESSED["objective_parent"])."
 						AND b.`course_active` = 1
 						AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation()).
-						($PROCESSED["course_id"] ? " AND (a.`course_id` = " . $db->qstr($PROCESSED["course_id"]).", '1' = '1'))" : "");
+						($PROCESSED["course_id"] ? " AND a.`course_id` = " . $db->qstr($PROCESSED["course_id"]) : "'1' = '1'");
 			$mapped_courses = $db->GetAll($query);
 		}
 
@@ -105,7 +105,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
 						ON a.`objective_id` = d.`objective_id`
 						JOIN `courses` AS e
 						ON c.`course_id` = e.`course_id`
-						JOIN `event_audience` AS f
+						LEFT JOIN `event_audience` AS f
 						ON c.`event_id` = f.`event_id` ".
 						($PROCESSED["group_id"] ? " AND f.`audience_type` = 'cohort' " : "")."
 						WHERE a.`objective_id` = ".$db->qstr($PROCESSED["objective_parent"])."

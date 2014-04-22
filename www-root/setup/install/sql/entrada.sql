@@ -4315,14 +4315,19 @@ CREATE TABLE IF NOT EXISTS `reports_aamc_ci` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `settings` (
-  `shortname` varchar(64) NOT NULL,
-  `value` text NOT NULL,
-  PRIMARY KEY (`shortname`)
+  `setting_id` int(12) NOT NULL AUTO_INCREMENT,
+  `shortname` varchar(64) CHARACTER SET utf8 NOT NULL,
+  `organisation_id` int(12) DEFAULT NULL,
+  `value` text CHARACTER SET utf8 NOT NULL,
+  PRIMARY KEY (`setting_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1605'),
-('version_entrada', '1.6.0DEV');
+INSERT INTO `settings` (`shortname`, `organisation_id`, `value`)
+  VALUES
+  ('version_db', NULL, '1606'),
+  ('version_entrada', NULL, '1.6.0DEV'),
+  ('export_weighted_grade', NULL, '1'),
+  ('export_calculated_grade', NULL, '{\"enabled\":0}');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,

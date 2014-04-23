@@ -4511,7 +4511,7 @@ CREATE TABLE IF NOT EXISTS `student_observerships` (
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-CREATE TABLE `observership_reflections` (
+CREATE TABLE IF NOT EXISTS `observership_reflections` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `observership_id` int(11) NOT NULL,
   `physicians_role` text NOT NULL,

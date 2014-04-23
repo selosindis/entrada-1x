@@ -83,8 +83,50 @@ class Entrada_Settings {
 
     /**
      * @param array $constraints
+     * This array can have either of two possible formats, or even a blend of the two.
+     * Each element in the array should either be a key-value pair with the key of the array
+     * being the field name, and the value being the value in the field, or an array holding
+     * at least elements, with the "key" key, and the "value" key, and then the optional
+     * inclusion of a "mode" key holding 'AND' or 'OR' which will come before the line in the where statement
+     * (only if it is not the first constraint), and a "method" which determines which operator will be used
+     * out of the following: "=", ">", ">=", "<", "<=", "!=", "<>", "BETWEEN", "LIKE", "IS NOT", "IS".
+     * For an example, here is an array, and the query which it would build with the rest of the parameters
+     * left unset on the method call:
+     *
+     *Array:
+    $constraints = array(
+        "shortname" => "export_weighted_grade",
+        array(
+        "mode"      => "AND",
+        "key"       => "organisation_id" ,
+        "value"     => "1"
+        ),
+        array(
+        "mode"      => "OR",
+        "key"       => "shortname" ,
+        "value"     => "export_weighted_grade"
+        ),
+        array(
+        "mode"      => "AND",
+        "key"       => "organisation_id" ,
+        "value"     => NULL,
+        "method"    => "IS"
+        )
+    );
+     *
+     *
+    Query:
+        SELECT * FROM `settings`
+        WHERE `shortname` = 'export_weighted_grade'
+        AND `organisation_id` = '1'
+        OR `shortname` = 'export_weighted_grade'
+        AND `organisation_id` IS NULL
+        ORDER BY `organisation_id` DESC
+     *
      * @param string $default_method
      * @param string $default_mode
+     * @param string $sort_column
+     * @param string $sort_order
      * @return bool|Entrada_Settings
      */
     private function fetchRow($constraints = array("setting_id" => "0"), $default_method = "=", $default_mode = "AND", $sort_column = "organisation_id", $sort_order = "DESC") {
@@ -142,76 +184,6 @@ class Entrada_Settings {
             }
         }
         return $self;
-    }
-
-
-    /**
-     * @param array $constraints
-     * @param string $default_method
-     * @param string $default_mode
-     * @return array
-     */
-    private function fetchAll($constraints = array("setting_id" => "0"), $default_method = "=", $default_mode = "AND", $sort_column = "organisation_id", $sort_order = "DESC") {
-        global $db;
-        $output = array();
-        if (is_array($constraints) && !empty($constraints)) {
-            $where = array();
-            $replacements = "";
-            $class_vars = array_keys(get_class_vars(get_called_class()));
-            foreach ($constraints as $index => $constraint) {
-                $key = false;
-                $value = false;
-                if (is_array($constraint) && in_array($constraint["key"], $class_vars)) {
-                    $mode = (isset($constraint["mode"]) && in_array(strtoupper($constraint["mode"]), array("OR", "AND")) ? $constraint["mode"] : $default_mode);
-                    $key = "`".clean_input($constraint["key"], array("trim", "striptags"))."`";
-                    $method = (isset($constraint["method"]) && in_array(strtoupper($constraint["method"]), array("=", ">", ">=", "<", "<=", "!=", "<>", "BETWEEN", "LIKE", "IS NOT", "IS")) ? $constraint["method"] : $default_method);
-                    if (strtoupper($method) == "BETWEEN" && is_array($constraint["value"]) && @count($constraint["value"]) == 2) {
-                        $value = array(
-                            clean_input($constraint["value"][0], array("trim", "striptags")),
-                            clean_input($constraint["value"][1], array("trim", "striptags"))
-                        );
-                    } elseif ($constraint["value"]) {
-                        $value = clean_input($constraint["value"], array("trim", "striptags"));
-                    } elseif ($constraint["value"] || $constraint["value"] === "0") {
-                        $value = clean_input($constraint["value"], array("trim", "striptags"));
-                    } else {
-                        $value = NULL;
-                    }
-                } elseif (!is_array($constraint) && in_array($index, $class_vars)) {
-                    $key = "`".clean_input($index, array("trim", "striptags"))."`";
-                    $value = clean_input($constraint, array("trim", "striptags"));
-                    $method = $default_method;
-                    $mode = $default_mode;
-                }
-                if (isset($key) && $key && isset($value) && ($value || $value === 0)) {
-                    $replacements .= "\n ".(empty($where) ? "WHERE " : (isset($mode) && $mode ? $mode : $default_mode))." ".$key." ".(isset($method) && $method ? $method : $default_method).($method == "BETWEEN" ? " ? AND ?" : " ?");
-                    if (is_array($value) && @count($value) == 2) {
-                        $where[] = $value[0];
-                        $where[] = $value[1];
-                    } else {
-                        $where[] = $value;
-                    }
-                }
-            }
-            if (!empty($where)) {
-                if (!in_array($sort_column, $class_vars)) {
-                    $sort_column = "organisation_id";
-                }
-                if ($sort_order == "ASC") {
-                    $sort_order = "ASC";
-                } else {
-                    $sort_order = "DESC";
-                }
-                $query = "SELECT * FROM `".$this->table_name."` ".$replacements." ORDER BY `".$sort_column."` ".$sort_order;
-                $results = $db->GetAll($query, $where);
-                if ($results) {
-                    foreach ($results as $result) {
-                        $output[] = new self($result);
-                    }
-                }
-            }
-        }
-        return $output;
     }
 
     public static function fetchByShortname($shortname, $organisation_id) {

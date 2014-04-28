@@ -1803,6 +1803,92 @@ display: none;
 display: block;
 }
 
+
+div#dashboard_ics_calendar_container {
+    position: relative;
+}
+div#dashboard_ics_calendar {
+    display: none;
+    height: 320px;
+    width: 660px;
+    background: #FFF;
+    z-index: 99;
+    bottom: 18px;
+    right: 6px;
+    position: absolute;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+div#dashboard_ics_calendar .panel-head {
+    height: 25px;
+    color: #EEE;
+    padding: 10px;
+    font-size: 18px;
+}
+div#dashboard_ics_calendar .calendar-side-1 {
+    width: 50px;
+    float: left;
+}
+div#dashboard_ics_calendar .calendar-side-2 {
+    width: 50px;
+    float: left;
+}
+
+div#dashboard_ics_calendar .content-calendar {
+    position: relative;
+    height: 100%;
+    padding: 10px;
+}
+
+div#dashboard_ics_calendar .content-calendar #close {
+    position: absolute;
+    bottom: 75px;
+    right: 10px;
+    display: none;
+}
+
+div#dashboard_ics_calendar .content-calendar #all-course {
+    padding-bottom: 10px;
+}
+
+div#dashboard_ics_calendar .content-calendar #course-selector {
+    display: none;
+    padding-bottom: 5px;
+}
+
+div#dashboard_ics_calendar .content-calendar #calendar-download {
+    display: none;
+}
+
+div#dashboard_ics_calendar .content-calendar #calendar-download {
+    display: none;
+}
+
+div#dashboard_ics_calendar .content-calendar #subscribe-download .btn[data-type='download'] {
+    display: none;
+}
+
+div#dashboard_ics_calendar .content-calendar #subscribe-download {
+    padding-bottom: 10px;
+}
+
+div#dashboard_ics_calendar .content-calendar #course-quick-select {
+    margin-bottom: 5px;
+    width: 100%;
+}
+
+div#dashboard_ics_calendar .content-calendar .cornerarrow {
+    bottom: 52px;
+    right: 35px;
+    left: initial;
+    top: initial;
+    -webkit-transform: rotate(270deg);
+    -moz-transform: rotate(270deg);
+    filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+}
+
+
 div.rss-add a.feeds {
 }
 .rsslist {

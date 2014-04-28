@@ -49,23 +49,32 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/config/xc2_default.js\"></script>";
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_inpage.js\"></script>";
 	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/calendar/script/xc2_timestamp.js\"></script>";
+	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/dashboard-ics.js\"></script>";
 
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.weekcalendar.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.qtip.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	$JQUERY[] = "<link href=\"".ENTRADA_RELATIVE."/css/jquery/jquery.weekcalendar.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
+    $JQUERY[] = "<link href=" . $ENTRADA_TEMPLATE->relative() ."/css/dashboard/dashboard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 
 	/**
 	 * Fetch the latest feeds and links for this user.
 	 */
 	$dashboard_feeds = dashboard_fetch_feeds();
 	$dashboard_links = dashboard_fetch_links();
-	/**
-	 * Display current weather conditions in the sidebar.
-	 */
-	$sidebar_html = display_weather();
-	if ($sidebar_html != "") {
-		new_sidebar_item("Weather Forecast", display_weather(), "weather", "open");
+    
+    //generates courses for use with the ics files
+    $COURSE_LIST = array();
+    $results = courses_fetch_courses(true, true);
+    if ($results) {
+        foreach ($results as $result) {
+            $COURSE_LIST[$result["course_id"]] = html_encode(($result["course_code"] ? $result["course_code"] . ": " : "") . $result["course_name"]);
+        }
 	}
+    $calendar_http_url = ENTRADA_URL."/calendars".(isset($_SESSION["details"]["private_hash"]) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : "")."/".html_encode($ENTRADA_USER->getUsername()).".ics"; 
+    $calendar_webcal_url = str_ireplace(array("https://", "http://"), "webcal://", $calendar_http_url);
+    ?>
+   
+   <?php
 
 	/**
 	 * If user is a member of any communities, show them here.
@@ -502,6 +511,40 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
                     },
                     data : '<?php echo ENTRADA_RELATIVE; ?>/calendars/<?php echo html_encode($_SESSION["details"]["username"]); ?>.json'
                 });
+                
+            });
+            
+            jQuery(document).ready(function() {
+                //set inital settings
+                jQuery("div#dashboard_ics_calendar .content-calendar #subscribe-download").removeClass('btn-group');
+                //hides Subscibe versus Download till a course is chosen so they can't download the all link.
+
+
+                jQuery('#calendar-ics-btn').click(function() {
+                    show_hide_calendar_ics();
+                });
+                jQuery('div#dashboard_ics_calendar .content-calendar #close').click(function() {
+                    show_hide_calendar_ics();
+                });
+
+                jQuery("div#dashboard_ics_calendar .content-calendar #all-course .btn").click(function() {
+                    jQuery("div#dashboard_ics_calendar .content-calendar #calendar-subscribe .span10").hide();
+                    jQuery("div#dashboard_ics_calendar .content-calendar #calendar-download .span10").hide(); 
+                    //hides the course download/subscribe buttons if no course is set
+                    if (!jQuery("div#dashboard_ics_calendar .content-calendar #course-quick-select").val() == "") {
+                        update_html_ics('<?php echo $calendar_http_url;?>', '<?php echo $calendar_webcal_url;?>', jQuery(this).data('type'), true);
+                    } else {
+                        update_html_ics('<?php echo $calendar_http_url;?>', '<?php echo $calendar_webcal_url;?>', jQuery(this).data('type'), false);
+                    }
+                    course_switcher(this, jQuery(this).data('type'));
+                 });
+                jQuery("div#dashboard_ics_calendar .content-calendar #subscribe-download .btn").click(function() {
+                    download_switcher(this, jQuery(this).data('type'));
+                 });
+
+                jQuery("div#dashboard_ics_calendar .content-calendar #course-quick-select").change(function() {
+                   update_html_ics('<?php echo $calendar_http_url;?>', '<?php echo $calendar_webcal_url;?>', 'course', true);
+                })                     
             });
 		
             function setDateValue(field, date) {
@@ -514,6 +557,11 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
                 return;
             }
+				
+			function showCalendarLink(link) {
+				jQuery("#calendar-link-wrapper").html("<input id=\"calendar-link-input\" style=\"margin-bottom:0;\" type=\"text\" value=\"" + link + "\" />");
+				jQuery("#calendar-link-input").select();
+			}
             </script>
             <div class="row-fluid">
                 <div class="span6">
@@ -531,8 +579,64 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 
             <div id="dashboardCalendar"></div>
 
+            <div id="dashboard_ics_calendar_container">
+                <div id="dashboard_ics_calendar" class="hidden">
+                    <div class="panel-head">Subscribe to Calendar or Download Calendar</div>
+                    <div class="content-calendar">
+                        <div class="row-fluid">
+                            <div class="btn-group" id="all-course">
+                                <button class="btn active" data-type="all">All Calendars</button>
+                                <button class="btn" data-type="course">Individual Course Calendar</button>
+                            </div>
+                        </div>
+                        <div class="row-fluid" id="course-selector">
+                            <div class="span2"><strong>Course Select: </strong></div>
+                            <div class="span10">
+                                <select id="course-quick-select" name="course-quick-select">
+                                <option value="">-- Select a Course --</option>
+                                <?php
+                                foreach ($COURSE_LIST as $course_id => $course_name) {
+                                    echo "<option value=\"".$course_id."\">".$course_name."</option>\n";
+                                }
+                                ?>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="row-fluid">
+                            <div class="btn-group" id="subscribe-download">
+                                <button class="btn active" data-type="subscribe">Subscribe</button>
+                                <button class="btn" data-type="download">Download</button>
+                            </div>
+                        </div>
+                        <div class="row-fluid">
+                            <p>The subscribed version of the ics file will be update automatically with changes made to the learning events, but is not editable. The download ics file can be imported and edited, but will not be updated automatically although you can re-download and upload again. </p>
+                        </div>
+
+                        <div id="calendar-subscribe" class="visable">
+                            <div class="row-fluid">
+                                <div class="span2"><strong>Subscribe</strong></div>
+                                <div class="span10">
+                                    <span id="calendar-link-wrapper"></span>
+                                    <a class="btn btn-small" href="javascript:showCalendarLink('<?php echo $calendar_http_url; ?>')" id="copy-link"><i class="icon-link"></i> Copy Subscription Link</a>
+                                    <a class="btn btn-info btn-small" href="<?php echo $calendar_webcal_url; ?>" id="subscribe-calendar-btn"><i class="icon-calendar icon-white"></i> Subscribe to Calendar</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="calendar-download" class="hidden">
+                            <div class="row-fluid">
+                                <div class="span2"><strong>Download</strong></div>
+                                <div class="span10"><a class="btn btn-info btn-small" href="<?php echo $calendar_http_url;?>"><i class="icon-calendar icon-white"></i> Download Calendar</a></div>
+                            </div>
+                        </div>
+                        <div class="btn pull-right hidden" id="close">Close</div>
+                        <div class="cornerarrow"></div>
+                    </div>
+                </div>
+            </div>
+            
             <div class="pull-right">
-                <a class="btn btn-info btn-small" href="<?php echo str_ireplace(array("https://", "http://"), "webcal://", ENTRADA_URL)."/calendars".(isset($_SESSION["details"]["private_hash"]) ? "/private-".html_encode($_SESSION["details"]["private_hash"]) : "")."/".html_encode($ENTRADA_USER->getUsername()).".ics"; ?>"><i class="icon-calendar icon-white"></i> Subscribe to Calendar</a>
+                <a class="btn btn-info btn-small" id="calendar-ics-btn"><i class="icon-calendar icon-white"></i> Subscribe to Calendar or Download Calendar</a>
             </div>
             <?php
 			if ($display_schedule_tabs) {

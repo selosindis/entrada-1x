@@ -54,13 +54,20 @@ if (!$ENTRADA_ACL->amIAllowed("dashboard", "read")) {
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.weekcalendar.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.qtip.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 	$JQUERY[] = "<link href=\"".ENTRADA_RELATIVE."/css/jquery/jquery.weekcalendar.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
-    $JQUERY[] = "<link href=" . $ENTRADA_TEMPLATE->relative() ."/css/dashboard/dashboard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />\n";
 
 	/**
 	 * Fetch the latest feeds and links for this user.
 	 */
 	$dashboard_feeds = dashboard_fetch_feeds();
 	$dashboard_links = dashboard_fetch_links();
+    
+	/**
+	 * Display current weather conditions in the sidebar.
+	 */
+	$sidebar_html = display_weather();
+	if ($sidebar_html != "") {
+		new_sidebar_item("Weather Forecast", display_weather(), "weather", "open");
+    }
     
     //generates courses for use with the ics files
     $COURSE_LIST = array();

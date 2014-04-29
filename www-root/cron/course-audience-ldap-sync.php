@@ -55,75 +55,167 @@ $ldap = NewADOConnection("ldap");
 $ldap->SetFetchMode(ADODB_FETCH_ASSOC);
 $ldap->debug = false;
 
-function fetchCustomInfo($date,$org_id){	
+function fetchCustomInfo($date, $org_id) {	
 	switch($org_id){
 		case 1:
 			$app = 1;
 			break;
+		case 4:
+			$app = 700;
+			break;
+		case 5:
+			$app = 101;
+			break;
+		case 9:
+			$app = 105;
+			break;
+		default:
+			//echo "Unknown org provided: " . $org_id;
+			exit;
+		break;
 	}
-	$m = date('n',$date);
+    
+	$m = date('n', $date);
+    
 	switch(true){
 		case $m < 4:
 			return array("W","_1_",$app);
-			break;
+        break;
 		case $m < 9:
 			if($org_id == 5 && $m < 6){
 				return array("Sp","_5_",$app);
 			}
 			return array("S","_5_",$app);
-			break;
+		break;
 		case $m < 12:
 			return array("F","_9_",$app);
-			break;
+		break;
 	}
 }
 
-function progressMessage($msg,$mode = "cron",$display_cron = true) {
+function progressMessage($msg, $mode = "cron", $display_cron = true) {
 	if ($mode == "command") {
 		echo $msg."\n";
-	} elseif ($display_cron) {
+	} else if ($display_cron) {
 		application_log($mode, $msg);
 	}
 }
+
 //the -1209600 is to start loading course lists two weeks in advance
-$query = "	SELECT a.`course_code`,a.`course_id`,a.`curriculum_type_id`,a.`organisation_id`, c.`start_date`,c.`cperiod_id`, a.`sync_ldap_courses`
-			FROM `courses` a
-			JOIN curriculum_lu_types b
-			ON a.`curriculum_type_id` = b.`curriculum_type_id`
-			JOIN `curriculum_periods` c
-			ON b.`curriculum_type_id` = c.`curriculum_type_id`
-			AND c.`active` = '1'
-			AND UNIX_TIMESTAMP() BETWEEN (c.`start_date` - 1209600) AND c.`finish_date`
-			WHERE a.`course_active` = '1'
-			AND a.`sync_ldap` = '1'
-			AND a.`organisation_id` NOT IN(".implode(",",$org_blacklist).")
-			GROUP BY a.`course_id`";
+$query = "SELECT a.`course_code`, a.`course_id`, a.`organisation_id`, b.`cperiod_id`, b.`audience_value` AS `group_id`, c.`curriculum_type_id`, c.`start_date`, c.`finish_date`, a.`sync_ldap_courses`, a.`sync_groups`
+            FROM `courses` AS a
+            JOIN `course_audience` AS b
+            ON a.`course_id` = b.`course_id`
+            JOIN `curriculum_periods` AS c
+            ON b.`cperiod_id` = c.`cperiod_id`
+            WHERE a.`sync_ldap` = '1'
+            AND a.`organisation_id` NOT IN(".implode(",",$org_blacklist).")
+            AND a.`course_active` = '1'
+            AND b.`audience_active` = '1'
+            AND c.`active` = '1'
+            AND UNIX_TIMESTAMP(NOW()) > c.`start_date` - 1209600 
+            AND UNIX_TIMESTAMP(NOW()) < c.`finish_date`";
 $results = $db->GetAll($query);
 if (!$results) {	
-	progressMessage("There are no courses to sync.",$mode);
+	progressMessage("There are no courses to sync.", $mode);
 	exit;
 }
 foreach ($results as $course) {
-	
-	$query = "SELECT `group_id` FROM `groups` WHERE `group_type` = 'course_list' AND `group_value` = ".$db->qstr($course["course_id"])." AND `group_name` LIKE '%{$YEAR}' ORDER BY `group_id` DESC";
-	$group_id = $db->GetOne($query);
-
 	/**
 	* This calls function above to implement organization specific logic
 	* @todo move all this to the database along with other settings
 	*/
 	list($SUFFIX,$LDAP_CODE,$APP_ID) = fetchCustomInfo($course["start_date"],$course["organisation_id"]);
-	progressMessage("Course Code: {$course["course_code"]} Suffix: {$SUFFIX} LDAP: {$LDAP_CODE}\n",$mode,false);
-	$start_date = 0;
-	$end_date = 0;
-	$curriculum_period = 0;
+	progressMessage("Course Code: " . $course["course_code"] . ", Suffix: " . $SUFFIX . ", LDAP: ".$LDAP_CODE."\n", $mode, false);
+	$start_date         = 0;
+	$end_date           = 0;
+	$curriculum_period  = 0;
 
+    $course_year = date("Y", $course["start_date"]);
+    if (!empty($course["group_id"])) {
+        $group_id = $course["group_id"];
+    } else {
+        $query = "SELECT `group_id` FROM `groups` WHERE `group_type` = 'course_list' AND `group_value` = ".$db->qstr($course["course_id"])." AND `group_name` LIKE '%".$course["course_code"].$SUFFIX."%".$course_year."' ORDER BY `group_id` DESC";
+        $group_id = $db->GetOne($query);
+        if ($group_id === false) {
+            $query = "SELECT `group_id` FROM `groups` WHERE `group_type` = 'course_list' AND `group_value` = ".$db->qstr($course["course_id"])." AND `group_name` LIKE '%".$course_year."' ORDER BY `group_id` DESC";
+            $group_id = $db->GetOne($query);
+        }
+    }
+    /**
+    * Find out if group exists for this course for this year and make the group if it doesn't yet exist
+    * @todo find a better way for this that doesn't force the "Class List YYYY" naming convention, should be in settings along with
+    * changes mentioned above
+    */
+    if (!$group_id) {
+        progressMessage("No group exists will be creating one now.\n",$mode,false);
+
+        if ($UPDATE) {
+            progressMessage("Deactivating old groups for course.\n",$mode,false);
+            $db->AutoExecute("groups", array("group_active"=>0), "UPDATE","`group_type` = 'course_list' AND `group_value` = ".$db->qstr($course["course_id"])." AND `group_type` = 'course_list' AND `expire_date` IS NOT NULL AND `expire_date` < UNIX_TIMESTAMP(NOW())");
+        }
+
+        $values = 	array(
+                        "group_name"	=> $course["course_code"]. $SUFFIX . " Class List " . $db->qstr($course_year),
+                        "group_type"	=> "course_list",
+                        "group_value"	=> (int) $course["course_id"],
+                        "start_date"	=> $start_date,
+                        "expire_date"	=> $end_date,
+                        "group_active"	=> "1",
+                        "updated_date"	=> time(),
+                        "updated_by"	=> "1"
+                    );
+        if ($UPDATE) {
+            if ($db->AutoExecute("groups", $values, "INSERT") && ($group_id = $db->Insert_Id())) {
+                $values						= array();
+                $values["group_id"]			= $group_id;
+                $values["organisation_id"]	= $course["organisation_id"];
+                $values["updated_date"]		= time();
+                $values["updated_by"]		= "1";
+
+                $db->AutoExecute("group_organisations", $values, "INSERT");
+            }
+        }else{
+            $group_id = true;
+        }
+    }
+
+    /**
+    * Fetch current audience that's attached to the course
+    */
+    $query = "	SELECT a.`id`, a.`number`, b.`member_active`
+                FROM `".AUTH_DATABASE."`.`user_data` AS a 
+                JOIN `group_members` AS b	
+                ON a.`id` = b.`proxy_id` 
+                JOIN `groups` AS c 
+                ON b.`group_id` = c.`group_id`
+                WHERE c.`group_type` = 'course_list' 
+                AND c.`group_value` = ".$db->qstr($course["course_id"])."
+                AND b.`entrada_only` = 0
+                AND c.`group_id` = ".$db->qstr($group_id);
+    $audience = $db->GetAll($query);
+    $course_audience = array();
+    if ($audience) {
+        foreach ($audience as $key=>$audience_member) {
+            $course_audience["id"][$key]		= $audience_member["id"];
+            $course_audience["number"][$key]	= $audience_member["number"];
+            if ($audience_member["member_active"] == 1) {
+                $course_audience["active"][$key]	= $audience_member["number"];
+            } else {
+                $course_audience["inactive"][$key]	= $audience_member["number"];
+            }
+        }
+
+        unset($audience);
+    } else {
+        $course_audience = false;
+    }
+    
 	/**
 	* Fetch curriculum period to make sure the correct course audience group is being worked with
 	*/
 	if ($course["curriculum_type_id"] != 0) {
-		$now = time();
-		$query = "SELECT `start_date`, `finish_date`,`cperiod_id` FROM `curriculum_periods` WHERE ".$db->qstr($now)." BETWEEN `start_date` AND `finish_date` AND `active` = '1' AND `curriculum_type_id` = ".$db->qstr($course["curriculum_type_id"]);
+		$query = "SELECT `start_date`, `finish_date`,`cperiod_id` FROM `curriculum_periods` WHERE UNIX_TIMESTAMP(NOW()) BETWEEN `start_date` AND `finish_date` AND `active` = '1' AND `curriculum_type_id` = ".$db->qstr($course["curriculum_type_id"]);
 		$result = $db->GetRow($query);
 		if ($result) {
 			$start_date			= $result["start_date"];
@@ -139,38 +231,6 @@ foreach ($results as $course) {
 			}
 		}
 	}		
-
-
-	/**
-	* Fetch current audience that's attached to the course
-	*/
-	$query = "	SELECT a.`id`, a.`number`, b.`member_active`
-				FROM `".AUTH_DATABASE."`.`user_data` AS a 
-				JOIN `group_members` AS b	
-				ON a.`id` = b.`proxy_id` 
-				JOIN `groups` AS c 
-				ON b.`group_id` = c.`group_id`
-				WHERE c.`group_type` = 'course_list' 
-				AND c.`group_value` = ".$db->qstr($course["course_id"])."
-				AND b.`entrada_only` = 0
-				AND c.`group_name` LIKE '%{$YEAR}'";
-	$audience = $db->GetAll($query);
-	$course_audience = array();
-	if ($audience) {
-		foreach ($audience as $key=>$audience_member) {
-			$course_audience["id"][$key]		= $audience_member["id"];
-			$course_audience["number"][$key]	= $audience_member["number"];
-			if ($audience_member["member_active"] == 1) {
-				$course_audience["active"][$key]	= $audience_member["number"];
-			} else {
-				$course_audience["inactive"][$key]	= $audience_member["number"];
-			}
-		}
-		
-		unset($audience);
-	} else {
-		$course_audience = false;
-	}
 
 	$community_audience = array();	
 	$query = "	SELECT `community_id` FROM `community_courses` WHERE `course_id` = ".$db->qstr($course["course_id"]);
@@ -203,7 +263,7 @@ foreach ($results as $course) {
 	if (!empty($course_codes)) {
 		foreach ($course_codes as $code) {
 			//create LDAP connection
-			if ($ldap->Connect(LDAP_HOST, LDAP_SEARCH_DN, LDAP_SEARCH_DN_PASS, LDAP_GROUPS_BASE_DN)) {	
+			if ($ldap->Connect(LDAP_HOST, LDAP_SEARCH_DN, LDAP_SEARCH_DN_PASS, LDAP_GROUPS_BASE_DN)) {
 				//get the course information, in particular the list of unique members
 
 				$course_code = str_replace($SUFFIX,"",$code);
@@ -215,45 +275,9 @@ foreach ($results as $course) {
 				/**
 				* Fetch course from LDAP server
 				*/
-				$results = $ldap->GetAll($search_query);
+				$results = $ldap->GetAll($search_query); 
 				if ($results) {
-					$ldap->Close();				
-					
-					/**
-					* Find out if group exists for this course for this year and make the group if it doesn't yet exist
-					* @todo find a better way for this that doesn't force the "Class List YYYY" naming convention, should be in settings along with
-					* changes mentioned above
-					*/
-					if (!$group_id) {
-						progressMessage("No group exists will be creating one now.\n",$mode,false);
-						if ($UPDATE) {
-							progressMessage("Deactivating old groups for course.\n",$mode,false);
-							$db->AutoExecute("groups", array("group_active"=>0), "UPDATE","`group_type` = 'course_list' AND `group_value` = ".$db->qstr($course["course_id"])." AND `group_name` NOT LIKE '%{$YEAR}'");
-						}
-						$values = 	array(
-										"group_name"	=> $course["course_code"]." Class List {$YEAR}",
-										"group_type"	=> "course_list",
-										"group_value"	=> (int) $course["course_id"],
-										"start_date"	=> $start_date,
-										"expire_date"	=> $end_date,
-										"group_active"	=> "1",
-										"updated_date"	=> time(),
-										"updated_by"	=> "1"
-									);
-						if ($UPDATE) {
-							if ($db->AutoExecute("groups", $values, "INSERT") && ($group_id = $db->Insert_Id())) {
-								$values						= array();
-								$values["group_id"]			= $group_id;
-								$values["organisation_id"]	= $course["organisation_id"];
-								$values["updated_date"]		= time();
-								$values["updated_by"]		= "1";
-
-								$db->AutoExecute("group_organisations", $values, "INSERT");
-							}
-						}else{
-							$group_id = true;
-						}
-					}
+					$ldap->Close();
 					
 					$uniUids = array();
 					progressMessage("Response recieved",$mode,false);
@@ -481,7 +505,7 @@ foreach ($results as $course) {
 												}
 											}
 										} elseif ($course_audience && isset($course_audience["number"]) && is_array($course_audience["number"])) {
-											if (in_array($pKey, $course_audience["inactive"])) {
+											if (is_array($course_audience["inactive"]) && in_array($pKey, $course_audience["inactive"])) {
 												$query = "UPDATE `group_members` SET `finish_date` = '0', `member_active` = '1', `updated_date` = ".$db->qstr(time()).", `updated_by` = '1' WHERE `group_id` = ".$db->qstr($group_id)." AND `proxy_id` = ".$db->qstr($id);
 												if ($db->Execute($query)) {
 													$key = array_search($pKey, $course_audience["number"]);
@@ -524,7 +548,7 @@ foreach ($results as $course) {
 				if($mode == "cron"){
 					application_log("cron",$ldap->ErrorMsg());			
 				}
-			}	
+			}
 		}
 		
 		/**
@@ -569,10 +593,10 @@ foreach ($results as $course) {
 			$query = "	SELECT * FROM `group_members` 
 						WHERE `group_id` = ".$db->qstr($group_id)." 
 						AND `member_active` = '1' 
-						AND UNIX_TIMESTAMP() > (`start_date` - 1209600)
+						AND UNIX_TIMESTAMP(NOW()) > (`start_date` - 1209600)
 						AND (
 							`finish_date` = 0 
-							OR UNIX_TIMESTAMP() < `finish_date`
+							OR UNIX_TIMESTAMP(NOW()) < `finish_date`
 						)
 						GROUP BY `proxy_id` ";
 			$members = $db->GetAll($query);
@@ -626,10 +650,118 @@ foreach ($results as $course) {
 			$warning = $community_count != $group_count?true:false;
 			progressMessage("Course: [".$course["course_code"]."] Enrollment Iterations: [".$iteration_count."] Group: [".$group_id."] Count: [".$group_count."] Community [".$comm_id."] Count: [".$community_count."].".($warning?"[WARNING] MISMATCHED USER COUNT":"")."\n",$mode);
 		}
-		
+        
 	} else {
 		application_log("cron", "No course codes associated with course [".$course["course_code"]."].");
 	}
+
+    if ($course["sync_groups"] == "1") {
+        // syncronize course group membership:
+        if ($ldap->Connect(LDAP_HOST, LDAP_SEARCH_DN, LDAP_SEARCH_DN_PASS, LDAP_CGROUP_BASE_DN)) {	
+            $course_code_base = clean_input($course_code, "alpha") . "_" . clean_input($course_code, "numeric");
+            $search_query = "cn=".$course_code_base."*".$LDAP_CODE."*";
+            $results = $ldap->GetAll($search_query);
+            $users = array();
+            $new_results = array();
+            
+            if ($results) {
+                $ldap->Close();
+
+                $course_group_lists = array();
+
+                $s = array();
+                foreach ($results as $k => $result) {
+                    $s[$k] = $result["cn"];
+                }
+
+                asort($s);
+                foreach ($s as $k => $cn) {
+                    $new_results[] = $results[$k];
+                }
+
+                foreach ($new_results as $result) {
+                    $collison = false;
+                    if(!empty($result["uniqueMember"])) {
+                        foreach ($result["uniqueMember"] as $user) {
+                            $u_d = explode(",", $user);
+                            foreach ($u_d as $kv_pair) {
+                                list($k, $v) = explode("=", $kv_pair);
+                                $v = strtolower($v);
+                                if (strtolower($k) == "queensucauniuid") {
+                                    if (!in_array($v, $users)) {
+                                       $users[] = $v;
+                                    } else {
+                                       $course_group_lists[$result["cn"]][] = $v;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if ($course_group_lists) {
+                    $i = 1;
+                    foreach ($course_group_lists as $course_group_list => $users) {
+                        $query = "SELECT * FROM `course_groups` WHERE `course_id` = ".$db->qstr($course["course_id"])." AND `active` = '1' AND `group_name` = '" . $course["course_code"] . $SUFFIX . " " . date("Y", $course["start_date"]) . " Course Group " . ($i < 10 ? "0" . $i : $i) . "'";
+                        $course_group = $db->GetRow($query);
+                        if (!$course_group) {
+                            $course_group = array(
+                                "course_id"     => $course["course_id"],
+                                "group_name"    => $course["course_code"] . $SUFFIX . " " . date("Y", $course["start_date"]) . " Course Group " . ($i < 10 ? "0" . $i : $i),
+                                "active"        => "1" 
+                            );
+                            if ($db->AutoExecute("`course_groups`", $course_group, "INSERT")) {
+                                $course_group["cgroup_id"] = $db->Insert_ID();
+                            }
+                        }
+                        if ($course_group) {
+                            $query = "SELECT a.`cgaudience_id`, a.`proxy_id` 
+                                        FROM `course_group_audience` AS a
+                                        JOIN `course_groups` AS b
+                                        ON a.`cgroup_id` = b.`cgroup_id`
+                                        AND a.`cgroup_id` = ?";
+                            $current_cgroup_audience = $db->GetAssoc($query, array($course_group["cgroup_id"]));
+                            
+                            foreach ($users as $k => $username) {
+                                $query = "SELECT a.`id`, b.`cgaudience_id`, b.`active`
+                                            FROM `".AUTH_DATABASE."`.`user_data` AS a 
+                                            LEFT JOIN `course_group_audience` AS b
+                                            ON a.`id` = b.`proxy_id`
+                                            AND b.`cgroup_id` = " . $db->qstr($course_group["cgroup_id"]) . "
+                                            WHERE a.`username` = " . $db->qstr($username);
+                                $user = $db->GetRow($query);
+                                if ($user) {
+                                    if ($temp = array_search($user["id"], $current_cgroup_audience)) {
+                                        unset($current_cgroup_audience[$temp]);
+                                    }
+                                    if (!$user["cgaudience_id"]) {
+                                        $cgaudience = array(
+                                            "cgroup_id" => $course_group["cgroup_id"],
+                                            "proxy_id"  => $user["id"],
+                                            "start_date"    => $course["start_date"],
+                                            "finish_date"   => $course["finish_date"],
+                                            "active"        => "1"
+                                        );
+                                        $db->AutoExecute("`course_group_audience`", $cgaudience, "INSERT");
+                                    } elseif ($user["active"] == "0") {
+                                        $db->AutoExecute("`course_group_audience`", array("active" => "1", "finish_date" => $course["finish_date"]), "UPDATE", "`cgaudience_id` = " . $db->qstr($user["cgaudience_id"]));
+                                    }
+                                }
+                            }
+                            
+                            if (isset($current_cgroup_audience) && !empty($current_cgroup_audience)) {
+                                foreach($current_cgroup_audience as $cgaudience_id => $proxy_id) {
+                                    $db->AutoExecute("`course_group_audience`", array("active" => "0", "finish_date" => time()), "UPDATE", "`cgaudience_id` = ".$db->qstr($cgaudience_id));
+                                }
+                            }
+                        }
+                        $i++;
+                    }
+                }
+                
+            }
+        }
+    }
 	progressMessage("\n\n\n\n",$mode);
 }
 

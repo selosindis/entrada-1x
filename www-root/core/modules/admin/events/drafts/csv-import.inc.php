@@ -45,6 +45,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     AND `status` = 'open'";
         $result = $db->GetRow($query);
         if ($result) {
+
+            $csv_headings = array(
+                "original_event"            => array("title" => "Original Event"),
+                "parent_event"              => array("title" => "Parent Event",          "required" => true),
+                "course_code"               => array("title" => "Course Code",           "required" => true),
+                "course_name"               => array("title" => "Course Name"),
+                "term"                      => array("title" => "Term"),
+                "date"                      => array("title" => "Date"),
+                "start_time"                => array("title" => "Start Time",            "required" => true),
+                "total_duration"            => array("title" => "Total Duration"),
+                "event_type_durations"      => array("title" => "Event Type Durations",  "required" => true),
+                "event_types"               => array("title" => "Event Types",           "required" => true),
+                "event_title"               => array("title" => "Event Title",           "required" => true),
+                "event_description"         => array("title" => "Event Description"),
+                "location"                  => array("title" => "Location"),
+                "audience_groups"           => array("title" => "Audience (Groups)"),
+                "audience_cohort"           => array("title" => "Audience (Cohort)"),
+                "audience_students"         => array("title" => "Audience (Students)"),
+                "teacher_names"             => array("title" => "Teacher Names"),
+                "teacher_numbers"           => array("title" => "Teacher Numbers"),
+                "objectives_release_date"    => array("title" => "Objective Release Date"),
+                "event_tutors"              => array("title" => "Event Tutors")
+            );
+            $unmapped_fields = $csv_headings;
+            
             if (isset($_FILES["csv_file"])) {
                 switch ($_FILES["csv_file"]["error"]) {
                     case 1 :
@@ -68,51 +93,191 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
             }
 
             if (!has_error()) {
-                $csv_importer = new CsvImporter($draft_id, $ENTRADA_USER->getActiveId());
-                /*if(!DEMO_MODE) {*/
-                /*echo "<pre>";
-                print_r($_FILES["csv_file"]);
-                exit;*/
-                	$csv_importer->importCsv($_FILES["csv_file"]);
-                //} else {
-                	//$csv_importer->importCsv(basename(DEMO_SCHEDULE));
-                //}
-
-                $csv_errors = $csv_importer->getErrors();
-                if ($csv_errors) {
-                    $err_msg  = "The following errors occured while attempting to import draft learning events. Please review the errors below and correct them in your file. Once correct, please try again.<br /><br />";
-                    $err_msg .= "<pre>";
-                    foreach ($csv_errors as $rowid => $error) {
-                        foreach ($error as $msg) {
-                            $err_msg .= "Row ".$rowid.": ".html_encode($msg)."\n";
-                        }
+                ?>
+                <style type="text/css">
+                    #unmapped-fields {
+                        margin-left:0px;
+                        padding-bottom:14px;
                     }
-                    $err_msg .= "</pre>";
-                    $err_msg .= "<br /><br />";
-                    $err_msg .= "Please <a href=\"".ENTRADA_RELATIVE."/admin/events/drafts?section=edit&draft_id=".$draft_id."\">click here</a> to return to the draft.";
+                    ul.nostyle {
+                        list-style:none;
+                        margin:0px;
+                        padding:0px;
+                    }
+                    .drop-target {
+                        background:#D9EDF7!important;
+                        border-top:1px dashed #C8DCE6 !important;
+                        border-right:1px dashed #C8DCE6  !important;
+                        border-bottom:1px dashed #C8DCE6  !important;
+                        border-left:1px dashed #C8DCE6  !important;
+                    }
+                    .draggable-title {
+                        cursor: pointer;
+                        margin-right:4px;
+                        margin-bottom:5px;
+                    }
+                </style>
+                <?php
+                echo display_generic("Please use this interface to map the draft event columns to the appropriate CSV columns. We will try to automatically map the headings to the correct columns via the titles in the first row, but if there are no titles this will need to be done manually.");
+                echo "<h4>Unmapped Fields</h4>";
+                if (($handle = fopen($_FILES["csv_file"]["tmp_name"], "r")) !== FALSE) {
+                    // we just want the headings
+                    $i = 0;
+                    while (($data = fgetcsv($handle, 1000, ",")) !== FALSE && $i < 5) {
+                        if ($i === 0) {
+                            $j = 0;
+                            foreach ($data as $d) {
+                                $mapped = false;
+                                $title = "";
+                                $key = strtolower(str_replace(" ", "_", clean_input($d, "boolops")));
+                                if (isset($csv_headings[$key])){
+                                    $mapped = true;
+                                    $title = $csv_headings[$key]["title"];
+                                    unset($unmapped_fields[$key]);
+                                }
 
-                    add_error($err_msg);
-                    echo display_error();
-                } else {
-                	if(!DEMO_MODE) {
-	                    $csv_success = $csv_importer->getSuccess();
-	
-	                    add_success("Successfully imported <strong>".count($csv_success)."</strong> events from <strong>".html_encode($_FILES["csv_file"]["name"])."</strong><br /><br />You will now be redirected to the edit draft page; this will happen automatically in 5 seconds or <a href=\"".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\">click here</a> to continue.");
-	                    echo display_success();
-	
-	                    $ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\\'', 5000)";
-	
-	                    application_log("success", "Proxy_id [".$ENTRADA_USER->getActiveId()."] successfully imported ".count($csv_success)." events into draft_id [".$draft_id."].");
-                	} else {
-                		$csv_success = $csv_importer->getSuccess();
-	
-	                    add_success("Entrada is in demo mode therefore the Entrada demo csv file was used for this import instead of <strong>".html_encode($_FILES["csv_file"]["name"])."</strong>.<br /><br />You will now be redirected to the edit draft page; this will happen automatically in 5 seconds or <a href=\"".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\">click here</a> to continue.");
-	                    echo display_success();
-	
-	                    $ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\\'', 5000)";
-	
-	                    application_log("success", "Proxy_id [".$ENTRADA_USER->getActiveId()."] successfully imported ".count($csv_success)." events into draft_id [".$draft_id."].");
-                	}
+                                $output[] = "<tr class=\"".($mapped === true && $csv_headings[$key]["required"] === true ? "success" : "")."\">\n";
+                                $output[] = "<td style=\"text-align:center!important;\">".($mapped === true ? "<a href=\"#\" class=\"remove\"><i class=\"icon-remove-sign\"></i></a>" : "")."</td>\n";
+                                $output[] = "<td class=\"".($mapped === false ? "droppable-title-container" : "")."\">".$title."<input type=\"hidden\" name=\"mapped_headings[".$j."]\" value=\"".$key."\" /></td>\n";
+                                $output[] = "<td><strong>".$d."</strong></td>\n";
+                                $output[] = "</tr>\n";
+
+                                $j++;
+                            }  
+                        }
+                        $json_rows[] = $data;
+                        $i++;
+                    }
+                    
+                    fclose($handle);
+
+                    if (!empty($unmapped_fields)) {
+                        echo "<div class=\"space-below row well\" id=\"unmapped-fields\">";
+                        foreach ($unmapped_fields as $field_name => $field) {
+                            echo "<span data-field-name=\"".$field_name."\" class=\"draggable-title label pull-left ".($field["required"] === true ? "label-important" : "")."\"><i class=\"icon-move icon-white\"></i> <span class=\"label-text\">".$field["title"]."</span></span>";
+                        }
+                        echo "</div>";
+                    }
+                    
+                    ?>
+                
+                    <script type="text/javascript">
+                        var json_rows = JSON.parse('<?php echo json_encode($json_rows); ?>');
+                        jQuery(function($) {
+                            
+                            var current_row = 0;
+                            var max_row = (json_rows.length - 1);
+                            
+                            $(".row-nav").on("click", function(e) {
+                                var button = $(this);
+                                
+                                if (button.children("i").hasClass("icon-arrow-right")) {
+                                    if (current_row < max_row) {
+                                        current_row++;
+                                        updateRows(json_rows[current_row]);
+                                    }
+                                } else {
+                                    if (current_row > 0) {
+                                        current_row--;
+                                        updateRows(json_rows[current_row]);
+                                    }
+                                }
+                                
+                                e.preventDefault();
+                            });
+                            
+                            function updateRows(jsonData) {
+                                for (var i = 0; i < jsonData.length; i++) {
+                                    $(".csv-map tbody tr").eq(i).children("td").eq(2).html("<strong>" + jsonData[i] + "</strong>");
+                                }
+                            }
+                            
+                            $(".draggable-title").draggable({
+                                start: function (event, ui) {
+                                    $(".droppable-title-container").addClass("drop-target");
+                                },
+                                stop: function (event, ui) {
+                                    $(".droppable-title-container").removeClass("drop-target");
+                                },
+                                revert: true
+                            });
+
+                            $(".droppable-title-container").droppable({
+                                drop: function (event, ui) {
+                                    var drop_target = $(this);
+                                    handleDrop(drop_target, event, ui);
+                                }
+                            });
+
+                            $(".csv-map").on("click", "a.remove", function(e) {
+                                var parent = $(this).closest("tr");
+                                var draggable_title = $(document.createElement("span"));
+                                var field_name = parent.children("td").eq(1).children("input[type=hidden]").val();
+                                parent.children("td").eq(1).children("input[type=hidden]").remove();
+                                draggable_title.addClass("label draggable-title pull-left " + (parent.hasClass("success") ? "label-important" : "")).attr("data-field-name", field_name).html("<i class=\"icon-move icon-white\"></i> <span class=\"label-text\">" + parent.children("td").eq(1).html() + "</span>").draggable({
+                                    start: function (event, ui) {
+                                        $(".droppable-title-container").addClass("drop-target");
+                                    },
+                                    stop: function (event, ui) {
+                                        $(".droppable-title-container").removeClass("drop-target");
+                                    },
+                                    revert: true
+                                });
+
+                                $("#unmapped-fields").append(draggable_title);
+                                parent.removeClass("success");
+                                parent.children("td").eq(0).html("");
+                                parent.children("td").eq(1).html("").addClass("droppable-title-container").droppable({
+                                    drop: function (event, ui) {
+                                        var drop_target = $(this);
+                                        handleDrop(drop_target, event, ui);
+                                    }
+                                });
+                                e.preventDefault();
+                            });
+
+                            function handleDrop(drop_target, event, ui) {
+                                $(".droppable-title-container").removeClass("drop-target");
+                                drop_target.html(ui.draggable.children(".label-text").html()).removeClass("droppable-title-container").droppable("destroy");
+
+                                var input = $(document.createElement("input"));
+                                input.attr({type : 'hidden', value : ui.draggable.data("field-name"), name : 'mapped_headings['+drop_target.closest("tbody tr").index()+']'})
+
+                                drop_target.append(input);
+
+                                if (ui.draggable.hasClass("label-important")) {
+                                    drop_target.closest("tr").addClass("success");
+                                }
+
+                                var remove_link = $(document.createElement("a"));
+                                remove_link.addClass("remove").attr("href", "#");
+                                var remove_icon = $(document.createElement("i"));
+                                remove_icon.addClass("icon-remove-sign").wrap($(document.createElement("a")));
+                                remove_link.append(remove_icon);
+                                drop_target.closest("tr").children("td").eq(0).append(remove_link);
+
+                                ui.draggable.remove();
+                            }
+                        });
+                    </script>
+                
+                    <table class="table table-striped table-bordered csv-map">
+                        <thead>
+                            <tr>
+                                <th width="6%"></th>
+                                <th width="47%">Mapped Field</th>
+                                <th width="47%">My CSV <div class="pull-right"><a href="#" class="row-nav"><i class="icon-arrow-left"></i></a><a href="#" class="row-nav"><i class="icon-arrow-right"></i></a></div></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php echo implode("", $output); ?>
+                        </tbody>
+                    </table>
+                    <div class="row-fluid">
+                        <a href="#" class="btn">Back</a>
+                        <input class="btn btn-primary pull-right" type="Submit" value="Import" />
+                    </div>
+                    <?php
                 }
             } else {
                 echo display_error();

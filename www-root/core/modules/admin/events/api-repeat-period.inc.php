@@ -188,7 +188,7 @@ if (!defined("IN_EVENTS")) {
                                     }
                                 }
                             }
-                            $output["events"][] = array("date" => ($output["dates"] ? "\n" : "").date("Y-m-d", $date), "restricted" => $restricted);
+                            $output["events"][] = array("date" => (isset($output["dates"]) && $output["dates"] ? "\n" : "").date("Y-m-d", $date), "restricted" => $restricted);
                         }
                         $output["status"] = "success";
                     } else {

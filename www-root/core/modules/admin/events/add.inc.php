@@ -182,6 +182,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
             $PROCESSED["recurring_events"] = array();
 			if (isset($_POST["recurring_event_start"]) && is_array($_POST["recurring_event_start"]) && !empty($_POST["recurring_event_start"])) {
                 foreach ($_POST["recurring_event_start"] as $key => $event_start) {
+                    $tmp_recurring_event = array();
 					if (isset($_POST["recurring_event_start_time"][$key]) && $tmp_input = clean_input($_POST["recurring_event_start_time"][$key], array("trim", "striptags"))) {
 						$time = $tmp_input;
 					} else {
@@ -190,6 +191,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					$time = strtotime($event_start . " " . $time);
 					if ($time) {
 						$recurring_event_date = $time;
+                        $tmp_recurring_event["event_start"] = $time;
 					} else {
 						add_error("One of the <strong>recurring events</strong> did not have a valid start date, please fill out a Event Start for <strong>Event ".($key+1)."</strong> under the Recurring Events now.");
 					}
@@ -200,13 +202,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             $event_finish += $event_type[1]*60;
                             $event_duration += $event_type[1];
                         }
-                        $PROCESSED["recurring_events"][] = array( "event_title" => $recurring_event_title, 
-                                                                "event_start" => $recurring_event_date, 
-                                                                "event_finish" => $event_finish, 
-                                                                "event_duration" => $event_duration);
+                        $tmp_recurring_event["event_title"] = $recurring_event_title;
+                        $tmp_recurring_event["event_finish"] = $event_finish;
+                        $tmp_recurring_event["event_duration"] = $event_duration;
                     } else {
                         add_error("One of the <strong>recurring events</strong> did not have a valid title, please fill out a title for <strong>Event ".($key+1)."</strong> under the Recurring Events now.");
                     }
+                    $PROCESSED["recurring_events"][] = $tmp_recurring_event;
                 }
             }
 
@@ -849,6 +851,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 <div class="space-below pad-left large"<?php echo (isset($PROCESSED["recurring_events"]) && @count($PROCESSED["recurring_events"]) ? "" : "style=\"display: none;\""); ?> id="recurring-events-list">
                     <?php 
                     if (isset($PROCESSED["recurring_events"]) && @count($PROCESSED["recurring_events"])) {
+                        ?>
+                        <h3 class="space-below">Recurring Events</h3>
+                        <?php
                         $ONLOAD[] = "jQuery('.inpage-datepicker').datepicker({
                                         dateFormat: 'yy-mm-dd',
                                         maxDate: add_year(new Date('".date("Y-m-d", $PROCESSED["event_start"])."')),
@@ -862,9 +867,50 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                             $(this).siblings('input').focus();
                                         }
                                     })";
+                        $restricted_date_found = false;
                         foreach ($PROCESSED["recurring_events"] as $key => $recurring_event) {
+                            if ($recurring_event["event_start"]) {
+                                $restricted_days = Models_RestrictedDays::fetchAll($ENTRADA_USER->getActiveOrganisation());
+
+                                $date_string = date("Y-m-d", $recurring_event["event_start"]);
+                                foreach ($restricted_days as $restricted_day) {
+                                    $restricted_string = date("Y-m-d", $restricted_day->getCalculatedDate(date("Y", $recurring_event["event_start"]), date("n", $recurring_event["event_start"]), $recurring_event["event_start"]));
+                                    if ($restricted_string == $date_string) {
+                                        $restricted_date_found = true;
+                                        break;
+                                    }
+                                }
+                                if ($restricted_date_found) {
+                                    ?>
+                                    <div id="display-error-box" class="alert alert-block alert-error">
+                                        <button type="button" class="close" data-dismiss="alert">×</button>
+                                        <ul>
+                                            <li>
+                                                Each of the highlighted events takes place during a restricted day. Please review to ensure those events take place on the correct date.
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <?php
+                                    break;
+                                }
+                            }
+                        }
+                        foreach ($PROCESSED["recurring_events"] as $key => $recurring_event) {
+                            $this_date_restricted = false;
+                            if ($recurring_event["event_start"]) {
+                                $restricted_days = Models_RestrictedDays::fetchAll($ENTRADA_USER->getActiveOrganisation());
+
+                                $date_string = date("Y-m-d", $recurring_event["event_start"]);
+                                foreach ($restricted_days as $restricted_day) {
+                                    $restricted_string = date("Y-m-d", $restricted_day->getCalculatedDate(date("Y", $recurring_event["event_start"]), date("n", $recurring_event["event_start"]), $recurring_event["event_start"]));
+                                    if ($restricted_string == $date_string) {
+                                        $this_date_restricted = true;
+                                        break;
+                                    }
+                                }
+                            }
                             ?>
-                            <div id="recurring-event-<?php echo ($key + 1); ?>" class="row-fluid pad-above<?php echo ($key % 2 == 0 ? " odd" : ""); ?>">
+                            <div id="recurring-event-<?php echo ($key + 1); ?>" class="recurring-event row-fluid pad-above<?php echo ($key % 2 == 0 ? " odd" : "").($this_date_restricted ? " restricted" : ""); ?>">
                                 <span class="span3 content-small pad-left">
                                     Event <?php echo ($key + 1); ?>:
                                 </span>
@@ -891,7 +937,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     </div>
                                 </span>
                                 <span class="span1 pad-right">
-                                    <button type="button" class="close" onclick="jQuery('#recurring-event-<?php echo ($key + 1); ?>').remove()">×</button>
+                                    <button type="button" class="close" onclick="removeRecurringEvent('<?php echo ($key + 1); ?>')">×</button>
                                 </span>
                             </div>
                             <?php
@@ -1034,7 +1080,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 &nbsp;
             </div>
             <div id="recurring-event-skeleton" style="display: none;">
-                <div id="recurring-event-%event_num%" class="row-fluid pad-above%event_class%">
+                <div id="recurring-event-%event_num%" class="recurring-event row-fluid pad-above%event_class%">
                     <span class="span3 content-small pad-left">
                         Event %event_num%:
                     </span>
@@ -1061,7 +1107,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         </div>
                     </span>
                     <span class="span1 pad-right">
-                        <button type="button" class="close" onclick="jQuery('#recurring-event-%event_num%').remove()">&times;</button>
+                        <button type="button" class="close" onclick="removeRecurringEvent('%event_num%')">&times;</button>
                     </span>
                 </div>
             </div>
@@ -1283,6 +1329,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     return new Date((date.getFullYear() + 1), date.getMonth(), date.getDate());
                 }
 
+                var show_restricted_message = <?php echo (isset($PROCESSED["recurring_events"]) && isset($restricted_date_found) && $restricted_date_found ? "true" : "false"); ?>;
+
                 jQuery(document).ready(function($){
                     var _old_toggle = $.fn.button.prototype.constructor.Constructor.prototype.toggle;
 
@@ -1363,6 +1411,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     }
                                     jQuery('#recurring-events-list').html('<h3 class="space-below">Recurring Events</h3>');
                                     for (var i = 1; i <= result.events.length; i++) {
+                                        if (result.events[(i - 1)].restricted && !show_restricted_message) {
+                                            jQuery('#recurring-events-list').append('<div id="display-error-box" class="alert alert-block alert-error"><button type="button" class="close" data-dismiss="alert">×</button><ul><li>Each of the highlighted events takes place during a restricted day. Please review to ensure those events take place on the correct date.</li></ul></div>');
+                                            show_restricted_message = true;
+                                        }
                                         var string = jQuery('#recurring-event-skeleton').html();
                                         var class_string = (result.events[(i - 1)].restricted ? ' restricted' : '')+(i % 2 > 0 ? ' odd' : '');
                                         string = string.replace(/%event_class%/g, class_string);
@@ -1387,18 +1439,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         }
                                     });
                                     $('#recurringModal').modal('hide');
-                                    $('.restricted').popover({
-                                        trigger: 'manual',
-                                        placement: 'right',
-                                        title: 'Error',
-                                        content: 'This day is restricted. Please ensure this is the correct date before continuing.',
-                                        template: '<div class=\"popover alert alert-error\"><div class=\"arrow\"></div><div class=\"popover-inner\"><div class=\"popover-content\"><p></p></div></div></div>'
-                                    }).click(function(e) {
-                                        $(this).popover('hide');
-                                        $(this).show();
-                                        e.stopPropagation();
-                                    });
-                                    $('.restricted').popover('show');
                                 } else {
                                     $('#error-messages').html(result.message);
                                 }
@@ -1414,35 +1454,43 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     var date = new Date(jQuery('#recurring_event_start_'+event_num).val());
                     var event_date = (date.getTime() / 1000) + (date.getTimezoneOffset() * 60);
                     jQuery.ajax({
-                            type: "POST",
-                            url: '<?php echo ENTRADA_URL ?>/admin/events?section=api-check-date',
-                            data: 'event_start='+event_date+'&organisation_id=<?php echo $ENTRADA_USER->getActiveOrganisation(); ?>',
-                            success: function (data) {
-                                if (data == 'Found') {
-                                    if (!jQuery('#recurring-event-'+event_num).hasClass('restricted')) {
-                                        jQuery('#recurring-event-'+event_num).addClass('restricted');
+                        type: "POST",
+                        url: '<?php echo ENTRADA_URL ?>/admin/events?section=api-check-date',
+                        data: 'event_start='+event_date+'&organisation_id=<?php echo $ENTRADA_USER->getActiveOrganisation(); ?>',
+                        success: function (data) {
+                            if (data == 'Found') {
+                                if (!jQuery('#recurring-event-'+event_num).hasClass('restricted')) {
+                                    if (!show_restricted_message) {
+                                        jQuery('#recurring-events-list h3:first').after('<div id="display-error-box" class="alert alert-block alert-error"><button type="button" class="close" data-dismiss="alert">×</button><ul><li>Each of the highlighted events takes place during a restricted day. Please review to ensure those events take place on the correct date.</li></ul></div>');
                                     }
-                                    jQuery('.restricted').popover('destroy');
-                                    jQuery('.restricted').popover({
-                                        trigger: 'manual',
-                                        placement: 'right',
-                                        title: 'Error',
-                                        content: 'This day is restricted. Please ensure this is the correct date before continuing.',
-                                        template: '<div class=\"popover alert alert-error\"><div class=\"arrow\"></div><div class=\"popover-inner\"><div class=\"popover-content\"><p></p></div></div></div>'
-                                    }).click(function(e) {
-                                        jQuery(this).popover('hide');
-                                        jQuery(this).show();
-                                        e.stopPropagation();
-                                    });
-                                    jQuery('.restricted').popover('show');
-                                } else if (jQuery('#recurring-event-'+event_num).hasClass('restricted')) {
-                                    jQuery('#recurring-event-'+event_num).removeClass('restricted');
+                                    jQuery('#recurring-event-'+event_num).addClass('restricted');
                                 }
-                            },
-                            error: function () {
-                                alert("error");
+                            } else if (jQuery('#recurring-event-'+event_num).hasClass('restricted')) {
+                                jQuery('#recurring-event-'+event_num).removeClass('restricted');
                             }
-                        });
+                        },
+                        error: function () {
+                            alert("error");
+                        }
+                    });
+                }
+
+                function removeRecurringEvent(event_num) {
+                    jQuery('#recurring-event-'+event_num).remove();
+                    var odd = true;
+                    jQuery('#recurring-events-list .recurring-event').each( function () {
+                        if (odd) {
+                            odd = false;
+                            if (!jQuery(this).hasClass('odd')) {
+                                jQuery(this).addClass('odd');
+                            }
+                        } else {
+                            odd = true;
+                            if (jQuery(this).hasClass('odd')) {
+                                jQuery(this).removeClass('odd');
+                            }
+                        }
+                    });
                 }
             </script>
             <?php

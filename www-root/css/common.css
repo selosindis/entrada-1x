@@ -4608,3 +4608,11 @@ th.sorting {
 .question-notice {
     background-color: #FCF8E3 !important;
 }
+
+#recurring-events-list > div {
+    border-bottom:solid 1px #CCC;
+}
+
+#recurring-events-list > div.restricted {
+    background-color:#FFD9D0;
+}

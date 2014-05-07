@@ -1359,6 +1359,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     $('#rebuild_button').show();
                                 }
                                 var date = new Date($('#event_start_date').val());
+                                date = new Date(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
                                 var datestring = (date.getTime() / 1000);
                                 $('#recurringModal').modal({
                                     remote: '<?php echo ENTRADA_URL ?>/admin/events?section=api-repeat-period&action=select&event_start=' + datestring + '&frequency=' + ($('#repeat_frequency').val() && $('#repeat_frequency').val() != 'none' ? $('#repeat_frequency').val() : 'daily')
@@ -1410,6 +1411,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         $(".timepicker").timepicker('destroy');
                                     }
                                     jQuery('#recurring-events-list').html('<h3 class="space-below">Recurring Events</h3>');
+                                    var events_string = '';
                                     for (var i = 1; i <= result.events.length; i++) {
                                         if (result.events[(i - 1)].restricted && !show_restricted_message) {
                                             jQuery('#recurring-events-list').append('<div id="display-error-box" class="alert alert-block alert-error"><button type="button" class="close" data-dismiss="alert">×</button><ul><li>Each of the highlighted events takes place during a restricted day. Please review to ensure those events take place on the correct date.</li></ul></div>');
@@ -1422,8 +1424,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         string = string.replace(/%event_title%/g, jQuery('#event_title').val());
                                         string = string.replace(/%event_time%/g, jQuery('#event_start_hour').val() + ":" + jQuery('#event_start_min').val());
                                         string = string.replace(/%event_date%/g, result.events[(i - 1)].date);
-                                        jQuery('#recurring-events-list').append(string);
+                                        events_string = events_string + string;
                                     }
+                                    jQuery('#recurring-events-list').append(events_string);
                                     jQuery('#recurring-events-list').show();
                                     $('.inpage-datepicker').datepicker({
                                         dateFormat: 'yy-mm-dd',

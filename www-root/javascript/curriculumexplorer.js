@@ -120,4 +120,22 @@ jQuery(function(){
 		}
 		return false;
 	});
+    
+    jQuery("#course").on("change", function() {
+        var COURSE_ID = jQuery(this).val();
+        jQuery(".course-specific-objectiveset").remove();
+        jQuery.ajax({
+				url: SITE_URL + "/curriculum/explorer?mode=ajax&method=course_specific_objective_sets&course_id=" + COURSE_ID,
+				success: function(data) {
+                    var jsonResponse = JSON.parse(data);
+                    if (jsonResponse.status == "success") {
+                        jQuery.each(jsonResponse.data, function( i, v ) {
+                            var option = jQuery(document.createElement("option"));
+                            option.val(v.objective_id).html(v.objective_name).addClass("course-specific-objectiveset");
+                            jQuery("#objective-set").append(option);
+                        });
+                    }
+                }
+        });
+    });
 });

@@ -150,6 +150,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					$message .= clean_input($_POST["feedback"], array("trim", "emailcontent"))."\n\n";
 					$message .= "=======================================================";
 
+                    $group = $ENTRADA_USER->getActiveGroup();
+                    if (empty($group)) {
+                        $group = "Student";
+                    }
+                    
 					$mail = new Zend_Mail("iso-8859-1");
 
 					$mail->addHeader("X-Priority", "3");
@@ -157,7 +162,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					$mail->addHeader("X-Originating-IP", $_SERVER["REMOTE_ADDR"]);
 					$mail->addHeader("X-Section", "Student Feedback System");
 
-					$mail->setSubject("New Student Feedback Submission - ".APPLICATION_NAME);
+					$mail->setSubject("New " . ucwords($group) . " Feedback Submission - ".APPLICATION_NAME);
 
 					foreach ($form_content["recipients"] as $email => $name) {
 						$mail->addTo($email, $name);

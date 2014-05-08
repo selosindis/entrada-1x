@@ -1178,8 +1178,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						</div>
                         <?php
                         if (isset($recurring_events) && $recurring_events) {
-                        $sidebar_html = "<div class=\"content-small\">Please select which fields (if any) you would like to apply to related recurring events: </div>\n";
-                        $sidebar_html .= "<div class=\"pad-left\">\n";
+                            $sidebar_html = "<div class=\"content-small\">Please select which fields (if any) you would like to apply to related recurring events: </div>\n";
+                            $sidebar_html .= "<div class=\"pad-left\">\n";
                             $sidebar_html .= "  <ul class=\"menu none\">\n";
                             $sidebar_html .= "      <li><input type=\"checkbox\" value=\"course\" id=\"cascade_course\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_course\">Course</label></li>\n";
                             $sidebar_html .= "      <li><input type=\"checkbox\" value=\"event_title\" id=\"cascade_event_title\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_event_title\">Event Title</label></li>\n";
@@ -1189,86 +1189,86 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             $sidebar_html .= "      <li><input type=\"checkbox\" value=\"associated_learners\" id=\"cascade_associated_learners\" onclick=\"toggleRecurringEventField(this.checked, jQuery(this).val())\" class=\"update-recurring-checkbox\" name=\"update_recurring_fields[]\" /> <label for=\"cascade_associated_learners\">Associated Learners</label></li>\n";
                             $sidebar_html .= "  </ul>\n";
                             $sidebar_html .= "</div>\n";
-                        $sidebar_html .= "<div><strong><a href=\"#recurringEvents\" data-toggle=\"modal\" data-target=\"#recurringEvents\"><i class=\"icon-edit\"></i> <span id=\"recurring_events_count\">".(isset($_POST["recurring_event_ids"]) && @count($_POST["recurring_event_ids"]) ? @count($_POST["recurring_event_ids"]) : @count($recurring_events))."</span> Recurring Events Selected</a></strong></div>";
-                        new_sidebar_item("Recurring Events", $sidebar_html, "recurring-events-sidebar");
-                        ?>
-                        <style type="text/css">
-                            #recurring-events-sidebar.fixed {
-                                position: fixed;
-                                top: 20px;
-                                z-index: 1;
-                                width: 225px;
-                                border-bottom: 5px solid #ffffff;
-                            }
-                            #recurring-events-sidebar .panel-head {
-                                background: linear-gradient(to bottom, #8A0808 0%, #3B0B0B 100%);
-                            }
+                            $sidebar_html .= "<div><strong><a href=\"#recurringEvents\" data-toggle=\"modal\" data-target=\"#recurringEvents\"><i class=\"icon-edit\"></i> <span id=\"recurring_events_count\">".(isset($_POST["recurring_event_ids"]) && @count($_POST["recurring_event_ids"]) ? @count($_POST["recurring_event_ids"]) : @count($recurring_events))."</span> Recurring Events Selected</a></strong></div>";
+                            new_sidebar_item("Recurring Events", $sidebar_html, "recurring-events-sidebar");
+                            ?>
+                            <style type="text/css">
+                                #recurring-events-sidebar.fixed {
+                                    position: fixed;
+                                    top: 20px;
+                                    z-index: 1;
+                                    width: 225px;
+                                    border-bottom: 5px solid #ffffff;
+                                }
+                                #recurring-events-sidebar .panel-head {
+                                    background: linear-gradient(to bottom, #8A0808 0%, #3B0B0B 100%);
+                                }
 
-                        </style>
-                        <script type="text/javascript">
-                            var shown = false;
-                            jQuery(document).ready(function () {
-                                var top = jQuery('#recurring-events-sidebar').offset().top - parseFloat(jQuery('#recurring-events-sidebar').css('marginTop').replace(/auto/, 100)) + 320;
-                                jQuery(window).scroll(function (event) {
-                                    var y = jQuery(this).scrollTop();
-                                    if (y >= top) {
+                            </style>
+                            <script type="text/javascript">
+                                var shown = false;
+                                jQuery(document).ready(function () {
+                                    var top = jQuery('#recurring-events-sidebar').offset().top - parseFloat(jQuery('#recurring-events-sidebar').css('marginTop').replace(/auto/, 100)) + 320;
+                                    jQuery(window).scroll(function (event) {
+                                        var y = jQuery(this).scrollTop();
+                                        if (y >= top) {
+                                            jQuery('#recurring-events-sidebar').addClass('fixed');
+                                        } else {
+                                            jQuery('#recurring-events-sidebar').removeClass('fixed');
+                                        }
+                                    });
+                                    if (jQuery(this).scrollTop() >= top) {
                                         jQuery('#recurring-events-sidebar').addClass('fixed');
-                                    } else {
-                                        jQuery('#recurring-events-sidebar').removeClass('fixed');
                                     }
                                 });
-                                if (jQuery(this).scrollTop() >= top) {
-                                    jQuery('#recurring-events-sidebar').addClass('fixed');
-                                }
-                            });
 
-                            function toggleRecurringEventField(checked, fieldname) {
-                                if (checked && jQuery('#update_' + fieldname).length < 1) {
-                                    jQuery('#editEventForm').append('<input type="hidden" name="update_recurring_fields[]" value="'+fieldname+'" id="update_"'+fieldname+' />');
-                                } else if (!checked && jQuery('#update_' + fieldname).length >= 1) {
-                                    jQuery('#update_' + fieldname).remove();
+                                function toggleRecurringEventField(checked, fieldname) {
+                                    if (checked && jQuery('#update_' + fieldname).length < 1) {
+                                        jQuery('#editEventForm').append('<input type="hidden" name="update_recurring_fields[]" value="'+fieldname+'" id="update_"'+fieldname+' />');
+                                    } else if (!checked && jQuery('#update_' + fieldname).length >= 1) {
+                                        jQuery('#update_' + fieldname).remove();
+                                    }
                                 }
-                            }
-                        </script>
-                        <div id="recurringEvents" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="Select Associated Recurring Events" aria-hidden="true">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                                <h3>Associated Recurring Events</h3>
-                            </div>
-                            <div class="modal-body">
-                                <div id="display-generic-box" class="alert alert-block alert-info">
-                                    <ul>
-                                        <li>
-                                            Please select which of the following related recurring events you would like to apply the selected changes to:
-                                        </li>
-                                    </ul>
+                            </script>
+                            <div id="recurringEvents" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="Select Associated Recurring Events" aria-hidden="true">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                    <h3>Associated Recurring Events</h3>
                                 </div>
-                                <?php
-                                foreach ($recurring_events as $recurring_event) {
-                                    ?>
-                                    <div class="row-fluid">
-                                    <span class="span1">
-                                        &nbsp;
-                                    </span>
-                                    <span class="span1">
-                                        <input type="checkbox" class="recurring_events" onclick="jQuery('#recurring_events_count').html(jQuery('.recurring_events:checked').length)" name="recurring_event_ids[]" value="<?php echo $recurring_event["event_id"]; ?>"<?php echo (!isset($_POST["recurring_event_ids"]) || in_array($recurring_event["event_id"], $_POST["recurring_event_ids"]) ? " checked=\"checked\"" : ""); ?> />
-                                    </span>
-                                    <span class="span10">
-                                        <strong class="space-right">
-                                            <?php echo html_encode($recurring_event["event_title"]); ?>
-                                        </strong>
-                                        [<span class="content-small"><?php echo html_encode(date(DEFAULT_DATE_FORMAT, $recurring_event["event_start"])); ?></span>]
-                                    </span>
+                                <div class="modal-body">
+                                    <div id="display-generic-box" class="alert alert-block alert-info">
+                                        <ul>
+                                            <li>
+                                                Please select which of the following related recurring events you would like to apply the selected changes to:
+                                            </li>
+                                        </ul>
                                     </div>
-                                <?php
-                                }
-                                ?>
+                                    <?php
+                                    foreach ($recurring_events as $recurring_event) {
+                                        ?>
+                                        <div class="row-fluid">
+                                        <span class="span1">
+                                            &nbsp;
+                                        </span>
+                                        <span class="span1">
+                                            <input type="checkbox" id="recurring_event_<?php echo $recurring_event["event_id"] ?>" class="recurring_events" onclick="jQuery('#recurring_events_count').html(jQuery('.recurring_events:checked').length)" name="recurring_event_ids[]" value="<?php echo $recurring_event["event_id"]; ?>"<?php echo (!isset($_POST["recurring_event_ids"]) || in_array($recurring_event["event_id"], $_POST["recurring_event_ids"]) ? " checked=\"checked\"" : ""); ?> />
+                                        </span>
+                                        <label class="span10" for="recurring_event_<?php echo $recurring_event["event_id"] ?>">
+                                            <strong class="space-right">
+                                                <?php echo html_encode($recurring_event["event_title"]); ?>
+                                            </strong>
+                                            [<span class="content-small"><?php echo html_encode(date(DEFAULT_DATE_FORMAT, $recurring_event["event_start"])); ?></span>]
+                                        </label>
+                                        </div>
+                                    <?php
+                                    }
+                                    ?>
+                                </div>
+                                <div class="modal-footer">
+                                    <a href="#" class="btn" data-dismiss="modal">Close</a>
+                                </div>
                             </div>
-                            <div class="modal-footer">
-                                <a href="#" class="btn" data-dismiss="modal">Close</a>
-                            </div>
-                        </div>
-                        <?php
+                            <?php
                         }
                         ?>
 						</form>

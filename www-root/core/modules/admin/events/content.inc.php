@@ -1648,14 +1648,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         &nbsp;
                                     </span>
                                     <span class="span1">
-                                        <input type="checkbox" class="recurring_events" onclick="jQuery('#recurring_events_count').html(jQuery('.recurring_events:checked').length)" name="recurring_event_ids[]" value="<?php echo $recurring_event["event_id"]; ?>"<?php echo (!isset($_POST["recurring_event_ids"]) || in_array($recurring_event["event_id"], $_POST["recurring_event_ids"]) ? " checked=\"checked\"" : ""); ?> />
+                                        <input type="checkbox" id="recurring_event_<?php echo $recurring_event["event_id"] ?>" class="recurring_events" onclick="jQuery('#recurring_events_count').html(jQuery('.recurring_events:checked').length)" name="recurring_event_ids[]" value="<?php echo $recurring_event["event_id"]; ?>"<?php echo (!isset($_POST["recurring_event_ids"]) || in_array($recurring_event["event_id"], $_POST["recurring_event_ids"]) ? " checked=\"checked\"" : ""); ?> />
                                     </span>
-                                    <span class="span10">
+                                    <label class="span10" for="recurring_event_<?php echo $recurring_event["event_id"] ?>">
                                         <strong class="space-right">
                                             <?php echo html_encode($recurring_event["event_title"]); ?>
                                         </strong>
                                         [<span class="content-small"><?php echo html_encode(date(DEFAULT_DATE_FORMAT, $recurring_event["event_start"])); ?></span>]
-                                    </span>
+                                    </label>
                                     </div>
                                 <?php
                                 }

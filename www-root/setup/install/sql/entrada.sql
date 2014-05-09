@@ -2001,6 +2001,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `permission` ENUM('open','closed') NOT NULL DEFAULT 'closed',
   `sync_ldap` int(1) NOT NULL DEFAULT '0',
   `sync_ldap_courses` text,
+  `sync_groups` tinyint(1) NOT NULL DEFAULT '0',
   `notifications` int(1) NOT NULL DEFAULT '1',
   `course_active` int(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`course_id`),

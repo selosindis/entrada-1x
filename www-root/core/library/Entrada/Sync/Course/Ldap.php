@@ -25,8 +25,6 @@
  * @copyright Copyright 2014 Queen's University. All Rights Reserved.
  */
 
-$ldap_sync = new Entrada_Sync_Course_Ldap($course_id);
-
 class Entrada_Sync_Course_Ldap {
 
     private $ldap_connection,
@@ -160,12 +158,12 @@ class Entrada_Sync_Course_Ldap {
                 if ($course_group_lists) {
                     $i = 1;
                     foreach ($course_group_lists as $course_group_list => $users) {
-                        $query = "SELECT * FROM `course_groups` WHERE `course_id` = ".$db->qstr($this->course["course_id"])." AND `active` = '1' AND `group_name` = '" . $this->course["course_code"] . $SUFFIX . " " . date("Y", $this->course["start_date"]) . " Course Group " . ($i < 10 ? "0" . $i : $i) . "'";
+                        $query = "SELECT * FROM `course_groups` WHERE `course_id` = ".$db->qstr($this->course["course_id"])." AND `active` = '1' AND `group_name` = '" . $this->course["course_code"] . $this->suffix . " " . date("Y", $this->course["start_date"]) . " Course Group " . ($i < 10 ? "0" . $i : $i) . "'";
                         $course_group = $db->GetRow($query);
                         if (!$course_group) {
                             $course_group = array(
                                 "course_id"     => $this->course["course_id"],
-                                "group_name"    => $this->course["course_code"] . $SUFFIX . " " . date("Y", $this->course["start_date"]) . " Course Group " . ($i < 10 ? "0" . $i : $i),
+                                "group_name"    => $this->course["course_code"] . $this->suffix . " " . date("Y", $this->course["start_date"]) . " Course Group " . ($i < 10 ? "0" . $i : $i),
                                 "active"        => "1" 
                             );
                             if ($db->AutoExecute("`course_groups`", $course_group, "INSERT")) {
@@ -677,7 +675,7 @@ class Entrada_Sync_Course_Ldap {
                 $params = array("W", "_1_");
             break;
             case $m < 9:
-                if($org_id == 5 && $m < 6){
+                if ($org_id == 5 && $m < 6) {
                     $params = array("Sp", "_5_");
                 }
                 $params = array("S", "_5_");

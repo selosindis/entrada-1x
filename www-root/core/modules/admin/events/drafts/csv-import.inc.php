@@ -64,7 +64,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
             case 2 :
                 
                 if (isset($_POST["csv"]) && $tmp_input = clean_input($_POST["csv"], "alphanumeric")) {
-                    $PROCSSED["csv_filename"] = $tmp_input;
+                    $PROCESSED["csv_filename"] = $tmp_input;
                 }
                 
                 if (isset($_POST["mapped_headings"]) && is_array($_POST["mapped_headings"])) {
@@ -74,10 +74,48 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 }
                 
                 if (file_exists(CACHE_DIRECTORY."/".$PROCESSED["csv_filename"])) {
-                    echo "found file ".CACHE_DIRECTORY."/".$PROCESSED["csv_filename"];
-                    Zend_Debug::dump($PROCESSED["col_map"]);
                     $csv_importer = new Entrada_Event_Draft_CsvImporter($draft_id, $ENTRADA_USER->getActiveId(), $PROCESSED["col_map"]);
-//                    $csv_importer->importCsv(CACHE_DIRECTORY."/".$PROCESSED["csv_filename"]);
+                    $csv_importer->importCsv(CACHE_DIRECTORY."/".$PROCESSED["csv_filename"]);
+                    
+                    $csv_errors = $csv_importer->getErrors();
+                    if ($csv_errors) {
+                        $err_msg  = "The following errors occured while attempting to import draft learning events. Please review the errors below and correct them in your file. Once correct, please try again.<br /><br />";
+                        $err_msg .= "<pre>";
+                        foreach ($csv_errors as $rowid => $error) {
+                            foreach ($error as $msg) {
+                                $err_msg .= "Row ".$rowid.": ".html_encode($msg)."\n";
+                            }
+                        }
+                        $err_msg .= "</pre>";
+                        $err_msg .= "<br /><br />";
+                        $err_msg .= "Please <a href=\"".ENTRADA_RELATIVE."/admin/events/drafts?section=edit&draft_id=".$draft_id."\">click here</a> to return to the draft.";
+
+                        add_error($err_msg);
+                        echo display_error();
+                    } else {
+                        if(!DEMO_MODE) {
+                            $csv_success = $csv_importer->getSuccess();
+
+                            add_success("Successfully imported <strong>".count($csv_success)."</strong> events from <strong>".html_encode($_FILES["csv_file"]["name"])."</strong><br /><br />You will now be redirected to the edit draft page; this will happen automatically in 5 seconds or <a href=\"".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\">click here</a> to continue.");
+                            echo display_success();
+
+                            $ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\\'', 5000)";
+
+                            application_log("success", "Proxy_id [".$ENTRADA_USER->getActiveId()."] successfully imported ".count($csv_success)." events into draft_id [".$draft_id."].");
+                        } else {
+                            $csv_success = $csv_importer->getSuccess();
+
+                            add_success("Entrada is in demo mode therefore the Entrada demo csv file was used for this import instead of <strong>".html_encode($_FILES["csv_file"]["name"])."</strong>.<br /><br />You will now be redirected to the edit draft page; this will happen automatically in 5 seconds or <a href=\"".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\">click here</a> to continue.");
+                            echo display_success();
+
+                            $ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/events/drafts?section=edit&draft_id=".$draft_id."\\'', 5000)";
+
+                            application_log("success", "Proxy_id [".$ENTRADA_USER->getActiveId()."] successfully imported ".count($csv_success)." events into draft_id [".$draft_id."].");
+                        }
+                    }
+                } else {
+                    application_log("error", "Unable to find expected file [".CACHE_DIRECTORY."/".$PROCESSED["csv_filename"]."]");
+                    add_error("An error ocurred while attempting to upload the CSV file. An administrator has been informed, please try again later.");
                 }
                 
             break;
@@ -147,9 +185,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         echo "<h4>Unmapped Fields</h4>";
                         if (($handle = fopen($_FILES["csv_file"]["tmp_name"], "r")) !== FALSE) {
                             $tmp_name = explode("/", $_FILES["csv_file"]["tmp_name"]);
-                            copy($_FILES["csv_file"]["tmp_name"], CACHE_DIRECTORY."/".$new_filename);
                             $new_filename = md5(end($tmp_name));
-
+                            
+//                            add some error handling here
+                            copy($_FILES["csv_file"]["tmp_name"], CACHE_DIRECTORY."/".$new_filename);
+                            
                             // we just want the headings
                             $i = 0;
                             while (($data = fgetcsv($handle, 1000, ",")) !== FALSE && $i < 5) {

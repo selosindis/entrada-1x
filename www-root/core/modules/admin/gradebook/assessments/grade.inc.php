@@ -71,6 +71,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$query = "SELECT `option_id`, `aoption_id` FROM `assessment_options` WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)." AND `option_active` = '1'";
 				$assessment_options = $db->GetAssoc($query);
 				
+                $query = "SELECT * FROM `assessment_attached_quizzes` 
+                            WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+                $attached_quizzes = $db->GetAll($query);
+                
 				$COHORT = $assessment["cohort"];
 				
 				$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`
@@ -356,10 +360,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 						<?php 
 						if ($assessment["assessment_type"] == "quiz") { 
-						   $query = "SELECT * FROM `assessment_attached_quizzes` 
-										WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID);
-							$attached_quizzes = $db->GetAll($query);
-							if ($attached_quizzes) {
+                            if ($attached_quizzes) {
 								if (count($attached_quizzes) == 1) {
 									$attached_quiz = $attached_quizzes[0];
 								}

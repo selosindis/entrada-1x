@@ -192,6 +192,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						add_error("The LDAP synchronization course list can not be empty.");
 					}
 					
+                    /**
+					 * Check to see if the course groups should syncronize with LDAP or not.
+					 */
+                    if ((isset($_POST["sync_groups"])) && ($_POST["sync_groups"] == "1")) {
+						$PROCESSED["sync_groups"] = 1;
+					} else {
+						$PROCESSED["sync_groups"] = 0;
+					}
+                    
 					/**
 					 * Non-required field "course_directors" / Course Directors (array of proxy ids).
 					 * This is actually accomplished after the course is modified below.
@@ -1055,6 +1064,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</label><br />
 								<label for="sync_on" class="radio">
 									<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> This course <strong>should</strong> have its audience synced with the LDAP server.
+								</label><br />
+                                <label for="sync_groups" class="checkbox">
+									<input type="checkbox" name="sync_groups" id="sync_groups" value="1"<?php echo ((((isset($PROCESSED["sync_groups"])) && ($PROCESSED["sync_groups"]))) ? " checked=\"checked\"" : ""); ?> /> Synchronize course groups with the LDAP server.
 								</label>
 								<div class="<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? "" : "hide"); ?> ldap-course-sync-list">
 									<div class="well well-small content-small"><strong>Note:</strong> Please enter a comma separated list of alphanumeric course codes you wish to sync in the text area below. Additional individuals and groups can be manually added in the <strong>Course Enrollment</strong> below. </div>

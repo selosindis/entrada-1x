@@ -32,6 +32,18 @@ if (isset($_POST["method"]) && $tmp_input = clean_input($_POST["method"], "alpha
 	$method = $tmp_input;
 }
 
+if (isset($_POST["sub_method"]) && $tmp_input = clean_input($_POST["sub_method"], "alphanumeric")) {
+	$sub_method = $tmp_input;
+}
+
+if (isset($_POST["course_id"]) && ((int)$_POST["course_id"])) {
+    $course_id = ((int) $_POST["course_id"]);
+}
+
+if (isset($_POST["entry_id"]) && ((int)$_POST["entry_id"])) {
+    $entry_id = ((int) $_POST["entry_id"]);
+}
+
 if (isset($_POST["notice_id"]) && $tmp_input = clean_input($_POST["notice_id"], "alphanumeric")) {
 	$notice_id = $tmp_input;
 }
@@ -189,8 +201,251 @@ if ($isAuthenticated) {
 	switch ($api_version) {
 		case 2 :
 			switch ($method) {
+                case "logbook" :
+                    if (isset($sub_method)) {
+                        $logbook = new Models_Logbook();
+                        switch ($sub_method) {
+                            case "list" :
+                                $entries = Models_Logbook_Entry::fetchAll($ENTRADA_USER->GetID());
+                                if ($entries) {
+                                    $entries_array = array();
+                                    foreach ($entries as $entry) {
+                                        $entry_data = $entry->toArray();
+                                        $course_name = $entry->getCourseName();
+                                        $entry_data["course_name"] = $course_name;
+                                        $entry_data["encounter_date"] = html_encode(date("F jS, Y", $entry->getEncounterDate()));
+                                        $entries_array[] = $entry_data;
+                                    }
+                                    echo json_encode(array("status" => "success", "data" => $entries_array));
+                                } else {
+                                    echo json_encode(array("status" => "error", "data" => array("msg" => "There are currently no entries in the system. Use the Add Log Entry button to create a new encounter tracking entry.")));
+                                }    
+                            break;
+                            case "fetch" :
+                                if (isset($entry_id)) {
+                                    $entry = Models_Logbook_Entry::fetchRow($entry_id);
+                                    if ($entry) {
+                                    	$objectives = array();
+                                        $entry_array = $entry->toArray();
+                                    	
+                                    	if (is_array($entry_array["objectives"]) && !empty($entry_array["objectives"])) {
+                                    		foreach ($entry_array["objectives"] as $objective) {
+	                                    		$objectives[$objective->getID()] = $objective->toArray();
+	                                            $objectives[$objective->getID()]["name"] = $objective->getObjective()->getName();
+	                                    	}
+                                    	}
+
+                                    	$entry_array["encounter_date"] = date("Y-m-d", $entry->getEncounterDate());
+                                    	$entry_array["encounter_time"] = date("H:i", $entry->getEncounterDate());
+                                    	$entry_array["objectives"] = $objectives;
+
+                                        echo json_encode(array("status" => "success", "data" => $entry_array));
+                                    } else {
+                                        echo json_encode(array("status" => "error", "data" => array("msg" => "An error occured whule fetching rotation data")));
+                                    }
+                                }
+                            break;
+                            case "rotation" :
+                                $courses = $logbook->getLoggingCourses();
+                                if ($courses) {
+                                    echo json_encode(array("status" => "success", "data" => $courses));
+                                } else {
+                                    echo json_encode(array("status" => "error", "data" => array("msg" => "An error occured whule fetching rotation data")));
+                                }
+                            break;
+                            case "institution" :
+                                $institutions = $logbook->getInstitutions();
+                                if ($institutions) {
+                                    echo json_encode(array("status" => "success", "data" => $institutions));
+                                } else {
+                                    echo json_encode(array("status" => "error", "data" => array("msg" => "An error occured whule fetching institution data")));
+                                }
+                            break;
+                            case "setting" :
+                                $locations = $logbook->getLocations();
+                                if ($locations) {
+                                    echo json_encode(array("status" => "success", "data" => $locations));
+                                } else {
+                                    echo json_encode(array("status" => "error", "data" => array("msg" => "An error occured whule fetching setting data")));
+                                }
+                            break;
+                            case "range" :
+                                $age_ranges = $logbook->getAgeRanges();
+                                if ($age_ranges) {
+                                    echo json_encode(array("status" => "success", "data" => $age_ranges));
+                                } else {
+                                    echo json_encode(array("status" => "error", "data" => array("msg" => "An error occured whule fetching age range data")));
+                                }
+                            break;
+                            case "skills" :
+                                if (isset($course_id) && $course_id) {
+                                    if (!isset($entry)) {
+                                        if (isset($entry_id) && $entry_id) {
+                                            $entry = Models_Logbook_Entry::fetchRow($entry_id);
+                                            $entry->setCourseID($course_id);
+                                        } else {
+                                            $entry = new Models_Logbook_Entry();
+                                            $entry->setCourseID($course_id);
+                                        }
+                                    }
+                                    $objectives = $entry->getCourseObjectivesMobile();
+                                    if (@count($objectives["required"]) || @count($objectives["logged"]) || @count($objectives["disabled"])) {
+                                        echo json_encode(array("status" => "success", "data" => $objectives));
+                                    } else {
+                                        echo json_encode(array("status" => "error", "data" => array("msg" => "An error occured whule fetching objective data")));
+                                    }
+                                }
+                            break;
+                            case "submit" :
+                                
+                                if (isset($entry_id)) {
+                                    $PROCESSED["lentry_id"] = $entry_id;
+                                }
+                                
+                                /**
+                                * Required field "rotation" / Rotation.
+                                */
+                            	if ((isset($_POST["course_id"])) && ($course_id = clean_input($_POST["course_id"], "int"))) {
+                                   $PROCESSED["course_id"] = $course_id;
+                               	} else {
+								   add_error("The <strong>Rotation</strong> field is required.");
+								}
+                                
+                                /*
+                                 * Required fields date and time
+                                 */
+                                if ((isset($_POST["date"])) && ($date = clean_input($_POST["date"], array("trim", "striptags"))) && (isset($_POST["time"])) && ($time = clean_input($_POST["time"], array("trim", "striptags")))) {
+                                    $date_pieces = explode("-", $date);
+                                    $time_pieces = explode(":", $time);
+                                    $hour	= (int) $time_pieces[0];
+                                    $minute	= (int) $time_pieces[1];
+                                    $second	= 0;
+                                    $month	= (int) trim($date_pieces[1]);
+                                    $day	= (int) trim($date_pieces[2]);
+                                    $year	= (int) trim($date_pieces[0]);
+
+                                    $PROCESSED["encounter_date"] = mktime($hour, $minute, $second, $month, $day, $year);
+                                } else {
+                                    add_error("The date and time fields are required");
+                                }
+
+								/**
+								* Non-required field "patient" / Patient.
+								*/
+								if ((isset($_POST["patient_id"])) && ($patient_id = clean_input($_POST["patient_id"], Array("notags","trim")))) {
+								   $PROCESSED["patient_info"] = $patient_id;
+								}
+
+								/**
+								* Required field "gender" / Gender.
+								*/
+								if ((isset($_POST["gender"])) && in_array($_POST["gender"], array("u", "m", "f")) && ($gender = clean_input($_POST["gender"], array("trim", "lower")))) {
+								   $PROCESSED["gender"] = $gender;
+								} else {
+								   $PROCESSED["gender"] = "";
+								}
+
+								/**
+								* Required field "agerange" / Age Range.
+								*/
+								if ((isset($_POST["agerange"])) && ($agerange = clean_input($_POST["agerange"], "int"))) {
+								   $PROCESSED["agerange_id"] = $agerange;
+								} else {
+								   add_error("The <strong>Age Range</strong> field is required.");
+								}
+
+								/**
+								* Required field "institution" / Institution.
+								*/
+								if ((isset($_POST["institution_id"])) && ($institution_id = clean_input($_POST["institution_id"], "int"))) {
+								   $PROCESSED["lsite_id"] = $institution_id;
+								} else {
+								   add_error("The <strong>Institution</strong> field is required.");
+								}
+
+								/**
+								* Required field "location" / Location.
+								*/
+								if ((isset($_POST["llocation_id"])) && ($location_id = clean_input($_POST["llocation_id"], "int"))) {
+								   $PROCESSED["llocation_id"] = $location_id;
+								} else {
+								   add_error("The <strong>Setting</strong> field is required.");
+								}
+
+								/**
+								* Required field "reflection" / Reflection on learning experience.
+								*/
+								if ((isset($_POST["reflection"])) && ($reflection = clean_input($_POST["reflection"], Array("trim", "notags")))) {
+								   $PROCESSED["reflection"] = $reflection;
+								} else {
+								   add_error("The <strong>Reflection on learning experience</strong> field is required. Please include at least a short description of this encounter before continuing.");
+								}
+
+								/**
+								* Non-required field "comments" / Comments.
+								*/
+								if ((isset($_POST["comments"])) && ($comments = clean_input($_POST["comments"], Array("trim", "notags")))) {
+								   $PROCESSED["comments"] = $comments;
+								} else {
+								   $PROCESSED["comments"] = "";
+								}
+
+								/**
+                                * Non-required field "objectives" / objectives
+                                */
+								if (is_array($_POST["objectives"]) && count($_POST["objectives"])) {
+								   foreach ($_POST["objectives"] as $objective_id) {
+								       $objective = Models_Objective::fetchRow($objective_id);
+								       if ($objective) {
+								           $objective_array = array();
+								           $objective_array["objective"] = $objective;
+								           $objective_array["objective_id"] = $objective_id;
+								           $objective_array["lentry_id"] = (isset($entry_id) && $entry_id ? $entry_id : NULL);
+								           $objective_array["participation_level"] = (isset($_POST["obj_participation_level"][$objective_id]) && $_POST["obj_participation_level"][$objective_id] ? $_POST["obj_participation_level"][$objective_id] : 3);
+								           $objective_array["updated_date"] = time();
+								           $objective_array["updated_by"] = $ENTRADA_USER->getID();
+								           $objective_array["objective_active"] = 1;
+								           $entry_objective = new Models_Logbook_Entry_Objective();
+								           $PROCESSED["objectives"][$objective_id] = $entry_objective->fromArray($objective_array);
+								       }
+								   }
+								} else {
+                                    add_error("Please select at least one objective");
+                                }
+
+								if (!$ERROR) {
+									$entry = new Models_Logbook_Entry();
+
+									$PROCESSED["proxy_id"] = $ENTRADA_USER->getID();
+                                	$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
+                                    $PROCESSED["updated_date"] = time();
+                                    
+                                    if (isset($entry_id)) {
+                                        if($entry->fromArray($PROCESSED)->update()) {
+                                            add_statistic("encounter_tracking", "update", "lentry_id", $PROCESSED["lentry_id"], $ENTRADA_USER->getID());
+                                            echo json_encode(array("status" => "success", "data" => "Successfully updated entry."));
+                                        } else {
+                                            application_log("error", "Error occurred when updating logbook entry, DB said: ".$db->ErrorMsg());
+                                            echo json_encode(array("status" => "error", "data" => array("An error occured while attemptin to update this entry.")));
+                                        }
+                                    } else {
+                                        if($entry->fromArray($PROCESSED)->insert()) {
+                                            add_statistic("encounter_tracking", "insert", "lentry_id", $db->Insert_ID(), $ENTRADA_USER->getID());
+                                            echo json_encode(array("status" => "success", "data" => array("The entry has been saved successfully.")));
+                                        } else {
+                                            application_log("error", "Error occurred when updating logbook entry, DB said: ".$db->ErrorMsg());
+                                            echo json_encode(array("status" => "error", "data" => array("An error occurred when attempting to create a new logbook entry, an administrator has been informed, please try again later.")));
+                                        }
+                                    }
+								} else {
+								   echo json_encode(array("status" => "error", "data" => array("Please ensure all required fields are complete.")));
+								}
+                            break;
+                        }
+                    }
+                break;
 				case "hash" :
-					echo json_encode(array('authenticated' => 'true', 'hash' => $user_details["private_hash"], 'firstname' => $user_details['firstname'], 'lastname' => $user_details['lastname']));
+					echo json_encode(array('authenticated' => 'true', 'hash' => $user_details["private_hash"], 'firstname' => $user_details['firstname'], 'lastname' => $user_details['lastname'], 'logbook_access' => $ENTRADA_ACL->amIAllowed('encounter_tracking', 'read')));
 					break;
 				case "credentials" :
 					echo true;

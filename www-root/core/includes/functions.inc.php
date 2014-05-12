@@ -16029,17 +16029,17 @@ function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessme
 	$weighted_grade = 0;
 	$weighted_total = 0;
 	$weighted_percent = 0;
-	$query = "	SELECT `assessments`.*, `assessment_marking_schemes`.`handler`
+    $query = "	SELECT `assessments`.*, `assessment_marking_schemes`.`handler`
 				FROM `assessments`
 				LEFT JOIN `assessment_marking_schemes`
 				ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
 				WHERE `assessments`.`course_id` = ".$db->qstr($course_id)."
+				".(!isset($learner) || $learner ? "
                 AND (`assessments`.`release_date` = '0' OR `assessments`.`release_date` <= ".$db->qstr(time()).")
                 AND (`assessments`.`release_until` = '0' OR `assessments`.`release_until` > ".$db->qstr(time()).")
-                ".(!isset($learner) || $learner ? "AND `assessments`.`show_learner` = '1'" : "")."
+                AND `assessments`.`show_learner` = '1'" : "")."
 				AND `assessments`.`cohort` = ".$db->qstr($cohort).
-				($assessment_id ? " AND `assessments`.`assessment_id` = ".$db->qstr($assessment_id) : ($assessment_ids_string ? " AND `assessments`.`assessment_id` IN (".$assessment_ids_string.")" : ""));
-
+                ($assessment_id ? " AND `assessments`.`assessment_id` = ".$db->qstr($assessment_id) : ($assessment_ids_string ? " AND `assessments`.`assessment_id` IN (".$assessment_ids_string.")" : ""));
 	$assessments = $db->GetAll($query);
 	if($assessments) {
         foreach ($assessments as $assessment) {

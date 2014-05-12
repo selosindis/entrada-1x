@@ -338,7 +338,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					echo "</div>\n";
 				}
 				if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
-					echo "<form action=\"".ENTRADA_URL . "/admin/gradebook/assessments?".replace_query(array("section" => "delete", "step"=>1))."\" method=\"post\">";
+					echo "<form action=\"".ENTRADA_URL . "/admin/gradebook/assessments?".replace_query(array("section" => "delete", "step" => 1, "cohort" => (isset($selected_cohort) && $selected_cohort ? $selected_cohort : (isset($selected_classlist) && $selected_classlist ? $selected_classlist : NULL))))."\" method=\"post\">";
 				}
 				?>
                 <script type="text/javascript">

@@ -455,12 +455,13 @@ if ($LOGGED_IN) {
 																	ORDER BY ".(($question["randomize_responses"] == 1) ? "RAND()" : "a.`response_order` ASC");
 													$responses	= $db->GetAll($query);
 													if ($responses) {
-														foreach ($responses as $response) {
-															echo "<li>";
-															echo "	<input type=\"radio\" id=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\" name=\"responses[".$question["qquestion_id"]."]\" value=\"".$response["qqresponse_id"]."\"".(($ajax_load_progress[$question["qquestion_id"]] == $response["qqresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question["qquestion_id"]."', '".$response["qqresponse_id"]."') : false)\" />";
-															echo "	<label for=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</label>";
-															echo "</li>\n";
-														}
+                                                        foreach ($responses as $response) {
+                                                            echo "<li style=\"vertical-align: top;\">";
+                                                            echo "  <div style=\"float: left; width: 5%;\"><input type=\"radio\" id=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\" name=\"responses[".$question["qquestion_id"]."]\" value=\"".$response["qqresponse_id"]."\"".(($ajax_load_progress[$question["qquestion_id"]] == $response["qqresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question["qquestion_id"]."', '".$response["qqresponse_id"]."') : false)\" /></div>";
+                                                            echo "  <div style=\"float: left; width: 95%;\"><label for=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</label></div>";
+                                                            echo "  <div style=\"clear: both;\"></div>";
+                                                            echo "</li>\n";
+                                                        }
 													}
 													echo "	</ul>\n";
 													echo "</li>\n";

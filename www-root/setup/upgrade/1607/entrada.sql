@@ -1,5 +1,15 @@
-ALTER TABLE `course_objectives` ADD `objective_start` INT(12) DEFAULT NULL AFTER `objective_details`;
-ALTER TABLE `course_objectives` ADD `objective_finish` INT(12) DEFAULT NULL AFTER `objective_start`;
-ALTER TABLE `course_objectives` ADD `active` TINYINT(1) NOT NULL DEFAULT '1' AFTER `updated_by`;
+ALTER TABLE `settings`
+DROP PRIMARY KEY;
 
-UPDATE `settings` SET `value` = '1607' WHERE `shortname` = 'version_db';
+ALTER TABLE `settings`
+ADD COLUMN `setting_id` INT(12) PRIMARY KEY AUTO_INCREMENT FIRST;
+
+ALTER TABLE `settings`
+ADD COLUMN `organisation_id` INT(12) DEFAULT NULL AFTER `shortname`;
+
+INSERT INTO `settings` (`shortname`, `organisation_id`, `value`)
+  VALUES
+  ('export_grades', NULL, '{\"enabled\":0}'),
+  ('export_weighted_grade', NULL, '1');
+
+UPDATE `settings` SET `value` = '1606' WHERE `shortname` = 'version_db';

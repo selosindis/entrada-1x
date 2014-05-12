@@ -2013,6 +2013,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `permission` enum('open','closed') NOT NULL DEFAULT 'open',
   `sync_ldap` int(1) NOT NULL DEFAULT '0',
   `sync_ldap_courses` text,
+  `sync_groups` tinyint(1) NOT NULL DEFAULT '0',
   `notifications` int(1) NOT NULL DEFAULT '1',
   `course_active` int(11) NOT NULL DEFAULT '1',
   PRIMARY KEY (`course_id`),
@@ -2397,7 +2398,7 @@ INSERT INTO `evaluations_lu_targets` (`target_id`, `target_shortname`, `target_t
 (6, 'preceptor', 'Clerkship Preceptor Evaluation', '', 1),
 (7, 'peer', 'Peer Assessment', '', 1),
 (8, 'self', 'Self Assessment', '', 1),
-(9, 'resident', 'Resident Evaluation', '', 1);
+(9, 'resident', 'Patient Encounter Assessment', '', 1);
 
 CREATE TABLE IF NOT EXISTS `evaluations_related_questions` (
   `erubric_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -4330,14 +4331,19 @@ CREATE TABLE IF NOT EXISTS `reports_aamc_ci` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `settings` (
-  `shortname` varchar(64) NOT NULL,
-  `value` text NOT NULL,
-  PRIMARY KEY (`shortname`)
+  `setting_id` int(12) NOT NULL AUTO_INCREMENT,
+  `shortname` varchar(64) CHARACTER SET utf8 NOT NULL,
+  `organisation_id` int(12) DEFAULT NULL,
+  `value` text CHARACTER SET utf8 NOT NULL,
+  PRIMARY KEY (`setting_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1605'),
-('version_entrada', '1.6.0DEV');
+INSERT INTO `settings` (`shortname`, `organisation_id`, `value`)
+  VALUES
+  ('version_db', NULL, '1606'),
+  ('version_entrada', NULL, '1.6.0DEV'),
+  ('export_weighted_grade', NULL, '1'),
+  ('export_calculated_grade', NULL, '{\"enabled\":0}');
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -5272,4 +5278,30 @@ CREATE TABLE IF NOT EXISTS `portfolio-advisors` (
   `portfolio_id` int(11) DEFAULT NULL,
   `active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`padvisor_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `evaluations_lu_response_descriptors` (
+  `erdescriptor_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(12) unsigned NOT NULL,
+  `descriptor` varchar(256) NOT NULL DEFAULT '',
+  `reportable` tinyint(1) NOT NULL DEFAULT '1',
+  `order` int(12) NOT NULL,
+  `updated_date` bigint(64) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`erdescriptor_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `evaluation_question_response_descriptors` (
+  `eqrdescriptor_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `eqresponse_id` int(12) unsigned NOT NULL,
+  `erdescriptor_id` int(12) unsigned NOT NULL,
+  PRIMARY KEY (`eqrdescriptor_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `evaluation_progress_patient_encounters` (
+  `eppencounter_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `encounter_name` varchar(255) DEFAULT NULL,
+  `encounter_complexity` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`eppencounter_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;

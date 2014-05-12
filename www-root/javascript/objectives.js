@@ -52,7 +52,7 @@ jQuery(document).ready(function(){
 		} else {
 			clicked.addClass("expanded");
 			jQuery.ajax({
-				url: SITE_URL + "/api/fetchobjectives.api.php?objective_id=" + objective_id,
+				url: SITE_URL + "/api/fetchobjectives.api.php?objective_id=" + objective_id + "&org_id=" + org_id,
 				type: "POST",
 				data: "method=fetch-linked-objectives",
 				async: false,
@@ -164,7 +164,7 @@ jQuery(document).ready(function(){
 		var id = jQuery(this).attr('data-id');		
 		var children = [];
 		if (loaded[id] === undefined || !loaded[id]) {
-			var query = {'objective_id':id};
+			var query = {'objective_id':id, 'org_id' : org_id};
             if (jQuery("#event-objectives-section").length > 0) {
                 if(jQuery('#mapped_objectives').length>0){
                     var type = jQuery('#mapped_objectives').attr('data-resource-type');

@@ -384,7 +384,7 @@ if (!defined("PARENT_INCLUDED")) {
 					success: function(data) {
 						var jsonResponse = JSON.parse(data);
 						if (jsonResponse.status == "success") {
-							var comment = "&ldquo;"+jsonResponse.data.comment+"&rdquo;<br /><span class=\"muted content-small\">" + jsonResponse.data.commentor + " - "+jsonResponse.data.submitted_date+" - <i class=\"icon-trash comment-delete\" style=\"cursor:pointer;\" data-pecomment-id=\""+comment.pecomment_id+"\"></i></span><hr />";
+							var comment = "&ldquo;"+jsonResponse.data.comment+"&rdquo;<br /><span class=\"muted content-small\">" + jsonResponse.data.commentor + " - "+jsonResponse.data.submitted_date+" - <i class=\"icon-trash comment-delete\" style=\"cursor:pointer;\" data-pecomment-id=\""+jsonResponse.data.pecomment_id+"\"></i></span><hr />";
 							if ($("#comments-"+jsonResponse.data.pentry_id).length > 0) {
 								$("#comments-"+jsonResponse.data.pentry_id).append(comment);
 							} else {
@@ -401,10 +401,10 @@ if (!defined("PARENT_INCLUDED")) {
 
 				e.preventDefault();
 			});
-//			$("#entry-modal .modal-footer .btn-primary").on("click", function(e) {
-//				$("#modal-form").submit();
-//				e.preventDefault();
-//			});
+			$("#entry-modal .modal-footer .btn-primary").on("click", function(e) {
+				$("#modal-form").submit();
+				e.preventDefault();
+			});
 			$("#user-portfolio").on("click", ".add-flag", function(e) {
 				var btn = $(this);
 				var action = "flag";
@@ -1119,11 +1119,16 @@ if (!defined("PARENT_INCLUDED")) {
 					<a class="btn btn-primary">Portfolio</a>
 					<a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#"><span class="caret"></span></a>
 					<ul class="dropdown-menu" id="portfolio-list">
-					<?php foreach ($eportfolios as $eportfolio) { ?>
+					<?php 
+                    if ($eportfolios) { 
+                        foreach ($eportfolios as $eportfolio) { ?>
 						<li>
 							<a href="#" data-id="<?php echo $eportfolio->getID(); ?>" class="portfolio-item"><?php echo $eportfolio->getPortfolioName(); ?></a>
 						</li>
-					<?php } ?>
+                    <?php } 
+                    } else {
+                        echo "<li>None assigned.</li>";
+                    } ?>
 					</ul>
 				</div>
 				<div class="btn-group" id="flag-toggle">

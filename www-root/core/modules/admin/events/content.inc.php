@@ -165,7 +165,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                     WHERE a.`objective_id` = ".$db->qstr($objective_id)."
                                     AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
                                     AND b.`objective_type` = 'event'
-                                    AND a.`objective_active` = '1'";
+                                    AND a.`objective_active` = '1'
+                                    AND b.`active` = '1'";
                             $result	= $db->GetRow($query);
                             if ($result) {
                                 $clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
@@ -1337,6 +1338,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         FROM `global_lu_objectives` a
                                         LEFT JOIN `course_objectives` b
                                         ON a.`objective_id` = b.`objective_id`
+                                        AND b.`active` = '1'
                                         AND b.`course_id` = ".$db->qstr($COURSE_ID)."
                                         LEFT JOIN `event_objectives` c
                                         ON c.`objective_id` = a.`objective_id`
@@ -2161,6 +2163,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     FROM `global_lu_objectives` a
                                                     LEFT JOIN `course_objectives` b
                                                     ON a.`objective_id` = b.`objective_id`
+                                                    AND b.`active` = '1'
                                                     AND b.`course_id` = ".$db->qstr($COURSE_ID)."
                                                     LEFT JOIN `event_objectives` c
                                                     ON c.`objective_id` = a.`objective_id`

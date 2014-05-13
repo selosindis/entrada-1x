@@ -62,6 +62,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 						AND b.`objective_parent` NOT IN (".$objective_ids_string.")
 					)
 					AND a.`objective_type` = 'course'
+                    AND a.`active` = '1'
 					AND b.`objective_active` = 1
 					ORDER BY a.`importance` ASC";
 		$objectives = $db->GetAll($query);
@@ -70,8 +71,9 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 				$query = "	SELECT a.*, b.`objective_details` FROM `global_lu_objectives` AS a
 							LEFT JOIN `course_objectives` AS b
 							ON a.`objective_id` = b.`objective_id`
-							AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+                            AND b.`course_id` = ".$db->qstr($COURSE_ID)."
 							AND b.`objective_type` = 'course'
+                            AND b.`active` = '1'
 							JOIN `objective_organisation` AS c
 							ON a.`objective_id` = c.`objective_id`
 							AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."

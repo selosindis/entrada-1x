@@ -437,6 +437,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									 FROM `course_objectives` AS a
 									 JOIN `global_lu_objectives` AS b
 									 ON a.`objective_id` = b.`objective_id`
+                                     AND b.`active` = '1'
 									 WHERE a.`course_id` = ".$COURSE_ID."
 									 AND a.`objective_type` = 'event'";
 						
@@ -451,6 +452,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 													JOIN `course_objectives` AS b
 													ON b.`course_id` = ".$COURSE_ID."
 													AND a.`objective_id` = b.`objective_id`
+                                                    AND b.`active` = '1'
 													JOIN `objective_organisation` AS c
 													ON a.`objective_id` = c.`objective_id`
 													WHERE a.`objective_id` = ".$db->qstr($objective_id)."
@@ -1124,6 +1126,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                 LEFT JOIN `course_objectives` b
                                                 ON a.`objective_id` = b.`objective_id`
                                                 AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+                                                AND b.`active` = '1'
                                                 LEFT JOIN `assessment_objectives` c
                                                 ON c.`objective_id` = a.`objective_id`
                                                 AND c.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."

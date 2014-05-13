@@ -60,6 +60,15 @@ class Models_Event_Draft_Creator extends Models_Base {
             )
         );
     }
+    
+    public static function fetchRowByDraftIDProxyID($draft_id, $proxy_id) {
+        $self = new self();
+        return $self->fetchRow(array(
+                array("key" => "draft_id", "value" => $draft_id, "method" => "=", "mode" => "AND"),
+                array("key" => "proxy_id", "value" => $proxy_id, "method" => "=", "mode" => "AND")
+            )
+        );
+    }
 
     public static function fetchAllByDraftID($draft_id = 0) {
         $self = new self();

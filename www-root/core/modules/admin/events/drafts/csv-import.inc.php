@@ -121,15 +121,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
             break;
             case 1 :
             default :
-                $query = "  SELECT a.*
-                            FROM `drafts` AS a
-                            JOIN `draft_creators` AS b
-                            ON b.`draft_id` = a.`draft_id`
-                            AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-                            WHERE a.`draft_id` = ".$db->qstr($draft_id)."
-                            AND `status` = 'open'";
-                $result = $db->GetRow($query);
-                if ($result) {
+                $draft = Models_Event_Draft::fetchRowByID($draft_id);
+                $draft_creator = Models_Event_Draft_Creator::fetchRowByDraftIDProxyID($draft_id, $proxy_id);
+                if ($draft && $draft->getStatus() == "open" && $draft_creator) {
 
                     $unmapped_fields = $csv_headings;
 

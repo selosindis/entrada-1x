@@ -384,7 +384,7 @@ if (!defined("PARENT_INCLUDED")) {
 					success: function(data) {
 						var jsonResponse = JSON.parse(data);
 						if (jsonResponse.status == "success") {
-							var comment = "&ldquo;"+jsonResponse.data.comment+"&rdquo;<br /><span class=\"muted content-small\">" + jsonResponse.data.commentor + " - "+jsonResponse.data.submitted_date+" - <i class=\"icon-trash comment-delete\" style=\"cursor:pointer;\" data-pecomment-id=\""+comment.pecomment_id+"\"></i></span><hr />";
+							var comment = "&ldquo;"+jsonResponse.data.comment+"&rdquo;<br /><span class=\"muted content-small\">" + jsonResponse.data.commentor + " - "+jsonResponse.data.submitted_date+" - <i class=\"icon-trash comment-delete\" style=\"cursor:pointer;\" data-pecomment-id=\""+jsonResponse.data.pecomment_id+"\"></i></span><hr />";
 							if ($("#comments-"+jsonResponse.data.pentry_id).length > 0) {
 								$("#comments-"+jsonResponse.data.pentry_id).append(comment);
 							} else {

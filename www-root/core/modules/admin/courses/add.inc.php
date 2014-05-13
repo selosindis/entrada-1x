@@ -353,17 +353,50 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 						if (is_array($PRIMARY_OBJECTIVES) && count($PRIMARY_OBJECTIVES)) {
 							foreach ($PRIMARY_OBJECTIVES as $objective_id) {
-								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($ENTRADA_USER->getID()).", `importance` = '1'");
+                                $objective = new Models_Course_Objective(array(
+                                    "course_id"         => $COURSE_ID,
+                                    "objective_id"      => $objective_id,
+                                    "importance"        => "1",
+                                    "objective_type"    => "course",
+                                    "objective_start"   => time(),
+                                    "objective_finish"  => NULL,
+                                    "updated_date"      => time(),
+                                    "updated_by"        => $ENTRADA_USER->getID(),
+                                    "active"            => "1"
+                                ));
+                                $objective->insert();
 							}
 						}
 						if (is_array($SECONDARY_OBJECTIVES) && count($SECONDARY_OBJECTIVES)) {
 							foreach ($SECONDARY_OBJECTIVES as $objective_id) {
-								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($ENTRADA_USER->getID()).", `importance` = '2'");
+                                $objective = new Models_Course_Objective(array(
+                                    "course_id"         => $COURSE_ID,
+                                    "objective_id"      => $objective_id,
+                                    "importance"        => "2",
+                                    "objective_type"    => "course",
+                                    "objective_start"   => time(),
+                                    "objective_finish"  => NULL,
+                                    "updated_date"      => time(),
+                                    "updated_by"        => $ENTRADA_USER->getID(),
+                                    "active"            => "1"
+                                ));
+                                $objective->insert();
 							}
 						}
 						if (is_array($TERTIARY_OBJECTIVES) && count($TERTIARY_OBJECTIVES)) {
 							foreach ($TERTIARY_OBJECTIVES as $objective_id) {
-								$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($ENTRADA_USER->getID()).", `importance` = '3'");
+                                $objective = new Models_Course_Objective(array(
+                                    "course_id"         => $COURSE_ID,
+                                    "objective_id"      => $objective_id,
+                                    "importance"        => "3",
+                                    "objective_type"    => "course",
+                                    "objective_start"   => time(),
+                                    "objective_finish"  => NULL,
+                                    "updated_date"      => time(),
+                                    "updated_by"        => $ENTRADA_USER->getID(),
+                                    "active"            => "1"
+                                ));
+                                $objective->insert();
 							}
 						}
 
@@ -997,6 +1030,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 												ON a.`objective_id` = b.`objective_id`
 												AND b.`course_id` = ".$db->qstr($COURSE_ID)."
 												WHERE a.`objective_active` = '1'
+                                                AND b.`active` = '1'
 												GROUP BY a.`objective_id`
 												ORDER BY b.`importance` ASC";
 									$mapped_objectives = $db->GetAll($query);

@@ -38,7 +38,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	
-	$DRAFT_IDS = array();
+	$draft_ids = array();
 
 	$action = clean_input($_GET["action"], array("trim", "nohtml"));
 	
@@ -69,16 +69,15 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					foreach($_POST["checked"] as $draft_id) {
 						$draft_id = (int) trim($draft_id);
 						if($draft_id) {
-							$DRAFT_IDS[] = $draft_id;
+							$draft_ids[] = $draft_id;
 						}
 					}
 				} elseif (isset($_GET["draft_id"]) && ($draft_id = clean_input($_GET["draft_id"], array("trim", "int")))) {
-					$DRAFT_IDS[] = $draft_id;
+					$draft_ids[] = $draft_id;
 				}
 
-				if(!@count($DRAFT_IDS)) {
-					$ERROR++;
-					$ERRORSTR[] = "There were no valid draft identifiers provided to create. Please ensure that you access this section through the event index.";
+				if(!@count($draft_ids)) {
+					add_error("There were no valid draft identifiers provided to create. Please ensure that you access this section through the event index.");
 				}
 			}
 
@@ -92,42 +91,32 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	switch($STEP) {
 		case 2 :
 			$approved = array();
-			$query = "SELECT `draft_id`, `name` FROM `drafts` WHERE `draft_id` IN (".implode(", ", $DRAFT_IDS).")";
-			$drafts = $db->GetAssoc($query);
-			foreach($DRAFT_IDS as $draft_id) {
-				$allow_approval = false;
-				
-				if($draft_id = (int) $draft_id) {
-					// set draft statuses to approved					
-					$query = "	UPDATE `drafts` SET `status`=".$db->qstr($status)." WHERE `draft_id` = ".$db->qstr($draft_id);
-					
-					if ($db->Execute($query)) {
-						$approved[$draft_id]["name"] = $drafts[$draft_id];
-					}
-				}
-				
+			foreach($draft_ids as $draft_id) {
+                $d =  Models_Event_Draft::fetchRowByID($draft_id);
+                if ($d->fromArray(array("status" => $status))->update()) {
+                    $approved[] = $d;
+                } else {
+                    Zend_Debug::dump($d);
+                }
 			}
 
 			$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/events/drafts\\'', 5000)";
 
 			if(!empty($approved)) {
 				$total_approved = count($approved);
-				$SUCCESS++;
-				$SUCCESSSTR[$SUCCESS]  = "You have successfully ".$action."ed ".$total_approved." draft".(($total_approved > 1) ? "s" : "").".";
-				$SUCCESSSTR[$SUCCESS] .= "<div style=\"padding-left: 15px; padding-bottom: 15px; font-family: monospace\">\n";
-				foreach($approved as $result) {
-					$SUCCESSSTR[$SUCCESS] .= html_encode($result["name"])."<br />";
+				$successmsg[] = "You have successfully ".$action."ed ".$total_approved." draft".(($total_approved > 1) ? "s" : "").".";
+				$successmsg[] .= "<div style=\"padding-left: 15px; padding-bottom: 15px; font-family: monospace\">\n";
+				foreach($approved as $draft) {
+					$successmsg[] .= html_encode($draft->getName())."<br />";
 				}
-				$SUCCESSSTR[$SUCCESS] .= "</div>\n";
-				$SUCCESSSTR[$SUCCESS] .= "You will be automatically redirected to the event index in 5 seconds, or you can <a href=\"".ENTRADA_URL."/admin/events/drafts\">click here</a> if you do not wish to wait.";
+				$successmsg[] .= "</div>\n";
+				$successmsg[] .= "You will be automatically redirected to the event index in 5 seconds, or you can <a href=\"".ENTRADA_URL."/admin/events/drafts\">click here</a> if you do not wish to wait.";
 
-				echo display_success();
+				echo display_success(implode("\n", $successmsg));
 
-				application_log("success", "User [".$ENTRADA_USER->getActiveId()."] approved draft ids: ".implode(", ", $DRAFT_IDS));
+				application_log("success", "User [".$ENTRADA_USER->getActiveId()."] approved draft ids: ".implode(", ", $draft_ids));
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "Unable to remove the requested drafts from the system.<br /><br />The system administrator has been informed of this issue and will address it shortly; please try again later.";
-
+				add_error("Unable to remove the requested drafts from the system.<br /><br />The system administrator has been informed of this issue and will address it shortly; please try again later.");
 				application_log("error", "Failed to remove draft from the remove request. Database said: ".$db->ErrorMsg());
 			}
 
@@ -141,17 +130,14 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				echo display_error();
 			} else {
 				
-				$total_events	= count($DRAFT_IDS);
+				$total_events	= count($draft_ids);
 				
-				$query		= "	SELECT a.*
-								FROM `drafts` AS a
-								JOIN `draft_creators` AS b
-								ON a.`draft_id` = b.`draft_id`
-								WHERE a.`draft_id` IN ('".implode("', '", $DRAFT_IDS)."')
-								AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
-				$results	= $db->GetAll($query);
-				
-				if($results) {
+                $drafts = array();
+                foreach ($draft_ids as $draft_id) {
+                    $drafts[] = Models_Event_Draft::fetchRowByID($draft_id);
+                }
+                
+				if(!empty($drafts)) {
 					echo display_notice(array("Please review the following draft".(($total_events > 1) ? "s" : "")." to ensure that you wish to <strong>".$status."</strong> ".(($total_events > 1) ? "them" : "it").".<br /><br />Approving a draft will schedule it to be imported into the system.<br />Re-opening a draft will remove it from the importation schedule and allow it to be modified."));
 					$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 					?>
@@ -160,53 +146,45 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						#draft-list_filter {-moz-border-radius:10px 10px 0px 0px; border: 1px solid #9D9D9D;border-bottom:none;background-color:#FAFAFA;font-size: 0.9em;padding:3px;}
 						#draft-list_paginate a {margin:2px 5px;}
 					</style>
-					<script type="text/javascript">
-						jQuery(function(){
-							jQuery(".noLink").live("click", function(){
-								return false;
-							});
-
-						});
-					</script>
 					<form action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=status&step=2&action=<?php echo $action; ?>" method="post">
-					<table class="table table-bordered table-striped" id="draft-list" widht="100%" cellspacing="0" summary="List of Events">
-					<colgroup>
-						<col class="modified" />
-						<col class="date" />
-						<col class="title" />
-						<col class="description" />
-					</colgroup>
-					<thead>
-						<tr>
-							<th class="modified">&nbsp;</th>
-							<th class="date">Creation Date &amp; Time</th>
-							<th class="title">Draft Title</th>
-							<th class="description">Description</th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php
-						foreach($results as $result) {
-							$url 	= ENTRADA_URL."/admin/events/drafts?section=edit&amp;draft_id=".$result["draft_id"];
+                        <table class="table table-bordered table-striped" id="draft-list" widht="100%" cellspacing="0" summary="List of Events">
+                        <colgroup>
+                            <col class="modified" />
+                            <col class="date" />
+                            <col class="title" />
+                            <col class="description" />
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th class="modified">&nbsp;</th>
+                                <th class="date">Creation Date &amp; Time</th>
+                                <th class="title">Draft Title</th>
+                                <th class="description">Description</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                            foreach($drafts as $draft) {
+                                $url 	= ENTRADA_URL."/admin/events/drafts?section=edit&amp;draft_id=".$draft->getDraftID();
 
-							echo "<tr id=\"draft-".$result["draft_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
-							echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["draft_id"]."\" checked=\"checked\" /></td>\n";
-							echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Creation Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["created"]).(($url) ? "</a>" : "")."</td>\n";
-							echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Title: ".html_encode($result["name"])."\">" : "").html_encode($result["name"]).(($url) ? "</a>" : "")."</td>\n";
-							echo "	<td class=\"description".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Description: ".html_encode($result["description"])."\">" : "").html_encode($result["description"]).(($url) ? "</a>" : "")."</td>\n";
-							echo "</tr>\n";
-						}
-						?>
-					</tbody>
-					</table>
-					<table width="100%">
-						<tfoot>
-							<tr>
-								<td><input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events/drafts/';" /></td>
-								<td align="right" style="padding-top: 10px"><input type="submit" class="btn btn-primary" value="Confirm" /></td>
-							</tr>
-						</tfoot>
-					</table>
+                                echo "<tr id=\"draft-".$draft->getDraftID()."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
+                                echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$draft->getDraftID()."\" checked=\"checked\" /></td>\n";
+                                echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Creation Date\">" : "").date(DEFAULT_DATE_FORMAT, $draft->getCreated()).(($url) ? "</a>" : "")."</td>\n";
+                                echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Title: ".html_encode($draft->getName())."\">" : "").html_encode($draft->getName()).(($url) ? "</a>" : "")."</td>\n";
+                                echo "	<td class=\"description".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Description: ".html_encode($draft->getDescription())."\">" : "").html_encode($draft->getDescription()).(($url) ? "</a>" : "")."</td>\n";
+                                echo "</tr>\n";
+                            }
+                            ?>
+                        </tbody>
+                        </table>
+                        <table width="100%">
+                            <tfoot>
+                                <tr>
+                                    <td><input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events/drafts/';" /></td>
+                                    <td align="right" style="padding-top: 10px"><input type="submit" class="btn btn-primary" value="Confirm" /></td>
+                                </tr>
+                            </tfoot>
+                        </table>
 					</form>
 					<?php
 				} else {

@@ -61,7 +61,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	}
 
 	$draft_id = (int) $_GET["draft_id"];
-
+    $draft = Models_Event_Draft::fetchRowByID($draft_id);
+    
 	/**
 	* Load the rich text editor.
 	*/
@@ -71,11 +72,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		case 2 :
 			
 			$i = 0;
-			foreach ($_POST["options"] as $option => $value) {
-				$PROCESSED["options"][$i]["option"] = clean_input($option, "alpha");
-				$PROCESSED["options"][$i]["value"] = 1;
-				$i++;
-			}
+            if (isset($_POST["options"]) && !empty($_POST["options"])) {
+                foreach ($_POST["options"] as $option => $value) {
+                    $PROCESSED["options"][$i]["option"] = clean_input($option, "alpha");
+                    $PROCESSED["options"][$i]["value"] = 1;
+                    $i++;
+                }
+            }
 			
 			/**
 			* Required field "draft_name" / Draft Title.
@@ -83,8 +86,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			if ((isset($_POST["draft_name"])) && ($tmp_input = clean_input($_POST["draft_name"], array("notags", "trim")))) {
 				$PROCESSED["name"] = $tmp_input;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Draft Title</strong> field is required.";
+				add_error("The <strong>Draft Title</strong> field is required.");
 			}
 
 			/**
@@ -114,102 +116,70 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			*/
 			if (!in_array($ENTRADA_USER->getActiveId(), $PROCESSED["associated_proxy_ids"])) {
 				array_unshift($PROCESSED["associated_proxy_ids"], $ENTRADA_USER->getActiveId());
-
-				$NOTICE++;
-				$NOTICESTR[] = "You cannot remove yourself as a <strong>Draft Author</strong>.";
+				add_notice("You cannot remove yourself as a <strong>Draft Author</strong>.");
 			}
 
 			if (!$ERROR) {
-				if ($db->AutoExecute("drafts", $PROCESSED, "UPDATE", "`draft_id` = ".$db->qstr($draft_id))) {
+				if ($draft->fromArray(array("name" => $PROCESSED["name"], "description" => $PROCESSED["description"]))->update()) {
 					/**
 					* Delete existing draft contacts, so we can re-add them.
 					*/
-					$query = "DELETE FROM `draft_creators` WHERE `draft_id` = ".$db->qstr($draft_id);
-					$db->Execute($query);
+					if ($draft->deleteCreators()) {
+                        /**
+                        * Add the updated draft authors to the draft_contacts table.
+                        */
 
-					/**
-					* Add the updated draft authors to the draft_contacts table.
-					*/
-
-					if ((is_array($PROCESSED["associated_proxy_ids"])) && !empty($PROCESSED["associated_proxy_ids"])) {
-						foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-							if (!$db->AutoExecute("draft_creators", array("draft_id" => $draft_id, "proxy_id" => $proxy_id), "INSERT")) {
-								$ERROR++;
-								$ERRORSTR[] = "There was an error while trying to attach a <strong>Draft Author</strong> to this draft.<br /><br />The system administrator was informed of this error; please try again later.";
-
-								application_log("error", "Unable to insert a new draft_contact record while adding a new draft. Database said: ".$db->ErrorMsg());
-							}
-						}
-					}
+                        if ((is_array($PROCESSED["associated_proxy_ids"])) && !empty($PROCESSED["associated_proxy_ids"])) {
+                            foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
+                                $creator = new Models_Event_Draft_Creator(array("draft_id" => $draft_id, "proxy_id" => $proxy_id));
+                                if (!$creator->insert()) {
+                                    add_error("There was an error while trying to attach a <strong>Draft Author</strong> to this draft.<br /><br />The system administrator was informed of this error; please try again later.");
+                                    application_log("error", "Unable to insert a new draft_contact record while adding a new draft. Database said: ".$db->ErrorMsg());
+                                }
+                            }
+                        }
+                    }
 					
 					if ($PROCESSED["options"]) {
-						$query = "DELETE FROM `draft_options` WHERE `draft_id` = ".$db->qstr($draft_id);
-						$db->Execute($query);
+						$draft->deleteOptions();
 						foreach ($PROCESSED["options"] as $option) {
-							$option["draft_id"] = $draft_id;
-							if (!$db->AutoExecute("draft_options", $option, "INSERT")) {
+                            $option["draft_id"] = $draft_id;
+                            $new_draft_option = new Models_Event_Draft_Option($option);
+							if (!$new_draft_option->insert()) {
 								application_log("error", "Error when saving draft [".$draft_id."] options, DB said: ".$db->ErrorMsg());
 							}
 						}
 					}
-					
-					$SUCCESS++;
-					$SUCCESSSTR[] = "The <strong>Draft Information</strong> section has been successfully updated.";
-
+					add_success("The <strong>Draft Information</strong> section has been successfully updated.");
 					application_log("success", "Draft information for draft_id [".$draft_id."] was updated.");
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "There was a problem updating this draft. The system administrator was informed of this error; please try again later.";
-
+					add_error("There was a problem updating this draft. The system administrator was informed of this error; please try again later.");
 					application_log("error", "There was an error updating draft information for draft_id [".$draft_id."]. Database said: ".$db->ErrorMsg());
 				}
 			}
 		break;
-		case 1 :
-		default :
-			$PROCESSED = $draft_record;
-
-			$query = "SELECT `proxy_id` FROM `draft_contacts` WHERE `draft_id` = ".$db->qstr($RECORD_ID);
-			$results = $db->GetAll($query);
-			if ($results) {
-				foreach ($results as $result) {
-					$PROCESSED["associated_proxy_ids"][] = $result["proxy_id"];
-				}
-			}
-		break;
 	}
 
-	// Display Content
-	switch ($STEP) {
-		case 2 :
-		case 1 :
-		default :
+	if ($draft && $draft->getStatus() == "open") {
 
-		break;
-	}
+	$BREADCRUMB[]	= array("url" => "", "title" => "Edit ".$draft->getName());
 
-	$query = "	SELECT *
-				FROM `drafts`
-				WHERE `draft_id` = ".$db->qstr($draft_id);
-	$draft_information = $db->GetRow($query);
+    $options = Models_Event_Draft_Option::fetchAllByDraftID($draft_id);
+    if ($options) {
+        foreach ($options as $option) {
+            $draft_options[$option->getOption()] = true; 
+        }
+    }
+    
+    $current_creators = array();
+    $creators = Models_Event_Draft_Creator::fetchAllByDraftID($draft_id);
+    if (!empty($creators)) {
+        foreach ($creators as $creator) {
+            $PROCESSED["associated_proxy_ids"][] = $creator->getProxyID();
+        }
+    }
 
-	if ($draft_information && $draft_information["status"] == "open") {
-
-	$BREADCRUMB[]	= array("url" => "", "title" => "Edit ".$draft_information["name"]);
-		
-	$query = "	SELECT `option`, `value`
-				FROM `draft_options` 
-				WHERE `draft_id` = ".$db->qstr($draft_id);
-	$draft_options = $db->GetAssoc($query);
-
-	$query = "	SELECT a.`proxy_id`, CONCAT(b.`lastname`, ', ', b.`firstname`) AS `fullname`
-				FROM `draft_creators` AS a
-				JOIN `".AUTH_DATABASE."`.`user_data` AS b
-				ON a.`proxy_id` = b.`id`
-				WHERE a.`draft_id` = ".$db->qstr($draft_id);
-	$creators = $db->GetAssoc($query);
-
-	if (!array_key_exists($ENTRADA_USER->getID(), $creators)) {
+	if (!in_array($ENTRADA_USER->getID(), $PROCESSED["associated_proxy_ids"])) {
 		add_notice("Your account is not approved to work on this draft schedule.<br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 		echo display_notice();
 	} else {
@@ -246,7 +216,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 					<tr>
 						<td></td>
 						<td><label for="draft_title" class="form-required">Draft Title</label></td>
-						<td><input type="text" id="draft_name" name="draft_name" value="<?php echo html_encode($draft_information["name"]); ?>" maxlength="64" style="width: 96%" /></td>
+						<td><input type="text" id="draft_name" name="draft_name" value="<?php echo html_encode($draft->getName()); ?>" maxlength="64" style="width: 96%" /></td>
 					</tr>
 					<tr>
 						<td></td>
@@ -254,7 +224,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<label for="draft_description" class="form-nrequired">Draft Description</label>
 						</td>
 						<td>
-							<textarea id="draft_description" name="draft_description" class="expandable" style="width: 96%;"><?php echo clean_input($draft_information["description"], array("trim", "encode")); ?></textarea>
+							<textarea id="draft_description" name="draft_description" class="expandable" style="width: 96%;"><?php echo clean_input($draft->getDescription(), array("trim", "encode")); ?></textarea>
 						</td>
 					</tr>
 					<tr>
@@ -280,28 +250,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							<ul id="author_list" class="menu" style="margin-top: 15px">
 								<?php
 								if (is_array($creators) && !empty($creators)) {
-									$selected_authors = array();
-									$query = "	SELECT `id` AS `proxy_id`, CONCAT_WS(', ', `lastname`, `firstname`) AS `fullname`, `organisation_id`
-												FROM `".AUTH_DATABASE."`.`user_data`
-												WHERE `id` IN (".implode(", ", array_keys($creators)).")
-												ORDER BY `lastname` ASC, `firstname` ASC";
-									$results = $db->GetAll($query);
-									if ($results) {
-										foreach ($results as $result) {
-											$selected_authors[$result["proxy_id"]] = $result;
-										}
-
-										unset($results);
-									}
-
-									foreach ($creators as $proxy_id => $creator) {
-										if ($proxy_id = (int) $proxy_id) {
-											if (array_key_exists($proxy_id, $selected_authors)) {
-												?>
-												<li class="community" id="author_<?php echo $proxy_id; ?>" style="cursor: move;"><?php echo $selected_authors[$proxy_id]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="author_list.removeItem('<?php echo $proxy_id; ?>');" class="list-cancel-image" /></li>
-												<?php
-											}
-										}
+									
+									foreach ($creators as $creator) {
+										?>
+                                        <li class="community" id="author_<?php echo $creator->getProxyID(); ?>" style="cursor: move;"><?php echo $creator->getCreator()->getFullName(); ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="author_list.removeItem('<?php echo $creator->getProxyID(); ?>');" class="list-cancel-image" /></li>
+										<?php
 									}
 								}
 								?>
@@ -356,9 +309,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							</table>
 						</td>
 					</tr>
-					
-					
-					
 					<tr>
 						<td colspan="3">
 							<div style="float: right; text-align: right">
@@ -371,99 +321,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			</table>
 		</form>
 		<?php
-		$query = "	SELECT a.*, CONCAT(c.`prefix`, ' ', c.`lastname`, ', ', c.`firstname` ) AS `fullname`, f.`curriculum_type_name` AS `event_term`
-					FROM `draft_events` AS a
-					LEFT JOIN `draft_contacts` AS b
-					ON b.`devent_id` = a.`devent_id`
-					LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
-					ON b.`proxy_id` = c.`id`
-					LEFT JOIN `draft_audience` AS d
-					ON a.`event_id` = d.`event_id`
-					LEFT JOIN `courses` AS e
-					ON a.`course_id` = e.`course_id`
-					LEFT JOIN `curriculum_lu_types` AS f
-					ON e.`curriculum_type_id` = f.`curriculum_type_id`
-					WHERE a.`draft_id` = ".$db->qstr($draft_id)."
-					GROUP BY a.`devent_id`
-					ORDER BY a.`event_start`";
-		$learning_events = $db->GetAll($query);
+		$draft_events = Models_Event_Draft_Event::fetchAllByDraftID($draft_id);
 		?>
 		<script type="text/javascript">
 			jQuery(function(){
-//				jQuery(".noLink").live("click", function(){
-//					return false;
-//				});
-//
-//				jQuery('#draftEvents').dataTable({
-//					"aaSorting": [[ 1, "asc" ]]
-//				});
-//
-//				jQuery("tbody a.date, tbody a.title, tbody a.time").live("click", function(){
-//					var element = jQuery(this);
-//					var temp_id = element.parent().parent().attr('rel');
-//					var temp_input = jQuery('<input/>', {
-//						id: element.parent().parent().attr('id')+'-input',
-//						type: 'text'
-//					});
-//
-//					temp_input.addClass(element.attr("class"));
-//
-//					var temp_data = element.html();
-//
-//					switch (element.attr('class').trim()) {
-//						case "date" :
-//							temp_input.datepicker({
-//								dateFormat: "yy-mm-dd",
-//								defaultDate: temp_data,
-//								onClose: function(dateText, inst) {
-//									temp_input.attr("value", dateText);
-//									if (dateText != temp_data && dateText != "") {
-//										temp_input.parent().append(update_draft_event("date", temp_id, dateText));
-//										temp_input.remove();
-//									} else {
-//										temp_input.parent().append(element);
-//										temp_input.remove();
-//									}
-//								}
-//							});
-//						break;
-//					}
-//
-//					element.parent().append(temp_input);
-//					element.siblings("input").focus();
-//					element.remove();
-//
-//					return false;
-//				});
-//
-//				jQuery("tbody input[type=text].time, tbody input[type=text].title").live("blur", function(){
-//					var element = jQuery(this);
-//					var temp_id = element.parent().parent().attr('rel');
-//					element.parent().append(update_draft_event(element.attr("class").trim(), temp_id, element.val()));
-//					element.remove();
-//				});
-//
-//				function update_draft_event(action, event_id, new_data) {
-//					var ajax_data = "";
-//					jQuery.ajax({
-//						type: 'POST',
-//						url: '<?php echo ENTRADA_URL ;?>/api/learning-events-schedule.api.php',
-//						data: 'action='+action+'&id='+event_id+'&data='+new_data,
-//						async: false,
-//						success: function(data) {
-//							ajax_data = data;
-//						}
-//					});
-//					return ajax_data;
-//				}
-//
-//				jQuery("form").keypress(function(e) {
-//					if (e.keyCode == 13) {
-//						jQuery("input").blur();
-//						return false;
-//					}
-//				});
-
 				jQuery(".import-csv").live("click", function(){
 					jQuery("#import-csv").dialog({
 						title: "Import CSV",
@@ -525,9 +386,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				</colgroup>
 				<thead>
 					<tr>
-						<th class="modified">&nbsp;</th>
-						<th class="date-smallest">Date</th>
-						<th class="accesses">Time</th>
+						<th class="modified" width="5%">&nbsp;</th>
+						<th class="date-smallest" width="12%">Date</th>
+						<th class="accesses" width="7%">Time</th>
 						<th class="general">Duration</th>
 						<th class="title">Event Title</th>
 					</tr>
@@ -538,25 +399,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				<?php
 
 				$count_modified = 0;
+                if (!empty($draft_events)) {
+                    foreach ($draft_events as $draft_event) {
+                        $url = "";
+                        $accessible = true;
 
-				foreach ($learning_events as $result) {
-					$url = "";
-					$accessible = true;
+                        $url = ENTRADA_URL."/admin/events?section=edit&mode=draft&id=".$draft_event->getDeventID();
 
-					$url = ENTRADA_URL."/admin/events?section=edit&mode=draft&id=".$result["devent_id"];
+                        if ((($draft_event->getReleaseDate()) && ($draft_event->getReleaseDate() > time())) || (($draft_event->getReleaseUntil()) && ($draft_event->getReleaseUntil() < time()))) {
+                            $accessible = false;
+                        }
 
-					if ((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {
-						$accessible = false;
-					}
-
-					echo "<tr id=\"event-".$result["event_id"]."\" rel=\"".$result["devent_id"]."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
-					echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["devent_id"]."\" /></td>\n";
-					echo "	<td class=\"date-smallest\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\" class=\"date\">" : "").date("Y-m-d", $result["event_start"]).(($url) ? "</a>" : "")."</td>\n";
-					echo "	<td class=\"accesses\">".(($url) ? "<a href=\"".$url."\" title=\"Event Time\" class=\"time\">" : "").date("H:i", $result["event_start"]).(($url) ? "</a>" : "")."</td>\n";
-					echo "	<td class=\"general\">".(($url) ? "<a href=\"".$url."\" title=\"Duration\">" : "").$result["event_duration"].(($url) ? " minutes</a>" : "")."</td>\n";
-					echo "	<td class=\"title\">".(($url) ? "<a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\" class=\"title\">" : "").html_encode($result["event_title"]).(($url) ? "</a>" : "")."</td>\n";
-					echo "</tr>\n";
-				}
+                        echo "<tr id=\"event-".$draft_event->getEventID()."\" rel=\"".$draft_event->getDeventID()."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
+                        echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$draft_event->getDeventID()."\" /></td>\n";
+                        echo "	<td class=\"date-smallest\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\" class=\"date\">" : "").date("Y-m-d", $draft_event->getEventStart()).(($url) ? "</a>" : "")."</td>\n";
+                        echo "	<td class=\"accesses\">".(($url) ? "<a href=\"".$url."\" title=\"Event Time\" class=\"time\">" : "").date("H:i", $draft_event->getEventStart()).(($url) ? "</a>" : "")."</td>\n";
+                        echo "	<td class=\"general\">".(($url) ? "<a href=\"".$url."\" title=\"Duration\">" : "").$draft_event->getEventDuration().(($url) ? " minutes</a>" : "")."</td>\n";
+                        echo "	<td class=\"title\">".(($url) ? "<a href=\"".$url."\" title=\"Event Title: ".html_encode($draft_event->getEventTitle())."\" class=\"title\">" : "").html_encode($draft_event->getEventTitle()).(($url) ? "</a>" : "")."</td>\n";
+                        echo "</tr>\n";
+                    }
+                } else {
+                    ?>
+                    <tr>
+                        <td colspan="5">There are currently no events in this draft. Please use the Import CSV button or the Add New Event button above to create some.</td>
+                    </tr>
+                    <?php
+                }
 				?>
 				</tbody>
 			</table>

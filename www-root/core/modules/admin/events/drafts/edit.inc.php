@@ -140,16 +140,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         }
                     }
 					
-					if ($PROCESSED["options"]) {
-						$draft->deleteOptions();
-						foreach ($PROCESSED["options"] as $option) {
-                            $option["draft_id"] = $draft_id;
-                            $new_draft_option = new Models_Event_Draft_Option($option);
-							if (!$new_draft_option->insert()) {
-								application_log("error", "Error when saving draft [".$draft_id."] options, DB said: ".$db->ErrorMsg());
-							}
-						}
-					}
+                    if ($draft->deleteOptions()) {
+                        if ($PROCESSED["options"]) {
+                            foreach ($PROCESSED["options"] as $option) {
+                                $option["draft_id"] = $draft_id;
+                                $new_draft_option = new Models_Event_Draft_Option($option);
+                                if (!$new_draft_option->insert()) {
+                                    application_log("error", "Error when saving draft [".$draft_id."] options, DB said: ".$db->ErrorMsg());
+                                }
+                            }
+                        }
+                    }
 					add_success("The <strong>Draft Information</strong> section has been successfully updated.");
 					application_log("success", "Draft information for draft_id [".$draft_id."] was updated.");
 				} else {

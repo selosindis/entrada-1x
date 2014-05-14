@@ -47,7 +47,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						FROM `courses` a
 						JOIN `assignments` b
 						ON a.`course_id` = b.`course_id`
-						WHERE b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID);
+						WHERE b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
+						AND b.`assignment_active` = '1'";
 			$course_details = $db->GetRow($query);
 			if($course_details){
 				if($ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update",false)){
@@ -58,18 +59,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	}
 
 	if ($COURSE_ID) {
-		if($ASSIGNMENT_ID){
+		if ($ASSIGNMENT_ID) {
 			$query = "	SELECT *, b.`name` as `assessment_name` 
 						FROM `assignments` a
 						JOIN `assessments` b
 						ON a.`assessment_id` = b.`assessment_id`
-						WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID);
+						WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
+						AND a.`assignment_active` = '1'";
 			$assessment_details = $db->getRow($query);
-			if ($assessment_details) {
-				$PROCESSED["name"] = $assessment_details["assessment_name"];
-			} else {
-				$PROCESSED["name"] = "";
-			}
+        }
+        if (isset($assessment_details) && $assessment_details) {
+			$PROCESSED["name"] = $assessment_details["assessment_name"];
 			
 			if($IS_CONTACT || $ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
 				$query = "	SELECT * FROM `courses`
@@ -223,7 +223,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										FROM `assignments` a
 										JOIN `assessments` b
 										ON a.`assessment_id` = b.`assessment_id`
-										WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID);
+										WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
+										AND a.`assignment_active` = '1'";
 							if($assignment_record = $db->GetRow($query)){
 								$PROCESSED["assignment_id"] = $assignment_record["assignment_id"];
 								$PROCESSED["assignment_title"] = $assignment_record["assignment_title"];

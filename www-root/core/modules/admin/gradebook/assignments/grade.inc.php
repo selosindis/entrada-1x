@@ -76,12 +76,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {			
 
-			$query = "	SELECT `assignments`.*,	`assessments`.`cohort`, `assessment_marking_schemes`.`id` AS `marking_scheme_id`, `assessment_marking_schemes`.`handler`, `assessment_marking_schemes`.`description` as `marking_scheme_description`
-						FROM `assignments`
-						LEFT JOIN `assessments`
-						ON `assignments`.`assessment_id` = `assessments`.`assessment_id`
-						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-						WHERE `assignments`.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID);
+			$query = "  SELECT a.*, b.`cohort`, c.`id` AS `marking_scheme_id`, c.`handler`, c.`description` as `marking_scheme_description`
+                        FROM `assignments` AS a
+                        LEFT JOIN `assessments` AS b
+                        ON a.`assessment_id` = b.`assessment_id`
+                        LEFT JOIN `assessment_marking_schemes` AS c
+                        ON c.`id` = b.`marking_scheme_id`
+                        WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
+                        AND a.`assignment_active` = '1'";
 			$assignment = $db->GetRow($query);
 			if ($assignment) {				
 				$COHORT = $assignment["cohort"];
@@ -181,6 +183,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							LEFT JOIN `assessment_exceptions` AS g
 							ON g.`assessment_id` = d.`assessment_id`
 							AND g.`proxy_id` = a.`id`
+							AND c.`assignment_active` = '1'
 							ORDER BY ".$by." ".$order;			
 				$students = $db->GetAll($query);
 												

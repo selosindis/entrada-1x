@@ -356,7 +356,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                             <?php
                                             if ($assessment["handler"] == "Boolean") {
                                                 echo "<br /><br />By default, importing a Pass/Fail grade counts any numeric grade other than 0 as a Pass. Alternatively, check off the box below to select the minimum numeric grade required to be considered a pass.\n";
-                                                echo "<br /><br /><input type=\"checkbox\" id=\"enable_threshold\" onclick=\"jQuery('#grade_threshold_holder').toggle(this.checked)\" /> <label for=\"enable_threshold\">Enable custom minimum passing value for imported grades</label>\n";
+                                                echo "<br /><br /><input type=\"checkbox\" id=\"enable_grade_threshold\" onclick=\"jQuery('#grade_threshold_holder').toggle(this.checked)\" name=\"enable_grade_threshold\" value=\"1\" /> <label for=\"enable_grade_threshold\">Enable custom minimum passing value for imported grades</label>\n";
                                                 echo "<br /><div style=\"display: none;\" id=\"grade_threshold_holder\"><label for=\"grade_threshold\">Minimum Pass Value:</label> <input class=\"space-left\" style=\"width: 40px;\" type=\"text\" name=\"grade_threshold\" id=\"grade_threshold\" value=\"60\" /></div>\n";
                                             }
                                             ?>

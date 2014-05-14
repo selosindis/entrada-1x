@@ -42,7 +42,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	}
 
 	if ($ASSESSMENT_ID) {
-        if (isset($_POST["grade_threshold"]) && ((int)$_POST["grade_threshold"])) {
+        if (isset($_POST["enable_grade_threshold"]) && $_POST["enable_grade_threshold"] && isset($_POST["grade_threshold"]) && ((int)$_POST["grade_threshold"])) {
             $grade_threshold = ((int)$_POST["grade_threshold"]);
         } else {
             $grade_threshold = false;
@@ -90,8 +90,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                     $temp_value = clean_input($temp_value, $clean_parameters);
                     $valid_value = false;
                     if (in_array($assessment["handler"], array("Boolean", "CompleteIncomplete"))) {
-                        if (in_array(strtolower($temp_value), array("p", "pass", "c", "complete", "true", "t")) !== false || (($assessment["handler"] != "Boolean" || !$grade_threshold) && ((int)$temp_value))) {
-                            $temp_value = 100;
+                        if (in_array(strtolower($temp_value), array("p", "pass", "c", "complete", "true", "t")) !== false || (($assessment["handler"] != "Boolean" || !$grade_threshold) && (is_numeric($temp_value)))) {
+                            if ((int)$temp_value) {
+                                $temp_value = 100;
+                            } else {
+                                $temp_value = 0;
+                            }
                             $valid_value = true;
                         } elseif (is_numeric($temp_value) && $assessment["handler"] == "Boolean" && $grade_threshold) {
                             $valid_value = true;

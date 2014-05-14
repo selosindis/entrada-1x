@@ -163,7 +163,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 								if ($eventaudience = $db->GetAll($query)) {
 									application_log("notice", "Found ".count($eventaudience)." event audience members for draft event [".$event["devent_id"]."].");
 									foreach ($eventaudience as $audience) {
-
+                                        
 										$audience["event_id"] = $event_id;
 										$audience["updated_date"] = time();
 										$audience["updated_by"] =  $draft_creators[0]["proxy_id"];
@@ -177,6 +177,31 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 											$error++;
 											application_log("error", "Error inserting event_audience [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
 										}
+                                        
+                                        if ($audience["audience_type"] == "group_id") {
+                                            /*
+                                             * If the draft event audience type is a group check the course group for contacts, 
+                                             * if found add them to `event_contacts` as tutors.
+                                             */
+                                            $contacts = Models_Course_Group_Contact::fetchAllByCgroupID($audience["audience_value"]);
+                                            if ($contacts) {
+                                                $i = 0;
+                                                foreach ($contacts as $contact) {
+                                                    $event_contact_data = array(
+                                                        "event_id"      => $event_id,
+                                                        "proxy_id"      => $contact->getProxyID(),
+                                                        "contact_role"  => "tutor",
+                                                        "contact_order" => $i,
+                                                        "updated_date"  => time(),
+                                                        "updated_by"    => "1"
+                                                    );
+                                                    if (!$db->AutoExecute("event_contacts", $event_contact_data, "INSERT")) {
+                                                        application_log("error", "Failed to insert event contact, DB said: ".$db->ErrorMsg());
+                                                    }
+                                                    $i++;
+                                                }
+                                            }
+                                        }
 									}
 								}
 

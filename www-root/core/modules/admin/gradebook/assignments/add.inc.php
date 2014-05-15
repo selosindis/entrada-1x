@@ -42,7 +42,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
         if (isset($_GET["assessment_id"]) && $tmp_ass = clean_input($_GET["assessment_id"],array("trim","int"))){
             $query = "SELECT * FROM `assessments`
-                        WHERE `assessment_id` = ".$db->qstr($tmp_ass);
+                        WHERE `assessment_id` = ".$db->qstr($tmp_ass)."
+                        AND `active` = '1'";
             $assessment = $db->GetRow($query);
             if ($assessment) {
 				$PROCESSED["name"] = $assessment["name"];

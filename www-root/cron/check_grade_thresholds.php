@@ -94,6 +94,7 @@ $query = "SELECT a.`assessment_id`, a.`name` AS `assessment_name`, a.`course_id`
 		  JOIN `courses` AS d
 		  ON a.`course_id` = d.`course_id`
 		  WHERE a.`grade_threshold` != 0
+		  AND a.`active` = 1
 		  AND b.`value` < a.`grade_threshold`
 		  AND b.`threshold_notified` = '0'
 		  AND (a.`marking_scheme_id` = '2' OR a.`marking_scheme_id` = '3')";

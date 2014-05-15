@@ -1428,6 +1428,7 @@ class AssessmentContactAssertion implements Zend_Acl_Assert_Interface {
 						JOIN `assessments` c
 						ON c.`assessment_id` = b.`assessment_id`
 						WHERE a.`proxy_id` = " . $db->qstr($user_id) . "
+						AND c.`active` = 1
 						AND b.`assignment_active` = 1
 						AND c.`assessment_id` = " . $db->qstr($assessment_id);
 		$results	= $db->GetAll($query);

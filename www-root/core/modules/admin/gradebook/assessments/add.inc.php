@@ -291,7 +291,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						// fetch the number of assessments to set the order
 						$query = "	SELECT COUNT(`assessment_id`)
 									FROM `assessments`
-									WHERE `course_id` = ".$db->qstr($COURSE_ID);
+									WHERE `course_id` = ".$db->qstr($COURSE_ID)."
+									AND `active` = '1'";
 						$order = $db->GetOne($query);
 						
 						$PROCESSED["order"]			= $order;
@@ -326,7 +327,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							
 							if ($assessment_options) {
 								foreach ($assessment_options as $assessment_option) {
-									$query = "SELECT * FROM `assessments` WHERE assessment_id =" . $ASSESSMENT_ID;
+									$query = "SELECT * FROM `assessments`
+									            WHERE `assessment_id`  = ".$db->qstr($ASSESSMENT_ID)."
+									            AND `active` = '1'";
 									$results = $db->GetRow($query);
 									if ($results) {
 										$PROCESSED["assessment_id"] = $results["assessment_id"];

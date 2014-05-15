@@ -64,23 +64,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {
 			if (!empty($ASSESSMENT_IDS)) {
-				$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`
-							FROM `assessments`
-							LEFT JOIN `assessment_marking_schemes` 
-                            ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-							WHERE `assessments`.`assessment_id` IN (".implode(",", $ASSESSMENT_IDS).") 
-                            AND `assessments`.`course_id` = ".$db->qstr($COURSE_ID)."
-                            AND (`assessments`.`release_date` = '0' OR `assessments`.`release_date` <= ".$db->qstr(time()).")
-                            AND (`assessments`.`release_until` = '0' OR `assessments`.`release_until` > ".$db->qstr(time()).")";
+				$query = "	SELECT a.*,b.`id` as `marking_scheme_id`, b.`handler`
+							FROM `assessments` AS a
+							LEFT JOIN `assessment_marking_schemes` AS b
+                            ON b.`id` = a.`marking_scheme_id`
+							WHERE a.`assessment_id` IN (".implode(",", $ASSESSMENT_IDS).")
+							AND a.`active` = '1'
+                            AND a.`course_id` = ".$db->qstr($COURSE_ID)."
+                            AND (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).")
+                            AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time()).")";
 			} else {
-				$query = "	SELECT `assessments`.*,`assessment_marking_schemes`.`id` as `marking_scheme_id`, `assessment_marking_schemes`.`handler`
-							FROM `assessments`
-							LEFT JOIN `assessment_marking_schemes` 
-                            ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-							WHERE `assessments`.`cohort` = ".$db->qstr($COHORT)." 
-                            AND `assessments`.`course_id` = ".$db->qstr($COURSE_ID)."
-                            AND (`assessments`.`release_date` = '0' OR `assessments`.`release_date` <= ".$db->qstr(time()).")
-                            AND (`assessments`.`release_until` = '0' OR `assessments`.`release_until` > ".$db->qstr(time()).")";
+				$query = "	SELECT a.*,b.`id` as `marking_scheme_id`, b.`handler`
+							FROM `assessments` AS a
+							LEFT JOIN `assessment_marking_schemes` AS b
+                            ON b.`id` = a.`marking_scheme_id`
+							WHERE a.`cohort` = ".$db->qstr($COHORT)."
+							AND a.`active` = '1'
+                            AND a.`course_id` = ".$db->qstr($COURSE_ID)."
+                            AND (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).")
+                            AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time()).")";
 			}
 			$assessments = $db->GetAll($query);
 			if ($assessments) {
@@ -110,7 +112,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				if (isset($COHORT)) {
 					$query .= " WHERE c.`group` = 'student' AND d.`group_id` = ".$db->qstr($COHORT);
 				} else {					
-					$cquery = "SELECT DISTINCT(`cohort`) FROM `assessments` WHERE `assessment_id` IN (".implode(",", $ASSESSMENT_IDS).")";
+					$cquery = "SELECT DISTINCT(`cohort`) FROM `assessments`
+                                WHERE `assessment_id` IN (".implode(",", $ASSESSMENT_IDS).")
+                                AND a.`active` = '1'";
 					$cohorts = $db->GetAll($cquery);
 					if ($cohorts) {
 						foreach($cohorts as $cohort){

@@ -86,7 +86,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			// Display Page
 			switch($STEP) {
 				case 2 :
-					$query = "DELETE FROM `assessments` WHERE `assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")";
+					$query = "UPDATE `assessments` SET `active` = 0 WHERE `assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")";
 					if($db->Execute($query)) {
 						$total_removed_assessments = $db->Affected_Rows();						
 						$ONLOAD[]	= "setTimeout('window.location=\\'".$INDEX_URL."\\'', 5000)";
@@ -95,13 +95,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							
 							if (!$db->AutoExecute ("assignments",array("assessment_id"=>0),"UPDATE","`assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")")) {
 								application_log("error", "Successfully removed assessment ids: ".implode(", ", $ASSESSMENT_IDS), "but was unable to remove the assignments pertaining to them.");
-							}							
-							
-							$query = "DELETE FROM `assessment_grades` WHERE `assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")";							
-							if($db->Execute($query)) {							
-								application_log("success", "Successfully removed assessment ids: ".implode(", ", $ASSESSMENT_IDS));
-							} else {
-								application_log("error", "Successfully removed assessment ids: ".implode(", ", $ASSESSMENT_IDS), "but was unable to remove the grades pertaining to them.");
 							}
 							
 							$SUCCESS++;
@@ -136,7 +129,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								JOIN `groups` AS b
 								ON a.`cohort` = b.`group_id`
 								WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
-								AND a.`assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).") ORDER BY a.`name` ASC";
+								AND a.`active` = '1'
+								AND a.`assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")
+								ORDER BY a.`name` ASC";
 					$assessments = 	$db->GetAll($query);
 					if($assessments) {
 						echo display_notice(array("Please review the following notices to ensure that you wish to permanently delete them. This action cannot be undone."));

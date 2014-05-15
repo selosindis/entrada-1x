@@ -113,7 +113,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         FROM `assessments` AS a
                         LEFT JOIN `group_members` AS b
                         ON a.`cohort` = b.`group_id`
-                        WHERE `assessment_id` = ".$db->qstr($assessment_id);
+                        WHERE `assessment_id` = ".$db->qstr($assessment_id)."
+                        AND a.`active` = '1'";
 
             if ($proxy_ids = $db->GetAll($query)) {
                 $grade_threshold = $proxy_ids[0]["grade_threshold"];

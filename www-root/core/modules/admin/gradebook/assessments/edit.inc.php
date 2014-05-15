@@ -43,8 +43,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	application_log("notice", "Failed to provide assessment identifier when attempting to edit an assessment");
 } else {
-	$query = "	SELECT * FROM `assessments` 
-						WHERE `assessment_id` = " . $db->qstr($ASSESSMENT_ID);
+	$query = "  SELECT * FROM `assessments`
+                WHERE `assessment_id` = " . $db->qstr($ASSESSMENT_ID)."
+                AND `active` = '1'";
 	$assessment_details = $db->GetRow($query);
 
 	if ($assessment_details) {
@@ -274,7 +275,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									$query = "SELECT `option_id`, `assessment_id`, `option_active` FROM `assessment_options` WHERE `assessment_id` = ".$db->qstr($assessment_details["assessment_id"]);
 									$current_assessment_options = $db->GetAssoc($query);
 									foreach ($assessment_options as $assessment_option) {
-										$query = "SELECT * FROM `assessments` WHERE assessment_id =" . $ASSESSMENT_ID;
+										$query = "SELECT * FROM `assessments`
+										            WHERE assessment_id = ".$db->qstr($ASSESSMENT_ID)."
+										            AND `active` = '1'";
 										$results = $db->GetRow($query);
 										if ($results) {
 											$PROCESSED["assessment_id"] = $results["assessment_id"];

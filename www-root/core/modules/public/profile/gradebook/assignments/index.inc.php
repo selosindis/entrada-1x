@@ -84,24 +84,25 @@ switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["sb"]) {
 	$group_ids_string = implode(', ',$group_ids);
 
 	$courses = groups_get_enrolled_course_ids($ENTRADA_USER->getID());
-	$query = "SELECT c.`course_code`, e.`assignment_id`, e.`assignment_title`, e.`due_date`, h.`grade_id` AS `grade_id`, h.`value` AS `grade_value`, i.`grade_weighting` AS `submitted_date`, f.`show_learner`
-						FROM `assignments` AS e
-						JOIN `courses` AS c
-						ON e.`course_id` = c.`course_id`
-						LEFT JOIN `assessments` AS f
-						ON e.`assessment_id` = f.`assessment_id`
-						AND f.`cohort` IN (". $group_ids_string .")
-						LEFT JOIN `assessment_grades` AS h
-						ON h.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
-						AND h.`assessment_id` = e.`assessment_id`
-						LEFT JOIN `assessment_exceptions` AS i
-						ON h.`proxy_id` = i.`proxy_id`
-						AND h.`assessment_id` = i.`assessment_id`
-						WHERE c.`course_id` IN (".(implode(',',$courses)).")
-						AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-	                    AND (e.`release_date` = 0 OR e.`release_date` < ".$db->qstr(time()).")
-	                    AND (e.`release_until` = 0 OR e.`release_until` > ".$db->qstr(time()).")
-	                    AND e.`assignment_active` = '1'
+	$query = "SELECT c.`course_code`, a.`assignment_id`, a.`assignment_title`, a.`due_date`, d.`grade_id` AS `grade_id`, d.`value` AS `grade_value`, e.`grade_weighting` AS `submitted_date`, c.`show_learner`
+						FROM `assignments` AS a
+						JOIN `courses` AS b
+						ON a.`course_id` = b.`course_id`
+						JOIN `assessments` AS c
+						ON a.`assessment_id` = c.`assessment_id`
+						AND c.`cohort` IN (". $group_ids_string .")
+						LEFT JOIN `assessment_grades` AS d
+						ON d.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+						AND d.`assessment_id` = a.`assessment_id`
+						LEFT JOIN `assessment_exceptions` AS e
+						ON d.`proxy_id` = e.`proxy_id`
+						AND d.`assessment_id` = e.`assessment_id`
+						WHERE b.`course_id` IN (".(implode(',', $courses)).")
+						AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+	                    AND (a.`release_date` = 0 OR a.`release_date` < ".$db->qstr(time()).")
+	                    AND (a.`release_until` = 0 OR a.`release_until` > ".$db->qstr(time()).")
+	                    AND a.`assignment_active` = '1'
+	                    AND c.`active` = 1
                         ORDER BY ".$sort_by;
 	$assignments = $db->GetAll($query);
 	if($assignments) {

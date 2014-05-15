@@ -78,11 +78,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 			$query = "  SELECT a.*, b.`cohort`, c.`id` AS `marking_scheme_id`, c.`handler`, c.`description` as `marking_scheme_description`
                         FROM `assignments` AS a
-                        LEFT JOIN `assessments` AS b
+                        JOIN `assessments` AS b
                         ON a.`assessment_id` = b.`assessment_id`
                         LEFT JOIN `assessment_marking_schemes` AS c
                         ON c.`id` = b.`marking_scheme_id`
                         WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
+                        AND b.`active` = 1
                         AND a.`assignment_active` = '1'";
 			$assignment = $db->GetRow($query);
 			if ($assignment) {				
@@ -173,16 +174,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							AND b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
 							JOIN `assignments` AS c
 							ON b.`assignment_id` = c.`assignment_id`
+							JOIN `assessments` AS e
+							ON e.`assessment_id` = c.`assessment_id`
 							LEFT JOIN `assessment_grades` AS d 
-							ON c.`assessment_id` = d.`assessment_id`
-							AND d.`proxy_id` = a.`id`
-							LEFT JOIN `assessments` AS e
 							ON d.`assessment_id` = e.`assessment_id`
+							AND d.`proxy_id` = a.`id`
 							LEFT JOIN `assessment_marking_schemes` AS f
 							ON e.`marking_scheme_id` = f.`id`
 							LEFT JOIN `assessment_exceptions` AS g
 							ON g.`assessment_id` = d.`assessment_id`
 							AND g.`proxy_id` = a.`id`
+							AND e.`active` = 1
 							AND c.`assignment_active` = '1'
 							ORDER BY ".$by." ".$order;			
 				$students = $db->GetAll($query);
@@ -190,7 +192,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$query = "	SELECT * FROM `assessments` AS a
 							JOIN `assessment_marking_schemes` AS b
 							ON a.`marking_scheme_id` = b.`id`
-							WHERE a.`assessment_id` = ".$db->qstr($assignment["assessment_id"]);				
+							WHERE a.`assessment_id` = ".$db->qstr($assignment["assessment_id"])."
+							AND a.`active` = 1";
 				$assessment = $db->GetRow($query);				
 				?>
 					<div style="float: right; text-align: right; width:400px;">

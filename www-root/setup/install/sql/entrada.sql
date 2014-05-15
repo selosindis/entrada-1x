@@ -973,6 +973,7 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   `release_until` bigint(64) NOT NULL DEFAULT '0',
   `order` smallint(6) NOT NULL DEFAULT '0',
   `grade_threshold` float NOT NULL DEFAULT '0',
+  `active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`assessment_id`),
   KEY `order` (`order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;

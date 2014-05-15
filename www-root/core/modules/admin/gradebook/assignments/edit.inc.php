@@ -65,7 +65,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						JOIN `assessments` b
 						ON a.`assessment_id` = b.`assessment_id`
 						WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
-						AND a.`assignment_active` = '1'";
+						AND a.`assignment_active` = '1'
+						AND b.`active` = 1";
 			$assessment_details = $db->getRow($query);
         }
         if (isset($assessment_details) && $assessment_details) {
@@ -224,7 +225,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										JOIN `assessments` b
 										ON a.`assessment_id` = b.`assessment_id`
 										WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
-										AND a.`assignment_active` = '1'";
+										AND a.`assignment_active` = '1'
+										AND b.`active` = 1";
 							if($assignment_record = $db->GetRow($query)){
 								$PROCESSED["assignment_id"] = $assignment_record["assignment_id"];
 								$PROCESSED["assignment_title"] = $assignment_record["assignment_title"];

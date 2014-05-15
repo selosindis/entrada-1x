@@ -77,22 +77,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                 
 				$COHORT = $assessment["cohort"];
 				
-				$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`
-							FROM `".AUTH_DATABASE."`.`user_data` AS b
-							JOIN `".AUTH_DATABASE."`.`user_access` AS c
-							ON c.`user_id` = b.`id` 
-							AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-							AND c.`account_active` = 'true'
-							AND (c.`access_starts` = '0' OR c.`access_starts`<=".$db->qstr(time()).")
-							AND (c.`access_expires` = '0' OR c.`access_expires`>=".$db->qstr(time()).")
+				$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`number`
+							FROM `".AUTH_DATABASE."`.`user_data` AS a
+							JOIN `".AUTH_DATABASE."`.`user_access` AS b
+							ON a.`id` = b.`user_id` 
+							AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+							AND b.`account_active` = 'true'
+							AND (b.`access_starts` = '0' OR b.`access_starts`<=".$db->qstr(time()).")
+							AND (b.`access_expires` = '0' OR b.`access_expires`>=".$db->qstr(time()).")
 							JOIN `group_members` AS c
-							ON b.`id` = c.`proxy_id`
-							WHERE c.`group` = 'student'
+							ON a.`id` = c.`proxy_id`
+							WHERE b.`group` = 'student'
 							AND c.`group_id` = ".$db->qstr($COHORT)."
 							AND c.`member_active` = '1' 
-							ORDER BY b.`lastname` ASC, b.`firstname` ASC";
+							ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 				$students = $db->GetAll($query);
-				
+                
 				foreach ($students as $key => &$student) {
 					$query = "SELECT `grade_id`, `value` AS `grade_value` FROM `assessment_grades`
 								WHERE `proxy_id` = ".$db->qstr($student["proxy_id"])."
@@ -346,15 +346,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						
 						<div id="import-csv" style="display:none;">
 							<h2>Import grades from CSV</h2>
-							<div id="display-notice-box" class="display-notice">
-								<ul>
-								<li><strong>Important Notes:</strong>
-									<br />Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets). 
-									<br />Any grades entered will be overwritten if present in the CSV.</li>
-								</ul>
-							</div>
-							<form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
-								<input type="file" name="file"/>
+                            <form enctype="multipart/form-data" action="<?php echo ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "csv-upload", "assessment_id" => $ASSESSMENT_ID)); ?>" method="POST">
+                                <div id="display-notice-box" class="display-notice">
+                                    <ul>
+                                        <li>
+                                            <strong>Important Notes:</strong>
+                                            <br />Format for the CSV should be [Student Number, Grade] with each entry on a separate line (without the brackets).
+                                            <br />Any grades entered will be overwritten if present in the CSV.
+                                            <?php
+                                            if ($assessment["handler"] == "Boolean") {
+                                                echo "<br /><br />By default, importing a Pass/Fail grade counts any numeric grade other than 0 as a Pass. Alternatively, check off the box below to select the minimum numeric grade required to be considered a pass.\n";
+                                                echo "<br /><br /><input type=\"checkbox\" id=\"enable_grade_threshold\" onclick=\"jQuery('#grade_threshold_holder').toggle(this.checked)\" name=\"enable_grade_threshold\" value=\"1\" /> <label for=\"enable_grade_threshold\">Enable custom minimum passing value for imported grades</label>\n";
+                                                echo "<br /><div style=\"display: none;\" id=\"grade_threshold_holder\"><label for=\"grade_threshold\">Minimum Pass Value:</label> <input class=\"space-left\" style=\"width: 40px;\" type=\"text\" name=\"grade_threshold\" id=\"grade_threshold\" value=\"60\" /></div>\n";
+                                            }
+                                            ?>
+                                        </li>
+                                    </ul>
+                                </div>
+								<input type="file" name="file" />
 							</form>
 						</div>
 
@@ -401,7 +410,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								} else if (jQuery(this).attr("id") == "import-csv-button") {
 									var target = jQuery("#import-csv");
 									var title = "Import CSV";
-									var height = 350;
+									var height = <?php echo ($assessment["handler"] == "Boolean" ? 500 : 350); ?>;
 								}
 								var importResults = target.dialog({
 									modal:		true,

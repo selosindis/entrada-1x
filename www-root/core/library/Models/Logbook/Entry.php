@@ -172,6 +172,31 @@ class Models_Logbook_Entry {
         }
     }
     
+    public function getCourseObjectivesMobile() {
+        global $db;
+        
+        if ($this->getCourseID()) {
+            $objectives = array("required" => array(), "logged" => array(), "disabled" => array());
+            $required_objectives = Models_Logbook::getAllRequiredObjectivesMobile($this->getCourseID());
+            foreach ($required_objectives as $required_objective) {
+                $query = "SELECT a.`objective_id` FROM `logbook_entry_objectives` AS a
+                            JOIN `logbook_entries` AS b
+                            ON a.`lentry_id` = b.`lentry_id`
+                            WHERE b.`entry_active` = 1
+                            AND b.`course_id` = ".$db->qstr($this->getCourseID())."
+                            AND a.`objective_id` = ".$db->qstr($required_objective["objective_id"])."
+                            AND a.`objective_active` = 1
+                            LIMIT 0, 1";
+                $objective_found = ($db->getOne($query) ? true : false);
+                $objectives[($this->attachedObjectiveIsDuplicate($required_objective["objective_id"]) ? "disabled" : ($objective_found ? "logged" : "required"))][] = $required_objective;
+            }
+            
+            return $objectives;
+        } else {
+            return false;
+        }
+    }
+    
     public function addObjective($objective_id, $participation_level) {
         global $ENTRADA_USER;
         

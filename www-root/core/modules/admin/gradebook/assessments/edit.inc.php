@@ -437,6 +437,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									 FROM `course_objectives` AS a
 									 JOIN `global_lu_objectives` AS b
 									 ON a.`objective_id` = b.`objective_id`
+                                     AND b.`active` = '1'
 									 WHERE a.`course_id` = ".$COURSE_ID."
 									 AND a.`objective_type` = 'event'";
 						
@@ -451,6 +452,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 													JOIN `course_objectives` AS b
 													ON b.`course_id` = ".$COURSE_ID."
 													AND a.`objective_id` = b.`objective_id`
+                                                    AND b.`active` = '1'
 													JOIN `objective_organisation` AS c
 													ON a.`objective_id` = c.`objective_id`
 													WHERE a.`objective_id` = ".$db->qstr($objective_id)."
@@ -787,7 +789,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                         $questions_array = array();
                                                         $query = "SELECT * FROM `quiz_questions`
                                                                     WHERE `quiz_id` = ".$db->qstr($attached_quiz["quiz_id"])."
-                                                                    AND `questiontype_id` = 1";
+                                                                    AND `questiontype_id` = 1
+                                                                    AND `question_active` = 1";
                                                         $quiz_questions = $db->GetAll($query);
                                                         if ($quiz_questions) {
                                                             foreach ($quiz_questions as $quiz_question) {
@@ -797,7 +800,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                                         LEFT JOIN `assessment_quiz_questions` AS b
                                                                         ON a.`qquestion_id` = b.`qquestion_id`
                                                                         WHERE b.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
-                                                                        AND a.`questiontype_id` = 1";
+                                                                        AND a.`questiontype_id` = 1
+                                                                        AND a.`question_active` = 1";
                                                             $quiz_questions = $db->GetAll($query);
                                                             if ($quiz_questions) {
                                                                 foreach ($quiz_questions as $quiz_question) {
@@ -828,7 +832,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                             </div>
                                                             <?php
                                                         } else {
-                                                            add_error($query."No valid questions were found associated with this quiz.");
+                                                            add_error("No valid questions were found associated with this quiz.");
                                                             echo display_error();
                                                         }
                                                         echo "          </div>\n";
@@ -1122,6 +1126,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                 LEFT JOIN `course_objectives` b
                                                 ON a.`objective_id` = b.`objective_id`
                                                 AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+                                                AND b.`active` = '1'
                                                 LEFT JOIN `assessment_objectives` c
                                                 ON c.`objective_id` = a.`objective_id`
                                                 AND c.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."

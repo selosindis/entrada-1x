@@ -84,21 +84,28 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			}
 			$assessments = $db->GetAll($query);
 			if ($assessments) {
+
+                $settings = new Entrada_Settings();
+                $export_weighted_grades = (($temp_setting = $settings->fetchByShortname("export_weighted_grade", $ENTRADA_USER->getActiveOrganisation())) && $temp_setting->getValue() ? true : false);
+                $export_calculated_grades = json_decode((($temp_setting = $settings->fetchByShortname("export_calculated_grade", $ENTRADA_USER->getActiveOrganisation())) && $temp_setting->getValue() ? $temp_setting->getValue() : false));
+                $export_calculated_grades_enabled = ($export_calculated_grades && isset($export_calculated_grades->enabled) && $export_calculated_grades->enabled ? true : false);
 				// CSV Download
 				$groups = array();				
 				$query = "SELECT b.`id` AS `proxy_id`, 
 							CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, 
 							b.`number`, 
 							c.`group`, 
-							c.`role`	
+							c.`role`,
+							d.`group_id`
 							FROM `".AUTH_DATABASE."`.`user_data` AS b
 							JOIN `".AUTH_DATABASE."`.`user_access` AS c
-							ON c.`user_id` = b.`id` AND c.`app_id`=".$db->qstr(AUTH_APP_ID)."
+							ON c.`user_id` = b.`id`
+							AND c.`app_id` = ".$db->qstr(AUTH_APP_ID)."
+							AND c.`account_active` = 'true'
+							AND (c.`access_starts` = '0' OR c.`access_starts` <= ".$db->qstr(time()).")
+							AND (c.`access_expires` = '0' OR c.`access_expires` >= ".$db->qstr(time()).")
 							JOIN `group_members` AS d
-							ON b.`id` = d.`proxy_id`
-							AND c.`account_active`='true'
-							AND (c.`access_starts`='0' OR c.`access_starts`<=".$db->qstr(time()).")
-							AND (c.`access_expires`='0' OR c.`access_expires`>=".$db->qstr(time()).") ";
+							ON b.`id` = d.`proxy_id`";
 
 				if (isset($COHORT)) {
 					$query .= " WHERE c.`group` = 'student' AND d.`group_id` = ".$db->qstr($COHORT);
@@ -124,10 +131,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					$assessment_ids[] = $assessment["assessment_id"];
 					$indexed_assessments[$assessment["assessment_id"]] = $assessment;
 					$weight_heading = "";
-					if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
+					if ($export_weighted_grades) {
 						$weight_heading  = " [Weighting: ".$assessment["grade_weighting"]."%]";
 					}					
-					echo ",\"".trim($assessment["name"]).$weight_heading." (".trim($assessment["type"]).")\"";					
+					echo ",\"".trim($assessment["name"]).(" [".(assessment_suffix($assessment) == "%" ? "Out of 100%" : ($assessment["handler"] == "Numeric" ? "Out of ".$assessment["numeric_grade_points_total"]." marks": ($assessment["handler"] == "Boolean" ? "P for Pass, F for Fail" : "C for Complete, I for Incomplete")))."]").$weight_heading." (".trim($assessment["type"]).")\"";
 				}
                 $assessment_ids_string = "";
                 foreach ($assessment_ids as $assessment_id) {
@@ -136,8 +143,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				// foreach ($assessments as $key => $assessment) {
 				// 	$query .= " LEFT JOIN `".DATABASE_NAME."`.`assessment_grades` AS assessment_$key ON b.`id` = assessment_$key.`proxy_id` AND assessment_$key.`assessment_id` IN (".$db->qstr($assessment["assessment_id"]).")";
 				// }
-				if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL) {
-				echo ",\"Weighted Total\"";
+				if ($export_weighted_grades) {
+				    echo ",\"Weighted Total\"";
+				}
+				if ($export_calculated_grades_enabled) {
+				    echo ",\"".(isset($export_calculated_grades->grade_long) && $export_calculated_grades->grade_long ? $export_calculated_grades->grade_long : "Rounded Total")."\"";
 				}
 				// foreach ($assessments as $key => $assessment) {
 				// 	$groups[] = $assessment["cohort"];
@@ -168,21 +178,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						}
 						foreach($assessment_ids as $assessment_id){					 
 							if(!isset($s_assessments[$assessment_id])){
-								$cols[] = trim(format_retrieved_grade(0, $indexed_assessments[$assessment_id]) . assessment_suffix($indexed_assessments[$assessment_id]));
+								$cols[] = trim(format_retrieved_grade(0, $indexed_assessments[$assessment_id]));
 								continue;
 							}
-							$cols[] = trim(format_retrieved_grade($s_assessments[$assessment_id]["grade"], $s_assessments[$assessment_id]) . assessment_suffix($s_assessments[$assessment_id]));							
+							$cols[] = trim(format_retrieved_grade($s_assessments[$assessment_id]["grade"], $s_assessments[$assessment_id]));
 						}
-						if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL && isset($COHORT)) {
-                            $weight = gradebook_get_weighted_grades($COURSE_ID, $COHORT, $student["proxy_id"], false, $assessment_ids_string, false);
+						if ($export_weighted_grades) {
+                            $weight = gradebook_get_weighted_grades($COURSE_ID, $student["group_id"], $student["proxy_id"], false, $assessment_ids_string, false);
 							$cols[] = round($weight["grade"], 2);
+                            if ($export_calculated_grades_enabled) {
+                                $export_grade = "";
+                                $whole_number_grade = round($weight["grade"], 0);
+                                switch ($export_calculated_grades->grade_short) {
+                                    case "letter_grade" :
+                                        foreach ($export_calculated_grades->grades as $letter => $range) {
+                                            if ($whole_number_grade >= $range->min && $whole_number_grade <= $range->max) {
+                                                $export_grade = $letter;
+                                            }
+                                        }
+                                        break;
+                                    case "rounded_percent" :
+                                    default :
+                                        $export_grade = $whole_number_grade;
+                                        break;
+                                }
+                                $cols[] = $export_grade;
+                            }
 							if($weight["total"] != 100){							
-								$cols[] = "[WARNING]: Your weighting totals do not equal 100% or this student is missing a weighted assessment. Current weighted total worth ".$weighted_total_max."% of total course mark.";
+								$cols[] = "[WARNING]: Your weighting totals do not equal 100% or this student is missing a weighted assessment. Current weighted total worth ".$weight["total"]."% of total course mark.";
 							}
 						}
 						echo "\"".implode("\",\"", $cols)."\"", "\n";
 					}
-					if (defined("GRADEBOOK_DISPLAY_WEIGHTED_TOTAL") && GRADEBOOK_DISPLAY_WEIGHTED_TOTAL && isset($COHORT)) {
+					if ($export_weighted_grades) {
 						echo "\n\n\n";
 						echo "\"[NOTE]: Weighted Total grades account for student specific weighting exceptions\"\n";
 					}

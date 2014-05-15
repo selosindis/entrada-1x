@@ -27,7 +27,9 @@ if ($RECORD_ID) {
 	if (!$submission	= $db->GetRow($query)) {
 		header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=submit&assignment_id=".$RECORD_ID);
 	}
-	$query			= "SELECT * FROM `assignments` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `assignment_active` = '1'";
+	$query			= "SELECT * FROM `assignments`
+	                    WHERE `assignment_id` = ".$db->qstr($RECORD_ID)."
+	                    AND `assignment_active` = '1'";
 	$folder_record	= $db->GetRow($query);
 	if ($folder_record){// || true) {
 		if ($folder_record["assessment_id"] == 0) {

@@ -73,7 +73,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 					break;
 					case "staff" :
 					case "faculty" :
-					case "students" :
+					case "student" :
 						$query = "SELECT CONCAT_WS(', ',`lastname`,`firstname`) as `fullname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($member["audience_value"]);
 						$fullname = $db->GetOne($query);
 						if ($fullname) {

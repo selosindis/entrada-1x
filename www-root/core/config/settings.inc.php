@@ -148,6 +148,10 @@ define("LDAP_SEARCH_DN", "uid=readonly,ou=people,dc=yourschool,dc=ca");			// The
 define("LDAP_SEARCH_DN_PASS", "");												// The LDAP password for the SearchDN above. These fields are optional.
 define("LDAP_MEMBER_ATTR", "UniUid");											// The member attribute used to identify the users unique LDAP ID.
 define("LDAP_USER_QUERY_FIELD", "UniCaPKey");									// The attribute used to identify the users staff / student number. Only used if LDAP_LOCAL_USER_QUERY_FIELD is set to "number".
+define("LDAP_CGROUP_BASE_DN", "ou=cgroups,ou=groups,o=main,dc=yourschool,dc=ca");
+define("LDAP_MEMBER_ATTR", "yourmemberattr");									// The member attribute used to identify the users unique LDAP ID.
+define("LDAP_USER_QUERY_FIELD", "youruserqueryfield");								// The attribute used to identify the users staff / student number. Only used if LDAP_LOCAL_USER_QUERY_FIELD is set to "number".
+define("LDAP_USER_IDENTIFIER", "youruniquemember");
 define("LDAP_LOCAL_USER_QUERY_FIELD", "number");								// username | number : This field allows you to specify which local user_data field is used to search for a valid username.
 
 define("AUTH_ALLOW_CAS", false);												// Whether or not you wish to allow CAS authorisation.
@@ -178,6 +182,8 @@ define("DEFAULT_CHARSET", "UTF-8");												// The character encoding which w
 define("DEFAULT_COUNTRY_ID", 39);												// The default contry id used to determine provinces / states, etc.
 define("DEFAULT_PROVINCE_ID", 9);												// The default provice id that is selected (use 0 for none).
 
+define("DEFAULT_CITY", "City");
+define("DEFAULT_POSTALCODE", "0123456");
 define("DEFAULT_DATE_FORMAT", "D M d/y g:ia");
 define("DEFAULT_ROWS_PER_PAGE", 25);
 
@@ -452,6 +458,39 @@ Before logging in for the first time you will need to create a password for your
 %password_reset_url%
 
 Once your password has been set you can log into %application_name% by visiting the following link:
+
+%application_url%
+
+Username: %username%
+
+If you require any assistance with this system, please do not hesitate to contact us:
+
+Central Education Office
+E-Mail: undergrad@yourschool.ca
+Telephone: +1 (613) 533-6000 x2494
+
+Sincerely,
+
+Central Education Office
+undergrad@yourschool.ca
+USERNOTIFICATION;
+
+/**
+ * This is the default notification message that is used in the Manage Users
+ * module when someone is updating a user in the system. It can be changed
+ * by the admin that is adding the user via a textarea when the new user
+ * is created.
+ */
+$DEFAULT_EDIT_USER_NOTIFICATION = <<<USERNOTIFICATION
+Dear %firstname% %lastname%,
+
+Your account has been updated in %application_name%, our web-based integrated teaching and learning system.
+
+Before logging in, you may need to reset your password. You can do this by clicking the following link:
+
+%password_reset_url%
+
+You can log into %application_name% by visiting the following link:
 
 %application_url%
 

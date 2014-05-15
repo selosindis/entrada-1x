@@ -192,32 +192,44 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						add_error("The LDAP synchronization course list can not be empty.");
 					}
 					
+                    /**
+					 * Check to see if the course groups should syncronize with LDAP or not.
+					 */
+                    if ((isset($_POST["sync_groups"])) && ($_POST["sync_groups"] == "1")) {
+						$PROCESSED["sync_groups"] = 1;
+					} else {
+						$PROCESSED["sync_groups"] = 0;
+					}
+                    
 					/**
 					 * Non-required field "course_directors" / Course Directors (array of proxy ids).
 					 * This is actually accomplished after the course is modified below.
 					 */
 
 					$posted_objectives = array();
+                    $PRIMARY_OBJECTIVES = array();
 					if ((isset($_POST["primary_objectives"])) && ($objectives = $_POST["primary_objectives"]) && (count($objectives))) {
-						$PRIMARY_OBJECTIVES = array();
 						foreach ($objectives as $objective_key => $objective) {
 							$PRIMARY_OBJECTIVES[] = clean_input($objective, "int");
+                            $objective_importance[$objective] = "1";
 							$posted_objectives["primary"][] = clean_input($objective, "int");
 						}
 					}
 
+                    $SECONDARY_OBJECTIVES = array();
 					if ((isset($_POST["secondary_objectives"])) && ($objectives = $_POST["secondary_objectives"]) && (count($objectives))) {
-						$SECONDARY_OBJECTIVES = array();
 						foreach ($objectives as $objective_key => $objective) {
 							$SECONDARY_OBJECTIVES[] = clean_input($objective, "int");
+                            $objective_importance[$objective] = "2";
 							$posted_objectives["secondary"][] = clean_input($objective, "int");
 						}
 					}
 
+                    $TERTIARY_OBJECTIVES = array();
 					if ((isset($_POST["tertiary_objectives"])) && ($objectives = $_POST["tertiary_objectives"]) && (count($objectives))) {
-						$TERTIARY_OBJECTIVES = array();
 						foreach ($objectives as $objective_key => $objective) {
 							$TERTIARY_OBJECTIVES[] = clean_input($objective, "int");
+                            $objective_importance[$objective] = "3";
 							$posted_objectives["tertiary"][] = clean_input($objective, "int");
 						}
 					}
@@ -502,8 +514,40 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								}
 							}
 
-							$db->Execute("DELETE FROM `course_objectives` WHERE `objective_type` = 'course' AND `course_id` = ".$db->qstr($COURSE_ID));
-							if (is_array($PRIMARY_OBJECTIVES) && count($PRIMARY_OBJECTIVES)) {
+                            $all_objectives = array_merge($PRIMARY_OBJECTIVES, $SECONDARY_OBJECTIVES, $TERTIARY_OBJECTIVES);
+                            $active_objectives = Models_Course_Objective::fetchAllByCourseID($COURSE_ID);
+                            if ($active_objectives) {
+                                // deactivate the objectives that have been removed.
+                                foreach ($active_objectives as $objective) {
+                                    if (!in_array($objective->getObjectiveID(), $all_objectives)) {
+                                        $objective->fromArray(array("active" => "0", "objective_finish" => time()))->update();
+                                    }
+                                    unset($all_objectives[array_search($objective->getObjectiveID(), $all_objectives)]);
+                                }
+                            }
+                            
+                            $objectives_added = 0;
+                            if (!empty($all_objectives)) {
+                                foreach ($all_objectives as $objective_id) {
+                                    $course_objective = new Models_Course_Objective(array(
+                                        "course_id"         => $COURSE_ID,
+                                        "objective_id"      => $objective_id,
+                                        "importance"        => $objective_importance[$objective_id],
+                                        "objective_type"    => "course",
+                                        "objective_details" => $objective_details[$objective_id],
+                                        "objective_start"   => time(),
+                                        "objective_finish"  => NULL,
+                                        "updated_date"      => time(),
+                                        "updated_by"        => $ENTRADA_USER->getID(),
+                                        "active"            => "1"
+                                    ));
+                                    if ($course_objective->insert()) {
+                                        $objectives_added++;
+                                    }
+                                }
+                            }
+
+							/*if (is_array($PRIMARY_OBJECTIVES) && count($PRIMARY_OBJECTIVES)) {
 								foreach($PRIMARY_OBJECTIVES as $objective_id) {
 									$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($ENTRADA_USER->getID()).", `importance` = '1', `objective_details` = ".(isset($objective_details[$objective_id]) && $objective_details[$objective_id] ? $db->qstr($objective_details[$objective_id]["details"]) : "NULL"));
 									if (isset($objective_details[$objective_id]) && $objective_details[$objective_id]) {
@@ -536,7 +580,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										$db->Execute("INSERT INTO `course_objectives` SET `course_id` = ".$db->qstr($COURSE_ID).", `objective_id` = ".$db->qstr($objective_id).", `updated_date` = ".$db->qstr(time()).", `updated_by` = ".$db->qstr($ENTRADA_USER->getID()).", `importance` = '1', `objective_details` = ".$db->qstr($objective["details"]));
 									}
 								}
-							}
+							}  */
 
 							if (isset($PROCESSED["course_report_ids"]) && count($PROCESSED["course_report_ids"]) > 0) {
 								//remove existing course_reports for this course before adding the new set of course reports.
@@ -1020,6 +1064,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								</label><br />
 								<label for="sync_on" class="radio">
 									<input type="radio" name="sync_ldap" id="sync_on" value="1"<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? " checked=\"checked\"" : ""); ?> /> This course <strong>should</strong> have its audience synced with the LDAP server.
+								</label><br />
+                                <label for="sync_groups" class="checkbox">
+									<input type="checkbox" name="sync_groups" id="sync_groups" value="1"<?php echo ((((isset($PROCESSED["sync_groups"])) && ($PROCESSED["sync_groups"]))) ? " checked=\"checked\"" : ""); ?> /> Synchronize course groups with the LDAP server.
 								</label>
 								<div class="<?php echo ((((isset($PROCESSED["sync_ldap"])) && ($PROCESSED["sync_ldap"]))) ? "" : "hide"); ?> ldap-course-sync-list">
 									<div class="well well-small content-small"><strong>Note:</strong> Please enter a comma separated list of alphanumeric course codes you wish to sync in the text area below. Additional individuals and groups can be manually added in the <strong>Course Enrollment</strong> below. </div>
@@ -1354,7 +1401,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					<?php 		} ?>
 							</ul>
 						</div>
-
 						<div class="mapped_objectives right droppable" id="mapped_objectives" data-resource-type="course" data-resource-id="<?php echo $COURSE_ID;?>">
 							<h3>Mapped Objectives</h3>
 							<div class="clearfix">
@@ -1376,6 +1422,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 												 	ON a.`objective_parent` = c.`objective_id`
 													WHERE a.`objective_active` = '1'
 													AND c.`objective_active` = '1'
+                                                    AND b.`active` = '1'
 													GROUP BY a.`objective_id`
 													ORDER BY b.`importance` ASC";
 										$mapped_objectives = $db->GetAll($query);

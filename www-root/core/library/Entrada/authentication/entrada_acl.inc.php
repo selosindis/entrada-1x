@@ -1708,7 +1708,7 @@ abstract class CommunityAssertion implements Zend_Acl_Assert_Interface {
 		return false;
 	}
 
-	static abstract function _checkCommunity($user_id, $community_id);
+	abstract public function _checkCommunity($user_id, $community_id);
 }
 
 /**
@@ -1727,7 +1727,7 @@ class CommunityOwnerAssertion extends CommunityAssertion {
 	 * @param integer $community_id The community's ID
 	 * @return boolean
 	 */
-	static function _checkCommunity ($user_id, $community_id) {
+	public function _checkCommunity ($user_id, $community_id) {
 		global $db;
 		$query	= "
 				SELECT `proxy_id` FROM `community_members`
@@ -1759,7 +1759,7 @@ class CommunityMemberAssertion extends CommunityAssertion {
 	 * @param integer $community_id The community's ID
 	 * @return boolean
 	 */
-	static function _checkCommunity($user_id, $community_id) {
+	public function _checkCommunity($user_id, $community_id) {
 		global $db, $ENTRADA_USER;
 		$query	= "
 				SELECT `proxy_id` FROM `community_members`

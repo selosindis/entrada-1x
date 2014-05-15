@@ -44,8 +44,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 			/*
 			* Ordering
 			*/
-			if (isset($_GET["iSortCol_0"]) && in_array($_GET["iSortCol_0"], array(0, 1, 2, 3))) {
-				$aColumns = array("modified", "display_until", "notice_author", "notice_summary");
+			if (isset($_GET["iSortCol_0"]) && in_array($_GET["iSortCol_0"], array(1, 2, 3))) {
+				$aColumns = array("notice_id", "display_until", "notice_author", "notice_summary");
 				$sort_array = array();
 				foreach ($notices as $notice) {
 					$notice_array = $notice;
@@ -110,7 +110,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 					'bServerSide': true,
 					'bProcessing': true,
 					'aoColumns': [
-						{ 'mDataProp': 'modified' },
+						{ 'mDataProp': 'modified', 'bSortable': false },
 						{ 'mDataProp': 'display_until' },
 						{ 'mDataProp': 'notice_author' },
 						{ 'mDataProp': 'notice_summary' },
@@ -137,7 +137,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 					'oLanguage': {
 						'sEmptyTable': 'There are currently notices in the system.',
 						'sZeroRecords': 'No notices found.'
-					}
+					},
+                    'aaSorting': [[ 1, 'desc' ]]
 
 				}
 			);

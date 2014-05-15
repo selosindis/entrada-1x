@@ -41,11 +41,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($RECORD_ID) {
-		$query = "	SELECT a.*
-					FROM `quizzes` AS a
-					WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
-					AND a.`quiz_active` = '1'";
-		$quiz_record = $db->GetRow($query);
+		$quiz = Models_Quiz::fetchRowByID($RECORD_ID);
+		$quiz_record = $quiz->toArray();
 		if ($quiz_record && $ENTRADA_ACL->amIAllowed(new QuizResource($quiz_record["quiz_id"]), "update")) {
 			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID, "title" => limit_chars($quiz_record["quiz_title"], 32));
 
@@ -173,13 +170,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				break;
 				case 1 :
 				default :
-					$PROCESSED = $quiz_record;
-
-					$query = "SELECT `proxy_id` FROM `quiz_contacts` WHERE `quiz_id` = ".$db->qstr($RECORD_ID);
-					$results = $db->GetAll($query);
-					if ($results) {
-						foreach ($results as $result) {
-							$PROCESSED["associated_proxy_ids"][] = $result["proxy_id"];
+					
+                    $quiz_contacts = Models_Quiz_Contact::fetchAllRecords($RECORD_ID);
+                    
+					if ($quiz_contacts) {
+						foreach ($quiz_contacts as $quiz_contact) {
+							$PROCESSED["associated_proxy_ids"][] = $quiz_contact->getProxyID();
 						}
 					}
 				break;
@@ -249,28 +245,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                     <ul id="author_list" class="menu" style="margin-top: 15px">
                                         <?php
                                         if (is_array($PROCESSED["associated_proxy_ids"]) && !empty($PROCESSED["associated_proxy_ids"])) {
-                                            $selected_authors = array();
-
-                                            $query = "	SELECT `id` AS `proxy_id`, CONCAT_WS(', ', `lastname`, `firstname`) AS `fullname`, `organisation_id`
-                                                        FROM `".AUTH_DATABASE."`.`user_data`
-                                                        WHERE `id` IN (".implode(", ", $PROCESSED["associated_proxy_ids"]).")
-                                                        ORDER BY `lastname` ASC, `firstname` ASC";
-                                            $results = $db->GetAll($query);
-                                            if ($results) {
-                                                foreach ($results as $result) {
-                                                    $selected_authors[$result["proxy_id"]] = $result;
-                                                }
-
-                                                unset($results);
-                                            }
-
                                             foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-                                                if ($proxy_id = (int) $proxy_id) {
-                                                    if (array_key_exists($proxy_id, $selected_authors)) {
-                                                        ?>
-                                                        <li class="user" id="author_<?php echo $proxy_id; ?>" style="cursor: move;"><?php echo $selected_authors[$proxy_id]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="author_list.removeItem('<?php echo $proxy_id; ?>');" class="list-cancel-image" /></li>
-                                                        <?php
-                                                    }
+                                                $u = User::get($proxy_id);
+                                                if ($u->getID()) {
+                                                    ?>
+                                                    <li class="user" id="author_<?php echo $u->getID(); ?>" style="cursor: move;"><?php echo $u->getFullName(false); ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="author_list.removeItem('<?php echo $u->getID(); ?>');" class="list-cancel-image" /></li>
+                                                    <?php
                                                 }
                                             }
                                         }
@@ -295,8 +275,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					<div id="quiz-content-questions">
                         <?php
                         if ($ALLOW_QUESTION_MODIFICATIONS) {
-                            $query = "SELECT questiontype_id, questiontype_title FROM `quizzes_lu_questiontypes` WHERE `questiontype_active` = '1'";
-                            $question_types = $db->GetAssoc($query);
+                            $question_types = Models_Quiz_QuestionTypes::fetchAllRecords();
                             if ($question_types) {
                                 ?>
                                 <div class="pull-right" style="margin-bottom:10px;">
@@ -304,9 +283,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                         <a class="btn btn-success dropdown-toggle" data-toggle="dropdown" href="#"><i class="icon-plus-sign icon-white"></i> Add New Question <span class="caret"></span></a>
                                         <ul class="dropdown-menu">
                                             <?php
-                                            foreach ($question_types as $questiontype_id => $question_type) {
+                                            foreach ($question_types as $question_type) {
                                                 ?>
-                                                <li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&amp;type=<?php echo $questiontype_id; ?>"><?php echo $question_type; ?></a></li>
+                                                <li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&amp;type=<?php echo $question_type->getQuestionTypeID(); ?>"><?php echo $question_type->getQuestionTypeTitle(); ?></a></li>
                                                 <?php
                                             }
                                             ?>
@@ -318,35 +297,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                             }
                         }
 
-                        $query = "	SELECT a.*
-                                    FROM `quiz_questions` AS a
-                                    WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
-                                    AND a.`question_active` = '1'
-                                    ORDER BY a.`question_order` ASC";
-                        $questions = $db->GetAll($query);
+                        $questions = Models_Quiz_Question::fetchAllRecords($RECORD_ID);
                         if ($questions) {
                             ?>
                             <div class="quiz-questions" id="quiz-content-questions-holder">
                                 <ol class="questions" id="quiz-questions-list">
                                     <?php
                                     foreach ($questions as $question) {
-                                        echo "<li id=\"question_".$question["qquestion_id"]."\" class=\"question\" style=\"display: list-item; vertical-align: top;\">";
+                                        echo "<li id=\"question_".$question->getQquestionID()."\" class=\"question\" style=\"display: list-item; vertical-align: top;\">";
                                         echo "	<div class=\"question".((!$ALLOW_QUESTION_MODIFICATIONS) ? " noneditable" : "")."\">\n";
 
                                         if ($ALLOW_QUESTION_MODIFICATIONS) {
                                             echo "	<div style=\"float: right\">\n";
-                                            echo "		<a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=edit-question&amp;id=".$question["qquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
-                                            echo "		<a id=\"question_delete_".$question["qquestion_id"]."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question["qquestion_id"]."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
+                                            echo "		<a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=edit-question&amp;id=".$question->getQquestionID()."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
+                                            echo "		<a id=\"question_delete_".$question->getQquestionID()."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question->getQquestionID()."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
                                             echo "	</div>\n";
                                         }
-                                        echo "		<span id=\"question_text_".$question["qquestion_id"]."\" class=\"question\">".($question["questiontype_id"] == "2" ? "<strong>Descriptive Text:</strong> " : ($question["questiontype_id"] == "3" ? "<strong>Page Break:</strong> " : "")).clean_input($question["question_text"], "trim")."</span>";
+                                        echo "		<span id=\"question_text_".$question->getQquestionID()."\" class=\"question\">".($question->getQuestionTypeID() == "2" ? "<strong>Descriptive Text:</strong> " : ($question->getQuestionTypeID() == "3" ? "<strong>Page Break:</strong> " : "")).clean_input($question->getQuestionText(), "trim")."</span>";
                                         echo "	</div>\n";
                                         echo "	<ul class=\"responses\">\n";
-                                        $query		= "	SELECT a.*
-                                                        FROM `quiz_question_responses` AS a
-                                                        WHERE a.`qquestion_id` = ".$db->qstr($question["qquestion_id"])."
-                                                        AND a.`response_active` = '1'
-                                                        ORDER BY ".(($question["randomize_responses"] == 1) ? "RAND()" : "a.`response_order` ASC");
+//                                        $query		= "	SELECT a.*
+//                                                        FROM `quiz_question_responses` AS a
+//                                                        WHERE a.`qquestion_id` = ".$db->qstr($question->getQquestionID())."
+//                                                        AND a.`response_active` = '1'
+//                                                        ORDER BY ".(($question["randomize_responses"] == 1) ? "RAND()" : "a.`response_order` ASC");
                                         $responses	= $db->GetAll($query);
                                         if ($responses) {
                                             foreach ($responses as $response) {

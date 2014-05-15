@@ -77,22 +77,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                 
 				$COHORT = $assessment["cohort"];
 				
-				$query = "	SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`
-							FROM `".AUTH_DATABASE."`.`user_data` AS b
-							JOIN `".AUTH_DATABASE."`.`user_access` AS c
-							ON c.`user_id` = b.`id` 
-							AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
-							AND c.`account_active` = 'true'
-							AND (c.`access_starts` = '0' OR c.`access_starts`<=".$db->qstr(time()).")
-							AND (c.`access_expires` = '0' OR c.`access_expires`>=".$db->qstr(time()).")
+				$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ', a.`lastname`, a.`firstname`) AS `fullname`, a.`number`
+							FROM `".AUTH_DATABASE."`.`user_data` AS a
+							JOIN `".AUTH_DATABASE."`.`user_access` AS b
+							ON a.`id` = b.`user_id` 
+							AND b.`app_id` IN (".AUTH_APP_IDS_STRING.")
+							AND b.`account_active` = 'true'
+							AND (b.`access_starts` = '0' OR b.`access_starts`<=".$db->qstr(time()).")
+							AND (b.`access_expires` = '0' OR b.`access_expires`>=".$db->qstr(time()).")
 							JOIN `group_members` AS c
-							ON b.`id` = c.`proxy_id`
-							WHERE c.`group` = 'student'
+							ON a.`id` = c.`proxy_id`
+							WHERE b.`group` = 'student'
 							AND c.`group_id` = ".$db->qstr($COHORT)."
 							AND c.`member_active` = '1' 
-							ORDER BY b.`lastname` ASC, b.`firstname` ASC";
+							ORDER BY a.`lastname` ASC, a.`firstname` ASC";
 				$students = $db->GetAll($query);
-				
+                
 				foreach ($students as $key => &$student) {
 					$query = "SELECT `grade_id`, `value` AS `grade_value` FROM `assessment_grades`
 								WHERE `proxy_id` = ".$db->qstr($student["proxy_id"])."

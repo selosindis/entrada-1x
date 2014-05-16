@@ -23,7 +23,7 @@
  * @copyright Copyright 2014 Queen's University. All Rights Reserved.
  */
 
-class Models_Quiz_QuestionTypes extends Models_Base {
+class Models_Quiz_QuestionType extends Models_Base {
 
     protected $questiontype_id, $questiontype_title, $questiontype_description, $questiontype_active, $questiontype_order;
 
@@ -87,5 +87,3 @@ class Models_Quiz_QuestionTypes extends Models_Base {
     }
 
 }
-
-?>

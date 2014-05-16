@@ -836,6 +836,17 @@ class User {
         }
 	}
 
+    public function toArray() {
+		$arr = false;
+		$class_vars = get_class_vars(get_called_class());
+		if (isset($class_vars)) {
+			foreach ($class_vars as $class_var => $value) {
+                    $arr[$class_var] = $this->$class_var;
+			}
+        }
+		return $arr;
+	}
+    
 	public static function getAccessHash() {
 		global $db, $ENTRADA_USER;
 		//get all of the users groups and roles for each organisation
@@ -860,6 +871,10 @@ class User {
 	 * @return User
 	 */
 	public static function fromArray(array $arr, User $user) {
+        foreach ($arr as $class_var_name => $value) {
+			$user->$class_var_name = $value;
+		}
+        /*
 		$user->id = $arr["id"];
 		$user->number = $arr["number"];
 		$user->username = $arr["username"];
@@ -895,7 +910,7 @@ class User {
 		$user->role = $arr["role"];
 		$user->access_id = $arr["access_id"];
 		$user->active_id = $arr["id"];
-
+        */
 		return $user;
 	}
 

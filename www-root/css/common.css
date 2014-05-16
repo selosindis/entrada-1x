@@ -4607,3 +4607,91 @@ th.sorting {
 .question-notice {
     background-color: #FCF8E3 !important;
 }
+
+.timer {
+    background-color: #D9EDF7;
+    border-radius: 4px;
+    color: #3A87AD;
+    border: 1px solid #BCE8F1;
+    margin:25px 0 0 0;
+    font-size:20px;
+    padding:23px 15px 15px 15px;
+    text-align: center;
+    width:192px;
+}
+
+.timer-icon {
+    margin-right: 5px;
+}
+
+.timer p {
+    font-size:12px;
+    margin-top: 10px;
+}
+
+span.minutes {
+    margin-top:-30px;
+    display: inline-block;
+}
+
+.affix {
+    position: fixed;
+    top: 0px;
+}
+
+/*
+ * course enrolment list css
+ */
+ 
+.course-members-media-list {
+    padding-bottom:11px;
+    margin-top:12px;
+    margin-left:20px;
+    padding-top:0px;
+    border-bottom: 1px solid #f5f5f5;
+    float:left;
+    width:327px;
+}
+ 
+.course-members-media-list .media-heading {
+    margin-bottom:0;
+}
+
+.course-members-media-list .media-heading p {
+    margin-bottom:0;
+}
+ 
+.course-members-media-list .media-heading small {
+    margin-top:5px;    
+}
+
+.media:first-child {
+    margin-top:12px;
+}
+
+#enrolment-container, #enrolment-search-container {
+    min-height:100px;
+}
+
+#enrolment-search {
+    background: url("../images/icon-magnify-gray.png") no-repeat right 2px top 4px;
+    padding:7px 30px 7px 16px;
+}
+
+.enrolment-loading {
+    text-align: center;
+    margin-top: 100px
+}
+
+.course-enrolment-button {
+    padding:7px 16px
+}
+
+.course-enrolment-dropdown {
+    padding:7px 10px
+}
+
+.icon-loading {
+    background-image: url("../images/indicator.gif");
+    background-position: 0px 0px;
+}

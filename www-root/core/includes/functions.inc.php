@@ -9521,9 +9521,7 @@ function courses_subnavigation($course_details, $tab="details") {
 		echo "<li".($tab=="reports"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/reports?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" >Reports</a></li>\n";
 	}
 	echo "	</ul>\n";
-
 	echo "</div>\n";
-	echo "<br />";
 }
 
 function course_fetch_course_group($cgroup_id = 0) {

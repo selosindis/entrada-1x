@@ -33,7 +33,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 } elseif (!$ENTRADA_ACL->amIAllowed('quiz', 'update', false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
+	
 	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 
 	echo display_error();
@@ -62,8 +62,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					if ((isset($_POST["quiz_title"])) && ($tmp_input = clean_input($_POST["quiz_title"], array("notags", "trim")))) {
 						$PROCESSED["quiz_title"] = $tmp_input;
 					} else {
-						$ERROR++;
-						$ERRORSTR[] = "The <strong>Quiz Title</strong> field is required.";
+						add_error("The <strong>Quiz Title</strong> field is required.");
 					}
 
 					/**
@@ -93,9 +92,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					 */
 					if (!in_array($ENTRADA_USER->getActiveId(), $PROCESSED["associated_proxy_ids"])) {
 						array_unshift($PROCESSED["associated_proxy_ids"], $ENTRADA_USER->getActiveId());
-
-						$NOTICE++;
-						$NOTICESTR[] = "You cannot remove yourself as a <strong>Quiz Author</strong>.";
+						
+						add_notice("You cannot remove yourself as a <strong>Quiz Author</strong>.");
 					}
 
 					/**
@@ -106,10 +104,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					 * to any of their learning events. If they have, then they cannot be
 					 * removed because it will pose a data integrity problem.
 					 */
-					$query		= "SELECT `proxy_id` FROM `quiz_contacts` WHERE `quiz_id` = ".$db->qstr($RECORD_ID);
-					$results	= $db->GetAll($query);
-					if ($results) {
-						foreach ($results as $result) {
+                    $contacts = Models_Quiz_Contact::fetchAllRecords($RECORD_ID);
+					if ($contacts) {
+						foreach ($contacts as $contact) {
+                            $result = $contact->toArray();
 							if (!in_array($result["proxy_id"], $PROCESSED["associated_proxy_ids"])) {
 								$query		= "	SELECT b.`proxy_id`
 												FROM `attached_quizzes` AS a
@@ -124,8 +122,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								if ($sresult) {
 									$PROCESSED["associated_proxy_ids"][] = $result["proxy_id"];
 
-									$NOTICE++;
-									$NOTICESTR[] = "Unable to remove <strong>".html_encode(get_account_data("fullname", $result["proxy_id"]))."</strong> from the <strong>Quiz Authors</strong> section because they have already attached this quiz to one or more events or communities.";
+									add_notice("Unable to remove <strong>".html_encode(get_account_data("fullname", $result["proxy_id"]))."</strong> from the <strong>Quiz Authors</strong> section because they have already attached this quiz to one or more events or communities.");
 								}
 							}
 						}
@@ -148,8 +145,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							if ((is_array($PROCESSED["associated_proxy_ids"])) && !empty($PROCESSED["associated_proxy_ids"])) {
 								foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
 									if (!$db->AutoExecute("quiz_contacts", array("quiz_id" => $RECORD_ID, "proxy_id" => $proxy_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
-										$ERROR++;
-										$ERRORSTR[] = "There was an error while trying to attach a <strong>Quiz Author</strong> to this quiz.<br /><br />The system administrator was informed of this error; please try again later.";
+										add_error("There was an error while trying to attach a <strong>Quiz Author</strong> to this quiz.<br /><br />The system administrator was informed of this error; please try again later.");
 
 										application_log("error", "Unable to insert a new quiz_contact record while adding a new quiz. Database said: ".$db->ErrorMsg());
 									}
@@ -161,8 +157,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 							application_log("success", "Quiz information for quiz_id [".$quiz_id."] was updated.");
 						} else {
-							$ERROR++;
-							$ERRORSTR[] = "There was a problem updating this quiz. The system administrator was informed of this error; please try again later.";
+							add_error("There was a problem updating this quiz. The system administrator was informed of this error; please try again later.");
 
 							application_log("error", "There was an error updating quiz information for quiz_id [".$quiz_id."]. Database said: ".$db->ErrorMsg());
 						}
@@ -316,15 +311,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                         echo "		<span id=\"question_text_".$question->getQquestionID()."\" class=\"question\">".($question->getQuestionTypeID() == "2" ? "<strong>Descriptive Text:</strong> " : ($question->getQuestionTypeID() == "3" ? "<strong>Page Break:</strong> " : "")).clean_input($question->getQuestionText(), "trim")."</span>";
                                         echo "	</div>\n";
                                         echo "	<ul class=\"responses\">\n";
-//                                        $query		= "	SELECT a.*
-//                                                        FROM `quiz_question_responses` AS a
-//                                                        WHERE a.`qquestion_id` = ".$db->qstr($question->getQquestionID())."
-//                                                        AND a.`response_active` = '1'
-//                                                        ORDER BY ".(($question["randomize_responses"] == 1) ? "RAND()" : "a.`response_order` ASC");
-                                        $responses	= $db->GetAll($query);
+                                        $responses = Models_Quiz_Question_Response::fetchAllRecords($question->getQquestionID());
                                         if ($responses) {
                                             foreach ($responses as $response) {
-                                                echo "<li class=\"".(($response["response_correct"] == 1) ? "display-correct" : "display-incorrect")."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</li>\n";
+                                                echo "<li class=\"".(($response->getResponseCorrect() == 1) ? "display-correct" : "display-incorrect")."\">".clean_input($response->getResponseText(), (($response->getResponseIsHTML() == 1) ? "trim" : "encode"))."</li>\n";
                                             }
                                         }
                                         echo "	</ul>\n";
@@ -515,18 +505,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                             <a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=attach&amp;id=<?php echo $RECORD_ID; ?>" class="btn btn-success pull-right"><i class="icon-plus-sign icon-white"></i> Attach To Learning Event</a>
                             <div class="clear" style="margin-bottom: 15px"></div>
                             <?php
-                            $query		= "	SELECT a.*, b.`event_id`, b.`course_id`, b.`event_title`, b.`event_start`, b.`event_duration`, c.`course_name`, c.`course_code`
-                                            FROM `attached_quizzes` AS a
-                                            JOIN `events` AS b
-                                            ON a.`content_type` = 'event'
-                                            AND	b.`event_id` = a.`content_id`
-                                            JOIN `courses` AS c
-                                            ON c.`course_id` = b.`course_id`
-                                            WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
-                                            AND c.`course_active` = '1'
-                                            ORDER BY b.`event_start` DESC";
-                            $results	= $db->GetAll($query);
-                            if($results) {
+                            $event_attached_quizzes = Models_Quiz_Attached_Event::fetchAllByQuizID($RECORD_ID);
+                            
+                            if ($event_attached_quizzes) {
                                 ?>
                                 <table class="tableList" cellspacing="0" summary="List of Learning Events">
                                 <colgroup>
@@ -547,21 +528,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                 </thead>
                                 <tbody>
                                     <?php
-                                    foreach($results as $result) {
-                                        $url = ENTRADA_URL."/admin/events?section=content&id=".$result["event_id"];
-                                        $completed_attempts = $db->GetOne("SELECT COUNT(DISTINCT `proxy_id`) FROM `quiz_progress` WHERE `progress_value` = 'complete' AND `aquiz_id` = ".$db->qstr($result["aquiz_id"]));
+                                    foreach($event_attached_quizzes as $attached_quiz) {
+                                        $url = ENTRADA_URL."/admin/events?section=content&id=".$attached_quiz->getEventID();
+                                        $completed_attempts = $attached_quiz->getCompletedAttempts();
 
-                                        echo "<tr id=\"event-".$result["event_id"]."\" class=\"event\">\n";
+                                        echo "<tr id=\"event-".$attached_quiz->getEventID()."\" class=\"event\">\n";
                                         echo "	<td class=\"modified\">\n";
                                         if ($completed_attempts > 0) {
-                                            echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;id=".$result["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($result["quiz_title"])."\" title=\"View results of ".html_encode($result["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
+                                            echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;id=".$attached_quiz->getAQuizID()."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($attached_quiz->getQuizTitle())."\" title=\"View results of ".html_encode($attached_quiz->getQuizTitle())."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
                                         } else {
                                             echo "	<img src=\"".ENTRADA_URL."/images/view-stats-disabled.gif\" width=\"16\" height=\"16\" alt=\"No completed quizzes at this time.\" title=\"No completed quizzes at this time.\" style=\"vertical-align: middle\" border=\"0\" />\n";
                                         }
                                         echo "	</td>\n";
-                                        echo "	<td class=\"date\"><a href=\"".$url."\" title=\"Event Date\">".date(DEFAULT_DATE_FORMAT, $result["event_start"])."</a></td>\n";
-                                        echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Event Title: ".html_encode($result["event_title"])."\">".html_encode($result["event_title"])."</a></td>\n";
-                                        echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Quiz Title: ".html_encode($result["quiz_title"])."\">".html_encode($result["quiz_title"])."</a></td>\n";
+                                        echo "	<td class=\"date\"><a href=\"".$url."\" title=\"Event Date\">".date(DEFAULT_DATE_FORMAT, $attached_quiz->getEventStart())."</a></td>\n";
+                                        echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Event Title: ".html_encode($attached_quiz->getEventTitle())."\">".html_encode($attached_quiz->getEventTitle())."</a></td>\n";
+                                        echo "	<td class=\"title\"><a href=\"".$url."\" title=\"Quiz Title: ".html_encode($attached_quiz->getQuizTitle())."\">".html_encode($attached_quiz->getQuizTitle())."</a></td>\n";
                                         echo "	<td class=\"completed\">".(int) $completed_attempts."</td>\n";
                                         echo "</tr>\n";
                                     }
@@ -570,8 +551,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                 </table>
                                 <?php
                             } else {
-                                $NOTICE++;
-                                $NOTICESTR[] = "This quiz is not currently attached to any learning events.<br /><br />To add this quiz to an event you are teaching, click the <strong>Attach To Learning Event</strong> link above.";
+                                add_notice("This quiz is not currently attached to any learning events.<br /><br />To add this quiz to an event you are teaching, click the <strong>Attach To Learning Event</strong> link above.");
 
                                 echo display_notice();
                             }
@@ -600,20 +580,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                             <a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=attach&amp;community=true&amp;id=<?php echo $RECORD_ID; ?>" class="btn btn-success pull-right"><i class="icon-plus-sign icon-white"></i> Attach To Community Page</a>
                             <div class="clear" style="margin-bottom: 15px"></div>
                             <?php
-                            $query		= "	SELECT a.*, b.`community_id`, b.`community_url`, b.`community_title`, CONCAT('[', b.`community_title`, '] ', bp.`menu_title`) AS `page_title`, bp.`page_url`
-                                            FROM `attached_quizzes` AS a
-                                            JOIN `communities` AS b
-                                            ON a.`content_type` = 'community_page'
-                                            JOIN `community_pages` AS bp
-                                            ON a.`content_type` = 'community_page'
-                                            AND	bp.`cpage_id` = a.`content_id`
-                                            AND bp.`community_id` = b.`community_id`
-                                            WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
-                                            AND b.`community_active` = '1'
-                                            AND bp.`page_active` = '1'
-                                            ORDER BY b.`community_title` ASC";
-                            $results	= $db->GetAll($query);
-                            if($results) {
+                            $community_page_attachments = Models_Quiz_Attached_CommunityPage::fetchAllByQuizID($RECORD_ID);
+                            if($community_page_attachments) {
                                 ?>
                                 <table class="tableList" cellspacing="0" summary="List of Community Pages">
                                 <colgroup>
@@ -632,9 +600,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                 </thead>
                                 <tbody>
                                     <?php
-                                    foreach($results as $result) {
+                                    foreach($community_page_attachments as $community_page_attachment) {
+                                        $result = $community_page_attachment->toArray();
                                         $url = ENTRADA_URL."/community".$result["community_url"].":".$result["page_url"];
-                                        $completed_attempts = $db->GetOne("SELECT COUNT(DISTINCT `proxy_id`) FROM `quiz_progress` WHERE `progress_value` = 'complete' AND `aquiz_id` = ".$db->qstr($result["aquiz_id"]));
+                                        $completed_attempts = $community_page_attachment->getCompletedAttempts();
 
                                         echo "<tr id=\"community-page-".$result["cpage_id"]."\" class=\"community-page\">\n";
                                         echo "	<td class=\"modified\">\n";
@@ -654,9 +623,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                 </table>
                                 <?php
                             } else {
-                                $NOTICESTR = array();
-                                $NOTICE = 1;
-                                $NOTICESTR[] = "This quiz is not currently attached to any community pages.<br /><br />To add this quiz to an page you are have administrative rights to, click the <strong>Attach To Community Page</strong> link above.";
+                                add_notice("This quiz is not currently attached to any community pages.<br /><br />To add this quiz to an page you are have administrative rights to, click the <strong>Attach To Community Page</strong> link above.");
 
                                 echo display_notice();
                             }
@@ -679,16 +646,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				break;
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "In order to edit a quiz, you must provide a valid quiz identifier.";
+			add_error("In order to edit a quiz, you must provide a valid quiz identifier.");
 
 			echo display_error();
 
 			application_log("notice", "Failed to provide a valid quiz identifer [".$RECORD_ID."] when attempting to edit a quiz.");
 		}
 	} else {
-		$ERROR++;
-		$ERRORSTR[] = "In order to edit a quiz, you must provide a quiz identifier.";
+		add_error("In order to edit a quiz, you must provide a quiz identifier.");
 
 		echo display_error();
 

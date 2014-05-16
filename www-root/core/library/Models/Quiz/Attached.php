@@ -47,6 +47,21 @@ class Models_Quiz_Attached extends Models_Base {
         }
     }
     
+    public static function getAttachedContact($quiz_id, $proxy_id) {
+        global $db;
+        
+        $query = "SELECT b.`proxy_id`
+                    FROM `attached_quizzes` AS a
+                    LEFT JOIN `event_contacts` AS b
+                    ON a.`content_type` = 'event'
+                    AND a.`content_id` = b.`event_id`
+                    LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
+                    ON b.`proxy_id` = c.`id`
+                    WHERE a.`quiz_id` = ".$db->qstr($quiz_id)."
+                    AND b.`proxy_id` = ".$db->qstr($proxy_id);
+        return $db->GetRow();
+    }
+    
     public function getAquizID() {
         return $this->aquiz_id;
     }

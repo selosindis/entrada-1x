@@ -72,6 +72,12 @@ class Models_Quiz_Contact extends Models_Base {
         return $output;
     }
     
+    public static function deleteContacts($quiz_id) {
+        global $db;
+        $query = "DELETE FROM `quiz_contacts` WHERE `quiz_id` = ".$db->qstr($quiz_id);
+        return $db->Execute($query);
+    }
+    
     public function getQcontactID() {
         return $this->qcontact_id;
     }
@@ -92,6 +98,23 @@ class Models_Quiz_Contact extends Models_Base {
         return $this->updated_by;
     }
 
-
+    public function insert() {
+        global $db;
+        if ($db->autoExecute($this->table_name, $this->toArray(), "INSERT")) {
+            $this->qcontact_id = $db->InsertID();
+            return $this;
+        } else {
+            return false;
+        }
+    }
+    
+    public function update() {
+        global $db;
+        if ($db->autoExecute($this->table_name, $this->toArray(), "UPDATE", "`qcontact_id` = ".$this->qcontact_id)) {
+            return $this;
+        } else {
+            return false;
+        }
+    }
     
 }

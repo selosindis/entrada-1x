@@ -109,16 +109,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						foreach ($contacts as $contact) {
                             $result = $contact->toArray();
 							if (!in_array($result["proxy_id"], $PROCESSED["associated_proxy_ids"])) {
-								$query		= "	SELECT b.`proxy_id`
-												FROM `attached_quizzes` AS a
-												LEFT JOIN `event_contacts` AS b
-												ON a.`content_type` = 'event'
-												AND a.`content_id` = b.`event_id`
-												LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
-												ON b.`proxy_id` = c.`id`
-												WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
-												AND b.`proxy_id` = ".$db->qstr($result["proxy_id"]);
-								$sresult	= $db->GetRow($query);
+								$sresult	= Models_Quiz_Attached::getCurrentContact($RECORD_ID, $result["proxy_id"]);
 								if ($sresult) {
 									$PROCESSED["associated_proxy_ids"][] = $result["proxy_id"];
 
@@ -132,19 +123,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						$PROCESSED["updated_date"] = time();
 						$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
-						if ($db->AutoExecute("quizzes", $PROCESSED, "UPDATE", "`quiz_id` = ".$db->qstr($RECORD_ID))) {
+						if ($quiz->fromArray($PROCESSED)->update()) {
 							/**
 							 * Delete existing quiz contacts, so we can re-add them.
 							 */
-							$query = "DELETE FROM `quiz_contacts` WHERE `quiz_id` = ".$db->qstr($RECORD_ID);
-							$db->Execute($query);
+							Models_Quiz_Contact::deleteContacts($RECORD_ID);
 
 							/**
 							 * Add the updated quiz authors to the quiz_contacts table.
 							 */
 							if ((is_array($PROCESSED["associated_proxy_ids"])) && !empty($PROCESSED["associated_proxy_ids"])) {
 								foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-									if (!$db->AutoExecute("quiz_contacts", array("quiz_id" => $RECORD_ID, "proxy_id" => $proxy_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
+                                    $contact = new Models_Quiz_Contact(array("quiz_id" => $RECORD_ID, "proxy_id" => $proxy_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getActiveID()));
+									if (!$contact->insert()) {
 										add_error("There was an error while trying to attach a <strong>Quiz Author</strong> to this quiz.<br /><br />The system administrator was informed of this error; please try again later.");
 
 										application_log("error", "Unable to insert a new quiz_contact record while adding a new quiz. Database said: ".$db->ErrorMsg());
@@ -152,8 +143,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								}
 							}
 
-							$SUCCESS++;
-							$SUCCESSSTR[] = "The <strong>Quiz Information</strong> section has been successfully updated.";
+							add_success("The <strong>Quiz Information</strong> section has been successfully updated.");
 
 							application_log("success", "Quiz information for quiz_id [".$quiz_id."] was updated.");
 						} else {

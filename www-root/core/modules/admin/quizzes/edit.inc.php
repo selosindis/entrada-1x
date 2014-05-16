@@ -260,7 +260,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					<div id="quiz-content-questions">
                         <?php
                         if ($ALLOW_QUESTION_MODIFICATIONS) {
-                            $question_types = Models_Quiz_QuestionTypes::fetchAllRecords();
+                            $question_types = Models_Quiz_QuestionType::fetchAllRecords();
                             if ($question_types) {
                                 ?>
                                 <div class="pull-right" style="margin-bottom:10px;">

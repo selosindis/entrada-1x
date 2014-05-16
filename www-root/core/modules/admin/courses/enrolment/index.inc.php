@@ -162,7 +162,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                             type : "GET",
                             data : "method=sync&course_id=" + course_id + "&cperiod_id=" + cperiod_id,
                             success: function(data) {
-                                console.log(data);
                                 var jsonResponse = JSON.parse(data);
                                 if (jsonResponse.status == "success") {
                                     getEnrolments(course_id, enrolment_view);

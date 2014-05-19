@@ -105,7 +105,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         } else {
                             $PROCESSED["assignment_uploads"] = 1;
                         }
-
+                        
+                        if (isset($_POST["allow_multiple_files"]) && $_POST["allow_multiple_files"]
+                                && isset($_POST["num_files_allowed"]) && ($max_file_uploads = (int)$_POST["num_files_allowed"]) > 0) {
+                            $PROCESSED["max_file_uploads"] = $max_file_uploads;
+                        } else {
+                            $PROCESSED["max_file_uploads"] = 1;
+                        }
 
                         /**
                          * Required field "event_start" / Event Date & Time Start (validated through validate_calendars function).
@@ -410,6 +416,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     </table>
                                 </div>
                             </div>
+                            <div class="control-group">
+                                <label class="control-label form-nrequired">File Uploads:</label>
+                                <div class="controls">
+                                    <input type="checkbox" name="allow_multiple_files" id="allow_multiple_files" style="vertical-align: middle"
+                                           <?php echo isset($_POST["allow_multiple_files"]) ? "checked=\"checked\" " : ""; ?>/>
+                                    <label for="allow_multiple_files" class="radio-group-title">Allow Multiple Files</label>
+                                    <div class="content-small" style="padding-bottom: 15px">Allow users to upload more than one file for this assignment.</div>
+                                    
+                                    <div id="num_files_allowed_wrapper" <?php echo isset($_POST["allow_multiple_files"]) ? "" : "style=\"display: none\" "; ?>>
+                                        <input type="text" name="num_files_allowed" id="num_files_allowed"
+                                               value="<?php echo isset($PROCESSED["max_file_uploads"]) ? $PROCESSED["max_file_uploads"] : 3; ?>"/>
+                                        <label for="num_file_allowed">Max Files Allowed</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <script type="text/javascript">   
+                            jQuery('#allow_multiple_files').change(function() {
+                                jQuery('#num_files_allowed_wrapper').toggle(this.checked);
+                            });
+                            </script>
                             <div class="control-group">
                                 <table>
                                     <tr>

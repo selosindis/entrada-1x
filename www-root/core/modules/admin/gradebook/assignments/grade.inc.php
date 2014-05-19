@@ -165,7 +165,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						break;
 				}				
 
-				$query = "	SELECT a.id AS `proxy_id`, CONCAT_WS(', ',a.`lastname`,a.`firstname`) AS `fullname`, a.`number` as `student_number`, c.`assessment_id`, b.`updated_date` AS `submitted_date`, b.`afile_id`, d.`grade_id`, d.`value` AS `grade_value`, f.`handler`, g.`grade_weighting`
+				$query = "	SELECT a.`id` AS `proxy_id`, CONCAT_WS(', ',a.`lastname`,a.`firstname`) AS `fullname`, a.`number` as `student_number`, c.`assessment_id`, MAX(b.`updated_date`) AS `submitted_date`, d.`grade_id`, d.`value` AS `grade_value`, f.`handler`, g.`grade_weighting`
 							FROM `".AUTH_DATABASE."`.`user_data` AS a
 							JOIN `assignment_files` AS b
 							ON a.`id` = b.`proxy_id`
@@ -184,6 +184,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							ON g.`assessment_id` = d.`assessment_id`
 							AND g.`proxy_id` = a.`id`
 							AND c.`assignment_active` = '1'
+                            GROUP BY a.`id`
 							ORDER BY ".$by." ".$order;			
 				$students = $db->GetAll($query);
 												
@@ -194,24 +195,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				$assessment = $db->GetRow($query);				
 				?>
 					<div style="float: right; text-align: right; width:400px;">
-						<ul class="page-action">
+						<div class="page-action">
 						<?php 
 						if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) { 
 						?>
-							<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "edit","assignment_id"=>$assignment["assignment_id"], "step" => false)); ?>" class="strong-green">Edit Assignment</a></li>
+                            <a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "edit","assignment_id"=>$assignment["assignment_id"], "step" => false)); ?>"><button class="btn">Edit Assignment</button></a>
 							<?php 
 							if($assignment["assessment_id"]) { ?>
-								<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit","assessment_id"=>$assignment["assessment_id"], "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
+                                <a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit","assessment_id"=>$assignment["assessment_id"], "step" => false)); ?>"><button class="btn">Edit Assessment</button></a>
 							<?php
 							} 
 						}
 						if (isset($assessment) && $assessment) { 
 						?>
-								<li><a href="#" id="advanced-options" class="strong-green">Show Options</a></li>
+                            <a href="#" id="advanced-options"><button class="btn">Show Options</button></a>
 						<?php 						
 						} 
 						?>
-						</ul>
+						</div>
 					</div>				
 				<div style="clear: both;"></div>
 				<?php				
@@ -290,12 +291,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 														<?php 
 														$query = "	SELECT a.*, CONCAT_WS(' ', c.`firstname`, c.`lastname`) AS `commenter_fullname`, c.`username` AS `commenter_username` 
 																	FROM `assignment_comments` AS a 
-																	JOIN `assignment_files` AS b 
-																	ON a.`afile_id` = b.`afile_id` 
 																	LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
 																	ON a.`proxy_id` = c.`id` 
-																	WHERE b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)." 
-																	AND b.`proxy_id` = ".$db->qstr($student["proxy_id"])."
+																	WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)." 
 																	AND a.`comment_active` = '1'
 																	ORDER BY a.`updated_date`";
 														$comment_results = $db->GetAll($query);
@@ -621,11 +619,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							if (jQuery('#gradebook_stats').is(":visible")) {
 								jQuery('#assignment_submissions').attr('class','span12');
 								jQuery('#gradebook_stats').hide();
-								jQuery('#advanced-options').text('Show Options');
+								jQuery('#advanced-options').html('<button class="btn">Show Options</button>');
 							} else {
 								jQuery('#assignment_submissions').attr('class','span7');
 								jQuery('#gradebook_stats').show();	
-								jQuery('#advanced-options').text('Hide Options');
+								jQuery('#advanced-options').html('<button class="btn">Hide Options</button>');
 							}
 						});
 						

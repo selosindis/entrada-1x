@@ -126,7 +126,7 @@ if ($RECORD_ID) {
 
 						if (($file_version) && (is_array($file_version))) {
 							$download_file = FILE_STORAGE_PATH."/A".$file_version["afversion_id"];
-							if ((@file_exists($download_file)) && (@is_readable($download_file))) {
+							if ((file_exists($download_file)) && (is_readable($download_file))) {
 								/**
 								 * This must be done twice in order to close both of the open buffers.
 								 */
@@ -190,7 +190,7 @@ if ($RECORD_ID) {
 							$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("section" => "grade", "id" => $file_record["course_id"], "assignment_id"=>$file_record["assignment_id"], "step" => false)), "title" => $file_record["assignment_title"]);
 							$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("section" => "grade", "id" => $file_record["course_id"], "assignment_id"=>$file_record["assignment_id"], "step" => false)), "title" => $user_name."'s Submission");
 						} else {								
-							$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&assignment_id=".$RECORD_ID, "title" => limit_chars($file_record["file_title"], 32));
+							$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&assignment_id=".$RECORD_ID, "title" => limit_chars($file_record["assignment_title"], 32));
 						}
 						$ADD_COMMENT	= true;//shares_module_access($file_record["cshare_id"], "add-comment");
 						$ADD_REVISION	= $assignment["assignment_uploads"]==1?false:true;//shares_file_module_access($file_record["csfile_id"], "add-revision");
@@ -293,7 +293,7 @@ if ($RECORD_ID) {
 						}
 						?>
 						<a name="top"></a>
-						<h1 id="file-<?php echo $RECORD_ID; ?>-title"><?php echo html_encode($file_record["file_title"]); ?></h1>
+                        <h1>Assignment Submission</h1>
 						<?php if (COMMUNITY_NOTIFICATIONS_ACTIVE && $_SESSION["details"]["notifications"]) { ?>
 							<div id="notifications-toggle" style="height: 2em;"></div>
 							<script type="text/javascript">
@@ -341,255 +341,277 @@ if ($RECORD_ID) {
 							<?php
 							$ONLOAD[] = "new Ajax.Updater('notifications-toggle', '".ENTRADA_URL."/api/notifications.api.php?community_id=".$COMMUNITY_ID."&assignment_id=".$RECORD_ID."&type=file-notify&action=view')";
 						}
-						?>
-						<div>
-							<?php echo html_encode($file_record["file_description"]); ?>
-						</div>
-						<div id="file-<?php echo $RECORD_ID; ?>" style="padding-top: 15px; clear: both">
-							<?php
-							//Student's submission
-							$query		= "
-										SELECT a.*,  CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `uploader`, b.`username` AS `uploader_username`
-										FROM `assignment_file_versions` AS a
-										JOIN `assignment_files` AS c
-										ON a.`afile_id` = c.`afile_id`
-										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-										ON a.`proxy_id` = b.`id`
-										WHERE a.`afile_id` = ".$db->qstr($file_record["afile_id"])."
-										AND a.`assignment_id` = ".$db->qstr($RECORD_ID)."
-										AND a.`file_active` = '1'
-										AND c.`file_type` = 'submission'
-										ORDER BY a.`file_version` DESC";
-							$results	= $db->GetAll($query);
-							if ($results) {
-								$total_releases	= @count($results);
-								echo "<h2>Assignment Submission</h2>";
-								echo "<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
-								echo "<colgroup>\n";
-								echo "	<col style=\"width: 8%\" />\n";
-								echo "	<col style=\"width: 92%\" />\n";
-								echo "</colgroup>\n";
-								echo "<tbody>\n";
-								echo "	<tr>\n";
-								echo "		<td style=\"vertical-align: top\"><a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;file_id=".$file_record["afile_id"]."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=latest\"><img src=\"".ENTRADA_URL."/templates/default/images/btn_save.gif\" width=\"32\" height=\"32\" alt=\"Save Latest Version\" title=\"Save Latest Version\" align=\"left\" style=\"margin-right: 15px; border: 0px\" /></a></td>";
-								echo "		<td style=\"vertical-align: top\">\n";
-								echo "			<div id=\"file-download-latest\">\n";
-								echo "				<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$file_record["afile_id"]."&amp;download=latest\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "").">".(((int) $file_record["access_method"]) ? " View" : "Download")." Latest (v".$results[0]["file_version"].")</a>\n";
-								echo "				<div class=\"content-small\">\n";
-								echo "					Filename: <span id=\"file-version-".$results[0]["csfversion_id"]."-title\">".html_encode($results[0]["file_filename"])." (v".$results[0]["file_version"].")</span> ".readable_size($results[0]["file_filesize"]);
-								if ($total_releases > 1 && $results[0]["proxy_id"] == $ENTRADA_USER->getID()) {
-									echo 				"(<a class=\"action delete-version\" id=\"delete_".$results[0]["afversion_id"]."\" href=\"javascript:void(0)')\" style=\"font-size: 10px; font-weight: normal\">delete</a>)";
-								}
-								echo "					<br />\n";
-								echo "					Uploaded ".date(DEFAULT_DATE_FORMAT, $results[0]["updated_date"])." by <a href=\"".ENTRADA_URL."/people?profile=".html_encode($results[0]["uploader_username"])."\" style=\"font-size: 10px; font-weight: normal\">".html_encode($results[0]["uploader"])."</a>.<br />";
-								echo "				</div>\n";
-								echo "			</div>\n";
-								echo "		</td>\n";
-								echo "	</tr>\n";
-								if ($total_releases > 1) {
-									echo "<tr>\n";
-									echo "	<td>&nbsp;</td>\n";
-									echo "	<td style=\"padding-top: 15px\">\n";
-									echo "		<h2>Older Versions</h2>\n";
-									echo "		<div id=\"file-download-releases\">\n";
-									echo "			<ul>\n";
-									foreach($results as $progress => $result) {
-										if ((int) $progress > 0) { // Because I don't want to display the first file again.
-											echo "		<li>\n";
-											echo "			<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=".$result["file_version"]."\" style=\"vertical-align: middle\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "")."><span id=\"file-version-".$result["afversion_id"]."-title\">".html_encode($result["file_filename"])." (v".$result["file_version"].")</span></a> <span class=\"content-small\" style=\"vertical-align: middle\">".readable_size($result["file_filesize"])."</span>\n";
-											if($result["proxy_id"] == $ENTRADA_USER->getID()){
-												echo "			(<a class=\"action delete-version\" id=\"delete_".$result["afversion_id"]."\" href=\"javascript:void(0)\">delete</a>)";
-											}
-											echo "			<div class=\"content-small\">\n";
-											echo "			Uploaded ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by <a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["uploader_username"])."\" style=\"font-size: 10px; font-weight: normal\">".html_encode($result["uploader"])."</a>.\n";
-											echo "			</div>\n";
-											echo "		</li>";
-										}
-									}
-									echo "			</ul>\n";
-									echo "		</div>\n";
-									echo "	</td>\n";
-									echo "</tr>\n";
-								}
-								echo "</tbody>\n";
-								echo "</table>\n";
-								echo "<br /><br />";
-							}
+                        
+                        $files_query = "SELECT a.*, c.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `uploader`, b.`username` AS `uploader_username`
+                                  FROM `assignment_file_versions` AS a
+                                  JOIN `assignment_files` AS c
+                                  ON a.`afile_id`=c.`afile_id`
+                                  LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                  ON a.`proxy_id`=b.`id`
+                                  WHERE a.`assignment_id`=".$RECORD_ID."
+                                  AND a.`file_active`=1
+                                  AND c.`file_type`='submission'
+                                  AND a.`file_version`=
+                                      (SELECT MAX(`file_version`)
+                                       FROM `assignment_file_versions`
+                                       WHERE `file_active`=1
+                                       AND `afile_id`=a.`afile_id`)";
+                        $file_records = $db->GetAll($files_query);
+                        if ($file_records) {
+                            foreach ($file_records as $file_record) {
+                            ?>
+                                <div id="file-<?php echo $file_record["afile_id"]; ?>" style="padding-top: 15px; clear: both">
+                                    <?php
+                                    //Student's submission
+                                    $query		= "
+                                                SELECT a.*,  CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `uploader`, b.`username` AS `uploader_username`
+                                                FROM `assignment_file_versions` AS a
+                                                JOIN `assignment_files` AS c
+                                                ON a.`afile_id` = c.`afile_id`
+                                                LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                                ON a.`proxy_id` = b.`id`
+                                                WHERE a.`afile_id` = ".$db->qstr($file_record["afile_id"])."
+                                                AND a.`assignment_id` = ".$db->qstr($RECORD_ID)."
+                                                AND a.`file_active` = '1'
+                                                AND c.`file_type` = 'submission'
+                                                ORDER BY a.`file_version` DESC";
+                                    $results	= $db->GetAll($query);
+                                    if ($results) {
+                                        $total_releases	= count($results);
+                                        echo "<h2 id=\"file-{$file_record["afile_id"]}-title\">".html_encode($file_record["file_title"])."</h2>\n";
+                                        echo "<p>".html_encode($file_record["file_description"])."</p>\n";
+                                        echo "<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
+                                        echo "<colgroup>\n";
+                                        echo "	<col style=\"width: 8%\" />\n";
+                                        echo "	<col style=\"width: 92%\" />\n";
+                                        echo "</colgroup>\n";
+                                        echo "<tbody>\n";
+                                        echo "	<tr>\n";
+                                        echo "		<td style=\"vertical-align: top\"><a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;file_id=".$file_record["afile_id"]."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=latest\"><img src=\"".ENTRADA_URL."/templates/default/images/btn_save.gif\" width=\"32\" height=\"32\" alt=\"Save Latest Version\" title=\"Save Latest Version\" align=\"left\" style=\"margin-right: 15px; border: 0px\" /></a></td>";
+                                        echo "		<td style=\"vertical-align: top\">\n";
+                                        echo "			<div id=\"file-download-latest\">\n";
+                                        echo "				<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$file_record["afile_id"]."&amp;download=latest\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "").">".(((int) $file_record["access_method"]) ? " View" : "Download")." Latest (v".$results[0]["file_version"].")</a>\n";
+                                        echo "				<div class=\"content-small\">\n";
+                                        echo "					Filename: <span id=\"file-version-".$results[0]["csfversion_id"]."-title\">".html_encode($results[0]["file_filename"])." (v".$results[0]["file_version"].")</span> ".readable_size($results[0]["file_filesize"]);
+                                        if ($total_releases > 1 && $results[0]["proxy_id"] == $ENTRADA_USER->getID()) {
+                                            echo 				"(<a class=\"action delete-version\" id=\"delete_".$results[0]["afversion_id"]."\" href=\"javascript:void(0)')\" style=\"font-size: 10px; font-weight: normal\">delete</a>)";
+                                        }
+                                        echo "					<br />\n";
+                                        echo "					Uploaded ".date(DEFAULT_DATE_FORMAT, $results[0]["updated_date"])." by <a href=\"".ENTRADA_URL."/people?profile=".html_encode($results[0]["uploader_username"])."\" style=\"font-size: 10px; font-weight: normal\">".html_encode($results[0]["uploader"])."</a>.<br />";
+                                        echo "				</div>\n";
+                                        echo "			</div>\n";
+                                        echo "		</td>\n";
+                                        echo "	</tr>\n";
+                                        if ($total_releases > 1) {
+                                            echo "<tr>\n";
+                                            echo "	<td>&nbsp;</td>\n";
+                                            echo "	<td style=\"padding-top: 15px\">\n";
+                                            echo "		<h2>Older Versions</h2>\n";
+                                            echo "		<div id=\"file-download-releases\">\n";
+                                            echo "			<ul>\n";
+                                            foreach($results as $progress => $result) {
+                                                if ((int) $progress > 0) { // Because I don't want to display the first file again.
+                                                    echo "		<li>\n";
+                                                    echo "			<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=".$result["file_version"]."\" style=\"vertical-align: middle\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "")."><span id=\"file-version-".$result["afversion_id"]."-title\">".html_encode($result["file_filename"])." (v".$result["file_version"].")</span></a> <span class=\"content-small\" style=\"vertical-align: middle\">".readable_size($result["file_filesize"])."</span>\n";
+                                                    if($result["proxy_id"] == $ENTRADA_USER->getID()){
+                                                        echo "			(<a class=\"action delete-version\" id=\"delete_".$result["afversion_id"]."\" href=\"javascript:void(0)\">delete</a>)";
+                                                    }
+                                                    echo "			<div class=\"content-small\">\n";
+                                                    echo "			Uploaded ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by <a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["uploader_username"])."\" style=\"font-size: 10px; font-weight: normal\">".html_encode($result["uploader"])."</a>.\n";
+                                                    echo "			</div>\n";
+                                                    echo "		</li>";
+                                                }
+                                            }
+                                            echo "			</ul>\n";
+                                            echo "		</div>\n";
+                                            echo "	</td>\n";
+                                            echo "</tr>\n";
+                                        }
+                                        echo "</tbody>\n";
+                                        echo "</table>\n";
+                                    }
 
-							//Teacher response
-							$query		= "
-										SELECT a.*,  CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `uploader`, b.`username` AS `uploader_username`
-										FROM `assignment_file_versions` AS a
-										JOIN `assignment_files` AS c
-										ON a.`afile_id` = c.`afile_id`
-										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-										ON a.`proxy_id` = b.`id`
-										WHERE c.`parent_id` = ".$db->qstr($file_record["afile_id"])."
-										AND a.`assignment_id` = ".$db->qstr($RECORD_ID)."
-										AND a.`file_active` = '1'
-										AND c.`file_type` = 'response'
-										ORDER BY a.`file_version` DESC";
-							$results	= $db->GetAll($query);
-							$teacher_file = false;
-							if ($results) {
-								$teacher_file = true;
-								$TEACHER_FILE_RECORD = $results[0]["afile_id"];
-								echo "<h2>Teacher's Response</h2>";
-								$total_releases	= @count($results);
-								echo "<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
-								echo "<colgroup>\n";
-								echo "	<col style=\"width: 8%\" />\n";
-								echo "	<col style=\"width: 92%\" />\n";
-								echo "</colgroup>\n";
-								echo "<tbody>\n";
-								echo "	<tr>\n";
-								echo "		<td style=\"vertical-align: top\"><a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$TEACHER_FILE_RECORD."&amp;download=latest\"><img src=\"".ENTRADA_URL."/templates/default/images/btn_save.gif\" width=\"32\" height=\"32\" alt=\"Save Latest Version\" title=\"Save Latest Version\" align=\"left\" style=\"margin-right: 15px; border: 0px\" /></a></td>";
-								echo "		<td style=\"vertical-align: top\">\n";
-								echo "			<div id=\"file-download-latest\">\n";
-								echo "				<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$TEACHER_FILE_RECORD."&amp;download=latest\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "").">".(((int) $file_record["access_method"]) ? " View" : "Download")." Latest (v".$results[0]["file_version"].")</a>\n";
-								echo "				<div class=\"content-small\">\n";
-								echo "					Filename: <span id=\"file-version-".$results[0]["afversion_id"]."-title\">".html_encode($results[0]["file_filename"])." (v".$results[0]["file_version"].")</span> ".readable_size($results[0]["file_filesize"]);
-								if ($results[0]["proxy_id"] == $ENTRADA_USER->getID()) {
-									echo 				"(<a class=\"action delete-version\" href=\"javascript:void(0)\" id=\"delete_".$results[0]["afversion_id"]."\" style=\"font-size: 10px; font-weight: normal\">delete</a>)";
-								}
-								echo "					<br />\n";
-								echo "					Uploaded ".date(DEFAULT_DATE_FORMAT, $results[0]["updated_date"])." by <a href=\"".ENTRADA_URL."/people?profile=".html_encode($results[0]["uploader_username"])."\" style=\"font-size: 10px; font-weight: normal\">".html_encode($results[0]["uploader"])."</a>.<br />";
-								echo "				</div>\n";
-								echo "			</div>\n";
-								echo "		</td>\n";
-								echo "	</tr>\n";
-								if ($total_releases > 1) {
-									echo "<tr>\n";
-									echo "	<td>&nbsp;</td>\n";
-									echo "	<td style=\"padding-top: 15px\">\n";
-									echo "		<h2>Older Versions</h2>\n";
-									echo "		<div id=\"file-download-releases\">\n";
-									echo "			<ul>\n";
-									foreach($results as $progress => $result) {
-										if ((int) $progress > 0) { // Because I don't want to display the first file again.
-											echo "		<li>\n";
-											echo "			<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;file_id=".$TEACHER_FILE_RECORD."&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=".$result["file_version"]."\" style=\"vertical-align: middle\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "")."><span id=\"file-version-".$result["afversion_id"]."-title\">".html_encode($result["file_filename"])." (v".$result["file_version"].")</span></a> <span class=\"content-small\" style=\"vertical-align: middle\">".readable_size($result["file_filesize"])."</span>\n";
-											if($result["proxy_id"] == $ENTRADA_USER->getID()){
-												echo "			(<a class=\"action delete-version\" id=\"delete_".$result["afversion_id"]."\" href=\"javascript:void(0)\">delete</a>)";
-											}
-											echo "			<div class=\"content-small\">\n";
-											echo "			Uploaded ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by <a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["uploader_username"])."\" style=\"font-size: 10px; font-weight: normal\">".html_encode($result["uploader"])."</a>.\n";
-											echo "			</div>\n";
-											echo "		</li>";
-										}
-									}
-									echo "			</ul>\n";
-									echo "		</div>\n";
-									echo "	</td>\n";
-									echo "</tr>\n";
-								}
-								echo "</tbody>\n";
-								echo "</table>\n";
-								echo "<br /><br />";
-							}
-							if (($ADD_REVISION) || ($ADD_COMMENT) || ($MOVE_FILE)) {
-								?>
-								<ul class="page-action">
-									<?php if (isset($iscontact) && $iscontact) {
-										if ($teacher_file) {?>
-										<li><a href="<?php echo ENTRADA_URL."/admin/gradebook/assignments"; ?>?section=response-revision&assignment_id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Upload Response Revision</a></li>
-									<?php } else {
-										?><li><a href="<?php echo ENTRADA_URL."/admin/gradebook/assignments"; ?>?section=submit-response&assignment_id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Hand Back Response</a></li><?php
-										}
-									} elseif ($ADD_REVISION) {?>
-									<li><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-revision&assignment_id=<?php echo $RECORD_ID; ?>">Upload Revised File</a></li>
-									<?php } ?>
-									<?php if ($ADD_COMMENT) : ?>
-									<li><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-comment&assignment_id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Add File Comment</a></li>
-									<?php endif; ?>
-								</ul>
-								<?php
-							}
+                                    //Teacher response
+                                    $query		= "
+                                                SELECT a.*,  CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `uploader`, b.`username` AS `uploader_username`
+                                                FROM `assignment_file_versions` AS a
+                                                JOIN `assignment_files` AS c
+                                                ON a.`afile_id` = c.`afile_id`
+                                                LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                                ON a.`proxy_id` = b.`id`
+                                                WHERE c.`parent_id` = ".$db->qstr($file_record["afile_id"])."
+                                                AND a.`assignment_id` = ".$db->qstr($RECORD_ID)."
+                                                AND a.`file_active` = '1'
+                                                AND c.`file_type` = 'response'
+                                                ORDER BY a.`file_version` DESC";
+                                    $results	= $db->GetAll($query);
+                                    $teacher_file = false;
+                                    if ($results) {
+                                        $teacher_file = true;
+                                        $TEACHER_FILE_RECORD = $results[0]["afile_id"];
+                                        echo "<h2>Teacher's Response</h2>";
+                                        $total_releases	= count($results);
+                                        echo "<table style=\"width: 100%\" cellspacing=\"0\" cellpadding=\"0\" border=\"0\">\n";
+                                        echo "<colgroup>\n";
+                                        echo "	<col style=\"width: 8%\" />\n";
+                                        echo "	<col style=\"width: 92%\" />\n";
+                                        echo "</colgroup>\n";
+                                        echo "<tbody>\n";
+                                        echo "	<tr>\n";
+                                        echo "		<td style=\"vertical-align: top\"><a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$TEACHER_FILE_RECORD."&amp;download=latest\"><img src=\"".ENTRADA_URL."/templates/default/images/btn_save.gif\" width=\"32\" height=\"32\" alt=\"Save Latest Version\" title=\"Save Latest Version\" align=\"left\" style=\"margin-right: 15px; border: 0px\" /></a></td>";
+                                        echo "		<td style=\"vertical-align: top\">\n";
+                                        echo "			<div id=\"file-download-latest\">\n";
+                                        echo "				<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$TEACHER_FILE_RECORD."&amp;download=latest\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "").">".(((int) $file_record["access_method"]) ? " View" : "Download")." Latest (v".$results[0]["file_version"].")</a>\n";
+                                        echo "				<div class=\"content-small\">\n";
+                                        echo "					Filename: <span id=\"file-version-".$results[0]["afversion_id"]."-title\">".html_encode($results[0]["file_filename"])." (v".$results[0]["file_version"].")</span> ".readable_size($results[0]["file_filesize"]);
+                                        if ($results[0]["proxy_id"] == $ENTRADA_USER->getID()) {
+                                            echo 				"(<a class=\"action delete-version\" href=\"javascript:void(0)\" id=\"delete_".$results[0]["afversion_id"]."\" style=\"font-size: 10px; font-weight: normal\">delete</a>)";
+                                        }
+                                        echo "					<br />\n";
+                                        echo "					Uploaded ".date(DEFAULT_DATE_FORMAT, $results[0]["updated_date"])." by <a href=\"".ENTRADA_URL."/people?profile=".html_encode($results[0]["uploader_username"])."\" style=\"font-size: 10px; font-weight: normal\">".html_encode($results[0]["uploader"])."</a>.<br />";
+                                        echo "				</div>\n";
+                                        echo "			</div>\n";
+                                        echo "		</td>\n";
+                                        echo "	</tr>\n";
+                                        if ($total_releases > 1) {
+                                            echo "<tr>\n";
+                                            echo "	<td>&nbsp;</td>\n";
+                                            echo "	<td style=\"padding-top: 15px\">\n";
+                                            echo "		<h2>Older Versions</h2>\n";
+                                            echo "		<div id=\"file-download-releases\">\n";
+                                            echo "			<ul>\n";
+                                            foreach($results as $progress => $result) {
+                                                if ((int) $progress > 0) { // Because I don't want to display the first file again.
+                                                    echo "		<li>\n";
+                                                    echo "			<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;file_id=".$TEACHER_FILE_RECORD."&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=".$result["file_version"]."\" style=\"vertical-align: middle\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "")."><span id=\"file-version-".$result["afversion_id"]."-title\">".html_encode($result["file_filename"])." (v".$result["file_version"].")</span></a> <span class=\"content-small\" style=\"vertical-align: middle\">".readable_size($result["file_filesize"])."</span>\n";
+                                                    if($result["proxy_id"] == $ENTRADA_USER->getID()){
+                                                        echo "			(<a class=\"action delete-version\" id=\"delete_".$result["afversion_id"]."\" href=\"javascript:void(0)\">delete</a>)";
+                                                    }
+                                                    echo "			<div class=\"content-small\">\n";
+                                                    echo "			Uploaded ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by <a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["uploader_username"])."\" style=\"font-size: 10px; font-weight: normal\">".html_encode($result["uploader"])."</a>.\n";
+                                                    echo "			</div>\n";
+                                                    echo "		</li>";
+                                                }
+                                            }
+                                            echo "			</ul>\n";
+                                            echo "		</div>\n";
+                                            echo "	</td>\n";
+                                            echo "</tr>\n";
+                                        }
+                                        echo "</tbody>\n";
+                                        echo "</table>\n";
+                                        echo "<br /><br />";
+                                    }
+                                ?>
+                                
+                                </div>
+                                
+                                <?php
+                                if (($ADD_REVISION) || ($MOVE_FILE)) {
+                                    ?>
+                                    <div class="page-action">
+                                        <?php if (isset($iscontact) && $iscontact) {
+                                            if ($teacher_file) {?>
+                                            <a href="<?php echo ENTRADA_URL."/admin/gradebook/assignments"; ?>?section=response-revision&assignment_id=<?php echo $RECORD_ID; ?>&fid=<?php echo $file_record['afile_id']; ?>"><button class="btn">Upload Response Revision</button></a>
+                                        <?php } else {
+                                            ?><a href="<?php echo ENTRADA_URL."/admin/gradebook/assignments"; ?>?section=submit-response&assignment_id=<?php echo $RECORD_ID; ?>&fid=<?php echo $file_record['afile_id']; ?>"><button class="btn">Hand Back Response</button></a><?php
+                                            }
+                                        } elseif ($ADD_REVISION) {?>
+                                            <a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-revision&assignment_id=<?php echo $RECORD_ID; ?>&fid=<?php echo $file_record['afile_id']; ?>"><button class="btn">Upload Revised File</button></a>
+                                        <?php } ?>
+                                    </div>
+                                    <?php
+                                }
+                            }
+                            ?>
+                            
+                            <h2 style="margin-bottom: 0px">Assignment Comments</h2>
+                            <?php
+                            
+                            $query		= "
+                                        SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `commenter_fullname`, b.`username` AS `commenter_username`
+                                        FROM `assignment_comments` AS a
+                                        LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                        ON b.`id` = a.`proxy_id`
+                                        WHERE a.`proxy_id` = b.`id`
+                                        AND a.`assignment_id` = ".$db->qstr($RECORD_ID)."
+                                        AND a.`comment_active` = '1'
+                                        ORDER BY a.`release_date` ASC";
+                            $results	= $db->GetAll($query);
+                            $comments	= 0;
+                            if ($results) { ?>
+                                <table class="discussions posts" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+                                    <colgroup>
+                                        <col style="width: 30%" />
+                                        <col style="width: 70%" />
+                                    </colgroup>
+                                    <tbody>
+                                    <?php
+                                    foreach($results as $result) {
+                                        $comments++;
+                                        ?>
+                                        <tr>
+                                            <td style="border-bottom: none; border-right: none"><span class="content-small">By:</span> <a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($result["commenter_username"]); ?>" style="font-size: 10px"><?php echo html_encode($result["commenter_fullname"]); ?></a></td>
+                                            <td style="border-bottom: none">
+                                                <div style="float: left">
+                                                    <span class="content-small"><strong>Commented:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $result["updated_date"]); ?></span>
+                                                </div>
+                                                <div style="float: right">
+                                                <?php
+                                                echo (($result["proxy_id"] == $ENTRADA_USER->getID()) ? " (<a class=\"action\" href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=edit-comment&amp;assignment_id=".$RECORD_ID."&amp;cid=".$result["acomment_id"]."\">edit</a>)" : "");
+                                                echo (($result["proxy_id"] == $ENTRADA_USER->getID()) ? " (<a class= \"action delete\" id=\"delete_".$result["acomment_id"]."\" href=\"javascript:void(0)\">delete</a>)":"");
+                                                ?>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td colspan="2" class="content">
+                                            <a name="comment-<?php echo (int) $result["cscomment_id"]; ?>"></a>
+                                            <?php
+                                                echo ((trim($result["comment_title"])) ? "<div style=\"font-weight: bold\">".html_encode(trim($result["comment_title"]))."</div>" : "");
+                                                echo $result["comment_description"];
 
-							$query		= "
-										SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `commenter_fullname`, b.`username` AS `commenter_username`
-										FROM `assignment_comments` AS a
-										LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
-										ON b.`id` = a.`proxy_id`
-										WHERE a.`proxy_id` = b.`id`
-										AND a.`afile_id` = ".$db->qstr($file_record["afile_id"])."
-										AND a.`assignment_id` = ".$db->qstr($RECORD_ID)."
-										AND a.`comment_active` = '1'
-										ORDER BY a.`release_date` ASC";
-							$results	= $db->GetAll($query);
-							$comments	= 0;
-							if ($results) { ?>
-								<h2 style="margin-bottom: 0px">File Comments</h2>
-								<table class="discussions posts" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-								<colgroup>
-									<col style="width: 30%" />
-									<col style="width: 70%" />
-								</colgroup>
-								<tbody>
-								<?php
-								foreach($results as $result) {
-									$comments++;
-									?>
-									<tr>
-										<td style="border-bottom: none; border-right: none"><span class="content-small">By:</span> <a href="<?php echo ENTRADA_URL."/people?profile=".html_encode($result["commenter_username"]); ?>" style="font-size: 10px"><?php echo html_encode($result["commenter_fullname"]); ?></a></td>
-										<td style="border-bottom: none">
-											<div style="float: left">
-												<span class="content-small"><strong>Commented:</strong> <?php echo date(DEFAULT_DATE_FORMAT, $result["updated_date"]); ?></span>
-											</div>
-											<div style="float: right">
-											<?php
-											echo (($result["proxy_id"] == $ENTRADA_USER->getID()) ? " (<a class=\"action\" href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=edit-comment&amp;assignment_id=".$RECORD_ID."&amp;cid=".$result["acomment_id"]."\">edit</a>)" : "");
-											echo (($result["proxy_id"] == $ENTRADA_USER->getID()) ? " (<a class= \"action delete\" id=\"delete_".$result["acomment_id"]."\" href=\"javascript:void(0)\">delete</a>)":"");
-											?>
-											</div>
-										</td>
-									</tr>
-									<tr>
-										<td colspan="2" class="content">
-										<a name="comment-<?php echo (int) $result["cscomment_id"]; ?>"></a>
-										<?php
-											echo ((trim($result["comment_title"])) ? "<div style=\"font-weight: bold\">".html_encode(trim($result["comment_title"]))."</div>" : "");
-											echo $result["comment_description"];
-
-											if ($result["release_date"] != $result["updated_date"]) {
-												echo "<div class=\"content-small\" style=\"margin-top: 15px\">\n";
-												echo "	<strong>Last updated:</strong> ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by ".(($result["proxy_id"] == $result["updated_by"]) ? html_encode($result["commenter_fullname"]) : html_encode(get_account_data("firstlast", $result["updated_by"]))).".";
-												echo "</div>\n";
-											}
-										?>
-										</td>
-									</tr>
-									<?php
-								}
-								?>
-								</tbody>
-								</table>
-								<?php
-								if (($ADD_REVISION) || ($ADD_COMMENT) || ($MOVE_FILE)) {
-									?>
-									<ul class="page-action" style="margin-top: 15px">
-										<?php if (isset($iscontact) && $iscontact) {
-											if ($teacher_file) {?>
-											<li><a href="<?php echo ENTRADA_URL."/admin/gradebook/assignments"; ?>?section=response-revision&assignment_id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Upload Response Revision</a></li>
-										<?php } else {
-											?><li><a href="<?php echo ENTRADA_URL."/admin/gradebook/assignments"; ?>?section=submit-response&assignment_id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Hand Back Response</a></li><?php
-											}
-										} elseif ($ADD_REVISION) {?>
-										<li><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-revision&assignment_id=<?php echo $RECORD_ID; ?>">Upload Revised File</a></li>
-										<?php } ?>
-										<?php if ($ADD_COMMENT) : ?>
-										<li><a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-comment&assignment_id=<?php echo $RECORD_ID; ?>&fid=<?php echo $FILE_ID; ?>">Add File Comment</a></li>
-										<?php endif; ?>
-									</ul>
-									<?php
-								}
-							}
-							?>
-								<div id="dialog-confirm" title="Delete?" style="display: none">
-									<p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>This item will be permanently deleted and cannot be recovered. Are you sure you want to delete it?</p>
-								</div>
-						</div>
-						<?php						
+                                                if ($result["release_date"] != $result["updated_date"]) {
+                                                    echo "<div class=\"content-small\" style=\"margin-top: 15px\">\n";
+                                                    echo "	<strong>Last updated:</strong> ".date(DEFAULT_DATE_FORMAT, $result["updated_date"])." by ".(($result["proxy_id"] == $result["updated_by"]) ? html_encode($result["commenter_fullname"]) : html_encode(get_account_data("firstlast", $result["updated_by"]))).".";
+                                                    echo "</div>\n";
+                                                }
+                                            ?>
+                                            </td>
+                                        </tr>
+                                        <?php
+                                    }
+                                    ?>
+                                    </tbody>
+                                </table>
+                                
+                                <?php if ($ADD_COMMENT) { ?>
+                                <a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-comment&assignment_id=<?php echo $RECORD_ID; ?>">
+                                    <button class="btn btn-default">Add Assignment Comment</button>
+                                </a>
+                                <?php } 
+                            }
+                            ?>
+                            
+                            <div id="dialog-confirm" title="Delete?" style="display: none">
+                                <p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>This item will be permanently deleted and cannot be recovered. Are you sure you want to delete it?</p>
+                            </div>
+                            
+                            <?php
+                        }
+                        
+                        $max_files = (int)$db->GetOne("SELECT `max_file_uploads` FROM `assignments` WHERE `assignment_id`=".$db->qstr($RECORD_ID));
+                        $num_files = (int)$db->GetOne("SELECT COUNT(*) FROM `assignment_files` WHERE `assignment_id`=".$db->qstr($RECORD_ID));
+                        ?>
+                        <div style="padding-top:15px; text-align:right;">
+                            <p>You may upload <?php echo $max_files; ?> file<?php echo $max_files !== 1 ? 's' : ''; ?> for this assignment.</p>
+                            <?php if ($num_files < $max_files) { ?>
+                            <a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments?section=submit&assignment_id=".$RECORD_ID; ?>">
+                                <button class="btn btn-primary">Add Another File</button>
+                            </a>
+                            <?php } ?>
+                        </div>
+                        <?php
 					}
 				} else {
 					header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=submit&assignment_id=".$RECORD_ID);

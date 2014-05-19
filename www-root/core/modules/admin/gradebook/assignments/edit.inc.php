@@ -113,6 +113,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							} else {
 								$PROCESSED["assignment_uploads"] = 1;
 							}
+                        
+                            if (isset($_POST["allow_multiple_files"]) && $_POST["allow_multiple_files"]
+                                    && isset($_POST["num_files_allowed"]) && ($max_file_uploads = (int)$_POST["num_files_allowed"]) > 0) {
+                                $PROCESSED["max_file_uploads"] = $max_file_uploads;
+                                $PROCESSED["allow_multiple_files"] = true;
+                            } else {
+                                $PROCESSED["max_file_uploads"] = 1;
+                            }
 
 							/**
 							 * Required field "event_start" / Event Date & Time Start (validated through validate_calendars function).
@@ -234,6 +242,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								$PROCESSED["release_date"] = $assignment_record["release_date"];
 								$PROCESSED["release_until"] = $assignment_record["release_until"];
 								$PROCESSED["due_date"] = $assignment_record["due_date"];
+                                $PROCESSED["allow_multiple_files"] = (int)$assignment_record["max_file_uploads"] > 1;
 							}
 							continue;
 						break;
@@ -475,6 +484,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											</table>
 										</td>
 									</tr>
+                                    <tr>
+                                        <td>&nbsp;</td>
+                                        <td style="vertical-align: top">
+                                            <label class="control-label form-nrequired">File Uploads:</label>
+                                        </td>
+                                        <td>
+                                            <div class="controls">
+                                                <input type="checkbox" name="allow_multiple_files" id="allow_multiple_files" style="vertical-align: middle"
+                                                       <?php echo $PROCESSED["allow_multiple_files"] ? "checked=\"checked\" " : ""; ?>/>
+                                                <label for="allow_multiple_files" class="radio-group-title">Allow Multiple Files</label>
+                                                <div class="content-small" style="padding-bottom: 15px">Allow users to upload more than one file for this assignment.</div>
+
+                                                <div id="num_files_allowed_wrapper" <?php echo $PROCESSED["allow_multiple_files"] ? "" : "style=\"display: none\" "; ?>>
+                                                    <input type="text" name="num_files_allowed" id="num_files_allowed"
+                                                           value="<?php echo isset($PROCESSED["max_file_uploads"]) ? $PROCESSED["max_file_uploads"] : 3; ?>"/>
+                                                    <label for="num_files_allowed">Max Files Allowed</label>
+                                                </div>
+                                            </div>
+                                            <script type="text/javascript">   
+                                            jQuery('#allow_multiple_files').change(function() {
+                                                jQuery('#num_files_allowed_wrapper').toggle(this.checked);
+                                            });
+                                            </script>
+                                        </td>
+                                    </tr>
 									<?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
         							<?php echo generate_calendars("due", "Assignment", false, false, 0, true, false, ((isset($PROCESSED["due_date"])) ? $PROCESSED["due_date"] : 0), true, false, "", " Due Date"); ?>
 								</tbody>

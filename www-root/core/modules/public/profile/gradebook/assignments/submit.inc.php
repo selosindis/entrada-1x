@@ -23,10 +23,6 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".COMMUNITY_URL."/javascript/s
 echo "<h1>Submit Assignment</h1>\n";
 
 if ($RECORD_ID) {
-	$query			= "SELECT * FROM `assignment_files` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())." AND `file_active` = '1'";
-	if ($submission	= $db->GetRow($query)) {
-		header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=view&assignment_id=".$RECORD_ID);
-	}
 	$query			= "SELECT * FROM `assignments`
 	                    WHERE `assignment_id` = ".$db->qstr($RECORD_ID)."
 	                    AND `assignment_active` = '1'
@@ -214,6 +210,9 @@ if ($RECORD_ID) {
 						if ($NOTICE) {
 							echo display_notice();
 						}
+                        
+                        $max_files = $db->GetOne("SELECT `max_file_uploads` FROM `assignments` WHERE `assignment_id`=".$db->qstr($RECORD_ID));
+                        
 						?>
 
 
@@ -228,6 +227,8 @@ if ($RECORD_ID) {
 						<tfoot>
 							<tr>
 								<td colspan="3" style="padding-top: 15px; text-align: right">
+                                    <p>You may upload <?php echo $max_files; ?> 
+                                        file<?php echo $max_files !== 1 ? 's' : ''; ?> for this assignment.</p>
 									<div id="display-upload-button">
 										<input type="button" class="btn btn-primary" value="Upload File" onclick ="uploadFile()" />
 									</div>
@@ -289,7 +290,7 @@ if ($RECORD_ID) {
 					break;
 				}
 			} else {
-				add_error('You are not authorized to upload to this assignment. If you think you are recieving this message in error, please contact the coordinator for the course.');
+				add_error('You are not authorized to upload to this assignment. If you think you are receiving this message in error, please contact the coordinator for the course.');
 				if ($ERROR) {
 					echo display_error();
 				}

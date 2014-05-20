@@ -118,59 +118,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                         $("#enrolment-container").empty();
                         $(".enrolment-loading").removeClass("hide");
                         $("#sync-icon").addClass("icon-refresh");
-                        $("#sync-enrolment").removeClass("disabled synched").html("<i id=\"sync-icon\" class=\"icon-refresh\"></i> Synchronize Enrolment");
                         getSyncDate(course_id);
                         getEnrolments(course_id, enrolment_view);
-                        
-                        $("#sync-enrolment").off("click");
-                        $("#sync-enrolment").on("click", function (e) {
-                            e.preventDefault();
-                            $(this).off("click");
-                            var cperiod_id = $("#cperiod_select").val();
-
-                            $("#sync-icon").removeClass("icon-refresh").addClass("icon-loading");
-                            $(this).addClass("disabled");
-                            $("#enrolment-container").empty();
-                            $(".enrolment-loading").removeClass("hide");
-                            jQuery.ajax ({
-                                url : "<?php echo ENTRADA_URL ?>/api/course-enrolment.api.php",
-                                type : "GET",
-                                data : "method=sync&course_id=" + course_id + "&cperiod_id=" + cperiod_id,
-                                success: function(data) {
-                                    var jsonResponse = JSON.parse(data);
-                                    if (jsonResponse.status == "success") {
-                                        getEnrolments(course_id, enrolment_view);
-                                        $("#sync-date").html(jsonResponse.data.sync_date);
-                                    }
-
-                                }
-                            });
-                        });
                     });
-
-                    $("#sync-enrolment").on("click", function (e) {
-                        e.preventDefault();
-                        $(this).off("click");
-                        var cperiod_id = $("#cperiod_select").val();
-
-                        $("#sync-icon").removeClass("icon-refresh").addClass("icon-loading");
-                        $(this).addClass("disabled");
-                        $("#enrolment-container").empty();
-                        $(".enrolment-loading").removeClass("hide");
-                        jQuery.ajax ({
-                            url : "<?php echo ENTRADA_URL ?>/api/course-enrolment.api.php",
-                            type : "GET",
-                            data : "method=sync&course_id=" + course_id + "&cperiod_id=" + cperiod_id,
-                            success: function(data) {
-                                var jsonResponse = JSON.parse(data);
-                                if (jsonResponse.status == "success") {
-                                    getEnrolments(course_id, enrolment_view);
-                                    $("#sync-date").html(jsonResponse.data.sync_date);
-                                }
-
-                            }
-                        });    
-                    });
+                    
+                    $("#sync-enrolment").on("click", {course_id: course_id, enrolment_view: enrolment_view}, ldapSync);
 
                     $(".view-toggle").on("click", function (e) {
                         e.preventDefault();
@@ -189,6 +141,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                 function getEnrolments (course_id, enrolment_view) {
                     var search_term = jQuery("#enrolment-search").val();
                     var cperiod_id = jQuery("#cperiod_select").val();
+                    jQuery("#enrolment-container").empty();
 
                     jQuery.ajax ({
                         url : "<?php echo ENTRADA_URL ?>/api/course-enrolment.api.php",
@@ -196,9 +149,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                         data : "method=list&course_id=" + course_id + "&cperiod_id=" + cperiod_id + "&enrolment_view=" + enrolment_view + "&search_term=" + search_term,
                         success: function(data) {
                             jQuery(".enrolment-loading").addClass("hide");
-                            if (jQuery("#sync-icon").hasClass("icon-loading")) {
-                                jQuery("#sync-enrolment").html("Enrolment Synchronized");
-                            }
                             jQuery("#sync-icon").removeClass("icon-loading").addClass("icon-refresh");
                             var jsonResponse = JSON.parse(data);
                             if (jsonResponse.status == "success") {
@@ -326,7 +276,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                     jQuery(media_body).addClass("media-body");
                     jQuery(media_heading).addClass("media-heading");
                     jQuery(media_heading_a).addClass("print-black").text(audience_member.firstname + " " + audience_member.lastname).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username}).html();
-                    jQuery(media_heading_small).addClass("pull-right print-black").text("#"+ audience_member.number).html();
+                    jQuery(media_heading_small).addClass("pull-right print-black").text(audience_member.number).html();
                     jQuery(media_p_email_a).addClass("print-black").text(audience_member.email).attr({href: "mailto:" + audience_member.email}).html();
 
                     jQuery(media_heading).append(media_heading_a).append(media_heading_small);
@@ -348,7 +298,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
 
                     jQuery(name_a).text(audience_member.firstname + " " + audience_member.lastname).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username}).html();
                     jQuery(email_a).text(audience_member.email).attr({href: "mailto:" + audience_member.email}).html();
-                    jQuery(number_a).text("#"+ audience_member.number).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username}).html();
+                    jQuery(number_a).text(audience_member.number).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username}).html();
 
                     jQuery(name_cell).append(name_a);
                     jQuery(email_cell).append(email_a);
@@ -373,6 +323,46 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                         }
                     });
                 }
+                
+                function ldapSync (e) {
+                    jQuery("#sync-enrolment").off("click", ldapSync);
+                    jQuery("#enrolment-search").val("");
+                    e.preventDefault();
+                    
+                    var cperiod_id = jQuery("#cperiod_select").val();
+                    var course_id = e.data.course_id;
+                    var enrolment_view = jQuery(".view-toggle.active").attr("data-view");
+
+                    jQuery("#sync-button-text").text("Synchronizing Enrolment");
+                    jQuery("#sync-icon").removeClass("icon-refresh").addClass("icon-loading");
+                    jQuery("#sync-enrolment").addClass("disabled");
+                    jQuery("#enrolment-container").empty();
+                    jQuery(".enrolment-loading").removeClass("hide");
+
+                    jQuery.ajax ({
+                        url : "<?php echo ENTRADA_URL ?>/api/course-enrolment.api.php",
+                        type : "GET",
+                        data : "method=sync&course_id=" + course_id + "&cperiod_id=" + cperiod_id,
+                        success: function(data) {
+                            var jsonResponse = JSON.parse(data);
+                            if (jsonResponse.status == "success") {
+                                getEnrolments(course_id, enrolment_view);
+
+                                jQuery("#sync-date").html(jsonResponse.data.sync_date);
+                                jQuery("#sync-enrolment").removeClass("disabled");
+                                jQuery("#sync-button-text").text("Synchronize Enrolment");
+                                jQuery("#sync-icon").removeClass("icon-loading").addClass("icon-refresh");
+                            } else {
+                                display_notice(jsonResponse.data, "#enrolment-container", "append");
+                                jQuery("#sync-enrolment").removeClass("disabled");
+                                jQuery("#sync-button-text").text("Synchronize Enrolment");
+                                jQuery("#sync-icon").removeClass("icon-loading").addClass("icon-refresh");
+                                jQuery(".enrolment-loading").addClass("hide");
+                            }
+                            jQuery("#sync-enrolment").on("click", {course_id: course_id, enrolment_view: enrolment_view}, ldapSync);
+                        }
+                    });
+                }
             </script>
             <div class="row-fluid">
                 <div class="span12">
@@ -389,7 +379,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                                     <select style="width:100%" id="cperiod_select" name="cperiod_select">
                                         <?php														
                                         foreach ($curriculum_periods as $period) { ?>
-                                            <option value="<?php echo html_encode($period->getID());?>" <?php echo (isset($PREFERENCES["selected_curriculum_period"]) && $PREFERENCES["selected_curriculum_period"] == $period->getID() ? "selected=\"selected\"" : ""); ?>">
+                                            <option value="<?php echo html_encode($period->getID());?>" <?php echo (isset($PREFERENCES["selected_curriculum_period"]) && $PREFERENCES["selected_curriculum_period"] == $period->getID() ? "selected=\"selected\"" : ""); ?>>
                                                 <?php echo (($period->getCurriculumPeriodTitle()) ? html_encode($period->getCurriculumPeriodTitle()) . " - " : "") . date("F jS, Y", html_encode($period->getStartDate()))." to ".date("F jS, Y", html_encode($period->getFinishDate())); ?>
                                             </option>
                                         <?php
@@ -421,7 +411,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                     <div class="span7">
                         <div class="pull-right">
                             <div class="btn-group">
-                                <a class="btn course-enrolment-button" id="sync-enrolment" href="#"><i class="icon-refresh" id="sync-icon"></i> Synchronize Enrolment</a>
+                                <a class="btn course-enrolment-button" id="sync-enrolment" href="#"><i class="icon-refresh" id="sync-icon"></i> <span id="sync-button-text">Synchronize Enrolment</span></a>
                                 <button class="btn dropdown-toggle course-enrolment-dropdown" data-toggle="dropdown">
                                     <span class="caret"></span>
                                 </button>

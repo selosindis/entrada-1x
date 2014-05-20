@@ -225,7 +225,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                                 var group_div = document.createElement("div");
 
                                 jQuery(group_div).addClass("row space-below medium").attr({id: group_name.split(' ').join('-').toLowerCase() + "-section"});
-                                jQuery(group_heading).text(group_name).attr({title: group_name + " Section"}).addClass("collapsable");
+                                jQuery(group_heading).text(group_name).attr({title: group_name + " Section"}).addClass("collapsable").html();
                                 jQuery("#enrolment-container").append(group_heading);
 
                                 jQuery.each(audience, function (audience, audience_member) {
@@ -259,7 +259,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                                 var group_div = document.createElement("div");
 
                                 jQuery(group_div).addClass("row space-below medium").attr({id: group_name});
-                                jQuery(group_heading).text(group_name);
+                                jQuery(group_heading).text(group_name).html();
                                 jQuery("#enrolment-container").append(group_heading);
 
                                 var table = document.createElement("table");
@@ -325,9 +325,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                     jQuery(media_div).addClass("media course-members-media-list");
                     jQuery(media_body).addClass("media-body");
                     jQuery(media_heading).addClass("media-heading");
-                    jQuery(media_heading_a).addClass("print-black").text(audience_member.firstname + " " + audience_member.lastname).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username});
-                    jQuery(media_heading_small).addClass("pull-right print-black").text("#"+ audience_member.number);
-                    jQuery(media_p_email_a).addClass("print-black").text(audience_member.email).attr({href: "mailto:" + audience_member.email});
+                    jQuery(media_heading_a).addClass("print-black").text(audience_member.firstname + " " + audience_member.lastname).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username}).html();
+                    jQuery(media_heading_small).addClass("pull-right print-black").text("#"+ audience_member.number).html();
+                    jQuery(media_p_email_a).addClass("print-black").text(audience_member.email).attr({href: "mailto:" + audience_member.email}).html();
 
                     jQuery(media_heading).append(media_heading_a).append(media_heading_small);
                     jQuery(media_p).append(media_p_email_a);
@@ -346,9 +346,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                     var email_a = document.createElement("a");
                     var number_a = document.createElement("a");
 
-                    jQuery(name_a).text(audience_member.firstname + " " + audience_member.lastname).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username});
-                    jQuery(email_a).text(audience_member.email).attr({href: "mailto:" + audience_member.email});
-                    jQuery(number_a).text("#"+ audience_member.number).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username});
+                    jQuery(name_a).text(audience_member.firstname + " " + audience_member.lastname).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username}).html();
+                    jQuery(email_a).text(audience_member.email).attr({href: "mailto:" + audience_member.email}).html();
+                    jQuery(number_a).text("#"+ audience_member.number).attr({href: "<?php echo ENTRADA_URL . "/people?profile=" ?>" + audience_member.username}).html();
 
                     jQuery(name_cell).append(name_a);
                     jQuery(email_cell).append(email_a);

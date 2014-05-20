@@ -16,6 +16,8 @@
 	<script type="text/javascript">jQuery.noConflict();</script>
 
 	<link href="{$template_relative}/css/stylesheet.css" rel="stylesheet" type="text/css" media="all" />
+	<link href="{$template_relative}/css/bootstrap.min.css" rel="stylesheet" type="text/css" media="all" />
+
 	<link href="{$template_relative}/css/print.css" rel="stylesheet" type="text/css" media="print" />
 
 	{$page_head}

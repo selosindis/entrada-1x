@@ -77,77 +77,93 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
         case "GET" :
             switch ($method) {
                 case "sync" :
-                    $ldap = new Entrada_Sync_Course_Ldap($course_id, $cperiod_id);
-                    $audience = new Models_Course_Audience();
-                    $a = $audience->fetchRowByCourseIDCperiodID($course_id, $cperiod_id);
-                    $ldap_sync_date = false;
-                    $period = Models_CurriculumPeriod::fetchRowByID($cperiod_id);
-                    if ($period->getStartDate() < strtotime("-2 weeks", time())) {
-                        $next_ldap_sync_date = date("Y-m-d", strtotime("-2 weeks", $period->getStartDate()));
-                    } else {
-                        $next_ldap_sync_date = "Tonight at midnight";
-                    }
-                    
-                    if ($a) {
-                        $ldap_sync_date = $a->getLdapSyncDate();
-                        echo json_encode(array("status" => "success", "data" => array("sync_date" => "Successfully synchronized enrolment <strong>" . date("Y-m-d H:i", $ldap_sync_date). "</strong>", "next" => $next_ldap_sync_date)));
-                    }
-                break;
-                case "sync_date" :
-                    $audience = new Models_Course_Audience();
-                    $a = $audience->fetchRowByCourseIDCperiodID($course_id, $cperiod_id);
-                    $ldap_sync_date = false;
-                    $period = Models_CurriculumPeriod::fetchRowByID($cperiod_id);
-                    if ($a) {
-                        $ldap_sync_date = $a->getLdapSyncDate();
-                        if ($ldap_sync_date) {
-                            if ($period->getStartDate() > strtotime("-2 weeks", time())) {
-                                $next_ldap_sync_date = date("Y-m-d", strtotime("-2 weeks", $period->getStartDate()));
+                    if (isset($course_id)) {
+                        if (isset($cperiod_id)) {
+                            $ldap = new Entrada_Sync_Course_Ldap($course_id, $cperiod_id);
+                            $audience = new Models_Course_Audience();
+                            $a = $audience->fetchRowByCourseIDCperiodID($course_id, $cperiod_id);
+                            $ldap_sync_date = false;
+                            if ($a) {
+                                $ldap_sync_date = $a->getLdapSyncDate();
+                                echo json_encode(array("status" => "success", "data" => array("sync_date" => "Successfully synchronized enrolment <strong>" . date("Y-m-d H:i", $ldap_sync_date). "</strong>")));
                             } else {
-                                $next_ldap_sync_date = "Tonight at midnight";
+                               echo json_encode(array("status" => "error", "data" => array("No course audience found."))); 
                             }
-                            echo json_encode(array("status" => "success", "data" => array("ldap_sync_date" => "Successfully synchronized enrolment <strong>" . date("Y-m-d H:i", $ldap_sync_date). "</strong>", "next_sync_date" => "The next synchornization will occur on " . $next_ldap_sync_date)));
                         } else {
-                            if ($period) {
-                                echo json_encode(array("status" => "success", "data" => array("ldap_sync_date" => "Enrolment will be synchronized on <strong>" . date("Y-m-d", strtotime("-2 weeks", $period->getStartDate()). "</strong>."))));
-                            }
+                            echo json_encode(array("status" => "error", "data" => array("Invalid curriculum period id provided.")));
                         }
                     } else {
-                        echo json_encode(array("status" => "error", "data" => array("No audience found.")));
+                        echo json_encode(array("status" => "error", "data" => array("Invalid course identifier provided.")));
+                    }   
+                break;
+                case "sync_date" :
+                    if (isset($course_id)) {
+                        if (isset($cperiod_id)) {
+                            $audience = new Models_Course_Audience();
+                            $a = $audience->fetchRowByCourseIDCperiodID($course_id, $cperiod_id);
+                            $ldap_sync_date = false;
+                            $period = Models_CurriculumPeriod::fetchRowByID($cperiod_id);
+                            if ($a) {
+                                $ldap_sync_date = $a->getLdapSyncDate();
+                                if ($ldap_sync_date) {
+                                    echo json_encode(array("status" => "success", "data" => array("ldap_sync_date" => "Successfully synchronized enrolment <strong>" . date("Y-m-d H:i", $ldap_sync_date). "</strong>")));
+                                } else {
+                                    if ($period) {
+                                        echo json_encode(array("status" => "success", "data" => array("ldap_sync_date" => "Enrolment will be synchronized on <strong>" . date("Y-m-d", strtotime("-2 weeks", $period->getStartDate()). "</strong>."))));
+                                    } else {
+                                        echo json_encode(array("status" => "error", "data" => array("Invalid curriculum period id provided.")));
+                                    }
+                                }
+                            } else {
+                                echo json_encode(array("status" => "error", "data" => array("No audience found.")));
+                            }
+                        } else {
+                            echo json_encode(array("status" => "error", "data" => array("Invalid curriculum period id provided.")));
+                        }
+                    } else {
+                        echo json_encode(array("status" => "error", "data" => array("Invalid course identifier provided.")));
                     }
                 break;
                 case "list" :
-                    $course = Models_Course::get($course_id);
-                    if ($course) {
-                        $course_audience = $course->getMembers($cperiod_id, $search_term);
-                        if ($course_audience) {
-                            $enrolment = array();
-                            foreach ($course_audience as $audience_type => $audience_type_members) {
-                                if ($audience_type == "groups") {
-                                    foreach ($audience_type_members as $group_name => $audience) {
-                                        foreach ($audience as $audience_member) {
-                                            $enrolment["groups"][$group_name][] = $audience_member->toArray();
+                    if (isset($course_id)) {
+                        if (isset($cperiod_id)) {
+                            $course = Models_Course::get($course_id);
+                            if ($course) {
+                                $course_audience = $course->getMembers($cperiod_id, $search_term);
+                                if ($course_audience) {
+                                    $enrolment = array();
+                                    foreach ($course_audience as $audience_type => $audience_type_members) {
+                                        if ($audience_type == "groups") {
+                                            foreach ($audience_type_members as $group_name => $audience) {
+                                                foreach ($audience as $audience_member) {
+                                                    $enrolment["groups"][$group_name][] = $audience_member->toArray();
+                                                }
+                                            }
+                                        } else if ($audience_type == "individuals") {
+                                            foreach ($audience_type_members as $audience_member) {
+                                                $enrolment["individuals"][] = $audience_member->toArray();
+                                            }
                                         }
                                     }
-                                } else if ($audience_type == "individuals") {
-                                    foreach ($audience_type_members as $audience_member) {
-                                        $enrolment["individuals"][] = $audience_member->toArray();
+                                    $_SESSION[APPLICATION_IDENTIFIER]["courses"]["selected_curriculum_period"] = $cperiod_id;
+                                    if (isset($enrolment_view)) {
+                                        $_SESSION[APPLICATION_IDENTIFIER]["courses"]["enrolment_view"] = $enrolment_view;
                                     }
+                                    echo json_encode(array("status" => "success", "data" => $enrolment));
+                                } else {
+                                    echo json_encode(array("status" => "error", "data" => array("No enrolments found.")));
                                 }
-                            }
-                            echo json_encode(array("status" => "success", "data" => $enrolment));
-                            if (isset($enrolment_view)) {
-                                $_SESSION[APPLICATION_IDENTIFIER]["courses"]["enrolment_view"] = $enrolment_view;
+                            } else {
+                               echo json_encode(array("status" => "error", "data" => array("No course found with the provided ID."))); 
                             }
                         } else {
-                            echo json_encode(array("status" => "error", "data" => array("No enrolments found.")));
+                            echo json_encode(array("status" => "error", "data" => array("Invalid curriculum period id provided.")));
                         }
                     } else {
-                       echo json_encode(array("status" => "error", "data" => array("No course found with the provided ID."))); 
+                        echo json_encode(array("status" => "error", "data" => array("Invalid course identifier provided.")));
                     }
                 break;
             }
         break;
-        
     }
 }

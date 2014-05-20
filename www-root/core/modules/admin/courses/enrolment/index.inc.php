@@ -389,7 +389,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                                     <select style="width:100%" id="cperiod_select" name="cperiod_select">
                                         <?php														
                                         foreach ($curriculum_periods as $period) { ?>
-                                            <option value="<?php echo html_encode($period->getID());?>" <?php echo (($period->getID() == $cperiod_id) ? "selected=\"selected\"" : "");?>>
+                                            <option value="<?php echo html_encode($period->getID());?>" <?php echo (isset($PREFERENCES["selected_curriculum_period"]) && $PREFERENCES["selected_curriculum_period"] == $period->getID() ? "selected=\"selected\"" : ""); ?>">
                                                 <?php echo (($period->getCurriculumPeriodTitle()) ? html_encode($period->getCurriculumPeriodTitle()) . " - " : "") . date("F jS, Y", html_encode($period->getStartDate()))." to ".date("F jS, Y", html_encode($period->getFinishDate())); ?>
                                             </option>
                                         <?php

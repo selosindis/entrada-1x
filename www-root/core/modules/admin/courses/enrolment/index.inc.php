@@ -366,7 +366,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                         type : "GET",
                         data : "method=sync_date&course_id=" + course_id + "&cperiod_id=" + cperiod_id,
                         success: function(data) {
-                            console.log(data);
                             var jsonResponse = JSON.parse(data);
                             if (jsonResponse.status == "success") {
                                 jQuery("#sync-date").html(jsonResponse.data.ldap_sync_date);

@@ -2035,6 +2035,7 @@ CREATE TABLE IF NOT EXISTS `course_audience` (
   `audience_type` enum('proxy_id','group_id') NOT NULL,
   `audience_value` int(11) NOT NULL,
   `cperiod_id` int(11) NOT NULL,
+  `ldap_sync_date` bigint(64) NOT NULL DEFAULT '0',
   `enroll_start` bigint(20) NOT NULL,
   `enroll_finish` bigint(20) NOT NULL,
   `audience_active` int(1) NOT NULL DEFAULT '1',

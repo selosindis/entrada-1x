@@ -65,7 +65,9 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
     
     if (isset(${$request_var}["search_term"]) && $tmp_input = clean_input(${$request_var}["search_term"], array("trim", "striptags"))) {
 		$search_term = $tmp_input;
-	}
+	} else {
+        $search_term = false;
+    }
     
     if (isset(${$request_var}["enrolment_view"]) && $tmp_input = clean_input(${$request_var}["enrolment_view"], array("trim", "striptags"))) {
 		$enrolment_view = $tmp_input;

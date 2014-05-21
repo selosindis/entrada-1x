@@ -841,7 +841,9 @@ class User {
 		$class_vars = get_class_vars(get_called_class());
 		if (isset($class_vars)) {
 			foreach ($class_vars as $class_var => $value) {
+                if ($class_var != "format_keys") {
                     $arr[$class_var] = $this->$class_var;
+                }
 			}
         }
 		return $arr;

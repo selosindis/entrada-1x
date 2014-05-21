@@ -106,6 +106,11 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/groups?section=edit&ids=".implode(",", $_SESSION["ids"])."\\'', ".(isset($wait)?$wait:0).")";
 			} elseif ($MEMBERS)  {  // Delete members
 				foreach($GROUP_IDS as $gmember_id) {
+                    $gmember_name = $db->GetOne("SELECT CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`
+                                                 FROM `group_members` AS a
+                                                 JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                                 ON b.`id`=a.`proxy_id`
+                                                 WHERE a.`gmember_id`=".$db->qstr($gmember_id));
 					switch ($_POST["coa"]) {
 						case "deactivate":
 							$db->Execute("UPDATE `group_members` SET `member_active`='0' WHERE `gmember_id` = ".$db->qstr($gmember_id));
@@ -117,7 +122,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 							$db->Execute("DELETE FROM `group_members` WHERE `gmember_id` = ".$db->qstr($gmember_id));
 						break;
 					}
-                    add_success("Successfully ".$_POST["coa"]."d the selected group member.");
+                    add_success("Successfully ".$_POST["coa"]."d $gmember_name.");
 				}
 				$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/groups?section=edit&ids=".implode(",", $_SESSION["ids"])."\\'', 5000)";
 
@@ -248,14 +253,39 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 							</thead>
 							<tfoot>
 								<tr>
-									<td />
-                                    <td style="padding-top: 10px" colspan="2">
-                                        <input type="submit" class="btn btn-primary" value="Activate" onClick="$('coa').value='activate'" />
-                                    </td>
-                                    <td style="padding-top: 10px" align="right" colspan="2">
-                                        <input type="submit" class="btn btn-warning" value="Deactivate" onClick="$('coa').value='deactivate'" />
-                                        <input type="submit" class="btn btn-danger" value="Delete" onClick="$('coa').value='delete'" />
-                                    </td>
+                                    <?php
+                                    
+                                    $post_action = isset($_POST['coa']) ? $_POST['coa'] : false;
+                                    switch ($post_action) {
+                                        case 'activate':
+                                            ?>
+                                            <td style="padding-top: 10px" align="right" colspan="5">
+                                                <input type="submit" class="btn btn-success" value="Activate" onClick="$('coa').value='activate'" />
+                                            </td>
+                                            <?php
+                                        break;
+                                        case 'delete':
+                                            ?>
+                                            <td style="padding-top: 10px" align="right" colspan="5">
+                                                <input type="submit" class="btn btn-warning" value="Deactivate" onClick="$('coa').value='deactivate'" />
+                                                <input type="submit" class="btn btn-danger" value="Delete" onClick="$('coa').value='delete'" />
+                                            </td>
+                                            <?php
+                                        break;
+                                        default:
+                                            ?>
+                                            <td style="padding-top: 10px" colspan="3">
+                                                <input type="submit" class="btn btn-success" value="Activate" onClick="$('coa').value='activate'" />
+                                            </td>
+                                            <td style="padding-top: 10px" align="right" colspan="2">
+                                                <input type="submit" class="btn btn-warning" value="Deactivate" onClick="$('coa').value='deactivate'" />
+                                                <input type="submit" class="btn btn-danger" value="Delete" onClick="$('coa').value='delete'" />
+                                            </td>
+                                            <?php
+                                        break;
+                                    }
+                                    
+                                    ?>
 								</tr>
 							</tfoot>
 							<tbody>

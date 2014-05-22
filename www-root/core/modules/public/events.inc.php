@@ -739,6 +739,7 @@ if (!defined("PARENT_INCLUDED")) {
 								LEFT JOIN `course_objectives` b
 								ON a.`objective_id` = b.`objective_id`
 								AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+                                AND b.`active` = '1'
 								LEFT JOIN `event_objectives` c
 								ON c.`objective_id` = a.`objective_id`
 								AND c.`event_id` = ".$db->qstr($EVENT_ID)."

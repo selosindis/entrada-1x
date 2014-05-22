@@ -89,6 +89,7 @@ if (!defined("IN_COURSE_REPORTS")) {
 				JOIN `global_lu_objectives` b
 				ON a.`objective_id` = b.`objective_id`
 				WHERE a.`course_id` = " . $db->qstr($course_details["course_id"]) . "
+                AND a.`active` = '1'
 				AND b.`objective_loggable` = 1";
 
 	$course_objectives = $db->getAll($query);

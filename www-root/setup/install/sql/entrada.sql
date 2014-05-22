@@ -2162,8 +2162,11 @@ CREATE TABLE IF NOT EXISTS `course_objectives` (
   `importance` int(2) NOT NULL DEFAULT '1',
   `objective_type` enum('event','course') DEFAULT 'course',
   `objective_details` text,
+  `objective_start` int(12) DEFAULT NULL,
+  `objective_finish` int(12) DEFAULT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
+  `active` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`cobjective_id`),
   KEY `course_id` (`course_id`),
   KEY `objective_id` (`objective_id`)

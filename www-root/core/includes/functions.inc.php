@@ -1749,7 +1749,8 @@ function fetch_clinical_presentations($parent_id = 0, $presentations = array(), 
 		$query = "	SELECT `objective_id`
 					FROM `course_objectives`
 					WHERE `course_id` = ".$db->qstr($course_id)."
-					AND `objective_type` = 'event'";
+					AND `objective_type` = 'event'
+                    AND `active` = '1'";
 		$allowed_objectives = $db->GetAll($query);
 		if ($allowed_objectives) {
 			foreach ($allowed_objectives as $presentation) {
@@ -1879,6 +1880,7 @@ function fetch_objective_child_mapped_course($objective_id = 0,$course_id = 0){
 	$query = "	SELECT a.*, COALESCE(b.`cobjective_id`,0) AS `mapped` FROM `global_lu_objectives` a
 				LEFT JOIN `course_objectives` b
 				ON a.`objective_id` = b.`objective_id`
+                AND b.`active` = '1'
 				AND b.`course_id` = ".$db->qstr($course_id)."
 				WHERE `objective_parent` = ".$db->qstr($objective_id);
 	$children = $db->GetRow($query);
@@ -1896,6 +1898,7 @@ function children_check_mapped($children,$objective_id,$course_id){
 		$query = "	SELECT a.*, COALESCE(b.`cobjective_id`,0) AS `mapped` FROM `global_lu_objectives` a
 					LEFT JOIN `course_objectives` b
 					ON a.`objective_id` = b.`objective_id`
+                    AND b.`active` = '1'
 					AND b.`course_id` = ".$db->qstr($course_id)."
 					WHERE `objective_parent` = ".$db->qstr($child["objective_id"]);
 		$children = $db->GetRow($query);
@@ -7736,7 +7739,9 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 						FROM `community_discussions` AS a
 						LEFT JOIN `community_pages` AS b
 						ON a.`cpage_id` = b.`cpage_id`
-						WHERE a.`cdiscussion_id` = ".$db->qstr($record_id);
+						JOIN `community_discussion_topics` AS c
+						ON a.`cdiscussion_id` = c.`cdiscussion_id`
+						WHERE c.`cdtopic_id` = ".$db->qstr($record_id);
 			$result = $db->GetRow($query);
 			if ($result["allow_member_read"] && $result["allow_member_view"]) {
 				$permission_required = 0;
@@ -9697,6 +9702,7 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
 						AND ")."`course_id` IN (".$escaped_course_ids.")
 						AND a.`objective_type` = 'course'
 						AND c.`organisation_id` = ".$db->qstr($org_id)."
+                        AND a.`active` = '1'
 						UNION
 						SELECT b.`objective_name`, b.`objective_id`, a.`importance`, a.`objective_details`, a.`course_id`, b.`objective_parent`, b.`objective_order`
 						FROM `course_objectives` AS a
@@ -9709,6 +9715,7 @@ function courses_fetch_objectives($org_id, $course_ids, $top_level_id = -1, $par
 						AND a.`objective_type` = 'course'
 						AND ")."a.`objective_type` = 'course'
 						AND c.`organisation_id` = ".$db->qstr($org_id)."
+                        AND a.`active` = '1'
 						AND b.`objective_id` NOT IN (
 							SELECT a.`objective_id`
 							FROM `course_objectives` AS a
@@ -9953,6 +9960,7 @@ function course_objective_has_child_mapped($objective_id,$course_id, $include_bo
 				AND b.`course_id` = ".$db->qstr($course_id)."
 				WHERE b.`course_id` = ".$db->qstr($course_id)."
 				AND a.`objective_active` = '1'
+                AND b.`active` = '1'
 				GROUP BY a.`objective_id`
 				ORDER BY a.`objective_id` ASC";
 	$objectives = $db->GetAll($query);
@@ -9974,6 +9982,7 @@ function course_objective_child_recursive($objectives,$objective_id,$course_id,$
 					AND b.`course_id` = ".$db->qstr($course_id)."
 					WHERE a.`objective_id` = ".$db->qstr($objective["objective_parent"])."
 					AND a.`objective_active` = '1'
+                    AND b.`active` = '1'
 					GROUP BY a.`objective_id`
 					ORDER BY a.`objective_order` ASC
 					";
@@ -12779,6 +12788,7 @@ function assessment_objectives_bottom_leaves($objectives,$course_id,$assessment_
 					FROM `global_lu_objectives` a
 					LEFT JOIN `course_objectives` b
 					ON a.`objective_id` = b.`objective_id`
+                    AND b.`active` = '1'
 					AND b.`course_id` = ".$db->qstr($course_id)."
 					LEFT JOIN `assessment_objectives` c
 					ON c.`objective_id` = a.`objective_id`
@@ -12900,6 +12910,7 @@ function assessment_objective_parent_mapped_recursive($objectives,$objective_id,
 						FROM `global_lu_objectives` a
 						LEFT JOIN `course_objectives` b
 						ON a.`objective_id` = b.`objective_id`
+                        AND b.`active` = '1'
 						AND b.`course_id` = ".$db->qstr($course_id)."
 						LEFT JOIN `assessment_objectives` c
 						ON c.`objective_id` = a.`objective_id`
@@ -12984,6 +12995,7 @@ function event_objectives_bottom_leaves($objectives,$course_id,$event_id, $paren
 					FROM `global_lu_objectives` a
 					LEFT JOIN `course_objectives` b
 					ON a.`objective_id` = b.`objective_id`
+                    AND b.`active` = '1'
 					AND b.`course_id` = ".$db->qstr($course_id)."
 					LEFT JOIN `event_objectives` c
 					ON c.`objective_id` = a.`objective_id`
@@ -13137,6 +13149,7 @@ function event_objective_parent_mapped_recursive($objectives,$objective_id,$cour
 						FROM `global_lu_objectives` a
 						LEFT JOIN `course_objectives` b
 						ON a.`objective_id` = b.`objective_id`
+                        AND b.`active` = '1'
 						AND b.`course_id` = ".$db->qstr($course_id)."
 						LEFT JOIN `event_objectives` c
 						ON c.`objective_id` = a.`objective_id`
@@ -13193,76 +13206,6 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 	if (!is_array($edit_ajax)) {
 		$edit_ajax = array();
 	}
-
-	/*if ((is_array($objectives)) && ($total = count($objectives))) {
-		$count	= 0;
-		if ($top) {
-			$output	= "\n<ul class=\"objective-list\" id=\"objective_".$parent_id."_list\"".($parent_id == $top_level_id ? " style=\"padding-left: 0; margin-top: 0\"" : "").">\n";
-		}
-		$iterated = false;
-		do {
-			if ($iterated) {
-				if ($display_importance == "primary" && $active["secondary"]) {
-					$display_importance = "secondary";
-				} elseif ((($display_importance == "secondary" || $display_importance == "primary") && $active["tertiary"])) {
-					$display_importance = "tertiary";
-				}
-			}
-			if ($top) {
-				$output .= "<h2".($iterated ? " class=\"collapsed\"" : "")." title=\"".ucwords($display_importance)." Objectives\">".ucwords($display_importance)." Objectives</h2>\n";
-				$output .= "<div id=\"".($display_importance)."-objectives\">\n";
-			}
-			foreach ($objectives as $objective_id => $objective) {
-				$count++;
-
-					if (($objective["parent"] == $parent_id) && (($objective["objective_".$display_importance."_children"]) || ($objective[$display_importance]) || ($parent_active))) {
-						$importance = (($objective["primary"]) ? 1 : ($objective["secondary"] ? 2 : ($objective["tertiary"] ? 3 : $importance)));
-
-						if (((($objective[$display_importance]) || ($parent_active)) && (count($objective["parent_ids"]) > 2))) {
-						$output .= "<li>\n";
-						if ($edit_text && !$course) {
-							$output .= "<div id=\"objective_table_".$objective_id."\" class=\"content-small\" style=\"color: #000\">\n";
-							$output .= "	<input type=\"checkbox\" name=\"checked_objectives[".$objective_id."]\" id=\"objective_checkbox_".$objective_id."\"".($course ? " disabled=\"true\" checked=\"checked\"" : " onclick=\"if (this.checked) { $('objective_table_".$objective_id."_details').show(); $('objective_text_".$objective_id."').focus(); } else { $('objective_table_".$objective_id."_details').hide(); }\"".($objective["event_objective"] ? " checked=\"checked\"" : ""))." style=\"float: left;\" value=\"1\" />\n";
-							$output .= "	<div style=\"padding-left: 25px;\"><label for=\"objective_checkbox_".$objective_id."\">".$objective["description"]." <a class=\"external content-small\" href=\"".ENTRADA_RELATIVE."/courses/objectives?section=objective-details&amp;oid=".$objective_id."\">".$objective["name"]."</a></label></div>\n";
-							$output .= "</div>\n";
-							$output .= "<div id=\"objective_table_".$objective_id."_details\" style=\"padding-left: 25px; margin-top: 5px".($objective["event_objective"] ? "" : "; display: none")."\">\n";
-							$output .= "	<label for=\"c_objective_".$objective_id."\" class=\"content-small\" id=\"objective_".$objective_id."_append\" style=\"vertical-align: middle;\">Provide your sessional free-text objective below as it relates to this curricular objective.</label>\n";
-							$output .= "	<textarea name=\"objective_text[".$objective_id."]\" id=\"objective_text_".$objective_id."\" class=\"expandable\">".(isset($objective["event_objective_details"]) ? html_encode($objective["event_objective_details"]) : "")."</textarea>";
-							$output .= "</div>\n";
-						} elseif ($edit_text) {
-							$edit_ajax[] = $objective_id;
-							$output .= "<div id=\"objective_table_".$objective_id."\">\n";
-							$output .= "	<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label> ( <span id=\"edit_mode_".$objective_id."\" class=\"content-small\" style=\"cursor: pointer\">edit</span> )\n";
-							$output .= "	<div class=\"content-small\" style=\"padding-left: 25px;\" id=\"objective_description_".$objective_id."\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])."</div>\n";
-							$output .= "</div>\n";
-						} else {
-							$output .= "<input type=\"checkbox\" id=\"objective_checkbox_".$objective_id."\ name=\"course_objectives[".$objective_id."]\"".(isset($objective["event_objective"]) && $objective["event_objective"] ? " checked=\"checked\"" : "")." onclick=\"if (this.checked) { this.parentNode.addClassName('".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."'); } else { this.parentNode.removeClassName('".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."'); }\" style=\"float: left;\" value=\"1\" />\n";
-							$output .= "<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label>\n";
-							$output .= "<div style=\"padding-left: 25px;\">\n";
-							$output .=		$objective["description"]."\n";
-							if (isset($objective["objective_details"]) && $objective["objective_details"]) {
-								$output .= "<br /><br />\n";
-								$output .= "<em>".$objective["objective_details"]."</em>";
-							}
-							$output .= "</div>\n";
-						}
-						$output .= "</li>\n";
-
-					} else {
-							$output .= event_objectives_in_list($objectives, $objective_id,$top_level_id, $edit_text, (($objective[$display_importance]) ? true : false), $importance, $course, false, $display_importance, $full_objective_list);
-					}
-				}
-			}
-			$iterated = true;
-			if ($top) {
-				$output .= "</div>\n";
-			}
-		} while ((($display_importance != "tertiary") && ($display_importance != "secondary" || $active["tertiary"]) && ($display_importance != "primary" || $active["secondary"] || $active["tertiary"])) && $top);
-		if ($top) {
-			$output .= "</ul>\n";
-		}
-	}*/
-
 
 	if ((is_array($objectives)) && ($total = count($objectives))) {
 		$count	= 0;
@@ -15299,6 +15242,7 @@ function objectives_build_course_competencies_array() {
 					a.`course_id` IN (
 						SELECT DISTINCT(`course_id`) FROM `course_objectives`
 						WHERE `objective_type` = 'course'
+                        AND `active` = '1'
 					)
 					OR b.`curriculum_type_active` = '1'
 				)
@@ -15375,7 +15319,8 @@ function objectives_build_course_competencies_array() {
 						$query = "	SELECT MIN(`importance`) as `importance` FROM `course_objectives`
 									WHERE `objective_type` = 'course'
 									AND `course_id` = ".$db->qstr($course_id)."
-									AND `objective_id` IN (".$objective_ids_string.")";
+									AND `objective_id` IN (".$objective_ids_string.")
+                                    AND `active` = '1'";
 						$found = $db->GetRow($query);
 						if ($found) {
 							$course["competencies"][$competency["objective_id"]] = $found["importance"];
@@ -15430,7 +15375,8 @@ function objectives_build_objective_descendants_id_string($objective_id = 0, $ob
 function objectives_build_course_objectives_id_string($course_id = 0) {
 	global $db;
 	$query = "	SELECT `objective_id` FROM `course_objectives`
-				WHERE `course_id` = ".$db->qstr($course_id);
+				WHERE `course_id` = ".$db->qstr($course_id)."
+                AND `active` = '1'";
 	$objective_ids = $db->GetAll($query);
 	if ($objective_ids) {
 		$objective_ids_string = false;
@@ -15463,6 +15409,7 @@ function objectives_competency_courses($competency_id = 0) {
 				AND `objective_id` IN (".objectives_build_objective_descendants_id_string($competency_id).")
 				AND a.`course_active` = 1
 				AND a.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+                AND b.`active` = '1'
 				GROUP BY a.`course_id`";
 	$courses = $db->GetAll($query);
 	if ($courses) {
@@ -17241,7 +17188,7 @@ function count_objective_child_events($objective_id = 0, $start = NULL, $end = N
 				FROM `event_objectives` AS a
 				JOIN `events` AS b
 				ON a.`event_id` = b.`event_id`
-				JOIN `event_audience` AS c
+				LEFT JOIN `event_audience` AS c
 				ON a.`event_id` = c.`event_id`".
 				($group_id != NULL ? " AND c.`audience_type` = 'cohort' " : "")."
 				WHERE `objective_id` = ".$db->qstr($objective_id).
@@ -17293,6 +17240,7 @@ function count_objective_child_courses($objective_id = 0, $level = 0) {
 				JOIN `courses` AS c
 				ON a.`course_id` = c.`course_id`
 				WHERE a.`objective_id` = ".$db->qstr($objective_id)."
+                AND a.`active` = '1'
 				AND c.`course_active` = '1'
 				AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
 	$output[$objective_id] = $db->GetOne($query);

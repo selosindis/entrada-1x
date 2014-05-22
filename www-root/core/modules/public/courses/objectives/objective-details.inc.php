@@ -38,6 +38,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					LEFT JOIN `course_objectives` AS b
 					ON a.`objective_id` = b.`objective_id`
 					AND b.`course_id` = ".$db->qstr($COURSE_ID) : "")."
+                    AND b.`active` = '1'
 					JOIN `objective_organisation` AS c
 					ON a.`objective_id` = c.`objective_id`
 					AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
@@ -63,6 +64,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					LEFT JOIN `course_objectives` AS b
 					ON a.`objective_id` = b.`objective_id`
 					AND b.`course_id` = ".$db->qstr($COURSE_ID) : "")."
+                    AND b.`active` = '1'
 					JOIN `objective_organisation` AS c
 					ON a.`objective_id` = c.`objective_id`
 					AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."

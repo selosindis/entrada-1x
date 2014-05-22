@@ -149,11 +149,21 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 							if (is_array($PROCESSED_OBJECTIVES)) {
 								foreach ($PROCESSED_OBJECTIVES as $objective_id => $objective) {
-									$objective_found = $db->GetOne("SELECT `objective_id` FROM `course_objectives` WHERE `objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
-									if ($objective_found) {
-										$db->AutoExecute("course_objectives", array("objective_details" => $objective, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
+                                    $objective = Models_Course_Objective::fetchRowByCourseIDObjectiveID($COURSE_ID, $objective_id);
+									if ($objective) {
+                                        $objective->fromArray(array("objective_details" => $objective, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()))->update();
 									} else {
-										$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_details" => $objective, "importance" => 0, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT");
+                                        $objective = new Models_Course_Objective(array(
+                                            "course_id" => $COURSE_ID, 
+                                            "objective_id" => $objective_id, 
+                                            "objective_details" => $objective, 
+                                            "objective_start" => time(), 
+                                            "importance" => 0, 
+                                            "updated_date" => time(), 
+                                            "updated_by" => $ENTRADA_USER->getID(),
+                                            "active" => "1"
+                                        ));
+										$objective->insert();
 									}
 
 								}

@@ -1640,7 +1640,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										<div id="curriculum_type_periods">
 											<?php
 											if ($PROCESSED["curriculum_type_id"]) {
-													$query = "SELECT * FROM `curriculum_periods` WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"])." AND `active` = 1 AND `finish_date` >= ".$db->qstr(time());
+													$query = "SELECT * FROM `curriculum_periods` WHERE `curriculum_type_id` = ".$db->qstr($PROCESSED["curriculum_type_id"])." AND `active` = 1";
 													if ($periods = $db->GetAll($query)) {
 														?>
 														<select name="curriculum_period" id="period_select">

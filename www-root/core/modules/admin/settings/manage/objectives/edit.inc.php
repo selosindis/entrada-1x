@@ -130,7 +130,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 					$query = "	SELECT a.* FROM `global_lu_objectives` a
 								JOIN `objective_audience` b
 								ON a.`objective_id` = b.`objective_id`
-								AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+								AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 								WHERE a.`objective_parent` = '0'
 								AND a.`objective_active` = '1'
 								AND a.`objective_id` != ".$db->qstr($PROCESSED["objective_set_id"])."
@@ -353,7 +353,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 			/**
 			* Fetch all courses into an array that will be used.
 			*/
-			$query = "SELECT * FROM `courses` WHERE `organisation_id` = ".$ENTRADA_USER->getActiveOrganisation()." ORDER BY `course_code` ASC";
+			$query = "SELECT * FROM `courses` WHERE `organisation_id` = ".$ORGANISATION_ID." ORDER BY `course_code` ASC";
 			$courses = $db->GetAll($query);
 			if ($courses) {
 				foreach ($courses as $course) {
@@ -932,7 +932,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_OBJECTIVES"))) {
 									$query = "SELECT a.* FROM `global_lu_objectives` a
 												LEFT JOIN `objective_organisation` b
 												ON a.`objective_id` = b.`objective_id`
-												AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+												AND b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
 												WHERE a.`objective_parent` = ".$db->qstr($OBJECTIVE_ID)."
 												AND a.`objective_active` = '1'
 												ORDER BY a.`objective_order`";

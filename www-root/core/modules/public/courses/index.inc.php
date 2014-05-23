@@ -350,6 +350,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								ON b.`objective_id` = c.`objective_id`
 								AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 								WHERE a.`objective_type` = 'event'
+                                AND a.`active` = '1'
 								AND b.`objective_active` = '1'
 								AND a.`course_id` = ".$db->qstr($COURSE_ID)."
 								GROUP BY b.`objective_id`

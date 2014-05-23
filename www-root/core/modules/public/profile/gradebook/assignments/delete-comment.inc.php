@@ -22,7 +22,12 @@ if (isset($_GET["acomment_id"]) && ($tmp_input = clean_input($_GET["acomment_id"
 }
 $ASSIGNMENT_ID = false;
 if ($ACOMMENT_ID) {
-	$query			= "	SELECT a.*,b.`course_id` FROM `assignment_comments` AS a JOIN `assignments` AS b ON a.`assignment_id` = b.`assignment_id` WHERE a.`acomment_id` = ".$db->qstr($ACOMMENT_ID)." AND a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+	$query			= "SELECT a.*, b.`course_id` FROM `assignment_comments` AS a
+	                    JOIN `assignments` AS b
+	                    ON a.`assignment_id` = b.`assignment_id`
+	                    WHERE a.`acomment_id` = ".$db->qstr($ACOMMENT_ID)."
+	                    AND a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+	                    AND b.`assignment_active` = '1'";
 			
 	$comment_record	= $db->GetRow($query);
 	if ($comment_record) {

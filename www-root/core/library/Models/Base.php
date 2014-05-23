@@ -46,6 +46,9 @@ class Models_Base {
     }
 
     /**
+     * See the fetchRow method for documentation. These two are functionally identical other than the fact
+     * fetchAll returns all the results (by using $db->GetAll()) whereas fetchRow only returns the first result.
+     *
      * @param array $constraints
      * @param string $default_method
      * @param string $default_mode
@@ -61,9 +64,34 @@ class Models_Base {
             foreach ($constraints as $index => $constraint) {
                 $key = false;
                 $value = false;
-                if (is_array($constraint) && (in_array($constraint["key"], $class_vars))) {
+                if (is_array($constraint)) {
+                    if (in_array($constraint["key"], $class_vars)) {
+                        $key = "`".clean_input($constraint["key"], array("trim", "striptags"))."`";
+                    } else {
+                        $key = $constraint["key"];
+                        if (is_array($key)) {
+                            if (strtoupper($key["function"]) == "CONCAT") {
+                                if ($key["keys"] && is_array($key["keys"]) && count($key["keys"] > 1)) {
+                                    $fn_key = function($keys) {
+                                        $return = array();
+                                        foreach($keys as $k) {
+                                            if ($k != " ") {
+                                                $return[] = "`".$k."`";
+                                            } else {
+                                                $return[] = "' '";
+                                            }
+                                        }
+                                        return $return;
+                                    };
+                                    $key_str = implode(",", $fn_key($key["keys"]));
+                                    $key_str = "CONCAT(" . $key_str . ")";
+                                }
+                                $key = $key_str;
+                            }
+
+                        }
+                    }
                     $mode = (isset($constraint["mode"]) && in_array(strtoupper($constraint["mode"]), array("OR", "AND")) ? $constraint["mode"] : $default_mode);
-                    $key = "`".clean_input($constraint["key"], array("trim", "striptags"))."`";
                     $method = (isset($constraint["method"]) && in_array(strtoupper($constraint["method"]), array("=", ">", ">=", "<", "<=", "!=", "<>", "BETWEEN", "LIKE", "IS NOT", "IS")) ? $constraint["method"] : $default_method);
                     if (strtoupper($method) == "BETWEEN" && is_array($constraint["value"]) && @count($constraint["value"]) == 2) {
                         $value = array(
@@ -114,6 +142,45 @@ class Models_Base {
     }
 
     /**
+     * This constraints array can have either of two possible formats, or even a blend of the two.
+     * Each element in the array should either be a key-value pair with the key of the array
+     * being the field name, and the value being the value in the field, or an array holding
+     * at least elements, with the "key" key, and the "value" key, and then the optional
+     * inclusion of a "mode" key holding 'AND' or 'OR' which will come before the line in the where statement
+     * (only if it is not the first constraint), and a "method" which determines which operator will be used
+     * out of the following: "=", ">", ">=", "<", "<=", "!=", "<>", "BETWEEN", "LIKE", "IS NOT", "IS".
+     * For an example, here is an array, and the query which it would build:
+     *
+     * Array:
+        $constraints = array(
+        array(
+        "key"       => "firstname" ,
+        "value"     => "%John%",
+        "method"    => "LIKE"
+        ),
+        array(
+        "mode"      => "AND",
+        "key"       => "lastname" ,
+        "value"     => "%Mc%",
+        "method"    => "LIKE"
+        ),
+        array(
+        "mode"      => "OR",
+        "key"       => "id" ,
+        "value"     => "1",
+        "method"    => "="
+        )
+        );
+
+     * Query:
+            SELECT * FROM `user_data`
+            WHERE `firstname` LIKE '%John%'
+            AND `lastname` LIKE '%Mc%'
+            OR `id` = '1'
+     *
+     * It is possible to use the CONCAT function in the where clause of the fetchAll by passing the key as an array in the format:
+     * array("function" => "CONCAT", "keys" => array("lastname", "firstname"))
+     *
      * @param array $constraints
      * @param string $default_method
      * @param string $default_mode

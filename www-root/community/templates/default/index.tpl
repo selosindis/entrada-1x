@@ -30,26 +30,21 @@
 </head>
 <body>
 {$sys_system_navigator}
-<div id="site-container">
-	<div id="site-header">
-		<div>
-			<img src="{$template_relative}/images/community-icon.gif" width="101" height="130" alt="" style="vertical-align: bottom; margin-right: 10px" />
-			<span class="community-title">{$site_community_title}</span>
+<div class="container">
+	<div class="row">
+		<div class="span2">
+			{include file="navigation_primary.tpl" site_primary_navigation=$site_primary_navigation}
 		</div>
-	</div>
-	<div id="site-body">
-		<table id="content-table" style="width: 100%; table-layout: fixed" cellspacing="0" cellpadding="0" border="0">
-		<colgroup>
-			<col style="width: 19%" />
-			<col style="width: 62%" />
-			<col style="width: 19%" />
-		</colgroup>
-		<tbody>
-			<tr>
-				<td class="column">
-					{include file="navigation_primary.tpl" site_primary_navigation=$site_primary_navigation}
-				</td>
-				<td class="column">
+		<div class="span10">
+			<div class="row">
+				<div class="span10">
+					<div class="header clearfix">
+						<span class="community-title">{$site_community_title}</span>
+					</div>
+				</div>
+			</div>
+			<div class="row">
+				<div class="span7 content-area">
 					{$site_breadcrumb_trail}
 					{$child_nav}
 					<div class="content">
@@ -68,17 +63,16 @@
 							{/if}
 						</div>
 					{/if}
-				</td>
-				<td class="column">
+				</div>
+				<div class="span3">
 					{$page_sidebar}
-				</td>
-			</tr>
-		</tbody>
-		</table>
-	</div>
-	<div id="site-footer">
-		<div style="padding: 10px 5px 15px 22%; text-align: left" class="content-copyright">
-			{php}echo COPYRIGHT_STRING;{/php}
+				</div>
+			</div>
+			<div class="footer span10">
+				<div class="content-copyright">
+					{php}echo COPYRIGHT_STRING;{/php}
+				</div>
+			</div>
 		</div>
 	</div>
 </div>

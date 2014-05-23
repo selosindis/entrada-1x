@@ -46,6 +46,7 @@ if ($ASSIGNMENT_ID) {
                                 ON a.`proxy_id` = c.`id`
                                 WHERE `file_active` = '1'
                                 AND a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
+                                AND b.`assignment_active` = '1'
                                 AND a.`proxy_id` = ".$db->qstr($USER_ID);
 			$file_record	= $db->GetRow($query);
 			if ($file_record) {

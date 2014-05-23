@@ -37,7 +37,9 @@ if ($RECORD_ID) {
 	if($FILE_ID){
 		$query			= "SELECT * FROM `assignment_files` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `afile_id` = ".$db->qstr($FILE_ID)."  AND `file_type` = 'submission' AND `file_active` = '1'";
 		$file_record = $db->GetRow($query);
-		$query			= "SELECT * FROM `assignments` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `assignment_active` = '1'";
+		$query			= "SELECT * FROM `assignments`
+		                    WHERE `assignment_id` = ".$db->qstr($RECORD_ID)."
+		                    AND `assignment_active` = '1'";
 		$folder_record	= $db->GetRow($query);
 		if ($folder_record){
 			$query = "SELECT CONCAT_WS(' ', `firstname`,`lastname`) AS `uploader` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($file_record["proxy_id"]);

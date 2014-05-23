@@ -148,6 +148,10 @@ define("LDAP_SEARCH_DN", "uid=readonly,ou=people,dc=yourschool,dc=ca");			// The
 define("LDAP_SEARCH_DN_PASS", "");												// The LDAP password for the SearchDN above. These fields are optional.
 define("LDAP_MEMBER_ATTR", "UniUid");											// The member attribute used to identify the users unique LDAP ID.
 define("LDAP_USER_QUERY_FIELD", "UniCaPKey");									// The attribute used to identify the users staff / student number. Only used if LDAP_LOCAL_USER_QUERY_FIELD is set to "number".
+define("LDAP_CGROUP_BASE_DN", "ou=cgroups,ou=groups,o=main,dc=yourschool,dc=ca");
+define("LDAP_MEMBER_ATTR", "yourmemberattr");									// The member attribute used to identify the users unique LDAP ID.
+define("LDAP_USER_QUERY_FIELD", "youruserqueryfield");								// The attribute used to identify the users staff / student number. Only used if LDAP_LOCAL_USER_QUERY_FIELD is set to "number".
+define("LDAP_USER_IDENTIFIER", "youruniquemember");
 define("LDAP_LOCAL_USER_QUERY_FIELD", "number");								// username | number : This field allows you to specify which local user_data field is used to search for a valid username.
 
 define("AUTH_ALLOW_CAS", false);												// Whether or not you wish to allow CAS authorisation.
@@ -178,6 +182,8 @@ define("DEFAULT_CHARSET", "UTF-8");												// The character encoding which w
 define("DEFAULT_COUNTRY_ID", 39);												// The default contry id used to determine provinces / states, etc.
 define("DEFAULT_PROVINCE_ID", 9);												// The default provice id that is selected (use 0 for none).
 
+define("DEFAULT_CITY", "City");
+define("DEFAULT_POSTALCODE", "0123456");
 define("DEFAULT_DATE_FORMAT", "D M d/y g:ia");
 define("DEFAULT_ROWS_PER_PAGE", 25);
 

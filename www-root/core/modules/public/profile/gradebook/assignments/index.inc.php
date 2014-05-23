@@ -101,6 +101,7 @@ switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["sb"]) {
 						AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 	                    AND (e.`release_date` = 0 OR e.`release_date` < ".$db->qstr(time()).")
 	                    AND (e.`release_until` = 0 OR e.`release_until` > ".$db->qstr(time()).")
+	                    AND e.`assignment_active` = '1'
                         ORDER BY ".$sort_by;
 	$assignments = $db->GetAll($query);
 	if($assignments) {

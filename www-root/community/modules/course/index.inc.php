@@ -1083,8 +1083,11 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                                     ON a.`course_id` = b.`course_id`
                                     WHERE a.`course_id` IN (".implode(', ',$course_ids).")
                                     AND a.`release_date` < ".$db->qstr(time())."
-                                    AND (a.`release_until` > ".$db->qstr(time())."
-                                        OR a.`release_until` = 0)";
+                                    AND (
+                                        a.`release_until` > ".$db->qstr(time())."
+                                        OR a.`release_until` = 0
+                                    )
+                                    AND a.`assignment_active`  = 1";
                         $results = $db->GetAll($query);
                         if ($results) { ?>
                         <thead>

@@ -365,7 +365,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                     ?>
                                 </ol>
                             </div>
-
+                            <style type="text/css">
+                                .question-group {
+                                    display:list-item;
+                                    width:100%;
+                                    background:#F8F8F8;
+                                    border:1px dashed #B8B8B8;
+                                    border-radius: 10px;
+                                }
+                                .question-group .question-group-inner {
+                                    padding:0px 20px;
+                                }
+                                .sortable-placeholder {
+                                    background: grey;
+                                    width:100%;
+                                    height:20px;
+                                }
+                            </style>
                             <?php
                             if ($ALLOW_QUESTION_MODIFICATIONS) {
                                 ?>
@@ -387,23 +403,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                         <a href="#" class="btn btn-danger" id="delete-question">Delete</a>
                                     </div>
                                 </div>
-                                <style type="text/css">
-                                    .question-group {
-                                        display:list-item;
-                                        width:100%;
-                                        background:#D9EDF7;
-                                        border: 1px solid #DDDDDD;
-                                        border-radius: 5px;
-                                    }
-                                    .question-group .question-group-inner {
-                                        padding:0px 20px;
-                                    }
-                                    .sortable-placeholder {
-                                        background: grey;
-                                        width:100%;
-                                        height:20px;
-                                    }
-                                </style>
                                 <script type="text/javascript">
                                     jQuery(function($) {
                                         

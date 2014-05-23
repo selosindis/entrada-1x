@@ -147,6 +147,8 @@ if ($RECORD_ID) {
 						<ol class="questions" id="quiz-questions-list">
 						<?php
 						foreach ($questions as $q) {
+                            if ($q->getQuestionTypeID() != 3) {
+                            
                             $question = $q->toArray();
 							$question_correct	= false;
 							$question_feedback	= "";
@@ -257,6 +259,7 @@ if ($RECORD_ID) {
 								echo "	</div>";
 							}
 							echo "</li>\n";
+                            }
 						}
 						?>
 						</ol>

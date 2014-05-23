@@ -131,7 +131,7 @@ if ($RECORD_ID) {
 															FROM `quiz_questions` AS a
 															WHERE a.`quiz_id` = ".$db->qstr($progress_record["quiz_id"])."
 															AND a.`question_active` = '1'
-															AND (a.`questiontype_id` != '2' AND a.`questiontype_id` != '3')
+															AND (a.`questiontype_id` != '2' AND a.`questiontype_id` != '3' AND a.`questiontype_id` != '4')
 															ORDER BY a.`question_order` ASC";
 											$questions	= $db->GetAll($query);
 											if ($questions) {
@@ -470,17 +470,11 @@ if ($RECORD_ID) {
 										<form class="question-responses" action="<?php echo ENTRADA_URL."/".$MODULE; ?>?section=attempt<?php echo (isset($QUIZ_TYPE) && $QUIZ_TYPE == "community_page" ? "&amp;community=true" : ""); ?>&amp;id=<?php echo $RECORD_ID; ?>" method="post">
 										<input type="hidden" name="step" value="2" />
 										<?php
-										$query = "SELECT a.*
-													FROM `quiz_questions` AS a
-													WHERE a.`quiz_id` = ".$db->qstr($quiz_record["quiz_id"])."
-													AND a.`question_active` = '1'
-													ORDER BY a.`question_order` ASC";
-										$questions = $db->GetAll($query);
-										
-										if (isset($questions) && isset($quiz_record["random_order"]) && $quiz_record["random_order"] == 1) {
+										$questions = Models_Quiz_Question::fetchAllRecords($quiz_record["quiz_id"]);
+                                        if (isset($questions) && isset($quiz_record["random_order"]) && $quiz_record["random_order"] == 1) {
 											$q = array();
 											foreach ($questions as $question_key => $question) {
-												if ($question["questiontype_id"] == "1") {
+												if ($question->getQuestiontypeID() == "1" || $question->getQuestiontypeID() == "4") {
 													$q[] = $question;
 													$questions[$question_key] = array();
 												}
@@ -504,6 +498,12 @@ if ($RECORD_ID) {
 											.pagination {float:right;}
 											.page.active {display:block;}
 											.page.inactive {display:none;}
+                                            .group {
+                                                border:1px dashed #B8B8B8;
+                                                border-radius: 10px;
+                                                padding:20px;
+                                                background:#F8F8F8;
+                                            }
 										</style>
 											<?php
                                                 $problem_pages = array();
@@ -511,43 +511,69 @@ if ($RECORD_ID) {
 												$counter = 1;
 												$quiz_markup = "";
 												foreach ($questions as $question) {
-													if ($question["questiontype_id"] == 3) {
+                                                    if ($question->getQuestiontypeID() == 4) {
+                                                        $quiz_markup .= "<li class=\"group\">";
+                                                        $quiz_markup .= $question->getQuestionText();
+                                                        $grouped_qquestions = Models_Quiz_Question::fetchGroupedQuestions($question->getQquestionID());
+                                                        if ($grouped_qquestions) { 
+                                                           
+                                                            $quiz_markup .= "<ol>";
+                                                            foreach ($grouped_qquestions as $question) {
+                                                                $quiz_markup .= "<li>".clean_input($question->getQuestionText(), "trim");
+                                                                $responses	= Models_Quiz_Question_Response::fetchAllRecords($question->getQquestionID());
+                                                                if ($responses) {
+                                                                    $quiz_markup .= "<ul class=\"responses\">";
+                                                                    foreach ($responses as $r) {
+                                                                        $response = $r->toArray();
+                                                                        $quiz_markup .= "<li class=\"row-fluid\">";
+                                                                        $quiz_markup .= "	<span class=\"span1\"><input type=\"radio\" id=\"response_".$question->getQquestionID()."_".$response["qqresponse_id"]."\" name=\"responses[".$question->getQquestionID()."]\" value=\"".$response["qqresponse_id"]."\"".(($ajax_load_progress[$question->getQquestionID()] == $response["qqresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question->getQquestionID()."', '".$response["qqresponse_id"]."') : false)\" /></span>";
+                                                                        $quiz_markup .= "	<label class=\"span11\" for=\"response_".$question->getQquestionID()."_".$response["qqresponse_id"]."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</label>";
+                                                                        $quiz_markup .= "</li>\n";
+                                                                    }
+                                                                    $quiz_markup .= "</ul>";
+                                                                }
+                                                                $quiz_markup .= "</li>";
+                                                            }
+                                                            $quiz_markup .= "</ol>";
+                                                        }
+                                                        $quiz_markup .= "</li>";
+                                                    } else if ($question->getQuestiontypeID() == 3) {
 														$page_counter++;
-														$break_id = $question["qquestion_id"];
+														$break_id = $question->getQquestionID();
 														$quiz_markup .= "</ol></div><div class=\"page inactive\" data-id=\"".$page_counter."\">";
 														$quiz_markup .= "<h2>Quiz Page ".$page_counter."</h2>";
 														$quiz_markup .= "<ol class=\"questions\" start=\"".$counter."\">";
-													} else if ($question["questiontype_id"] == 2) {
+													} else if ($question->getQuestiontypeID() == 2) {
 														$quiz_markup .= "</ol>";
-														$quiz_markup .= "<div class=\"display-generic\">".$question["question_text"]."</div>";
+														$quiz_markup .= "<div class=\"display-generic\">".$question->getQuestionText()."</div>";
 														$quiz_markup .= "<ol class=\"questions\" start=\"".$counter."\">";
 													} else {
-                                                        if (in_array($question["qquestion_id"], $problem_questions) && !key_exists($page_counter, $problem_pages)) {
+                                                        if (in_array($question->getQquestionID(), $problem_questions) && !key_exists($page_counter, $problem_pages)) {
                                                             $problem_pages[$page_counter] = true;
                                                         }
-														$quiz_markup .= "<li id=\"question_".$question["qquestion_id"]."\"".((in_array($question["qquestion_id"], $problem_questions)) ? " class=\"notice\"" : "")." data-page=\"".$page_counter."\">";
+														$quiz_markup .= "<li id=\"question_".$question->getQquestionID()."\"".((in_array($question->getQquestionID(), $problem_questions)) ? " class=\"notice\"" : "")." data-page=\"".$page_counter."\">";
 														$quiz_markup .= "	<div class=\"question noneditable\">\n";
-														$quiz_markup .= "		<span id=\"question_text_".$question["qquestion_id"]."\" class=\"question\">".clean_input($question["question_text"], "trim")."</span>";
+														$quiz_markup .= "		<span id=\"question_text_".$question->getQquestionID()."\" class=\"question\">".clean_input($question->getQuestionText(), "trim")."</span>";
 														$quiz_markup .= "	</div>\n";
-														if ($question["questiontype_id"] == 1) {
+														if ($question->getQuestiontypeID() == 1) {
 															$quiz_markup .= "	<ul class=\"responses\">\n";
 															$query		= "	SELECT a.*
 																			FROM `quiz_question_responses` AS a
-																			WHERE a.`qquestion_id` = ".$db->qstr($question["qquestion_id"])."
+																			WHERE a.`qquestion_id` = ".$db->qstr($question->getQquestionID())."
 																			AND a.`response_active` = '1'
-																			ORDER BY ".(($question["randomize_responses"] == 1) ? "RAND()" : "a.`response_order` ASC");
+																			ORDER BY ".(($question->getRandomizeResponses() == 1) ? "RAND()" : "a.`response_order` ASC");
 															$responses	= $db->GetAll($query);
 															if ($responses) {
 																foreach ($responses as $response) {
 																	$quiz_markup .= "<li class=\"row-fluid\">";
-																	$quiz_markup .= "	<span class=\"span1\"><input type=\"radio\" id=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\" name=\"responses[".$question["qquestion_id"]."]\" value=\"".$response["qqresponse_id"]."\"".(($ajax_load_progress[$question["qquestion_id"]] == $response["qqresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question["qquestion_id"]."', '".$response["qqresponse_id"]."') : false)\" /></span>";
-																	$quiz_markup .= "	<label class=\"span11\" for=\"response_".$question["qquestion_id"]."_".$response["qqresponse_id"]."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</label>";
+																	$quiz_markup .= "	<span class=\"span1\"><input type=\"radio\" id=\"response_".$question->getQquestionID()."_".$response["qqresponse_id"]."\" name=\"responses[".$question->getQquestionID()."]\" value=\"".$response["qqresponse_id"]."\"".(($ajax_load_progress[$question->getQquestionID()] == $response["qqresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question->getQquestionID()."', '".$response["qqresponse_id"]."') : false)\" /></span>";
+																	$quiz_markup .= "	<label class=\"span11\" for=\"response_".$question->getQquestionID()."_".$response["qqresponse_id"]."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</label>";
 																	$quiz_markup .= "</li>\n";
 																}
 															}
 															$quiz_markup .= "	</ul>\n";
-														} else if ($question["questiontype_id"] == 2) {
-															$quiz_markup .= "<textarea id=\"response_".$question["qquestion_id"]."\" name=\"responses[".$question["qquestion_id"]."]\" maxlength=\"".$question["char_limit"]."\" style=\"width:95%;\"></textarea>";
+														} else if ($question->getQuestiontypeID() == 2) {
+															$quiz_markup .= "<textarea id=\"response_".$question->getQquestionID()."\" name=\"responses[".$question->getQquestionID()."]\" maxlength=\"".$question->getCharLimit()."\" style=\"width:95%;\"></textarea>";
 														}
 														$quiz_markup .= "</li>\n";
 														$counter ++;

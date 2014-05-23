@@ -110,6 +110,7 @@ if ($RECORD_ID) {
 								AND a.`question_active` = '1'
 								ORDER BY a.`question_order` ASC";
 				$questions	= $db->GetAll($query);
+                $questions = Models_Quiz_Question::fetchAllRecords($quiz_record["quiz_id"]);
 				if ($questions) {
 					$PROCESSED = quiz_load_progress($RECORD_ID);
 
@@ -134,59 +135,121 @@ if ($RECORD_ID) {
 							You got <strong><?php echo $quiz_score; ?>/<?php echo $quiz_value; ?></strong> on this quiz, which is <strong><?php echo $quiz_percentage; ?>%</strong>.
 						</div>
 					</div>
-
+                    <style type="text/css">
+                        .group {
+                            border:1px dashed #B8B8B8;
+                            border-radius: 10px;
+                            padding:20px;
+                            background:#F8F8F8;
+                        }
+                    </style>
 					<div class="quiz-questions" id="quiz-content-questions-holder">
 						<ol class="questions" id="quiz-questions-list">
 						<?php
-						foreach ($questions as $question) {
+						foreach ($questions as $q) {
+                            $question = $q->toArray();
 							$question_correct	= false;
 							$question_feedback	= "";
 
-							echo "<li id=\"question_".$question["qquestion_id"]."\">";
+							echo "<li id=\"question_".$question["qquestion_id"]."\" class=\"".($question["questiontype_id"] == 4 ? "group" : "")."\">";
 							echo "	<div class=\"question noneditable\">\n";
 							echo "		<span id=\"question_text_".$question["qquestion_id"]."\" class=\"question\">".clean_input($question["question_text"], "trim")."</span>";
 							echo "	</div>\n";
-							echo "	<ul class=\"responses\">\n";
-							$query		= "	SELECT a.*
-											FROM `quiz_question_responses` AS a
-											WHERE a.`qquestion_id` = ".$db->qstr($question["qquestion_id"])."
-											AND a.`response_active` = '1'
-											ORDER BY ".(($question["randomize_responses"] == 1) ? "RAND()" : "a.`response_order` ASC");
-							$responses	= $db->GetAll($query);
-							if ($responses) {
-								foreach ($responses as $response) {
-									$response_selected	= false;
-									$response_correct	= false;
+                            if ($q->getQuestionTypeID() == "4") {
+                                $grouped_qquestions = Models_Quiz_Question::fetchGroupedQuestions($q->getQquestionID());
+                                if ($grouped_qquestions) {
+                                    echo "<ul>";
+                                    foreach ($grouped_qquestions as $q) {
+                                        $question = $q->toArray();
+                                        echo "<li id=\"question_".$question["qquestion_id"]."\">";
+                                        echo "	<div class=\"question noneditable\">\n";
+                                        echo "		<span id=\"question_text_".$question["qquestion_id"]."\" class=\"question\">".clean_input($question["question_text"], "trim")."</span>";
+                                        echo "	</div>\n";
+                                        $responses = Models_Quiz_Question_Response::fetchAllRecords($q->getQquestionID());
+                                        if ($responses) {
+                                            echo "	<ul class=\"responses\">\n";
+                                            foreach ($responses as $r) {
+                                                $response = $r->toArray();
+                                                
+                                                $response_selected	= false;
+                                                $response_correct	= false;
 
-									if ($PROCESSED[$question["qquestion_id"]] == $response["qqresponse_id"]) {
-										$response_selected = true;
+                                                if ($PROCESSED[$question["qquestion_id"]] == $response["qqresponse_id"]) {
+                                                    $response_selected = true;
 
-										if ($response["response_correct"] == 1) {
-											$response_correct	= true;
-											$question_correct	= true;
-										} else {
-											$response_correct	= false;
-										}
+                                                    if ($response["response_correct"] == 1) {
+                                                        $response_correct	= true;
+                                                        $question_correct	= true;
+                                                    } else {
+                                                        $response_correct	= false;
+                                                    }
 
-										if ($tmp_input = clean_input($response["response_feedback"], array("notags", "trim"))) {
-											$question_feedback = $tmp_input;
-										}
-									}
+                                                    if ($tmp_input = clean_input($response["response_feedback"], array("notags", "trim"))) {
+                                                        $question_feedback = $tmp_input;
+                                                    }
+                                                }
+                                                
+                                                echo "<li".(($response_selected) ? " class=\"selected ".(($response_correct) ? "correct" : "incorrect")."\"" : (($response["response_correct"] == 1) ? " class=\"correct\"" : "")).">";
+                                                echo clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"));
 
-									echo "<li".(($response_selected) ? " class=\"selected ".(($response_correct) ? "correct" : "incorrect")."\"" : (($response["response_correct"] == 1) ? " class=\"correct\"" : "")).">";
-									echo	clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"));
+                                                if ($response_selected) {
+                                                    if ($response["response_correct"] == 1) {
+                                                        echo "<img class=\"question-response-indicator\" src=\"".ENTRADA_URL."/images/question-response-correct.gif\" alt=\"Correct\" title=\"Correct\" />";
+                                                    } else {
+                                                        echo "<img class=\"question-response-indicator\" src=\"".ENTRADA_URL."/images/question-response-incorrect.gif\" alt=\"Incorrect\" title=\"Incorrect\" />";
+                                                    }
+                                                }
+                                                echo "</li>\n";
+                                            }
+                                            echo "  </ul>\n";
+                                        }
+                                        echo "</li>\n";
+                                    }
+                                    echo "</ul>\n";
+                                }
+                            } else {
+                                echo "	<ul class=\"responses\">\n";
+                                $query		= "	SELECT a.*
+                                                FROM `quiz_question_responses` AS a
+                                                WHERE a.`qquestion_id` = ".$db->qstr($question["qquestion_id"])."
+                                                AND a.`response_active` = '1'
+                                                ORDER BY ".(($question["randomize_responses"] == 1) ? "RAND()" : "a.`response_order` ASC");
+                                $responses	= $db->GetAll($query);
+                                if ($responses) {
+                                    foreach ($responses as $response) {
+                                        $response_selected	= false;
+                                        $response_correct	= false;
 
-									if ($response_selected) {
-										if ($response["response_correct"] == 1) {
-											echo "<img class=\"question-response-indicator\" src=\"".ENTRADA_URL."/images/question-response-correct.gif\" alt=\"Correct\" title=\"Correct\" />";
-										} else {
-											echo "<img class=\"question-response-indicator\" src=\"".ENTRADA_URL."/images/question-response-incorrect.gif\" alt=\"Incorrect\" title=\"Incorrect\" />";
-										}
-									}
-									echo "</li>\n";
-								}
-							}
-							echo "	</ul>\n";
+                                        if ($PROCESSED[$question["qquestion_id"]] == $response["qqresponse_id"]) {
+                                            $response_selected = true;
+
+                                            if ($response["response_correct"] == 1) {
+                                                $response_correct	= true;
+                                                $question_correct	= true;
+                                            } else {
+                                                $response_correct	= false;
+                                            }
+
+                                            if ($tmp_input = clean_input($response["response_feedback"], array("notags", "trim"))) {
+                                                $question_feedback = $tmp_input;
+                                            }
+                                        }
+
+                                        echo "<li".(($response_selected) ? " class=\"selected ".(($response_correct) ? "correct" : "incorrect")."\"" : (($response["response_correct"] == 1) ? " class=\"correct\"" : "")).">";
+                                        echo	clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"));
+
+                                        if ($response_selected) {
+                                            if ($response["response_correct"] == 1) {
+                                                echo "<img class=\"question-response-indicator\" src=\"".ENTRADA_URL."/images/question-response-correct.gif\" alt=\"Correct\" title=\"Correct\" />";
+                                            } else {
+                                                echo "<img class=\"question-response-indicator\" src=\"".ENTRADA_URL."/images/question-response-incorrect.gif\" alt=\"Incorrect\" title=\"Incorrect\" />";
+                                            }
+                                        }
+                                        echo "</li>\n";
+                                    }
+                                }
+                                echo "	</ul>\n";    
+                            }
 							if ($question_feedback != "") {
 								echo "	<div class=\"display-generic\" style=\"margin-left: 65px; padding: 10px\">\n";
 								echo "		<strong>Question Feedback:</strong><br />";

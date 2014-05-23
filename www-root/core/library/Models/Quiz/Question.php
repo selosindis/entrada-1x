@@ -25,7 +25,7 @@
 
 class Models_Quiz_Question extends Models_Base {
     
-    protected $qquestion_id, $quiz_id, $questiontype_id, $question_text, $question_points, $question_order, $question_group, $question_active, $randomize_responses, $course_codes;
+    protected $qquestion_id, $quiz_id, $questiontype_id, $question_text, $question_points, $question_order, $qquestion_group_id, $question_active, $randomize_responses, $course_codes;
     
     protected $table_name = "quiz_questions";
     protected $default_sort_column = "question_order";
@@ -34,38 +34,49 @@ class Models_Quiz_Question extends Models_Base {
         parent::__construct($arr);
     }
     
-    public static function fetchRowByID($question_id) {
+    public static function fetchRowByID($qquestion_id) {
         $self = new self();
         return $self->fetchRow(array(
-                array("key" => "question_id", "value" => $question_id, "method" => "=", "mode" => "AND")
+                array("key" => "qquestion_id", "value" => $qquestion_id, "method" => "=", "mode" => "AND")
             )
         );
     }
 
     public static function fetchAllRecords($quiz_id, $question_active = 1) {
-        $self = new self();
+        global $db;
+        
+        $output = false;
 
-        $constraints = array(
-            array(
-                "mode"      => "AND",
-                "key"       => "quiz_id",
-                "value"     => $quiz_id,
-                "method"    => "="
-            ),
-            array(
-                "mode"      => "AND",
-                "key"       => "question_active",
-                "value"     => $question_active,
-                "method"    => "="
-            )
-        );
+        $query = "SELECT a.* 
+                    FROM `quiz_questions` AS a
+                    WHERE a.`quiz_id` = ? AND a.`question_active` = ? AND (a.`qquestion_group_id` IS NULL OR a.`qquestion_group_id` = '0')
+                    ORDER BY a.`question_order`";
+        $results = $db->GetAll($query, array($quiz_id, $question_active));
+        
+        if (!empty($results)) {
+            $output = array();
+            foreach ($results as $result) {
+                $output[] = new self($result);
+            }
+        }
 
-        $objs = $self->fetchAll($constraints, "=", "AND", $sort_col, $sort_order);
-        $output = array();
+        return $output;
+    }
+    
+    public static function fetchGroupedQuestions($qquestion_group_id, $question_active = 1) {
+        global $db;
+        
+        $output = false;
 
-        if (!empty($objs)) {
-            foreach ($objs as $o) {
-                $output[] = $o;
+        $query = "SELECT a.* 
+                    FROM `quiz_questions` AS a
+                    WHERE a.`qquestion_group_id` = ? AND a.`question_active` = ?
+                    ORDER BY a.`question_order`";
+        $results = $db->GetAll($query, array($qquestion_group_id, $question_active));
+        if (!empty($results)) {
+            $output = array();
+            foreach ($results as $result) {
+                $output[] = new self($result);
             }
         }
 
@@ -96,8 +107,8 @@ class Models_Quiz_Question extends Models_Base {
         return $this->question_order;
     }
 
-    public function getQuestionGroup() {
-        return $this->question_group;
+    public function getQquestionGroupID() {
+        return $this->qquestion_group_id;
     }
 
     public function getQuestionActive() {
@@ -110,6 +121,27 @@ class Models_Quiz_Question extends Models_Base {
 
     public function getCourseCodes() {
         return $this->course_codes;
+    }
+    
+    public function insert() {
+        global $db;
+        
+        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+            $this->qquestion_id = $db->Insert_ID();
+            return $this;
+        } else {
+            return false;
+        }
+    }
+    
+    public function update() {
+        global $db;
+        
+        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`qquestion_id` = ".$db->qstr($this->qquestion_id))) {
+            return $this;
+        } else {
+            return false;
+        }
     }
     
 }

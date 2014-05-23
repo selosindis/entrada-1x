@@ -42,9 +42,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 } else {
 	if ($RECORD_ID) {
 		$quiz = Models_Quiz::fetchRowByID($RECORD_ID);
-		$quiz_record = $quiz->toArray();
-		if ($quiz_record && $ENTRADA_ACL->amIAllowed(new QuizResource($quiz_record["quiz_id"]), "update")) {
-			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID, "title" => limit_chars($quiz_record["quiz_title"], 32));
+		
+        $PROCESSED = $quiz->toArray();
+        
+		if ($PROCESSED && $ENTRADA_ACL->amIAllowed(new QuizResource($PROCESSED["quiz_id"]), "update")) {
+			$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID, "title" => limit_chars($PROCESSED["quiz_title"], 32));
 
 			$PROCESSED["associated_proxy_ids"] = array();
 
@@ -265,13 +267,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                 ?>
                                 <div class="pull-right" style="margin-bottom:10px;">
                                     <div class="btn-group">
-                                        <a class="btn btn-success dropdown-toggle" data-toggle="dropdown" href="#"><i class="icon-plus-sign icon-white"></i> Add New Question <span class="caret"></span></a>
+                                        <a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&type=1" class="btn btn-success">Add Multiple Choice Question</a>
+                                        <button class="btn btn-success dropdown-toggle" data-toggle="dropdown">
+                                        <span class="caret"></span>
+                                        </button>
                                         <ul class="dropdown-menu">
-                                            <?php
+                                            <?php 
                                             foreach ($question_types as $question_type) {
+                                                if ($question_type->getQuestionTypeID() != 1) {
                                                 ?>
-                                                <li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&amp;type=<?php echo $question_type->getQuestionTypeID(); ?>"><?php echo $question_type->getQuestionTypeTitle(); ?></a></li>
+                                                <li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&type=<?php echo $question_type->getQuestionTypeID(); ?>">Add <?php echo $question_type->getQuestionTypeTitle(); ?></a></li>
                                                 <?php
+                                                }
                                             }
                                             ?>
                                         </ul>
@@ -289,26 +296,71 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                 <ol class="questions" id="quiz-questions-list">
                                     <?php
                                     foreach ($questions as $question) {
-                                        echo "<li id=\"question_".$question->getQquestionID()."\" class=\"question\" style=\"display: list-item; vertical-align: top;\">";
-                                        echo "	<div class=\"question".((!$ALLOW_QUESTION_MODIFICATIONS) ? " noneditable" : "")."\">\n";
-
-                                        if ($ALLOW_QUESTION_MODIFICATIONS) {
-                                            echo "	<div style=\"float: right\">\n";
-                                            echo "		<a href=\"".ENTRADA_URL."/admin/".$MODULE."?section=edit-question&amp;id=".$question->getQquestionID()."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-edit.gif\" alt=\"Edit Question\" title=\"Edit Question\" /></a>";
-                                            echo "		<a id=\"question_delete_".$question->getQquestionID()."\" class=\"question-controls-delete\" href=\"#delete-question-confirmation-box\" title=\"".$question->getQquestionID()."\"><img class=\"question-controls\" src=\"".ENTRADA_URL."/images/action-delete.gif\" alt=\"Delete Question\" title=\"Delete Question\" /></a>";
-                                            echo "	</div>\n";
-                                        }
-                                        echo "		<span id=\"question_text_".$question->getQquestionID()."\" class=\"question\">".($question->getQuestionTypeID() == "2" ? "<strong>Descriptive Text:</strong> " : ($question->getQuestionTypeID() == "3" ? "<strong>Page Break:</strong> " : "")).clean_input($question->getQuestionText(), "trim")."</span>";
-                                        echo "	</div>\n";
-                                        echo "	<ul class=\"responses\">\n";
-                                        $responses = Models_Quiz_Question_Response::fetchAllRecords($question->getQquestionID());
-                                        if ($responses) {
-                                            foreach ($responses as $response) {
-                                                echo "<li class=\"".(($response->getResponseCorrect() == 1) ? "display-correct" : "display-incorrect")."\">".clean_input($response->getResponseText(), (($response->getResponseIsHTML() == 1) ? "trim" : "encode"))."</li>\n";
+                                        ?>
+                                        <li id="question_<?php echo $question->getQquestionID(); ?>" class="<?php echo $question->getQuestionTypeID() == 4 ? "question-group" : "question"; ?>" style="display: list-item; vertical-align: top;" data-qquestion-id="<?php echo $question->getQquestionID(); ?>">
+                                            <div class="question-group-inner">
+                                        	<div class="question <?php echo ((!$ALLOW_QUESTION_MODIFICATIONS) ? " noneditable" : ""); ?>" style="padding-right:0px;">
+                                            <?php if ($ALLOW_QUESTION_MODIFICATIONS) { ?>
+                                            	<div style="float: right">
+                                                  <i class="icon-move drag-handle"></i>
+                                            		<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=edit-question&amp;id=<?php echo $question->getQquestionID(); ?>"><i class="icon-pencil question-controls" title="Edit Question"></i></a>
+                                            		<a id="question_delete_<?php echo $question->getQquestionID(); ?>" class="question-controls-delete" href="#delete-question-confirmation-box" title="<?php echo $question->getQquestionID(); ?>" data-toggle="modal"><i class="icon-minus-sign question-controls"></i></a>
+                                                    <?php if ($question->getQuestionTypeID() == 4) { ?>
+                                                    <a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&type=1&qquestion_id=<?php echo $question->getQquestionID(); ?>"><i class="icon-plus-sign"></i></a>
+                                                    <?php } ?>
+                                            	</div>
+                                            <?php } ?>
+                                        		<span id="question_text_<?php echo $question->getQquestionID(); ?>" class="question-text"><?php echo ($question->getQuestionTypeID() == "2" ? "<strong>Descriptive Text:</strong> " : ($question->getQuestionTypeID() == "3" ? "<strong>Page Break:</strong> " : "")).clean_input($question->getQuestionText(), "trim") ; ?></span>
+                                        	</div>
+                                            <?php if ($question->getQuestionTypeID() != 4) { ?>
+                                        	<ul class="responses">
+                                            <?php
+                                            $responses = Models_Quiz_Question_Response::fetchAllRecords($question->getQquestionID());
+                                            if ($responses) {
+                                                foreach ($responses as $response) { ?>
+                                                    <li class="<?php echo (($response->getResponseCorrect() == 1) ? "display-correct" : "display-incorrect"); ?>"><?php echo clean_input($response->getResponseText(), (($response->getResponseIsHTML() == 1) ? "trim" : "encode")); ?></li>
+                                                <?php }
                                             }
-                                        }
-                                        echo "	</ul>\n";
-                                        echo "</li>\n";
+                                            ?>
+                                        	</ul>
+                                            <?php } else { 
+                                                $question_group_questions = Models_Quiz_Question::fetchGroupedQuestions($question->getQquestionID());
+                                                
+                                                if ($question_group_questions) {
+                                                    echo "<ol>";
+                                                    foreach ($question_group_questions as $question_group_question) {
+                                                        $responses = Models_Quiz_Question_Response::fetchAllRecords($question_group_question->getQquestionID());
+                                                        ?>
+                                                        <li data-qquestion-id="<?php echo $question_group_question->getQquestionID(); ?>">
+                                                        <?php if ($ALLOW_QUESTION_MODIFICATIONS) { ?>
+                                                            <div style="float: right">
+                                                              <i class="icon-move drag-subhandle"></i>
+                                                              <a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=edit-question&amp;id=<?php echo $question_group_question->getQquestionID(); ?>"><i class="icon-pencil question-controls" title="Edit Question"></i></a>
+                                                              <a id="question_delete_<?php echo $question->getQquestionID(); ?>" class="question-controls-delete" href="#delete-question-confirmation-box" title="<?php echo $question_group_question->getQquestionID(); ?>" data-toggle="modal"><i class="icon-minus-sign question-controls"></i></a>
+                                                            </div>
+                                                        <?php } ?>
+                                                        
+                                                            <?php 
+                                                                echo "<span class=\"question-text\">".$question_group_question->getQuestionText()."</span>"; 
+                                                                if ($responses) {
+                                                                    ?>
+                                                            <ul class="responses">
+                                                                <?php foreach ($responses as $response) { ?>
+                                                                <li class="<?php echo (($response->getResponseCorrect() == 1) ? "display-correct" : "display-incorrect"); ?>"><?php echo $response->getResponseText(); ?></li>
+                                                                <?php } ?>
+                                                            </ul>
+                                                                    <?php
+                                                                }
+                                                            ?>
+                                                        </li>
+                                                        <?php 
+                                                    }
+                                                    echo "</ol>";
+                                                }
+                                            } ?>
+                                            </div>
+                                        </li>
+                                        <?php
                                     }
                                     ?>
                                 </ol>
@@ -317,103 +369,114 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                             <?php
                             if ($ALLOW_QUESTION_MODIFICATIONS) {
                                 ?>
-                                <div id="delete-question-confirmation-box" class="modal-confirmation">
-                                    <h1>Delete Quiz <strong>Question</strong> Confirmation</h1>
-                                    Do you really wish to remove this question from your quiz?
-                                    <div class="body">
-                                        <div id="delete-question-confirmation-content" class="content"></div>
+                                <div id="delete-question-confirmation-box" class="modal hide fade">
+                                    <div class="modal-header">
+                                        <h1>Delete Quiz <strong>Question</strong> Confirmation</h1>
                                     </div>
-                                    If you confirm this action, the question will be permanently removed.
-                                    <div class="footer">
-                                        <input type="button" class="btn" value="Close" onclick="Control.Modal.close()" style="float: left; margin: 8px 0px 4px 10px" />
-                                        <input type="button" class="btn btn-primary" value="Confirm" onclick="deleteQuizQuestion(deleteQuestion_id)" style="float: right; margin: 8px 10px 4px 0px" />
+                                    <div class="modal-body">
+                                        Do you really wish to remove this question from your quiz?
+                                        <br />
+                                        <br />
+                                        <blockquote>
+                                            <div id="delete-question-confirmation-content" class="content"></div>
+                                        </blockquote>
+                                        If you confirm this action, the question will be permanently removed.
+                                    </div>
+                                    <div class="modal-footer">
+                                        <a href="#" class="btn" data-dismiss="modal">Close</a>
+                                        <a href="#" class="btn btn-danger" id="delete-question">Delete</a>
                                     </div>
                                 </div>
-                                <script type="text/javascript" defer="defer">
-                                    var deleteQuestion_id = 0;
-
-                                    document.observe('dom:loaded', function() {
-                                        try {
-                                            Sortable.create('quiz-questions-list', { handles : $$('#quiz-questions-list div.question'), onUpdate : updateQuizQuestionOrder });
-                                            $$('a.question-controls-delete').each(function(obj) {
-                                                new Control.Modal(obj.id, {
-                                                    overlayOpacity:	0.75,
-                                                    closeOnClick:	'overlay',
-                                                    className:		'modal-confirmation',
-                                                    fade:			true,
-                                                    fadeDuration:	0.30,
-                                                    beforeOpen: function() {
-                                                        deleteQuestion_id = obj.readAttribute('title');
-                                                        $('delete-question-confirmation-content').innerHTML = $('question_text_' + obj.readAttribute('title')).innerHTML;
-                                                    },
-                                                    afterClose: function() {
-                                                        deleteQuestion_id = 0;
-                                                        $('delete-question-confirmation-content').innerHTML = '';
+                                <style type="text/css">
+                                    .question-group {
+                                        display:list-item;
+                                        width:100%;
+                                        background:#D9EDF7;
+                                        border: 1px solid #DDDDDD;
+                                        border-radius: 5px;
+                                    }
+                                    .question-group .question-group-inner {
+                                        padding:0px 20px;
+                                    }
+                                    .sortable-placeholder {
+                                        background: grey;
+                                        width:100%;
+                                        height:20px;
+                                    }
+                                </style>
+                                <script type="text/javascript">
+                                    jQuery(function($) {
+                                        
+                                        var temp_qquestion_id = 0;
+                                        
+                                        $(".question-controls-delete").on("click", function(e) {
+                                            $("#delete-question-confirmation-content").html($(this).closest("li").find(".question-text").html());
+                                            temp_qquestion_id = $(this).closest("li").data("qquestion-id");
+                                        });
+                                        $("#delete-question").on("click", function(e) {
+                                            $.ajax({
+                                                type : "POST",
+                                                data : { method: "delete-question", qquestion_id : temp_qquestion_id},
+                                                url  : "<?php echo ENTRADA_URL . "/admin/" . $MODULE . "?section=api"; ?>",
+                                                success: function(data) {
+                                                    var jsonResponse = JSON.parse(data);
+                                                    if (jsonResponse.status == "success") {
+                                                        $("li[data-qquestion-id='" + jsonResponse.data.qquestion_id + "']").remove();
                                                     }
-                                                });
+                                                    $("#delete-question-confirmation-box").modal("hide");
+                                                    if ($("#quiz-questions-list").children("li").length <= 0) {
+                                                        $("#display-no-question-message").removeClass("hide");
+                                                    }
+                                                }
                                             });
-                                        } catch (e) {
-                                            clog(e);
-                                        }
+                                            e.preventDefault();
+                                        });
+                                        $("ol.questions").sortable({ 
+                                            handle : ".drag-handle", 
+                                            placeholder: "sortable-placeholder", 
+                                            helper: "clone", 
+                                            cursor: "move", 
+                                            forceHelperSize: true,
+                                            stop: function() {
+                                                var list = $(this);
+                                                list.children("li").each(function(i, v) {
+                                                    $.ajax({
+                                                        type : "POST",
+                                                        data : { method: "update-question-order", qquestion_id : $(v).data("qquestion-id"), order : i + 1 },
+                                                        url  : "<?php echo ENTRADA_URL . "/admin/" . $MODULE . "?section=api"; ?>",
+                                                        success: function(data) {
+                                                            
+                                                        }
+                                                    });
+                                                });
+                                            }
+                                        });
+                                        $(".question-group-inner ol").sortable({ 
+                                            handle : ".drag-subhandle", 
+                                            placeholder: "sortable-placeholder", 
+                                            helper: "clone", 
+                                            cursor: "move", 
+                                            forceHelperSize: true,
+                                            stop: function() {
+                                                var list = $(this);
+                                                list.children("li").each(function(i, v) {
+                                                    $.ajax({
+                                                        type : "POST",
+                                                        data : { method: "update-question-order", qquestion_id : $(v).data("qquestion-id"), order : i + 1 },
+                                                        url  : "<?php echo ENTRADA_URL . "/admin/" . $MODULE . "?section=api"; ?>",
+                                                        success: function(data) {
+                                                            
+                                                        }
+                                                    });
+                                                });
+                                            }
+                                        });
                                     });
-
-                                    function updateQuizQuestionOrder() {
-                                        new Ajax.Request('<?php echo ENTRADA_URL."/admin/".$MODULE; ?>', {
-                                            method: 'post',
-                                            parameters: { section : 'order-question', id : <?php echo $RECORD_ID; ?>, result : Sortable.serialize('quiz-questions-list', { name : 'order' }) },
-                                            onSuccess: function(transport) {
-                                                if (!transport.responseText.match(200)) {
-                                                    new Effect.Highlight('quiz-content-questions-holder', { startcolor : '#FFD9D0' });
-                                                }
-                                            },
-                                            onError: function() {
-                                                new Effect.Highlight('quiz-content-questions-holder', { startcolor : '#FFD9D0' });
-                                            }
-                                        });
-                                    }
-
-                                    function deleteQuizQuestion(qquestion_id) {
-                                        Control.Modal.close();
-                                        $('question_' + qquestion_id).fade({ duration: 0.3 });
-
-                                        new Ajax.Request('<?php echo ENTRADA_URL."/admin/".$MODULE; ?>', {
-                                            method: 'post',
-                                            parameters: { section: 'delete-question', id: qquestion_id },
-                                            onSuccess: function(transport) {
-                                                if (transport.responseText.match(200)) {
-                                                    $('question_' + qquestion_id).remove();
-
-                                                    if ($$('#quiz-questions-list li.question').length == 0) {
-                                                        $('display-no-question-message').show();
-                                                    }
-                                                } else {
-                                                    if ($$('#question_' + qquestion_id + ' .display-error').length == 0) {
-                                                        var errorString	= 'Unable to delete this question at this time.<br /><br />The system administrator has been notified of this error, please try again later.';
-                                                        var errorMsg	= new Element('div', { 'class': 'display-error' }).update(errorString);
-
-                                                        $('question_' + qquestion_id).insert(errorMsg);
-                                                    }
-
-                                                    $('question_' + qquestion_id).appear({ duration: 0.3 });
-
-                                                    new Effect.Highlight('question_' + qquestion_id, { startcolor : '#FFD9D0' });
-                                                }
-                                            },
-                                            onError: function() {
-                                                $('question_' + qquestion_id).appear({ duration: 0.3 });
-
-                                                new Effect.Highlight('question_' + qquestion_id, { startcolor : '#FFD9D0' });
-                                            }
-                                        });
-                                    }
                                 </script>
                                 <?php
                             }
-                        } else {
-                            $ONLOAD[] = "$('display-no-question-message').show()";
-                        }
-                        ?>
-                        <div id="display-no-question-message" class="display-generic" style="display: none">
+                        } ?>
+                        <div id="display-no-question-message" class="display-generic <?php echo ($questions) ? "hide" : ""; ?>">
                             There are currently <strong>no quiz questions</strong> associated with this quiz.<br /><br />To create questions in this quiz click the <strong>Add Question</strong> link above.
                         </div>
                     </div>

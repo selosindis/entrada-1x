@@ -57,6 +57,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 		$type = 1;
 	}
 
+    if (isset($_GET["qquestion_id"]) && $tmp_input = clean_input($_GET["qquestion_id"], "int")) {
+        $qquestion_group_id = $tmp_input;
+    }
+    
 	if ($RECORD_ID) {
 		$query			= "	SELECT a.*
 							FROM `quizzes` AS a
@@ -111,6 +115,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 
 
 						switch ($type) {
+                            case 4 :
 							case 3 :
 							case 2 :
 								$PROCESSED["question_points"] = 0;
@@ -240,6 +245,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						}
 
 						if (!$ERROR) {
+                            
+                            if (isset($type) && isset($qquestion_group_id) && $type == 1) {
+                                $PROCESSED["qquestion_group_id"] = $qquestion_group_id;
+                            }
 							if($ENTRADA_ACL->amIAllowed(new QuizQuestionResource(null, $quiz_record['quiz_id']), 'create')) {
 								if ($db->AutoExecute("quiz_questions", $PROCESSED, "INSERT")) {
 									if ($qquestion_id = $db->Insert_Id()) {
@@ -396,7 +405,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							</tr>
 						</tbody>
 						</table>
-						<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&amp;type=<?php echo $type; ?>&amp;step=2" method="post" id="addQuizQuestionForm" class="form-horizontal">
+						<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&amp;type=<?php echo $type; ?><?php echo isset($qquestion_group_id) ? "&amp;qquestion_id=".$qquestion_group_id : ""; ?>&amp;step=2" method="post" id="addQuizQuestionForm" class="form-horizontal">
 						<input type="hidden" name="questiontype_id" value="<?php echo $type; ?>" />
 						<table style="width: 100%; margin-bottom: 25px" cellspacing="0" cellpadding="2" border="0" summary="Add Quiz Question">
 						<colgroup>
@@ -408,12 +417,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							<tr>
 								<td colspan="3">
 									<h2 title="Quiz Content Add Question">Add Quiz Question</h2>
-									<?php if ($type == 2) { ?>
+                                    <?php if ($type != 1) { ?>
+                                    <input type="hidden" id="question_points" name="question_points" value="0" />
+                                    <?php } ?>
+									<?php if ($type == 2 || $type == 4) { ?>
 										<div class="display-generic"><strong>Note:</strong> The Descriptive Text will appear to users taking the quiz.</div>
-										<input type="hidden" id="question_points" name="question_points" value="0" />
 									<?php } else if ($type == 3) { ?>
 										<div class="display-generic"><strong>Note:</strong> The Descriptive Text will not appear to users taking the quiz, but will appear on the quiz management page.</div>
-										<input type="hidden" id="question_points" name="question_points" value="0" />
 									<?php } ?>
 									<?php
 									if ($ERROR) {

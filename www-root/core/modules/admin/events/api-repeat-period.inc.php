@@ -131,11 +131,11 @@ if (!defined("IN_EVENTS")) {
             $output = array();
             
             if (isset($_POST["event_start"]) && $_POST["event_start"]) {
-                $event_start = ((int) $_POST["event_start"]);
+                $event_start = strtotime("23:59:59 ", ((int) $_POST["event_start"]));
             }
             
             if (isset($_POST["recurring_end"]) && $_POST["recurring_end"]) {
-                $recurring_end = strtotime($_POST["recurring_end"]);
+                $recurring_end = strtotime($_POST["recurring_end"]." 23:59:59");
             } else {
                 $output["status"] = "error";
                 add_error("Please ensure you select a valid date when the recurring events will be created until.");
@@ -188,7 +188,7 @@ if (!defined("IN_EVENTS")) {
                                     }
                                 }
                             }
-                            $output["events"][] = array("date" => ($output["dates"] ? "\n" : "").date("Y-m-d", $date), "restricted" => $restricted);
+                            $output["events"][] = array("date" => (isset($output["dates"]) && $output["dates"] ? "\n" : "").date("Y-m-d", $date), "restricted" => $restricted);
                         }
                         $output["status"] = "success";
                     } else {

@@ -38,8 +38,17 @@
 		<div class="span10">
 			<div class="row">
 				<div class="span10">
-					<div class="header clearfix">
-						<span class="community-title">{$site_community_title}</span>
+					<div class="header table">
+						<div class="table-cell">
+							<div class="header-icon"></div>
+						</div>
+						<div class="table-cell table-cell-full-width">
+							<div class="table">
+								<div class="table-cell middle">
+									<span class="community-title">{$site_community_title}</span>
+								</div>
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>

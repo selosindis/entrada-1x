@@ -10159,6 +10159,9 @@ function events_subnavigation($event_info,$tab='content'){
 	echo "		<li".($tab=='content'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $event_info['event_id'], "step" => false))."\" >Event Content</a></li>";
 
 	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"],"step"=>false))."\" >Event Attendance</a></li>";
+    if ($event_info["recurring_id"]) {
+	    echo "		<li".($tab=='recurring'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "recurring", "id" => $event_info["event_id"],"step"=>false))."\" >Related Recurring Events</a></li>";
+    }
 
 	echo "		<li".($tab=='history'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "history", "id" => $event_info["event_id"],"step"=>false))."\">Event History</a></li>";
 	echo "	</ul>";

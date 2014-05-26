@@ -222,6 +222,31 @@ class Models_Course extends Models_Base {
 			return false;
 		}
 	}
+
+    public function getTeachersByDates($event_start = null, $event_finish = null) {
+        global $db;
+        $teachers = false;
+        
+        $query = "  SELECT a.`event_id`, b.*, c.`firstname`, c.`lastname`, c.`email` FROM `events` AS a 
+                    JOIN `event_contacts` AS b
+                    ON a.`event_id` = b.`event_id`
+                    LEFT JOIN `entrada_auth`.`user_data` AS c
+                    ON b.`proxy_id` = c.`id`
+                    WHERE a.`course_id` = ? 
+                    AND a.`event_start` >= ?
+                    AND a.`event_finish` <= ?
+                    AND b.`contact_role` = ?
+                    GROUP BY b.`proxy_id`";
+        
+        $results = $db->GetAll($query, array($this->course_id, $event_start, $event_finish, "teacher"));
+        if ($results) {
+            foreach ($results as $result) {
+                $teacher = new User();
+                $teachers[] = $teacher->fromArray($result, $teacher);
+            }
+        }
+        return $teachers;
+    }
 }
 
 ?>

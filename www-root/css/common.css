@@ -4695,3 +4695,11 @@ span.minutes {
     background-image: url("../images/indicator.gif");
     background-position: 0px 0px;
 }
+
+#recurring-events-list > div {
+    border-bottom:solid 1px #CCC;
+}
+
+#recurring-events-list > div.restricted {
+    background-color:#FFD9D0;
+}

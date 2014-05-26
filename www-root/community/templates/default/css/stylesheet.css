@@ -198,10 +198,6 @@ div.bread-crumb-trail ul {
 div.bread-crumb-trail ul li {
 	display: inline;
 	list-style-type: none;
-	padding-left: 13px;
-	vertical-align: middle;
-	background: transparent url(../images/breadcrumb-arrow.gif) no-repeat center left;
-	background-position-y: 1px;
 }
 
 /* Discussion Styles */
@@ -1377,8 +1373,8 @@ div.community-page-container {
 	background-image: url(../../../../images/record-next-off.gif);
 }
 div.community-page-list.home {
-	background: url(../../../../images/record-next-on.gif) no-repeat 26px 6px;
-	padding: 4px 0px 4px 41px;
+	background: url(../../../../images/record-next-on.gif) no-repeat 21px 6px;
+	padding: 4px 0px 4px 36px;
 	border-bottom: 1px solid #CCC;
 }
 div.locked-spacer {

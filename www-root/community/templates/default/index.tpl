@@ -20,6 +20,8 @@
 
 	<link href="{$template_relative}/css/print.css" rel="stylesheet" type="text/css" media="print" />
 
+	<link href='http://fonts.googleapis.com/css?family=Roboto:400,400italic,700,700italic,300,300italic' rel='stylesheet' type='text/css'>
+
 	{$page_head}
 
 	<style type="text/css">
@@ -32,12 +34,12 @@
 {$sys_system_navigator}
 <div class="container">
 	<div class="row">
-		<div class="span2">
+		<div class="span3">
 			{include file="navigation_primary.tpl" site_primary_navigation=$site_primary_navigation}
 		</div>
-		<div class="span10">
+		<div class="span9 content-container">
 			<div class="row">
-				<div class="span10">
+				<div class="span9">
 					<div class="header table">
 						<div class="table-cell">
 							<div class="header-icon"></div>
@@ -53,7 +55,7 @@
 				</div>
 			</div>
 			<div class="row">
-				<div class="span7 content-area">
+				<div class="span6 content-area">
 					{$site_breadcrumb_trail}
 					{$child_nav}
 					<div class="content">
@@ -77,7 +79,7 @@
 					{$page_sidebar}
 				</div>
 			</div>
-			<div class="footer span10">
+			<div class="footer span9">
 				<div class="content-copyright">
 					{php}echo COPYRIGHT_STRING;{/php}
 				</div>

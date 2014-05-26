@@ -923,10 +923,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</tbody>
 								<tbody>
 									<tr>
-										<td><input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /></td>
-										<td colspan="2">
-											<label for="narrative_assessment" class="form-nrequired">This is a <strong>narrative assessment</strong>.</label>
-										</td>
+										<td colspan="3">
+                                            <label for="narrative_assessment" class="form-nrequired checkbox">
+                                                <input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /> This is a <strong>narrative assessment</strong>.
+                                            </label>
+                                        </td>
 									</tr>
 								</tbody>
 							</table>

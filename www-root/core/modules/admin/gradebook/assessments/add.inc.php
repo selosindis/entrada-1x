@@ -523,7 +523,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										<td></td>
 										<td><label for="course_list" class="form-required">Course List:</label></td>
 										<td>
-											<select id="course_list" name="course_list" style="width: 250px">
+											<select id="course_list" class="course-list" name="course_list" style="width: 250px">
 											<?php
 												foreach ($course_lists as $course_list) {
 													echo "<option value=\"".$course_list["group_id"]."\"".(($PROCESSED["cohort"] == $course_list["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($course_list["group_name"])."</option>\n";
@@ -540,7 +540,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 										<td></td>
 										<td><label for="cohort" class="form-required">Cohort:</label></td>
 										<td>
-											<select id="cohort" name="cohort" style="width: 250px">
+											<select id="cohort" class="course-list" name="cohort" style="width: 250px">
 											<?php
 											$active_cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
 											if (isset($active_cohorts) && !empty($active_cohorts)) {
@@ -724,14 +724,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								<tr>
 									<td colspan="3">
 										<label class="checkbox form-nrequired" for="narrative_assessment">
-										<input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /> This is a <strong>narrative assessment</strong>.
+                                            <input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /> This is a <strong>narrative assessment</strong>.
+                                        </label>
 									</td>
-									
 								</tr>
 							</tbody>
 						</table>
 						<script type="text/javascript" charset="utf-8">
-						jQuery(function($) {
+						var course_id = "<?php echo $COURSE_ID ?>";
+                        jQuery(function($) {
+                            
+                            $("#datepicker").datepicker({
+                                onSelect: function (date) {
+                                    //getEventsByDate(date);
+                                },
+                                dateFormat: "yy-mm-dd"
+                            });
+                            
+                            getCurriculumPeriodDates(course_id);
+                            
+                            $(".course-list").on("change", function () {
+                                getCurriculumPeriodDates(course_id);
+                            });
+                            
 							jQuery('#marking_scheme_id').change(function() {
 								if(jQuery(':selected', this).val() == 3 || jQuery(':selected', this).text() == "Numeric") {
 									jQuery('#numeric_marking_scheme_details').show();
@@ -739,6 +754,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									jQuery('#numeric_marking_scheme_details').hide();
 								}
 							}).trigger('change');
+                            
+                            $("#close-event-modal").on("click", function (e) {
+                                e.preventDefault();
+                                $("#event-modal").modal("hide");
+                            });
+                           
 							/*
 							 *
 							 *  Removed as per under grad medicine request, commented out in case this functionality needs to re implemented								
@@ -823,7 +844,42 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								}
 							});
 						});
+                        
+                        function getEventsByDate (date) {
+                            jQuery.ajax({
+                                url: "<?php echo ENTRADA_URL; ?>/api/assessment-event.api.php",
+                                data: "method=get&course_id=" + course_id + "&date=" + date,
+                                type: "GET",
+                                success: function(data) {																				
+                                    
+                                }
+                            });
+                        }
+                        
+                        function getCurriculumPeriodDates(course_id) {
+                            var audience_value = jQuery("#cohort").val();
+                            
+                            jQuery.ajax({
+                                url: "<?php echo ENTRADA_URL; ?>/api/assessment-event.api.php",
+                                data: "method=cperiod&course_id=" + course_id + "&audience=" + audience_value,
+                                type: "GET",
+                                success: function(data) {																			
+                                    var response = JSON.parse(data);
+                                    if (response.status == "success") {
+                                        jQuery("#datepicker").datepicker( "option", "minDate", response.data.start_date );
+                                        jQuery("#datepicker").datepicker( "option", "maxDate", response.data.finish_date );
+                                    }
+                                }
+                            });
+                        }
 						</script>
+                        <h2>Assessment Events</h2>
+                        <div class="row-fluid space-below">
+                            <a href="#event-modal" class="btn btn-success pull-right" role="button" data-toggle="modal"><i class="icon-plus-sign icon-white"></i> Attach learning event</a>
+                        </div>
+                        <div class="alert">
+                            There are currently no learning events attached to this assessment. To attach a learning event to this assessment, use the attach event button
+                        </div>
 						<?php
 						// list($course_objectives, $top_level_id) = courses_fetch_objectives($ENTRADA_USER->getActiveOrganisation(), array($ASSESSMENT_ID), -1, 0, false, $posted_objectives, 0, false);
 						// require_once(ENTRADA_ABSOLUTE."/javascript/courses.js.php");
@@ -1081,6 +1137,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							</table>
 						</div>
 					</form>
+                    <div id="event-modal" class="modal hide fade">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h3>Select a learning event</h3>
+                        </div>
+                        <div class="modal-body">
+                            <div id="datepicker"></div>
+                        </div>
+                        <div>
+                            <a href="#" class="btn" id="close-event-modal">Close</a>
+                            <a href="#" class="btn btn-primary pull-right">Save changes</a>
+                        </div>
+                    </div>
 					<?php
 				break;
 			}

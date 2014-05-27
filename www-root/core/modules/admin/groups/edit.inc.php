@@ -281,7 +281,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GROUPS"))) {
 				</table>
 
 				<div id="delbutton" style="padding-top: 15px; text-align: right;">
-					<input type="submit" class="btn btn-danger" value="Delete/Activate" style="vertical-align: middle" />
+                    <input type="hidden" name="coa" id="coa" value="" /> 
+                    <input type="submit" class="btn btn-success" value="Activate" style="vertical-align: middle" onClick="$('coa').value='activate'" />
+					<input type="submit" class="btn btn-danger" value="Delete/Deactivate" style="vertical-align: middle" onClick="$('coa').value='delete'" />
 				</div>
 
 				<input type="hidden" name="members" value="1" />

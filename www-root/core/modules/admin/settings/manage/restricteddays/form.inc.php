@@ -75,7 +75,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                         }
                     break;
                     case "weekly" :
-                        if ((isset($_POST["repeat_toggle"])) && ($weekday = ((int) $_POST["repeat_toggle"])) && $weekday >= 1 && $weekday <= 7) {
+                        if ((isset($_POST["weekday"])) && ($weekday = ((int) $_POST["weekday"])) && $weekday >= 1 && $weekday <= 7) {
                             $PROCESSED["day"] = $weekday;
                         } else {
                             add_error("The <strong>Weekday</strong> field is required.");
@@ -130,6 +130,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							application_log("error", "Error occurred when updating restricted day, DB said: ".$db->ErrorMsg());
 						}
 					} else {
+                        $PROCESSED["organisation_id"] = $ORGANISATION_ID;
                         if($day->fromArray($PROCESSED)->insert()) {
                             add_success("The restricted day has successfully been updated. You will be redirected to the restricted days index in 5 seconds, or you can <a href=\"".ENTRADA_URL ."/admin/settings/manage/restricteddays?org=".$ORGANISATION_ID."\">click here</a> if you do not wish to wait.");
                             add_statistic("restricted_day", "insert", "orday_id", $db->Insert_ID(), $ENTRADA_USER->getID());
@@ -177,18 +178,18 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				?>
                 <script type="text/javascript">
                     jQuery(document).ready(function($){
-                        var _old_toggle = $.fn.button.prototype.constructor.Constructor.prototype.toggle;
+                        var _old_toggle = jQuery.fn.button.prototype.constructor.Constructor.prototype.toggle;
 
-                        $.fn.button.prototype.constructor.Constructor.prototype.toggle = function () {
+                        jQuery.fn.button.prototype.constructor.Constructor.prototype.toggle = function () {
                             _old_toggle.apply(this);
                             this.$element.trigger('active');
                         }
-                        $('.toggle-days').live('active', function(event) {
+                        jQuery('.toggle-days').live('active', function(event) {
                             event.preventDefault();
-                            if ($(this).hasClass('active') && $('#weekday_'+ $(this).data("value")).length < 1) {
-                                $('#days-container').update('<input type="hidden" value="'+ $(this).data("value") +'" name="weekday" id="weekday_'+ $(this).data("value") +'" />');
-                            } else if (!$(this).hasClass('active') && $('#weekday_'+ $(this).data("value")).length > 0) {
-                                $('#weekday_'+ $(this).data("value")).remove();
+                            if (jQuery(this).hasClass('active') && jQuery('#weekday_'+ jQuery(this).data("value")).length < 1) {
+                                jQuery('#days-container').html('<input type="hidden" value="'+ jQuery(this).data("value") +'" name="weekday" id="weekday_'+ jQuery(this).data("value") +'" />');
+                            } else if (!jQuery(this).hasClass('active') && jQuery('#weekday_'+ jQuery(this).data("value")).length > 0) {
+                                jQuery('#weekday_'+ jQuery(this).data("value")).remove();
                             }
                         });
                     });

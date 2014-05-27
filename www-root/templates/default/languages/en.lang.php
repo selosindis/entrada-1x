@@ -250,4 +250,25 @@ return array (
 	"course" => "Course",
 	"courses" => "Courses",
 	"evaluation_filtered_words" => "Dr. Doctor; Firstname Lastname",
+
+    /**
+     * Gradebook Module
+     */
+    "assignment_notice" =>
+"<p>
+    A new Assignment [<a href=\"%assignment_submission_url%\">%assignment_title%</a>] has been released in %course_code%: %course_name%.
+</p>
+<p>
+    Details for this Assignment are as follows:
+</p>
+<p>
+    Due Date: %due_date%
+</p>
+<p>
+    Title: %assignment_title%
+</p>
+<p>
+    Description:<br />
+    %assignment_description%
+</p>",
 );

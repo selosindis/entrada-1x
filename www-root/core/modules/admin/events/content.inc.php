@@ -1192,64 +1192,72 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         </table>
                     </div>
 
-                    <a name="course-keywords-section"></a>
-                    <h2 title="Course Keywords Section">Event Keywords</h2>
-                    <div id="course-keywords-section">
+                    <?php
+                    /**
+                     * Test to see if the MeSH tables have been loaded or not,
+                     * since this is an optional Entrada feature.
+                     */
+                    $query = "SELECT 1 FROM `mesh_terms` LIMIT 1";
+                    if ($db->GetRow($query)) {
+                        ?>
+                        <a name="course-keywords-section"></a>
+                        <h2 title="Course Keywords Section">Event Keywords</h2>
+                        <div id="course-keywords-section">
+                            <div class="keywords half left">
+                                <h3>Keyword Search</h3>
+                                <div>Search MeSH Keywords
+                                    <input id="search" autocomplete="off" type="text" name="keyword">
+                                    <input id="event_id" type="hidden" name="event_id" value="<?php echo $EVENT_ID; ?>">
+                                </div>
 
-                        <div class="keywords half left">
-                            <h3>Keyword Search</h3>
-                            <div>Search MeSH Keywords
-                                <input id="search" autocomplete="off" type="text" name="keyword">
-                                <input id="event_id" type="hidden" name="event_id" value="<?php echo $EVENT_ID?>" >
-                            </div>
-
-                            <div id="search_results">
-                                <div id="inserted"></div>
+                                <div id="search_results">
+                                    <div id="inserted"></div>
                                     <div id="results"><ul></ul></div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="mapped_keywords right">
-                            <h3>Attached Keywords</h3>
-                            <div class="clearfix">
-                                <ul class="page-action" style="float: right">
-                                    <div class="row-fluid space-below">
-                                        <a href="javascript:void(0)" class="keyword-toggle btn btn-success btn-small pull-right" keyword-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Show Keyword Search</a>
-                                    </div>
-                                </ul>
-                            </div>
-                                    <p class="well well-small content-small">
-                                        <strong>Helpful Tip:</strong> Click <strong>Show Keyword Search</strong> to search from the MeSH keyword database. Click + to add to, - to remove from, the course.
-                                    </p>
-
-                            <div id="tagged">
-                                <div id="right1">
+                            <div class="mapped_keywords right">
+                                <h3>Attached Keywords</h3>
+                                <div class="clearfix">
+                                    <ul class="page-action" style="float: right">
+                                        <div class="row-fluid space-below">
+                                            <a href="javascript:void(0)" class="keyword-toggle btn btn-success btn-small pull-right" keyword-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Show Keyword Search</a>
+                                        </div>
+                                    </ul>
+                                </div>
+                                <p class="well well-small content-small">
+                                    <strong>Helpful Tip:</strong> Click <strong>Show Keyword Search</strong> to search from the MeSH keyword database. Click + to add to, - to remove from, the course.
+                                </p>
+                                <div id="tagged">
+                                    <div id="right1">
                                         <ul>
-                                        <?php
+                                            <?php
                                             $query = "  SELECT ek.`keyword_id`, d.`descriptor_name`
                                                         FROM `event_keywords` AS ek
                                                         JOIN `mesh_descriptors` AS d
                                                         ON ek.`keyword_id` = d.`descriptor_ui`
                                                         AND ek.`event_id` = " . $db->qstr($EVENT_ID) . "
                                                         ORDER BY `descriptor_name`";
-
                                             $results = $db->GetAll($query);
                                             if ($results) {
                                                 foreach($results as $result) {
                                                     echo "<li data-dui=\"" . $result['keyword_id'] . "\" data-dname=\"" . $result['descriptor_name'] . "\" id=\"tagged_keyword\" onclick=\"removeval(this, '" . $result['keyword_id'] . "')\"><i class=\"icon-minus-sign \"></i> " . $result['descriptor_name'] . "</li>";
                                                 }
                                             }
-                                    ?>
+                                            ?>
                                         </ul>
+                                    </div>
                                 </div>
                             </div>
+                            <input type="hidden" name="delete_keywords[]" id="delete_keywords" value=""/>
+                            <input type="hidden" name="add_keywords[]" id="add_keywords" value=""/>
+                            <div style="clear:both;"></div>
+                            <div class="pull-right">
+                                <input type="submit" value="Save" class="btn btn-primary" />
+                            </div>
                         </div>
-                        <input type="hidden" name="delete_keywords[]" id="delete_keywords" value=""/>
-                        <input type="hidden" name="add_keywords[]" id="add_keywords" value=""/>
-                        <div style="clear:both;"></div>
-                        <div class="pull-right">
-                            <input type="submit" value="Save" class="btn btn-primary" />
-                        </div>
-                    </div>
+                        <?php
+                    }
+                    ?>
 
                     <a name="event-objectives-section"></a>
                     <h2 title="Event Objectives Section">Event Objectives</h2>

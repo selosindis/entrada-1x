@@ -33,8 +33,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 } elseif (!$ENTRADA_ACL->amIAllowed('quiz', 'create', false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+    add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
@@ -55,8 +54,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			if ((isset($_POST["quiz_title"])) && ($tmp_input = clean_input($_POST["quiz_title"], array("notags", "trim")))) {
 				$PROCESSED["quiz_title"] = $tmp_input;
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "The <strong>Quiz Title</strong> field is required.";
+				add_error("The <strong>Quiz Title</strong> field is required.");
 			}
 
 			/**
@@ -110,17 +108,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 				$PROCESSED["created_by"]	= $ENTRADA_USER->getID();
 
-				if ($db->AutoExecute("quizzes", $PROCESSED, "INSERT")) {
-					if ($quiz_id = $db->Insert_Id()) {
+                $quiz = new Models_Quiz($PROCESSED);
+                
+				if ($quiz->insert()) {
+                    $quiz_id = $quiz->getQuizID();
+					if ($quiz_id) {
 						
 						/**
 						 * Add the quiz authors to the quiz_contacts table.
 						 */
 						if ((is_array($PROCESSED["associated_proxy_ids"])) && (count($PROCESSED["associated_proxy_ids"]))) {						
 							foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
-								if (!$db->AutoExecute("quiz_contacts", array("quiz_id" => $quiz_id, "proxy_id" => $proxy_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
-									$ERROR++;
-									$ERRORSTR[] = "There was an error while trying to attach a <strong>Quiz Author</strong> to this quiz.<br /><br />The system administrator was informed of this error; please try again later.";
+                                $contact = new Models_Quiz_Contact(
+                                    array(
+                                        "quiz_id"       => $quiz_id, 
+                                        "proxy_id"      => $proxy_id, 
+                                        "updated_date"  => time(), 
+                                        "updated_by"    => $ENTRADA_USER->getID()
+                                    )
+                                );
+								if (!$contact->insert()) {
+									add_error("There was an error while trying to attach a <strong>Quiz Author</strong> to this quiz.<br /><br />The system administrator was informed of this error; please try again later.");
 
 									application_log("error", "Unable to insert a new quiz_contact record while adding a new quiz. Database said: ".$db->ErrorMsg());
 								}
@@ -149,14 +157,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						application_log("success", "New quiz [".$quiz_id."] added to the system.");
 						
 					} else {
-						$ERROR++;
-						$ERRORSTR[] = "There was a problem inserting this quiz into the system. The system administrator was informed of this error; please try again later.";
+						add_error("There was a problem inserting this quiz into the system. The system administrator was informed of this error; please try again later.");
 
 						application_log("error", "There was an error inserting a quiz, as there was no insert ID. Database said: ".$db->ErrorMsg());
 					}
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "There was a problem inserting this quiz into the system. The system administrator was informed of this error; please try again later.";
+					add_error("There was a problem inserting this quiz into the system. The system administrator was informed of this error; please try again later.");
 
 					application_log("error", "There was an error inserting a quiz. Database said: ".$db->ErrorMsg());
 				}
@@ -235,19 +241,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							<?php
 							if (is_array($PROCESSED["associated_proxy_ids"]) && !empty($PROCESSED["associated_proxy_ids"])) {
 								$selected_authors = array();
-
-								$query = "	SELECT `id` AS `proxy_id`, CONCAT_WS(', ', `lastname`, `firstname`) AS `fullname`, `organisation_id`
-											FROM `".AUTH_DATABASE."`.`user_data`
-											WHERE `id` IN (".implode(", ", $PROCESSED["associated_proxy_ids"]).")
-											ORDER BY `lastname` ASC, `firstname` ASC";
-								$results = $db->GetAll($query);
-								if ($results) {
-									foreach ($results as $result) {
-										$selected_authors[$result["proxy_id"]] = $result;
-									}
-
-									unset($results);
-								}
+                                
+                                foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
+                                    $u = User::get($proxy_id);
+                                    if ($u->getID()) {
+                                        $selected_authors[$u->getID()]["fullname"] = $u->getFullname(true);
+                                    }
+                                }
 
 								foreach ($PROCESSED["associated_proxy_ids"] as $proxy_id) {
 									if ($proxy_id = (int) $proxy_id) {
@@ -272,15 +272,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					<select id="post_action" name="post_action">
 						<option value="content"<?php echo (((!isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"])) || ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "content")) ? " selected=\"selected\"" : ""); ?>>Return to the quiz</option>
 						<?php
-							$query = "SELECT * FROM `quizzes_lu_questiontypes` WHERE `questiontype_active` = '1'";
-							$question_types = $db->GetAll($query);
+							$question_types = Models_Quiz_QuestionType::fetchAllRecords();
 							if (!$question_types || @count($question_types) <= 1) {
 								?>
 								<option value="new1"<?php echo (isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) && ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new1") ? " selected=\"selected\"" : ""); ?>>Add a new question</option>
 								<?php
 							} else {
 								foreach ($question_types as $question_type) {
-									echo "<option value=\"new".$question_type["questiontype_id"]."\"".(isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) && ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new".$question_type["questiontype_id"]) ? " selected=\"selected\"" : "").">Add ".($quiz_record["questiontype_id"] == $question_type["questiontype_id"] ? "another " : "a new ").strtolower($question_type["questiontype_title"])."</option>";
+									echo "<option value=\"new".$question_type->getQuestionTypeID()."\"".(isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) && ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new".$question_type->getQuestionTypeID()) ? " selected=\"selected\"" : "").">Add ".($quiz_record["questiontype_id"] == $question_type->getQuestionTypeID() ? "another " : "a new ").strtolower($question_type->getQuestionTypeTitle())."</option>";
 								}
 							}
 							?>

@@ -28,7 +28,7 @@ class Models_Quiz_QuizType extends Models_Base {
     protected $quiztype_id, $quiztype_code, $quiztype_title, $quiztype_description, $quiztype_active, $quiztype_order;
     
     protected $table_name = "quizzes_lu_quiztypes";
-    protected $default_sort_col = "quiztype_order";
+    protected $default_sort_column = "quiztype_order";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -90,7 +90,5 @@ class Models_Quiz_QuizType extends Models_Base {
     public function getQuiztypeOrder() {
         return $this->quiztype_order;
     }
-
-    
-    
+   
 }

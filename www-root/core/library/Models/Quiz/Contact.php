@@ -60,7 +60,7 @@ class Models_Quiz_Contact extends Models_Base {
             )
         );
 
-        $objs = $self->fetchAll($constraints, "=", "AND", $sort_col, $sort_order);
+        $objs = $self->fetchAll($constraints, "=", "AND", $self->default_sort_column, $sort_order);
         $output = array();
 
         if (!empty($objs)) {
@@ -101,7 +101,7 @@ class Models_Quiz_Contact extends Models_Base {
     public function insert() {
         global $db;
         if ($db->autoExecute($this->table_name, $this->toArray(), "INSERT")) {
-            $this->qcontact_id = $db->InsertID();
+            $this->qcontact_id = $db->Insert_ID();
             return $this;
         } else {
             return false;
@@ -112,6 +112,17 @@ class Models_Quiz_Contact extends Models_Base {
         global $db;
         if ($db->autoExecute($this->table_name, $this->toArray(), "UPDATE", "`qcontact_id` = ".$this->qcontact_id)) {
             return $this;
+        } else {
+            return false;
+        }
+    }
+    
+    public function delete() {
+        global $db;
+        
+        $query = "DELETE FROM `".$this->table_name."` WHERE `qcontact_id` = ?";
+        if ($db->Execute($query, $this->qcontact_id)) {
+            return true;
         } else {
             return false;
         }

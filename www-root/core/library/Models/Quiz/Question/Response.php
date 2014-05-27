@@ -25,7 +25,7 @@
 
 class Models_Quiz_Question_Response extends Models_Base {
 
-    protected $qqresponse_id, $qquestion_id, $response_text, $response_order, $response_correct, $response_is_html, $response_feedback, $response_active;
+    protected $qqresponse_id, $qquestion_id, $response_text, $response_order, $response_correct, $response_is_html, $response_feedback, $response_active = 1;
     
     protected $table_name = "quiz_question_responses";
     protected $default_sort_column = "response_order";
@@ -104,7 +104,37 @@ class Models_Quiz_Question_Response extends Models_Base {
         return $this->response_active;
     }
 
-
+    public function insert() {
+        global $db;
+        
+        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+            $this->qqresponse_id = $db->Insert_ID();
+            return $this;
+        } else {
+            return false;
+        }
+    }
+    
+    public function update() {
+        global $db;
+        
+        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`qqresponse_id` = ".$db->qstr($this->qqresponse_id))) {
+            return $this;
+        } else {
+            return false;
+        }
+    }
+    
+    public function delete() {
+        global $db;
+        
+        $query = "DELETE FROM `".$this->table_name."` WHERE `qqresponse_id` = ?";
+        if ($db->Execute($query, $this->qqresponse_id)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
     
 }
 

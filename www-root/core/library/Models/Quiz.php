@@ -25,7 +25,7 @@
 
 class Models_Quiz extends Models_Base {
     
-    protected $quiz_id, $quiz_title, $quiz_description, $quiz_active, $updated_date, $updated_by, $created_by;
+    protected $quiz_id, $quiz_title, $quiz_description, $quiz_active = 1, $updated_date, $updated_by, $created_by;
     
     protected $table_name = "quizzes";
     protected $default_sort_column = "quiz_title";
@@ -119,8 +119,7 @@ class Models_Quiz extends Models_Base {
     }
     
     public function getQuizAuthor() {
-//        $author = User::get($this->created_by);
-        $author = User::get(1);
+        $author = User::get($this->created_by);
         if ($author) {
             return $author;
         } else {
@@ -130,6 +129,39 @@ class Models_Quiz extends Models_Base {
     
     public function getQuizQuestions() {
         return Models_Quiz_Question::fetchAllRecords($this->quiz_id);
+    }
+    
+    public function insert() {
+        global $db;
+        
+        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+            $this->quiz_id = $db->Insert_ID();
+            return $this;
+        } else {
+            echo $db->ErrorMsg();
+            return false;
+        }
+    }
+    
+    public function update() {
+        global $db;
+        
+        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`quiz_id` = ".$db->qstr($this->quiz_id))) {
+            return $this;
+        } else {
+            return false;
+        }
+    }
+    
+    public function delete() {
+        global $db;
+        
+        $query = "DELETE FROM `".$this->table_name."` WHERE `quiz_id` = ?";
+        if ($db->Execute($query, $this->quiz_id)) {
+            return true;
+        } else {
+            return false;
+        }
     }
     
 }

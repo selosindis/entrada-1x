@@ -134,6 +134,28 @@ class Models_Quiz_Attached extends Models_Base {
         return $this->updated_by;
     }
     
+    public function insert() {
+        global $db;
+        
+        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+            $this->aquiz_id = $db->Insert_ID();
+            return $this;
+        } else {
+            echo $db->ErrorMsg();
+            return false;
+        }
+    }
+    
+    public function update() {
+        global $db;
+        
+        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`aquiz_id` = ".$db->qstr($this->aquiz_id))) {
+            return $this;
+        } else {
+            return false;
+        }
+    }
+    
 }
 
 ?>

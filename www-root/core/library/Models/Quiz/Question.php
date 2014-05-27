@@ -25,7 +25,7 @@
 
 class Models_Quiz_Question extends Models_Base {
     
-    protected $qquestion_id, $quiz_id, $questiontype_id, $question_text, $question_points, $question_order, $qquestion_group_id, $question_active, $randomize_responses, $course_codes;
+    protected $qquestion_id, $quiz_id, $questiontype_id, $question_text, $question_points, $question_order, $qquestion_group_id, $question_active = 1, $randomize_responses, $course_codes;
     
     protected $table_name = "quiz_questions";
     protected $default_sort_column = "question_order";
@@ -81,6 +81,19 @@ class Models_Quiz_Question extends Models_Base {
         }
 
         return $output;
+    }
+    
+    public static function fetchNextOrder($quiz_id) {
+        global $db;
+        
+        $next_order = 0;
+        $query	= "SELECT MAX(`question_order`) AS `next_order` FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($quiz_id)." AND `question_active` = '1'";
+        $result = $db->getOne($query);
+        if ($result) {
+            $next_order = $result;
+        }
+        
+        return $next_order;
     }
     
     public function getQquestionID() {
@@ -139,6 +152,17 @@ class Models_Quiz_Question extends Models_Base {
         
         if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`qquestion_id` = ".$db->qstr($this->qquestion_id))) {
             return $this;
+        } else {
+            return false;
+        }
+    }
+    
+    public function delete() {
+        global $db;
+        
+        $query = "DELETE FROM `".$this->table_name."` WHERE `qquestion_id` = ?";
+        if ($db->Execute($query, $this->qquestion_id)) {
+            return true;
         } else {
             return false;
         }

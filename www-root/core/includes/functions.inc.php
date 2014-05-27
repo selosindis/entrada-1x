@@ -3081,9 +3081,9 @@ function clean_input($string, $rules = array()) {
 					$string = preg_replace('/\<br\s*\/?\>/i', "\n", $string);
 					$string = str_replace("&nbsp;", " ", $string);
 				break;
-                case "utf8_convert" :
-                    $string = preg_replace_callback("/(&#[0-9]+;)/", function($m) { return mb_convert_encoding($m[1], "UTF-8", "HTML-ENTITIES"); }, $string);
-                break;
+				case "utf8_convert" :
+					$string = preg_replace_callback("/(&#[ox]?[a-f,A-F,0-9]+;)/", function($m) { return mb_convert_encoding($m[1], "UTF-8", "HTML-ENTITIES"); }, $string);
+				break;
 				case "html_decode" :
 				case "decode" :			// Returns the output of the html_decode() function.
 					$string = html_decode($string);

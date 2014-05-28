@@ -174,7 +174,7 @@ if (!defined("IN_EVENTS")) {
                 </div>
 			</div>
 			<?php
-			if ((($related_events && $related_event_ids) || $PROCESSED["remove_id"]) && !$related_event_error) {
+			if ((($related_events && $related_event_ids) || (isset($PROCESSED["remove_id"]) && $PROCESSED["remove_id"])) && !$related_event_error) {
 				$added_events = array();
 				$query = "SELECT * FROM `events` WHERE `parent_id` = ".$db->qstr((isset($event["parent_id"]) && $event["parent_id"] ? $event["parent_id"] : $event["event_id"])).($related_event_ids ? " AND `event_id` NOT IN (".$related_event_ids.")" : "");
 				$removed_events = $db->GetAll($query);

@@ -40,6 +40,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					AND `course_active` = '1'";
 		$course_details	= $db->GetRow($query);
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new CourseResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
+            $HEAD[] = "<script type=\"text/javascript\">var org_id = '".$ENTRADA_USER->getActiveOrganisation()."';</script>";
 			$HEAD[] = "<script type=\"text/javascript\">var SITE_URL = '".ENTRADA_URL."';</script>";
 			$HEAD[] = "<script type=\"text/javascript\">var DELETE_IMAGE_URL = '".ENTRADA_URL."/images/minus-sign.png';</script>";
 			$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/picklist.js\"></script>\n";
@@ -1109,7 +1110,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                     <span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
                                     <ul id="director_list" class="menu" style="margin-top: 15px">
                                         <?php
-                                        if (is_array($chosen_course_directors) && count($chosen_course_directors)) {
+                                        if (is_array($chosen_course_directors) && count($chosen_course_directors) && isset($DIRECTOR_LIST) && !empty($DIRECTOR_LIST)) {
                                             foreach ($chosen_course_directors as $director) {
                                                 if ((array_key_exists($director, $DIRECTOR_LIST)) && is_array($DIRECTOR_LIST[$director])) {
                                                     ?>
@@ -1135,7 +1136,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                     <span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
                                     <ul id="coordinator_list" class="menu" style="margin-top: 15px">
                                         <?php
-                                        if (isset($chosen_ccoordinators) && is_array($chosen_ccoordinators) && $chosen_ccoordinators) {
+                                        if (isset($chosen_ccoordinators) && is_array($chosen_ccoordinators) && $chosen_ccoordinators && isset($COORDINATOR_LIST) && !empty($COORDINATOR_LIST)) {
                                             foreach ($chosen_ccoordinators as $coordinator) {
                                                 if ((array_key_exists($coordinator, $COORDINATOR_LIST)) && is_array($COORDINATOR_LIST[$coordinator])) {
                                                     ?>

@@ -17,7 +17,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 a:hover, a:focus {
-	color: #232222 !important;
+	color: #333 !important;
 	text-decoration: none !important;
 }
 
@@ -30,7 +30,7 @@ i {
 }
 
 .container {
-	background: #232222;
+	background: #fff;
 }
 
 .table {
@@ -65,7 +65,7 @@ i {
 
 /* Navigation Styles */
 .navbar {
-	background: #232222;
+	background: #fff;
 	margin: 0 !important;
 	top: 0;
 	bottom: 0;
@@ -87,11 +87,12 @@ i {
 
 .navbar .nav > li > a {
 	text-shadow: none !important;
-	color: #999 !important;
+	color: #666 !important;
 }
 
 .navbar .nav > li > a:hover {
-	background: #141414 !important;
+	background: #333 !important;
+	color: #f6f4f4 !important;
 }
 
 .navbar .nav > li.selected a {
@@ -106,7 +107,7 @@ i {
 
 .sub-pages a {	
 	font-size: 12px !important;
-	background: #2c2b2b;
+	background: #f6f4f4;
 }
 
 /* Child Navigation Styles */
@@ -137,14 +138,14 @@ a.toc:hover {
 
 /* Page Styles */
 h2,h2.history,.content-subheading {
-	font-family:"Century Gothic", Helvetica, Arial, sans-serif;
+	font-family: 'Roboto', sans-serif;
 	font-size:16px;
 	color:#036;
 	border-bottom:1px #eee solid;
 }
 
 h3 {
-	font-family:"Century Gothic", Helvetica, Arial, sans-serif;
+	font-family: 'Roboto', sans-serif;
 	font-size:13px;
 	color:#036;
 	border-bottom:1px #eee solid;
@@ -168,29 +169,32 @@ h3 {
 	margin-left: 0 !important;
 	padding-left: 20px !important;
 	background: #fff;
+	border-left: 1px solid #eee;
+	width: 699px !important;
 }
 
 .community-title {
 	font-family: 'Roboto', sans-serif;
 	font-size: 34px;
 	font-weight: 700;
-	color: #232222;
+	color: #333;
 	padding-left: 20px;
 }
 
 .content-area {
 	margin-top: 22px;
+	width: 459px !important;
 }
 .footer {
 	padding: 15px 0 15px 20px;
 	margin: 0 !important;
 	bottom: 0;
-	background: #f9f7f7;
+	border-top: 1px solid #eee;
 	margin-left: -20px !important;
 }
 
 .content-copyright {
-	font-family: "Lucida Grande", Geneva, Verdana, Arial, Helvetica, sans-serif;
+	font-family: 'Roboto', sans-serif;
 	font-size: 11px;
 	font-style: normal;
 	color: #999;
@@ -221,7 +225,7 @@ table.discussions.posts thead tr td {
 	vertical-align: middle;
 	border: 1px solid #eee;
 	color: #eee;
-	background-color: #232222;
+	background-color: #333;
 	font-size: 14px;
 	font-weight: 700;
 	background-image: none;
@@ -405,7 +409,7 @@ table.tableList thead tr td {
 	vertical-align: middle;
 	border: 1px solid #fff;
 	color: #eee;
-	background-color: #232222;
+	background-color: #333;
 	font-size: 11px;
 	font-weight: 700;
 	padding: 0 5px 0 10px;
@@ -416,7 +420,7 @@ table.memberList thead tr td {
 	vertical-align: middle;
 	border: 1px solid #fff;
 	color: #eee;
-	background-color: #232222;
+	background-color: #333;
 	font-size: 11px;
 	font-weight: 700;
 	padding: 0 5px 0 10px;
@@ -439,7 +443,7 @@ table.discussions thead tr td,table.permissions thead tr td,table.page-options t
 	vertical-align: middle;
 	border: 1px solid #fff;
 	color: #eee;
-	background-color: #232222;
+	background-color: #333;
 	font-size: 11px;
 	font-weight: 700;
 	padding: 0 5px 0 10px;
@@ -466,7 +470,7 @@ top:8px;
 right:225px;
 width:100px;
 text-align:right;
-font-family:"Lucida Grande", Geneva, Verdana, Arial, Helvetica, sans-serif;
+font-family: 'Roboto', sans-serif;
 font-size:11px;
 font-style:normal;
 color:#666;
@@ -549,7 +553,7 @@ text-decoration:underline;
 }
 
 h1,.content-heading {
-font-family:"Century Gothic", Helvetica, Arial, sans-serif;
+font-family: 'Roboto', sans-serif;
 font-size:20px;
 font-weight:400;
 color:#036;
@@ -581,12 +585,12 @@ margin-bottom:5px;
 }
 
 div.announcement a.title {
-font-family:"Century Gothic", Helvetica, Arial, sans-serif;
-font-size:16px;
-font-weight:700;
-color:#036;
-display:block;
-text-decoration:none;
+	font-family: 'Roboto', sans-serif;
+	font-size: 16px;
+	font-weight: 700;
+	color: #333;
+	display: block;
+	text-decoration: none;
 }
 
 div.announcement a.title:hover {
@@ -832,7 +836,7 @@ input.button-sm {
 background-color:#EEE;
 color:#000;
 background-image:url(../images/btn_bg_sm.gif);
-font-family:"Lucida Grande", Geneva, Verdana, Arial, Helvetica, sans-serif;
+font-family: 'Roboto', sans-serif;
 font-size:11px;
 width:57px;
 height:20px;
@@ -1074,7 +1078,7 @@ color:#A0A0A0;
 }
 
 div.tutorial {
-font-family:"Lucida Grande", Geneva, Verdana, Arial, Helvetica, sans-serif;
+font-family: 'Roboto', sans-serif;
 padding-top:20px;
 font-size:16px;
 color:#444;
@@ -1124,7 +1128,7 @@ text-decoration:none;
 }
 
 div.announcement .tagline,.content-small {
-font-family:"Lucida Grande", Geneva, Verdana, Arial, Helvetica, sans-serif;
+font-family: 'Roboto', sans-serif;
 font-size:11px;
 font-style:normal;
 color:#666;

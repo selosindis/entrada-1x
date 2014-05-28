@@ -58,6 +58,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                  * Store the old session data for when the current is logged out
                  */
                 $previous_session = $_SESSION;
+
                 $_SESSION = array();
                 unset($_SESSION);
                 session_destroy();

@@ -186,16 +186,17 @@ class Entrada_Settings {
         return $self;
     }
 
-    public static function fetchByShortname($shortname, $organisation_id) {
-        $self = new self();
-
-        return $self->fetchRow(array(array("key" => "shortname", "value" => $shortname, "mode" => "AND"), array("key" => "organisation_id", "value" => $organisation_id, "mode" => "AND"), array("key" => "shortname", "value" => $shortname, "mode" => "OR"), array("key" => "organisation_id", "value" => NULL, "method" => "IS", "mode" => "AND")));
+    public function fetchByShortname($shortname, $organisation_id) {
+        return $this->fetchRow(array(array("key" => "shortname", "value" => $shortname, "mode" => "AND"), array("key" => "organisation_id", "value" => $organisation_id, "mode" => "AND"), array("key" => "shortname", "value" => $shortname, "mode" => "OR"), array("key" => "organisation_id", "value" => NULL, "method" => "IS", "mode" => "AND")));
     }
 
-    public static function fetchByID($setting_id) {
-        $self = new self();
+    public function fetchValueByShortname($shortname, $organisation_id) {
+        $temp_setting = $this->fetchByShortname($shortname, $organisation_id);
+        return ($temp_setting && $temp_setting->getValue() ? $temp_setting->getValue() : NULL);
+    }
 
-        return $self->fetchRow(array(array("key" => "setting_id", "value" => $setting_id)));
+    public function fetchByID($setting_id) {
+        return $this->fetchRow(array(array("key" => "setting_id", "value" => $setting_id)));
     }
 
     /**

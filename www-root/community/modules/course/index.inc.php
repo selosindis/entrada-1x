@@ -1135,7 +1135,7 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             ON a.`cohort` = c.`group_id`
                             WHERE `course_id` IN (".implode("', '", $course_ids).")".
                             $student_sql."
-                            ORDER BY c.`group_id` DESC, a.`type`";
+                            ORDER BY c.`group_id` DESC, a.`order` ASC, a.`type`";
 
                 $assessments = $db->GetAll($query);
                 $cohorts_threshold = $ENTRADA_SETTINGS->fetchValueByShortname("course_webpage_assessment_cohorts_count", $ENTRADA_USER->getActiveOrganisation());

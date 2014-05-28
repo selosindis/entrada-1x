@@ -352,36 +352,37 @@ if ($ACTION == "login") {
 
 	unset($result, $username, $password);
 } elseif ($ACTION == "logout") {
-	users_online("logout");
-	
-	/**
-	 * If the user is in masquerade mode, save the session data from before 
-	 * the masquerade began before it is destroyed with the rest of the session
-	 */
-	if (isset($_SESSION["admin_session"]) && $_SESSION["admin_session"]) {
-		$admin_session = $_SESSION["admin_session"];
-	}
+    users_online("logout");
 
-	$_SESSION = array();
-	unset($_SESSION);
-	session_destroy();
+    /**
+     * If the user is in masquerade mode, save the session data from before
+     * the masquerade began before it is destroyed with the rest of the session
+     */
+    if (isset($_SESSION["previous_session"]) && $_SESSION["previous_session"]) {
+        $previous_session = $_SESSION["previous_session"];
+    }
 
-	if ((defined("AUTH_ALLOW_CAS")) && (AUTH_ALLOW_CAS == true)) {
-		phpCAS::logout(ENTRADA_URL);
-	}
-	
-	/**
-	 * If logging out of the masquerade, log back in as admin and redirect
-	 */
-	if (isset($admin_session) && $admin_session) {
-		session_start();
-		$_SESSION = $admin_session;
-		header("Location: ".ENTRADA_URL."/admin/users");
-		exit;
-	}
+    $_SESSION = array();
+    unset($_SESSION);
+    session_destroy();
 
-	header("Location: ".ENTRADA_URL);
-	exit;
+    if ((defined("AUTH_ALLOW_CAS")) && (AUTH_ALLOW_CAS == true)) {
+        phpCAS::logout(ENTRADA_URL);
+    }
+
+    /**
+     * If logging out of the masquerade, log back in as admin and redirect
+     */
+    if (isset($previous_session) && $previous_session) {
+        session_start();
+        $_SESSION = $previous_session;
+
+        header("Location: ".ENTRADA_URL."/admin/users");
+        exit;
+    }
+
+    header("Location: ".ENTRADA_URL);
+    exit;
 }
 
 if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"] && isset($ENTRADA_USER)) {

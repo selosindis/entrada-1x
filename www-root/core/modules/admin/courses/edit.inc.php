@@ -1383,7 +1383,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                                 ON a.`objective_parent` = c.`objective_id`
                                                 WHERE a.`objective_active` = '1'
                                                 AND c.`objective_active` = '1'
-                                                AND b.`active` = '1'
+                                                AND b.`objective_active` = '1'
                                                 GROUP BY a.`objective_id`
                                                 ORDER BY b.`importance` ASC";
                                     $mapped_objectives = $db->GetAll($query);

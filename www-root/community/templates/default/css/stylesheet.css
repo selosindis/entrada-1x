@@ -29,8 +29,20 @@ i {
 	display: none !important;
 }
 
+.span2-5 {
+	width: 180px;
+}
+
+.span6-5 {
+	width: 500px;
+}
+
+.span9-5 {
+	width: 740px;
+}
+
 .container {
-	background: #fff;
+	background: #232222;
 }
 
 .table {
@@ -65,12 +77,11 @@ i {
 
 /* Navigation Styles */
 .navbar {
-	background: #fff;
+	background: #232222;
 	margin: 0 !important;
 	top: 0;
 	bottom: 0;
-	max-width: 220px;
-	overflow: scroll !important;
+	max-width: 180px;
 }
 .nav {
 	margin-bottom: 0 !important;
@@ -82,17 +93,16 @@ i {
 
 .navbar .nav {
 	margin: 25px 0 0 0 !important;
-	width: 220px;
+	width: 180px;
 }
 
 .navbar .nav > li > a {
 	text-shadow: none !important;
-	color: #666 !important;
+	color: #999 !important;
 }
 
 .navbar .nav > li > a:hover {
-	background: #333 !important;
-	color: #f6f4f4 !important;
+	background: #141414 !important;
 }
 
 .navbar .nav > li.selected a {
@@ -107,7 +117,7 @@ i {
 
 .sub-pages a {	
 	font-size: 12px !important;
-	background: #f6f4f4;
+	background: #2c2b2b;
 }
 
 /* Child Navigation Styles */
@@ -153,8 +163,8 @@ h3 {
 }
 
 .header {
-	margin-left: -25px !important;
-	padding: 25px 0 20px 25px;
+	margin-left: -20px !important;
+	padding: 25px 0 20px 20px;
 	background-image: url(../images/header-pattern.png) !important;
 	border-bottom: 3px solid #528a2e;
 }
@@ -169,28 +179,25 @@ h3 {
 	margin-left: 0 !important;
 	padding-left: 20px !important;
 	background: #fff;
-	border-left: 1px solid #eee;
-	width: 699px !important;
 }
 
 .community-title {
 	font-family: 'Roboto', sans-serif;
 	font-size: 34px;
+	line-height: 37px;
 	font-weight: 700;
 	color: #333;
 	padding-left: 20px;
+	padding-right: 20px;
 }
 
 .content-area {
 	margin-top: 22px;
-	width: 459px !important;
 }
 .footer {
-	padding: 15px 0 15px 20px;
-	margin: 0 !important;
-	bottom: 0;
-	border-top: 1px solid #eee;
+	padding: 15px 40px 15px 20px;
 	margin-left: -20px !important;
+	background: #f9f7f7;
 }
 
 .content-copyright {
@@ -324,12 +331,12 @@ input[type="submit"].btn-danger:hover {
 /* List Icons */
 ul.menu li.admin {
 	background:transparent url(../images/list-admin.png) no-repeat;
-	background-position-y: 4px;
+	background-position: 0 4px;
 }
 
 ul.menu li.nav {
 	background:transparent url(../images/nav_arrow.png) no-repeat;
-	background-position-y: 6px;
+	background-position: 0 6px;
 }
 
 div.tutorial ul li {
@@ -337,16 +344,16 @@ div.tutorial ul li {
 	font-size:14px;
 	color:#666;
 	padding: 0 20px 0px 20px;
-	background-position-y: 6px;
+	background-position: 0 6px;
 }
 ul.menu li.community {
 	background:transparent url(../images/list-community.png) no-repeat;
-	background-position-y: 4px;
+	background-position: 0 4px;
 }
 
 ul.menu li.on {
 	background:transparent url(../images/checkbox-on.png) no-repeat;
-	background-position-y: 3px;
+	background-position: 0 3px;
 }
 
 .page-action li {
@@ -356,22 +363,22 @@ ul.menu li.on {
 }
 table.memberList tr td.sortedDESC a {
 	background:transparent url(../images/sort_desc.png) no-repeat scroll right top;
-	background-position-y: 3px;
+	background-position: 0 3px;
 }
 
 table.memberList tr td.sortedASC a {
 	background:transparent url(../images/sort_asc.png) no-repeat scroll right top;
-	background-position-y: 3px;
+	background-position: 0 3px;
 }
 
 table.discussions thead tr td.sortedASC .noLink,table.permissions thead tr td.sortedASC .noLink,table.discussions thead tr td.sortedASC a,table.permissions thead tr td.sortedASC a {
 	background:transparent url(../images/sort_asc.png) top right no-repeat;
-	background-position-y: 3px;
+	background-position: 0 3px;
 }
 
 table.discussions thead tr td.sortedDESC a,table.permissions thead tr td.sortedDESC a,table.discussions thead tr td.sortedDESC .noLink,table.permissions thead tr td.sortedDESC .noLink {
 	background:transparent url(../images/sort_desc.png) top right no-repeat;
-	background-position-y: 3px;
+	background-position: 0 3px;
 }
 
 a.feeds.rss {
@@ -380,7 +387,7 @@ a.feeds.rss {
 
 a.feeds.ics {
 	background:transparent url(../images/ics-enabled.png) no-repeat center left;
-	background-position-y: 4px;
+	background-position: 0 4px;
 }
 
 ul.menu li.status-online {

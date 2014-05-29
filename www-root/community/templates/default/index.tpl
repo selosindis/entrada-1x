@@ -34,28 +34,26 @@
 {$sys_system_navigator}
 <div class="container">
 	<div class="row">
-		<div class="span3">
+		<div class="span2-5">
 			{include file="navigation_primary.tpl" site_primary_navigation=$site_primary_navigation}
 		</div>
-		<div class="span9 content-container">
+		<div class="span9-5 content-container">
 			<div class="row">
-				<div class="span9">
+				<div class="span9-5">
 					<div class="header table">
 						<div class="table-cell">
 							<div class="header-icon"></div>
 						</div>
 						<div class="table-cell table-cell-full-width">
 							<div class="table">
-								<div class="table-cell middle">
-									<span class="community-title">{$site_community_title}</span>
-								</div>
+								<div class="table-cell middle community-title">{$site_community_title}</div>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 			<div class="row">
-				<div class="span6 content-area">
+				<div class="span6-5 content-area">
 					{$site_breadcrumb_trail}
 					{$child_nav}
 					<div class="content">

@@ -77,7 +77,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 										AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 										ORDER BY a.`objective_order` ASC";
 						$result	= $db->GetRow($query);
-						if ($result) {
+                        if ($result) {
 							$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
 						}
 					}
@@ -360,11 +360,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							/**
 							 * Insert Clinical Presentations.
 							 */
-							$query = "DELETE FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($COURSE_ID);
+                            $query = "DELETE FROM `course_objectives` WHERE `objective_type` = 'event' AND `course_id` = ".$db->qstr($COURSE_ID);
 							if ($db->Execute($query)) {
-								if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
-									foreach ($clinical_presentations as $objective_id => $presentation_name) {
-										if (!$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
+                            	if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
+                            		foreach ($clinical_presentations as $objective_id => $presentation_name) {
+                            			if (!$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 											add_error("There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.");
 
 											application_log("error", "Unable to insert a new clinical presentation to the database when adding a new event. Database said: ".$db->ErrorMsg());

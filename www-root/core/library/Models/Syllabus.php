@@ -120,11 +120,10 @@ class Models_Syllabus {
 					JOIN `curriculum_periods` AS c
 					ON b.`curriculum_type_id` = c.`curriculum_type_id`
 					AND c.`active` = 1
-					WHERE a.`course_id` = ? 
-					AND UNIX_TIMESTAMP(NOW()) BETWEEN c.`start_date` AND c.`finish_date` ".
-					(!is_null($active) ? "AND a.`active` = ?" : "");
+					WHERE a.`course_id` = ?".
+					(!is_null($active) ? "AND a.`active` = ?" : "")."
+                    GROUP BY a.`syllabus_id`";
 		$course_details = $db->GetRow($query, array($course_id, $active));
-
 		if ($course_details) {
 			$syllabus->fromArray($course_details);
 		}

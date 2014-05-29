@@ -321,7 +321,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 				}
 			}
 
-			if (!has_error()) {
+            if (!has_error()) {
 				$PROCESSED["updated_date"] = time();
 				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 
@@ -495,6 +495,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 									$msg = "You will now be redirected to the course index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 								break;
 							}
+                            
+                            if (isset($PROCESSED["syllabus"])) {
+                                if (isset($PROCESSED["syllabus"]["syllabus_id"])) {
+                                    $mode = "UPDATE";
+                                    $where = "`syllabus_id` = ".$db->qstr($PROCESSED["syllabus"]["syllabus_id"]);
+                                    $syllabus_data["syllabus_id"] = $PROCESSED["syllabus"]["syllabus_id"];
+                                } else {
+                                    $mode = "INSERT";
+                                    $where = "1 = 1";
+                                }
+
+                                if (!empty($period_list)) {
+                                    $query = "SELECT * FROM `curriculum_periods` WHERE `cperiod_id` IN (".implode(",", $period_list).") ORDER BY `start_date` DESC LIMIT 1";
+                                    $period_data = $db->GetRow($query);
+                                } else {
+                                    $period_data["start_date"] = mktime(0, 0, 0, 1);
+                                    $period_data["finish_date"] = mktime(0, 0, 0, 12);
+                                }
+
+                                $syllabus_start = date("n", $period_data["start_date"]);
+                                $syllabus_finish = date("n", $period_data["finish_date"]);
+
+                                $syllabus_data["course_id"] = $COURSE_ID;
+                                $syllabus_data["template"] = $PROCESSED["syllabus"]["syllabus_template"];
+                                $syllabus_data["active"] = $PROCESSED["syllabus"]["syllabus_enabled"];
+                                $syllabus_data["syllabus_start"] = $syllabus_start;
+                                $syllabus_data["syllabus_finish"] = $syllabus_finish;
+                                if (!$db->AutoExecute("course_syllabi", $syllabus_data, $mode, $where)) {
+                                    add_error("An error ocurred while attempting to update the course syllabus, an administrator has been informed, please try again later.");
+                                    application_log("error", "Error on course syllabus ".$mode.", DB said: ".$db->ErrorMsg());
+                                }
+                            }
+
 
 							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 							add_success("You have successfully added <strong>".html_encode($PROCESSED["course_name"])."</strong> to this system.<br /><br />".$msg);
@@ -1548,6 +1581,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                     $('#period_list').show();
                                     eval("var student_"+period_id+"_list = new AutoCompleteList({ type: 'student_"+period_id+"', url: '<?php echo ENTRADA_RELATIVE;?>/api/personnel.api.php?type=student', remove_image: '"+DELETE_IMAGE_URL+"'})");
                                     eval("window.student_"+period_id+"_list = student_"+period_id+"_list");
+                                    
+                                    if ($("#enrollment-required").length <= 1) {
+                                        $("#enrollment-required").fadeOut();
+                                        $("input[name=syllabus_enabled]").removeAttr("disabled");
+                                    }
                                 }
                             });
                         });
@@ -1762,6 +1800,50 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                         });
                     }
                 </script>
+                
+                <h2 title="Course Syllabus Section">Course Syllabus</h2>
+                <div id="course-syllabus-section">
+                    <?php
+                        $course_syllabus = Models_Syllabus::fetchRowByCourseID($COURSE_ID);
+                        $syllabi = glob($ENTRADA_TEMPLATE->absolute()."/syllabus/*.php");
+                    ?>
+                    <?php if (!isset($PROCESSED["periods"])) { ?>
+                    <div class="display-notice" id="enrollment-required">
+                        <ul>
+                            <li>An enrollment period must be selected before syllabus generation can be enabled.</li>
+                        </ul>
+                    </div>
+                    <?php } ?>
+                    <input type="hidden" name="syllabus_id" value="<?php echo $course_syllabus->getID(); ?>" />
+                    <div class="control-group">
+                        <label class="control-label">Automatic Generation</label>
+                        <div class="controls">
+                            <label class="radio"><input type="radio" name="syllabus_enabled" <?php echo !isset($PROCESSED["periods"]) ? "disabled=\"disabled\"" : ""; ?> value="enabled" <?php echo $course_syllabus->getActive() ? "checked=\"checked\"" : ""; ?> /> Enabled</label>
+                            <label class="radio"><input type="radio" name="syllabus_enabled" <?php echo !isset($PROCESSED["periods"]) ? "disabled=\"disabled\"" : ""; ?> <?php echo !$course_syllabus->getActive() ? "checked=\"checked\"" : ""; ?> /> Disabled</label>
+                        </div>
+                    </div>
+                    <div id="syllabus-settings" style="<?php echo !$course_syllabus->getActive() ? "display:none;" : ""; ?>">
+                        <div class="control-group" id="syllabus-template">
+                            <label class="control-label">Template</label>
+                            <div class="controls">
+                                <select name="syllabus_template">
+                                    <?php
+                                    foreach ($syllabi as $syllabus) {
+                                        $syllabus_template = trim(substr($syllabus, strrpos($syllabus, "/") + 1));
+                                        $syllabus_template = substr($syllabus_template, 0, strlen($syllabus_template) - 4);
+                                        if ($syllabus_template != "page-whitelist.inc") {
+                                            ?>
+                                            <option value="<?php echo $syllabus_template; ?>" <?php echo $course_syllabus->getTemplate() == $syllabus_template ? "selected=\"selected\"" : ""; ?> ><?php echo $syllabus_template; ?></option>
+                                            <?php
+                                        }
+                                    }
+                                    ?>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
 				<style type="text/css">
                     .remove_audience, .remove_student, .remove_period {
                         cursor: pointer;

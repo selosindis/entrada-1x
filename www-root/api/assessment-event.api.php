@@ -102,7 +102,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                     if(isset(${$request_var}["title"]) && $tmp_input = clean_input(${$request_var}["title"], array("trim", "striptags"))) {
 						$title = $tmp_input;
 					} else {
-						add_error("No date provided.");
+						add_error("No event title provided.");
 					}
                     
                     if(isset(${$request_var}["course_id"]) && $tmp_input = clean_input(${$request_var}["course_id"], array("trim", "int"))) {
@@ -123,7 +123,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                             }
                             echo json_encode(array("status" => "success", "data" => $events_array));
                         } else {
-                            echo json_encode(array("status" => "error", "data" => array("No events found on <strong>". date("Y-m-d", $start_date) ."</strong>.")));
+                            echo json_encode(array("status" => "error", "data" => array("No events found with a title containing <strong>". $title ."</strong>")));
                         }
                     } else {
                         echo json_encode(array("status" => "error", "data" => $ERRORSTR));

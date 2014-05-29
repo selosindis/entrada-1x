@@ -181,6 +181,8 @@ class Models_Event extends Models_Base {
             array(
                 array("key" => "course_id", "value" => $course_id, "method" => "="),
                 array("mode" => "AND", "key" => "event_title", "value" => "%".$title."%", "method" => "LIKE"),
+                //array("mode" => "AND", "key" => "parent_id", "value" => "0", "method" => "="),
+                //array("mode" => "OR", "key" => "parent_id", "value" => NULL, "method" => "="),
                 "=", "AND", "event_start"
             )
         );

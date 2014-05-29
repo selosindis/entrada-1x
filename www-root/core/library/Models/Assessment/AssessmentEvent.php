@@ -61,5 +61,15 @@ class Models_Assessment_AssessmentEvent extends Models_Base {
     public function getActive() {
         return $this->active;
     }
+    
+    public function insert() {
+		global $db;
+		
+		if ($db->AutoExecute("`event_assessments`", $this->toArray(), "INSERT")) {
+			return true;
+		} else {
+			return false;
+		}
+    }
 }
 ?>

@@ -4738,18 +4738,23 @@ th.sorting {
     background: #fff;
 }
 
-#event-modal #event-msgs {
+#event-modal #event-msgs, #event-modal #event-search-msgs {
     margin: auto;
-    width: 92%;
+    width: 90.5%;
 }
 
 #event-modal #assessment-event-search-toggles {
     margin-right: 23px;
 }
 
+#event-modal #title-search {
+    
+}
+
 #event-modal #event-title-search {
     background: url("../images/icon-magnify-gray.png") no-repeat right 2px top 4px;
+    margin-left:25px;
+    margin-bottom:15px;
     padding:7px 30px 7px 16px;
-    width: 85%;
-    margin: auto !important;
+    width: 82%;
 }

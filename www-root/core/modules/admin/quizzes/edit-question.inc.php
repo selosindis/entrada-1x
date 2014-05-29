@@ -476,7 +476,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 													<label for="response_text_<?php echo $number; ?>" class="form-<?php echo (($number > 2) ? "n" : ""); ?>required"><?php echo chr($number + 96); ?>)</label>
 												</td>
 												<td style="padding-top: 10px">
-													<textarea class="expandable" id="response_text_<?php echo $number; ?>" name="response_text[<?php echo $number; ?>]" style="width: 99%; height: 0px"><?php echo ((isset($PROCESSED["quiz_question_responses"][$number]["response_text"])) ? clean_input($PROCESSED["quiz_question_responses"][$number]["response_text"], "encode") : ""); ?></textarea>
+													<textarea class="expandable" id="response_text_<?php echo $number; ?>" name="response_text[<?php echo $number; ?>]" style="width: 99%; height: 20px"><?php echo ((isset($PROCESSED["quiz_question_responses"][$number]["response_text"])) ? clean_input($PROCESSED["quiz_question_responses"][$number]["response_text"], "encode") : ""); ?></textarea>
 												</td>
 												<td class="center" style="padding-top: 10px">
 													<input type="checkbox" id="response_is_html_<?php echo $number; ?>" name="response_is_html[<?php echo $number; ?>]" value="1"<?php echo (((isset($PROCESSED["quiz_question_responses"][$number]["response_is_html"])) && ($PROCESSED["quiz_question_responses"][$number]["response_is_html"] == 1)) ? " checked=\"true\"" : ""); ?> onclick="toggleEditor('response_text_<?php echo $number; ?>')" />
@@ -500,10 +500,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 											<tr>
 												<td style="padding: 5px 0px 10px 0px; border-bottom: 1px #CCCCCC solid">&nbsp;</td>
 												<td colspan="3" style="padding: 5px 0px 15px 0px; border-bottom: 1px #CCCCCC solid">
-													<input type="checkbox" id="toggle_response_feedback_<?php echo $number; ?>" onclick="Effect.toggle('container_response_feedback_<?php echo $number; ?>', 'appear', { duration: 0.3 }); if (this.checked == true) setTimeout('$(\'response_feedback_<?php echo $number; ?>\').focus();', 50);"<?php echo (((isset($PROCESSED["quiz_question_responses"][$number]["response_feedback"])) && (trim($PROCESSED["quiz_question_responses"][$number]["response_feedback"]) != "")) ? " checked=\"true\"" : ""); ?> />
+													<input type="checkbox" id="toggle_response_feedback_<?php echo $number; ?>" data-number="<?php echo html_encode($number); ?>" onclick="Effect.toggle('container_response_feedback_<?php echo $number; ?>', 'appear', { duration: 0.3 }); if (this.checked == true) setTimeout('$(\'response_feedback_<?php echo $number; ?>\').focus();', 50);"<?php echo (((isset($PROCESSED["quiz_question_responses"][$number]["response_feedback"])) && (trim($PROCESSED["quiz_question_responses"][$number]["response_feedback"]) != "")) ? " checked=\"true\"" : ""); ?> />
 													<label for="toggle_response_feedback_<?php echo $number; ?>" class="form-nrequired" style="margin-left: 5px; vertical-align: middle"> Provide feedback if this response is chosen <span id="response_feedback_term_<?php echo $number; ?>" class="response_feedback_term <?php echo (($response_correct) ? "correctly" : "incorrectly"); ?>"><?php echo (($response_correct) ? "correctly" : "incorrectly"); ?></span>.</label>
 													<div id="container_response_feedback_<?php echo $number; ?>" style="margin-left: 27px;<?php echo (((!isset($PROCESSED["quiz_question_responses"][$number]["response_feedback"])) || (trim($PROCESSED["quiz_question_responses"][$number]["response_feedback"]) == "")) ? " display: none" : ""); ?>">
-														<textarea class="expandable" id="response_feedback_<?php echo $number; ?>" name="response_feedback[<?php echo $number; ?>]" style="width: 99%; height: 0px"><?php echo ((isset($PROCESSED["quiz_question_responses"][$number]["response_feedback"])) ? clean_input($PROCESSED["quiz_question_responses"][$number]["response_feedback"], "encode") : ""); ?></textarea>
+														<textarea class="expandable" id="response_feedback_<?php echo $number; ?>" name="response_feedback[<?php echo $number; ?>]" style="width: 99%; height: 20px"><?php echo ((isset($PROCESSED["quiz_question_responses"][$number]["response_feedback"])) ? clean_input($PROCESSED["quiz_question_responses"][$number]["response_feedback"], "encode") : ""); ?></textarea>
 													</div>
 												</td>
 											</tr>
@@ -513,6 +513,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									</tbody>
 									</table>
 									<script type="text/javascript">
+                                    jQuery(document).ready(function () {
+                                        jQuery("input[id^=toggle_response_feedback_]").on("change", function () {
+                                            var number = jQuery(this).attr("data-number");
+                                            if (jQuery(this).is(":checked")) {
+                                                if (jQuery("#response_feedback_" + number).is(":disabled")) {
+                                                    jQuery("#response_feedback_" + number).prop("disabled", false);
+                                                }
+                                            } else {
+                                                jQuery("#response_feedback_" + number).prop("disabled", true);
+                                            }
+                                        });
+                                    });
+                                    
 									$$('table.quiz-question td.selectCorrect input[type=radio]').each(function (el) {
 										$(el).observe('click', alterFeedbackTerm);
 									});

@@ -161,17 +161,29 @@ class Models_Event extends Models_Base {
         return $this->updated_by;
     }
     
-    public static function fetchAllByCourseID($course_id = null) {
-        $self = new self();
-        return $self->fetchAll(array("course_id" => $course_id));
+    public function fetchAllByCourseID($course_id = null) {
+        return $this->fetchAll(array("course_id" => $course_id));
     }
     
-    public static function fetchAllByCourseIDGroupID($course_id = null, $group_id = null) {
-        global $db;
-        
-        $query = "  SELECT a.*, b.* FROM `course_audince` AS a
-                    LEFT JOIN `events` AS b
-                    WHERE `course_id` ?";
+    public function fetchAllByCourseIdStartDateFinishDate($course_id = null, $start_date = null, $finish_date = null) {
+        return $this->fetchAll(
+            array(
+                array("key" => "course_id", "value" => $course_id, "method" => "="),
+                array("mode" => "AND", "key" => "event_start", "value" => $start_date, "method" => ">="),
+                array("mode" => "AND", "key" => "event_finish", "value" => $finish_date, "method" => "<=")
+            ), 
+            "=", "AND", "event_start"
+        );
+    }
+    
+    public function fetchAllByCourseIdTitle($course_id = null, $title = null) {
+        return $this->fetchAll(
+            array(
+                array("key" => "course_id", "value" => $course_id, "method" => "="),
+                array("mode" => "AND", "key" => "event_title", "value" => "%".$title."%", "method" => "LIKE"),
+                "=", "AND", "event_start"
+            )
+        );
     }
 }
 ?>

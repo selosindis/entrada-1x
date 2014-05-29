@@ -59,7 +59,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
         break;
         case "GET" :
             switch ($method) {
-                case "get" :
+                case "date_search" :
                     if(isset(${$request_var}["date"]) && $tmp_input = clean_input(${$request_var}["date"], array("trim", "striptags"))) {
 						$date = $tmp_input;
 					} else {
@@ -73,15 +73,57 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					}
                     
                     if (!$ERROR) {
-                        $events = Models_Event::fetchAllByCourseID($course_id);
+                        $e = new Models_Event();
+                        
+                        $start_date = strtotime($date. " 12:00am");
+                        $finish_date = strtotime($date. " 11:59pm");
+                        
+                        if ($start_date && $finish_date) {
+                            $events = $e->fetchAllByCourseIdStartDateFinishDate($course_id, $start_date, $finish_date);
+                            if ($events) {
+                                $events_array = array();
+                                foreach ($events as $event) {
+                                    $event = $event->toArray();
+                                    $event["event_start"] = date("D M d/y g:ia", $event["event_start"]);
+                                    $events_array[] = $event;
+                                }
+                                echo json_encode(array("status" => "success", "data" => $events_array));
+                            } else {
+                                echo json_encode(array("status" => "error", "data" => array("No events found on <strong>". date("Y-m-d", $start_date) ."</strong>.")));
+                            }
+                        } else {
+                            echo json_encode(array("status" => "error", "data" => array("A problem occured while attempting to fetch learning events. Please try again later.")));
+                        }
+                    } else {
+                        echo json_encode(array("status" => "error", "data" => $ERRORSTR));
+                    }
+                break;
+                case "title_search" :
+                    if(isset(${$request_var}["title"]) && $tmp_input = clean_input(${$request_var}["title"], array("trim", "striptags"))) {
+						$title = $tmp_input;
+					} else {
+						add_error("No date provided.");
+					}
+                    
+                    if(isset(${$request_var}["course_id"]) && $tmp_input = clean_input(${$request_var}["course_id"], array("trim", "int"))) {
+						$course_id = $tmp_input;
+					} else {
+						add_error("No course ID provided.");
+					}
+                    
+                    if (!$ERROR) {
+                        $e = new Models_Event();
+                        $events = $e->fetchAllByCourseIdTitle($course_id, $title);
                         if ($events) {
                             $events_array = array();
                             foreach ($events as $event) {
-                                $events_array[] = $event->toArray();
+                                $event = $event->toArray();
+                                $event["event_start"] = date("D M d/y g:ia", $event["event_start"]);
+                                $events_array[] = $event;
                             }
                             echo json_encode(array("status" => "success", "data" => $events_array));
                         } else {
-                            echo json_encode(array("status" => "error", "data" => "No events found."));
+                            echo json_encode(array("status" => "error", "data" => array("No events found on <strong>". date("Y-m-d", $start_date) ."</strong>.")));
                         }
                     } else {
                         echo json_encode(array("status" => "error", "data" => $ERRORSTR));

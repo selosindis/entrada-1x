@@ -42,7 +42,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";	
 	$HEAD[] = "<script type=\"text/javascript\">var SITE_URL = '".ENTRADA_URL."';</script>";
 	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_assessment.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";				
+	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_assessment.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 	
 	if (isset($_POST["mode"]) && $_POST["mode"] == "ajax") {
 		
@@ -480,7 +480,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						echo display_error();
 					}
 					?>
-					<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="selIt()" class="form-horizontal">
+					<form id="assessment-form" action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2)); ?>" method="post" onsubmit="selIt()" class="form-horizontal">
 						<h2>Assessment Details</h2>
 						
 						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Assessment">
@@ -732,13 +732,93 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						</table>
 						<script type="text/javascript" charset="utf-8">
 						var course_id = "<?php echo $COURSE_ID ?>";
+                        
                         jQuery(function($) {
+                            var search_type = "<?php echo (isset($PREFERENCES["assessment-event-search"]) ? $PREFERENCES["assessment-event-search"] : "calendar"); ?>";
+                            var timer;  
+                            var done_interval = 600;
                             
+                            if (search_type == "calendar") {
+                                $("#calendar-search-toggle").addClass("active");
+                                $("#calendar-search").removeClass("hide");
+                                $("#event-modal-title").text("Select a learning event by date");
+                            } else {
+                                $("#title-search-toggle").addClass("active");
+                                $("#title-search").removeClass("hide");
+                                $("#event-modal-title").text("Select a learning event by date");
+                            }
+                            
+                            $("#calendar-search-toggle").on("click", function (e) {
+                                e.preventDefault();
+                                $(this).addClass("active");
+                                if ($("#title-search-toggle").hasClass("active")) {
+                                    $("#title-search-toggle").removeClass("active");
+                                }
+                                $("#calendar-search").removeClass("hide");
+                                $("#title-search").addClass("hide");
+                                $("#event-modal-title").text("Select a learning event by date");
+                            });
+                            
+                            $("#title-search-toggle").on("click", function (e) {
+                                e.preventDefault();
+                                $(this).addClass("active");
+                                if ($("#calendar-search-toggle").hasClass("active")) {
+                                    $("#calendar-search-toggle").removeClass("active");
+                                }
+                                $("#title-search").removeClass("hide");
+                                $("#calendar-search").addClass("hide");
+                                $("#event-modal-title").text("Select a learning event by title");
+                            });
+                            
+                            $("#event-title-search").keyup(function () {
+                                var title = $(this).val();
+                                
+                                clearTimeout(timer);
+                                timer = setTimeout(function () {
+                                    getEventsByTitle(title);
+                                }, done_interval);
+                            });
+                           
                             $("#datepicker").datepicker({
                                 onSelect: function (date) {
-                                    //getEventsByDate(date);
+                                    $("#event-msgs").empty();
+                                    $("#loading").removeClass("hide");
+                                    getEventsByDate(date);
                                 },
-                                dateFormat: "yy-mm-dd"
+                                dateFormat: "yy-mm-dd",
+                                showOtherMonths: true,
+                                selectOtherMonths: true,
+                                dayNamesMin: [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ]
+                            });
+                            
+                            $("#events-wrap").on("click", "#events-list li", function () {
+                                if ($("#events-list").children().hasClass("active")) {
+                                    $("#events-list").children().removeClass("active");
+                                }
+                                
+                                if (!$(this).hasClass("active")) {
+                                    $(this).addClass("active");
+                                }
+                            });
+                            
+                            $("#events-search-wrap").on("click", "#events-search-list li", function () {
+                                if ($("#events-search-list").children().hasClass("active")) {
+                                    $("#events-search-list").children().removeClass("active");
+                                }
+                                
+                                if (!$(this).hasClass("active")) {
+                                    $(this).addClass("active");
+                                }
+                            });
+                            
+                            $("#attach-learning-event").on("click", function () {
+                                if ($("#events-list").children().hasClass("active")) {
+                                    var event_id = $("#events-list li.active").attr("data-id");
+                                    buildEventInput(event_id);
+                                    $("#event-modal").modal("hide");
+                                } else {
+                                    alert("Please select a learning event to attach to this assessment. If you no longer wish to attach a learning event to this assessment, click close.");
+                                }
                             });
                             
                             getCurriculumPeriodDates(course_id);
@@ -758,6 +838,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             $("#close-event-modal").on("click", function (e) {
                                 e.preventDefault();
                                 $("#event-modal").modal("hide");
+                            });
+                            
+                            $("#event-modal").on("hide", function () {
+                                if ($("#events-list").children().hasClass("active")) {
+                                    $("#events-list").children().removeClass("active");
+                                }
                             });
                            
 							/*
@@ -848,10 +934,53 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         function getEventsByDate (date) {
                             jQuery.ajax({
                                 url: "<?php echo ENTRADA_URL; ?>/api/assessment-event.api.php",
-                                data: "method=get&course_id=" + course_id + "&date=" + date,
+                                data: "method=date_search&course_id=" + course_id + "&date=" + date,
                                 type: "GET",
-                                success: function(data) {																				
-                                    
+                                beforeSend: function () {
+                                    jQuery("#events-list").empty();
+                                    jQuery("#loading").removeClass("hide");
+                                },
+                                success: function(data) {
+                                    jQuery("#loading").addClass("hide");
+                                    var response = JSON.parse(data);
+                                    if (response.status == "success") {
+                                        jQuery.each(response.data, function (key, event) {
+                                            console.log(event);
+                                            buildEventList(event);
+                                        });
+                                    } else {
+                                        display_notice(response.data, "#event-msgs", "append");
+                                    }
+                                }, 
+                                error: function () {
+                                    jQuery("#loading").addClass("hide");
+                                }
+                            });
+                        }
+                        
+                        function getEventsByTitle (title) {
+                            jQuery.ajax({
+                                url: "<?php echo ENTRADA_URL; ?>/api/assessment-event.api.php",
+                                data: "method=title_search&course_id=" + course_id + "&title=" + title,
+                                type: "GET",
+                                beforeSend: function () {
+                                    jQuery("#events-search-list").empty();
+                                    jQuery("#loading").removeClass("hide");
+                                },
+                                success: function(data) {
+                                    jQuery("#loading").addClass("hide");
+                                    var response = JSON.parse(data);
+                                    if (response.status == "success") {
+                                        jQuery.each(response.data, function (key, event) {
+                                            console.log(event);
+                                            buildEventList(event);
+                                        });
+                                    } else {
+                                        display_notice(response.data, "#event-msgs", "append");
+                                    }
+                                }, 
+                                error: function () {
+                                    jQuery("#loading").addClass("hide");
                                 }
                             });
                         }
@@ -871,6 +1000,35 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     }
                                 }
                             });
+                        }
+                        
+                        function buildEventList (event) {
+                            var event_li = document.createElement("li");
+                            var event_div = document.createElement("div");
+                            var event_h3 = document.createElement("h3");
+                            var event_span = document.createElement("span");
+                            
+                            jQuery(event_h3).addClass("event-text").text(event.event_title).html();
+                            jQuery(event_span).addClass("event-text").addClass("muted").text(event.event_start).html();
+                            jQuery(event_div).addClass("event-container").append(event_h3).append(event_span);
+                            jQuery(event_li).attr({"data-id": event.event_id}).append(event_div);
+                            
+                            if (jQuery("#calendar-search-toggle").hasClass("active")) {
+                                jQuery("#events-list").append(event_li);
+                            } else {
+                                jQuery("#events-search-list").append(event_li);
+                            }
+                        }
+                        
+                        function buildEventInput (event_id) {
+                            var event_input = document.createElement("input");
+                            
+                            if (jQuery("#assessment-event").length) {
+                                jQuery("#assessment-event").remove();
+                            }
+                            
+                            jQuery(event_input).attr({name: "event_id", id: "assessment-event", type: "hidden", value: event_id});
+                            jQuery("#assessment-form").append(event_input);   
                         }
 						</script>
                         <h2>Assessment Events</h2>
@@ -1140,14 +1298,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                     <div id="event-modal" class="modal hide fade">
                         <div class="modal-header">
                             <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                            <h3>Select a learning event</h3>
+                            <h3 id="event-modal-title"></h3>
                         </div>
                         <div class="modal-body">
-                            <div id="datepicker"></div>
+                            <div id="assessment-event-search-toggles" class="row space-below">
+                                <div class="btn-group pull-right clearfix">
+                                    <a href="#" class="btn" id="calendar-search-toggle"><i class="icon-calendar"></i></a>
+                                    <a href="#" class="btn" id="title-search-toggle"><i class="icon-search"></i></a>
+                                </div>
+                            </div>
+                            <div id="calendar-search" class="hide">
+                                <div id="datepicker" class="space-below"></div>
+                                <div id="events-wrap">
+                                    <ul id="events-list"></ul>
+                                </div>
+                                <div id="event-msgs"></div>
+                            </div>
+                            <div id="title-search" class="hide">
+                                <input type="text" placeholder="Search learning events by title" id="event-title-search" />
+                                <div id="events-search-wrap">
+                                    <ul id="events-search-list"></ul>
+                                </div>
+                                <div id="event-search-msgs"></div>
+                            </div>
+                            <div id="loading" class="hide"><img src="<?php echo ENTRADA_URL ?>/images/loading.gif" /></div>
                         </div>
-                        <div>
+                        <div id="event-modal-footer">
                             <a href="#" class="btn" id="close-event-modal">Close</a>
-                            <a href="#" class="btn btn-primary pull-right">Save changes</a>
+                            <a href="#" id="attach-learning-event" class="btn btn-primary pull-right">Attach Learning event</a>
                         </div>
                     </div>
 					<?php

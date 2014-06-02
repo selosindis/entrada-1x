@@ -617,17 +617,23 @@ if ($RECORD_ID) {
 									if (!isset($evaluation_targets) || !count($evaluation_targets)) {
 										$evaluation_targets = Models_Evaluation::getTargetsArray($RECORD_ID, $PROCESSED["eevaluator_id"], $ENTRADA_USER->getID(), false, true, false, (isset($evaluation_request) && $evaluation_request ? $evaluation_request["erequest_id"] : false));
 									}
-                                    if ($PROCESSED["target_shortname"] == "preceptor") {
+                                    if (in_array($PROCESSED["target_shortname"], array("preceptor", "teacher", "peer", "resident"))) {
                                         $HEAD[] = "
                                                     <script type=\"text/javascript\">
-                                                        function displayOtherTeacher(instructor_id) {
-                                                            if(instructor_id == 'other') {
+                                                        function fetchTargetDetails(etarget_id) {
+                                                            ".($PROCESSED["target_shortname"] == "preceptor" ? "
+                                                            var preceptor_evaluation = jQuery('#event_id').val();
+                                                            if(etarget_id == 'other') {
                                                                 $('other_teacher_layer').style.display = 'block';
                                                                 $('other_teacher_fname').focus();
                                                             } else {
                                                                 $('other_teacher_layer').style.display = 'none';
-                                                            }
-
+                                                                " : "var preceptor_evaluation = false;
+                                                            ")."
+                                                                if (etarget_id && parseInt(etarget_id) == etarget_id) {
+                                                                    jQuery('#target-details-holder').load('".ENTRADA_URL."/evaluations?section=api-target-info&id=".$RECORD_ID."', {'etarget_id' : etarget_id, 'eevaluator_id' : '".$PROCESSED["eevaluator_id"]."', 'erequest_id' : ".(isset($evaluation_request) && $evaluation_request ? "'".$evaluation_request["erequest_id"]."'" : "false").", 'ajax' : true, 'preceptor_evaluation' : preceptor_evaluation} );
+                                                                }
+                                                            ".($PROCESSED["target_shortname"] == "preceptor" ? "}" : "")."
                                                             return;
                                                         }
                                                     </script>";
@@ -681,7 +687,7 @@ if ($RECORD_ID) {
 											}
 										} elseif ($PROCESSED["target_shortname"] == "teacher") {
 											echo "<div class=\"content-small\">Please choose a teacher to evaluate: \n";
-											echo "<select id=\"evaluation_target\" name=\"evaluation_target\">";
+											echo "<select id=\"evaluation_target\" name=\"evaluation_target\" onchange=\"fetchTargetDetails(jQuery(this).val())\">";
 											echo "<option value=\"0\">-- Select a teacher --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
@@ -696,13 +702,15 @@ if ($RECORD_ID) {
 											echo "<select id=\"event_id\" name=\"event_id\"".($PROCESSED["target_shortname"] == "preceptor" ? " onchange=\"loadPreceptors(this.options[this.selectedIndex].value)\"" : "").">";
 											echo "<option value=\"0\">-- Select an event --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
-												echo "<option value=\"".$evaluation_target["event_id"]."\"".(($PROCESSED["event_id"] == $evaluation_target["event_id"]) || ((!isset($PROCESSED["event_id"]) || !$PROCESSED["event_id"]) && isset($evaluation_target["requested"]) && $evaluation_target["requested"]) ? " selected=\"selected\"" : "").">".(strpos($evaluation_target["event_title"], $evaluation_target["rotation_title"]) === false ? $evaluation_target["rotation_title"]." - " : "").$evaluation_target["event_title"]."</option>\n";
+												echo "<option value=\"".$evaluation_target["event_id"]."\"".((isset($PROCESSED_CLERKSHIP_EVENT["event_id"]) && $PROCESSED_CLERKSHIP_EVENT["event_id"] == $evaluation_target["event_id"]) || ((!isset($PROCESSED_CLERKSHIP_EVENT["event_id"]) || !$PROCESSED_CLERKSHIP_EVENT["event_id"]) && isset($evaluation_target["requested"]) && $evaluation_target["requested"]) ? " selected=\"selected\"" : "").">".(strpos($evaluation_target["event_title"], $evaluation_target["rotation_title"]) === false ? $evaluation_target["rotation_title"]." - " : "").$evaluation_target["event_title"]."</option>\n";
 											}
 											echo "</select>";
 											if ($PROCESSED["target_shortname"] == "preceptor") {
 												echo "<div id=\"preceptor_select\">\n";
-												if (isset($PROCESSED["event_id"]) && $PROCESSED["event_id"]) {
-													echo Models_Evaluation::getPreceptorSelect($RECORD_ID, $PROCESSED["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
+												if (isset($PROCESSED_CLERKSHIP_EVENT["event_id"]) && $PROCESSED_CLERKSHIP_EVENT["event_id"]) {
+                                                    echo "<br /><div class=\"content-small\">Please choose a clerkship preceptor to evaluate: \n";
+													echo Models_Evaluation::getPreceptorSelect($RECORD_ID, $PROCESSED_CLERKSHIP_EVENT["event_id"], $ENTRADA_USER->getID(), (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] ? $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] : 0));
+                                                    echo "</div>\n";
 												} else {
 													echo display_notice("Please select a <strong>Clerkship Service</strong> to evaluate a <strong>Preceptor</strong> for.");
 												}
@@ -726,7 +734,7 @@ if ($RECORD_ID) {
 										} elseif ($PROCESSED["target_shortname"] == "peer" || $PROCESSED["target_shortname"] == "student") {
 											echo "<div class=\"content-small\">Please choose a learner to assess: \n";
 											echo "<input type=\"hidden\" id=\"evaluation_target\" name=\"evaluation_target\" value=\"".$evaluation_targets[0]["etarget_id"]."\" />";
-											echo "<select id=\"target_record_id\" name=\"target_record_id\">";
+											echo "<select id=\"target_record_id\" name=\"target_record_id\" onchange=\"fetchTargetDetails(this.value)\">";
 											echo "<option value=\"0\">-- Select a learner --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
@@ -741,7 +749,7 @@ if ($RECORD_ID) {
                                             echo "      Please choose a resident to evaluate:\n";
                                             echo "  </label>\n";
                                             echo "  <span class=\"span5\">\n";
-                                            echo "      <select id=\"evaluation_target\" name=\"evaluation_target\">";
+                                            echo "      <select id=\"evaluation_target\" name=\"evaluation_target\" onchange=\"fetchTargetDetails(this.value)\">";
 											echo "          <option value=\"0\">-- Select a resident --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
@@ -774,6 +782,15 @@ if ($RECORD_ID) {
                                             echo "</div>";
 										}
 									}
+                                    if (isset($PROCESSED["etarget_id"]) && $PROCESSED["etarget_id"]) {
+                                        if ($PROCESSED["target_shortname"] == "preceptor") {
+                                            if (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) {
+                                                $ONLOAD[] = "fetchTargetDetails(".((int)$PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]).");";
+                                            }
+                                        } else {
+                                            $ONLOAD[] = "fetchTargetDetails(".((int)$PROCESSED["etarget_id"]).");";
+                                        }
+                                    }
                                     if ($PROCESSED["target_shortname"] == "preceptor") {
                                         ?>
                                             <div id="other_teacher_layer"<?php echo (!isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) || $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"] !== "other" ? " style=\"display: none\"" : ""); ?>>
@@ -802,6 +819,7 @@ if ($RECORD_ID) {
                                         <?php
                                     }
 									?>
+                                    <div id="target-details-holder" class="space-above space-below"></div>
 									<div id="display-unsaved-warning" class="display-notice" style="display: none">
 										<ul>
 											<li><strong>Warning Unsaved Response:</strong><br />Your response to the question indicated by a yellow background was not automatically saved.</li>
@@ -911,7 +929,12 @@ if ($RECORD_ID) {
 													$('preceptor_select').addClassName('notice');
 
 													$('preceptor_select').update('<ul><li>No <strong>Preceptors</strong> available for evaluation found in the system.</li></ul>');
-											}
+											},
+                                            onComplete: function() {
+                                                if ($('preceptor_proxy_id') && $('preceptor_proxy_id').selectedIndex == 0) {
+                                                    jQuery('#target-details-holder').html('');
+                                                }
+                                            }
 										});
 									}
 									</script>

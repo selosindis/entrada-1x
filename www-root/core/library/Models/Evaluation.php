@@ -500,10 +500,8 @@ class Models_Evaluation {
 		}
 	}
 
-	public static function getPreceptorSelect($evaluation_id, $event_id, $evaluator_proxy_id, $preceptor_proxy_id = 0) {
+	public static function getPreceptorArray($evaluation_id, $event_id, $evaluator_proxy_id) {
 		global $db;
-
-		$output = "";
 
 		$query	= "SELECT b.`preceptor_proxy_id` FROM `evaluation_progress` AS a
 					JOIN `evaluation_progress_clerkship_events` AS b
@@ -541,8 +539,19 @@ class Models_Evaluation {
 						GROUP BY a.`id`";
 			$preceptors = $db->GetAll($query);
 		}
+
+		return ($preceptors ? $preceptors : false);
+	}
+
+	public static function getPreceptorSelect($evaluation_id, $event_id, $evaluator_proxy_id, $preceptor_proxy_id = 0) {
+		global $db;
+
+		$output = "";
+
+		$preceptors = Models_Evaluation::getPreceptorArray($evaluation_id, $event_id, $evaluator_proxy_id);
+
 		if ($preceptors) {
-			$output = "<select id=\"preceptor_proxy_id\" name=\"preceptor_proxy_id\" onchange=\"displayOtherTeacher(this.value)\">\n";
+			$output = "<select id=\"preceptor_proxy_id\" name=\"preceptor_proxy_id\" onchange=\"fetchTargetDetails(this.value)\">\n";
 			$output .= "<option value=\"0\">-- Select a preceptor --</option>\n";
 			foreach ($preceptors as $preceptor) {
 				if ($preceptor["proxy_id"]) {

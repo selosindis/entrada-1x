@@ -17,6 +17,40 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_SHARES"))) {
 } elseif (!$COMMUNITY_LOAD) {
 	exit;
 }
+$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/wizard.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+$HEAD[] = "<link href=\"".ENTRADA_URL."/css/wizard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
+?>
+<script type="text/javascript">
+    var ajax_url = '';
+    var modalDialog;
+    document.observe('dom:loaded', function() {
+    modalDialog = new Control.Modal($('false-link'), {
+            position:        'center',
+            overlayOpacity:    0.75,
+            closeOnClick:    'overlay',
+            className:        'modal',
+            fade:            true,
+            fadeDuration:    0.30
+        });  
+    });                                            
+    function openDialog (url) {
+    if (url) {
+            ajax_url = url;
+            new Ajax.Request(ajax_url, {
+                    method: 'get',
+                    onComplete: function(transport) {
+                            modalDialog.container.update(transport.responseText);
+                            modalDialog.open();
+                    }
+            });
+    } else {
+            modalDialog.open();
+    }
+}   
+
+
+</script>
+<?php
 
 if ($RECORD_ID) {
 	$query			= "SELECT * FROM `community_shares` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `cshare_id` = ".$db->qstr($RECORD_ID);
@@ -106,7 +140,7 @@ if ($RECORD_ID) {
 			 * Get the total number of results using the generated queries above and calculate the total number
 			 * of pages that are available based on the results per page preferences.
 			 */
-			$query	= "
+            $query_total    = "
 					SELECT COUNT(*) AS `total_rows`
 					FROM `community_share_files` AS a
 					LEFT JOIN `community_shares` AS c
@@ -117,9 +151,27 @@ if ($RECORD_ID) {
 					AND a.`file_active` = '1'
 					".((!$LOGGED_IN) ? " AND c.`allow_public_read` = '1'" : (($COMMUNITY_MEMBER) ? ((!$COMMUNITY_ADMIN) ? " AND c.`allow_member_read` = '1'" : "") : " AND c.`allow_troll_read` = '1'"))."
 					".((!$COMMUNITY_ADMIN) ? ($LOGGED_IN ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR " : " AND (")."(a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "");
-			$result	= $db->GetRow($query);
+            
+            $query_total    .= "
+                    UNION ALL
+                    SELECT COUNT(*) AS `total_rows`
+                    FROM `community_share_links` AS a
+                    LEFT JOIN `community_shares` AS c
+                    ON a.`cshare_id` = c.`cshare_id`
+                    WHERE a.`cshare_id` = ".$db->qstr($RECORD_ID)."
+                    AND a.`community_id` = ".$db->qstr($COMMUNITY_ID)."
+                    AND c.`cpage_id` = ".$db->qstr($PAGE_ID)."
+                    AND a.`link_active` = '1'
+                    ".((!$LOGGED_IN) ? " AND c.`allow_public_read` = '1'" : (($COMMUNITY_MEMBER) ? ((!$COMMUNITY_ADMIN) ? " AND c.`allow_member_read` = '1'" : "") : " AND c.`allow_troll_read` = '1'"))."
+                    ".((!$COMMUNITY_ADMIN) ? ($LOGGED_IN ? " AND ((a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId()).") OR " : " AND (")."(a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).") AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time())."))" : "");            
+            $result    = $db->GetAll($query_total);
+            //adds the results of the file and links together
+            $rowCountTotal = '';
+            foreach($result as $rowCount) {
+                $rowCountTotal = $rowCountTotal + intval($rowCount["total_rows"]);
+            }
 			if ($result) {
-				$TOTAL_ROWS	= $result["total_rows"];
+                $TOTAL_ROWS    = $rowCountTotal;
 
 				if ($TOTAL_ROWS <= $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"]) {
 					$TOTAL_PAGES = 1;
@@ -280,18 +332,37 @@ if ($RECORD_ID) {
 				if ($results) {
 					?>
 					<table class="discussions forums" style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+                    <?php if ($COMMUNITY_ADMIN) { ?>
 					<colgroup>
-						<col style="width: 4%" />
+                        <col style="width: 4%" />
+                        <col style="width: 52%" />
+                        <col style="width: 18%" />
+                        <col style="width: 18%" />
+                        <col style="width: 7%" />                                                
+                    </colgroup>                                            
+                    <?php } else { ?>
+                    <colgroup>
+                        <col style="width: 4%" />
 						<col style="width: 55%" />
 						<col style="width: 20%" />
 						<col style="width: 21%" />
 					</colgroup>
+                    <?php } ?>
+
 					<thead>
 						<tr>
 							<td>&nbsp;</td>
 							<td<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "title") ? " class=\"sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"])."\"" : ""); ?> style="border-left: none"><?php echo communities_order_link("title", "File Title"); ?></td>
 							<td<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "owner") ? " class=\"sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"])."\"" : ""); ?> style="border-left: none"><?php echo communities_order_link("owner", "Owner"); ?></td>
 							<td<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "date") ? " class=\"sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"])."\"" : ""); ?> style="border-left: none"><?php echo communities_order_link("date", "Last Updated"); ?></td>
+                            <?php
+                            if ($COMMUNITY_ADMIN) {
+                            ?>                                                            
+                                <td>Views</td>
+                            <?php
+                            }
+                            ?>
+
 						</tr>
 					</thead>
 					<tbody>
@@ -300,6 +371,17 @@ if ($RECORD_ID) {
 						$accessible	= true;
 						$parts		= pathinfo($result["file_title"]);
 						$ext		= (isset($parts["extension"]) && $parts["extension"] ? $parts["extension"] : "");
+                        
+                        $action_field   = "csfile_id";
+                        $action         = "file_download";
+                        $module         = 'community:'. $COMMUNITY_ID .':shares';
+                        $viewsSQL       = " SELECT COUNT(*) AS views
+                                            FROM " . DATABASE_NAME . ".statistics AS stats
+                                            WHERE stats.module = '". $module ."'
+                                            AND stats.action = '" . $action . "'
+                                            AND stats.action_field = '" . $action_field . "'
+                                            AND stats.action_value = " . $result["csfile_id"];
+                        $statistics = $db->GetRow($viewsSQL);
 
 						if ((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {
 							$accessible = false;
@@ -322,6 +404,10 @@ if ($RECORD_ID) {
 						echo "	</td>\n";
 						echo "	<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\"><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["owner_username"])."\" style=\"font-size: 10px\">".html_encode($result["owner"])."</a></td>\n";
 						echo "	<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\">".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</td>\n";
+                            if ($COMMUNITY_ADMIN) {
+                                echo "	<td class=\"accesses\" style=\"text-align: center\"><a href=\"#file-views\" onclick=\"openDialog('".ENTRADA_URL."/api/community-file-stats.api.php?action=file&module=".$module."&fid=".$result["csfile_id"]."')\" title=\"Click to see access log ".html_encode($statistics['views'])."\" style=\"font-weight: bold\">".html_encode($statistics['views'])."</a></td>\n";
+                            }                                      
+
 						echo "</tr>\n";
 					}
 					?>

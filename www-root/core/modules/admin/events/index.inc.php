@@ -269,6 +269,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=content&amp;id=".$result["event_id"]."\">Event Content</a></li>";
                     echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=attendance&amp;id=".$result["event_id"]."\">Event Attendance</a></li>";
                     echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=history&amp;id=".$result["event_id"]."\">Event History</a></li>";
+                    echo "          <li><a href=\"".ENTRADA_RELATIVE . "/admin/events?section=statistics&amp;id=".$result["event_id"]."\">Event Statistics</a></li>";
                     echo "      </ul>\n";
                     echo "  </div>\n";
                 } else {

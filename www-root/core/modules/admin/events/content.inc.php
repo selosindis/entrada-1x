@@ -313,8 +313,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 /**
                                  * Event Description
                                  */
-                                if (event_text_change($EVENT_ID,"event_description")) {
-                                    $history_texts .= "event description";
+                                
+                                $changed = false;
+                                $changed = md5_change_value($EVENT_ID, 'event_id', 'event_description', $_POST["event_description"], 'events');
+
+                                if ($changed) {
+                                    $history_texts .= "Event Description";
                                 }
                                 if ((isset($_POST["event_description"])) && (clean_input($_POST["event_description"], array("notags", "nows")))) {
                                     $event_description = clean_input($_POST["event_description"], array("allowedtags"));
@@ -325,11 +329,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 /**
                                  * Free-Text Objectives
                                  */
-                                if (event_text_change($EVENT_ID,"event_objectives")) {
+
+                                $changed = false;
+                                $changed = md5_change_value($EVENT_ID, 'event_id', 'event_objectives', $_POST["event_objectives"], 'events');
+                                if ($changed) {
                                     if (strlen($history_texts)>2) {
                                         $history_texts .= ":";
                                     }
-                                    $history_texts .= "event objectives";
+                                    $history_texts .= "Event Objectives";
                                 }
                                 if ((isset($_POST["event_objectives"])) && (clean_input($_POST["event_objectives"], array("notags", "nows")))) {
                                     $event_objectives = clean_input($_POST["event_objectives"], array("allowedtags"));
@@ -340,11 +347,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 /**
                                  * Required Preparation
                                  */
-                                if (event_text_change($EVENT_ID,"event_message")) {
+                                
+                                $changed = false;
+                                $changed = md5_change_value($EVENT_ID, 'event_id', 'event_message', $_POST["event_message"], 'events');
+                                
+                                if ($changed) {
                                     if (strlen($history_texts)>2) {
                                         $history_texts .= ":";
                                     }
-                                    $history_texts .= "Required Preparation";
+                                    $history_texts .= "Event Preparation";
                                 }
                                 if ((isset($_POST["event_message"])) && (clean_input($_POST["event_message"], array("notags", "nows")))) {
                                     $event_message = clean_input($_POST["event_message"], array("allowedtags"));
@@ -466,6 +477,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     $db->Execute($query);
                                                 }
                                             }
+                                            history_log($EVENT_ID, "deleted MeSH Keywords.", $PROXY_ID);
                                         }
                                     }
                                 }
@@ -484,6 +496,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     $db->Execute($query);
                                                 }
                                             }
+                                            history_log($EVENT_ID, "added MeSH Keywords.", $PROXY_ID);
                                         }
                                     }                                                                                                                             
                                 }
@@ -760,7 +773,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											}
 										}
 									}
-									history_log($EVENT_ID, "deleted ". count($FILE_IDS) ." resource files".($FILE_IDS>1?"s":""));
+									history_log($EVENT_ID, "deleted ". count($FILE_IDS) ." resource file".(count($FILE_IDS)>1?"s":""), $PROXY_ID);
 								}
 							}
 						break;
@@ -803,7 +816,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											}
 										}
 									}
-									history_log($EVENT_ID, "deleted ". count($LINK_IDS) ." resource files".($LINK_IDS>1?"s":""));
+									history_log($EVENT_ID, "deleted ". count($LINK_IDS) ." resource file".(count($LINK_IDS)>1?"s":""), $PROXY_ID);
 								}
 							}
 						break;
@@ -846,7 +859,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											}
 										}
 									}
-									history_log($EVENT_ID, "deleted ". count($QUIZ_IDS) ." ".($QUIZ_IDS>1?"zes":""));
+									history_log($EVENT_ID, "deleted ". count($QUIZ_IDS) ." quiz".(count($QUIZ_IDS)>1?"es":""), $PROXY_ID);
 								}
 							}
 						break;
@@ -1722,6 +1735,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 $filename	= $result["file_name"];
                                 $parts		= pathinfo($filename);
                                 $ext		= $parts["extension"];
+                                    $student_hidden = $result["student_hidden"];
+                                    if ($student_hidden) {
+                                        $image_src = $ext."_h";
+                                    } else {
+                                        $image_src = $ext;
+                                    }
+
+                                    $total_views_query = "SELECT SUM(a.`views`) AS `total_views` 
+										                  FROM
+														  (
+														      SELECT DISTINCT (stats.`proxy_id`), COUNT(*) AS `views` 
+															  FROM statistics AS stats, `".AUTH_DATABASE."`.`user_data` AS users 
+															  WHERE (stats.`module` = 'events' OR stats.`module` = 'podcasts')
+															  AND stats.`action` = 'file_download' 
+															  AND stats.`action_field` = 'file_id' 
+															  AND stats.`action_value` = ".$result["efile_id"]." 
+														      AND stats.`proxy_id` = users.`id` GROUP BY stats.proxy_id
+													      ) AS a";
+									$total_views = $db->GetOne($total_views_query);
 
                                 echo "<tr>\n";
                                 echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
@@ -1730,12 +1762,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 echo "	</td>\n";
                                 echo "	<td class=\"file-category\">".((isset($RESOURCE_CATEGORIES["event"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["event"][$result["file_category"]]) : "Unknown Category")."</td>\n";
                                 echo "	<td class=\"title\">\n";
-                                echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />";
-                                echo "		<a href=\"#file-listing\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-event.api.php?action=edit&id=".$EVENT_ID."&fid=".$result["efile_id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
+                                    echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$image_src."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($image_src)." Document\" style=\"vertical-align: middle\" />";
+                                    echo "		<a " . ($student_hidden ? "class='hidden_shares'" : "") . " href=\"#file-listing\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-event.api.php?action=edit&id=".$EVENT_ID."&fid=".$result["efile_id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
                                 echo "	</td>\n";
                                 echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
                                 echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
-                                echo "	<td class=\"accesses\" style=\"text-align: center\">".$result["accesses"]."</td>\n";
+                                    echo "	<td class=\"accesses\" style=\"text-align: center\"><a href=\"#file-views\" onclick=\"openDialog('".ENTRADA_URL."/api/file-stats.api.php?action=file&id=".$EVENT_ID."&fid=".$result["efile_id"]."')\" title=\"Click to see access log ".html_encode($total_views)."\" style=\"font-weight: bold\">".html_encode($total_views)."</a></td>\n";
                                 echo "</tr>\n";
                             }
                         } else {
@@ -1798,17 +1830,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         echo "<tbody>\n";
                         if ($results) {
                             foreach ($results as $result) {
+                                    $student_hidden = $result["student_hidden"];
+                                    if ($student_hidden) {
+                                        $link_src = "htmlh";
+                                    } else {
+                                        $link_src = "html";
+                                    }
                                 echo "<tr>\n";
                                 echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
                                 echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["elink_id"]."\" style=\"vertical-align: middle\" />\n";
                                 echo "		<a href=\"".ENTRADA_URL."/link-event.php?id=".$result["elink_id"]."\" target=\"_blank\"><img src=\"".ENTRADA_URL."/images/url-visit.gif\" width=\"16\" height=\"16\" alt=\"Visit ".html_encode($result["link"])."\" title=\"Visit ".html_encode($result["link"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
                                 echo "	</td>\n";
                                 echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-                                echo "		<a href=\"#link-listing\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-event.api.php?action=edit&id=".$EVENT_ID."&lid=".$result["elink_id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
+                                    echo "<img src='".ENTRADA_URL."/serve-icon.php?ext=" . $link_src . "' width='16' height='16' alt='".strtoupper($link_src)." Document' title='".strtoupper($link_src)." Document' style='vertical-align: middle; margin-right: 4px' />\n";
+                                    echo "		<a " . ($student_hidden ? "class='hidden_shares'" : "") . "  href=\"#link-listing\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-event.api.php?action=edit&id=".$EVENT_ID."&lid=".$result["elink_id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
                                 echo "	</td>\n";
                                 echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
                                 echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
-                                echo "	<td class=\"accesses\" style=\"text-align: center\">".$result["accesses"]."</td>\n";
+                                    echo "	<td class=\"accesses\" style=\"text-align: center\"><a href=\"#file-views\" onclick=\"openDialog('".ENTRADA_URL."/api/file-stats.api.php?action=link&id=".$EVENT_ID."&fid=".$result["elink_id"]."')\" title=\"Click to see access log ".html_encode($result["accesses"])."\" style=\"font-weight: bold\">".html_encode($result["accesses"])."</a></td>\n";                                                                
                                 echo "</tr>\n";
                             }
                         } else {

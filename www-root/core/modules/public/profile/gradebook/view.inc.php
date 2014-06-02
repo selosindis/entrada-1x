@@ -108,6 +108,7 @@ if ($COURSE_ID) {
 			<tbody>
 			<?php
 			foreach ($results as $result) {
+                add_statistic("gradebook", "view", "assessment_id", $result["assessment_id"]);
 				if (isset($result["value"])) {
 					$grade_value = format_retrieved_grade(round($result["value"], 2), $result);
 				} else {

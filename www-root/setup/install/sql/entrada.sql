@@ -2331,6 +2331,7 @@ CREATE TABLE IF NOT EXISTS `evaluations_lu_questions` (
   `questiontype_id` int(12) NOT NULL,
   `question_code` varchar(48) DEFAULT NULL,
   `question_text` longtext NOT NULL,
+  `question_description` longtext DEFAULT NULL,
   `allow_comments` tinyint(1) NOT NULL DEFAULT '1',
   `question_active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`equestion_id`)
@@ -4340,7 +4341,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 
 INSERT INTO `settings` (`shortname`, `organisation_id`, `value`)
   VALUES
-  ('version_db', NULL, '1610'),
+  ('version_db', NULL, '1611'),
   ('version_entrada', NULL, '1.6.0DEV'),
   ('export_weighted_grade', NULL, '1'),
   ('export_calculated_grade', NULL, '{\"enabled\":0}');

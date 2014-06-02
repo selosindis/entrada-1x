@@ -215,6 +215,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						}
 
 						$PROCESSED["evaluation_rubric_categories"][$i]["category"] = $category;
+                        if (isset($_POST["category_description"][$i]) && ($tmp_input = clean_input($_POST["category_description"][$i], array("trim", "notags")))) {
+                            $PROCESSED["evaluation_rubric_categories"][$i]["category_description"] = $tmp_input;
+                        }
 						$PROCESSED["evaluation_rubric_categories"][$i]["category_order"] = $i;
 						$PROCESSED["evaluation_rubric_categories"][$i]["objective_ids"] = array();
 						if ((isset($_POST["objective_ids_".$i])) && (is_array($_POST["objective_ids_".$i]))) {
@@ -293,6 +296,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								$PROCESSED_QUESTION = array("questiontype_id" => 3,
 															"question_text" => $category["category"],
 															"question_code" => $category["category"],
+                                                            "question_description" => (isset($category["category_description"]) && $category["category_description"] ? $category["category_description"] : NULL),
 															"organisation_id" => $ENTRADA_USER->getActiveOrganisation(),
 															"allow_comments" => $PROCESSED["allow_comments"]);
 								$equestion_id = 0;

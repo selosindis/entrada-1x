@@ -620,7 +620,7 @@ if ($RECORD_ID) {
                                     if (in_array($PROCESSED["target_shortname"], array("preceptor", "teacher", "peer", "resident"))) {
                                         $HEAD[] = "
                                                     <script type=\"text/javascript\">
-                                                        function fetchTargetDetails(etarget_id) {
+                                                        function fetchTargetDetails(id, id_name) {
                                                             ".($PROCESSED["target_shortname"] == "preceptor" ? "
                                                             var preceptor_evaluation = jQuery('#event_id').val();
                                                             if(etarget_id == 'other') {
@@ -630,8 +630,10 @@ if ($RECORD_ID) {
                                                                 $('other_teacher_layer').style.display = 'none';
                                                                 " : "var preceptor_evaluation = false;
                                                             ")."
-                                                                if (etarget_id && parseInt(etarget_id) == etarget_id) {
-                                                                    jQuery('#target-details-holder').load('".ENTRADA_URL."/evaluations?section=api-target-info&id=".$RECORD_ID."', {'etarget_id' : etarget_id, 'eevaluator_id' : '".$PROCESSED["eevaluator_id"]."', 'erequest_id' : ".(isset($evaluation_request) && $evaluation_request ? "'".$evaluation_request["erequest_id"]."'" : "false").", 'ajax' : true, 'preceptor_evaluation' : preceptor_evaluation} );
+                                                                var etarget_id = (id_name == 'evaluation_target' ? id : false);
+                                                                var proxy_id = (id_name == 'proxy_id' ? id : false);
+                                                                if (((etarget_id && parseInt(etarget_id) == etarget_id) || (proxy_id && parseInt(proxy_id) == proxy_id))) {
+                                                                    jQuery('#target-details-holder').load('".ENTRADA_URL."/evaluations?section=api-target-info&id=".$RECORD_ID."', {'etarget_id' : etarget_id, 'eevaluator_id' : '".$PROCESSED["eevaluator_id"]."', 'erequest_id' : ".(isset($evaluation_request) && $evaluation_request ? "'".$evaluation_request["erequest_id"]."'" : "false").", 'preceptor_evaluation' : preceptor_evaluation, 'proxy_id' : proxy_id} );
                                                                 }
                                                             ".($PROCESSED["target_shortname"] == "preceptor" ? "}" : "")."
                                                             return;
@@ -687,7 +689,7 @@ if ($RECORD_ID) {
 											}
 										} elseif ($PROCESSED["target_shortname"] == "teacher") {
 											echo "<div class=\"content-small\">Please choose a teacher to evaluate: \n";
-											echo "<select id=\"evaluation_target\" name=\"evaluation_target\" onchange=\"fetchTargetDetails(jQuery(this).val())\">";
+											echo "<select id=\"evaluation_target\" name=\"evaluation_target\" onchange=\"fetchTargetDetails(jQuery(this).val(), 'evaluation_target')\">";
 											echo "<option value=\"0\">-- Select a teacher --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
@@ -734,7 +736,7 @@ if ($RECORD_ID) {
 										} elseif ($PROCESSED["target_shortname"] == "peer" || $PROCESSED["target_shortname"] == "student") {
 											echo "<div class=\"content-small\">Please choose a learner to assess: \n";
 											echo "<input type=\"hidden\" id=\"evaluation_target\" name=\"evaluation_target\" value=\"".$evaluation_targets[0]["etarget_id"]."\" />";
-											echo "<select id=\"target_record_id\" name=\"target_record_id\" onchange=\"fetchTargetDetails(this.value)\">";
+											echo "<select id=\"target_record_id\" name=\"target_record_id\" onchange=\"fetchTargetDetails(this.value, 'proxy_id')\">";
 											echo "<option value=\"0\">-- Select a learner --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
@@ -749,7 +751,7 @@ if ($RECORD_ID) {
                                             echo "      Please choose a resident to evaluate:\n";
                                             echo "  </label>\n";
                                             echo "  <span class=\"span5\">\n";
-                                            echo "      <select id=\"evaluation_target\" name=\"evaluation_target\" onchange=\"fetchTargetDetails(this.value)\">";
+                                            echo "      <select id=\"evaluation_target\" name=\"evaluation_target\" onchange=\"fetchTargetDetails(this.value, 'evaluation_target')\">";
 											echo "          <option value=\"0\">-- Select a resident --</option>\n";
 											foreach ($evaluation_targets as $evaluation_target) {
 												if (!isset($evaluation_target["eprogress_id"]) || !$evaluation_target["eprogress_id"]) {
@@ -785,10 +787,10 @@ if ($RECORD_ID) {
                                     if (isset($PROCESSED["etarget_id"]) && $PROCESSED["etarget_id"]) {
                                         if ($PROCESSED["target_shortname"] == "preceptor") {
                                             if (isset($PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) && $PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]) {
-                                                $ONLOAD[] = "fetchTargetDetails(".((int)$PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]).");";
+                                                $ONLOAD[] = "fetchTargetDetails(".((int)$PROCESSED_CLERKSHIP_EVENT["preceptor_proxy_id"]).", 'proxy_id');";
                                             }
-                                        } else {
-                                            $ONLOAD[] = "fetchTargetDetails(".((int)$PROCESSED["etarget_id"]).");";
+                                        } elseif (in_array($PROCESSED["target_shortname"], array("peer", "student", "resident", "teacher"))) {
+                                            $ONLOAD[] = "fetchTargetDetails(".((int)$PROCESSED["target_record_id"]).", 'proxy_id');";
                                         }
                                     }
                                     if ($PROCESSED["target_shortname"] == "preceptor") {

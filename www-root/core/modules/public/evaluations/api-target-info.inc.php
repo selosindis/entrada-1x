@@ -30,12 +30,7 @@
  * @version $Id: save-response.inc.php 1170 2010-05-01 14:35:01Z simpson $
  *
 */
-if (isset($_POST["ajax"]) && $_POST["ajax"]) {
-    ob_clear_open_buffers();
-    $ajax = true;
-} else {
-    $ajax = false;
-}
+ob_clear_open_buffers();
 
 if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 	/**
@@ -52,30 +47,34 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 }
 
 if ($RECORD_ID) {
-    if ($ajax) {
-        if (isset($_POST["etarget_id"]) && ($tmp_input = clean_input($_POST["etarget_id"], "int"))) {
-            $etarget_id = $tmp_input;
-        }
-        if (isset($_POST["eevaluator_id"]) && ($tmp_input = clean_input($_POST["eevaluator_id"], "int"))) {
-            $eevaluator_id = $tmp_input;
-        }
-        if (isset($_POST["erequest_id"]) && ($tmp_input = clean_input($_POST["erequest_id"], "int"))) {
-            $erequest_id = $tmp_input;
-        } else {
-            $erequest_id = false;
-        }
-        if (isset($_POST["preceptor_evaluation"]) && ($tmp_input = clean_input($_POST["preceptor_evaluation"], "int"))) {
-            $preceptor_evaluation = $tmp_input;
-        } else {
-            $preceptor_evaluation = false;
-        }
+    if (isset($_POST["etarget_id"]) && ($tmp_input = clean_input($_POST["etarget_id"], "int"))) {
+        $etarget_id = $tmp_input;
+    }
+    if (isset($_POST["proxy_id"]) && ($tmp_input = clean_input($_POST["proxy_id"], "int"))) {
+        $proxy_id = $tmp_input;
+    }
+    if (isset($_POST["eevaluator_id"]) && ($tmp_input = clean_input($_POST["eevaluator_id"], "int"))) {
+        $eevaluator_id = $tmp_input;
+    }
+    if (isset($_POST["erequest_id"]) && ($tmp_input = clean_input($_POST["erequest_id"], "int"))) {
+        $erequest_id = $tmp_input;
+    } else {
+        $erequest_id = false;
+    }
+    if (isset($_POST["preceptor_evaluation"]) && ($tmp_input = clean_input($_POST["preceptor_evaluation"], "int"))) {
+        $preceptor_evaluation = $tmp_input;
+    } else {
+        $preceptor_evaluation = false;
     }
 
-	if (isset($etarget_id) && $etarget_id && isset($eevaluator_id) && $eevaluator_id) {
+	if (((isset($etarget_id) && $etarget_id) || (isset($proxy_id) && $proxy_id)) && isset($eevaluator_id) && $eevaluator_id) {
         $evaluation_targets = Models_Evaluation::getTargetsArray($RECORD_ID, $eevaluator_id, $ENTRADA_USER->getID(), false, true, false, $erequest_id);
         foreach ($evaluation_targets as $evaluation_target) {
             if (!isset($preceptor_evaluation) || !$preceptor_evaluation) {
-                if (isset($evaluation_target["etarget_id"]) && $evaluation_target["etarget_id"] == $etarget_id) {
+                if (isset($proxy_id) && $proxy_id && isset($evaluation_target["proxy_id"]) && $evaluation_target["proxy_id"] == $proxy_id) {
+                    $found = true;
+                    break;
+                } elseif (isset($etarget_id) && $etarget_id && isset($evaluation_target["etarget_id"]) && $evaluation_target["etarget_id"] == $etarget_id) {
                     $proxy_id = $evaluation_target["proxy_id"];
                     $found = true;
                     break;
@@ -83,8 +82,7 @@ if ($RECORD_ID) {
             } elseif ($preceptor_evaluation == $evaluation_target["event_id"]) {
                 $preceptors = Models_Evaluation::getPreceptorArray($RECORD_ID, $preceptor_evaluation, $ENTRADA_USER->getID());
                 foreach ($preceptors as $preceptor) {
-                    if ($preceptor["proxy_id"] == $etarget_id) {
-                        $proxy_id = $etarget_id;
+                    if ($preceptor["proxy_id"] == $proxy_id) {
                         $found = true;
                         break;
                     }
@@ -231,6 +229,4 @@ if ($RECORD_ID) {
 		}
 	}
 }
-if ($ajax) {
-    exit;
-}
+exit;

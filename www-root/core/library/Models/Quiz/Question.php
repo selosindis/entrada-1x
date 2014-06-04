@@ -49,7 +49,7 @@ class Models_Quiz_Question extends Models_Base {
 
         $query = "SELECT a.* 
                     FROM `quiz_questions` AS a
-                    WHERE a.`quiz_id` = ? AND a.`question_active` = ? AND (a.`qquestion_group_id` IS NULL OR a.`qquestion_group_id` = '0')
+                    WHERE a.`quiz_id` = ? AND a.`question_active` = ?
                     ORDER BY a.`question_order`";
         $results = $db->GetAll($query, array($quiz_id, $question_active));
         
@@ -63,16 +63,62 @@ class Models_Quiz_Question extends Models_Base {
         return $output;
     }
     
-    public static function fetchGroupedQuestions($qquestion_group_id, $question_active = 1) {
+    public static function fetchAllMCQ($quiz_id, $question_active = 1) {
+        global $db;
+        
+        $output = false;
+        
+        $query = "SELECT a.*
+                    FROM `quiz_questions` AS a
+                    WHERE a.`quiz_id` = ?
+                    AND a.`question_active` = ?
+                    AND a.`questiontype_id` = '1'
+                    ORDER BY `question_order` ASC";
+        $results = $db->GetAll($query, array($quiz_id, $question_active));
+        if ($results) {
+            foreach ($results as $result) {
+                if (!is_null($result["qquestion_group_id"])) {
+                    $output[$result["qquestion_group_id"]][] = new self($result);
+                } else {
+                    $output[$result["qquestion_id"]][] = new self($result);
+                }
+            }
+        }
+        return $output;
+    }
+    
+    public static function fetchNonMCQ($quiz_id, $question_active = 1) {
+        global $db;
+        
+        $output = false;
+        
+        $query = "SELECT a.*
+                    FROM `quiz_questions` AS a
+                    WHERE a.`quiz_id` = ?
+                    AND a.`question_active` = ?
+                    AND a.`questiontype_id` != '1'
+                    ORDER BY `question_order` ASC";
+        $results = $db->GetAll($query, array($quiz_id, $question_active));
+        if ($results) {
+            foreach ($results as $result) {
+                $output[$result["question_order"]] = new self($result);
+            }
+        }
+        return $output;
+    }
+    
+    public static function fetchGroupedQuestions($quiz_id, $question_active = 1) {
         global $db;
         
         $output = false;
 
-        $query = "SELECT a.* 
+        $query = "SELECT a.*
                     FROM `quiz_questions` AS a
-                    WHERE a.`qquestion_group_id` = ? AND a.`question_active` = ?
-                    ORDER BY a.`question_order`";
-        $results = $db->GetAll($query, array($qquestion_group_id, $question_active));
+                    WHERE a.`quiz_id` = ?
+                    AND a.`question_active` = ?
+                    AND a.`questiontype_id` = '1'
+                    ORDER BY `question_order` ASC";
+        $results = $db->GetAll($query, array($quiz_id, $question_active));
         if (!empty($results)) {
             $output = array();
             foreach ($results as $result) {

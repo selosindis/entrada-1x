@@ -66,6 +66,25 @@ class Models_Quiz_Progress extends Models_Base {
         return $output;
     }
     
+    public static function fetchRowByAquizIDProxyID($aquiz_id, $proxy_id, $progress_value = "inprogress") {
+        global $db;
+        
+        $output = false;
+        
+        $query = "SELECT *
+                    FROM `quiz_progress`
+                    WHERE `aquiz_id` = ?
+                    AND `proxy_id` = ?
+                    AND `progress_value` = ?
+                    ORDER BY `updated_date` ASC";
+        $result = $db->GetRow($query, array($aquiz_id, $proxy_id, $progress_value));
+        if ($result) {
+            $output = new self($result);
+        }
+        
+        return $output;
+    }
+    
     public function getQprogressID() {
         return $this->qprogress_id;
     }
@@ -108,6 +127,38 @@ class Models_Quiz_Progress extends Models_Base {
 
     public function getUpdatedBy() {
         return $this->updated_by;
+    }
+    
+    public function insert() {
+        global $db;
+        
+        if ($db->AutoExecute($this->table_name, $this->toArray(), "INSERT")) {
+            $this->qprogress_id = $db->Insert_ID();
+            return $this;
+        } else {
+            return false;
+        }
+    }
+    
+    public function update() {
+        global $db;
+        
+        if ($db->AutoExecute($this->table_name, $this->toArray(), "UPDATE", "`qprogress_id` = ".$db->qstr($this->qprogress_id))) {
+            return $this;
+        } else {
+            return false;
+        }
+    }
+    
+    public function delete() {
+        global $db;
+        
+        $query = "DELETE FROM `".$this->table_name."` WHERE `qprogress_id` = ?";
+        if ($db->Execute($query, $this->qprogress_id)) {
+            return true;
+        } else {
+            return false;
+        }
     }
     
 }

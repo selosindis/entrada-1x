@@ -72,8 +72,8 @@ class Models_Quiz_Attached_Event extends Models_Quiz_Attached {
                     WHERE a.`aquiz_id` = ".$db->qstr($aquiz_id)."
                     AND c.`course_active` = '1'
                     ORDER BY b.`event_start` DESC";
-        $results = $db->GetRow($query);
-        if ($results) {
+        $result = $db->GetRow($query);
+        if ($result) {
             $output = new self($result);
         }
         

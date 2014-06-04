@@ -138,9 +138,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                         add_error("Invalid order number.");
                     }
                     
+                    if(isset(${$request_var}["group"]) && $tmp_input = clean_input(${$request_var}["group"], "int")) {
+						$PROCESSED["qquestion_group_id"] = $tmp_input;
+					} else {
+                        $PROCESSED["qquestion_group_id"] = NULL;
+                    }
+                    
                     if (!$ERROR) {
                         $qquestion = Models_Quiz_Question::fetchRowByID($PROCESSED["qquestion_id"]);
-                        if ($qquestion->fromArray(array("question_order" => $PROCESSED["question_order"]))->update()) {
+                        if ($qquestion->fromArray(array("question_order" => $PROCESSED["question_order"], "qquestion_group_id" => $PROCESSED["qquestion_group_id"]))->update()) {
                             echo json_encode(array("status" => "success", "data" => array("qquestion_id" => $qquestion->getQquestionID(), "question_order" => $qquestion->getQuestionOrder())));
                         } else {
                             echo json_encode(array("status" => "error", "data" => array("Failed to update quiz question order.")));
@@ -149,38 +155,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                     
                 break;
                 case "delete-question" :
-                    if(isset(${$request_var}["qquestion_id"]) && $tmp_input = clean_input(${$request_var}["qquestion_id"], "int")) {
-						$PROCESSED["qquestion_id"] = $tmp_input;
+                    if(isset(${$request_var}["qquestion_ids"])) {
+						$question_ids = explode(",", ${$request_var}["qquestion_ids"]);
+                        if (!empty($question_ids)) {
+                            foreach ($question_ids as $question_id) {
+                                $tmp_input = clean_input($question_id, "int");
+                                if ($tmp_input) {
+                                    $PROCESSED["qquestion_ids"][] = $tmp_input;
+                                } else {
+                                    add_error("Invalid quiz question ID");
+                                    application_log("API passed [".$question_id."] which is an invalid question ID.");
+                                }
+                            }
+                        } else {
+                            add_error("No question IDs were passed to delete.");
+                        }
 					} else {
                         add_error("Invalid quiz question ID.");
                     }
                     
-                    if (!$ERROR) {
-                        $qquestion = Models_Quiz_Question::fetchRowByID($PROCESSED["qquestion_id"]);
-                        if ($qquestion->fromArray(array("question_active" => "0"))->update()) {
-                            if ($qquestion->getQuestionTypeID() == 4) {
-                                $grouped_qquestions = Models_Quiz_Question::fetchGroupedQuestions($PROCESSED["qquestion_id"]);
-                                if ($grouped_qquestions) {
-                                    // delete any grouped questions
-                                    foreach ($grouped_qquestions as $qquestion) {
-                                        if (!$qquestion->fromArray(array("question_active" => "0"))->update()) {
-                                            add_error("Failed to deactivate grouped question.");
-                                            applicaiton_log("Failed to deactivate grouped quiz question, DB said: ".$db->ErrorMsg());
-                                        }
-                                    }
-                                }
+                    if (!$ERROR && !empty($PROCESSED["qquestion_ids"])) {
+                        foreach ($PROCESSED["qquestion_ids"] as $question_id) {
+                            $qquestion = Models_Quiz_Question::fetchRowByID($question_id);
+                            if (!$qquestion->fromArray(array("question_active" => "0"))->update()) {
+                                add_error("Failed to deactivate question.");
+                                applicaiton_log("Failed to deactivate quiz question, DB said: ".$db->ErrorMsg());
                             }
-                        } else {
-                            add_error("Failed to deactivate question.");
-                            applicaiton_log("Failed to deactivate quiz question, DB said: ".$db->ErrorMsg());
                         }
                         
                         if (!$ERROR) {
-                            echo json_encode(array("status" => "success", "data" => array("qquestion_id" => $qquestion->getQquestionID())));
+                            echo json_encode(array("status" => "success", "data" => array("qquestion_ids" => $PROCESSED["qquestion_ids"])));
                         } else {
                             echo json_encode(array("status" => "error", "data" => array("Failed to delete quiz question.")));
                         }
-                        
                     }
                 break;
             }

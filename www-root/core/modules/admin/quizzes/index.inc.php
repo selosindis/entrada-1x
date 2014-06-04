@@ -51,7 +51,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
         $quiz_data[$i]["quiz_title"]        = $quiz->getQuizTitle();
         $quiz_data[$i]["question_total"]    = count($quiz->getQuizQuestions());
         $quiz_data[$i]["quiz_status"]       = $quiz->getQuizActive() ? "Active" : "Disabled";
-        $quiz_data[$i]["quiz_author"]       = $quiz->getQuizAuthor()->getFullName(false);
+        $quiz_data[$i]["quiz_author"]       = $quiz->getQuizAuthor() ? $quiz->getQuizAuthor()->getFullName(false) : "";
         $quiz_data[$i]["updated_date"]      = $quiz->getUpdatedDate();
         $i++;
     }

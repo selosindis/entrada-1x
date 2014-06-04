@@ -161,6 +161,11 @@ class Models_Event extends Models_Base {
         return $this->updated_by;
     }
     
+    public static function get($event_id = null) {
+        $self = new self();
+        return $self->fetchRow(array("event_id" => $event_id));
+    }
+    
     public function fetchAllByCourseID($course_id = null) {
         return $this->fetchAll(array("course_id" => $course_id));
     }
@@ -177,15 +182,49 @@ class Models_Event extends Models_Base {
     }
     
     public function fetchAllByCourseIdTitle($course_id = null, $title = null) {
-        return $this->fetchAll(
-            array(
-                array("key" => "course_id", "value" => $course_id, "method" => "="),
-                array("mode" => "AND", "key" => "event_title", "value" => "%".$title."%", "method" => "LIKE"),
-                //array("mode" => "AND", "key" => "parent_id", "value" => "0", "method" => "="),
-                //array("mode" => "OR", "key" => "parent_id", "value" => NULL, "method" => "="),
-                "=", "AND", "event_start"
-            )
-        );
+        global $db;
+        $events = false;
+        
+        $query = "  SELECT * FROM `events` 
+                    WHERE  `course_id` = ?
+                    AND `event_title` LIKE ?
+                    AND (`parent_id` = ? OR `parent_id` IS NULL)
+                    ORDER BY `event_start` ASC";
+        
+        $results = $db->GetAll($query, array($course_id, "%".$title."%", "0"));
+        
+        if ($results) {
+            foreach ($results as $result) {
+                $event = new self($result);
+                $events[] = $event;
+            }
+        }
+        
+        return $events;
+    }
+    
+    public function fetchAllByCourseIdTitleDates($course_id = null, $title = null, $cperiod_start_date = null, $cperiod_finish_date = null) {
+        global $db;
+        $events = false;
+        
+        $query = "  SELECT * FROM `events` 
+                    WHERE  `course_id` = ?
+                    AND `event_title` LIKE ?
+                    AND `event_start` >= ?
+                    AND `event_finish` <= ?
+                    AND (`parent_id` = ? OR `parent_id` IS NULL)
+                    ORDER BY `event_start` ASC";
+        
+        $results = $db->GetAll($query, array($course_id, "%".$title."%", $cperiod_start_date, $cperiod_finish_date, "0"));
+        
+        if ($results) {
+            foreach ($results as $result) {
+                $event = new self($result);
+                $events[] = $event;
+            }
+        }
+        
+        return $events;
     }
 }
 ?>

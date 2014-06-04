@@ -102,7 +102,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                     if(isset(${$request_var}["title"]) && $tmp_input = clean_input(${$request_var}["title"], array("trim", "striptags"))) {
 						$title = $tmp_input;
 					} else {
-						add_error("No event title provided.");
+						add_error("To search for learning events, begin typing the title of the event you wish to find in the search box.");
 					}
                     
                     if(isset(${$request_var}["course_id"]) && $tmp_input = clean_input(${$request_var}["course_id"], array("trim", "int"))) {
@@ -111,9 +111,29 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						add_error("No course ID provided.");
 					}
                     
+                    if(isset(${$request_var}["audience"]) && $tmp_input = clean_input(${$request_var}["audience"], array("trim", "int"))) {
+						$audience = $tmp_input;
+					} else {
+						add_error("No audience ID provided.");
+					}
+                    
                     if (!$ERROR) {
+                        
+                        $ca = new Models_Course_Audience();
+                        $course_audience = $ca->fetchRowByCourseIDAudienceTypeAudienceValue($course_id, "group_id", $audience);
+                        
+                        if ($course_audience) {
+                            $curriculum_period = $course_audience->getCurriculumPeriod($course_audience->getCperiodID());
+                        }
+                        
                         $e = new Models_Event();
-                        $events = $e->fetchAllByCourseIdTitle($course_id, $title);
+                        
+                        if ($curriculum_period) {
+                            $events = $e->fetchAllByCourseIdTitleDates($course_id, $title, $curriculum_period->getStartDate(), $curriculum_period->getFinishDate());
+                        } else {
+                            $events = $e->fetchAllByCourseIdTitle($course_id, $title);
+                        }
+                        
                         if ($events) {
                             $events_array = array();
                             foreach ($events as $event) {
@@ -153,7 +173,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                 echo json_encode(array("status" => "error", "data" => "No curriculum period found."));
                             }
                         } else {
-                            echo json_encode(array("status" => "error", "data" => "No course audience found."));
+                            echo json_encode(array("status" => "no_cperiod", "data" => array("current_date" => date("y-m-d", time()))));
                         }
                     }
                 break;

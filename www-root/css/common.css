@@ -4617,8 +4617,8 @@ th.sorting {
 }
 
 #event-modal .modal-body {
-    height:620px;
-    max-height:620px !important;
+    height:450px;
+    max-height:450px !important;
     overflow: hidden;
 }
 
@@ -4627,7 +4627,7 @@ th.sorting {
     text-align: center;
 }
 
-#event-modal #events-list, #event-modal #events-search-list {
+#event-modal #events-list, #event-modal #events-search-list, #attached-event-list {
     list-style-type: none;
     margin-left: 0;
 }
@@ -4646,17 +4646,18 @@ th.sorting {
 
 #event-modal #events-search-wrap {
     margin: auto;
-    max-height: 500px;
+    max-height: 380px;
     overflow-y: scroll;
     overflow: -moz-scrollbars-vertical;
-    width: 90%;
+    width: 91%;
 }
 
 #event-modal #events-list, #event-modal #events-search-list {
     margin-bottom: 15px;
+    width:100%;
 }
 
-#event-modal #events-list li, #event-modal #events-search-list li {
+#event-modal #events-list li, #event-modal #events-search-list li, #attached-events-list li {
     padding: 1px 15px 8px 15px;
     border-bottom: 1px solid #eaeaea;
     cursor: pointer;
@@ -4674,7 +4675,7 @@ th.sorting {
     background: #f6f6f6;
 }
 
-#event-modal #events-list h3, #event-modal #events-search-list h3 {
+#event-modal #events-list h3, #event-modal #events-search-list h3, #attached-event-list h3 {
     margin-bottom: 0;
     line-height: 19px;
 }
@@ -4757,4 +4758,16 @@ th.sorting {
     margin-bottom:15px;
     padding:7px 30px 7px 16px;
     width: 82%;
+}
+
+#remove-attched-assessment-event {
+   display: inline-block;
+   margin-right: 5px;
+   padding:3px 5px;
+   cursor: pointer;
+}
+
+#remove-attched-assessment-event-div {
+    float:left;
+    height:80px;
 }

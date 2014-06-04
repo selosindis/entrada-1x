@@ -62,14 +62,40 @@ class Models_Assessment_AssessmentEvent extends Models_Base {
         return $this->active;
     }
     
+    public function setActive($active = 1) {
+        $this->active = $active;
+    }
+    
+    public static function getEvent($event_id = null) {
+        return Models_Event::get($event_id);
+    }
+    
+    public static function fetchRowByAssessmentID ($assessment_id = null) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "assessment_id", "value" => $assessment_id, "method" => "="),
+            array("mode" => "AND", "key" => "active", "value" => 1, "method" => "=")    
+        ));
+    }
+    
     public function insert() {
 		global $db;
 		
-		if ($db->AutoExecute("`event_assessments`", $this->toArray(), "INSERT")) {
+		if ($db->AutoExecute("`assessment_events`", $this->toArray(), "INSERT")) {
 			return true;
 		} else {
 			return false;
 		}
     }
+    
+    public function update() {
+		global $db;
+        
+		if ($db->AutoExecute("`assessment_events`", $this->toArray(), "UPDATE", "`assessment_event_id` = ".$db->qstr($this->getID()))) {
+			return true;
+		} else {
+			return false;
+		}
+	}
 }
 ?>

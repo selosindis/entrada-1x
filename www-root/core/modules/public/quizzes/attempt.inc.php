@@ -482,13 +482,18 @@ if ($RECORD_ID) {
                                             }
                                             
                                             foreach ($questions as $q_key => $question) {
-                                                if (is_null($output[$q_key]->getQquestionGroupID())) {
+                                                if (!is_null($question->getQquestionGroupID())) {
                                                     array_splice($output, $q_key, 0, array($question));
-                                                } else {
-                                                    for ($i = $q_key - 1; $i <= count($output); $i++) {
-                                                        if(is_null($output[$i]->getQquestionGroupID())) {
-                                                            array_splice($output, ($i), 0, array($question));
-                                                            break;
+                                                } else { 
+                                                    if (is_null($output[$q_key]->getQquestionGroupID())) {
+                                                        array_splice($output, $q_key, 0, array($question));
+                                                    } else {
+                                                        for ($i = $q_key - 1; $i <= count($output); $i++) {
+                                                            var_dump($i);
+                                                            if(is_null($output[$i]->getQquestionGroupID())) {
+                                                                array_splice($output, ($i), 0, array($question));
+                                                                break;
+                                                            }
                                                         }
                                                     }
                                                 }

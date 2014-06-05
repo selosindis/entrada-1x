@@ -16064,7 +16064,7 @@ function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessme
                 if(isset($grade["value"])) {
                     $grade_value = format_retrieved_grade($grade["value"], $assessment);
                     $weighted_total += $grade_weighting;
-                    $weighted_grade += (($assessment["handler"] == "Numeric" ? ($grade_value / $assessment["numeric_grade_points_total"]) : (($assessment["handler"] == "Percentage" ? ((float)$grade_value / 100.0) : $grade_value)))) * $grade_weighting;
+                    $weighted_grade += (($assessment["handler"] == "Numeric" ? ($grade_value / $assessment["numeric_grade_points_total"]) : (($assessment["handler"] == "Percentage" ? ((float)$grade_value / 100.0) : ($assessment["handler"] == "IncompleteComplete" ? ($grade_value == "C" ? 100 : 0) / 100 : $grade_value))))) * $grade_weighting;
                 }
             }
         }

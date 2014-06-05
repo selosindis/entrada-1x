@@ -25,9 +25,9 @@
 	{$page_head}
 
 	<style type="text/css">
-	#site-header {literal}{{/literal}
+	#site-header {
 		background: transparent url('{$template_relative}/images/header-{$site_theme}.gif') no-repeat bottom;
-	{literal}}{/literal}
+	}
 	</style>
 </head>
 <body>
@@ -79,22 +79,22 @@
 			</div>
 			<div class="footer span9">
 				<div class="content-copyright">
-					{php}echo COPYRIGHT_STRING;{/php}
+                    {$copyright_string}
 				</div>
 			</div>
 		</div>
 	</div>
 </div>
-{php}if(((!defined("DEVELOPMENT_MODE")) || (!(bool) DEVELOPMENT_MODE)) && (defined("GOOGLE_ANALYTICS_CODE")) && (GOOGLE_ANALYTICS_CODE != "")) :{/php}
-<script type="text/javascript">
-	var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
-	document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
-</script>
-<script type="text/javascript">
-	var pageTracker = _gat._getTracker("{php} echo GOOGLE_ANALYTICS_CODE;{/php}");
-	pageTracker._initData();
-	pageTracker._trackPageview();
-</script>
-{php}endif;{/php}
+{if !$development_mode && $google_analytics_code}
+    <script type="text/javascript">
+        var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+        document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+    </script>
+    <script type="text/javascript">
+        var pageTracker = _gat._getTracker("{$google_analytics_code}");
+        pageTracker._initData();
+        pageTracker._trackPageview();
+    </script>
+{/if}
 </body>
 </html>

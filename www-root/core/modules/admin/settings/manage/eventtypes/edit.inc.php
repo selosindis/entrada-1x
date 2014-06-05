@@ -134,16 +134,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		case 1 :
 		default :
 
-			
-			$query = "SELECT * FROM `events_lu_eventtypes` WHERE `eventtype_id` = ".$db->qstr($PROCESSED["eventtype_id"]);
-			$result = $db->GetRow($query);
-			if($result){
-				$PROCESSED["eventtype_title"] = $result["eventtype_title"];
-				$PROCESSED["eventtype_description"] = $result["eventtype_description"];				
-			}
+			$event_type = Models_Event_EventType::get($PROCESSED["eventtype_id"]);
 
-			
-			
 		break;
 	}
 
@@ -169,38 +161,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			}
 						
 			?>
-			<form action="<?php echo ENTRADA_URL."/admin/settings/manage/eventtypes"."?".replace_query(array("action" => "edit", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
-			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Page">
-			<colgroup>
-				<col style="width: 30%" />
-				<col style="width: 70%" />
-			</colgroup>
-			<thead>
-				<tr>
-					<td colspan="2"><h1>Event Type Details</h1></td>
-				</tr>
-			</thead>
-			<tfoot>
-				<tr>
-					<td colspan="2" style="padding-top: 15px; text-align: right">
-						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/eventtypes?org=<?php echo $ORGANISATION_ID;?>'" />
-                        <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td><label for="eventtype_title" class="form-required">Event Type	 Name:</label></td>
-					<td><input type="text" id="eventtype_title" name="eventtype_title" value="<?php echo ((isset($PROCESSED["eventtype_title"])) ? html_encode($PROCESSED["eventtype_title"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
-				</tr>
-				<tr>
-					<td style="vertical-align: top;"><label for="eventtype_description" class="form-nrequired">Event Type Description: </label></td>
-					<td>
-						<textarea id="eventtype_description" name="eventtype_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ((isset($PROCESSED["eventtype_description"])) ? html_encode($PROCESSED["eventtype_description"]) : ""); ?></textarea>
-					</td>
-				</tr>
-			</tbody>
-			</table>
+			<form class="form-horizontal" action="<?php echo ENTRADA_URL."/admin/settings/manage/eventtypes"."?".replace_query(array("action" => "edit", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
+                <div class="control-group">
+                    <label for="eventtype_title" class="form-required control-label">Event Type Name:</label>
+                    <div class="controls">
+                        <input type="text" id="eventtype_title" name="eventtype_title" value="<?php echo html_encode($event_type->getEventTypeTitle()); ?>" maxlength="60" />
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="eventtype_description" class="form-nrequired control-label">Event Type Description: </label>
+                    <div class="controls">
+                        <textarea id="eventtype_description" name="eventtype_description" style="width: 98%; height: 200px"><?php echo html_encode($event_type->getEventTypeDescription()); ?></textarea>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/eventtypes?org=<?php echo $ORGANISATION_ID;?>'" />
+                    <input type="submit" class="btn btn-primary pull-right" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+                </div>
 			</form>
 			<?php
 		break;

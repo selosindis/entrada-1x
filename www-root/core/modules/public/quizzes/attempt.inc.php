@@ -455,52 +455,81 @@ if ($RECORD_ID) {
                                         if (isset($questions) && isset($quiz_record["random_order"]) && $quiz_record["random_order"] == 1) {
 											$q = array();
                                             $grouped_questions = array();
+                                            $i = 0;
+                                            
 											foreach ($questions as $question_key => $question) {
-												if ($question->getQuestiontypeID() == "1" && !is_null($question->getQquestionGroupID())) {
-													$grouped_questions[$question->getQquestionGroupID()][] = $question;
+												if (!is_null($question->getQquestionGroupID())) {
+                                                    if ($question->getQuestiontypeID() == "3") {
+                                                        $grouped_breaks[$question->getQquestionGroupID()][] = $question;
+                                                    } else {
+                                                        $grouped_questions[$question->getQquestionGroupID()][] = $question;
+                                                    }
                                                     unset($questions[$question_key]);
-												} else if ($question->getQuestiontypeID() == "1" && is_null($question->getQquestionGroupID())) {
+												} else if ($question->getQuestiontypeID() == "1") {
                                                     $q[] = $question;
                                                     unset($questions[$question_key]);
                                                 }
+                                                $i++;
 											}
                                             
-                                            foreach ($grouped_questions as $q_group) {
+                                            foreach ($grouped_questions as $group_id => $q_group) {
                                                 $q[] = $q_group;
                                             }
                                             
 											shuffle($q);
-                                            
+
+                                            $i = 1;
                                             foreach ($q as $qquestion) {
                                                 if (is_array($qquestion)) {
+                                                    $g_id = 0;
                                                     foreach ($qquestion as $grouped_question) {
                                                         $output[] = $grouped_question;
+                                                        $g_id = $grouped_question->getQquestionGroupID();
+                                                    }
+                                                    if (isset($grouped_breaks) && !empty($grouped_breaks[$g_id])) {
+                                                        foreach ($grouped_breaks[$g_id] as $grouped_break) {
+                                                            $output[] = $grouped_break;
+                                                        }
                                                     }
                                                 } else {
                                                     $output[] = $qquestion;
                                                 }
+                                                $i++;
                                             }
                                             
-                                            foreach ($questions as $q_key => $question) {
-                                                if (!is_null($question->getQquestionGroupID())) {
-                                                    array_splice($output, $q_key, 0, array($question));
-                                                } else { 
-                                                    if (is_null($output[$q_key]->getQquestionGroupID())) {
-                                                        array_splice($output, $q_key, 0, array($question));
-                                                    } else {
-                                                        for ($i = $q_key - 1; $i <= count($output); $i++) {
-                                                            var_dump($i);
-                                                            if(is_null($output[$i]->getQquestionGroupID())) {
-                                                                array_splice($output, ($i), 0, array($question));
+                                            if (!empty($questions)) {
+                                                foreach ($questions as $q_key => $question) {
+                                                    $index = $q_key;
+                                                    $g_id = $output[$index]->getQquestionID();
+                                                    if (!is_null($g_id)) {
+                                                        for ($index; $i >= 0; $i--) {
+                                                            if ($output[$i]->getQquestionGroupID() != $g_id) {
+                                                                array_splice($output, ($q_key - $i), 0, array($question));
                                                                 break;
                                                             }
+                                                            $g_id = $output[$i]->getQquestionGroupID();
                                                         }
+                                                    } else {
+                                                        array_splice($output, $index, 0, array($question));
+                                                    }
+                                                }
+                                            }
+                                            
+                                            
+                                            if ($output[count($output) - 1]->getQuestionTypeID() != 1) {
+                                                $move = $output[count($output) - 1];
+                                                $old_group_id = $output[count($output) - 1]->getQquestionGroupID();
+                                                $index = count($output) - 1;
+                                                for ($i = $index; $i >= 0; $i--) {
+                                                    if ($output[$i]->getQquestionGroupID() != $old_group_id) {
+                                                        array_splice($output, $i + 1, 0, array($move));
+                                                        unset($output[count($output) - 1]);
+                                                        break;
                                                     }
                                                 }
                                             }
                                             
                                             $questions = $output;
-//                                            Zend_Debug::dump($questions);
 										}
                                         
 										$total_questions	= 0;

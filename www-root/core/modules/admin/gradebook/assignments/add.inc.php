@@ -225,7 +225,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                 $order = 0;
                                                 foreach ($associated_directors as $proxy_id) {
                                                     if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
-                                                        if ($proxy_id !== $ENTRADA_USER->getID()){
+                                                        if ($proxy_id != (int) $ENTRADA_USER->getID()){
                                                             if (!$db->AutoExecute("assignment_contacts", array("assignment_id" => $ASSIGNMENT_ID, "proxy_id" => $proxy_id, "contact_order" => $order+1, "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getID()), "INSERT")) {
                                                                 add_error("There was an error when trying to insert a &quot;" . $module_singular_name . " Director&quot; into the system. The system administrator was informed of this error; please try again later.");
 
@@ -236,6 +236,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                         }
                                                     }
                                                 }
+                                                exit;
                                             }
                                             application_log("success", "Successfully added assignment ID [".$ASSIGNMENT_ID."]");
                                         } else {

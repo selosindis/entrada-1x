@@ -39,6 +39,10 @@ class Models_Event_EventTypeOrganisation extends Models_Base {
         return $this->organisation_id;
     }
     
+    public function setEventTypeID ($eventtype_id) {
+        $this->eventtype_id = $eventtype_id;
+    }
+    
     public static function get ($eventtype_id = null) {
         $self = new self();
         return $self->fetchRow(array("eventtype_id" => $eventtype_id));

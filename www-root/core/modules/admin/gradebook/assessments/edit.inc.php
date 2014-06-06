@@ -43,12 +43,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	application_log("notice", "Failed to provide assessment identifier when attempting to edit an assessment");
 } else {
-	$query = "  SELECT * FROM `assessments`
-                WHERE `assessment_id` = " . $db->qstr($ASSESSMENT_ID)."
-                AND `active` = '1'";
-	$assessment_details = $db->GetRow($query);
+	$assessment = Models_Gradebook_Assessment::fetchRowByID($ASSESSMENT_ID);
+	$assessment_details = $assessment->toArray();
 
-	if ($assessment_details) {
+	if (!empty($assessment_details)) {
 		if ($COURSE_ID) {
 			$COURSE_ID = $assessment_details["course_id"]; // Ensure (for permissions and data congruency) that the course_id is actually that of the assessment
 			$query = "	SELECT * FROM `courses` 
@@ -270,29 +268,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 							$PROCESSED["course_id"] = $COURSE_ID;
 
-							if ($db->AutoExecute("assessments", $PROCESSED, "UPDATE", "`assessment_id` = " . $db->qstr($assessment_details["assessment_id"]))) {
+							if ($assessment->fromArray($PROCESSED)->update()) {
 								if ($assessment_options) {
 									$query = "SELECT `option_id`, `assessment_id`, `option_active` FROM `assessment_options` WHERE `assessment_id` = ".$db->qstr($assessment_details["assessment_id"]);
 									$current_assessment_options = $db->GetAssoc($query);
 									foreach ($assessment_options as $assessment_option) {
-										$query = "SELECT * FROM `assessments`
-										            WHERE assessment_id = ".$db->qstr($ASSESSMENT_ID)."
-										            AND `active` = '1'";
-										$results = $db->GetRow($query);
-										if ($results) {
-											$PROCESSED["assessment_id"] = $results["assessment_id"];
-											$PROCESSED["option_id"] = $assessment_option["id"];
-											if (is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected)) {
-												$PROCESSED["option_active"] = 1;
-											} else {
-												$PROCESSED["option_active"] = 0;
-											}
-											if (array_key_exists($assessment_option["id"], $current_assessment_options)) {
-												$db->AutoExecute("assessment_options", $PROCESSED, "UPDATE", "`assessment_id` = " . $db->qstr($assessment_details["assessment_id"]) . "AND `option_id` = " . $db->qstr($assessment_option["id"]));
-											} else {
-												$db->AutoExecute("assessment_options", $PROCESSED, "INSERT");
-											}
-										}
+                                        $PROCESSED["assessment_id"] = $ASSESSMENT_ID;
+                                        $PROCESSED["option_id"] = $assessment_option["id"];
+                                        if (is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected)) {
+                                            $PROCESSED["option_active"] = 1;
+                                        } else {
+                                            $PROCESSED["option_active"] = 0;
+                                        }
+                                        if (array_key_exists($assessment_option["id"], $current_assessment_options)) {
+                                            $db->AutoExecute("assessment_options", $PROCESSED, "UPDATE", "`assessment_id` = " . $db->qstr($assessment_details["assessment_id"]) . "AND `option_id` = " . $db->qstr($assessment_option["id"]));
+                                        } else {
+                                            $db->AutoExecute("assessment_options", $PROCESSED, "INSERT");
+                                        }
 									}
 								}
 								

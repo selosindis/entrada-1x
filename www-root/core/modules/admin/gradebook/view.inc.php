@@ -272,15 +272,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 				
                 $output_cohort = false;
                 $cohort_found = false;
-                foreach ($cohorts as $key => $cohort) {
-                    if (!$cohort_found) {
-                        $output_cohort = $cohort;
-                        if (isset($selected_cohort) && $selected_cohort && $selected_cohort == $cohort["group_id"]) {
-                            $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"] = $selected_cohort;
-                            $cohort_found = true;
-                        }
-                        if ($key == (count($cohorts) - 1) && !$cohort_found) {
-                            $selected_cohort = $cohort["group_id"];
+                if ($cohorts) {
+                    foreach ($cohorts as $key => $cohort) {
+                        if (!$cohort_found) {
+                            $output_cohort = $cohort;
+                            if (isset($selected_cohort) && $selected_cohort && $selected_cohort == $cohort["group_id"]) {
+                                $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"] = $selected_cohort;
+                                $cohort_found = true;
+                            }
+                            if ($key == (count($cohorts) - 1) && !$cohort_found) {
+                                $selected_cohort = $cohort["group_id"];
+                            }
                         }
                     }
                 }
@@ -456,18 +458,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							echo "<td><h3 style=\"border-bottom: 0;\">Assignment</h3></td>";
 							echo "</tr>";
 
-							$query = "	SELECT `course_id`, `assessment_id`, `name`, `grade_weighting`, `order`
-										FROM `assessments`
-										WHERE `cohort` = " . $db->qstr($output_cohort["group_id"])."
-										AND `course_id` = ". $db->qstr($COURSE_ID)."
-										AND `active` = '1'
-										ORDER BY `order` ASC";
-
-							$results = $db->GetAll($query);
-							if ($results) {
+                            $assessments = Models_Gradebook_Assessment::fetchAllRecords($output_cohort["group_id"], $COURSE_ID);
+							if ($assessments) {
 								$total_grade_weight = 0;
 								$count = 0;
-								foreach ($results as $result) {
+								foreach ($assessments as $assessment) {
+                                    $result = $assessment->toArray();
 									if ($ENTRADA_ACL->amIAllowed(new AssessmentResource($course_details["course_id"], $course_details["organisation_id"], $result["assessment_id"]), "update")) {
 										//Display this row if the user is a Dropbox Contact for an assignment associated with this assessment or if they are the Course Owner.
 										$query =  "	SELECT a.`course_id`, a.`assignment_id`, a.`assignment_title` 

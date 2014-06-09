@@ -206,6 +206,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 							$organisation_where.
 							$type."
 							AND a.`cohort` = ".$db->qstr($PROCESSED["cohort"])."
+							AND a.`active` = 1
 							ORDER BY a.`assessment_id` ASC ";
 				$assessments[$course_id][$type_id] = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);
 			}

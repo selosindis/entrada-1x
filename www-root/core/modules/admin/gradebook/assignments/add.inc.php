@@ -45,9 +45,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("step" => false)), "title" => "Add Assignment");
 
         if (isset($_GET["assessment_id"]) && $tmp_ass = clean_input($_GET["assessment_id"],array("trim","int"))){
-            $query = "SELECT * FROM `assessments`
-                        WHERE `assessment_id` = ".$db->qstr($tmp_ass);
-            $assessment = $db->GetRow($query);
+            $assessment_object = Models_Gradebook_Assessment::fetchRowByID($tmp_ass);
+            $assessment = $assessment_object->toArray();
             if ($assessment) {
                 $query = "SELECT * FROM `assignments`
                             WHERE `assessment_id` = ".$db->qstr($tmp_ass)."
@@ -236,7 +235,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                         }
                                                     }
                                                 }
-                                                exit;
                                             }
                                             application_log("success", "Successfully added assignment ID [".$ASSIGNMENT_ID."]");
                                         } else {

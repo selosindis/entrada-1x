@@ -1133,7 +1133,8 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             ON a.`characteristic_id` = b.`id`
                             JOIN `groups` AS c
                             ON a.`cohort` = c.`group_id`
-                            WHERE `course_id` IN (".implode("', '", $course_ids).")".
+                            WHERE `course_id` IN (".implode("', '", $course_ids).")
+                            AND a.`active` = '1'".
                             $student_sql."
                             ORDER BY c.`group_id` DESC, a.`order` ASC, a.`type`";
 

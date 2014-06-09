@@ -67,10 +67,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         AND `assignment_active` = '1'";
             $assignment_record = $db->GetRow($query);
             if ($assignment_record) {
-                $query = "	SELECT *
-                            FROM `assessments`
-                            WHERE `assessment_id` = ".$db->qstr($assignment_record["assessment_id"])."
-                            AND `active` = 1";
+                $query = "	SELECT *, b.`name` as `assessment_name`
+						FROM `assignments` a
+						JOIN `assessments` b
+						ON a.`assessment_id` = b.`assessment_id`
+						WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
+						AND a.`assignment_active` = '1'
+						AND b.`active` = 1";
                 $assessment_details = $db->getRow($query);
                 if (isset($assessment_details) && $assessment_details) {
                     if ($assignment_record["notice_id"]) {

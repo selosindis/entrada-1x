@@ -286,7 +286,8 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 									AND a.`cohort` = b.`audience_value`
 									JOIN `assessments_lu_meta` AS c
 									ON `a`.`characteristic_id` = c.`id`
-									WHERE a.`course_id` = ".$db->qstr($course->getID());
+									WHERE a.`course_id` = ".$db->qstr($course->getID())."
+									AND a.`active` = 1";
 						$results = $db->GetArray($query);
 						$gradebook_html = "";
 						if ($results) {
@@ -297,7 +298,8 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 										JOIN `course_audience` AS b
 										ON a.`course_id` = b.`course_id`
 										AND a.`cohort` = b.`audience_value`
-										WHERE a.`course_id` = ".$db->qstr($course->getID());
+										WHERE a.`course_id` = ".$db->qstr($course->getID())."
+										AND a.`active` = 1";
 
 							$total_grade_weights = $db->GetAll($query);
 							foreach ($results as $result) {

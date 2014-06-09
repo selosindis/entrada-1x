@@ -196,26 +196,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							AND a.`active` = 1";
 				$assessment = $db->GetRow($query);				
 				?>
-					<div style="float: right; text-align: right; width:400px;">
-						<ul class="page-action">
-						<?php 
-						if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) { 
-						?>
-							<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "edit","assignment_id"=>$assignment["assignment_id"], "step" => false)); ?>" class="strong-green">Edit Assignment</a></li>
-							<?php 
-							if($assignment["assessment_id"]) { ?>
-								<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit","assessment_id"=>$assignment["assessment_id"], "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
-							<?php
-							} 
-						}
-						if (isset($assessment) && $assessment) { 
-						?>
-								<li><a href="#" id="advanced-options" class="strong-green">Show Options</a></li>
-						<?php 						
-						} 
-						?>
-						</ul>
-					</div>				
+                <div style="float: right; text-align: right; width:400px;">
+                    <ul class="page-action">
+                    <?php 
+                    if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) { 
+                    ?>
+                        <li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "edit","assignment_id"=>$assignment["assignment_id"], "step" => false)); ?>" class="strong-green">Edit Assignment</a></li>
+                        <?php 
+                        if($assignment["assessment_id"]) { ?>
+                            <li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit","assessment_id"=>$assignment["assessment_id"], "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
+                        <?php
+                        } 
+                    }
+                    if (isset($assessment) && $assessment && isset($students) && !(empty($students))) { 
+                    ?>
+                            <li><a href="#" id="advanced-options" class="strong-green">Show Options</a></li>
+                    <?php 						
+                    } 
+                    ?>
+                    </ul>
+                </div>				
 				<div style="clear: both;"></div>
 				<?php				
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";

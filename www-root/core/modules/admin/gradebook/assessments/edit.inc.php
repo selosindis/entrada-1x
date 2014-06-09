@@ -269,6 +269,44 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							$PROCESSED["course_id"] = $COURSE_ID;
 
 							if ($assessment->fromArray($PROCESSED)->update()) {
+                                if ($PROCESSED["cohort"] != $assessment_details["cohort"]) {
+                                    $query = "SELECT `notice_id` FROM `assignments`
+                                                WHERE `assessment_id` = " . $db->qstr($assessment_details["assessment_id"]) . "
+                                                AND `notice_id` IS NOT NULL
+                                                AND `notice_id` != '0'";
+                                    $notice_id = $db->GetOne($query);
+                                    if ($notice_id) {
+                                        $query = "SELECT * FROM `groups` WHERE `group_id` = ".$db->qstr($PROCESSED["cohort"]);
+                                        $assessment_group = $db->GetRow($query);
+                                        if ($assessment_group) {
+                                            $query = "SELECT * FROM `notice_audience`
+                                                        WHERE `notice_id` = " . $db->qstr($notice_id) . "
+                                                        AND `audience_value` = " . $db->qstr($assessment_details["cohort"]) . "
+                                                        AND `audience_type` IN ('cohort', 'course_list')";
+                                            $notice_audience = $db->GetRow($query);
+                                            if ($notice_audience) {
+                                                $notice_audience["updated_by"] = $ENTRADA_USER->getID();
+                                                $notice_audience["updated_date"] = time();
+                                                $notice_audience["audience_value"] = $PROCESSED["cohort"];
+                                                $notice_audience["audience_type"] = $assessment_group["group_type"];
+                                                if (!$db->AutoExecute("`notice_audience`", $notice_audience, "UPDATE", "`naudience_id` = ".$db->qstr($notice_audience["naudience_id"]))) {
+                                                    application_log("error", "An error was encountered while attempting to update the `notice_audience` record for an notice [".$notice_id."]. DB Said: ".$db->ErrorMsg());
+                                                }
+                                            } else {
+                                                $notice_audience = array(
+                                                    "notice_id" => $notice_id,
+                                                    "audience_type" => $assessment_group["group_type"],
+                                                    "audience_value" => $PROCESSED["cohort"],
+                                                    "updated_by" => $ENTRADA_USER->getID(),
+                                                    "updated_date" => time()
+                                                );
+                                                if (!$db->AutoExecute("`notice_audience`", $notice_audience, "INSERT")) {
+                                                    application_log("error", "An error was encountered while attempting to update the `notice_audience` record for an notice [".$notice_id."]. DB Said: ".$db->ErrorMsg());
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
 								if ($assessment_options) {
 									$query = "SELECT `option_id`, `assessment_id`, `option_active` FROM `assessment_options` WHERE `assessment_id` = ".$db->qstr($assessment_details["assessment_id"]);
 									$current_assessment_options = $db->GetAssoc($query);

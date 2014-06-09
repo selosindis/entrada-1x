@@ -43,11 +43,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	application_log("notice", "Failed to provide assessment identifier when attempting to edit an assessment");
 } else {
-	$query = "	SELECT * FROM `assessments` 
-						WHERE `assessment_id` = " . $db->qstr($ASSESSMENT_ID);
-	$assessment_details = $db->GetRow($query);
+	$assessment = Models_Gradebook_Assessment::fetchRowByID($ASSESSMENT_ID);
+	$assessment_details = $assessment->toArray();
 
-	if ($assessment_details) {
+	if (!empty($assessment_details)) {
 		if ($COURSE_ID) {
 			$COURSE_ID = $assessment_details["course_id"]; // Ensure (for permissions and data congruency) that the course_id is actually that of the assessment
 			$query = "	SELECT * FROM `courses` 
@@ -269,27 +268,61 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 							$PROCESSED["course_id"] = $COURSE_ID;
 
-							if ($db->AutoExecute("assessments", $PROCESSED, "UPDATE", "`assessment_id` = " . $db->qstr($assessment_details["assessment_id"]))) {
+							if ($assessment->fromArray($PROCESSED)->update()) {
+                                if ($PROCESSED["cohort"] != $assessment_details["cohort"]) {
+                                    $query = "SELECT `notice_id` FROM `assignments`
+                                                WHERE `assessment_id` = " . $db->qstr($assessment_details["assessment_id"]) . "
+                                                AND `notice_id` IS NOT NULL
+                                                AND `notice_id` != '0'";
+                                    $notice_id = $db->GetOne($query);
+                                    if ($notice_id) {
+                                        $query = "SELECT * FROM `groups` WHERE `group_id` = ".$db->qstr($PROCESSED["cohort"]);
+                                        $assessment_group = $db->GetRow($query);
+                                        if ($assessment_group) {
+                                            $query = "SELECT * FROM `notice_audience`
+                                                        WHERE `notice_id` = " . $db->qstr($notice_id) . "
+                                                        AND `audience_value` = " . $db->qstr($assessment_details["cohort"]) . "
+                                                        AND `audience_type` IN ('cohort', 'course_list')";
+                                            $notice_audience = $db->GetRow($query);
+                                            if ($notice_audience) {
+                                                $notice_audience["updated_by"] = $ENTRADA_USER->getID();
+                                                $notice_audience["updated_date"] = time();
+                                                $notice_audience["audience_value"] = $PROCESSED["cohort"];
+                                                $notice_audience["audience_type"] = $assessment_group["group_type"];
+                                                if (!$db->AutoExecute("`notice_audience`", $notice_audience, "UPDATE", "`naudience_id` = ".$db->qstr($notice_audience["naudience_id"]))) {
+                                                    application_log("error", "An error was encountered while attempting to update the `notice_audience` record for an notice [".$notice_id."]. DB Said: ".$db->ErrorMsg());
+                                                }
+                                            } else {
+                                                $notice_audience = array(
+                                                    "notice_id" => $notice_id,
+                                                    "audience_type" => $assessment_group["group_type"],
+                                                    "audience_value" => $PROCESSED["cohort"],
+                                                    "updated_by" => $ENTRADA_USER->getID(),
+                                                    "updated_date" => time()
+                                                );
+                                                if (!$db->AutoExecute("`notice_audience`", $notice_audience, "INSERT")) {
+                                                    application_log("error", "An error was encountered while attempting to update the `notice_audience` record for an notice [".$notice_id."]. DB Said: ".$db->ErrorMsg());
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
 								if ($assessment_options) {
 									$query = "SELECT `option_id`, `assessment_id`, `option_active` FROM `assessment_options` WHERE `assessment_id` = ".$db->qstr($assessment_details["assessment_id"]);
 									$current_assessment_options = $db->GetAssoc($query);
 									foreach ($assessment_options as $assessment_option) {
-										$query = "SELECT * FROM `assessments` WHERE assessment_id =" . $ASSESSMENT_ID;
-										$results = $db->GetRow($query);
-										if ($results) {
-											$PROCESSED["assessment_id"] = $results["assessment_id"];
-											$PROCESSED["option_id"] = $assessment_option["id"];
-											if (is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected)) {
-												$PROCESSED["option_active"] = 1;
-											} else {
-												$PROCESSED["option_active"] = 0;
-											}
-											if (array_key_exists($assessment_option["id"], $current_assessment_options)) {
-												$db->AutoExecute("assessment_options", $PROCESSED, "UPDATE", "`assessment_id` = " . $db->qstr($assessment_details["assessment_id"]) . "AND `option_id` = " . $db->qstr($assessment_option["id"]));
-											} else {
-												$db->AutoExecute("assessment_options", $PROCESSED, "INSERT");
-											}
-										}
+                                        $PROCESSED["assessment_id"] = $ASSESSMENT_ID;
+                                        $PROCESSED["option_id"] = $assessment_option["id"];
+                                        if (is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected)) {
+                                            $PROCESSED["option_active"] = 1;
+                                        } else {
+                                            $PROCESSED["option_active"] = 0;
+                                        }
+                                        if (array_key_exists($assessment_option["id"], $current_assessment_options)) {
+                                            $db->AutoExecute("assessment_options", $PROCESSED, "UPDATE", "`assessment_id` = " . $db->qstr($assessment_details["assessment_id"]) . "AND `option_id` = " . $db->qstr($assessment_option["id"]));
+                                        } else {
+                                            $db->AutoExecute("assessment_options", $PROCESSED, "INSERT");
+                                        }
 									}
 								}
 								

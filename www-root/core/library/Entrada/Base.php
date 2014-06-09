@@ -11,7 +11,7 @@
  * @copyright Copyright 2014 Queen's University. All Rights Reserved.
  *
  */
-class Models_Base {
+class Entrada_Base {
 
     public function __construct($arr = NULL) {
         if (is_array($arr)) {
@@ -28,9 +28,7 @@ class Models_Base {
         $class_vars = get_class_vars(get_called_class());
         if (isset($class_vars)) {
             foreach ($class_vars as $class_var => $value) {
-                if ($class_var != "table_name" && $class_var !="default_sort_column") {
-                    $arr[$class_var] = $this->$class_var;
-                }
+                $arr[$class_var] = $this->$class_var;
             }
         }
         return $arr;
@@ -228,6 +226,7 @@ class Models_Base {
             if (!empty($where)) {
                 $query = "SELECT * FROM `".$this->table_name."` ".$replacements;
                 $result = $db->GetRow($query, $where);
+                Zend_Debug::dump($query);
                 if ($result) {
                     $class = get_called_class();
                     $self = new $class($result);

@@ -120,10 +120,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					// Fetch all associated assessments
 					$query = "SELECT a.`assignment_id`, a.`assignment_title`, b.`name`, a.`assessment_id` 
 								FROM `assignments` AS a
-								LEFT JOIN `assessments` AS b
+								JOIN `assessments` AS b
 								ON a.`assessment_id` = b.`assessment_id`
 								WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
-								AND a.`assignment_id` IN (".implode(", ", $ASSIGNMENT_IDS).") ORDER BY a.`assignment_title` ASC";
+								AND b.`active` = 1
+								AND a.`assignment_active` = 1
+								AND a.`assignment_id` IN (".implode(", ", $ASSIGNMENT_IDS).")
+								ORDER BY a.`assignment_title` ASC";
 					$assignments = 	$db->GetAll($query);
 					if($assignments) {
 						echo display_notice(array("Please review the following assignments to ensure that you wish to permanently delete them. This action cannot be undone."));

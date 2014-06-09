@@ -41,6 +41,7 @@ if ($RECORD_ID) {
 						JOIN `group_members` AS c 
 						ON b.`group_id` = c.`group_id` 
 						WHERE a.`assessment_id` = ".$db->qstr($folder_record["assessment_id"])."
+						AND a.`active` = 1
 						AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 			$permitted = $db->GetRow($query);
 		}

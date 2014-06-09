@@ -18,6 +18,7 @@
  * @author Organisation: Queen's University
  * @author Unit: MEdTech Unit
  * @author Developer: Brandon Thorn <brandon.thorn@queensu.ca>
+ * @author Developer: Josh Dillon <jdillon@queensu.ca>
  * @copyright Copyright 2011 Queen's University. All Rights Reserved.
  *
 */
@@ -164,74 +165,64 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 				echo display_error();
 			}			
 			?>
-			<form action="<?php echo ENTRADA_URL."/admin/settings/manage/medbiqinstructional"."?".replace_query(array("action" => "edit", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
-			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Page">
-			<colgroup>
-				<col style="width: 30%" />
-				<col style="width: 70%" />
-			</colgroup>
-			<thead>
-				<tr>
-					<td colspan="2"><h1>Instructional Method Details</h1></td>
-				</tr>
-			</thead>
-			<tfoot>
-				<tr>
-					<td colspan="2" style="padding-top: 15px; text-align: right">
-						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/medbiqinstructional?org=<?php echo $ORGANISATION_ID;?>'" />
-                        <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td><label for="instructional_method" class="form-required">Instructional Method:</label></td>
-					<td><input type="text" id="instructional_method" name="instructional_method" value="<?php echo ((isset($PROCESSED["instructional_method"])) ? html_decode($PROCESSED["instructional_method"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
-				</tr>
-				<tr>
-					<td style="vertical-align: top;"><label for="instructional_method_description" class="form-nrequired">Description:</label></td>
-					<td>
-						<textarea id="instructional_method_description" name="instructional_method_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ((isset($PROCESSED["instructional_method_description"])) ? html_decode($PROCESSED["instructional_method_description"]) : ""); ?></textarea>
-					</td>
-				</tr>
-				<tr>
-					<td><label for="instructional_method" class="form-nrequired">Mapped Event Types:</label></td>
-					<?php
-						$event_type_list = array();
-				
-						$query = "	SELECT a.* FROM `events_lu_eventtypes` AS a 
-							LEFT JOIN `eventtype_organisation` AS b 
-							ON a.`eventtype_id` = b.`eventtype_id` 
-							LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
-							ON c.`organisation_id` = b.`organisation_id` 
-							WHERE b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-							AND a.`eventtype_active` = '1' 
-							ORDER BY a.`eventtype_order` ASC";
-						
-						if ($results = $db->GetAll($query)) {
-							foreach($results as $result) {
-								$event_type_list[] = array("eventtype_id"=>$result['eventtype_id'], "eventtype_title" => $result["eventtype_title"]);
-							}
-						}
-						if (isset($event_type_list) && is_array($event_type_list) && !empty($event_type_list)) {
-							echo "<td>";
-							foreach($event_type_list as $eventtype) {
-								if(isset($SEMI_PROCESSED["fk_eventtype_id"])) {
-									if(in_array($eventtype["eventtype_id"], $SEMI_PROCESSED["fk_eventtype_id"])) {
-										$checked = "CHECKED";
-									} else {
-										$checked = "";
-									}
-								} else {
-									$checked = "";
-								}
-								echo "<input type=\"checkbox\" name=\"fk_eventtype_id[]\" value=\"".$eventtype["eventtype_id"]."\" ".$checked.">".$eventtype["eventtype_title"]."<br>";
-							}
-						}
-					?>
-				</tr>
-				</tbody>
-			</table>
+			<form action="<?php echo ENTRADA_URL."/admin/settings/manage/medbiqinstructional"."?".replace_query(array("action" => "edit", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post" class="form-horizontal">
+                <div class="control-group">
+                    <label for="instructional_method" class="control-label form-required">Instructional Method:</label>
+                    <div class="controls">
+                        <input type="text" id="instructional_method" name="instructional_method" value="<?php echo ((isset($PROCESSED["instructional_method"])) ? html_decode($PROCESSED["instructional_method"]) : ""); ?>" />
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="instructional_method_description" class="control-label form-nrequired">Description:</label>
+                    <div class="controls">
+                        <textarea id="instructional_method_description" name="instructional_method_description" style="width: 98%; height: 200px"><?php echo ((isset($PROCESSED["instructional_method_description"])) ? html_decode($PROCESSED["instructional_method_description"]) : ""); ?></textarea>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label form-nrequired">Mapped Event Types:</label>
+                    <div class="controls">
+                    <?php
+                    $event_type_list = array();
+
+                    $query = "	SELECT a.* FROM `events_lu_eventtypes` AS a 
+                        LEFT JOIN `eventtype_organisation` AS b 
+                        ON a.`eventtype_id` = b.`eventtype_id` 
+                        LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
+                        ON c.`organisation_id` = b.`organisation_id` 
+                        WHERE b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+                        AND a.`eventtype_active` = '1' 
+                        ORDER BY a.`eventtype_order` ASC";
+
+                    if ($results = $db->GetAll($query)) {
+                        foreach($results as $result) {
+                            $event_type_list[] = array("eventtype_id"=>$result['eventtype_id'], "eventtype_title" => $result["eventtype_title"]);
+                        }
+                    }
+                    if (isset($event_type_list) && is_array($event_type_list) && !empty($event_type_list)) {
+                        foreach($event_type_list as $eventtype) {
+                            if(isset($SEMI_PROCESSED["fk_eventtype_id"])) {
+                                if(in_array($eventtype["eventtype_id"], $SEMI_PROCESSED["fk_eventtype_id"])) {
+                                    $checked = "CHECKED";
+                                } else {
+                                    $checked = "";
+                                }
+                            } else {
+                                $checked = "";
+                            } ?>
+                            <label class="checkbox" style="display:block">
+                                <input type="checkbox" name="fk_eventtype_id[]" value="<?php echo $eventtype["eventtype_id"]; ?>" <?php echo $checked; ?> />
+                                <?php echo $eventtype["eventtype_title"]; ?>
+                            </label>
+                        <?php    
+                        }
+                    }
+                    ?>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/medbiqinstructional?org=<?php echo $ORGANISATION_ID;?>'" />
+                    <input type="submit" class="btn btn-primary pull-right" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+                </div>
 			</form>
 			<?php
 		break;

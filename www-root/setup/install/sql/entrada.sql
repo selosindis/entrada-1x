@@ -4340,7 +4340,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 
 INSERT INTO `settings` (`shortname`, `organisation_id`, `value`)
   VALUES
-  ('version_db', NULL, '1609'),
+  ('version_db', NULL, '1610'),
   ('version_entrada', NULL, '1.6.0DEV'),
   ('export_weighted_grade', NULL, '1'),
   ('export_calculated_grade', NULL, '{\"enabled\":0}');

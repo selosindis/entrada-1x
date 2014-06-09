@@ -15,7 +15,6 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
  * @author Developer: James Ellis <james.ellis@queensu.ca>

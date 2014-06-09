@@ -646,7 +646,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					if ((@is_array($edit_ajax)) && (@count($edit_ajax))) {
 						echo "<script type=\"text/javascript\">\n";
 						foreach ($edit_ajax as $objective_id) {
-							echo "var editor_".$objective_id." = new Ajax.InPlaceEditor('objective_description_".$objective_id."', '".ENTRADA_RELATIVE."/api/objective-details.api.php', { rows: 7, cols: 62, okText: \"Save Changes\", cancelText: \"Cancel Changes\", externalControl: \"edit_mode_".$objective_id."\", submitOnBlur: \"true\", callback: function(form, value) { return 'id=".$objective_id."&cids=".$COURSE_ID."&objective_details='+escape(value) } });\n";
+							echo "var editor_".$objective_id." = new Ajax.InPlaceEditor('objective_description_".$objective_id."', '".ENTRADA_RELATIVE."/api/objective-details.api.php', { rows: 7, cols: 62, okText: \"Save Changes\", cancelText: \"Cancel Changes\", externalControl: \"edit_mode_".$objective_id."\", submitOnBlur: \"true\", callback: function(form, value) { jQuery('#clear_objective_".$objective_id."').toggle((value.length !== 0 && value.trim())); return 'id=".$objective_id."&cids=".$COURSE_ID."&objective_details='+escape(value) } });\n";
 						}
 						echo "</script>\n";
 					}

@@ -235,7 +235,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                         }
                                                     }
                                                 }
-                                                exit;
                                             }
                                             application_log("success", "Successfully added assignment ID [".$ASSIGNMENT_ID."]");
                                         } else {

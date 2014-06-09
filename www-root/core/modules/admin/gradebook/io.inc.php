@@ -84,10 +84,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			}
 			$assessments = $db->GetAll($query);
 			if ($assessments) {
-
-                $settings = new Entrada_Settings();
-                $export_weighted_grades = (($temp_setting = $settings->fetchByShortname("export_weighted_grade", $ENTRADA_USER->getActiveOrganisation())) && $temp_setting->getValue() ? true : false);
-                $export_calculated_grades = json_decode((($temp_setting = $settings->fetchByShortname("export_calculated_grade", $ENTRADA_USER->getActiveOrganisation())) && $temp_setting->getValue() ? $temp_setting->getValue() : false));
+                $temp_setting = $ENTRADA_SETTINGS->fetchByShortname("export_weighted_grade", $ENTRADA_USER->getActiveOrganisation());
+                $export_weighted_grades = ($temp_setting && $temp_setting->getValue() ? true : false);
+                $export_calculated_grades = json_decode(($temp_setting && $temp_setting->getValue() ? $temp_setting->getValue() : false));
                 $export_calculated_grades_enabled = ($export_calculated_grades && isset($export_calculated_grades->enabled) && $export_calculated_grades->enabled ? true : false);
 				// CSV Download
 				$groups = array();				

@@ -27,6 +27,8 @@ class Models_Event_EventTypeOrganisation extends Models_Base {
     protected $eventtype_id,
               $organisation_id;
     
+    protected $table_name = "eventtype_organisation";
+    
     public function __construct($arr = NULL) {
         parent::__construct($arr);
     }
@@ -60,7 +62,7 @@ class Models_Event_EventTypeOrganisation extends Models_Base {
     
     public function update() {
 		global $db;
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->_toArray(), "UPDATE", "`eventtype_id` = ".$db->qstr($this->getID() . " AND `organisation_id` = " .$db->qstr($this->getOrganisationID())))) {
+		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "UPDATE", "`eventtype_id` = ".$db->qstr($this->getID() . " AND `organisation_id` = " .$db->qstr($this->getOrganisationID())))) {
 			return true;
 		} else {
 			return false;

@@ -79,7 +79,10 @@ class Models_EventType extends Models_Base {
     
     public static function get ($eventtype_id = null, $active = 1) {
         $self = new self();
-        return $self->fetchRow(array("eventtype_id" => $eventtype_id, "eventtype_active" => $active));
+        return $self->fetchRow(array(
+            array("key" => "eventtype_id", "value" => $eventtype_id, "method" => "="),
+            array("mode" => "AND", "key" => "eventtype_active", "value" => $active, "method" => "=")
+        ));
     }
     
     public function insert() {
@@ -94,7 +97,7 @@ class Models_EventType extends Models_Base {
     
     public function update() {
 		global $db;
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->_toArray(), "UPDATE", "`eventtype_id` = ".$db->qstr($this->getID()))) {
+		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "UPDATE", "`eventtype_id` = ".$db->qstr($this->getID()))) {
 			return true;
 		} else {
 			return false;

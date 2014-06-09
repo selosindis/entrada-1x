@@ -18,7 +18,8 @@
  * @author Organisation: Queen's University
  * @author Unit: MEdTech Unit
  * @author Developer: Brandon Thorn <brandon.thorn@queensu.ca>
- * @copyright Copyright 2011 Queen's University. All Rights Reserved.
+ * @author Developer: Josh Dillon <jdillon@queensu.ca>
+ * @copyright Copyright 2014 Queen's University. All Rights Reserved.
  *
 */
 
@@ -36,10 +37,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 } else {
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/eventtypes?".replace_query(array("section" => "edit"))."&amp;org=".$ORGANISATION_ID, "title" => "Edit Event Type");
-	
+    
 	if (isset($_GET["type_id"]) && ($type = clean_input($_GET["type_id"], array("notags", "trim")))) {
 		$PROCESSED["eventtype_id"] = $type;
-	}
+	} else {
+        add_error("No Event Type found with the specified ID.");
+    }
 	
 	// Error Checking
 	switch ($STEP) {
@@ -64,66 +67,62 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			}			
 			
 			if (!$ERROR) {
+                
+                $params = array("eventtype_title" => $PROCESSED["eventtype_title"], "eventtype_description" => $PROCESSED["eventtype_description"], "eventtype_order" => "0", "updated_date"=> time(),"updated_by" => $ENTRADA_USER->getID(), "eventtype_active" => 1);
 				
-				// Check to see if the eventtype_id is used in more than one organisation
-				$query = "	SELECT `organisation_id`, `eventtype_id`
-							FROM `eventtype_organisation` WHERE `eventtype_id` = ".$db->qstr($PROCESSED["eventtype_id"]);
-				$results = $db->GetAssoc($query);
-
-				if (count($results) > 1) {
-					// if the eventtype_id is used in multiple organisations we are going to create a new entry and remove the old one
-					$action = "INSERT";
-					$where = FALSE;
-					
-					// we need a list of event_ids that are associated with this eventtype_id
-					$query = "	SELECT b.`event_id`, c.`eventtype_id`
-								FROM `courses` AS a
-								LEFT JOIN `events` AS b
-								ON a.`course_id` = b.`course_id`
-								LEFT JOIN `event_eventtypes` AS c
-								ON b.`event_id` = c.`event_id`
-								WHERE a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-								AND c.`eventtype_id` = ".$db->qstr($PROCESSED["eventtype_id"]);
-					$events_list = $db->GetAssoc($query);
+                // Check to see if the eventtype_id is used in more than one organisation
+                $eventtype_organisation = Models_Event_EventTypeOrganisation::get($PROCESSED["eventtype_id"]);
+                // if the eventtype_id is used in multiple organisations we are going to create a new entry and remove the old ones
+                $eventtype = new Models_EventType($params);
+				if ($eventtype_organisation) {
+                    if ($eventtype->insert()) {
+                        
+                        // if creating a new eventtype we will need to delete the old one, then update all of the previously fetched events to the new one.
+						$eventtype_id = $eventtype->getID();
+                        $eto = new Models_Event_EventTypeOrganisation(array("eventtype_id" => $PROCESSED["eventtype_id"], "organisation_id" => $ORGANISATION_ID));
+						
+                        if (!$eto->delete()) {
+                            application_log("error", "An error occured while attempting to delete the organisation eventtype " . $eto->getEventTypeID() . " DB said: " . $db->ErrorMsg());
+                            add_error("An error while attempting to delete the organisation event type");
+                        } else {
+                            $eto->setEventTypeID($eventtype_id);
+                            if(!$eto->insert()) {
+                                application_log("error", "An error occured while attempting to insert the organisation eventtype " . $eto->getEventTypeID() . " DB said: " . $db->ErrorMsg());
+                                add_error("An error while attempting to insert the organisation event type");
+                            }
+                        }
+                        
+                        // we need a list of event_ids that are associated with this eventtype_id
+                        $query = "	SELECT b.`event_id`, c.*
+                                    FROM `courses` AS a
+                                    LEFT JOIN `events` AS b
+                                    ON a.`course_id` = b.`course_id`
+                                    LEFT JOIN `event_eventtypes` AS c
+                                    ON b.`event_id` = c.`event_id`
+                                    WHERE a.`organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+                                    AND c.`eventtype_id` = ".$db->qstr($PROCESSED["eventtype_id"]);
+                        $events_list = $db->GetAssoc($query);
+                        
+                        if ($events_list) {
+                            foreach ($events_list as $event) {
+                                $event_eventtype = new Models_Event_EventType(array("eeventtype_id" => $event["eeventtype_id"], "event_id" => $event["event_id"], "eventtype_id" => $eventtype_id, "duration" => $event["duration"]));
+                                $event_eventtype->update();
+                            }
+                        }
+                    } else {
+                        application_log("error", "An error occured while attempting to insert the eventtype " . $PROCESSED["eventtype_id"] . " DB said: " . $db->ErrorMsg());
+                        add_error("An error while attempting to insert the event type");
+                    }
 				} else {
-					// if the eventtype_id is not in multiple organisations update it as normal
-					$action = "UPDATE";
-					$where = "`eventtype_id` = ".$db->qstr($PROCESSED["eventtype_id"]);
+                    $eventtype->update();
 				}
 				
-				$params = array("eventtype_title" => $PROCESSED["eventtype_title"],"eventtype_description"=>$PROCESSED["eventtype_description"], "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getID());
-				
-				if ($db->AutoExecute("`events_lu_eventtypes`", $params, $action, $where)) {
-					
-					if ($action == "INSERT") {
-						// if creating a new eventtype we will need to delete the old one, then update all of the previously fetched events to the new one.
-						$eventtype_id = $db->Insert_ID();
-						
-						$query = "	DELETE FROM `eventtype_organisation`
-									WHERE `eventtype_id` = ".$db->qstr($PROCESSED["eventtype_id"])."
-									AND `organisation_id` = ".$db->qstr($ORGANISATION_ID);
-						$db->Execute($query);
-						
-						$query = "	INSERT INTO `eventtype_organisation` (`eventtype_id`, `organisation_id`)
-									VALUES (".$db->qstr($eventtype_id).", ".$db->qstr($ORGANISATION_ID).")";
-						$db->Execute($query);
-						
-						$query = "	UPDATE `event_eventtypes`
-									SET `eventtype_id` = ".$db->qstr($eventtype_id)."
-									WHERE `event_id` IN ('".implode("', '", array_keys($events_list))."')";
-						$db->Execute($query);
-					}
-					
+				if (!$ERROR) {	
 					$url = ENTRADA_URL . "/admin/settings/manage/eventtypes?org=".$ORGANISATION_ID;
 					$SUCCESS++;
 					$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["eventtype_title"])."</strong> to the system.<br /><br />You will now be redirected to the Event Types index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 					$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 					application_log("success", "New Event Type [".$PROCESSED["eventtype_id"]."] added to the system.");
-				} else {
-					$ERROR++;
-					$ERRORSTR[] = "There was a problem inserting this objective into the system. The system administrator was informed of this error; please try again later.".$db->ErrorMsg();
-
-					application_log("error", "There was an error inserting an objective. Database said: ".$db->ErrorMsg());
 				}
 			}
 
@@ -133,9 +132,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		break;
 		case 1 :
 		default :
-
-			$event_type = Models_Event_EventType::get($PROCESSED["eventtype_id"]);
-
+			
 		break;
 	}
 
@@ -159,27 +156,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 			if ($ERROR) {
 				echo display_error();
 			}
-						
-			?>
-			<form class="form-horizontal" action="<?php echo ENTRADA_URL."/admin/settings/manage/eventtypes"."?".replace_query(array("action" => "edit", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
-                <div class="control-group">
-                    <label for="eventtype_title" class="form-required control-label">Event Type Name:</label>
-                    <div class="controls">
-                        <input type="text" id="eventtype_title" name="eventtype_title" value="<?php echo html_encode($event_type->getEventTypeTitle()); ?>" maxlength="60" />
-                    </div>
-                </div>
-                <div class="control-group">
-                    <label for="eventtype_description" class="form-nrequired control-label">Event Type Description: </label>
-                    <div class="controls">
-                        <textarea id="eventtype_description" name="eventtype_description" style="width: 98%; height: 200px"><?php echo html_encode($event_type->getEventTypeDescription()); ?></textarea>
-                    </div>
-                </div>
-                <div class="control-group">
-                    <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/eventtypes?org=<?php echo $ORGANISATION_ID;?>'" />
-                    <input type="submit" class="btn btn-primary pull-right" value="<?php echo $translate->_("global_button_save"); ?>" />                           
-                </div>
-			</form>
-			<?php
+            
+            if (isset($PROCESSED["eventtype_id"])) {
+                $event_type = Models_EventType::get($PROCESSED["eventtype_id"]);
+                if ($event_type) { ?>
+                    <form class="form-horizontal" action="<?php echo ENTRADA_URL."/admin/settings/manage/eventtypes"."?".replace_query(array("action" => "edit", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
+                        <div class="control-group">
+                            <label for="eventtype_title" class="form-required control-label">Event Type Name:</label>
+                            <div class="controls">
+                                <input type="text" id="eventtype_title" name="eventtype_title" value="<?php echo html_encode($event_type->getEventTypeTitle()); ?>" maxlength="60" />
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <label for="eventtype_description" class="form-nrequired control-label">Event Type Description: </label>
+                            <div class="controls">
+                                <textarea id="eventtype_description" name="eventtype_description" style="width: 98%; height: 200px"><?php echo html_encode($event_type->getEventTypeDescription()); ?></textarea>
+                            </div>
+                        </div>
+                        <div class="control-group">
+                            <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/eventtypes?org=<?php echo $ORGANISATION_ID;?>'" />
+                            <input type="submit" class="btn btn-primary pull-right" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+                        </div>
+                    </form>
+                <?php
+                }
+            }
 		break;
 	}
 

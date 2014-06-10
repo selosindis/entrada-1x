@@ -58,7 +58,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					$question_used = 0;
 				}
 			}
-			$PROCESSED["question_parent_id"] = $QUESTION_ID;
+
+            if ($question_used) {
+                $PROCESSED["question_parent_id"] = $QUESTION_ID;
+            }
 		}
 		
 		if ($PROCESSED["questiontype_id"] == 3) {
@@ -1081,8 +1084,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								ON a.`questiontype_id` = b.`questiontype_id`
 								LEFT JOIN `evaluation_rubric_questions` AS c
 								ON a.`equestion_id` = c.`equestion_id`
+								LEFT JOIN `evaluations_related_questions` AS d
+								ON a.`question_parent_id` = d.`related_equestion_id`
 								WHERE (
-									a.`question_parent_id` = ".$db->qstr($PROCESSED["question_parent_id"])."
+									d.`equestion_id` = ".$db->qstr($PROCESSED["question_parent_id"])."
+								    OR a.`question_parent_id` = ".$db->qstr($PROCESSED["question_parent_id"])."
 									OR a.`equestion_id` = ".$db->qstr($PROCESSED["question_parent_id"])."
 									OR a.`equestion_id` IN (
 										SELECT d.`equestion_id` FROM `evaluation_rubric_questions` AS d

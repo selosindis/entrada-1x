@@ -418,7 +418,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							if ($question_record["question_parent_id"]) {
 								$PROCESSED_RELATED_QUESTION["related_equestion_id"] = $question_record["question_parent_id"];
 							}
-							$PROCESSED["question_parent_id"] = 0;
 						}
 						if ($question_used) {
 							if ($PROCESSED["questiontype_id"] == 3) {

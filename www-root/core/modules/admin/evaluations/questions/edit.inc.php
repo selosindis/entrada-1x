@@ -140,7 +140,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					$PROCESSED["categories_count"] = count($categories);
 				}
 			}
-		} elseif ($PROCESSED["questiontype_id"] == 1 || $PROCESSED["questiontype_id"] == 4) {
+		} elseif (in_array($PROCESSED["questiontype_id"], array(1, 4, 5, 6))) {
 			$query = "SELECT a.`objective_id` FROM `evaluation_question_objectives` AS a
 						JOIN `global_lu_objectives` AS b
 						ON a.`objective_id` = b.`objective_id`
@@ -221,6 +221,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						}
 					break;
 					case 1 :
+					case 5 :
+					case 6 :
 					default :
 						/**
 						 * Required field "allow_comments" / Allow Question Comments.

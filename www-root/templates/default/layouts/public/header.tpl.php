@@ -6,7 +6,7 @@
     <head>
         <meta charset="<?php echo DEFAULT_CHARSET; ?>" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <meta http-equiv="X-Frame-Options" content="DENY" />
+        <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
         <title>%TITLE%</title>
 
         <meta name="description" content="%DESCRIPTION%" />

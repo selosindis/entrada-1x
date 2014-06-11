@@ -53,8 +53,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
         "audience_students"         => array("title" => "Audience (Students)"),
         "teacher_names"             => array("title" => "Teacher Names"),
         "teacher_numbers"           => array("title" => "Teacher Numbers"),
-        "objectives_release_date"    => array("title" => "Objective Release Date"),
-        "event_tutors"              => array("title" => "Event Tutors")
+        "objectives_release_date"   => array("title" => "Objective Release Date"),
+        "event_tutors"              => array("title" => "Event Tutors"),
+        "recurring_event"           => array("title" => "Recurring Event")
     );
     
 	$draft_id = (isset($_GET["draft_id"]) ? (int) $_GET["draft_id"] : 0);

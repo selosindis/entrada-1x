@@ -38,6 +38,7 @@ class Entrada_Event_Draft_CsvImporter {
         $this->validation_rules = array(
             "original_event"            => array("int"),
             "parent_event"              => array("int"),
+            "recurring_event"           => array("int"),
             "course_code"               => array("trim", "striptags"),
             "course_name"               => array("trim", "striptags"),
             "term"                      => array("trim", "striptags"),

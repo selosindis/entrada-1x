@@ -69,10 +69,17 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 									ORDER BY `parent_id` ASC";
 						$events = $db->GetAll($query);
 						if ($events) {
+                            $recurring_event_id_map = array();
 
 							application_log("notice", "Draft schedule importer found ".count($events)." events in draft ".$draft["draft_id"].".");
 
 							foreach ($events as $event) {
+                                $recurring_id_updated = false;
+
+                                if (isset($event["recurring_id"]) && $event["recurring_id"] && array_key_exists($event["recurring_id"], $recurring_event_id_map)) {
+                                    $event["recurring_id"] = $recurring_event_id_map[$event["recurring_id"]];
+                                    $recurring_id_updated = true;
+                                }
 
 								if ($event["event_id"]) {
 									$old_event_id = $event["event_id"];
@@ -94,6 +101,14 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 								echo $event["parent_id"]."\n";
 								if ($db->AutoExecute("`events`", $event, 'INSERT')) {
 									$event_id = $db->Insert_ID();
+
+                                    if (!$recurring_id_updated && isset($event["recurring_id"]) && $event["recurring_id"] && !array_key_exists($event["recurring_id"], $recurring_event_id_map)) {
+                                        $recurring_event_id_map[$event["recurring_id"]] = $event_id;
+                                        $query = "UPDATE `events` SET `recurring_id` = ".$db->qstr($event_id)." WHERE `event_id` = ".$db->qstr($event_id);
+                                        if (!$db->Execute($query)) {
+                                            application_log("error", "An error occurred when updating a draft event with a recurring event id. DB said: ".$db->ErrorMsg());
+                                        }
+                                    }
 									$old_events[$old_event_id]["new_event_id"] = $event_id;
 									application_log("success", "Successfully created event [".$event_id."]");
 								} else {

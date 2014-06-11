@@ -96,7 +96,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 if ($d->fromArray(array("status" => $status))->update()) {
                     $approved[] = $d;
                 } else {
-                    Zend_Debug::dump($d);
+                    application_log("error", "An unknown error was encountered while attempting to change the status [".$status."] of an event draft [".$draft_id."].");
                 }
 			}
 
@@ -138,7 +138,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 }
                 
 				if(!empty($drafts)) {
-					echo display_notice(array("Please review the following draft".(($total_events > 1) ? "s" : "")." to ensure that you wish to <strong>".$status."</strong> ".(($total_events > 1) ? "them" : "it").".<br /><br />Approving a draft will schedule it to be imported into the system.<br />Re-opening a draft will remove it from the importation schedule and allow it to be modified."));
+					echo display_notice(array("Please review the following draft".(($total_events > 1) ? "s" : "")." to ensure that you wish to set ".(($total_events > 1) ? "them" : "it")." to <strong>".$status."</strong>.<br /><br />Approving a draft will schedule it to be imported into the system.<br />Re-opening a draft will remove it from the importation schedule and allow it to be modified."));
 					$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
 					?>
 					<style type="text/css">

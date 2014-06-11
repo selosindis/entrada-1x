@@ -650,6 +650,7 @@ class Models_Evaluation {
                     <thead>
                         <tr>
                             <td colspan="2">&nbsp;</td>
+                            <td class="center" style="font-weight: bold; font-size: 11px">Descriptor</td>
                             <td class="center" style="font-weight: bold; font-size: 11px">Minimum Pass</td>
                         </tr>
                     </thead>

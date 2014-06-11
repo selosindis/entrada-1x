@@ -88,6 +88,7 @@ $query = "	SELECT a.*, COUNT(b.`assessment_id`) AS `assessments`
 			FROM `courses` AS a
 			JOIN `assessments` AS b
 			ON a.`course_id` = b.`course_id`
+			AND b.`active` = 1
 			AND b.`cohort` IN (".$group_ids_string.")
 			AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
 			AND (b.`release_until` = '0' OR b.`release_until` > ".$db->qstr(time()).")

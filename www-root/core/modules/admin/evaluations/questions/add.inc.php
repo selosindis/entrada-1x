@@ -95,6 +95,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				break;
 				case 1 :
                 case 5 :
+                case 6 :
 				default :
 					/**
 					 * Required field "allow_comments" / Allow Question Comments.

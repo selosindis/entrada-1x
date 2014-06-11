@@ -348,9 +348,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 							var numRows = 0;
 
 							jQuery(function($){
-								$(document).ready(function(){
-									$(".calendar").live('click',function(e){
-										var info = e.target.id.split("_");
+							    $(document).ready(function($) {
+								    $("#curriculum_periods").on('click', '.calendar', function() {
+									    var info = $(this).attr('id').split('_');
 										showCalendar('', document.getElementById(info[0]+'_'+info[2]), document.getElementById(info[0]+'_'+info[2]), '', 'Title', 0, 20, 1);
 									});
 
@@ -366,7 +366,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 										$('#curriculum_periods_table').hide();
 										$('#no_period_msg').show();
 									}
-
 								});
 
 								$('#add_period').click(function(){										
@@ -378,14 +377,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 									var day = (today.getDate().toString().length > 1) ? today.getDate() : "0"+(today.getDate());
 									var date = today.getFullYear()+"-"+month+"-"+day;
 									var formattedRow = rowTemplate.replace(/:id/g,'add-' + currentIdx).replace(/:date/g,date);
-									$('#curriculum_periods').append(formattedRow);
 
-                               	 	$('html, body').animate({ scrollTop: $('#period_add-' + currentIdx).offset().top }, 1000 );
+									$('#curriculum_periods').append(formattedRow);
 
 									currentIdx++;
 									numRows++;
 								});
-
 
 								$('#delete_selected').click(function(){
 									$('.remove_checkboxes:checked').each(function(){
@@ -410,7 +407,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 										$(this).removeAttr('disabled');
 									});
 								});
-
 							});								
 						</script>						
 					</td>

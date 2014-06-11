@@ -3081,9 +3081,9 @@ function clean_input($string, $rules = array()) {
 					$string = preg_replace('/\<br\s*\/?\>/i', "\n", $string);
 					$string = str_replace("&nbsp;", " ", $string);
 				break;
-                case "utf8_convert" :
-                    $string = preg_replace_callback("/(&#[0-9]+;)/", function($m) { return mb_convert_encoding($m[1], "UTF-8", "HTML-ENTITIES"); }, $string);
-                break;
+				case "utf8_convert" :
+					$string = preg_replace_callback("/(&#[ox]?[a-f,A-F,0-9]+;)/", function($m) { return mb_convert_encoding($m[1], "UTF-8", "HTML-ENTITIES"); }, $string);
+				break;
 				case "html_decode" :
 				case "decode" :			// Returns the output of the html_decode() function.
 					$string = html_decode($string);
@@ -7739,7 +7739,9 @@ function community_notify($community_id, $record_id, $content_type, $url, $permi
 						FROM `community_discussions` AS a
 						LEFT JOIN `community_pages` AS b
 						ON a.`cpage_id` = b.`cpage_id`
-						WHERE a.`cdiscussion_id` = ".$db->qstr($record_id);
+						JOIN `community_discussion_topics` AS c
+						ON a.`cdiscussion_id` = c.`cdiscussion_id`
+						WHERE c.`cdtopic_id` = ".$db->qstr($record_id);
 			$result = $db->GetRow($query);
 			if ($result["allow_member_read"] && $result["allow_member_view"]) {
 				$permission_required = 0;
@@ -10159,6 +10161,9 @@ function events_subnavigation($event_info,$tab='content'){
 	echo "		<li".($tab=='content'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $event_info['event_id'], "step" => false))."\" >Event Content</a></li>";
 
 	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"],"step"=>false))."\" >Event Attendance</a></li>";
+    if ($event_info["recurring_id"]) {
+	    echo "		<li".($tab=='recurring'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "recurring", "id" => $event_info["event_id"],"step"=>false))."\" >Related Recurring Events</a></li>";
+    }
 
 	echo "		<li".($tab=='history'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "history", "id" => $event_info["event_id"],"step"=>false))."\">Event History</a></li>";
 	echo "	</ul>";
@@ -12860,13 +12865,13 @@ function assessment_objective_parent_mapped_course($objective_id,$assessment_id,
 	global $db;
 	$query = "	SELECT a.*, c.course_id
 				FROM `global_lu_objectives` a
+				JOIN `assessments` c
+				ON c.`assessment_id` = ".$db->qstr($assessment_id)."
+				AND c.`active` = '1'
 				LEFT JOIN `assessment_objectives` b
 				ON b.`objective_id` = a.`objective_id`
-				AND b.`assessment_id` = ".$db->qstr($assessment_id)."
-				LEFT JOIN `assessments` c
-				ON b.`assessment_id` = c.`assessment_id`
-				WHERE b.`assessment_id` = ".$db->qstr($assessment_id)."
-				AND a.`objective_id` = ".$db->qstr($objective_id)."
+				AND b.`assessment_id` = c.`assessment_id`
+				WHERE a.`objective_id` = ".$db->qstr($objective_id)."
 				AND a.`objective_active` = '1'
 				GROUP BY a.`objective_id`
 				ORDER BY a.`objective_id` ASC";
@@ -12884,13 +12889,13 @@ function assessment_objective_decendant_mapped_course($objective_id,$assessment_
 	global $db;
 	$query = "	SELECT a.*, c.course_id
 				FROM `global_lu_objectives` a
+				JOIN `assessments` c
+				ON c.`assessment_id` = ".$db->qstr($assessment_id)."
+				AND c.`active` = '1'
 				LEFT JOIN `assessment_objectives` b
 				ON b.`objective_id` = a.`objective_id`
-				AND b.`assessment_id` = ".$db->qstr($assessment_id)."
-				LEFT JOIN `assessments` c
-				ON b.`assessment_id` = c.`assessment_id`
-				WHERE b.`assessment_id` = ".$db->qstr($assessment_id)."
-				AND a.`objective_active` = '1'
+				AND b.`assessment_id` = c.`assessment_id`
+				WHERE a.`objective_active` = '1'
 				GROUP BY a.`objective_id`
 				ORDER BY a.`objective_id` ASC";
 	$objectives = $db->GetAll($query);
@@ -13247,11 +13252,11 @@ function event_objectives_in_list($objectives, $parent_id, $top_level_id, $edit_
 							} elseif ($edit_text) {
 								$edit_ajax[] = $objective_id;
 								$output .= "<div id=\"objective_table_".$objective_id."\">\n";
-								$output .= "	<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label> ( <span id=\"edit_mode_".$objective_id."\" class=\"content-small\" style=\"cursor: pointer\">edit</span> )".(isset($objective["objective_details"]) && $objective["objective_details"] ? "<span style=\"margin-left: 10px;\">( <span id=\"revert_mode_".$objective_id."\" class=\"content-small\" onclick=\"new Ajax.Updater('objective_description_".$objective_id."', '".ENTRADA_RELATIVE."/api/objective-details.api.php', {parameters: { id: '".$objective_id."', cids: '".$course_id."', objective_details: '' }})\" style=\"cursor: pointer\">clear custom text</span> )</span>" : "")."\n";
+								$output .= "	<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label> ( <span id=\"edit_mode_".$objective_id."\" class=\"content-small\" style=\"cursor: pointer\">edit</span> )<span id=\"clear_objective_".$objective_id."\" style=\"margin-left: 10px;".(isset($objective["objective_details"]) && $objective["objective_details"] ? "" : " display: none;")."\">( <span id=\"revert_mode_".$objective_id."\" class=\"content-small\" onclick=\"new Ajax.Updater('objective_description_".$objective_id."', '".ENTRADA_RELATIVE."/api/objective-details.api.php', {parameters: { id: '".$objective_id."', cids: '".$course_id."', objective_details: '' }, onComplete: function() { jQuery('#clear_objective_".$objective_id."').hide(); }})\" style=\"cursor: pointer\">clear custom text</span> )</span>\n";
 								$output .= "	<div class=\"content-small\" style=\"padding-left: 25px;\" id=\"objective_description_".$objective_id."\">".(isset($objective["objective_details"]) && $objective["objective_details"] ? $objective["objective_details"] : $objective["description"])."</div>\n";
 								$output .= "</div>\n";
 							} else {
-								$output .= "<input type=\"checkbox\" id=\"objective_checkbox_".$objective_id."\ name=\"course_objectives[".$objective_id."]\"".(isset($objective["event_objective"]) && $objective["event_objective"] ? " checked=\"checked\"" : "")." onclick=\"if (this.checked) { this.parentNode.addClassName('".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."'); } else { this.parentNode.removeClassName('".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."'); }\" style=\"float: left;\" value=\"1\" />\n";
+								$output .= "<input type=\"checkbox\" id=\"objective_checkbox_".$objective_id."\" name=\"course_objectives[".$objective_id."]\"".(isset($objective["event_objective"]) && $objective["event_objective"] ? " checked=\"checked\"" : "")." onclick=\"if (this.checked) { this.parentNode.addClassName('".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."'); } else { this.parentNode.removeClassName('".($importance == 2 ? "secondary" : ($importance == 3 ? "tertiary" : "primary"))."'); }\" style=\"float: left;\" value=\"1\" />\n";
 								$output .= "<label for=\"objective_checkbox_".$objective_id."\" class=\"heading\">".$objective["name"]."</label>\n";
 								$output .= "<div style=\"padding-left: 25px;\">\n";
 								$output .=		$objective["description"]."\n";
@@ -16031,17 +16036,18 @@ function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessme
 	$weighted_grade = 0;
 	$weighted_total = 0;
 	$weighted_percent = 0;
-    $query = "	SELECT `assessments`.*, `assessment_marking_schemes`.`handler`
-				FROM `assessments`
-				LEFT JOIN `assessment_marking_schemes`
-				ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-				WHERE `assessments`.`course_id` = ".$db->qstr($course_id)."
+    $query = "	SELECT a.*, b.`handler`
+				FROM `assessments` AS a
+				LEFT JOIN `assessment_marking_schemes` AS b
+				ON b.`id` = a.`marking_scheme_id`
+				WHERE a.`course_id` = ".$db->qstr($course_id)."
 				".(!isset($learner) || $learner ? "
-                AND (`assessments`.`release_date` = '0' OR `assessments`.`release_date` <= ".$db->qstr(time()).")
-                AND (`assessments`.`release_until` = '0' OR `assessments`.`release_until` > ".$db->qstr(time()).")
-                AND `assessments`.`show_learner` = '1'" : "")."
-				AND `assessments`.`cohort` = ".$db->qstr($cohort).
-                ($assessment_id ? " AND `assessments`.`assessment_id` = ".$db->qstr($assessment_id) : ($assessment_ids_string ? " AND `assessments`.`assessment_id` IN (".$assessment_ids_string.")" : ""));
+                AND (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).")
+                AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time()).")
+                AND a.`show_learner` = '1'" : "")."
+                AND a.`active` = '1'
+				AND a.`cohort` = ".$db->qstr($cohort).
+                ($assessment_id ? " AND a.`assessment_id` = ".$db->qstr($assessment_id) : ($assessment_ids_string ? " AND a.`assessment_id` IN (".$assessment_ids_string.")" : ""));
 	$assessments = $db->GetAll($query);
 	if($assessments) {
         foreach ($assessments as $assessment) {
@@ -16061,7 +16067,7 @@ function gradebook_get_weighted_grades($course_id, $cohort, $proxy_id, $assessme
                 if(isset($grade["value"])) {
                     $grade_value = format_retrieved_grade($grade["value"], $assessment);
                     $weighted_total += $grade_weighting;
-                    $weighted_grade += (($assessment["handler"] == "Numeric" ? ($grade_value / $assessment["numeric_grade_points_total"]) : (($assessment["handler"] == "Percentage" ? ((float)$grade_value / 100.0) : $grade_value)))) * $grade_weighting;
+                    $weighted_grade += (($assessment["handler"] == "Numeric" ? ($grade_value / $assessment["numeric_grade_points_total"]) : (($assessment["handler"] == "Percentage" ? ((float)$grade_value / 100.0) : ($assessment["handler"] == "IncompleteComplete" ? ($grade_value == "C" ? 100 : 0) / 100 : $grade_value))))) * $grade_weighting;
                 }
             }
         }

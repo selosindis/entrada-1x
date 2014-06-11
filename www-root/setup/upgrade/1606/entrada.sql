@@ -26,4 +26,4 @@ CREATE TABLE IF NOT EXISTS `evaluation_progress_patient_encounters` (
 
 UPDATE `evaluations_lu_targets` SET `target_title` = 'Patient Encounter Assessment' WHERE `target_shortname` = 'resident';
 
-UPDATE `settings` SET `value` = '1605' WHERE `shortname` = 'version_db';
+UPDATE `settings` SET `value` = '1606' WHERE `shortname` = 'version_db';

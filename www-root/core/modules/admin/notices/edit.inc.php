@@ -241,6 +241,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_NOTICES"))) {
 						if ($ERROR) {
 							echo display_error();
 						}
+                        $query = "SELECT * FROM `assignments` WHERE `notice_id` = ".$db->qstr($NOTICE_ID)." AND `assignment_active` = 1";
+                        $notice_assignment = $db->GetRow($query);
+                        if ($notice_assignment) {
+                            echo display_notice("<strong>Please Note</strong>: This notice is meant to ");
+                        }
 						?>
 						<div class="row-fluid">	
 							<a href="<?php echo ENTRADA_URL; ?>/admin/notices?section=report&amp;notice_id=<?php echo $NOTICE_ID;?>" class="pull-right btn btn-primary btn-large"><i class="icon-flag icon-white"></i> View Notice Statistics</a>

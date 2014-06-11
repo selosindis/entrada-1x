@@ -43,7 +43,9 @@ if (!defined("IN_GRADEBOOK")) {
     $PROCESSED = array();
     
     if ($ASSESSMENT_ID) {
-        $query = "SELECT * FROM `assessments` WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+        $query = "SELECT * FROM `assessments`
+                    WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+                    AND `active` = '1'";
         $assessment = $db->GetRow($query);
         if ($assessment) {
             if (isset($_GET["aquiz_id"]) && ($tmp_input = clean_input($_GET["aquiz_id"], "int"))) {

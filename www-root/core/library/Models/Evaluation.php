@@ -650,6 +650,7 @@ class Models_Evaluation {
                     <thead>
                         <tr>
                             <td colspan="2">&nbsp;</td>
+                            <td class="center" style="font-weight: bold; font-size: 11px">Descriptor</td>
                             <td class="center" style="font-weight: bold; font-size: 11px">Minimum Pass</td>
                         </tr>
                     </thead>
@@ -3858,7 +3859,7 @@ class Models_Evaluation {
 				if ($evaluation_targets) {
 					switch ($evaluation["target_shortname"]) {
 						case "preceptor" :
-							$permissions[] = array("preceptor_proxy_id" => $ENTRADA_USER->getID(), "target_type" => "rotation_id", "contact_type" => "preceptor");
+							$permissions[] = array("preceptor_proxy_id" => $ENTRADA_USER->getActiveId(), "target_type" => "rotation_id", "contact_type" => "preceptor");
 						case "rotation_core" :
 						case "rotation_elective" :
 							foreach ($evaluation_targets as $evaluation_target) {
@@ -3866,7 +3867,7 @@ class Models_Evaluation {
 									$query = "SELECT b.* FROM `".CLERKSHIP_DATABASE."`.`global_lu_rotations` AS a
 												JOIN `course_contacts` AS b
 												ON a.`course_id` = b.`course_id`
-												AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+												AND b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 												WHERE a.`rotation_id` = ".$db->qstr($evaluation_target["target_value"])."
 												AND b.`contact_type` IN ('director', 'pcoordinator')";
 									$courses_contacts = $db->GetAll($query);
@@ -3884,7 +3885,7 @@ class Models_Evaluation {
 									if ($evaluation_target["target_type"] == "course_id") {
 										$query = "SELECT * FROM `course_contacts`
 													WHERE `course_id` = ".$db->qstr($evaluation_target["target_value"])."
-													AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+													AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 													AND `contact_type` IN ('director', 'pcoordinator')";
 										$courses_contacts = $db->GetAll($query);
 										if ($courses_contacts) {
@@ -3902,7 +3903,7 @@ class Models_Evaluation {
 								if ($evaluation_target["target_type"] == "cgroup_id") {
 									$query = "SELECT `cgroup_id` FROM `course_group_contacts`
 												WHERE `cgroup_id` = ".$db->qstr($evaluation_target["target_value"])."
-												AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+												AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 									$tutor_record = $db->GetRow($query);
 									if ($tutor_record) {
 										$permissions[] = array("target_value" => $tutor_record["cgroup_id"], "target_type" => "cgroup_id", "contact_type" => "tutor");
@@ -3912,7 +3913,7 @@ class Models_Evaluation {
 							}
 
 							if (!$skip_evaluator_check) {
-								$cohort_ids = groups_get_enrolled_group_ids($ENTRADA_USER->getID(), false, $ENTRADA_USER->getActiveOrganisation(), false);
+								$cohort_ids = groups_get_enrolled_group_ids($ENTRADA_USER->getActiveId(), false, $ENTRADA_USER->getActiveOrganisation(), false);
                                 $cohort_ids_string = "";
                                 if (isset($cohort_ids) && is_array($cohort_ids)) {
                                     foreach ($cohort_ids as $cohort_id) {
@@ -3923,7 +3924,7 @@ class Models_Evaluation {
 								$query = "SELECT a.`cgroup_id` FROM `course_group_audience` AS a
 											JOIN `course_groups` AS b
 											ON a.`cgroup_id` = b.`cgroup_id`
-											WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+											WHERE a.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 											AND a.`active` = 1
 											AND b.`active` = 1";
 								$course_groups = $db->GetAll($query);
@@ -3945,7 +3946,7 @@ class Models_Evaluation {
 											(
 												(
 													b.`evaluator_type` = 'proxy_id'
-													AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getID())."
+													AND b.`evaluator_value` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 												)
 												".(isset($cohort_ids_string) && $cohort_ids_string ? " OR (
 													b.`evaluator_type` = 'cohort'
@@ -3964,7 +3965,7 @@ class Models_Evaluation {
 									if ($evaluation["max_submittable"] == 0) {
 										$evaluation_targets_list = array();
 										foreach ($evaluator_records as $evaluator_record) {
-											$temp_targets = Models_Evaluation::getTargetsArray($evaluation_id, $evaluator_record["eevaluator_id"], $ENTRADA_USER->getID());
+											$temp_targets = Models_Evaluation::getTargetsArray($evaluation_id, $evaluator_record["eevaluator_id"], $ENTRADA_USER->getActiveId());
 											foreach ($temp_targets as $temp_target) {
 												$evaluation_targets_list[] = $temp_target;
 											}
@@ -3979,10 +3980,10 @@ class Models_Evaluation {
 										$query = "SELECT `eprogress_id` FROM `evaluation_progress`
 													WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
 													AND `progress_value` = 'complete'
-													AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+													AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 										$eprogress_ids = $db->GetAll($query);
 										if ($eprogress_ids && $max_submittable <= count($eprogress_ids)) {
-											$permissions[] = array("target_record_id" => $ENTRADA_USER->getID(), "contact_type" => "target");
+											$permissions[] = array("target_record_id" => $ENTRADA_USER->getActiveId(), "contact_type" => "target");
 										}
 									}
 								}
@@ -3990,8 +3991,8 @@ class Models_Evaluation {
 						break;
 						case "teacher" :
 							foreach ($evaluation_targets as $evaluation_target) {
-								if ($evaluation_target["target_type"] == "proxy_id" && $evaluation_target["target_value"] == $ENTRADA_USER->getID()) {
-									$permissions[] = array("target_value" => $ENTRADA_USER->getID(), "target_type" => "proxy_id", "contact_type" => "faculty");
+								if ($evaluation_target["target_type"] == "proxy_id" && $evaluation_target["target_value"] == $ENTRADA_USER->getActiveId()) {
+									$permissions[] = array("target_value" => $ENTRADA_USER->getActiveId(), "target_type" => "proxy_id", "contact_type" => "faculty");
 									break;
 								}
 							}
@@ -4000,11 +4001,11 @@ class Models_Evaluation {
 						case "resident" :
 							$query = "SELECT * FROM `evaluation_progress`
 										WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
-										AND `target_record_id` = ".$db->qstr($ENTRADA_USER->getID())."
+										AND `target_record_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 										AND `progress_value` = 'complete'";
 							$progress_record = $db->GetRow($query);
 							if ($progress_record) {
-								$permissions[] = array("target_record_id" => $ENTRADA_USER->getID(), "contact_type" => "target");
+								$permissions[] = array("target_record_id" => $ENTRADA_USER->getActiveId(), "contact_type" => "target");
 							}
 						break;
 						case "self" :
@@ -4017,7 +4018,7 @@ class Models_Evaluation {
 									if ($evaluation_evaluator["evaluator_type"] == "cgroup_id") {
 										$query = "SELECT `cgroup_id` FROM `course_group_contacts`
 													WHERE `cgroup_id` = ".$db->qstr($evaluation_evaluator["evaluator_value"])."
-													AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+													AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId());
 										$tutor_record = $db->GetRow($query);
 										if ($tutor_record) {
 											$permissions[] = array("target_value" => 0, "evaluator_type" => "cgroup_id", "evaluator_value" => $tutor_record["cgroup_id"], "target_type" => "self", "contact_type" => "tutor");
@@ -4029,11 +4030,11 @@ class Models_Evaluation {
 							if (!$skip_evaluator_check) {
                                 $query = "SELECT `eprogress_id` FROM `evaluation_progress`
                                             WHERE `progress_value` = 'complete'
-                                            AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+                                            AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
                                             AND `evaluation_id` = ".$db->qstr($evaluation_id);
                                 $completed_evaluation = $db->getRow($query);
                                 if ($completed_evaluation) {
-                                    $permissions[] = array("target_record_id" => $ENTRADA_USER->getID(), "contact_type" => "target");
+                                    $permissions[] = array("target_record_id" => $ENTRADA_USER->getActiveId(), "contact_type" => "target");
                                 }
 							}
 						break;
@@ -4042,7 +4043,7 @@ class Models_Evaluation {
 			}
 			$query = "SELECT * FROM `evaluation_contacts`
 						WHERE `evaluation_id` = ".$db->qstr($evaluation_id)."
-						AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID())."
+						AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
 						AND `contact_role` = 'reviewer'";
 			$evaluation_contact = $db->GetRow($query);
 			if ($evaluation_contact) {

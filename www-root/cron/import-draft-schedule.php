@@ -311,6 +311,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 									}
 									
 									if ($draft_options["topics"]) {
+                                        
 										/*
 										 *  add the event topics associated with the draft event
 										 */
@@ -319,14 +320,14 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 													WHERE `event_id` = ".$db->qstr($old_event_id);
 										if ($event_topics = $db->GetAll($query)) {
 											foreach ($event_topics as $topic) {
-												unset($topic["eobjective_id"]);
+												unset($topic["etopic_id"]);
 												$topic["event_id"]		= $event_id;
 												$topic["updated_by"]	= $draft_creators[0]["proxy_id"];
-												if ($db->AutoExecute("`event_objectives`", $topic, "INSERT")) {
+												if ($db->AutoExecute("`event_topics`", $topic, "INSERT")) {
 													application_log("success", "Successfully inserted topic [".$db->Insert_ID()."] from old event [".$old_event_id."], for new event [".$event_id."].");
 												} else {
 													$error++;
-													application_log("error", "Error inserting event_objectives [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
+													application_log("error", "Error inserting event_topics [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
 												}
 											}
 										} else {
@@ -400,7 +401,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 									application_log("error", "Failed to sent email to draft [".$draft_id."] creators.");
 								}
 							}
-							
+						
 							$query = "UPDATE `drafts` SET `status` = 'closed' WHERE `draft_id` = ".$db->qstr($draft["draft_id"]);
 							if ($db->Execute($query)) {
 							   /*

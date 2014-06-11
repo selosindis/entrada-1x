@@ -97,7 +97,7 @@ if (!defined("IN_EVENTS")) {
 							}
                             ?>
                             <tr>
-                                <td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_custom" value="custom" onclick="selectEventAudienceOption('custom')" style="vertical-align: middle"<?php echo ((($PROCESSED["event_audience_type"] == "custom") || (!$course_list && $permission != "closed")) ? " checked=\"checked\"" : ""); ?> /></td>
+                                <td style="vertical-align: top"><input type="radio" name="event_audience_type" id="event_audience_type_custom" value="custom" onclick="selectEventAudienceOption('custom')" style="vertical-align: middle"<?php echo (((isset($PROCESSED["event_audience_type"]) && $PROCESSED["event_audience_type"] == "custom") || (!$course_list && $permission != "closed")) ? " checked=\"checked\"" : ""); ?> /></td>
                                 <td colspan="2" style="padding-bottom: 15px">
                                     <label for="event_audience_type_custom" class="radio-group-title">A Custom Event Audience</label>
                                     <div class="content-small">This event is intended for a custom selection of learners.</div>
@@ -332,7 +332,7 @@ if (!defined("IN_EVENTS")) {
 
                                         <ul class="menu multiselect" id="audience_list" style="margin-top: 5px">
                                         <?php
-                                        if (is_array($PROCESSED["associated_cohort_ids"]) && count($PROCESSED["associated_cohort_ids"])) {
+                                        if (isset($PROCESSED["associated_cohort_ids"]) && is_array($PROCESSED["associated_cohort_ids"]) && count($PROCESSED["associated_cohort_ids"])) {
                                             foreach ($PROCESSED["associated_cohort_ids"] as $group) {
                                                 if ((array_key_exists($group, $COHORT_LIST)) && is_array($COHORT_LIST[$group])) {
                                                     ?>
@@ -342,7 +342,7 @@ if (!defined("IN_EVENTS")) {
                                             }
                                         }
 
-                                        if (is_array($PROCESSED["associated_cgroup_ids"]) && count($PROCESSED["associated_cgroup_ids"])) {
+                                        if (isset($PROCESSED["associated_cgroup_ids"]) && is_array($PROCESSED["associated_cgroup_ids"]) && count($PROCESSED["associated_cgroup_ids"])) {
                                             foreach ($PROCESSED["associated_cgroup_ids"] as $group) {
                                                 if ((array_key_exists($group, $GROUP_LIST)) && is_array($GROUP_LIST[$group])) {
                                                     ?>
@@ -352,7 +352,7 @@ if (!defined("IN_EVENTS")) {
                                             }
                                         }
 
-                                        if (is_array($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) {
+                                        if (isset($PROCESSED["associated_proxy_ids"]) && is_array($PROCESSED["associated_proxy_ids"]) && count($PROCESSED["associated_proxy_ids"])) {
                                             foreach ($PROCESSED["associated_proxy_ids"] as $student) {
                                                 if ((array_key_exists($student, $STUDENT_LIST)) && is_array($STUDENT_LIST[$student])) {
                                                     ?>

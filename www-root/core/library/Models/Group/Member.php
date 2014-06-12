@@ -132,4 +132,3 @@ class Models_Group_Member extends Models_Base {
         return $member;
     }
 }
-?>

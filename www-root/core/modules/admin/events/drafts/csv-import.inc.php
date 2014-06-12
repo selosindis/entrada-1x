@@ -226,7 +226,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             ?>
 
                             <script type="text/javascript">
-                                var json_rows = JSON.parse('<?php echo json_encode($json_rows); ?>');
+                                var json_rows = <?php echo json_encode($json_rows); ?>;
                                 jQuery(function($) {
 
                                     var current_row = 0;

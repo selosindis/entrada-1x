@@ -660,7 +660,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					</script>
 
 					<a name="learning_events_section"></a>
-                    <h2 id="learning_events_section" title="Learning Events">Learning Events</h2>
+                    <h2 id="learning_events_section" class="collapsed" title="Learning Events">Learning Events</h2>
 					<div id="learning-events">
                         <?php
                         /**
@@ -735,7 +735,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                     </div>
 
                     <a name="community_pages_section"></a>
-                    <h2 id="community_pages_section" title="Community Pages Section">Community Pages</h2>
+                    <h2 id="community_pages_section" class="collapsed" title="Community Pages Section">Community Pages</h2>
                     <div id="community-pages-section">
                         <?php
                         /**

@@ -31,7 +31,7 @@ class Models_Event_MapEventsEventType extends Models_Base {
               $updated_by;
     
     protected $table_name = "map_events_eventtypes";
-    protected $default_sort_column = "map_events_eventtypes_id  ";
+    protected $default_sort_column = "map_events_eventtypes_id";
     
     public function __construct($arr = NULL) {
         parent::__construct($arr);
@@ -55,6 +55,13 @@ class Models_Event_MapEventsEventType extends Models_Base {
     
     public function getUpdatedBy () {
         return $this->updated_by;
+    }
+    
+    public static function fetchAllByInstructionalMethodID ($instructional_method_id = null) {
+        $self = new self();
+        return $self->fetchAll(array(
+            array("key" => "fk_instructional_method_id", "value" => $instructional_method_id, "method" => "=")
+        ));
     }
     
     public function update () {

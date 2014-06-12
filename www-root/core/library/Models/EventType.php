@@ -85,6 +85,28 @@ class Models_EventType extends Models_Base {
         ));
     }
     
+    public static function fetchAllByOrganisationID ($organisation_id = null, $active = 1) {
+        global $db;
+        $event_types = false;
+        
+        $query = "	SELECT a.* FROM `events_lu_eventtypes` AS a 
+                    LEFT JOIN `eventtype_organisation` AS b 
+                    ON a.`eventtype_id` = b.`eventtype_id` 
+                    LEFT JOIN `".AUTH_DATABASE."`.`organisations` AS c
+                    ON c.`organisation_id` = b.`organisation_id` 
+                    WHERE b.`organisation_id` = ?
+                    AND a.`eventtype_active` = ?
+                    ORDER BY a.`eventtype_order` ASC";
+        
+        $results = $db->GetAll($query, array($organisation_id, $active));
+        if ($results) {
+            foreach ($results as $result) {
+                $event_types[] = new self($result);
+            }
+        }
+        return $event_types;
+    }
+    
     public function insert() {
 		global $db;
 		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "INSERT")) {

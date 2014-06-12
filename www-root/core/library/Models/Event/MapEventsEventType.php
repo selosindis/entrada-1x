@@ -68,11 +68,22 @@ class Models_Event_MapEventsEventType extends Models_Base {
         return false;
     }
     
-    public function insert () {
-        return false;
-    }
+    public function insert() {
+		global $db;
+		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "INSERT")) {
+			$this->map_events_eventtypes_id = $db->Insert_ID();
+			return true;
+		} else {
+			return false;
+		}
+	}
     
     public function delete () {
-        return false;
-    }
+		global $db;
+		
+		$query = "DELETE FROM `". $this->table_name ."` WHERE `map_events_eventtypes_id` = ?";
+		$result = $db->Execute($query, array($this->getID()));
+		
+		return $result;
+	}
 }

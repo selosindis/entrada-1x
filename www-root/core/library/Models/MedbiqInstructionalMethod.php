@@ -75,9 +75,18 @@ class Models_MedbiqInstructionalMethod extends Models_Base {
         ));
     }
     
-    public function update () {
-        return false;
+    public function getMappedEventTypes () {
+        return Models_Event_MapEventsEventType::fetchAllByInstructionalMethodID($this->instructional_method_id);
     }
+    
+    public function update() {
+		global $db;
+		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "UPDATE", "`instructional_method_id` = ".$db->qstr($this->getID()))) {
+			return true;
+		} else {
+			return false;
+		}
+	}
     
     public function insert () {
         return false;

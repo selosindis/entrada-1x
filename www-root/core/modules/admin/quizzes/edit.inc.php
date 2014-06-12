@@ -312,7 +312,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                     ?>
                                     <li class="question">
                                         <div class="question">
-                                            <?php if ($ALLOW_QUESTION_MODIFICATIONS) { ?><input type="checkbox" class="question-ids" name="qquestion_ids[]" value="<?php echo $question->getQquestionID(); ?>" /><?php } ?> <span class="question-text"><?php echo $question->getQuestionText(); ?></span>
+                                            <?php if ($ALLOW_QUESTION_MODIFICATIONS) { ?><input type="checkbox" class="question-ids" name="qquestion_ids[]" value="<?php echo $question->getQquestionID(); ?>" data-qquestion-group-id="<?php echo !is_null($question->getQquestionGroupID()) ? $question->getQquestionGroupID() : "0"; ?>" /><?php } ?> <span class="question-text"><?php echo $question->getQuestionText(); ?></span>
                                             <?php if ($ALLOW_QUESTION_MODIFICATIONS) { ?>
                                             <div class="pull-right">
                                                 <i class="icon-move drag-handle"></i>
@@ -389,27 +389,69 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                 <script type="text/javascript">
                                     jQuery(function($) {
                                         
+                                        $("input.question-ids:checked").prop("checked", false);
+                                        
                                         $("#group-questions").on("click", function(e) {
                                             var container;
-                                            $(".question-ids:checked").each(function(i, v) {
-                                                if (i == 0) {
-                                                    container = $(this).closest("ol.questions");
-                                                    if (!container.hasClass("question-group")) {
-                                                        container.addClass("question-group");
-                                                    }
-                                                } else {
-                                                    var question = $(this).closest("li.question");
-                                                    var question_parent = question.closest("ol.questions");
-                                                    if (question_parent.attr("start") != container.attr("start")) {
-                                                        container.append(question.clone());
-                                                        question.remove();
-                                                        if (question_parent.children("li").length >= 0) {
-                                                            question_parent.remove();
+                                            
+                                            if ($(this).hasClass("ungroup")) {
+                                                var questions = new Array();
+                                                var group_id = 0;
+                                                $("input.question-ids").each(function(i, input) {
+                                                    if ($(input).is(":checked")) {
+                                                        questions[i] = $(input).closest("li.question").clone();
+                                                        $(input).closest("li.question").remove();
+                                                        if ($(input).closest("ol.questions").children("li.question").length <= 0) {
+                                                            $(input).closest("ol.questions").remove();
+                                                        }
+                                                    } else {
+                                                        if ($(input).data("qquestion-group-id") != group_id || $(input).data("qquestion-group-id") == 0) {
+                                                            questions[i] = $(input).closest("ol.questions").clone();
+                                                            $(input).closest("ol.questions").remove();
                                                         }
                                                     }
+                                                    group_id = $(input).data("qquestion-group-id");
+                                                });
+                                                
+                                                if (questions.length >= 1) {
+                                                    var start = 1;
+                                                    $(questions).each(function(i, question) {
+                                                        if ($(question).hasClass("question")) {
+                                                            var question_parent = $(document.createElement("ol"));
+                                                            question_parent.attr("start", start).addClass("questions").append(question);
+                                                            $("div.quiz-questions").append(question_parent);
+                                                            start++;
+                                                        } else {
+                                                            $(question).attr("start", start);
+                                                            $("div.quiz-questions").append(question);
+                                                            start = start + question.children("li").length;
+                                                        }
+                                                    });
                                                 }
-                                            });
-                                            saveQuestionOrder()
+                                                
+                                            } else {
+                                                $(".question-ids:checked").each(function(i, v) {
+                                                    if (i == 0) {
+                                                        container = $(this).closest("ol.questions");
+                                                        if (!container.hasClass("question-group")) {
+                                                            container.addClass("question-group");
+                                                        }
+                                                    } else {
+                                                        var question = $(this).closest("li.question");
+                                                        var question_parent = question.closest("ol.questions");
+                                                        if (question_parent.attr("start") != container.attr("start")) {
+                                                            container.append(question.clone());
+                                                            question.remove();
+                                                            if (question_parent.children("li").length >= 0) {
+                                                                question_parent.remove();
+                                                            }
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                            saveQuestionOrder();
+                                            $("input.question-ids:checked").prop("checked", false);
+                                            $(this).removeClass("ungroup").html("Group Selected");
                                             e.preventDefault();
                                         });
                                         
@@ -458,11 +500,36 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                         
                                         $("input.question-ids").on("change", function(e) {
                                             var group = $(this).closest("ol.questions");
+                                            
                                             if (!$(this).prop("checked")) {
                                                 group.find("input.question-ids").removeAttr("checked");
                                             } else {
                                                 group.find("input.question-ids").attr("checked", "checked");
                                             }
+                                            
+                                            var grouped = true;
+                                            var checked_count = 0;
+                                            
+                                            $("input.question-ids").each(function(i, ui) {
+                                                if ($(ui).prop("checked")) {
+                                                    if (!$(ui).closest("ol.questions").hasClass("question-group")) {
+                                                        grouped = false;
+                                                        return false;
+                                                    }
+                                                    checked_count++;
+                                                }
+                                            });
+                                            
+                                            if (grouped == true) {
+                                                $("#group-questions").html("Ungroup Selected").addClass("ungroup");
+                                            } else {
+                                                $("#group-questions").html("Group Selected").removeClass("ungroup");
+                                            }
+                                            
+                                            if (checked_count <= 0) {
+                                                $("#group-questions").html("Group Selected").removeClass("ungroup");
+                                            }
+                                            
                                         });
                                         
                                         var temp_qquestion_id = 0;

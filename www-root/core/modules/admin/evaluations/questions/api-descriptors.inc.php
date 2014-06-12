@@ -64,32 +64,36 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
         $descriptors = Models_Evaluation_ResponseDescriptor::fetchAllByOrganisation($ORGANISATION_ID);
         if ($descriptors && @count($descriptors)) {
             ?>
-            <table class="tableList">
-                <thead>
-                    <tr>
-                        <th width="10%">&nbsp;</th>
-                        <th width="90%" class="text-left">Descriptors</th>
-                    </tr>
-                </thead>
-                <tbody>
-                <?php
-                foreach ($descriptors as $descriptor) {
-                    ?>
-                    <tr>
-                        <td>
-                            <input type="radio" name="response_descriptor_id" value="<?php echo $descriptor->getID(); ?>" onclick="jQuery('#response_descriptor_<?php echo $RESPONSE_NUMBER; ?>').val(<?php echo $descriptor->getID(); ?>)"<?php echo ($erdescriptor_id == $descriptor->getID() ? " checked=\"checked\"" : ""); ?> />
-                        </td>
-                        <td>
+            <div class="pull-right cursor-pointer close" style="margin-top: -15px;" onclick="modalDescriptorDialog.close()">&times;</div>
+            <div class="row-fluid">
+                <span class="span1 offset1">&nbsp;</span
+                <span class="span10">
+                    <strong>
+                        Descriptors
+                    </strong>
+                </span>
+            </div>
+            <?php
+            foreach ($descriptors as $descriptor) {
+                ?>
+                <div class="row-fluid">
+                    <span class="span1 offset1">
+                        <input type="radio" id="response_descriptor_id_<?php echo $descriptor->getID(); ?>" name="response_descriptor_id" value="<?php echo $descriptor->getID(); ?>" onclick="jQuery('#response_descriptor_<?php echo $RESPONSE_NUMBER; ?>').val(<?php echo $descriptor->getID(); ?>)"<?php echo ($erdescriptor_id == $descriptor->getID() ? " checked=\"checked\"" : ""); ?> />
+                    </span
+                    <span class="span10">
+                        <label for="response_descriptor_id_<?php echo $descriptor->getID(); ?>">
                             <?php
                             echo $descriptor->getDescriptor();
                             ?>
-                        </td>
-                    </tr>
-                    <?php
-                }
-                ?>
-                </tbody>
-            </table>
+                        </label>
+                    </span>
+                </div>
+                <?php
+            }
+            ?>
+            <div class="pull-right space-above">
+                <a class="btn btn-small btn-primary" onclick="modalDescriptorDialog.close()">Close</a>
+            </div>
             <?php
         }
     } else {

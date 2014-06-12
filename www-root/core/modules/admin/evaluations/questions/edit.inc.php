@@ -58,7 +58,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					$question_used = 0;
 				}
 			}
-			$PROCESSED["question_parent_id"] = $QUESTION_ID;
+
+            if ($question_used) {
+                $PROCESSED["question_parent_id"] = $QUESTION_ID;
+            }
 		}
 		
 		if ($PROCESSED["questiontype_id"] == 3) {
@@ -137,7 +140,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					$PROCESSED["categories_count"] = count($categories);
 				}
 			}
-		} elseif ($PROCESSED["questiontype_id"] == 1 || $PROCESSED["questiontype_id"] == 4) {
+		} elseif (in_array($PROCESSED["questiontype_id"], array(1, 4, 5, 6))) {
 			$query = "SELECT a.`objective_id` FROM `evaluation_question_objectives` AS a
 						JOIN `global_lu_objectives` AS b
 						ON a.`objective_id` = b.`objective_id`
@@ -218,6 +221,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						}
 					break;
 					case 1 :
+					case 5 :
+					case 6 :
 					default :
 						/**
 						 * Required field "allow_comments" / Allow Question Comments.
@@ -415,7 +420,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							if ($question_record["question_parent_id"]) {
 								$PROCESSED_RELATED_QUESTION["related_equestion_id"] = $question_record["question_parent_id"];
 							}
-							$PROCESSED["question_parent_id"] = 0;
 						}
 						if ($question_used) {
 							if ($PROCESSED["questiontype_id"] == 3) {
@@ -1081,8 +1085,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								ON a.`questiontype_id` = b.`questiontype_id`
 								LEFT JOIN `evaluation_rubric_questions` AS c
 								ON a.`equestion_id` = c.`equestion_id`
+								LEFT JOIN `evaluations_related_questions` AS d
+								ON a.`question_parent_id` = d.`related_equestion_id`
 								WHERE (
-									a.`question_parent_id` = ".$db->qstr($PROCESSED["question_parent_id"])."
+									d.`equestion_id` = ".$db->qstr($PROCESSED["question_parent_id"])."
+								    OR a.`question_parent_id` = ".$db->qstr($PROCESSED["question_parent_id"])."
 									OR a.`equestion_id` = ".$db->qstr($PROCESSED["question_parent_id"])."
 									OR a.`equestion_id` IN (
 										SELECT d.`equestion_id` FROM `evaluation_rubric_questions` AS d

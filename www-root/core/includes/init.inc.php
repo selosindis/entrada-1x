@@ -79,6 +79,11 @@ if (defined("AUTH_ALLOW_CAS") && (bool) AUTH_ALLOW_CAS) {
  */
 $ENTRADA_TEMPLATE = new Entrada_Template();
 
+/**
+ * Initialize the settings class.
+ */
+$ENTRADA_SETTINGS = new Entrada_Settings();
+
 if ($ENTRADA_USER) {
     /**
      * Check whether we are using the organisation_id + ua_id from the URL, from

@@ -196,5 +196,3 @@ class Models_Syllabus {
 	}
 	
 }
-
-?>

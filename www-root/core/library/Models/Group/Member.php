@@ -79,7 +79,7 @@ class Models_Group_Member extends Models_Base {
     public static function getUsersByGroupID($group_id, $search_term = false, $active = 1) {
         global $db;
         $members = false;
-        
+
         $query	= "	SELECT a.`id`, a.`number`, a.`firstname`, a.`lastname`, c.`gmember_id`, c.`member_active`,
                     a.`username`, a.`email`, a.`organisation_id`, a.`username`, b.`group`, b.`role`
                     FROM `".AUTH_DATABASE."`.`user_data` AS a
@@ -92,7 +92,7 @@ class Models_Group_Member extends Models_Base {
                     AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
                     AND c.`group_id` = ?
                     AND c.`member_active` = ?
-                    ". (trim($search_term) ? " AND (CONCAT(a.`firstname`, ' ' , a.`lastname`) LIKE '%". trim($search_term) ."%' OR CONCAT(a.`lastname`, ' ' , a.`firstname`) LIKE '%". trim($search_term) ."%')" : "") ."
+                    ". (trim($search_term) ? " AND (CONCAT(a.`firstname`, ' ' , a.`lastname`) LIKE ".$db->qstr("%".$search_term."%")." OR CONCAT(a.`lastname`, ' ' , a.`firstname`) LIKE ".$db->qstr("%".$search_term."%") : "") ."
                     GROUP BY a.`id`
                     ORDER BY a.`lastname` ASC, a.`firstname` ASC";
         
@@ -106,7 +106,7 @@ class Models_Group_Member extends Models_Base {
         return $members;
     }
     
-    public static function getUser ($proxy_id = null, $search_term = false) {
+    public static function getUser($proxy_id = null, $search_term = false) {
         global $db;
         $member = false;
         
@@ -120,7 +120,7 @@ class Models_Group_Member extends Models_Base {
                     AND (b.`access_starts` = '0' OR b.`access_starts` <= ?)
                     AND (b.`access_expires` = '0' OR b.`access_expires` > ?)
                     AND a.`id` = ?
-                    ". (trim($search_term) ? " AND (CONCAT(a.`firstname`, ' ' , a.`lastname`) LIKE '%". trim($search_term) ."%' OR CONCAT(a.`lastname`, ' ' , a.`firstname`) LIKE '%". trim($search_term) ."%')" : "") ."
+                    ". (trim($search_term) ? " AND (CONCAT(a.`firstname`, ' ' , a.`lastname`) LIKE ".$db->qstr("%".$search_term."%")." OR CONCAT(a.`lastname`, ' ' , a.`firstname`) LIKE ".$db->qstr("%".$search_term."%") : "") ."
                     GROUP BY a.`id`
                     ORDER BY a.`lastname` ASC, a.`firstname` ASC";
         

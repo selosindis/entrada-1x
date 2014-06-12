@@ -47,6 +47,10 @@ class Models_MedbiqInstructionalMethod extends Models_Base {
         return $this->code;
     }
     
+    public function getInstructionalMethod () {
+        return $this->instructional_method;
+    }
+    
     public function getInstructionalMethodDescription () {
         return $this->instructional_method_description;
     }

@@ -63,11 +63,23 @@ class Models_MedbiqInstructionalMethod extends Models_Base {
         return $this->updated_by;
     }
     
+    public static function get ($instructional_method_id = null, $active = 1) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "instructional_method_id", "value" => $instructional_method_id, "method" => "="),
+            array("mode" => "AND", "key" => "active", "value" => $active, "method" => "=")
+        ));
+    }
+    
     public function update () {
         return false;
     }
     
     public function insert () {
+        return false;
+    }
+    
+    public function delete () {
         return false;
     }
 }

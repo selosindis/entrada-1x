@@ -1223,6 +1223,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                 function buildAttachedEventList () {
                                     var event_title = jQuery("#assessment-event").attr("data-title");
                                     var event_date = jQuery("#assessment-event").attr("data-date");
+                                    var event_id = jQuery("#assessment-event").val();
                                     var event_li = document.createElement("li");
                                     var event_div = document.createElement("div");
                                     var remove_icon_div = document.createElement("div");
@@ -1235,7 +1236,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     jQuery(event_remove_icon).addClass("icon-trash icon-white");
                                     jQuery(remove_icon_span).append(event_remove_icon);
                                     jQuery(remove_icon_div).append(remove_icon_span).attr({id: "remove-attched-assessment-event-div"});
-                                    jQuery(event_h3).addClass("event-text").text(event_title).html();
+                                    jQuery(event_h3).addClass("event-text").html("<a href=\"<?php echo ENTRADA_URL; ?>/events?rid=" + event_id + "\">" + event_title + "</a>");
                                     jQuery(event_span).addClass("event-text").addClass("muted").text(event_date).html();
                                     jQuery(event_div).append(event_h3).append(event_span);
                                     jQuery(event_li).append(event_div);
@@ -1530,21 +1531,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             <h3 id="event-modal-title">Search learning events to attach to this assessment</h3>
                         </div>
                         <div class="modal-body">
-                            <!--
-                            <div id="assessment-event-search-toggles" class="row space-below">
-                                <div class="btn-group pull-right clearfix">
-                                    <a href="#" class="btn" id="calendar-search-toggle"><i class="icon-calendar"></i></a>
-                                    <a href="#" class="btn" id="title-search-toggle"><i class="icon-search"></i></a>
-                                </div>
-                            </div>
-                            <div id="calendar-search" class="hide">
-                                <div id="datepicker" class="space-below"></div>
-                                <div id="event-msgs"></div>
-                                <div id="events-wrap">
-                                    <ul id="events-list"></ul>
-                                </div>
-                            </div>
-                            -->
                             <div id="title-search">
                                 <input type="text" placeholder="Search learning events by title" id="event-title-search" />
                                 <div id="event-search-msgs">

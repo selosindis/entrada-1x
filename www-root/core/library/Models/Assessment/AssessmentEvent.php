@@ -70,10 +70,22 @@ class Models_Assessment_AssessmentEvent extends Models_Base {
         return Models_Event::get($event_id);
     }
     
+    public function getAssessment() {
+        return Models_Assessment::fetchRowByID($this->assessment_id);
+    }
+
     public static function fetchRowByAssessmentID ($assessment_id = null) {
         $self = new self();
         return $self->fetchRow(array(
             array("key" => "assessment_id", "value" => $assessment_id, "method" => "="),
+            array("mode" => "AND", "key" => "active", "value" => 1, "method" => "=")    
+        ));
+    }
+    
+    public static function fetchRowByEventID ($event_id = null) {
+        $self = new self();
+        return $self->fetchRow(array(
+            array("key" => "event_id", "value" => $event_id, "method" => "="),
             array("mode" => "AND", "key" => "active", "value" => 1, "method" => "=")    
         ));
     }

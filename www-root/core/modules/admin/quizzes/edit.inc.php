@@ -261,13 +261,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                     <h2 id="quiz_questions_section" title="Quiz Content Questions">Quiz Questions</h2>
 					<div id="quiz-content-questions">
                         <?php
+                        $questions = Models_Quiz_Question::fetchAllRecords($RECORD_ID);
                         if ($ALLOW_QUESTION_MODIFICATIONS) {
                             $question_types = Models_Quiz_QuestionType::fetchAllRecords();
                             if ($question_types) {
                                 ?>
                                 <div class="row-fluid space-below">
+                                    <?php if (isset($questions) && $questions) { ?>
                                     <a href="#delete-question-confirmation-box" class="btn btn-danger" id="delete-questions" data-toggle="modal">Delete Selected</a>
                                     <a href="#" class="btn" id="group-questions">Group Selected</a>
+                                    <?php } ?>
                                     <div class="pull-right">
                                         <div class="btn-group">
                                             <a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add-question&amp;id=<?php echo $RECORD_ID; ?>&type=1" class="btn btn-success">Add Multiple Choice Question</a>
@@ -291,8 +294,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                 <?php
                             }
                         }
-                        
-                        $questions = Models_Quiz_Question::fetchAllRecords($RECORD_ID);
                         
                         if ($questions) {
                             $i = 1;

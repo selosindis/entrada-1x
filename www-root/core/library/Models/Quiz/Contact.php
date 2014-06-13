@@ -42,7 +42,7 @@ class Models_Quiz_Contact extends Models_Base {
         );
     }
 
-    public static function fetchAllRecords($quiz_id, $question_active = 1) {
+    public static function fetchAllRecords($quiz_id) {
         $self = new self();
 
         $constraints = array(
@@ -50,12 +50,6 @@ class Models_Quiz_Contact extends Models_Base {
                 "mode"      => "AND",
                 "key"       => "quiz_id",
                 "value"     => $quiz_id,
-                "method"    => "="
-            ),
-            array(
-                "mode"      => "AND",
-                "key"       => "question_active",
-                "value"     => $question_active,
                 "method"    => "="
             )
         );

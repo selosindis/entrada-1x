@@ -89,7 +89,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						$row = array();
 						$row["modified"] = "<input class=\"delete-control\" type=\"checkbox\" name=\"delete[]\" value=\"".$quiz["quiz_id"]."\" />";
 						$row["quiz_title"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">".$quiz["quiz_title"]."</a>";
-						$row["author"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">". $quiz["author"] ."</a>";
+						$row["author"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">". $quiz["quiz_author"] ."</a>";
 						$row["question_total"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">". $quiz["question_total"] ."</a>";
 						$row["updated_date"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">".date("Y-m-d g:ia", $quiz["updated_date"])."</a>";
 						$row["id"] = $quiz["quiz_id"];

@@ -376,8 +376,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                             }
 										}
 									}
-
-									echo implode("; ", $q_a);
+                                    if (isset($q_a) && !empty($q_a)) {
+                                        echo implode("; ", $q_a);
+                                    }
 									?>
 								</td>
 							</tr>

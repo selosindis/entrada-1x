@@ -51,7 +51,7 @@ class Entrada_Event_Draft_CsvImporter {
             "event_description"         => array("trim", "striptags"),
             "location"                  => array("trim", "striptags"),
             "audience_groups"           => array("trim", "striptags"),
-            "audience_cohort"           => array("trim", "striptags"),
+            "audience_cohorts"           => array("trim", "striptags"),
             "audience_students"         => array("trim", "striptags"),
             "teacher_names"             => array("trim", "striptags"),
             "teacher_numbers"           => array("trim", "striptags"),
@@ -60,7 +60,7 @@ class Entrada_Event_Draft_CsvImporter {
         );
         $this->delimited_fields = array(
             "event_type_durations", "event_types", "audience_groups", 
-            "audience_cohort", "audience_students", "teacher_numbers", 
+            "audience_cohorts", "audience_students", "teacher_numbers",
             "teacher_names", "event_tutors"
         );
 	}
@@ -210,6 +210,14 @@ class Entrada_Event_Draft_CsvImporter {
 			$err["errors"][] = "The event title was not set for this event.";
 			$skip_row = true;
 		}
+		// recurring event id, not required
+		if (!is_null($mapped_cols["recurring_event"])) {
+			$output[$mapped_cols["original_event"]]["recurring_event"] = $mapped_cols["recurring_event"];
+		} else {
+			if ($old_event_data) {
+				$output[$mapped_cols["original_event"]]["recurring_event"] = $old_event_data["recurring_id"];
+			}
+		}
 
 		// event description, not required
 		if (strlen($mapped_cols["event_description"]) > 0) {
@@ -230,10 +238,10 @@ class Entrada_Event_Draft_CsvImporter {
 		}
 
 		// event audience, not required	but needs to be verified
-		if (!empty($mapped_cols["audience_cohort"])) {
-			foreach ($mapped_cols["audience_cohort"] as $i => $cohort) {
+		if (!empty($mapped_cols["audience_cohorts"])) {
+			foreach ($mapped_cols["audience_cohorts"] as $i => $cohort) {
 				if (!empty($cohort)) {
-					$mapped_cols["audience_cohort"][$i] = $db->qstr(strtolower(clean_input($cohort, array("trim", "striptags"))));
+					$mapped_cols["audience_cohorts"][$i] = $db->qstr(strtolower(clean_input($cohort, array("trim", "striptags"))));
 				}
 			}
 			$query = "	SELECT a.`group_id`, a.`group_name`
@@ -241,7 +249,7 @@ class Entrada_Event_Draft_CsvImporter {
                         JOIN `group_organisations` AS b
                         ON b.`group_id` = a.`group_id`
                         AND b.`organisation_id` = ".$db->qstr($organisation_id)."
-						WHERE LCASE(a.`group_name`) IN (".implode(", ", $mapped_cols["audience_cohort"]).")
+						WHERE LCASE(a.`group_name`) IN (".implode(", ", $mapped_cols["audience_cohorts"]).")
 						GROUP BY a.`group_name`";
 			$results = $db->GetAll($query);
 			if ($results) {
@@ -342,65 +350,91 @@ class Entrada_Event_Draft_CsvImporter {
             foreach ($valid_row as $row) {
 
                 if (isset($row["devent_id"])) {
-                    $mode = "UPDATE";
-                    $where = "WHERE `devent_id` = ".$db->qstr($row["devent_id"]);
+                    $update = true;
+                    $where = " WHERE `devent_id` = ".$db->qstr($row["devent_id"]);
+                    $query = "UPDATE `draft_events`
+                                SET `parent_id` = ".$db->qstr($row["parent_event"]).",
+                                    `recurring_id` = ".$db->qstr($row["recurring_event"]).",
+                                    `course_id` = ".$db->qstr($row["course_id"]).",
+                                    `event_title` = ".$db->qstr($row["event_title"]).",
+                                    `event_description` = ".$db->qstr($row["event_description"]).",
+                                    `event_start` = ".$db->qstr($row["event_start"]).",
+                                    `event_finish` = ".$db->qstr(($row["event_start"] + ($row["total_duration"] * 60))).",
+                                    `event_duration` = ".$db->qstr($row["total_duration"]).",
+                                    `event_location` = ".$db->qstr($row["event_location"])."
+                                    WHERE `devent_id` = ".$db->qstr($row["devent_id"]);
                 } else {
-                    $mode = "INSERT INTO";
-                    $where = "";
+                    $update = false;
+                    $query = "INSERT INTO `draft_events` (`draft_id`, `event_id`, `parent_id`, `recurring_id`, `course_id`, `event_title`, `event_description`, `event_start`, `event_finish`, `event_duration`, `event_location`)
+                                VALUES (".$this->draft_id.", ".$db->qstr($row["event_id"]).", ".$db->qstr($row["parent_event"]).", ".$db->qstr($row["recurring_event"]).", ".$db->qstr($row["course_id"]).", ".$db->qstr($row["event_title"]).", ".$db->qstr($row["event_description"]).", ".$db->qstr($row["event_start"]).", ".$db->qstr($row["event_start"] + ($row["total_duration"] * 60)).", ".$db->qstr($row["total_duration"]).", ".$db->qstr($row["event_location"]).")";
                 }
 
-                $query =	$mode." `draft_events` (`draft_id`, `event_id`, `parent_id`, `course_id`, `event_title`, `event_description`, `event_start`, `event_finish`, `event_duration`, `event_location`)
-                            VALUES (".$this->draft_id.", ".$db->qstr($row["event_id"]).", ".$db->qstr($row["parent_event"]).", ".$db->qstr($row["course_id"]).", ".$db->qstr($row["event_title"]).", ".$db->qstr($row["event_description"]).", ".$db->qstr($row["event_start"]).", ".$db->qstr($row["event_start"] + ($row["total_duration"] * 60)).", ".$db->qstr($row["total_duration"]).", ".$db->qstr($row["event_location"]).")".
-                            $where;
                 $result = $db->Execute($query);
 
                 $devent_id = (isset($row["devent_id"]) ? $row["devent_id"] : $db->Insert_ID()."\n");
 
+                if ($update) {
+                    $query = "DELETE FROM `draft_eventtypes`
+                                WHERE `devent_id` = ".$db->qstr($row["devent_id"]);
+                    if (!$db->Execute($query)) {
+                        application_log("error", "Unable to remove existing `draft_eventtypes` records when importing a csv into an events draft. DB Said: ".$db->ErrorMsg());
+                    }
+                }
                 foreach ($row["eventtypes"] as $eventtype) {
-                    $query =	$mode." `draft_eventtypes` (`devent_id`, `event_id`, `eventtype_id`, `duration`)
-                                VALUES (".$db->qstr($devent_id).", ".$db->qstr($row["event_id"]).", ".$db->qstr($eventtype["type"]).", ".$db->qstr($eventtype["duration"]).")".
-                                $where;
+                    $query =	"INSERT INTO `draft_eventtypes` (`devent_id`, `event_id`, `eventtype_id`, `duration`)
+                                VALUES (".$db->qstr($devent_id).", ".$db->qstr($row["event_id"]).", ".$db->qstr($eventtype["type"]).", ".$db->qstr($eventtype["duration"]).")";
                     $result = $db->Execute($query);
                 }
+
+                if ($update) {
+                    $query = "DELETE FROM `draft_audience`
+                                    WHERE `devent_id` = ".$db->qstr($row["devent_id"]);
+                    if (!$db->Execute($query)) {
+                        application_log("error", "Unable to remove existing `draft_audience` records when importing a csv into an events draft. DB Said: ".$db->ErrorMsg());
+                    }
+                }
+
                 if (isset($row["audiences"]["cohorts"])) {
                     foreach ($row["audiences"]["cohorts"] as $cohort) {
-                        $query =	$mode." `draft_audience` (`devent_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
-                                    VALUES (".$db->qstr($devent_id).", 'cohort', ".$db->qstr($cohort).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")".
-                                    $where;
+                        $query =	"INSERT INTO `draft_audience` (`devent_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
+                                    VALUES (".$db->qstr($devent_id).", 'cohort', ".$db->qstr($cohort).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")";
                         $result = $db->Execute($query);
                     }
                 }
                 if (isset($row["audiences"]["groups"])) {
                     foreach ($row["audiences"]["groups"] as $group) {
-                        $query =	$mode." `draft_audience` (`devent_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
-                                    VALUES (".$db->qstr($devent_id).", 'group_id', ".$db->qstr($group).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")".
-                                    $where;
+                        $query =	"INSERT INTO `draft_audience` (`devent_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
+                                    VALUES (".$db->qstr($devent_id).", 'group_id', ".$db->qstr($group).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")";
                         $result = $db->Execute($query);
                     }
                 }
                 if (isset($row["audiences"]["students"])) {
                     foreach ($row["audiences"]["students"] as $student) {
-                        $query =	$mode." `draft_audience` (`devent_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
-                                    VALUES (".$db->qstr($devent_id).", 'proxy_id', ".$db->qstr($student).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")".
-                                    $where;
+                        $query =	"INSERT INTO `draft_audience` (`devent_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
+                                    VALUES (".$db->qstr($devent_id).", 'proxy_id', ".$db->qstr($student).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")";
                         $result = $db->Execute($query);
                     }
                 }
 
                 // If there is no custom audience set above, set the audience to the course_id.
                 if ($row["course_id"] && (!isset($row["audiences"]["cohorts"]) || empty($row["audiences"]["cohorts"])) && (!isset($row["audiences"]["groups"]) || empty($row["audiences"]["groups"])) && (!isset($row["audiences"]["students"]) || empty($row["audiences"]["students"]))) {
-                        $query =	$mode." `draft_audience` (`devent_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
-                                    VALUES (".$db->qstr($devent_id).", 'course_id', ".$db->qstr($row["course_id"]).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")".
-                                    $where;
+                        $query =	"INSERT INTO `draft_audience` (`devent_id`, `audience_type`, `audience_value`, `updated_date`, `updated_by`)
+                                    VALUES (".$db->qstr($devent_id).", 'course_id', ".$db->qstr($row["course_id"]).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")";
                         $result = $db->Execute($query);
                 }
 
+                if ($update) {
+                    $query = "DELETE FROM `draft_contacts`
+                                        WHERE `devent_id` = ".$db->qstr($row["devent_id"]);
+                    if (!$db->Execute($query)) {
+                        application_log("error", "Unable to remove existing `draft_contacts` records when importing a csv into an events draft. DB Said: ".$db->ErrorMsg());
+                    }
+                }
                 if (isset($row["teachers"])) {
                     $i = 0;
                     foreach ($row["teachers"] as $teacher) {
-                        $query =	$mode." `draft_contacts` (`devent_id`, `proxy_id`, `contact_role`, `contact_order`, `updated_date`, `updated_by`)
-                                    VALUES (".$db->qstr($devent_id).", ".$db->qstr($teacher).", 'teacher', ".$db->qstr($i).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")".
-                                    $where;
+                        $query =	"INSERT INTO `draft_contacts` (`devent_id`, `proxy_id`, `contact_role`, `contact_order`, `updated_date`, `updated_by`)
+                                    VALUES (".$db->qstr($devent_id).", ".$db->qstr($teacher).", 'teacher', ".$db->qstr($i).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")";
                         $result = $db->Execute($query);
                         $i++;
                     }
@@ -409,9 +443,8 @@ class Entrada_Event_Draft_CsvImporter {
 				if (isset($row["tutors"])) {
                     $i = 0;
                     foreach ($row["tutors"] as $tutor) {
-                        $query =	$mode." `draft_contacts` (`devent_id`, `proxy_id`, `contact_role`, `contact_order`, `updated_date`, `updated_by`)
-                                    VALUES (".$db->qstr($devent_id).", ".$db->qstr($tutor).", 'tutor', ".$db->qstr($i).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")".
-                                    $where;
+                        $query =	"INSERT INTO `draft_contacts` (`devent_id`, `proxy_id`, `contact_role`, `contact_order`, `updated_date`, `updated_by`)
+                                    VALUES (".$db->qstr($devent_id).", ".$db->qstr($tutor).", 'tutor', ".$db->qstr($i).", ".$db->qstr(time()).", ".$db->qstr($this->updater).")";
                         $result = $db->Execute($query);
                         $i++;
                     }

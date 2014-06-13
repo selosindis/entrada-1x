@@ -49,7 +49,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
         "event_description"         => array("title" => "Event Description"),
         "location"                  => array("title" => "Location"),
         "audience_groups"           => array("title" => "Audience (Groups)"),
-        "audience_cohort"           => array("title" => "Audience (Cohort)"),
+        "audience_cohorts"           => array("title" => "Audience (Cohorts)"),
         "audience_students"         => array("title" => "Audience (Students)"),
         "teacher_names"             => array("title" => "Teacher Names"),
         "teacher_numbers"           => array("title" => "Teacher Numbers"),
@@ -209,7 +209,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                         $j++;
                                     }  
                                 }
-                                $json_rows[] = $data;
+                                $output_data = array();
+                                foreach ($data as $key => $field) {
+                                    $clean_field = str_replace("'", "&#39;", $field);
+                                    $output_data[$key] = $clean_field;
+                                }
+                                $json_rows[] = $output_data;
                                 $i++;
                             }
 

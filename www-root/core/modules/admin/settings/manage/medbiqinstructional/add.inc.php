@@ -79,8 +79,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 			if (!$ERROR) {
 				$PROCESSED["updated_date"] = time();
 				$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
-
-				if ($db->AutoExecute("medbiq_instructional_methods", $PROCESSED, "INSERT")) {
+                $PROCESSED["active"] = 1;
+                
+                $medbiq_instructional_method = new Models_MedbiqInstructionalMethod($PROCESSED);
+				if ($medbiq_instructional_method->insert()) {
 					if(isset($SEMI_PROCESSED)) {
 						// Insert keys into mapped table
 						$MAPPED_PROCESSED = array();
@@ -89,8 +91,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 						$MAPPED_PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 						
 						foreach($SEMI_PROCESSED["fk_eventtype_id"] as $fk_eventtype_id) {
-							$MAPPED_PROCESSED["fk_eventtype_id"] = $fk_eventtype_id;
-							if(!$db->AutoExecute("map_events_eventtypes", $MAPPED_PROCESSED, "INSERT")) {
+							$MAPPED_PROCESSED["fk_eventtype_id"] = (int) $fk_eventtype_id;
+                            $mapped_event_type = new Models_Event_MapEventsEventType($MAPPED_PROCESSED);
+							if(!$mapped_event_type->insert()) {
 								$ERROR++;
 								$ERRORSTR[] = "There was a problem inserting this instructional method into the system. The system administrator was informed of this error; please try again later.";
 		
@@ -107,17 +110,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 						
 						application_log("success", "New Medbiquitous Instructional Method [".$PROCESSED["instructional_method"]."] added to the system.");
 					}
-				}
-			} else {
-				$ERROR++;
-				$ERRORSTR[] = "There was a problem inserting this instructional method into the system. The system administrator was informed of this error; please try again later.";
-
-				application_log("error", "There was an error inserting an instructional method. Database said: ".$db->ErrorMsg());
+				} else {
+                    $ERROR++;
+					$ERRORSTR[] = "There was a problem inserting this instructional method into the system. The system administrator was informed of this error; please try again later.";
+                    
+                    application_log("error", "There was an error inserting an instructional method. Database said: ".$db->ErrorMsg());
+                }
 			}
 		
-
 			if ($ERROR) {
 				$STEP = 1;
+                $medbiq_instructional_method = new Models_MedbiqInstructionalMethod($PROCESSED);
 			}
 		break;
 		case 1 :
@@ -151,19 +154,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
                 <div class="control-group">
                     <label for="instructional_method" class="control-label form-required">Instructional Method:</label>
                     <div class="controls">
-                        <input type="text" id="instructional_method" name="instructional_method" value="<?php //echo html_decode($medbiq_instructional_method->getInstructionalMethod()); ?>" />
+                        <input type="text" id="instructional_method" name="instructional_method" value="<?php echo (isset($medbiq_instructional_method) ? html_decode($medbiq_instructional_method->getInstructionalMethod()): ""); ?>" />
                     </div>
                 </div>
                 <div class="control-group">
                     <label for="instructional_method_description" class="control-label form-nrequired">Description:</label>
                     <div class="controls">
-                        <textarea id="instructional_method_description" name="instructional_method_description" style="width: 98%; height: 200px"><?php //echo html_decode($medbiq_instructional_method->getInstructionalMethodDescription()); ?></textarea>
+                        <textarea id="instructional_method_description" name="instructional_method_description" style="width: 98%; height: 200px"><?php echo (isset($medbiq_instructional_method) ? html_decode($medbiq_instructional_method->getInstructionalMethodDescription()) : ""); ?></textarea>
                     </div>
                 </div>
                 <div class="control-group">
                     <label for="code" class="control-label form-required">Instructional Code:</label>
                     <div class="controls">
-                        <input type="text" class="input-small" id="code" name="code" value="<?php //echo html_encode($medbiq_instructional_method->getCode()); ?>" />
+                        <input type="text" class="input-small" id="code" name="code" value="<?php echo (isset($medbiq_instructional_method) ? html_encode($medbiq_instructional_method->getCode()) : ""); ?>" />
                     </div>
                 </div>
                 <div class="control-group">

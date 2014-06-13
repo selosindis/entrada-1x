@@ -174,51 +174,49 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 			if ($ERROR) {
 				echo display_error();
 			}
-            
-            if ($medbiq_instructional_method) { ?>
-                <form action="<?php echo ENTRADA_URL."/admin/settings/manage/medbiqinstructional"."?".replace_query(array("action" => "edit", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post" class="form-horizontal">
-                    <div class="control-group">
-                        <label for="instructional_method" class="control-label form-required">Instructional Method:</label>
-                        <div class="controls">
-                            <input type="text" id="instructional_method" name="instructional_method" value="<?php echo html_decode($medbiq_instructional_method->getInstructionalMethod()); ?>" />
-                        </div>
+            ?>
+            <form action="<?php echo ENTRADA_URL."/admin/settings/manage/medbiqinstructional"."?".replace_query(array("action" => "edit", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post" class="form-horizontal">
+                <div class="control-group">
+                    <label for="instructional_method" class="control-label form-required">Instructional Method:</label>
+                    <div class="controls">
+                        <input type="text" id="instructional_method" name="instructional_method" value="<?php echo (isset($medbiq_instructional_method) ? html_decode($medbiq_instructional_method->getInstructionalMethod()): ""); ?>" />
                     </div>
-                    <div class="control-group">
-                        <label for="instructional_method_description" class="control-label form-nrequired">Description:</label>
-                        <div class="controls">
-                            <textarea id="instructional_method_description" name="instructional_method_description" style="width: 98%; height: 200px"><?php echo html_decode($medbiq_instructional_method->getInstructionalMethodDescription()); ?></textarea>
-                        </div>
+                </div>
+                <div class="control-group">
+                    <label for="instructional_method_description" class="control-label form-nrequired">Description:</label>
+                    <div class="controls">
+                        <textarea id="instructional_method_description" name="instructional_method_description" style="width: 98%; height: 200px"><?php echo (isset($medbiq_instructional_method) ? html_decode($medbiq_instructional_method->getInstructionalMethodDescription()) : ""); ?></textarea>
                     </div>
-                    <div class="control-group">
-                        <label for="code" class="control-label form-required">Instructional Code:</label>
-                        <div class="controls">
-                            <input type="text" class="input-small" id="code" name="code" value="<?php echo html_encode($medbiq_instructional_method->getCode()); ?>" />
-                        </div>
+                </div>
+                <div class="control-group">
+                    <label for="code" class="control-label form-required">Instructional Code:</label>
+                    <div class="controls">
+                        <input type="text" class="input-small" id="code" name="code" value="<?php echo (isset($medbiq_instructional_method) ? html_encode($medbiq_instructional_method->getCode()) : ""); ?>" />
                     </div>
-                    <div class="control-group">
-                        <label class="control-label form-nrequired">Mapped Event Types:</label>
-                        <div class="controls">
-                        <?php
-                        $event_types = Models_EventType::fetchAllByOrganisationID($ORGANISATION_ID);
-                        if ($event_types) {
-                            foreach($event_types as $eventtype) { ?>
-                                <label class="checkbox" style="display:block">
-                                    <input type="checkbox" name="fk_eventtype_id[]" value="<?php echo $eventtype->getID(); ?>" <?php echo (isset($SEMI_PROCESSED["fk_eventtype_id"]) && in_array($eventtype->getID(), $SEMI_PROCESSED["fk_eventtype_id"]) ? "checked=\"checked\"" : ""); ?> />
-                                    <?php echo $eventtype->getEventTypeTitle(); ?>
-                                </label>
-                            <?php    
-                            }
+                </div>
+                <div class="control-group">
+                    <label class="control-label form-nrequired">Mapped Event Types:</label>
+                    <div class="controls">
+                    <?php
+                    $event_types = Models_EventType::fetchAllByOrganisationID($ORGANISATION_ID);
+                    if ($event_types) {
+                        foreach($event_types as $eventtype) { ?>
+                            <label class="checkbox" style="display:block">
+                                <input type="checkbox" name="fk_eventtype_id[]" value="<?php echo $eventtype->getID(); ?>" <?php echo (isset($SEMI_PROCESSED["fk_eventtype_id"]) && in_array($eventtype->getID(), $SEMI_PROCESSED["fk_eventtype_id"]) ? "checked=\"checked\"" : ""); ?> />
+                                <?php echo $eventtype->getEventTypeTitle(); ?>
+                            </label>
+                        <?php    
                         }
-                        ?>
-                        </div>
+                    }
+                    ?>
                     </div>
-                    <div class="control-group">
-                        <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/medbiqinstructional?org=<?php echo $ORGANISATION_ID;?>'" />
-                        <input type="submit" class="btn btn-primary pull-right" value="<?php echo $translate->_("global_button_save"); ?>" />                           
-                    </div>
-                </form>
+                </div>
+                <div class="control-group">
+                    <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/medbiqinstructional?org=<?php echo $ORGANISATION_ID;?>'" />
+                    <input type="submit" class="btn btn-primary pull-right" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+                </div>
+            </form>
 			<?php
-            }
 		break;
 	}
 }

@@ -88,9 +88,15 @@ class Models_MedbiqInstructionalMethod extends Models_Base {
 		}
 	}
     
-    public function insert () {
-        return false;
-    }
+    public function insert() {
+		global $db;
+		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "INSERT")) {
+			$this->instructional_method_id = $db->Insert_ID();
+			return true;
+		} else {
+			return false;
+		}
+	}
     
     public function delete () {
         return false;

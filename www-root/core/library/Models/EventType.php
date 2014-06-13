@@ -31,6 +31,7 @@ class Models_EventType extends Models_Base {
               $eventtype_order,
               $eventtype_default_enrollment,
               $eventtype_report_calculation,
+              $medbiq_instructional_method_id,
               $updated_date,
               $updated_by;
     
@@ -69,6 +70,10 @@ class Models_EventType extends Models_Base {
         return $this->eventtype_report_calculation;
     }
     
+    public function getMedbiqInstructionalMethodID () {
+        return $this->medbiq_instructional_method_id;
+    }
+    
     public function getUpdatedDate () {
         return $this->updated_date;
     }
@@ -83,6 +88,10 @@ class Models_EventType extends Models_Base {
             array("key" => "eventtype_id", "value" => $eventtype_id, "method" => "="),
             array("mode" => "AND", "key" => "eventtype_active", "value" => $active, "method" => "=")
         ));
+    }
+    
+    public function getMappedMedbiqInstructionalMethods () {
+        return Models_Event_MapEventsEventType::fetchAllByEventTypeID($this->eventtype_id);
     }
     
     public static function fetchAllByOrganisationID ($organisation_id = null, $active = 1) {

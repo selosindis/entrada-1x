@@ -2618,6 +2618,7 @@ CREATE TABLE IF NOT EXISTS `events_lu_eventtypes` (
   `eventtype_order` int(6) NOT NULL,
   `eventtype_default_enrollment` varchar(50) DEFAULT NULL,
   `eventtype_report_calculation` varchar(100) DEFAULT NULL,
+  `medbiq_instructional_method_id` int(12) unsigned DEFAULT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
   PRIMARY KEY (`eventtype_id`),

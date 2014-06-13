@@ -138,7 +138,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                     switch ($import_type) {
                         case "all" :
                         default :
-                            $query = "SELECT c.`qquestion_id`, a.`aquiz_id`, b.`response_correct`,
+                            $query = "SELECT c.`qquestion_id`, a.`aquiz_id`, b.`response_correct`, c.`qpresponse_id`
                                         FROM `quiz_progress` AS a
                                         JOIN `quiz_question_responses` AS b
                                         ON c.`qqresponse_id` = b.`qqresponse_id`
@@ -155,7 +155,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             $query .= " )";
                             break;
                         case "first" :
-                            $query = "SELECT c.`qquestion_id`, a.`aquiz_id`, b.`response_correct`, a.`updated_date`, MIN(a.`updated_date`)
+                            $query = "SELECT c.`qquestion_id`, a.`aquiz_id`, b.`response_correct`, a.`updated_date`, MIN(a.`updated_date`), c.`qpresponse_id`
                                         FROM `quiz_progress` AS a
                                         JOIN `quiz_question_responses` AS b
                                         ON c.`qqresponse_id` = b.`qqresponse_id`
@@ -176,7 +176,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         GROUP BY c.`qquestion_id`";
                             break;
                         case "last" :
-                            $query = "SELECT c.`qquestion_id`, a.`aquiz_id`, b.`response_correct`, a.`updated_date`, MAX(a.`updated_date`)
+                            $query = "SELECT c.`qquestion_id`, a.`aquiz_id`, b.`response_correct`, a.`updated_date`, MAX(a.`updated_date`), c.`qpresponse_id`
                                         FROM `quiz_progress` AS a
                                         JOIN `quiz_question_responses` AS b
                                         ON c.`qqresponse_id` = b.`qqresponse_id`
@@ -197,7 +197,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         GROUP BY c.`qquestion_id`";
                             break;
                         case "best" :
-                            $query = "SELECT c.`qquestion_id`, a.`aquiz_id`, b.`response_correct`, a.`quiz_score`, MAX(a.`quiz_score`)
+                            $query = "SELECT c.`qquestion_id`, a.`aquiz_id`, b.`response_correct`, a.`quiz_score`, MAX(a.`quiz_score`), c.`qpresponse_id`
                                         FROM `quiz_progress` AS a
                                         JOIN `quiz_question_responses` AS b
                                         ON c.`qqresponse_id` = b.`qqresponse_id`
@@ -225,7 +225,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         foreach ($responses as $response) {
                             if (array_key_exists($response["qquestion_id"]."-".$response["aquiz_id"], $questions_list)) {
                                 $total_value += $questions_list[$response["qquestion_id"]."-".$response["aquiz_id"]]["question_points"];
-                                if ($response["response_correct"]) {
+                                if ($response["response_correct"] && $response["qpresponse_id"]) {
                                     $scored_value += $questions_list[$response["qquestion_id"]."-".$response["aquiz_id"]]["question_points"];
                                 }
                             }

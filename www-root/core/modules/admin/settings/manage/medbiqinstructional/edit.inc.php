@@ -19,7 +19,7 @@
  * @author Unit: MEdTech Unit
  * @author Developer: Brandon Thorn <brandon.thorn@queensu.ca>
  * @author Developer: Josh Dillon <jdillon@queensu.ca>
- * @copyright Copyright 2011 Queen's University. All Rights Reserved.
+ * @copyright Copyright 2014 Queen's University. All Rights Reserved.
  *
 */
 

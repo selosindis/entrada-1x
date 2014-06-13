@@ -941,7 +941,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         <td></td>
                                         <td valign="top"><label class="form-nrequired">Assessment Event:</label></td>
                                         <td>
-                                            <a href="#event-modal" class="btn btn-success space-below" role="button" data-toggle="modal"><i class="icon-plus-sign icon-white"></i> Attach Learning Event </a>
+                                            <a id="attach-event-button" href="#event-modal" class="btn btn-success space-below <?php echo $event ? "hide" : ""; ?>" role="button" data-toggle="modal"><i class="icon-plus-sign icon-white"></i> Attach Learning Event </a>
                                             <ul id="attached-event-list">
                                                 <li>
                                                     <div class="well well-small content-small" id="no-learning-event">
@@ -1030,41 +1030,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         buildAttachedEventList();
                                     }
                                     
-                                    /*
-                                    if (search_type == "calendar") {
-                                        $("#calendar-search-toggle").addClass("active");
-                                        $("#calendar-search").removeClass("hide");
-                                        $("#event-modal-title").text("Select a learning event by date");
-                                    } else {
-                                        $("#title-search-toggle").addClass("active");
-                                        $("#title-search").removeClass("hide");
-                                        $("#event-modal-title").text("Select a learning event by date");
-                                    }
-
-                                    $("#calendar-search-toggle").on("click", function (e) {
-                                        e.preventDefault();
-                                        $(this).addClass("active");
-                                        if ($("#title-search-toggle").hasClass("active")) {
-                                            $("#title-search-toggle").removeClass("active");
-                                        }
-                                        $("#calendar-search").removeClass("hide");
-                                        $("#title-search").addClass("hide");
-                                        $("#event-modal-title").text("Select a learning event by date");
-                                    });
-                                    
-                                    
-                                    $("#title-search-toggle").on("click", function (e) {
-                                        e.preventDefault();
-                                        $(this).addClass("active");
-                                        if ($("#calendar-search-toggle").hasClass("active")) {
-                                            $("#calendar-search-toggle").removeClass("active");
-                                        }
-                                        $("#title-search").removeClass("hide");
-                                        $("#calendar-search").addClass("hide");
-                                        $("#event-modal-title").text("Select a learning event by title");
-                                    });
-                                    */
-
                                     $("#event-title-search").keyup(function () {
                                         var title = $(this).val();
 
@@ -1073,31 +1038,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                             getEventsByTitle(title);
                                         }, done_interval);
                                     });
-
-                                    /*
-                                    $("#datepicker").datepicker({
-                                        onSelect: function (date) {
-                                            $("#event-msgs").empty();
-                                            $("#loading").removeClass("hide");
-                                            getEventsByDate(date);
-                                        },
-                                        dateFormat: "yy-mm-dd",
-                                        showOtherMonths: true,
-                                        selectOtherMonths: true,
-                                        dayNamesMin: [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ]
-                                    });
-                                    */
-                                    /*
-                                    $("#events-wrap").on("click", "#events-list li", function () {
-                                        if ($("#events-list").children().hasClass("active")) {
-                                            $("#events-list").children().removeClass("active");
-                                        }
-
-                                        if (!$(this).hasClass("active")) {
-                                            $(this).addClass("active");
-                                        }
-                                    });
-                                    */
 
                                     $("#events-search-wrap").on("click", "#events-search-list li", function () {
                                         if ($("#events-search-list").children().hasClass("active")) {
@@ -1110,14 +1050,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     });
 
                                     $("#attach-learning-event").on("click", function (e) {
-                                        /*
-                                        if ($("#calendar-search-toggle").hasClass("active")) {
-                                            var selected_list = $("#events-list");
-                                        } else {
-                                            var selected_list = $("#events-search-list");
-                                        }
-                                        */
-                                       
                                         e.preventDefault();
 
                                         if ($("#events-search-list").children().hasClass("active")) {
@@ -1130,10 +1062,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                             buildEventInput(event_id, event_title, event_date);                                            
                                             buildAttachedEventList ();
 
-                                            $(event_success_div).addClass("alert alert-info").text("Successfully selected a learning event to attach to this assessment, please click the save button to complete the attachment process.");
                                             $(event_success_li).append(event_success_div);
                                             $("#attached-event-list").prepend(event_success_li);
-                                            
+                                            $("#attach-event-button").addClass("hide");
                                             $("#event-modal").modal("hide");
                                         } else {
                                             alert("Please select a learning event to attach to this assessment. If you no longer wish to attach a learning event to this assessment, click close.");
@@ -1148,17 +1079,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         $(event_well_li).append(event_well);
                                         $("#attached-event-list").empty();
                                         $("#attached-event-list").append(event_well_li);
+                                        $("#attach-event-button").removeClass("hide");
                                         $("#assessment-event").remove();
                                     });
 
-                                    /*
-                                    getCurriculumPeriodDates(course_id);
-
-                                    $(".course-list").on("change", function () {
-                                        getCurriculumPeriodDates(course_id);
-                                    });
-                                    */
-                                    
 									jQuery('#marking_scheme_id').change(function() {
 										if(jQuery(':selected', this).val() == 3 || jQuery(':selected', this).text() == "Numeric") {
 											jQuery('#numeric_marking_scheme_details').show();
@@ -1173,12 +1097,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     });
 
                                     $("#event-modal").on("hide", function () {
-                                        /*
-                                        if ($("#events-list").children().hasClass("active")) {
-                                            $("#events-list").children().removeClass("active");
-                                        }
-                                        */
-
                                         if ($("#events-search-list").children().hasClass("active")) {
                                             $("#events-search-list").children().removeClass("active");
                                         }
@@ -1192,52 +1110,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                             display_notice(msg, "#event-search-msgs", "append");
                                         }
                                     });
-                                    
-									/*
-									 *			
-									 *  Removed as per under grad medicine request, commented out in case this functionality needs to re implemented								
-									jQuery('#grade_weighting').keyup(function() {
-										if (parseFloat(jQuery('#grade_weighting').val())) {
-											jQuery('#assessment_required_1').attr('checked', 'checked');
-											jQuery('#assessment_required_options').hide();
-														
-										} else {
-											jQuery('#assessment_required_0').attr('checked', 'checked');
-											jQuery('#assessment_required_options').show();
-														
-										}
-									});
-												
-									jQuery('#grade_weighting').ready(function() {
-										if (parseFloat(jQuery('#grade_weighting').val())) {
-											jQuery('#assessment_required_1').attr('checked', 'checked');
-											jQuery('#assessment_required_options').hide();
-														
-										} else {
-											jQuery('#assessment_required_options').show();
-														
-										}
-									});
-									*/			
-//									jQuery('#assessment_characteristic').change(function (){
-//										jQuery('#assessment_options input:[type=checkbox]').removeAttr('checked');
-//										var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
-//										if(assessmentType == 'exam' || assessmentType == 'quiz') {
-//											jQuery('#assessment_options').show();
-//										} else {
-//											jQuery('#assessment_options').hide();
-//										}
-//									});
-//												
-//									jQuery('#assessment_characteristic').ready(function (){
-//										var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
-//										if(assessmentType == 'exam' || assessmentType == 'quiz') {
-//											jQuery('#assessment_options').show();
-//										} else {
-//											jQuery('#assessment_options').hide();
-//											jQuery('#quiz_options').hide();
-//										}
-//									});	
                                     
 									jQuery('#show_quiz_option_1').ready(function (){
                                         if (jQuery('#show_quiz_option_1').is(":visible") && jQuery('#show_quiz_option_1').is(":checked")) {
@@ -1290,34 +1162,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     }
                                 }
                                 
-                                /*
-                                function getEventsByDate (date) {
-                                    jQuery.ajax({
-                                        url: "<?php echo ENTRADA_URL; ?>/api/assessment-event.api.php",
-                                        data: "method=date_search&course_id=" + course_id + "&date=" + date,
-                                        type: "GET",
-                                        beforeSend: function () {
-                                            jQuery("#events-list").empty();
-                                            jQuery("#loading").removeClass("hide");
-                                        },
-                                        success: function(data) {
-                                            jQuery("#loading").addClass("hide");
-                                            var response = JSON.parse(data);
-                                            if (response.status == "success") {
-                                                jQuery.each(response.data, function (key, event) {
-                                                    buildEventList(event);
-                                                });
-                                            } else {
-                                                display_notice(response.data, "#event-msgs", "append");
-                                            }
-                                        }, 
-                                        error: function () {
-                                            jQuery("#loading").addClass("hide");
-                                        }
-                                    });
-                                }
-                                */
-
                                 function getEventsByTitle (title) {
                                     var audience = jQuery(".course-list").val();
                                     
@@ -1346,28 +1190,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         }
                                     });
                                 }
-                                
-                                /*
-                                function getCurriculumPeriodDates(course_id) {
-                                    var audience_value = jQuery(".course-list").val();
-
-                                    jQuery.ajax({
-                                        url: "<?php echo ENTRADA_URL; ?>/api/assessment-event.api.php",
-                                        data: "method=cperiod&course_id=" + course_id + "&audience=" + audience_value,
-                                        type: "GET",
-                                        success: function(data) {																			
-                                            var response = JSON.parse(data);
-                                            if (response.status == "success") {
-                                                jQuery("#datepicker").datepicker("option", "minDate", response.data.start_date);
-                                                jQuery("#datepicker").datepicker("option", "maxDate", response.data.finish_date);
-                                            } else if (response.status == "no_cperiod") {
-                                                jQuery("#datepicker").datepicker("option", "setDate", response.data.current_date);
-                                            }
-                                        }
-                                    });
-                                }
-                                */
-
+                               
                                 function buildEventList (event) {
                                     var event_li = document.createElement("li");
                                     var event_div = document.createElement("div");

@@ -137,9 +137,11 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                         if ($events) {
                             $events_array = array();
                             foreach ($events as $event) {
-                                $event = $event->toArray();
-                                $event["event_start"] = date("D M d/y g:ia", $event["event_start"]);
-                                $events_array[] = $event;
+                                $events_array[] = array(
+                                    "event_id" => $event->getID(),
+                                    "event_title" => $event->getEventTitle(),
+                                    "event_start" => date("D M d/y g:ia", $event->getEventStart())
+                                );
                             }
                             echo json_encode(array("status" => "success", "data" => $events_array));
                         } else {

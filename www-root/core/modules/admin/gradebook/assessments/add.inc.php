@@ -298,20 +298,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					}
 
 					if (!$ERROR) {
-						
-						// fetch the number of assessments to set the order
-						$query = "	SELECT COUNT(`assessment_id`)
-									FROM `assessments`
-									WHERE `course_id` = ".$db->qstr($COURSE_ID);
-						$order = $db->GetOne($query);
-						
-						$PROCESSED["order"]			= $order;
+												
+						$PROCESSED["order"]			= Models_Gradebook_Assessment::fetchNextOrder($COURSE_ID, $PROCESSED["cohort"]);
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 						$PROCESSED["course_id"]		= $COURSE_ID;
+                        $PROCESSED["active"]        = '1';
 						
-						if ($db->AutoExecute("assessments", $PROCESSED, "INSERT")) {		
-							if($ASSESSMENT_ID = $db->Insert_Id()) {
+                        $assessment = new Models_Gradebook_Assessment($PROCESSED);
+                        
+						if ($assessment->insert()) {		
+                            $ASSESSMENT_ID = $assessment->getAssessmentID();
+                            
+							if($ASSESSMENT_ID) {
 								application_log("success", "Successfully added assessment ID [".$ASSESSMENT_ID."]");
 							} else {
 								application_log("error", "Unable to fetch the newly inserted assessment identifier for this assessment.");
@@ -355,7 +354,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							
 							if ($assessment_options) {
 								foreach ($assessment_options as $assessment_option) {
-									$query = "SELECT * FROM `assessments` WHERE assessment_id =" . $ASSESSMENT_ID;
+									$query = "SELECT * FROM `assessments`
+									            WHERE `assessment_id`  = ".$db->qstr($ASSESSMENT_ID)."
+									            AND `active` = '1'";
 									$results = $db->GetRow($query);
 									if ($results) {
 										$PROCESSED["assessment_id"] = $results["assessment_id"];

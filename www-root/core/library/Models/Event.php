@@ -15,7 +15,7 @@
  * You should have received a copy of the GNU General Public License
  * along with Entrada.  If not, see <http://www.gnu.org/licenses/>.
  *
- * A model for handeling courses
+ * A model for handeling events
  *
  * @author Organisation: Queen's University
  * @author Unit: School of Medicine
@@ -226,5 +226,10 @@ class Models_Event extends Models_Base {
         
         return $events;
     }
+    
+    public function getEventAudience() {
+        return Models_Event_Audience::fetchAllByEventID($this->event_id);
+    }
+    
 }
 ?>

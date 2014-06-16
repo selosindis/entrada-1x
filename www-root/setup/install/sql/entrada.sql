@@ -973,6 +973,7 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   `release_until` bigint(64) NOT NULL DEFAULT '0',
   `order` smallint(6) NOT NULL DEFAULT '0',
   `grade_threshold` float NOT NULL DEFAULT '0',
+  `active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`assessment_id`),
   KEY `order` (`order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -4334,7 +4335,9 @@ INSERT INTO `settings` (`shortname`, `organisation_id`, `value`)
   ('version_db', NULL, '1610'),
   ('version_entrada', NULL, '1.6.0DEV'),
   ('export_weighted_grade', NULL, '1'),
-  ('export_calculated_grade', NULL, '{\"enabled\":0}');
+  ('export_calculated_grade', NULL, '{\"enabled\":0}'),
+  ('course_webpage_assessment_cohorts_count', NULL, '4');
+
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -5295,6 +5298,16 @@ CREATE TABLE IF NOT EXISTS `evaluation_progress_patient_encounters` (
   `encounter_name` varchar(255) DEFAULT NULL,
   `encounter_complexity` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`eppencounter_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `assessment_events` (
+  `assessment_event_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `assessment_id` int(12) unsigned NOT NULL,
+  `event_id` int(12) unsigned NOT NULL,
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) unsigned NOT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`assessment_event_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `organisation_lu_restricted_days` (

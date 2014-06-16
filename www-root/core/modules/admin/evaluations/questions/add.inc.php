@@ -95,6 +95,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				break;
 				case 1 :
                 case 5 :
+                case 6 :
 				default :
 					/**
 					 * Required field "allow_comments" / Allow Question Comments.
@@ -518,31 +519,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			require_once("javascript/evaluations.js.php");
 			$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js\"></script>";
 			$HEAD[]	= "<script type=\"text/javascript\"> var SITE_URL = '".ENTRADA_URL."'; </script>";
-			$HEAD[]	= "
-			<script type=\"text/javascript\">
-				jQuery(document).ready(function() {
-					modalDescriptorDialog = new Control.Modal($('false-link'), {
-						position:		'center',
-						overlayOpacity:	0.75,
-						closeOnClick:	'overlay',
-						className:		'modal',
-						fade:			true,
-						fadeDuration:	0.30,
-						width: 455
-					});
-				});
-
-                function openDescriptorDialog(response_number, erdescriptor_id) {
-                    new Ajax.Request('".ENTRADA_URL."/admin/evaluations/questions?section=api-descriptors&response_number='+response_number+'&organisation_id=".$ENTRADA_USER->getActiveOrganisation()."&erdescriptor_id='+erdescriptor_id, {
-                        method: 'get',
-                        onComplete: function(transport) {
-                            loaded = [];
-                            modalDescriptorDialog.container.update(transport.responseText);
-                            modalDescriptorDialog.open();
-                        }
+            if (!in_array($PROCESSED["questiontype_id"], array(2, 4))) {
+                $HEAD[]	= "
+                <script type=\"text/javascript\">
+                    jQuery(document).ready(function() {
+                        modalDescriptorDialog = new Control.Modal($('false-link'), {
+                            position:		'center',
+                            overlayOpacity:	0.75,
+                            closeOnClick:	'overlay',
+                            className:		'modal',
+                            fade:			true,
+                            fadeDuration:	0.30,
+                            width: 455
+                        });
                     });
-                }
-			</script>";
+
+                    function openDescriptorDialog(response_number, erdescriptor_id) {
+                        new Ajax.Request('".ENTRADA_URL."/admin/evaluations/questions?section=api-descriptors&response_number='+response_number+'&organisation_id=".$ENTRADA_USER->getActiveOrganisation()."&erdescriptor_id='+erdescriptor_id, {
+                            method: 'get',
+                            onComplete: function(transport) {
+                                loaded = [];
+                                modalDescriptorDialog.container.update(transport.responseText);
+                                modalDescriptorDialog.open();
+                            }
+                        });
+                    }
+                </script>";
+            }
 			if ($PROCESSED["questiontype_id"] == 3) {
 				$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_evaluation_rubric.js\"></script>";
 				$HEAD[] = "<script type=\"text/javascript\">

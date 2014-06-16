@@ -31,8 +31,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 	exit;
 }
 
-if (isset($_GET["target_id"]) && clean_input($_GET["target_id"], "int")) {
-	$view_target = clean_input($_GET["target_id"], "int");
+if (isset($_GET["target_id"]) && clean_input($_GET["target_id"], "trim")) {
+	$view_target = clean_input($_GET["target_id"], "trim");
 } else {
 	$view_target = false;
 }

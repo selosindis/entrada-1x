@@ -37,7 +37,7 @@ $loader->registerNamespace('Models_');
 
 require_once("config/settings.inc.php");
 
-header("X-Frame-Options: DENY");
+header("X-Frame-Options: SAMEORIGIN");
 
 if (defined("DEVELOPMENT_MODE") && (bool) DEVELOPMENT_MODE) {
     require_once("Entrada/adodb/adodb-exceptions.inc.php");
@@ -78,6 +78,11 @@ if (defined("AUTH_ALLOW_CAS") && (bool) AUTH_ALLOW_CAS) {
  * Initialize the interface template.
  */
 $ENTRADA_TEMPLATE = new Entrada_Template();
+
+/**
+ * Initialize the settings class.
+ */
+$ENTRADA_SETTINGS = new Entrada_Settings();
 
 if ($ENTRADA_USER) {
     /**

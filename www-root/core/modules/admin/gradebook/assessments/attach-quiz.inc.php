@@ -41,7 +41,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
     if ($ASSESSMENT_ID) {
-        $query = "SELECT * FROM `assessments` WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+        $query = "SELECT * FROM `assessments`
+                    WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+                    AND `active` = '1'";
         $assessment = $db->GetRow($query);
         if ($assessment) {
             $BREADCRUMB[] = array("url" => ENTRADA_URL . "/admin/gradebook/assessment?" . replace_query(array("section" => "attach-quiz", "step" => false)), "title" => "Attach Quiz");

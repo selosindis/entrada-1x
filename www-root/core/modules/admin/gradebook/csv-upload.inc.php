@@ -63,7 +63,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
             $query = "SELECT *, a.`name` as `assessment_name` FROM `assessments` AS a
                         JOIN `assessment_marking_schemes` AS b
                         ON a.`marking_scheme_id` = b.`id`
-                        WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+                        WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+                        AND a.`active` = 1";
             $assessment = $db->GetRow($query);
             $GROUP = $assessment["cohort"];
             $ASSESSMENT_NAME = $assessment["assessment_name"];

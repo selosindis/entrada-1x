@@ -69,10 +69,17 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 									ORDER BY `parent_id` ASC";
 						$events = $db->GetAll($query);
 						if ($events) {
+                            $recurring_event_id_map = array();
 
 							application_log("notice", "Draft schedule importer found ".count($events)." events in draft ".$draft["draft_id"].".");
 
 							foreach ($events as $event) {
+                                $recurring_id_updated = false;
+
+                                if (isset($event["recurring_id"]) && $event["recurring_id"] && array_key_exists($event["recurring_id"], $recurring_event_id_map)) {
+                                    $event["recurring_id"] = $recurring_event_id_map[$event["recurring_id"]];
+                                    $recurring_id_updated = true;
+                                }
 
 								if ($event["event_id"]) {
 									$old_event_id = $event["event_id"];
@@ -94,6 +101,14 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 								echo $event["parent_id"]."\n";
 								if ($db->AutoExecute("`events`", $event, 'INSERT')) {
 									$event_id = $db->Insert_ID();
+
+                                    if (!$recurring_id_updated && isset($event["recurring_id"]) && $event["recurring_id"] && !array_key_exists($event["recurring_id"], $recurring_event_id_map)) {
+                                        $recurring_event_id_map[$event["recurring_id"]] = $event_id;
+                                        $query = "UPDATE `events` SET `recurring_id` = ".$db->qstr($event_id)." WHERE `event_id` = ".$db->qstr($event_id);
+                                        if (!$db->Execute($query)) {
+                                            application_log("error", "An error occurred when updating a draft event with a recurring event id. DB said: ".$db->ErrorMsg());
+                                        }
+                                    }
 									$old_events[$old_event_id]["new_event_id"] = $event_id;
 									application_log("success", "Successfully created event [".$event_id."]");
 								} else {
@@ -163,7 +178,7 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 								if ($eventaudience = $db->GetAll($query)) {
 									application_log("notice", "Found ".count($eventaudience)." event audience members for draft event [".$event["devent_id"]."].");
 									foreach ($eventaudience as $audience) {
-
+                                        
 										$audience["event_id"] = $event_id;
 										$audience["updated_date"] = time();
 										$audience["updated_by"] =  $draft_creators[0]["proxy_id"];
@@ -177,6 +192,31 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 											$error++;
 											application_log("error", "Error inserting event_audience [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());
 										}
+                                        
+                                        if ($audience["audience_type"] == "group_id") {
+                                            /*
+                                             * If the draft event audience type is a group check the course group for contacts, 
+                                             * if found add them to `event_contacts` as tutors.
+                                             */
+                                            $contacts = Models_Course_Group_Contact::fetchAllByCgroupID($audience["audience_value"]);
+                                            if ($contacts) {
+                                                $i = 0;
+                                                foreach ($contacts as $contact) {
+                                                    $event_contact_data = array(
+                                                        "event_id"      => $event_id,
+                                                        "proxy_id"      => $contact->getProxyID(),
+                                                        "contact_role"  => "tutor",
+                                                        "contact_order" => $i,
+                                                        "updated_date"  => time(),
+                                                        "updated_by"    => "1"
+                                                    );
+                                                    if (!$db->AutoExecute("event_contacts", $event_contact_data, "INSERT")) {
+                                                        application_log("error", "Failed to insert event contact, DB said: ".$db->ErrorMsg());
+                                                    }
+                                                    $i++;
+                                                }
+                                            }
+                                        }
 									}
 								}
 

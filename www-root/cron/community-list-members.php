@@ -41,7 +41,6 @@ if (isset($MAILING_LISTS) && is_array($MAILING_LISTS) && $MAILING_LISTS["active"
 										JOIN `community_mailing_lists` AS b
 										ON a.`community_id` = b.`community_id`
 										WHERE a.`member_active` < 0
-										AND b.`list_type` != 'inactive'
 										ORDER BY a.`community_id` ASC";
 					
 					if ($members = $db->GetAll($query)) {

@@ -164,70 +164,62 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQASSESSMENT"))) {
 				echo display_error();
 			}			
 			?>
-			<form action="<?php echo ENTRADA_URL."/admin/settings/manage/medbiqassessment"."?".replace_query(array("action" => "edit", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
-			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Page">
-			<colgroup>
-				<col style="width: 30%" />
-				<col style="width: 70%" />
-			</colgroup>
-			<thead>
-				<tr>
-					<td colspan="2"><h1>Assessment Method Details</h1></td>
-				</tr>
-			</thead>
-			<tfoot>
-				<tr>
-					<td colspan="2" style="padding-top: 15px; text-align: right">
-						<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/medbiqassessment?org=<?php echo $ORGANISATION_ID;?>'" />
-                        <input type="submit" class="btn btn-primary" value="<?php echo $translate->_("global_button_save"); ?>" />                           
-					</td>
-				</tr>
-			</tfoot>
-			<tbody>
-				<tr>
-					<td><label for="assessment_method" class="form-required">Assessment Method:</label></td>
-					<td><input type="text" id="assessment_method" name="assessment_method" value="<?php echo ((isset($PROCESSED["assessment_method"])) ? html_decode($PROCESSED["assessment_method"]) : ""); ?>" maxlength="60" style="width: 300px" /></td>
-				</tr>
-				<tr>
-					<td style="vertical-align: top;"><label for="assessment_method_description" class="form-nrequired">Description:</label></td>
-					<td>
-						<textarea id="assessment_method_description" name="assessment_method_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ((isset($PROCESSED["assessment_method_description"])) ? html_decode($PROCESSED["assessment_method_description"]) : ""); ?></textarea>
-					</td>
-				</tr>
-				<tr>
-					<td><label for="assessment_method" class="form-nrequired">Mapped Assessment Types:</label></td>
-					<?php
-						$title_list = array();
-				
-						$query = "	SELECT * FROM `assessments_lu_meta` 
-						WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID)."
-						AND `active` = '1' 
-						ORDER BY `title` ASC";
-						
-						if ($results = $db->GetAll($query)) {
-							foreach($results as $result) {
-								$title_list[] = array("id"=>$result['id'], "title" => $result["title"]);
-							}
-						}
-						if (isset($title_list) && is_array($title_list) && !empty($title_list)) {
-							echo "<td>";
-							foreach($title_list as $title) {
-								if(isset($SEMI_PROCESSED["fk_assessments_meta_id"])) {
-									if(in_array($title["id"], $SEMI_PROCESSED["fk_assessments_meta_id"])) {
-										$checked = "CHECKED";
-									} else {
-										$checked = "";
-									}
-								} else {
-									$checked = "";
-								}
-								echo "<input type=\"checkbox\" name=\"fk_assessments_meta_id[]\" value=\"".$title["id"]."\" ".$checked.">".$title["title"]."<br>";
-							}
-						}
+            <h1>Assessment Method Details</h1>
+			<form action="<?php echo ENTRADA_URL."/admin/settings/manage/medbiqassessment"."?".replace_query(array("action" => "edit", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post" class="form-horizontal">
+                <div class="control-group">
+                    <label for="assessment_method" class="form-required control-label">Assessment Method:</label>
+                    <div class="controls">
+                        <input type="text" class="input-xlarge" id="assessment_method" name="assessment_method" value="<?php echo ((isset($PROCESSED["assessment_method"])) ? html_decode($PROCESSED["assessment_method"]) : ""); ?>" maxlength="60" />
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="assessment_method_description" class="form-nrequired control-label">Description:</label>
+                    <div class="controls">
+                        <textarea id="assessment_method_description" name="assessment_method_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ((isset($PROCESSED["assessment_method_description"])) ? html_decode($PROCESSED["assessment_method_description"]) : ""); ?></textarea>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="form-nrequired control-label">Mapped Assessment Types:</label>
+                    <div class="controls">
+                    <?php
+                    $title_list = array();
+
+                    $query = "	SELECT * FROM `assessments_lu_meta` 
+                    WHERE `organisation_id` = ".$db->qstr($ORGANISATION_ID)."
+                    AND `active` = '1' 
+                    ORDER BY `title` ASC";
+
+                    if ($results = $db->GetAll($query)) {
+                        foreach($results as $result) {
+                            $title_list[] = array("id"=>$result['id'], "title" => $result["title"]);
+                        }
+                    }
+                    if (isset($title_list) && is_array($title_list) && !empty($title_list)) {
+                        foreach($title_list as $title) {
+                            if(isset($SEMI_PROCESSED["fk_assessments_meta_id"])) {
+                                if(in_array($title["id"], $SEMI_PROCESSED["fk_assessments_meta_id"])) {
+                                    $checked = "CHECKED";
+                                } else {
+                                    $checked = "";
+                                }
+                            } else {
+                                $checked = "";
+                            }
+                            echo "<div class=\"checkbox\">";
+                            echo "<label>";
+                            echo "<input type=\"checkbox\" name=\"fk_assessments_meta_id[]\" value=\"".$title["id"]."\" ".$checked.">";
+                            echo $title["title"];
+                            echo "</label>";
+                            echo "</div>";
+                        }
+                    }
 					?>
-				</tr>
-				</tbody>
-			</table>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/medbiqassessment?org=<?php echo $ORGANISATION_ID;?>'" />
+                    <input type="submit" class="btn btn-primary pull-right" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+                </div>
 			</form>
 			<?php
 		break;

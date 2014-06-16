@@ -55,9 +55,13 @@ class Models_Event_EventType extends Models_Base {
         return $this->fetchAll(array("event_id" => $this->event_id));
     }
     
+    public function fetchRowByEventID () {
+        return $this->fetchRow(array("event_id" => $this->event_id));
+    }
+    
     public function update() {
 		global $db;
-		if ($db->AutoExecute("`". $this->table_name ."`", $this->_toArray(), "UPDATE", "`eeventtype_id` = ".$db->qstr($this->getID()))) {
+		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "UPDATE", "`eeventtype_id` = ".$db->qstr($this->getID()))) {
 			return true;
 		} else {
 			return false;

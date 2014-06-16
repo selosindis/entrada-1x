@@ -73,9 +73,14 @@ class Models_Event_MapEventsEventType extends Models_Base {
         return Models_MedbiqInstructionalMethod::get($this->fk_instructional_method_id);
     }
     
-    public function update () {
-        return false;
-    }
+    public function update() {
+		global $db;
+		if ($db->AutoExecute("`". $this->table_name ."`", $this->toArray(), "UPDATE", "`map_events_eventtypes_id` = ".$db->qstr($this->getID()))) {
+			return true;
+		} else {
+			return false;
+		}
+	}
     
     public function insert() {
 		global $db;

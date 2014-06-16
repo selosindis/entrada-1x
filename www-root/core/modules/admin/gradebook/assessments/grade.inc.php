@@ -65,7 +65,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         ON b.`id` = a.`marking_scheme_id`
 						LEFT JOIN `assessments_lu_meta` AS c
                         ON c.`id` = a.`characteristic_id`
-						WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+						WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+						AND a.`active` = '1'";
 			$assessment = $db->GetRow($query);
 			if ($assessment) {
 				$query = "SELECT `option_id`, `aoption_id` FROM `assessment_options` WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)." AND `option_active` = '1'";

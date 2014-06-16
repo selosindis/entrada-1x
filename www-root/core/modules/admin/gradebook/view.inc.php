@@ -47,7 +47,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			foreach ($_POST["order"] as $assessment_id => $order) {
 				$order = (int) $order[0];
 
-				$query = "UPDATE `assessments` SET `order` = ".$db->qstr($order)." WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `assessment_id` = ".$db->qstr((int) $assessment_id);
+				$query = "UPDATE `assessments` SET `order` = ".$db->qstr($order)."
+				            WHERE `course_id` = ".$db->qstr($COURSE_ID)."
+				            AND `assessment_id` = ".$db->qstr((int) $assessment_id);
 				if($db->Execute($query)) {
 					$error = false;
 					application_log("success", "Updated gradebook assessment [".$assessment_id."] to order [".$order."].");
@@ -125,24 +127,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			preferences_update($MODULE, $PREFERENCES);
 
 			/**
-			 * Provide the queries with the columns to order by.
-			 */
-			switch($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
-				case "name" :
-					$sort_by = "`assessments`.`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]).", `assessments`.`cohort` ASC";
-				break;
-				case "type" :
-					$sort_by = "`assessments`.`type` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
-				break;
-				case "scheme" :
-					$sort_by = "`assessment_marking_schemes`.`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
-				break;
-				default :
-					$sort_by = "`assessments`.`order` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
-				break;
-			}			
-
-			/**
 			 * Check if cohort variable is set, otherwise a default is used.
 			 */
 			if (isset($_GET["cohort"]) && ((int)$_GET["cohort"])) {
@@ -166,7 +150,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 							AND b.`group_active` = 1
 							AND b.`group_id` = " . $db->qstr($selected_cohort) . "
-							WHERE a.`course_id` = ".$db->qstr($COURSE_ID);
+							WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
+							AND a.`active` = '1'";
 				$result	= $db->GetRow($query);
 			} 
 			if ($result) {
@@ -280,21 +265,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							ON b.`group_id` = c.`group_id`
 							WHERE a.`course_id` =". $db->qstr($COURSE_ID)."
 							AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+							AND a.`active` = '1'
 							GROUP BY b.`group_id`
 							ORDER BY b.`group_name`";
 				$cohorts = $db->GetAll($query);
 				
                 $output_cohort = false;
                 $cohort_found = false;
-                foreach ($cohorts as $key => $cohort) {
-                    if (!$cohort_found) {
-                        $output_cohort = $cohort;
-                        if (isset($selected_cohort) && $selected_cohort && $selected_cohort == $cohort["group_id"]) {
-                            $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"] = $selected_cohort;
-                            $cohort_found = true;
-                        }
-                        if ($key == (count($cohorts) - 1) && !$cohort_found) {
-                            $selected_cohort = $cohort["group_id"];
+                if ($cohorts) {
+                    foreach ($cohorts as $key => $cohort) {
+                        if (!$cohort_found) {
+                            $output_cohort = $cohort;
+                            if (isset($selected_cohort) && $selected_cohort && $selected_cohort == $cohort["group_id"]) {
+                                $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"] = $selected_cohort;
+                                $cohort_found = true;
+                            }
+                            if ($key == (count($cohorts) - 1) && !$cohort_found) {
+                                $selected_cohort = $cohort["group_id"];
+                            }
                         }
                     }
                 }
@@ -513,17 +501,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             echo "<td class='assessment_col_5'><h3>Views</h3></td>";
 							echo "</tr>";
 
-							$query = "	SELECT `course_id`, `assessment_id`, `name`, `grade_weighting`, `order`
-										FROM `assessments`
-										WHERE `cohort` = " . $db->qstr($output_cohort["group_id"])."
-										AND `course_id` = ". $db->qstr($COURSE_ID)."
-										ORDER BY `order` ASC";
-
-							$results = $db->GetAll($query);
-							if ($results) {
+                            $assessments = Models_Gradebook_Assessment::fetchAllRecords($output_cohort["group_id"], $COURSE_ID);
+							if ($assessments) {
 								$total_grade_weight = 0;
 								$count = 0;
-								foreach ($results as $result) {
+								foreach ($assessments as $assessment) {
+                                    $result = $assessment->toArray();
 									if ($ENTRADA_ACL->amIAllowed(new AssessmentResource($course_details["course_id"], $course_details["organisation_id"], $result["assessment_id"]), "update")) {
 										//Display this row if the user is a Dropbox Contact for an assignment associated with this assessment or if they are the Course Owner.
 										$query =  "	SELECT a.`course_id`, a.`assignment_id`, a.`assignment_title` 

@@ -41,6 +41,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	$default_csv_headings = array(
 			"event_id" => "Original Event",
 			"parent_id" => "Parent Event",
+            "recurring_id" => "Recurring Event",
 			"event_term" => "Term",
 			"course_code" => "Course Code",
 			"course_name" => "Course Name",
@@ -59,12 +60,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			"teacher_names" => "Teacher Names",			
 			"objectives_release_date" => "Objectives Release Date"
 	);
-
-	if (isset($_SESSION["my_export_options"]) && $_SESSION["my_export_options"]) {
-		$diff = array_diff($default_csv_headings, $_SESSION["my_export_options"]);
-		$default_csv_headings = $_SESSION["my_export_options"];
-	}
-
 	$objective_name = $translate->_("events_filter_controls");
 	$curriculum_objectives_name = $objective_name["co"]["global_lu_objectives_name"];
 	$clinical_presentations_name = $objective_name["cp"]["global_lu_objectives_name"];
@@ -90,6 +85,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		"tutor_numbers" => "Tutor Numbers",
 		"tutor_names" => "Tutor Names",
 	);
+
+    if (isset($_SESSION["my_export_options"]) && $_SESSION["my_export_options"]) {
+        $diff = array_diff($default_csv_headings, $_SESSION["my_export_options"]);
+        $default_csv_headings = $_SESSION["my_export_options"];
+        $additional_csv_headings = array_diff($additional_csv_headings, $_SESSION["my_export_options"]);
+    }
 
 	if (isset($diff) && $diff && is_array($diff)) {
 		$additional_csv_headings = array_merge($additional_csv_headings, $diff);

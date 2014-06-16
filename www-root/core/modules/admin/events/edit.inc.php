@@ -366,6 +366,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							$_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] = "content";
 						}
 
+                        if (isset($_POST["audience_visible"]) && $tmp_input = clean_input($_POST["audience_visible"], "int")) {
+                            $PROCESSED["audience_visible"] = "1";
+                        } else {
+                            $PROCESSED["audience_visible"] = "0";
+                        }
+                        
 						if (!$ERROR) {
 							$PROCESSED["updated_date"]	= time();
 							$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
@@ -1159,7 +1165,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 <input type="hidden" id="faculty_id" name="faculty_id" value="" />
 							</div>
 						</div>
-
+                        <div class="control-group">
+                            <label class="control-label form-nrequired" for="faculty_name">Audience Display:</label>
+                            <div class="controls">
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td style="vertical-align:top;"><input type="checkbox" name="audience_visible" id="audience_visible" value="1" <?php echo ($event_info["audience_visible"] == "1" || $PROCESSED["audience_visible"] == "1") ? "checked=\"checked\"" : ""; ?> /></td>
+                                            <td>
+                                                <label for="audience_visible" class="radio-group-title">Show audience to learners</label>
+                                                <div class="content-small">This option controls students ability to view the audience.</div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                         <?php
                         if ($PROCESSED["course_id"]) {
                             require_once(ENTRADA_ABSOLUTE."/core/modules/admin/events/api-audience-options.inc.php");

@@ -2041,6 +2041,53 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             </table>
                         </form>
                     </div>
+                    <?php
+                        $attached_gradebook_assessment = Models_Assessment_AssessmentEvent::fetchRowByEventID($EVENT_ID);
+                    ?>
+                    <div class="space-below">
+                        <h3>Attached Gradebook Assessments</h3>
+                        <table class="tableList" cellspacing="0" summary="List of Attached LTI Providers">
+                            <colgroup>
+                                <col class="modified wide"/>
+                                <col class="title" />
+                                <col class="title" />
+                                <col class="date" />
+                                <col class="date" />
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <td class="modified">&nbsp;</td>
+                                    <td class="title sortedASC"><div class="noLink">Assessment Name</div></td>
+                                    <td class="title">Assessment Type</td>
+                                    <td class="date-small">Assessment Points</td>
+                                    <td class="date-small">Assessment Weight</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                        <?php if ($attached_gradebook_assessment) { ?>
+                                <?php
+                                    $assessment = $attached_gradebook_assessment->getAssessment();
+                                ?>
+                                <tr>
+                                    <td></td>
+                                    <td><a href="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments/?section=grade&id=<?php echo $assessment->getCourseID(); ?>&assessment_id=<?php echo $assessment->getAssessmentID(); ?>"><strong><?php echo $assessment->getName(); ?></strong></a></td>
+                                    <td><?php echo $assessment->getType(); ?></td>
+                                    <td><?php echo $assessment->getNumericGradePointsTotal(); ?></td>
+                                    <td><?php echo $assessment->getGradeWeighting(); ?>%</td>
+                                </tr>
+                        <?php } else { ?>
+                                <tr>
+                                    <td colspan="5">
+                                        <div class="display-generic" style="white-space: normal">
+                                            There have been no assessments added to this event. To <strong>add a new LTI Provider</strong> simply click the Add LTI Provider button.
+                                        </div>
+                                    </td>
+                                </tr>
+                        <?php } ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    
                 </div>
 
                 <script type="text/javascript">

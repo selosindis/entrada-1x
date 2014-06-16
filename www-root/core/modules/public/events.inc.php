@@ -64,7 +64,7 @@ if (!defined("PARENT_INCLUDED")) {
 		$transverse = false;
 	}
 
-    $event = Models_Event::fetchRow($EVENT_ID);
+    $event = Models_Event::get($EVENT_ID);
 
 	/**
 	 * Check for groups which have access to the administrative side of this module

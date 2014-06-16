@@ -226,5 +226,10 @@ class Models_Event extends Models_Base {
         
         return $events;
     }
+    
+    public function getEventAudience() {
+        return Models_Event_Audience::fetchAllByEventID($this->event_id);
+    }
+    
 }
 ?>

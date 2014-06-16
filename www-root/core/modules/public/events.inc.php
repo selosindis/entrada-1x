@@ -519,6 +519,7 @@ if (!defined("PARENT_INCLUDED")) {
                                                 <ul class="menu">
                                                     <?php foreach ($event_audience as $audience) { 
                                                         $a = $audience->getAudience();
+                                                        if (is_array($a->getAudienceMembers())) {
                                                         $link = false;
                                                         switch ($audience->getAudienceType()) {
                                                             case "proxy_id" :
@@ -576,6 +577,11 @@ if (!defined("PARENT_INCLUDED")) {
                                                         <?php } ?>
                                                         </li>
                                                     <?php }
+                                                        } else {
+                                                            ?>
+                                                        <li><?php echo $a->getAudienceName(); ?></li>
+                                                            <?php
+                                                        }
                                                     } ?>
                                                 </ul>
                                                 <?php

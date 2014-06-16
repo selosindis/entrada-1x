@@ -182,8 +182,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQASSESSMENT"))) {
                                 $checked = "";
                             }
                             echo "<div class=\"checkbox\">";
-                            echo "<input type=\"checkbox\" name=\"fk_assessments_meta_id[]\" value=\"".$title["id"]."\" ".$checked.">";
-                            echo "<label>";
+                            echo "<input type=\"checkbox\" id=\"assessment_type_". $title["id"] ."\" name=\"fk_assessments_meta_id[]\" value=\"".$title["id"]."\" ".$checked.">";
+                            echo "<label for=\"assessment_type_". $title["id"] ."\">";
                             echo $title["title"];
                             echo "</label>";
                             echo "</div>";

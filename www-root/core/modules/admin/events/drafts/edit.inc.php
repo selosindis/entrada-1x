@@ -32,34 +32,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."].");
 } else {
-
-	if (isset($_GET["mode"]) && $temp = (clean_input($_GET["mode"], array("trim", "striptags")))) {
-		ob_clear_open_buffers();
-		switch ($temp) {
-			case "csv-example" :
-				$csv_content  = "Original Event,Parent Event,Term,Course Code,Course Name,Date,Start Time,Total Duration,Event Type Durations,Event Types,Event Title,Event Description,Location,Audience (Cohorts),Audience (Groups),Audience (Students),Teacher Numbers,Teacher Names, Objectives Release Date"."\n";
-				$csv_content .= "0,1,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d").",9:00,120,60;30;30,Lecture;Lab;Review / Feedback Session,\"Demo Event #1: Learning Demos\",\"This session will focus on learning demos and their purpose.\",Room 102,Class of ".fetch_first_year().",,,8217321,Dr. Jenn Warden,".date("Y-m-d", strtotime("+1 day"))."\n";
-				$csv_content .= "0,1,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d", strtotime("+1 week")).",9:00,60,60,Lecture,\"Demo Event #2: More About Demos\",\"This session will expand on learning demos, and give an idea of how to give one.\",Room 102,Class of ".fetch_first_year().",,,7291430,Ted Simon,".date("Y-m-d", strtotime("+10 days"))."\n";
-				$csv_content .= "0,0,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d", strtotime("+1 week")).",10:00,60,60,Small Group,\"Demo Small Group Session (Group 1)\",,Room 201,,".fetch_first_year()." Group 1,,7291430,Ted Simon,".date("Y-m-d", strtotime("+12 days"))."\n";
-				$csv_content .= "0,0,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d", strtotime("+1 week")).",10:00,60,60,Small Group,\"Demo Small Group Session (Group 2)\",,Room 202,,".fetch_first_year()." Group 2,,8392943,Sam Edwards,".date("Y-m-d", strtotime("+2 weeks"))."\n";
-				$csv_content .= "0,0,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d", strtotime("+1 week")).",10:00,60,60,Small Group,\"Demo Small Group Session (Group 3)\",,Room 203,,".fetch_first_year()." Group 3,,2536437,Jim Sampson,".date("Y-m-d", strtotime("+1 week"))."\n";
-				$csv_content .= "0,1,Term 1,EXAMPLE101,Introduction to Example,".date("Y-m-d", strtotime("+8 days")).",8:00,60,60,Examination,\"Mid-Term Make Up Session\",\"An mid term examination on Learning Demos will be given during this session.\",Room 203a,,,8290103;2823945,7291430,Ted Simon,".date("Y-m-d", strtotime("+2 weeks"))."\n";
-				$csv_content .= "0,1,Term 4,EXAMPLE403,Applying Examples,".date("Y-m-d", strtotime("+9 days")).",14:30,60,60,Directed Independent Learning,Neurology Theme of the Week: Multiple Sclerosis,,,,,,,,".date("Y-m-d", strtotime("+3 weeks"))."\n";
-
-				header('Pragma: public');
-				header('Content-type: text/csv');
-				header('Content-Disposition: attachment; filename="draft-schedule-example.csv"');
-
-				echo $csv_content;
-
-			break;
-			default :
-                continue;
-            break;
-		}
-		exit;
-	}
-
+    
 	$draft_id = (int) $_GET["draft_id"];
     $draft = Models_Event_Draft::fetchRowByID($draft_id);
     
@@ -325,27 +298,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		$draft_events = Models_Event_Draft_Event::fetchAllByDraftID($draft_id);
 		?>
 		<script type="text/javascript">
-			jQuery(function(){
-				jQuery(".import-csv").live("click", function(){
-					jQuery("#import-csv").dialog({
-						title: "Import CSV",
-						resizable: false,
-						draggable: false,
-						modal: true,
-						width: 300,
-						buttons: [
-							{
-								text: "Import",
-								click: function() { jQuery("#csv-form").trigger("submit"); }
-							},
-							{
-								text: "Cancel",
-								click: function() { jQuery(this).dialog("close"); }
-							}
-						]
-					});
-					return false;
-				});
+			jQuery(function($){
+                $("#import-button").on("click", function() {
+                    $("#csv-form").submit();
+                });
 			});
 		</script>
 		<style type="text/css">
@@ -362,20 +318,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			?>
 			<div class="row-fluid space-below">
 				<div class="pull-right">
-					<a href="#" class="btn btn-small btn-success import-csv"><i class="icon-plus-sign icon-white"></i> Import CSV</a>
+					<a href="#import-csv" class="btn btn-small btn-success" data-toggle="modal"><i class="icon-plus-sign icon-white"></i> Import CSV</a>
 					<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add&mode=draft&draft_id=<?php echo $draft_id; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add New Event</a>
 				</div>
 			</div>
 			<?php
 		}
 		?>
-		<div id="import-csv">
-			<form id="csv-form" action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=csv-import&draft_id=<?php echo $draft_id; ?>" enctype="multipart/form-data" method="POST">
-				<p><a href="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=edit&mode=csv-example">Click here to download example CSV</a>.</p>
-				<input type="hidden" name="draft_id" value="<?php echo $draft_id; ?>" />
-				<input type="file" name="csv_file" />
-			</form>
-		</div>
+        <div class="modal hide fade" id="import-csv">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                <h3>Import CSV</h3>
+            </div>
+            <div class="modal-body">
+                <?php echo display_notice("Upon uploading a CSV you will be prompted to confirm the association between column headings and their data points."); ?>
+                <form id="csv-form" action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=csv-import&draft_id=<?php echo $draft_id; ?>" enctype="multipart/form-data" method="POST">
+                    <input type="hidden" name="draft_id" value="<?php echo $draft_id; ?>" />
+                    <input type="file" name="csv_file" />
+                </form>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn">Close</a>
+                <a href="#" class="btn btn-primary" id="import-button">Import</a>
+            </div>
+        </div>
 		<form name="frmSelect" action="<?php echo ENTRADA_URL; ?>/admin/events?section=delete&mode=draft&draft_id=<?php echo $draft_id; ?>" method="post">
 			<table class="table table-striped table-bordered" id="draftEvents" cellspacing="0" cellpadding="1" summary="List of Events" style="margin-bottom:5px;">
 				<colgroup>

@@ -158,11 +158,10 @@ class GoogleMailingList extends MailingListBase
 		$client = Zend_Gdata_ClientLogin::getHttpClient($GOOGLE_APPS["admin_username"], $GOOGLE_APPS["admin_password"], Zend_Gdata_Gapps::AUTH_SERVICE_NAME);
 		$service = new Zend_Gdata_Gapps($client, $GOOGLE_APPS["domain"]);
 		$this->service = $service;
-        $list_status_map = array("discussion" => "Member", "announcements" => "Owner", "inactive" => "inactive");
-        if (array_key_exists($this->type, $list_status_map) && ($list_status_map[$this->type] == "Owner" || $list_status_map[$this->type] == "Member")) {
+        if ($this->type == "discussion" || $this->type == "announcements") {
             $found_group = $this->service->retrieveGroup($this->list_name);
             if (!isset($found_group) || !$found_group) {
-                $this->create_group($list_status_map[$this->type], $this->list_name);
+                $this->create_group($this->type, $this->list_name);
             }
         }
 	}
@@ -307,11 +306,11 @@ class GoogleMailingList extends MailingListBase
 
     public function change_mode($mode) {
         $return = false;
-        $list_status_map = array("discussion" => "Member", "announcements" => "Owner", "inactive" => "inactive");
+        $list_status_map = array("discussion" => "Member", "announcements" => "Owner");
         if (array_key_exists($mode, $list_status_map) && ($list_status_map[$mode] == "Owner" || $list_status_map[$mode] == "Member")) {
             $found_group = $this->service->retrieveGroup($this->list_name);
             if (!isset($found_group) || !$found_group) {
-                $this->create_group($list_status_map[$mode], $this->list_name);
+                $this->create_group($mode, $this->list_name);
             }
             if ($this->service->updateGroup($this->list_name, NULL, NULL, $list_status_map[$mode])) {
                 $return = true;
@@ -327,8 +326,9 @@ class GoogleMailingList extends MailingListBase
 
         $return = false;
 
-        if ($mode == "Owner" || $mode == "Member") {
-            if ($this->service->createGroup($list_name, $list_name, NULL, $mode)) {
+        $list_status_map = array("discussion" => "Member", "announcements" => "Owner");
+        if (array_key_exists($mode, $list_status_map) && ($list_status_map[$mode] == "Owner" || $list_status_map[$mode] == "Member")) {
+            if ($this->service->createGroup($list_name, $list_name, NULL, $list_status_map[$mode])) {
                 $return = true;
             }
         }

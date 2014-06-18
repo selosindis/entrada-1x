@@ -22,7 +22,8 @@
  * @copyright Copyright 2014 Queen's University. All Rights Reserved.
  *
 */
-
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -43,7 +44,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	} else {
         add_error("No Event Type found with the specified ID.");
     }
-	
+    
+    if (isset($PROCESSED["eventtype_id"])) {
+        $event_type = Models_EventType::get($PROCESSED["eventtype_id"]);
+    }
+   
 	// Error Checking
 	switch ($STEP) {
 		case 2 :
@@ -64,12 +69,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				$PROCESSED["eventtype_description"] = $eventtype_description;
 			} else {
 				$PROCESSED["eventtype_description"] = "";
-			}			
+			}
+            
+            if (isset($_POST["medbiq_instructional_method_id"]) && ($tmp_input = clean_input($_POST["medbiq_instructional_method_id"], array("trim", "int")))) {
+                $PROCESSED["medbiq_instructional_method_id"] = $tmp_input;
+            } else {
+                $PROCESSED["medbiq_instructional_method_id"] = null;
+            }
 			
 			if (!$ERROR) {
                 
-                $params = array("eventtype_title" => $PROCESSED["eventtype_title"], "eventtype_description" => $PROCESSED["eventtype_description"], "eventtype_order" => "0", "updated_date"=> time(),"updated_by" => $ENTRADA_USER->getID(), "eventtype_active" => 1);
-				
+                $params = array("eventtype_title" => $PROCESSED["eventtype_title"], "eventtype_description" => $PROCESSED["eventtype_description"], "medbiq_instructional_method_id" => $PROCESSED["medbiq_instructional_method_id"], "eventtype_order" => "0", "updated_date"=> time(),"updated_by" => $ENTRADA_USER->getID(), "eventtype_active" => 1);
+                
                 // Check to see if the eventtype_id is used in more than one organisation
                 $eventtype_organisation = Models_Event_EventTypeOrganisation::get($PROCESSED["eventtype_id"]);
                 // if the eventtype_id is used in multiple organisations we are going to create a new entry and remove the old ones
@@ -92,6 +103,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                             }
                         }
                         
+                        $mapped_instructional_method = Models_Event_MapEventsEventType::fetchRowByEventTypeID($PROCESSED["eventtype_id"]);
+                        if ($mapped_instructional_method) {
+                            $mapped_instructional_method->delete();
+                        }
+                        
+                        $mapped_method = new Models_Event_MapEventsEventType(array("fk_instructional_method_id" => $PROCESSED["medbiq_instructional_method_id"], "fk_eventtype_id" => $eventtype_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()));
+                        if (!$mapped_method->insert()) {
+                            application_log("error", "An error occured while attempting to insert the medbiq instructional method " . $mapped_method->getID() . " DB said: " . $db->ErrorMsg());
+                            add_error("An error occured while attempting to save the selected medbiq instructional method");
+                        }
+                        
                         // we need a list of event_ids that are associated with this eventtype_id
                         $query = "	SELECT b.`event_id`, c.*
                                     FROM `courses` AS a
@@ -104,8 +126,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                         $events_list = $db->GetAssoc($query);
                         
                         if ($events_list) {
-                            foreach ($events_list as $event) {
-                                $event_eventtype = new Models_Event_EventType(array("eeventtype_id" => $event["eeventtype_id"], "event_id" => $event["event_id"], "eventtype_id" => $eventtype_id, "duration" => $event["duration"]));
+                            foreach ($events_list as $event_id => $event) {
+                                $event_eventtype = new Models_Event_EventType(array("eeventtype_id" => $event["eeventtype_id"], "event_id" => $event_id, "eventtype_id" => $eventtype_id, "duration" => $event["duration"]));
                                 $event_eventtype->update();
                             }
                         }
@@ -157,29 +179,48 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 				echo display_error();
 			}
             
-            if (isset($PROCESSED["eventtype_id"])) {
-                $event_type = Models_EventType::get($PROCESSED["eventtype_id"]);
-                if ($event_type) { ?>
-                    <form class="form-horizontal" action="<?php echo ENTRADA_URL."/admin/settings/manage/eventtypes"."?".replace_query(array("action" => "edit", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
-                        <div class="control-group">
-                            <label for="eventtype_title" class="form-required control-label">Event Type Name:</label>
-                            <div class="controls">
-                                <input type="text" id="eventtype_title" name="eventtype_title" value="<?php echo html_encode($event_type->getEventTypeTitle()); ?>" maxlength="60" />
+            if (isset($event_type) && $event_type) { ?>
+            <form class="form-horizontal" action="<?php echo ENTRADA_URL."/admin/settings/manage/eventtypes"."?".replace_query(array("action" => "edit", "step" => 2))."&org=".$ORGANISATION_ID; ?>" method="post">
+                <div class="control-group">
+                    <label for="eventtype_title" class="form-required control-label">Event Type Name:</label>
+                    <div class="controls">
+                        <input type="text" id="eventtype_title" name="eventtype_title" value="<?php echo ($event_type ? html_encode($event_type->getEventTypeTitle()) : ""); ?>" maxlength="60" />
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label for="eventtype_description" class="form-nrequired control-label">Event Type Description: </label>
+                    <div class="controls">
+                        <textarea id="eventtype_description" name="eventtype_description" style="width: 98%; height: 200px"><?php echo ($event_type ? html_encode($event_type->getEventTypeDescription()): ""); ?></textarea>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="form-nrequired control-label">Medbiquitos Instructional Method:</label>
+                    <div class="controls">
+                    <?php
+                    $medbiq_instructional_method = new Models_MedbiqInstructionalMethod();
+                    $medbiq_instructional_methods = $medbiq_instructional_method->fetchAllMedbiqInstructionalMethods();
+                    $mapped_instructional_method = $event_type->getMappedMedbiqInstructionalMethod();
+                    
+                    if ($medbiq_instructional_methods) {
+                        foreach ($medbiq_instructional_methods as $medbiq_method) { ?>
+                            <div class="radio">
+                                <label for="instructional_method_<?php echo $medbiq_method->getID(); ?>">
+                                    <input type="radio" name="medbiq_instructional_method_id" id="instructional_method_<?php echo $medbiq_method->getID(); ?>" value="<?php echo $medbiq_method->getID(); ?>" <?php echo ($mapped_instructional_method && $mapped_instructional_method->getInstructionalMethodID() == $medbiq_method->getID() ? "checked=\"checked\"" : ""); ?>>
+                                    <?php echo $medbiq_method->getInstructionalMethod(); ?>
+                                </label>
                             </div>
-                        </div>
-                        <div class="control-group">
-                            <label for="eventtype_description" class="form-nrequired control-label">Event Type Description: </label>
-                            <div class="controls">
-                                <textarea id="eventtype_description" name="eventtype_description" style="width: 98%; height: 200px"><?php echo html_encode($event_type->getEventTypeDescription()); ?></textarea>
-                            </div>
-                        </div>
-                        <div class="control-group">
-                            <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/eventtypes?org=<?php echo $ORGANISATION_ID;?>'" />
-                            <input type="submit" class="btn btn-primary pull-right" value="<?php echo $translate->_("global_button_save"); ?>" />                           
-                        </div>
-                    </form>
-                <?php
-                }
+                        <?php
+                        }
+                    }
+                    ?>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/settings/manage/eventtypes?org=<?php echo $ORGANISATION_ID;?>'" />
+                    <input type="submit" class="btn btn-primary pull-right" value="<?php echo $translate->_("global_button_save"); ?>" />                           
+                </div>
+            </form>
+            <?php
             }
 		break;
 	}

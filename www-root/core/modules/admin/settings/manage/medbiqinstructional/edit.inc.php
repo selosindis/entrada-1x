@@ -201,10 +201,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
                     $event_types = Models_EventType::fetchAllByOrganisationID($ORGANISATION_ID);
                     if ($event_types) {
                         foreach($event_types as $eventtype) { ?>
-                            <label class="checkbox" style="display:block">
-                                <input type="checkbox" name="fk_eventtype_id[]" value="<?php echo $eventtype->getID(); ?>" <?php echo (isset($SEMI_PROCESSED["fk_eventtype_id"]) && in_array($eventtype->getID(), $SEMI_PROCESSED["fk_eventtype_id"]) ? "checked=\"checked\"" : ""); ?> />
-                                <?php echo $eventtype->getEventTypeTitle(); ?>
-                            </label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="fk_eventtype_id[]" value="<?php echo $eventtype->getID(); ?>" <?php echo (isset($SEMI_PROCESSED["fk_eventtype_id"]) && in_array($eventtype->getID(), $SEMI_PROCESSED["fk_eventtype_id"]) ? "checked=\"checked\"" : ""); ?> />
+                                    <?php echo $eventtype->getEventTypeTitle(); ?>
+                                </label>
+                            </div>
                         <?php    
                         }
                     }

@@ -64,9 +64,9 @@ class Models_Event_MapEventsEventType extends Models_Base {
         ));
     }
     
-    public static function fetchAllByEventTypeID ($event_type_id = null) {
+    public static function fetchRowByEventTypeID ($event_type_id = null) {
         $self = new self();
-        return $self->fetchAll(array("fk_eventtype_id" => $event_type_id));
+        return $self->fetchRow(array("fk_eventtype_id" => $event_type_id));
     }
     
     public function getInstructionalMethod () {

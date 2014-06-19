@@ -22,25 +22,25 @@
  * @author Developer: James Ellis <james.ellis@queensu.ca>
  * @copyright Copyright 2014 Queen's University. All Rights Reserved.
  *
-*/
+ */
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
-	exit;
+    exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
-	header("Location: ".ENTRADA_URL);
-	exit;
+    header("Location: ".ENTRADA_URL);
+    exit;
 } elseif (!$ENTRADA_ACL->amIAllowed("evaluation", "read", false)) {
-	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
+    $ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+    $ERROR++;
+    $ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 
-	echo display_error();
+    echo display_error();
 
-	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
+    application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
-    $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations/reports?section=student-clerkship-evalutions", "title" => "Clerkship Core Rotation Evaluation Reports");
-	switch ($STEP) {
+    $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/evaluations/reports?section=student-clerkship-preceptor-evalutions", "title" => "Clerkship Preceptor Evaluation Reports");
+    switch ($STEP) {
         case 3 :
             $report_questions = array();
             $report_targets = array();
@@ -80,7 +80,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                     $query = "SELECT a.`event_title`, a.`rotation_id`, a.`region_id`, c.`region_name`, a.`category_id`, a.`event_id` FROM `".CLERKSHIP_DATABASE."`.`events` AS a
                                 JOIN `evaluation_progress_clerkship_events` AS b
                                 ON a.`event_id` = b.`event_id`
-                                AND b.`preceptor_proxy_id` IS NULL
+                                AND b.`preceptor_proxy_id` IS NOT NULL
+                                AND b.`preceptor_proxy_id` != 3499
                                 JOIN `".CLERKSHIP_DATABASE."`.`regions` AS c
                                 ON a.`region_id` = c.`region_id`
                                 JOIN `evaluation_progress` AS d
@@ -139,7 +140,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                     $query = "SELECT e.`eform_id`, a.`category_id` FROM `".CLERKSHIP_DATABASE."`.`events` AS a
                                 JOIN `evaluation_progress_clerkship_events` AS b
                                 ON a.`event_id` = b.`event_id`
-                                AND b.`preceptor_proxy_id` IS NULL
+                                AND b.`preceptor_proxy_id` IS NOT NULL
+                                AND b.`preceptor_proxy_id` != 3499
                                 JOIN `evaluation_progress` AS c
                                 ON b.`eprogress_id` = c.`eprogress_id`
                                 JOIN `evaluations` AS d
@@ -184,11 +186,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                             }
                         }
                         if (@count($report_questions)) {
-                            foreach ($report_questions as &$report_question) {
-                                $query = "SELECT c.*, a.`category_id` FROM `".CLERKSHIP_DATABASE."`.`events` AS a
+                            $answers_by_preceptor = array();
+                            foreach ($report_questions as $equestion_id => &$report_question) {
+                                if (!array_key_exists($equestion_id, $answers_by_preceptor)) {
+                                    $answers_by_preceptor[$equestion_id] = array();
+                                }
+                                $query = "SELECT c.*, a.`category_id`, b.`preceptor_proxy_id` FROM `".CLERKSHIP_DATABASE."`.`events` AS a
                                             JOIN `evaluation_progress_clerkship_events` AS b
                                             ON a.`event_id` = b.`event_id`
-                                            AND b.`preceptor_proxy_id` IS NULL
+                                            AND b.`preceptor_proxy_id` IS NOT NULL
+                                            AND b.`preceptor_proxy_id` != 3499
                                             JOIN `evaluation_responses` AS c
                                             ON c.`eprogress_id` = b.`eprogress_id`
                                             JOIN `".CLERKSHIP_DATABASE."`.`categories` AS d
@@ -240,6 +247,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                     }
                                     foreach ($chosen_responses as $chosen_response) {
                                         if (in_array($chosen_response["category_id"], $PROCESSED["category_ids"])) {
+                                            if (!array_key_exists($chosen_response["preceptor_proxy_id"], $answers_by_preceptor[$equestion_id])) {
+                                                $answers_by_preceptor[$equestion_id][$chosen_response["preceptor_proxy_id"]] = array("responses" => $report_question["responses"]);
+                                                foreach ($answers_by_preceptor[$equestion_id][$chosen_response["preceptor_proxy_id"]]["responses"] as $eqresponse_id => $response) {
+                                                    $answers_by_preceptor[$equestion_id][$chosen_response["preceptor_proxy_id"]]["responses"][$eqresponse_id]["chosen"] = 0;
+                                                }
+                                                $answers_by_preceptor[$equestion_id][$chosen_response["preceptor_proxy_id"]]["total_responses"] = 0;
+                                            }
                                             if (!array_key_exists("chosen", $report_question["responses"][$chosen_response["eqresponse_id"]])) {
                                                 $report_question["responses"][$chosen_response["eqresponse_id"]]["chosen"] = 0;
                                                 $report_question["responses"][$chosen_response["eqresponse_id"]]["comments"] = array();
@@ -248,9 +262,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                                                 $report_question["total_responses"] = 0;
                                             }
                                             $report_question["responses"][$chosen_response["eqresponse_id"]]["chosen"]++;
+                                            $answers_by_preceptor[$equestion_id][$chosen_response["preceptor_proxy_id"]]["responses"][$chosen_response["eqresponse_id"]]["chosen"]++;
                                             if (isset($chosen_response["comments"]) && $chosen_response["comments"]) {
                                                 $report_question["responses"][$chosen_response["eqresponse_id"]]["comments"][] = $chosen_response["comments"];
                                             }
+                                            $answers_by_preceptor[$equestion_id][$chosen_response["preceptor_proxy_id"]]["total_responses"]++;
                                             $report_question["total_responses"]++;
                                         }
                                     }
@@ -266,7 +282,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                     add_error("No evaluation data for the chosen services was found during the selected period.");
                 }
             }
-        break;
+            break;
         case 2 :
             if (isset($_POST["report_start"]) && $_POST["report_start"] && strtotime($_POST["report_start"])) {
                 $report_start = trim($_POST["report_start"]);
@@ -302,7 +318,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
             if (has_error()) {
                 $STEP = 1;
             }
-        break;
+            break;
     }
     switch ($STEP) {
         case 3 :
@@ -361,22 +377,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                     $targets_string .= "<strong>".html_encode($report_target["event_title"])."</strong> (<em>".html_encode($rotation_title)."</em> - <em>".html_encode($report_target["region_name"])."</em>) [<strong>".(array_key_exists($report_target["event_id"], $report_targets_responses_count) && ((int)$report_targets_responses_count[$report_target["event_id"]]) ? ((int)$report_targets_responses_count[$report_target["event_id"]]) : "0")."</strong> evaluations completed for <strong>".$count."</strong> events]<br />\n";
                 }
                 $targets_string .= "<br /><br />Total of <strong>".$total_completed."</strong> evaluations completed for <strong>".$total_events."</strong> events.";
-                echo "<h1>Clerkship Core Rotation Evaluation Reports</h1>\n";
                 echo "<div id=\"evaluation-report-body\">\n";
+                echo "<h1>Clerkship Preceptor Evaluation Reports</h1>\n";
                 echo "<div class=\"row-fluid\"><h2 class=\"span4\">Services reported on:</h2></div>\n";
                 echo "<div class=\"row-fluid space-below\"><span class=\"span9 offset3 question-content\">".$targets_string."</span></div>\n";
                 $count = 1;
-                foreach ($report_questions as &$report_question) {
+                foreach ($report_questions as $equestion_id => &$report_question) {
                     echo "<div class=\"row-fluid space-below".($count > 1 ? " border-above" : "")."\">\n";
                     echo "  <h3 class=\"span3\">Question #".$count.": </h3>\n";
                     echo "  <span class=\"span7 offset1 space-above medium question-content\">".$report_question["question_text"]."</span>\n";
                     echo "</div>\n";
                     echo "  <div class=\"row-fluid border-bottom space-below question-content\">\n";
-                    echo "      <span class=\"span7\"><strong>Response</strong></span>\n";
+                    echo "      <span class=\"span5\"><strong>Response</strong></span>\n";
+                    echo "      <span class=\"span2\"><strong>Range</strong></span>\n";
                     echo "      <span class=\"span2\"><strong>Percent</strong></span>\n";
                     echo "      <span class=\"span2 offset1\"><strong>Selections</strong></span>\n";
                     echo "  </div>\n";
-                    foreach ($report_question["responses"] as $response) {
+                    foreach ($report_question["responses"] as $eqresponse_id => $response) {
                         echo "  <div class=\"row-fluid question-content\">\n";
                         echo "      <span class=\"span7\">".$response["response_text"]."</span>\n";
                         echo "      <span class=\"span2\">".(isset($response["chosen"]) && $response["chosen"] ? round((((float)$response["chosen"]) / ((float)$report_question["total_responses"]) * 100.0), 2) : "0")."% </span>\n";
@@ -405,7 +422,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
             }
             break;
         case 2 :
-            echo "<h1>Clerkship Core Rotation Evaluation Reports</h1>\n";
+            echo "<h1>Clerkship Preceptor Evaluation Reports</h1>\n";
             if (has_success()) {
                 echo display_success();
             }
@@ -425,7 +442,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                         ON a.`rotation_id` = b.`rotation_id`
                         JOIN `evaluation_progress_clerkship_events` AS c
                         ON a.`event_id` = c.`event_id`
-                        AND c.`preceptor_proxy_id` IS NULL
+                        AND c.`preceptor_proxy_id` IS NOT NULL
+                        AND c.`preceptor_proxy_id` != 3499
                         JOIN `evaluation_progress` AS c1
                         ON c.`eprogress_id` = c1.`eprogress_id`
                         AND c1.`progress_value` = 'complete'
@@ -483,7 +501,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                 }
             }
             ?>
-            <form name="frmReport" action="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=student-clerkship-evaluations&step=3" method="post">
+            <form name="frmReport" action="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=student-clerkship-preceptor-evaluations&step=3" method="post">
                 <?php
                 foreach ($PROCESSED["cohorts"] as $cohort) {
                     echo "<input type=\"hidden\" name=\"cohorts[]\" value=\"".$cohort."\" />\n";
@@ -608,7 +626,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
             break;
         case 1 :
         default :
-            echo "<h1>Clerkship Core Rotation Evaluation Reports</h1>\n";
+            echo "<h1>Clerkship Preceptor Evaluation Reports</h1>\n";
             if (has_success()) {
                 echo display_success();
             }
@@ -633,7 +651,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                         });
                     });
                 </script>
-                <form name="frmReport" action="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=student-clerkship-evaluations&step=2" method="post">
+                <form name="frmReport" action="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=student-clerkship-preceptor-evaluations&step=2" method="post">
                     <div class="control-group row-fluid">
                         <label for="course_id" class="form-required span3">Report Start: </label>
                         <span class="controls span8">
@@ -658,11 +676,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                             <div class="input-append">
                                 <select multiple="multiple" name="cohorts[]" id="cohorts" style="height: 160px">
                                     <?php
-                                    $query = "SELECT * FROM `groups` AS a
+                                    echo $query = "SELECT * FROM `groups` AS a
                                                 JOIN `group_organisations` AS b
                                                 ON a.`group_id` = b.`group_id`
                                                 WHERE a.`group_type` = 'cohort'
                                                 AND a.`group_active` = 1
+                                                AND a.`group_id` <= 11
                                                 AND b.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation());
                                     $cohorts = $db->GetAll($query);
                                     if ($cohorts) {

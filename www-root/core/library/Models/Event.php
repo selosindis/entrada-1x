@@ -46,6 +46,7 @@ class Models_Event extends Models_Base {
               $event_duration,
               $release_date,
               $release_until,
+              $audience_visible,
               $draft_id,
               $updated_date,
               $updated_by;
@@ -147,6 +148,10 @@ class Models_Event extends Models_Base {
     
     public function getReleaseUntil () {
         return $this->release_until;
+    }
+    
+    public function getAudienceVisible() {
+        return $this->audience_visible;
     }
     
     public function getDraftID () {

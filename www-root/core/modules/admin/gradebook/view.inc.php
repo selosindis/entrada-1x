@@ -560,29 +560,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                         ORDER BY b.`lastname` ASC, b.`firstname` ASC";
                                             $students = $db->GetAll($query);
 
-                                            $viewsSQL = "   SELECT DISTINCT (stats.proxy_id), COUNT(*) AS views, users.firstname, users.lastname, MIN(stats.timestamp) as firstViewedTime, MAX(stats.timestamp) as lastViewedTime
-                                                          FROM " . DATABASE_NAME . ".statistics AS stats, " . AUTH_DATABASE . ".user_data AS users
-                                                          JOIN ".AUTH_DATABASE.".user_access AS access
-                                                          ON access.user_id = users.id
-                                                          JOIN group_members AS members
-                                                          WHERE stats.module = 'gradebook'
-                                                          AND stats.action = '" . $action . "'
-                                                          AND stats.action_field = '" . $action_field . "'
-                                                          AND stats.action_value = " . $db->qstr($result["assessment_id"]) . "
-                                                          AND stats.proxy_id = users.id
-                                                          AND access.group = 'student'
-                                                            AND members.group_id = ".$db->qstr($output_cohort["group_id"])."                                                                                      
-                                                          GROUP BY stats.proxy_id
-                                                          ORDER BY users.lastname ASC";
-                                            $statistics = $db->GetAll($viewsSQL);
-                                            $userViews = 0;
-                                            $statsHTML = "";
-                                            foreach ($statistics as $stats) {
-                                                $statsHTML .=   "<li class='statsLI'><span class='sortStats sortStatsNameModel'>" . $stats["lastname"] . ", " . $stats["firstname"] . "</span><span class='sortStats sortStatsViewsModel'>" . $stats["views"] . "</span><span class='sortStats sortStatsDateModel'>" . date("m-j-Y g:ia", $stats["firstViewedTime"]) . "</span><span class='sortStats sortStatsDateModel'>" . date("m-j-Y g:ia", $stats["lastViewedTime"]) . "</span></li>";
-                                                $userViews++;
-                                                $totalViews = $totalViews + $stats["views"];
-                                            }
-											
+											$params = array(
+                                                "module" => "gradebook",
+                                                "action" => "view",
+                                                "action_field" => "assessment_id",
+                                                "action_value" => $result["assessment_id"]
+                                            );
+                                            $assessment_views = Models_Statistic::getCountByParams($params);
+                                            
 											if ($assignment && $ENTRADA_ACL->amIAllowed(new AssignmentResource($course_details["course_id"], $course_details["organisation_id"], $assignment["assignment_id"]), "update")) {
 												$url = ENTRADA_URL."/admin/gradebook/assignments?section=grade&amp;id=".$COURSE_ID."&amp;assignment_id=".$assignment["assignment_id"];
 												echo "<td id=\"assignment-".$assignment["assignment_id"]."\">";
@@ -601,7 +586,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 												}
 												echo "</td>\n";
 											}
-                                            echo "<td class='assessment_col_5'><a href='#' onclick=\"openDialog('".ENTRADA_URL."/api/gradebook-stats.api.php?action=assessment&id=".$result["assessment_id"]."&group_id=" . $output_cohort["group_id"] . "')\">" . $userViews . "</a></td>";
+                                            echo "<td class='assessment_col_5'><a href=\"#assessment-view-details\" class=\"assessment-view\" data-toggle=\"modal\" data-assessment-id=\"" . $result["assessment_id"] . "\">" . $assessment_views["views"] . "</a></td>";
 											echo "</tr>";											
 										}
 									}
@@ -641,6 +626,58 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					?>
 					</tbody>
 				</table>
+                <?php
+                $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+                ?>
+                <script type="text/javascript">
+                    jQuery(function($) {
+                        var gradebook_views_table = $("#gradebook-views").DataTable({
+                            "bPaginate": false,
+                            "bInfo": false,
+                            "bFilter": false
+                        });
+                        $(".assessment-view").on("click", function() {
+                            var assessment_id = $(this).data("assessment-id");
+                            $.ajax({
+                                url : "<?php echo ENTRADA_URL; ?>/api/gradebook-stats.api.php",
+                                data : {assessment_id : assessment_id},
+                                success: function(data) {
+                                    var jsonResponse = JSON.parse(data);
+                                    if (jsonResponse.status == "success") {
+                                        if (jsonResponse.data.length > 0) {
+                                            gradebook_views_table.fnAddData(jsonResponse.data);
+                                        }
+                                    }
+                                }
+                            });
+                        });
+                        $("#assessment-view-details").on("hidden", function(e) {
+                            gradebook_views_table.fnClearTable();
+                        });
+                    });
+                </script>
+                <div id="assessment-view-details" class="modal hide fade">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h3>Gradebook Views</h3>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table table-bordered table-striped" id="gradebook-views">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Views</th>
+                                    <th>First View</th>
+                                    <th>Last View</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">Close</a>
+                    </div>
+                </div>
 				<div class="gradebook_edit" style="display: none;"></div>
 				<?php
 				if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {

@@ -57,91 +57,77 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				exit;
 			} else {
 				$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/events?".replace_query(array("section" => "Statistics", "id" => $EVENT_ID)), "title" => "Event Statistics");
-                                $PROCESSED["proxy_id"] = $ENTRADA_USER->getID();
-                                //This will create a record set that has the proxyid, firstname, lastname, last timestamp, view per user.
-                                $viewsSQL = "   SELECT DISTINCT (stats.proxy_id), COUNT(*) AS views, users.firstname, users.lastname, MAX(stats.timestamp) as lastViewedTime
-                                                FROM `".DATABASE_NAME."`.statistics AS stats, `".AUTH_DATABASE."`.user_data AS users
-                                                WHERE stats.module = 'events'
-                                                AND stats.action = 'view'
-                                                AND stats.action_field = 'event_id' 
-                                                AND stats.action_value = " . $EVENT_ID . " 
-                                                AND stats.proxy_id = users.id
-                                                GROUP BY stats.proxy_id
-                                                ORDER BY users.lastname ASC";
-                                $statistics = $db->GetAll($viewsSQL);
+                $PROCESSED["proxy_id"] = $ENTRADA_USER->getID();
+                //This will create a record set that has the proxyid, firstname, lastname, last timestamp, view per user.
 
+                $statistics = Models_Statistic::getEventViews($EVENT_ID);
 
-                                $totalViews = 0;
-                                $userViews = 0;
-                                $statsHTML = "";
-                                foreach ($statistics as $stats) {
-                                    $statsHTML .=   "<li class='statsLI'><span class='sortStats sortStatsName'>" . $stats["lastname"] . ", " . $stats["firstname"] . "</span><span class='sortStats sortStatsViews'>" . $stats["views"] . "</span><span class='sortStats sortStatsDate'>" . date("m-j-Y g:ia", $stats["lastViewedTime"]) . "</span></li>";
-                                    //$statsHTML .= " <tr><td>" . $stats["lastname"] . ", " . $stats["firstname"] . "</td>
-                                                   // <td>" . $stats["views"] . "</td>
-                                                   // <td>" . date("m-j-Y g:ia", $stats["lastViewedTime"]) . "</td></tr>";
-                                    $userViews++;
-                                    $totalViews = $totalViews + $stats["views"];
-                                }
-
-
-                                events_subnavigation($event_info,'statistics');
-                                echo "<div class=\"content-small\">".fetch_course_path($event_info["course_id"])."</div>\n";
-				echo "<h1 id=\"page-top\" class=\"event-title\">".html_encode($event_info["event_title"])."</h1>\n";
-					?>
-                                        <script type="text/javascript">
-                                            jQuery(document).ready(function(){
-                                                jQuery(".sortStatsHeader").click(function() {
-                                                    var sortID = jQuery(this).attr("id");
-                                                    if(jQuery(this).hasClass("ASC")) {
-                                                        var sortOrder = "DESC";
-                                                    } else {
-                                                        var sortOrder = "ASC";
-                                                    }
-                                                    var eventID = "<?php echo $EVENT_ID?>";
-                                                    var dataString = 'sortOrder=' + sortOrder + '&sortID=' + sortID + '&eventID=' + eventID;
-                                                    var url = '<?php echo ENTRADA_URL . "/api/stats-event-view.php";?>'
-                                                    jQuery.ajax({
-                                                        type: "POST",
-                                                        url: url,
-                                                        data: dataString,
-                                                        dataType: "json",
-                                                        success: function(data) {
-                                                            jQuery("#userViews").html("<strong>" + data["userViews"] + "</strong>");
-                                                            jQuery("#totalViews").html("<strong>" + data["totalViews"] + "</strong>");
-                                                            jQuery("#statsHTML").html(data["statsHTML"]);
-                                                            if(jQuery("#" + sortID).hasClass("ASC")) {
-                                                                jQuery(".sortStatsHeader").removeClass("ASC").addClass("DESC");;
-                                                            } else {
-                                                                jQuery(".sortStatsHeader").removeClass("DESC").addClass("ASC");
-                                                            }
-                                                        }
-                                                     });
-                                                });
-                                            });
-                                        </script>
-					<h2 title="Event Statistics Section">Event Statistics</h2>
-                                        <ul class="statsUL">
-                                            <li class="statsLI"><span class="statsLISpan1">Number of users who viewed this event: </span><span id="userViews"><strong><?php echo $userViews?></strong></span></li>
-                                            <li class="statsLI"><span class="statsLISpan1">Total views of this event: </span><span id="totalViews"><strong><?php echo $totalViews?></strong></span></li>
-                                        </ul>
-                                        <ul class="statsUL">
-                                            <li class="statsLIHeader"><span class="sortStatsHeader ASC sortStatsName" id="name">Name</span><span class="sortStatsHeader ASC sortStatsViews" id="view">Views</span><span class="sortStatsHeader ASC sortStatsDate" id="date">Last viewed on</span></li>
-                                            <div id="statsHTML"><?php echo $statsHTML ?></div>
-                                        </ul>
-                                        <p class="content-small">Click on title to change sort</p>
-                                <?Php
+                $total_views = 0;
+                
+                events_subnavigation($event_info,'statistics');
+				?>
+                <div class="content-small"><?php echo fetch_course_path($event_info["course_id"]); ?></div>
+                <h1 id="page-top" class="event-title"><?php echo html_encode($event_info["event_title"]); ?></h1>
+                <h2 title="Event Statistics Section">Event Statistics</h2>
+                <?php
+                $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+                ?>
+                <script type="text/javascript">
+                    jQuery(function($) {
+                        var event_views_table = $("#event-views").DataTable({
+                            "bPaginate": false,
+                            "bInfo": false,
+                            "bFilter": false
+                        });
+                    });
+                </script>
+                <table class="table table-bordered table-striped" id="event-views">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Views</th>
+                            <th>Last viewed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if ($statistics) { ?>
+                            <?php foreach ($statistics as $statistic) { 
+                                $total_views += $statistic["views"];
+                                ?>
+                            <tr>
+                                <td><?php echo $statistic["lastname"] . ", " . $statistic["firstname"]; ?></td>
+                                <td><?php echo $statistic["views"]; ?></td>
+                                <td><?php echo date("Y-m-d H:i", $statistic["last_viewed_time"]); ?></td>
+                            </tr>
+                            <?php } ?>
+                        <?php } else { ?>
+                            <tr>
+                                <td colspan="3">This event has not yet been viewed.</td>
+                            </tr>
+                        <?php } ?>
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="2">Number of users who viewed this event:</td>
+                            <td><?php echo count($statistics); ?></td>
+                        </tr>
+                        <tr>
+                            <td colspan="2">Total event views:</td>
+                            <td><?php echo $total_views; ?></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                <?php
 			}
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "In order to view event update history you must provide a valid event identifier. The provided ID does not exist in this system.";
+			add_error("In order to view event update history you must provide a valid event identifier. The provided ID does not exist in this system.");
 
 			echo display_error();
 
 			application_log("notice", "Failed to provide a valid event identifer when attempting to view event updates.");
 		}
 	} else {
-		$ERROR++;
-		$ERRORSTR[] = "In order to view event update history you must provide the events identifier.";
+		add_error("In order to view event update history you must provide the events identifier.");
 
 		echo display_error();
 

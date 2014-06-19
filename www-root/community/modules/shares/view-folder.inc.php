@@ -21,7 +21,7 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 $HEAD[] = "<link href=\"".ENTRADA_URL."/css/wizard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 ?>
 <script type="text/javascript">
-    var ajax_url = '';
+    /*var ajax_url = '';
     var modalDialog;
     document.observe('dom:loaded', function() {
     modalDialog = new Control.Modal($('false-link'), {
@@ -46,7 +46,7 @@ $HEAD[] = "<link href=\"".ENTRADA_URL."/css/wizard.css?release=".html_encode(APP
     } else {
             modalDialog.open();
     }
-}   
+}   */
 
 
 </script>
@@ -167,10 +167,11 @@ if ($RECORD_ID) {
             $result    = $db->GetAll($query_total);
             //adds the results of the file and links together
             $rowCountTotal = '';
-            foreach($result as $rowCount) {
-                $rowCountTotal = $rowCountTotal + intval($rowCount["total_rows"]);
-            }
-			if ($result) {
+            if ($result) {
+                foreach($result as $rowCount) {
+                    $rowCountTotal = $rowCountTotal + intval($rowCount["total_rows"]);
+                }
+
                 $TOTAL_ROWS    = $rowCountTotal;
 
 				if ($TOTAL_ROWS <= $_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["pp"]) {
@@ -372,16 +373,13 @@ if ($RECORD_ID) {
 						$parts		= pathinfo($result["file_title"]);
 						$ext		= (isset($parts["extension"]) && $parts["extension"] ? $parts["extension"] : "");
                         
-                        $action_field   = "csfile_id";
-                        $action         = "file_download";
-                        $module         = 'community:'. $COMMUNITY_ID .':shares';
-                        $viewsSQL       = " SELECT COUNT(*) AS views
-                                            FROM " . DATABASE_NAME . ".statistics AS stats
-                                            WHERE stats.module = '". $module ."'
-                                            AND stats.action = '" . $action . "'
-                                            AND stats.action_field = '" . $action_field . "'
-                                            AND stats.action_value = " . $result["csfile_id"];
-                        $statistics = $db->GetRow($viewsSQL);
+                        $params = array(
+                            "action"        => "file_download",
+                            "action_field"  => "csfile_id",
+                            "action_value"  => $result["csfile_id"],
+                            "module"        => "community:" . $COMMUNITY_ID . ":shares"
+                        );
+                        $statistics = Models_Statistic::getCountByParams($params);
 
 						if ((($result["release_date"]) && ($result["release_date"] > time())) || (($result["release_until"]) && ($result["release_until"] < time()))) {
 							$accessible = false;
@@ -405,7 +403,7 @@ if ($RECORD_ID) {
 						echo "	<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\"><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["owner_username"])."\" style=\"font-size: 10px\">".html_encode($result["owner"])."</a></td>\n";
 						echo "	<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\">".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</td>\n";
                             if ($COMMUNITY_ADMIN) {
-                                echo "	<td class=\"accesses\" style=\"text-align: center\"><a href=\"#file-views\" onclick=\"openDialog('".ENTRADA_URL."/api/community-file-stats.api.php?action=file&module=".$module."&fid=".$result["csfile_id"]."')\" title=\"Click to see access log ".html_encode($statistics['views'])."\" style=\"font-weight: bold\">".html_encode($statistics['views'])."</a></td>\n";
+                                echo "	<td class=\"accesses\" style=\"text-align: center\"><a id=\"views-dialog\" href=\"#file-views\" title=\"Click to see access log ".html_encode($statistics['views'])."\" style=\"font-weight: bold\">".html_encode($statistics['views'])."</a></td>\n";
                             }                                      
 
 						echo "</tr>\n";
@@ -413,6 +411,95 @@ if ($RECORD_ID) {
 					?>
 					</tbody>
 					</table>
+                    <script type="text/javascript">
+                        jQuery(function($) {
+                            $("#views-dialog").on("click", function(e) {
+                                $("#file-views").dialog({
+                                    title: "File Views",
+                                    draggable: false,
+                                    resizable: false,
+                                    modal: true,
+                                    height: 200,
+                                    width: 500,
+                                    buttons: [
+                                        {
+                                            text: "Close",
+                                            click: function() {
+                                                $( this ).dialog( "close" );
+                                            }
+                                        }
+                                    ]
+                                });
+                            });
+                        });
+                    </script>
+                    <style type="text/css">
+                        .table {
+                            width:100%;
+                            padding:0px;
+                        }
+                        .table.table-bordered {
+                            border:1px solid grey;
+                            border-radius: 5px;
+                        }
+                        .table th:first-child, .table td:first-child {
+                            border-left:none;
+                        }
+                        .table tr th {
+                            border-top: none;
+                        }
+                        .table th, .table td {
+                            border-left:1px solid grey;
+                            border-top: 1px solid grey;
+                            padding:3px;
+                            text-align:left;
+                        }
+                    </style>
+                    <?php
+                    $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+                    ?>
+                    <script type="text/javascript">
+                        jQuery(function($) {
+                            var file_views_table = $("#file-views-table").DataTable({
+                                "bPaginate": false,
+                                "bInfo": false,
+                                "bFilter": false
+                            });
+                        });
+                    </script>
+                    <div id="file-views" style="display:none;">
+                        <table class="table table-bordered table-striped" id="file-views-table" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Views</th>
+                                    <th>Last Viewed</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                        <?php
+                            $file_views = Models_Statistic::getCommunityFileViews("community:" . $COMMUNITY_ID . ":shares", $result["csfile_id"]);
+                            if ($file_views) {
+                                foreach ($file_views as $file_view) {
+                                    ?>
+                                <tr>
+                                    <td><?php echo $file_view["lastname"] . ", " . $file_view["firstname"]; ?></td>
+                                    <td class="centered"><?php echo $file_view["views"]; ?></td>
+                                    <td><?php echo date("Y-m-d H:i", $file_view["last_viewed_time"]); ?></td>
+                                </tr>
+                                    <?php
+                                }
+                            } else {
+                                ?>
+                                <tr>
+                                    <td colspan="3">This file has not yet been viewed by users.</td>
+                                </tr>
+                                <?php
+                            }
+                        ?>
+                            </tbody>
+                        </table>
+                    </div>
 					<?php
 				} else {
 					$NOTICE++;

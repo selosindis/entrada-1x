@@ -923,7 +923,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 <iframe id="upload-frame" name="upload-frame" onload="frameLoad()" style="display: none;"></iframe>
                 <a id="false-link" href="#placeholder"></a>
                 <div id="placeholder" style="display: none"></div>
+                <?php
+                $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+                ?>
                 <script type="text/javascript">
+                jQuery(function($) {
+                    var datatables = $(".datatable").DataTable({
+                        "bPaginate": false,
+                        "bInfo": false,
+                        "bFilter": false
+                    });
+                });
+                    
                 jQuery(document).ready(function () {
                     jQuery("#delay_release_option_date").css("margin", "0");
                     jQuery("#delay_release").is(":checked") ? jQuery("#delay_release_controls").show() : jQuery("#delay_release_controls").hide();
@@ -1731,30 +1742,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         echo "</tfoot>\n";
                         echo "<tbody>\n";
                         if ($results) {
+                            $output_views = array();
                             foreach ($results as $result) {
                                 $filename	= $result["file_name"];
                                 $parts		= pathinfo($filename);
                                 $ext		= $parts["extension"];
-                                    $student_hidden = $result["student_hidden"];
-                                    if ($student_hidden) {
-                                        $image_src = $ext."_h";
-                                    } else {
-                                        $image_src = $ext;
+                                
+                                $student_hidden = $result["student_hidden"];
+                                if ($student_hidden) {
+                                    $image_src = $ext."_h";
+                                } else {
+                                    $image_src = $ext;
+                                }
+
+                                $total_views = 0;
+                                
+                                $event_file_views = Models_Statistic::getEventFileViews($result["efile_id"]);
+                                if ($event_file_views) {
+                                    $output_views[$result["efile_id"]]["file_name"] = $result["file_name"];
+                                    $output_views[$result["efile_id"]]["views"] = $event_file_views;
+                                    foreach ($event_file_views as $event_file_view) {
+                                        $total_views += $event_file_view["views"];
                                     }
-
-                                    $total_views_query = "SELECT SUM(a.`views`) AS `total_views` 
-										                  FROM
-														  (
-														      SELECT DISTINCT (stats.`proxy_id`), COUNT(*) AS `views` 
-															  FROM statistics AS stats, `".AUTH_DATABASE."`.`user_data` AS users 
-															  WHERE (stats.`module` = 'events' OR stats.`module` = 'podcasts')
-															  AND stats.`action` = 'file_download' 
-															  AND stats.`action_field` = 'file_id' 
-															  AND stats.`action_value` = ".$result["efile_id"]." 
-														      AND stats.`proxy_id` = users.`id` GROUP BY stats.proxy_id
-													      ) AS a";
-									$total_views = $db->GetOne($total_views_query);
-
+                                }
+                                
                                 echo "<tr>\n";
                                 echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
                                 echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["efile_id"]."\" style=\"vertical-align: middle\" />\n";
@@ -1767,7 +1778,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 echo "	</td>\n";
                                 echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
                                 echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
-                                    echo "	<td class=\"accesses\" style=\"text-align: center\"><a href=\"#file-views\" onclick=\"openDialog('".ENTRADA_URL."/api/file-stats.api.php?action=file&id=".$EVENT_ID."&fid=".$result["efile_id"]."')\" title=\"Click to see access log ".html_encode($total_views)."\" style=\"font-weight: bold\">".html_encode($total_views)."</a></td>\n";
+                                    echo "	<td class=\"accesses\" style=\"text-align: center\"><a href=\"#file-views-".$result["efile_id"]."\" data-toggle=\"modal\" title=\"Click to see access log ".html_encode($total_views)."\" style=\"font-weight: bold\">".html_encode($total_views)."</a></td>\n";
                                 echo "</tr>\n";
                             }
                         } else {
@@ -1782,6 +1793,42 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         echo "</tbody>\n";
                         echo "</table>\n";
                         echo "</form>\n";
+                        
+                        if (!empty($output_views)) {
+                            foreach ($output_views as $efile_id => $output_view) {
+                                ?>
+                                <div id="file-views-<?php echo $efile_id; ?>" class="modal hide fade">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                        <h3><?php echo $output_view["file_name"]; ?> views</h3>
+                                    </div>
+                                    <div class="modal-body">
+                                        <table class="table table-striped table-bordered datatable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Views</th>
+                                                    <th>Last Viewed</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                        <?php foreach ($output_view["views"] as $view) { ?>
+                                                <tr>
+                                                    <td><?php echo $view["lastname"] . ", " . $view["firstname"]; ?></td>
+                                                    <td><?php echo $view["views"]; ?></td>
+                                                    <td><?php echo date("Y-m-d H:i", $view["last_viewed_time"]); ?></td>
+                                                </tr>
+                                        <?php } ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">Close</a>
+                                    </div>
+                                </div>
+                                <?php
+                            }
+                        }
                         ?>
                     </div>
 
@@ -1830,12 +1877,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         echo "<tbody>\n";
                         if ($results) {
                             foreach ($results as $result) {
-                                    $student_hidden = $result["student_hidden"];
-                                    if ($student_hidden) {
-                                        $link_src = "htmlh";
-                                    } else {
-                                        $link_src = "html";
-                                    }
+                                
+                                $student_hidden = $result["student_hidden"];
+                                if ($student_hidden) {
+                                    $link_src = "htmlh";
+                                } else {
+                                    $link_src = "html";
+                                }
+                                
+                                $link_statistics[$result["elink_id"]]["title"] = $result["link_title"];
+                                $link_statistics[$result["elink_id"]]["statistics"] = Models_Statistic::getEventLinkViews($result["elink_id"]);
+                                
                                 echo "<tr>\n";
                                 echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
                                 echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["elink_id"]."\" style=\"vertical-align: middle\" />\n";
@@ -1847,7 +1899,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 echo "	</td>\n";
                                 echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
                                 echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
-                                    echo "	<td class=\"accesses\" style=\"text-align: center\"><a href=\"#file-views\" onclick=\"openDialog('".ENTRADA_URL."/api/file-stats.api.php?action=link&id=".$EVENT_ID."&fid=".$result["elink_id"]."')\" title=\"Click to see access log ".html_encode($result["accesses"])."\" style=\"font-weight: bold\">".html_encode($result["accesses"])."</a></td>\n";                                                                
+                                    echo "	<td class=\"accesses\" style=\"text-align: center\"><a href=\"#link-statistic-".$result["elink_id"]."\" data-toggle=\"modal\" title=\"Click to see access log ".html_encode($result["accesses"])."\" style=\"font-weight: bold\">".html_encode($result["accesses"])."</a></td>\n";                                                                
                                 echo "</tr>\n";
                             }
                         } else {
@@ -1862,6 +1914,47 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         echo "</tbody>\n";
                         echo "</table>\n";
                         echo "</form>\n";
+                        
+                        if (isset($link_statistics) && !empty($link_statistics)) {
+                            foreach ($link_statistics as $elink_id => $link_statistic_set) {
+                                ?>
+                                <div class="modal hide fade" id="link-statistic-<?php echo $elink_id; ?>">
+                                    <div class="modal-header">
+                                        <h3><?php echo $link_statistics[$result["elink_id"]]["title"]; ?> Statistics</h3>
+                                    </div>
+                                    <div class="modal-body">
+                                        <table class="table table-striped table-bordered datatable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Views</th>
+                                                    <th>Last Viewed</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                    <?php 
+                                    if (!empty($link_statistic_set["statistics"])) {
+                                        foreach ($link_statistic_set["statistics"] as $link_statistic) { 
+                                        ?>
+                                        <tr>
+                                            <td><?php echo $link_statistic["lastname"] . ", " . $link_statistic["firstname"]; ?></td>
+                                            <td><?php echo $link_statistic["views"]; ?></td>
+                                            <td><?php echo date("Y-m-d H:i", $link_statistic["last_viewed_time"]); ?></td>
+                                        </tr>
+                                        <?php 
+                                        }
+                                    } ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <a href="#" class="btn" data-dismiss="modal">Close</a>
+                                    </div>
+                                </div>
+                                <?php
+                            }
+                        }
+                        
                         ?>
                     </div>
 
@@ -1949,7 +2042,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         echo "</form>\n";
                         ?>
                     </div>
-
                     <div style="margin-bottom: 15px">
                         <div style="float: left; margin-bottom: 5px">
                             <h3>Attached LTI Providers</h3>

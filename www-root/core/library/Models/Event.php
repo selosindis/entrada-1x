@@ -49,8 +49,7 @@ class Models_Event extends Models_Base {
               $audience_visible,
               $draft_id,
               $updated_date,
-              $updated_by,
-              $audience_visible;
+              $updated_by;
     
     protected $table_name = "events";
     protected $default_sort_column = "event_id";
@@ -165,10 +164,6 @@ class Models_Event extends Models_Base {
     
     public function getUpdatedBy () {
         return $this->updated_by;
-    }
-    
-    public function getAudienceVisible() {
-        return $this->audience_visible;
     }
     
     public static function get($event_id = null) {

@@ -331,6 +331,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							}
 
 							$copied[$event_id]["event_title"] = $event_info["event_title"];
+                            
+                            history_log($EVENT_ID, 'created this learning event.', $ENTRADA_USER->getID());
 						} else {
 							$ERROR++;
 							$ERRORSTR[] = "There was a problem copying this event $event_id to $EVENT_ID into the system. The system administrator was informed of this error; please try again later.";

@@ -111,6 +111,9 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
                                     }
 									$old_events[$old_event_id]["new_event_id"] = $event_id;
 									application_log("success", "Successfully created event [".$event_id."]");
+                                    
+                                    //inserts creation log
+                                    history_log($event_id, 'created this learning event.', $event["updated_by"]);
 								} else {
 									$error++;
 									application_log("error", "Error inserting event [".$event_id."] on draft schedule import. DB said: ".$db->ErrorMsg());

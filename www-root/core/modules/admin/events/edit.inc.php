@@ -101,6 +101,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				// Error Checking
 				switch($STEP) {
 					case 2 :
+                        
+                        $stats = array();
+                        
 						/**
 						 * Required field "course_id" / Course
 						 */
@@ -128,6 +131,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						 */
 						if ((isset($_POST["event_title"])) && ($event_title = clean_input($_POST["event_title"], array("notags", "trim")))) {
 							$PROCESSED["event_title"] = $event_title;
+
+                            $changed = false;
+                            $changed = md5_change_value($EVENT_ID, 'event_id', 'event_title', $PROCESSED["event_title"], 'events');
+                            if ($changed) {
+                                $stats[] = 'title';
+                            }
 						} else {
 							add_error("The <strong>Event Title</strong> field is required.");
 						}
@@ -139,6 +148,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						if ((isset($start_date["start"])) && ((int) $start_date["start"])) {
 							$PROCESSED["event_start"] = (int) $start_date["start"];
 						}
+                        
+                        $changed = false;
+                        $changed = md5_change_value($EVENT_ID, 'event_id', 'event_start', $PROCESSED["event_start"], 'events');
+                        if ($changed) {
+                            $stats[] = 'start';
+						}
 
 						/**
 						 * Non-required field "event_location" / Event Location
@@ -148,6 +163,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						} else {
 							$PROCESSED["event_location"] = "";
 						}
+						
+                        $changed = false;
+                        $changed = md5_change_value($EVENT_ID, 'event_id', 'event_location', $PROCESSED["location"], 'events');
+                        if ($changed) {
+                            $stats[] = 'location';
+                        }
 
 						/**
 						 * Required fields "eventtype_id" / Event Type
@@ -303,12 +324,25 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						} else {
 							$PROCESSED["release_date"] = 0;
 						}
+                        
+                        $changed = false;
+                        $changed = md5_change_value($EVENT_ID, 'event_id', 'release_date', $PROCESSED["release_date"], 'events');
+                        if ($changed) {
+                            $stats[] = 'release_date';
+                        }
+
 						if ((isset($viewable_date["finish"])) && ((int) $viewable_date["finish"])) {
 							$PROCESSED["release_until"] = (int) $viewable_date["finish"];
 						} else {
 							$PROCESSED["release_until"] = 0;
 						}
 
+                        $changed = false;
+                        $changed = md5_change_value($EVENT_ID, 'event_id', 'release_until', $PROCESSED["release_until"], 'events');
+                        if ($changed) {
+                            $stats[] = 'release_until';
+                        }
+                        
 						if (isset($_POST["post_action"])) {
 							switch($_POST["post_action"]) {
 								case "content" :
@@ -375,6 +409,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 								 * If there are faculty associated with this event, add them
 								 * to the event_contacts table.
 								 */
+                                
+                                //creates an array of existing contacts 
+                                //used to compare changes to the faculty
+                                $existing_contacts_query = "    SELECT `proxy_id`
+                                                                FROM `".$tables["contacts"]."`
+                                                                WHERE `event_id` = ".$db->qstr($EVENT_ID);
+                                $existing_contacts = $db->GetAll($existing_contacts_query);
+                                foreach ($existing_contacts as $existing_contact) {
+                                    $existing_contact_array[] = $existing_contact['proxy_id'];
+                                }
+                                
 								$query = "DELETE FROM `".$tables["contacts"]."` ".$where_query;
 								if ($db->Execute($query)) {
 									if ((is_array($PROCESSED["associated_faculty"])) && (count($PROCESSED["associated_faculty"]))) {
@@ -391,6 +436,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 										}
 									}
 								}
+								
+                                //compares the previous faculty list with the new one
+                                
+                                $changed = false;
+                                //only try to compare the arrays if faculty are already associated
+                                if (is_array($existing_contact_array) && is_array($PROCESSED["associated_faculty"])) {
+                                    $changed = compare_array_values($PROCESSED["associated_faculty"], $existing_contact_array);
+                                }
+                                // if no faculty are set, but a list is set and not empty then set changed to true
+                                if (!is_array($existing_contact_array) && is_array($PROCESSED["associated_faculty"]) && !empty($PROCESSED["associated_faculty"])) {
+                                    $changed = true;
+                                }
+                                if ($changed) {
+                                    $stats[] = 'contacts';
+                                }
 
 								$query = "DELETE FROM `".$tables["audience"]."` ".$where_query;
 								if ($db->Execute($query)) {
@@ -772,6 +832,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 									application_log("success", "Event [".$EVENT_ID."] has been modified.");
 								}
+                                
+                                if (!empty($stats)) {
+                                    $stats_string = implode(", ", $stats);
+                                    history_log($EVENT_ID, 'edited this learning event in sections: ' . $stats_string, $PROXY_ID);
+                                }
 							} else {
 								add_error("There was a problem updating this event in the system. The system administrator was informed of this error; please try again later.".$db->ErrorMsg());
 

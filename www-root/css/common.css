@@ -3253,6 +3253,33 @@ table.mspr_table tr.unapproved {
 table.mspr_table tr.unapproved td {
 	color:#999999;
 }
+
+
+/*gradebook css */
+
+#assessment_list h3{
+    border-bottom: 0;
+    line-height: 20px;
+    text-align: left;
+}
+.assessment_col_1{
+    width: 20px;
+}
+.assessment_col_2{
+    width: 350px;
+}
+.assessment_col_3{
+    width: 80px;
+}
+.assessment_col_4{
+    width: 122px;
+}
+.assessment_col_5{
+    width: 45px;
+}
+
+
+
 #gradebook_grades {
 	margin-left: 0px;
 }

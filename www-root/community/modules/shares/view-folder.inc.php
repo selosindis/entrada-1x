@@ -402,20 +402,50 @@ if ($RECORD_ID) {
 						echo "	</td>\n";
 						echo "	<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\"><a href=\"".ENTRADA_URL."/people?profile=".html_encode($result["owner_username"])."\" style=\"font-size: 10px\">".html_encode($result["owner"])."</a></td>\n";
 						echo "	<td style=\"font-size: 10px; white-space: nowrap; overflow: hidden\">".date(DEFAULT_DATE_FORMAT, $result["updated_date"])."</td>\n";
-                            if ($COMMUNITY_ADMIN) {
-                                echo "	<td class=\"accesses\" style=\"text-align: center\"><a id=\"views-dialog\" href=\"#file-views\" title=\"Click to see access log ".html_encode($statistics['views'])."\" style=\"font-weight: bold\">".html_encode($statistics['views'])."</a></td>\n";
-                            }                                      
-
+                        if ($COMMUNITY_ADMIN) {
+                            echo "	<td class=\"accesses\" style=\"text-align: center\"><a class=\"views-dialog\" href=\"#file-views\" data-action='" . $params['action'] . "' data-action_field='" . $params['action_field'] . "' data-action_value='" . $params['action_value'] . "' title=\"Click to see access log ".html_encode($statistics['views'])."\" style=\"font-weight: bold\">".html_encode($statistics['views'])."</a></td>\n";
+                        }
 						echo "</tr>\n";
 					}
 					?>
 					</tbody>
 					</table>
                     <script type="text/javascript">
-                        jQuery(function($) {
-                            $("#views-dialog").on("click", function(e) {
+                        jQuery(function($) {                           
+                            $(".views-dialog").on("click", function(e) {
+                                //updates stats in table
+                                var clicked = jQuery(this);
+                                var action = clicked.data('action');
+                                var action_field = clicked.data('action_field');
+                                var action_value = clicked.data('action_value');
+                                var module = '<?php echo "community:" . $COMMUNITY_ID . ":shares";?>';
+                                var url = '<?php echo ENTRADA_URL . "/api/stats-community-file.api.php";?>'
+                                
+                                var dataObject = {
+                                        action: action,
+                                        action_field: action_field,
+                                        action_value: action_value,
+                                        module: module
+                                        };
+                                        
+                                jQuery.ajax({
+                                    type: "POST",
+                                    url: url,
+                                    data: dataObject,
+                                    dataType: "json",
+                                    success: function(data) {
+                                        jQuery("#file-views-table").html(data['html']);
+                                    }
+                                });
+                                
+                                switch (action_field) {
+                                    case "csfile_id":
+                                    default: 
+                                        var title = "File Views";
+                                }
+                                
                                 $("#file-views").dialog({
-                                    title: "File Views",
+                                    title: title,
                                     draggable: false,
                                     resizable: false,
                                     modal: true,

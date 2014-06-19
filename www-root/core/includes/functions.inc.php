@@ -10959,7 +10959,7 @@ function events_output_calendar_controls_old($module_type = "") {
  * @param string $role
  * @return array Containing the default filters.
  */
-function events_filters_defaults($proxy_id = 0, $group = "", $role = "", $organisation = 0) {
+function events_filters_defaults($proxy_id = 0, $group = "", $role = "", $organisation = 0, $course_id = 0) {
 	$filters = array();
 
 	switch ($group) {
@@ -10977,6 +10977,9 @@ function events_filters_defaults($proxy_id = 0, $group = "", $role = "", $organi
 			 * Students see events they are involved with by default.
 			 */
 			$filters["student"][0] = (int) $proxy_id;
+            if ($course_id) {
+                $filters["course"][0] = (int) $course_id;
+            }
 		break;
 		case "medtech" :
 		case "staff" :
@@ -10991,7 +10994,43 @@ function events_filters_defaults($proxy_id = 0, $group = "", $role = "", $organi
 	if (!empty($filters)) {
 		ksort($filters);
 	}
+	return $filters;
+}
 
+/**
+ * Function used to create the default filter settings for Learning Events
+ *
+ * @param int $proxy_id
+ * @param string $group
+ * @param string $role
+ * @return array Containing the default filters.
+ */
+function events_filters_faculty($course_id = 0, $group = "", $role = "", $organisation = 0) {
+	$filters = array();
+
+	switch ($group) {
+		case "staff" :            
+		case "resident" :
+		case "medtech" :                    
+		case "faculty" :
+			/**
+			 * Teaching faculty see events which they are involved with by default.
+			 */
+			if (in_array($role, array("director", "lecturer", "teacher", "staff", "admin"))) {
+				$filters["course"][0] = (int) $course_id;
+			}
+		break;
+		default :
+            $first_cohort = ((int) fetch_first_cohort());
+            if ($first_cohort) {
+                $filters["group"][0] = $first_cohort;
+            }
+		break;
+	}
+
+	if (!empty($filters)) {
+		ksort($filters);
+	}
 	return $filters;
 }
 

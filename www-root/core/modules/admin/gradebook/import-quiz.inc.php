@@ -113,7 +113,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         FROM `assessments` AS a
                         LEFT JOIN `group_members` AS b
                         ON a.`cohort` = b.`group_id`
-                        WHERE `assessment_id` = ".$db->qstr($assessment_id);
+                        WHERE `assessment_id` = ".$db->qstr($assessment_id)."
+                        AND a.`active` = '1'";
 
             if ($proxy_ids = $db->GetAll($query)) {
                 $grade_threshold = $proxy_ids[0]["grade_threshold"];
@@ -137,84 +138,96 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                     switch ($import_type) {
                         case "all" :
                         default :
-                            $query = "SELECT b.`qquestion_id`, a.`aquiz_id`, c.`response_correct` 
+                            $query = "SELECT q.`qquestion_id`, a.`aquiz_id`, c.`response_correct`, b.`qpresponse_id`
                                         FROM `quiz_progress` AS a
-                                        JOIN `quiz_progress_responses` AS b
+                                        JOIN `quiz_questions` AS q
+                                        ON a.`quiz_id` = q.`quiz_id`
+                                        LEFT JOIN `quiz_progress_responses` AS b
                                         ON a.`qprogress_id` = b.`qprogress_id`
-                                        JOIN `quiz_question_responses` AS c
+                                        AND q.`qquestion_id` = b.`qquestion_id`
+                                        LEFT JOIN `quiz_question_responses` AS c
                                         ON b.`qqresponse_id` = c.`qqresponse_id`
                                         WHERE a.`proxy_id` = ".$db->qstr($proxy_id)."
                                         AND a.`progress_value` = 'complete'
                                         AND (\n";
                             $first = true;
                             foreach ($question_ids_strings as $aquiz_id => $question_ids_string) {
-                                $query .= (!$first ? "OR " : "")."(a.`aquiz_id` = ".$db->qstr($aquiz_id)." AND b.`qquestion_id` IN (".$question_ids_string."))\n";
+                                $query .= (!$first ? "OR " : "")."(a.`aquiz_id` = ".$db->qstr($aquiz_id)." AND q.`qquestion_id` IN (".$question_ids_string."))\n";
                                 $first = false;
                             }
                             $query .= " )";
                             break;
                         case "first" :
-                            $query = "SELECT b.`qquestion_id`, a.`aquiz_id`, c.`response_correct`, a.`updated_date`, MIN(a.`updated_date`)
+                            $query = "SELECT q.`qquestion_id`, a.`aquiz_id`, c.`response_correct`, a.`updated_date`, MIN(a.`updated_date`), b.`qpresponse_id`
                                         FROM `quiz_progress` AS a
-                                        JOIN `quiz_progress_responses` AS b
+                                        JOIN `quiz_questions` AS q
+                                        ON a.`quiz_id` = q.`quiz_id`
+                                        LEFT JOIN `quiz_progress_responses` AS b
                                         ON a.`qprogress_id` = b.`qprogress_id`
-                                        JOIN `quiz_question_responses` AS c
+                                        AND q.`qquestion_id` = b.`qquestion_id`
+                                        LEFT JOIN `quiz_question_responses` AS c
                                         ON b.`qqresponse_id` = c.`qqresponse_id`
                                         WHERE a.`proxy_id` = ".$db->qstr($proxy_id)."
                                         AND a.`progress_value` = 'complete'
                                         AND (\n";
                             $first = true;
                             foreach ($question_ids_strings as $aquiz_id => $question_ids_string) {
-                                $query .= (!$first ? "OR " : "")."(a.`aquiz_id` = ".$db->qstr($aquiz_id)." AND b.`qquestion_id` IN (".$question_ids_string."))\n";
+                                $query .= (!$first ? "OR " : "")."(a.`aquiz_id` = ".$db->qstr($aquiz_id)." AND q.`qquestion_id` IN (".$question_ids_string."))\n";
                                 $first = false;
                             }
                             $query .= " )
                                         AND a.`updated_date` = (
                                             SELECT MIN(`updated_date`) FROM `quiz_progress` WHERE `proxy_id` = a.`proxy_id` AND `aquiz_id` = a.`aquiz_id` AND `progress_value` = 'complete'
                                         )
-                                        GROUP BY b.`qquestion_id`";
+                                        GROUP BY q.`qquestion_id`";
                             break;
                         case "last" :
-                            $query = "SELECT b.`qquestion_id`, a.`aquiz_id`, c.`response_correct`, a.`updated_date`, MAX(a.`updated_date`)
+                            $query = "SELECT q.`qquestion_id`, a.`aquiz_id`, c.`response_correct`, a.`updated_date`, MAX(a.`updated_date`), b.`qpresponse_id`
                                         FROM `quiz_progress` AS a
-                                        JOIN `quiz_progress_responses` AS b
+                                        JOIN `quiz_questions` AS q
+                                        ON a.`quiz_id` = q.`quiz_id`
+                                        LEFT JOIN `quiz_progress_responses` AS b
                                         ON a.`qprogress_id` = b.`qprogress_id`
-                                        JOIN `quiz_question_responses` AS c
+                                        AND q.`qquestion_id` = b.`qquestion_id`
+                                        LEFT JOIN `quiz_question_responses` AS c
                                         ON b.`qqresponse_id` = c.`qqresponse_id`
                                         WHERE a.`proxy_id` = ".$db->qstr($proxy_id)."
                                         AND a.`progress_value` = 'complete'
                                         AND (\n";
                             $first = true;
                             foreach ($question_ids_strings as $aquiz_id => $question_ids_string) {
-                                $query .= (!$first ? "OR " : "")."(a.`aquiz_id` = ".$db->qstr($aquiz_id)." AND b.`qquestion_id` IN (".$question_ids_string."))\n";
+                                $query .= (!$first ? "OR " : "")."(a.`aquiz_id` = ".$db->qstr($aquiz_id)." AND q.`qquestion_id` IN (".$question_ids_string."))\n";
                                 $first = false;
                             }
                             $query .= " )
                                         AND a.`updated_date` = (
                                             SELECT MAX(`updated_date`) FROM `quiz_progress` WHERE `proxy_id` = a.`proxy_id` AND `aquiz_id` = a.`aquiz_id` AND `progress_value` = 'complete'
                                         )
-                                        GROUP BY b.`qquestion_id`";
+                                        GROUP BY q.`qquestion_id`";
                             break;
                         case "best" :
-                            $query = "SELECT b.`qquestion_id`, a.`aquiz_id`, c.`response_correct`, a.`quiz_score`, MAX(a.`quiz_score`)
+                            $query = "SELECT q.`qquestion_id`, a.`aquiz_id`, c.`response_correct`, a.`quiz_score`, MAX(a.`quiz_score`), b.`qpresponse_id`
                                         FROM `quiz_progress` AS a
-                                        JOIN `quiz_progress_responses` AS b
+                                        JOIN `quiz_questions` AS q
+                                        ON a.`quiz_id` = q.`quiz_id`
+                                        LEFT JOIN `quiz_progress_responses` AS b
                                         ON a.`qprogress_id` = b.`qprogress_id`
-                                        JOIN `quiz_question_responses` AS c
+                                        AND q.`qquestion_id` = b.`qquestion_id`
+                                        LEFT JOIN `quiz_question_responses` AS c
                                         ON b.`qqresponse_id` = c.`qqresponse_id`
                                         WHERE a.`proxy_id` = ".$db->qstr($proxy_id)."
                                         AND a.`progress_value` = 'complete'
                                         AND (\n";
                             $first = true;
                             foreach ($question_ids_strings as $aquiz_id => $question_ids_string) {
-                                $query .= (!$first ? "OR " : "")."(a.`aquiz_id` = ".$db->qstr($aquiz_id)." AND b.`qquestion_id` IN (".$question_ids_string."))\n";
+                                $query .= (!$first ? "OR " : "")."(a.`aquiz_id` = ".$db->qstr($aquiz_id)." AND q.`qquestion_id` IN (".$question_ids_string."))\n";
                                 $first = false;
                             }
                             $query .= " )
                                         AND a.`quiz_score` = (
                                             SELECT MAX(`quiz_score`) FROM `quiz_progress` WHERE `proxy_id` = a.`proxy_id` AND `aquiz_id` = a.`aquiz_id` AND `progress_value` = 'complete'
                                         )
-                                        GROUP BY b.`qquestion_id`";
+                                        GROUP BY q.`qquestion_id`";
                             break;
                     }
                     $responses = $db->GetAll($query);
@@ -222,9 +235,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         $total_value = 0;
                         $scored_value = 0;
                         foreach ($responses as $response) {
-                            $total_value += $questions_list[$response["qquestion_id"]."-".$response["aquiz_id"]]["question_points"];
-                            if ($response["response_correct"]) {
-                                $scored_value += $questions_list[$response["qquestion_id"]."-".$response["aquiz_id"]]["question_points"];
+                            if (array_key_exists($response["qquestion_id"]."-".$response["aquiz_id"], $questions_list)) {
+                                $total_value += $questions_list[$response["qquestion_id"]."-".$response["aquiz_id"]]["question_points"];
+                                if ($response["response_correct"] && $response["qpresponse_id"]) {
+                                    $scored_value += $questions_list[$response["qquestion_id"]."-".$response["aquiz_id"]]["question_points"];
+                                }
                             }
                         }
                         $PROCESSED["value"]     = ($scored_value / $total_value) * 100;

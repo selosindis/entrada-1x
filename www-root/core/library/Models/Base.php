@@ -28,7 +28,9 @@ class Models_Base {
         $class_vars = get_class_vars(get_called_class());
         if (isset($class_vars)) {
             foreach ($class_vars as $class_var => $value) {
-                $arr[$class_var] = $this->$class_var;
+                if ($class_var != "table_name" && $class_var !="default_sort_column") {
+                    $arr[$class_var] = $this->$class_var;
+                }
             }
         }
         return $arr;

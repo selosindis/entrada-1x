@@ -138,8 +138,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 							} else {
 								$event["objectives_release_date"] = 0;
 							}
-							
-							
+
+
 							
 							if (!$db->AutoExecute("draft_events", $event, 'INSERT')) {
 								add_error("An error occured, an administrator has been notified. Please try again later.");

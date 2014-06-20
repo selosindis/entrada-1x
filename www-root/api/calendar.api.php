@@ -25,7 +25,7 @@
 require_once("init.inc.php");
 
 $request = explode("/", ((isset( $_GET["request"])) ? clean_input($_GET["request"], array("url", "lowercase", "nows")) : ""));
-
+$seleted_course = clean_input($_GET["course"], int);
 $user_proxy_id = 0;
 $user_username = "";
 $user_firstname = "";
@@ -191,7 +191,24 @@ if ($user_proxy_id) {
 	if ((isset($_GET["end"])) && ($tmp_input = clean_input($_GET["end"], array("trim", "int")))) {
 		$event_finish = $tmp_input;
 	}
-
+        if ($user_group == "faculty" || $user_group == "staff" || $user_group == "medtech") {
+            $learning_events = events_fetch_filtered_events(
+                            $user_proxy_id,
+                            $user_group,
+                            $user_role,
+                            $user_organisation_id,
+                            "date",
+                            "asc",
+                            "custom",
+                            $event_start,
+                            $event_finish,
+                            events_filters_faculty($seleted_course, $user_group, $user_role),
+                            true,
+                            1,
+                            1750,
+                            0,
+                            ($user_group == "student" ? true : false));
+        } else {
 	$learning_events = events_fetch_filtered_events(
 			$user_proxy_id,
 			$user_group,
@@ -202,12 +219,13 @@ if ($user_proxy_id) {
 			"custom",
 			$event_start,
 			$event_finish,
-			events_filters_defaults($user_proxy_id, $user_group, $user_role),
+            events_filters_defaults($user_proxy_id, $user_group, $user_role,  0, $seleted_course),
 			true,
 			1,
 			1750,
             0,
             ($user_group == "student" ? true : false));
+        }
 
 	if ($ENTRADA_ACL->amIAllowed("clerkship", "read")) {
 		$query = "	SELECT c.*

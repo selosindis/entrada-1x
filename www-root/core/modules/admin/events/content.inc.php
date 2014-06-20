@@ -313,8 +313,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 /**
                                  * Event Description
                                  */
-                                if (event_text_change($EVENT_ID,"event_description")) {
-                                    $history_texts .= "event description";
+                                
+                                $changed = false;
+                                $changed = md5_change_value($EVENT_ID, 'event_id', 'event_description', $_POST["event_description"], 'events');
+
+                                if ($changed) {
+                                    $history_texts .= "Event Description";
                                 }
                                 if ((isset($_POST["event_description"])) && (clean_input($_POST["event_description"], array("notags", "nows")))) {
                                     $event_description = clean_input($_POST["event_description"], array("allowedtags"));
@@ -325,11 +329,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 /**
                                  * Free-Text Objectives
                                  */
-                                if (event_text_change($EVENT_ID,"event_objectives")) {
+
+                                $changed = false;
+                                $changed = md5_change_value($EVENT_ID, 'event_id', 'event_objectives', $_POST["event_objectives"], 'events');
+                                if ($changed) {
                                     if (strlen($history_texts)>2) {
                                         $history_texts .= ":";
                                     }
-                                    $history_texts .= "event objectives";
+                                    $history_texts .= "Event Objectives";
                                 }
                                 if ((isset($_POST["event_objectives"])) && (clean_input($_POST["event_objectives"], array("notags", "nows")))) {
                                     $event_objectives = clean_input($_POST["event_objectives"], array("allowedtags"));
@@ -340,11 +347,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 /**
                                  * Required Preparation
                                  */
-                                if (event_text_change($EVENT_ID,"event_message")) {
+                                
+                                $changed = false;
+                                $changed = md5_change_value($EVENT_ID, 'event_id', 'event_message', $_POST["event_message"], 'events');
+                                
+                                if ($changed) {
                                     if (strlen($history_texts)>2) {
                                         $history_texts .= ":";
                                     }
-                                    $history_texts .= "Required Preparation";
+                                    $history_texts .= "Event Preparation";
                                 }
                                 if ((isset($_POST["event_message"])) && (clean_input($_POST["event_message"], array("notags", "nows")))) {
                                     $event_message = clean_input($_POST["event_message"], array("allowedtags"));
@@ -466,6 +477,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     $db->Execute($query);
                                                 }
                                             }
+                                            history_log($EVENT_ID, "deleted MeSH Keywords.", $PROXY_ID);
                                         }
                                     }
                                 }
@@ -484,6 +496,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                                     $db->Execute($query);
                                                 }
                                             }
+                                            history_log($EVENT_ID, "added MeSH Keywords.", $PROXY_ID);
                                         }
                                     }                                                                                                                             
                                 }
@@ -760,7 +773,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											}
 										}
 									}
-									history_log($EVENT_ID, "deleted ". count($FILE_IDS) ." resource files".($FILE_IDS>1?"s":""));
+									history_log($EVENT_ID, "deleted ". count($FILE_IDS) ." resource file".(count($FILE_IDS)>1?"s":""), $PROXY_ID);
 								}
 							}
 						break;
@@ -803,7 +816,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											}
 										}
 									}
-									history_log($EVENT_ID, "deleted ". count($LINK_IDS) ." resource files".($LINK_IDS>1?"s":""));
+									history_log($EVENT_ID, "deleted ". count($LINK_IDS) ." resource file".(count($LINK_IDS)>1?"s":""), $PROXY_ID);
 								}
 							}
 						break;
@@ -846,7 +859,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 											}
 										}
 									}
-									history_log($EVENT_ID, "deleted ". count($QUIZ_IDS) ." ".($QUIZ_IDS>1?"zes":""));
+									history_log($EVENT_ID, "deleted ". count($QUIZ_IDS) ." quiz".(count($QUIZ_IDS)>1?"es":""), $PROXY_ID);
 								}
 							}
 						break;
@@ -910,7 +923,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 <iframe id="upload-frame" name="upload-frame" onload="frameLoad()" style="display: none;"></iframe>
                 <a id="false-link" href="#placeholder"></a>
                 <div id="placeholder" style="display: none"></div>
+                <?php
+                $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+                ?>
                 <script type="text/javascript">
+                jQuery(function($) {
+                    var datatables = $(".datatable").DataTable({
+                        "bPaginate": false,
+                        "bInfo": false,
+                        "bFilter": false
+                    });
+                });
+                    
                 jQuery(document).ready(function () {
                     jQuery("#delay_release_option_date").css("margin", "0");
                     jQuery("#delay_release").is(":checked") ? jQuery("#delay_release_controls").show() : jQuery("#delay_release_controls").hide();
@@ -1192,64 +1216,72 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         </table>
                     </div>
 
-                    <a name="course-keywords-section"></a>
-                    <h2 title="Course Keywords Section">Event Keywords</h2>
-                    <div id="course-keywords-section">
+                    <?php
+                    /**
+                     * Test to see if the MeSH tables have been loaded or not,
+                     * since this is an optional Entrada feature.
+                     */
+                    $query = "SELECT 1 FROM `mesh_terms` LIMIT 1";
+                    if ($db->GetRow($query)) {
+                        ?>
+                        <a name="course-keywords-section"></a>
+                        <h2 title="Course Keywords Section">Event Keywords</h2>
+                        <div id="course-keywords-section">
+                            <div class="keywords half left">
+                                <h3>Keyword Search</h3>
+                                <div>Search MeSH Keywords
+                                    <input id="search" autocomplete="off" type="text" name="keyword">
+                                    <input id="event_id" type="hidden" name="event_id" value="<?php echo $EVENT_ID; ?>">
+                                </div>
 
-                        <div class="keywords half left">
-                            <h3>Keyword Search</h3>
-                            <div>Search MeSH Keywords
-                                <input id="search" autocomplete="off" type="text" name="keyword">
-                                <input id="event_id" type="hidden" name="event_id" value="<?php echo $EVENT_ID?>" >
-                            </div>
-
-                            <div id="search_results">
-                                <div id="inserted"></div>
+                                <div id="search_results">
+                                    <div id="inserted"></div>
                                     <div id="results"><ul></ul></div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="mapped_keywords right">
-                            <h3>Attached Keywords</h3>
-                            <div class="clearfix">
-                                <ul class="page-action" style="float: right">
-                                    <div class="row-fluid space-below">
-                                        <a href="javascript:void(0)" class="keyword-toggle btn btn-success btn-small pull-right" keyword-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Show Keyword Search</a>
-                                    </div>
-                                </ul>
-                            </div>
-                                    <p class="well well-small content-small">
-                                        <strong>Helpful Tip:</strong> Click <strong>Show Keyword Search</strong> to search from the MeSH keyword database. Click + to add to, - to remove from, the course.
-                                    </p>
-
-                            <div id="tagged">
-                                <div id="right1">
+                            <div class="mapped_keywords right">
+                                <h3>Attached Keywords</h3>
+                                <div class="clearfix">
+                                    <ul class="page-action" style="float: right">
+                                        <div class="row-fluid space-below">
+                                            <a href="javascript:void(0)" class="keyword-toggle btn btn-success btn-small pull-right" keyword-toggle="show" id="toggle_sets"><i class="icon-plus-sign icon-white"></i> Show Keyword Search</a>
+                                        </div>
+                                    </ul>
+                                </div>
+                                <p class="well well-small content-small">
+                                    <strong>Helpful Tip:</strong> Click <strong>Show Keyword Search</strong> to search from the MeSH keyword database. Click + to add to, - to remove from, the course.
+                                </p>
+                                <div id="tagged">
+                                    <div id="right1">
                                         <ul>
-                                        <?php
+                                            <?php
                                             $query = "  SELECT ek.`keyword_id`, d.`descriptor_name`
                                                         FROM `event_keywords` AS ek
                                                         JOIN `mesh_descriptors` AS d
                                                         ON ek.`keyword_id` = d.`descriptor_ui`
                                                         AND ek.`event_id` = " . $db->qstr($EVENT_ID) . "
                                                         ORDER BY `descriptor_name`";
-
                                             $results = $db->GetAll($query);
                                             if ($results) {
                                                 foreach($results as $result) {
                                                     echo "<li data-dui=\"" . $result['keyword_id'] . "\" data-dname=\"" . $result['descriptor_name'] . "\" id=\"tagged_keyword\" onclick=\"removeval(this, '" . $result['keyword_id'] . "')\"><i class=\"icon-minus-sign \"></i> " . $result['descriptor_name'] . "</li>";
                                                 }
                                             }
-                                    ?>
+                                            ?>
                                         </ul>
+                                    </div>
                                 </div>
                             </div>
+                            <input type="hidden" name="delete_keywords[]" id="delete_keywords" value=""/>
+                            <input type="hidden" name="add_keywords[]" id="add_keywords" value=""/>
+                            <div style="clear:both;"></div>
+                            <div class="pull-right">
+                                <input type="submit" value="Save" class="btn btn-primary" />
+                            </div>
                         </div>
-                        <input type="hidden" name="delete_keywords[]" id="delete_keywords" value=""/>
-                        <input type="hidden" name="add_keywords[]" id="add_keywords" value=""/>
-                        <div style="clear:both;"></div>
-                        <div class="pull-right">
-                            <input type="submit" value="Save" class="btn btn-primary" />
-                        </div>
-                    </div>
+                        <?php
+                    }
+                    ?>
 
                     <a name="event-objectives-section"></a>
                     <h2 title="Event Objectives Section">Event Objectives</h2>
@@ -1718,11 +1750,30 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         echo "</tfoot>\n";
                         echo "<tbody>\n";
                         if ($results) {
+                            $output_views = array();
                             foreach ($results as $result) {
                                 $filename	= $result["file_name"];
                                 $parts		= pathinfo($filename);
                                 $ext		= $parts["extension"];
+                                
+                                $student_hidden = $result["student_hidden"];
+                                if ($student_hidden) {
+                                    $image_src = $ext."_h";
+                                } else {
+                                    $image_src = $ext;
+                                }
 
+                                $total_views = 0;
+                                
+                                $event_file_views = Models_Statistic::getEventFileViews($result["efile_id"]);
+                                if ($event_file_views) {
+                                    $output_views[$result["efile_id"]]["file_name"] = $result["file_name"];
+                                    $output_views[$result["efile_id"]]["views"] = $event_file_views;
+                                    foreach ($event_file_views as $event_file_view) {
+                                        $total_views += $event_file_view["views"];
+                                    }
+                                }
+                                
                                 echo "<tr>\n";
                                 echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
                                 echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["efile_id"]."\" style=\"vertical-align: middle\" />\n";
@@ -1730,12 +1781,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 echo "	</td>\n";
                                 echo "	<td class=\"file-category\">".((isset($RESOURCE_CATEGORIES["event"][$result["file_category"]])) ? html_encode($RESOURCE_CATEGORIES["event"][$result["file_category"]]) : "Unknown Category")."</td>\n";
                                 echo "	<td class=\"title\">\n";
-                                echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$ext."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($ext)." Document\" style=\"vertical-align: middle\" />";
-                                echo "		<a href=\"#file-listing\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-event.api.php?action=edit&id=".$EVENT_ID."&fid=".$result["efile_id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
+                                    echo "		<img src=\"".ENTRADA_URL."/serve-icon.php?ext=".$image_src."\" width=\"16\" height=\"16\" alt=\"".strtoupper($ext)." Document\" title=\"".strtoupper($image_src)." Document\" style=\"vertical-align: middle\" />";
+                                    echo "		<a " . ($student_hidden ? "class='hidden_shares'" : "") . " href=\"#file-listing\" onclick=\"openDialog('".ENTRADA_URL."/api/file-wizard-event.api.php?action=edit&id=".$EVENT_ID."&fid=".$result["efile_id"]."')\" title=\"Click to edit ".html_encode($result["file_title"])."\" style=\"font-weight: bold\">".html_encode($result["file_title"])."</a>";
                                 echo "	</td>\n";
                                 echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
                                 echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
-                                echo "	<td class=\"accesses\" style=\"text-align: center\">".$result["accesses"]."</td>\n";
+                                    echo "	<td class=\"accesses\" style=\"text-align: center\"><a href=\"#file-views-".$result["efile_id"]."\" data-toggle=\"modal\" title=\"Click to see access log ".html_encode($total_views)."\" style=\"font-weight: bold\">".html_encode($total_views)."</a></td>\n";
                                 echo "</tr>\n";
                             }
                         } else {
@@ -1750,6 +1801,42 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         echo "</tbody>\n";
                         echo "</table>\n";
                         echo "</form>\n";
+                        
+                        if (!empty($output_views)) {
+                            foreach ($output_views as $efile_id => $output_view) {
+                                ?>
+                                <div id="file-views-<?php echo $efile_id; ?>" class="modal hide fade">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                        <h3><?php echo $output_view["file_name"]; ?> views</h3>
+                                    </div>
+                                    <div class="modal-body">
+                                        <table class="table table-striped table-bordered datatable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Views</th>
+                                                    <th>Last Viewed</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                        <?php foreach ($output_view["views"] as $view) { ?>
+                                                <tr>
+                                                    <td><?php echo $view["lastname"] . ", " . $view["firstname"]; ?></td>
+                                                    <td><?php echo $view["views"]; ?></td>
+                                                    <td><?php echo date("Y-m-d H:i", $view["last_viewed_time"]); ?></td>
+                                                </tr>
+                                        <?php } ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">Close</a>
+                                    </div>
+                                </div>
+                                <?php
+                            }
+                        }
                         ?>
                     </div>
 
@@ -1798,17 +1885,29 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         echo "<tbody>\n";
                         if ($results) {
                             foreach ($results as $result) {
+                                
+                                $student_hidden = $result["student_hidden"];
+                                if ($student_hidden) {
+                                    $link_src = "htmlh";
+                                } else {
+                                    $link_src = "html";
+                                }
+                                
+                                $link_statistics[$result["elink_id"]]["title"] = $result["link_title"];
+                                $link_statistics[$result["elink_id"]]["statistics"] = Models_Statistic::getEventLinkViews($result["elink_id"]);
+                                
                                 echo "<tr>\n";
                                 echo "	<td class=\"modified\" style=\"width: 50px; white-space: nowrap\">\n";
                                 echo "		<input type=\"checkbox\" name=\"delete[]\" value=\"".$result["elink_id"]."\" style=\"vertical-align: middle\" />\n";
                                 echo "		<a href=\"".ENTRADA_URL."/link-event.php?id=".$result["elink_id"]."\" target=\"_blank\"><img src=\"".ENTRADA_URL."/images/url-visit.gif\" width=\"16\" height=\"16\" alt=\"Visit ".html_encode($result["link"])."\" title=\"Visit ".html_encode($result["link"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
                                 echo "	</td>\n";
                                 echo "	<td class=\"title\" style=\"white-space: normal; overflow: visible\">\n";
-                                echo "		<a href=\"#link-listing\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-event.api.php?action=edit&id=".$EVENT_ID."&lid=".$result["elink_id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
+                                    echo "<img src='".ENTRADA_URL."/serve-icon.php?ext=" . $link_src . "' width='16' height='16' alt='".strtoupper($link_src)." Document' title='".strtoupper($link_src)." Document' style='vertical-align: middle; margin-right: 4px' />\n";
+                                    echo "		<a " . ($student_hidden ? "class='hidden_shares'" : "") . "  href=\"#link-listing\" onclick=\"openDialog('".ENTRADA_URL."/api/link-wizard-event.api.php?action=edit&id=".$EVENT_ID."&lid=".$result["elink_id"]."')\" title=\"Click to edit ".html_encode($result["link"])."\" style=\"font-weight: bold\">".(($result["link_title"] != "") ? html_encode($result["link_title"]) : $result["link"])."</a>\n";
                                 echo "	</td>\n";
                                 echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_date"]) ? date(DEFAULT_DATE_FORMAT, $result["release_date"]) : "No Restrictions")."</span></td>\n";
                                 echo "	<td class=\"date-small\"><span class=\"content-date\">".(((int) $result["release_until"]) ? date(DEFAULT_DATE_FORMAT, $result["release_until"]) : "No Restrictions")."</span></td>\n";
-                                echo "	<td class=\"accesses\" style=\"text-align: center\">".$result["accesses"]."</td>\n";
+                                    echo "	<td class=\"accesses\" style=\"text-align: center\"><a href=\"#link-statistic-".$result["elink_id"]."\" data-toggle=\"modal\" title=\"Click to see access log ".html_encode($result["accesses"])."\" style=\"font-weight: bold\">".html_encode($result["accesses"])."</a></td>\n";                                                                
                                 echo "</tr>\n";
                             }
                         } else {
@@ -1823,6 +1922,47 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         echo "</tbody>\n";
                         echo "</table>\n";
                         echo "</form>\n";
+                        
+                        if (isset($link_statistics) && !empty($link_statistics)) {
+                            foreach ($link_statistics as $elink_id => $link_statistic_set) {
+                                ?>
+                                <div class="modal hide fade" id="link-statistic-<?php echo $elink_id; ?>">
+                                    <div class="modal-header">
+                                        <h3><?php echo $link_statistics[$result["elink_id"]]["title"]; ?> Statistics</h3>
+                                    </div>
+                                    <div class="modal-body">
+                                        <table class="table table-striped table-bordered datatable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Name</th>
+                                                    <th>Views</th>
+                                                    <th>Last Viewed</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                    <?php 
+                                    if (!empty($link_statistic_set["statistics"])) {
+                                        foreach ($link_statistic_set["statistics"] as $link_statistic) { 
+                                        ?>
+                                        <tr>
+                                            <td><?php echo $link_statistic["lastname"] . ", " . $link_statistic["firstname"]; ?></td>
+                                            <td><?php echo $link_statistic["views"]; ?></td>
+                                            <td><?php echo date("Y-m-d H:i", $link_statistic["last_viewed_time"]); ?></td>
+                                        </tr>
+                                        <?php 
+                                        }
+                                    } ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <a href="#" class="btn" data-dismiss="modal">Close</a>
+                                    </div>
+                                </div>
+                                <?php
+                            }
+                        }
+                        
                         ?>
                     </div>
 
@@ -1910,7 +2050,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         echo "</form>\n";
                         ?>
                     </div>
-
                     <div style="margin-bottom: 15px">
                         <div style="float: left; margin-bottom: 5px">
                             <h3>Attached LTI Providers</h3>
@@ -2002,6 +2141,53 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             </table>
                         </form>
                     </div>
+                    <?php
+                        $attached_gradebook_assessment = Models_Assessment_AssessmentEvent::fetchRowByEventID($EVENT_ID);
+                    ?>
+                    <div class="space-below">
+                        <h3>Attached Gradebook Assessments</h3>
+                        <table class="tableList" cellspacing="0" summary="List of Attached LTI Providers">
+                            <colgroup>
+                                <col class="modified wide"/>
+                                <col class="title" />
+                                <col class="title" />
+                                <col class="date" />
+                                <col class="date" />
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <td class="modified">&nbsp;</td>
+                                    <td class="title sortedASC"><div class="noLink">Assessment Name</div></td>
+                                    <td class="title">Assessment Type</td>
+                                    <td class="date-small">Assessment Points</td>
+                                    <td class="date-small">Assessment Weight</td>
+                                </tr>
+                            </thead>
+                            <tbody>
+                        <?php if ($attached_gradebook_assessment) { ?>
+                                <?php
+                                    $assessment = $attached_gradebook_assessment->getAssessment();
+                                ?>
+                                <tr>
+                                    <td></td>
+                                    <td><a href="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments/?section=grade&id=<?php echo $assessment->getCourseID(); ?>&assessment_id=<?php echo $assessment->getAssessmentID(); ?>"><strong><?php echo $assessment->getName(); ?></strong></a></td>
+                                    <td><?php echo $assessment->getType(); ?></td>
+                                    <td><?php echo $assessment->getNumericGradePointsTotal(); ?></td>
+                                    <td><?php echo $assessment->getGradeWeighting(); ?>%</td>
+                                </tr>
+                        <?php } else { ?>
+                                <tr>
+                                    <td colspan="5">
+                                        <div class="display-generic" style="white-space: normal">
+                                            There have been no assessments added to this event. To <strong>add a new LTI Provider</strong> simply click the Add LTI Provider button.
+                                        </div>
+                                    </td>
+                                </tr>
+                        <?php } ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    
                 </div>
 
                 <script type="text/javascript">

@@ -38,15 +38,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($COURSE_ID) {
+
+        $PROCESSED = array();
+        $PROCESSED_NOTICE = array();
+
 		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("step" => false)), "title" => "Add Assignment");
 
         if (isset($_GET["assessment_id"]) && $tmp_ass = clean_input($_GET["assessment_id"],array("trim","int"))){
-            $query = "SELECT * FROM `assessments`
-                        WHERE `assessment_id` = ".$db->qstr($tmp_ass);
-            $assessment = $db->GetRow($query);
+            $assessment_object = Models_Gradebook_Assessment::fetchRowByID($tmp_ass);
+            $assessment = $assessment_object->toArray();
             if ($assessment) {
-				$PROCESSED["name"] = $assessment["name"];
-				
                 $query = "SELECT * FROM `assignments`
                             WHERE `assessment_id` = ".$db->qstr($tmp_ass)."
                             AND `assignment_active` = 1";
@@ -67,668 +68,510 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         WHERE `course_id` = ".$db->qstr($COURSE_ID)."
                         AND `course_active` = '1'";
             $course_details	= $db->GetRow($query);
+            if ($course_details) {
+                if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
+                    $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "add", "id" => $COURSE_ID, "step" => false)), "title" => "Add Assignment Drop Box");
 
-            $m_query = "	SELECT * FROM `assessment_marking_schemes`
-                            WHERE `enabled` = 1;";
-            $MARKING_SCHEMES = $db->GetAll($m_query);
+                    // Error Checking
+                    switch($STEP) {
+                        case 2 :
+                            if (isset($_POST["assignment_title"]) && $tmp_title = clean_input($_POST["assignment_title"],array("trim","notags"))){
+                                $PROCESSED["assignment_title"] = $tmp_title;
+                            } else {
+                                $ERROR++;
+                                $ERRORSTR[] = "Assignment Title is a required Field.";
+                            }
 
-            $assessment_options_query = "SELECT `id`, `title`, `active`
-                                         FROM `assessments_lu_meta_options`
-                                         WHERE `active` = '1'";
-            $assessment_options = $db->GetAll($assessment_options_query);
-            if ($course_details && $MARKING_SCHEMES && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-                function return_id($arr) {
-                    return $arr["id"];
-                }
+                            if (isset($_POST["assignment_description"]) && $tmp_desc = clean_input($_POST["assignment_description"],array("trim","notags"))){
+                                $PROCESSED["assignment_description"] = $tmp_desc;
+                            } else {
+                                $PROCESSED["assignment_description"] = "";
+                            }
 
-                $MARKING_SCHEME_IDS = array_map("return_id", $MARKING_SCHEMES);
-                $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "add", "id" => $COURSE_ID, "step" => false)), "title" => "Add Assignment Drop Box");
+                            if (isset($_POST["assignment_uploads"]) && $tmp_uploads = clean_input($_POST["assignment_uploads"],array("trim","notags"))){
+                                $PROCESSED["assignment_uploads"] = $tmp_uploads == "allow"?0:1;
+                            } else {
+                                $PROCESSED["assignment_uploads"] = 1;
+                            }
 
-                // Error Checking
-                switch($STEP) {
-                    case 2 :
-                        if (isset($_POST["assignment_title"]) && $tmp_title = clean_input($_POST["assignment_title"],array("trim","notags"))){
-                            $PROCESSED["assignment_title"] = $tmp_title;
-                        } else {
-                            $ERROR++;
-                            $ERRORSTR[] = "Assignment Title is a required Field.";
-                        }
+                            /**
+                             * Required field "event_start" / Event Date & Time Start (validated through validate_calendars function).
+                             */
+                            $release_date = validate_calendars("viewable", false, false,true);
+                            $due_date = validate_calendars("due", false, false,true);
 
-                        if (isset($_POST["assignment_description"]) && $tmp_desc = clean_input($_POST["assignment_description"],array("trim","notags"))){
-                            $PROCESSED["assignment_description"] = $tmp_desc;
-                        } else {
-                            $PROCESSED["assignment_description"] = "";
-                        }
+                            if ((isset($release_date["start"])) && ((int) $release_date["start"])) {
+                                $PROCESSED["release_date"] = (int) $release_date["start"];
+                            } else {
+                                $PROCESSED["release_date"] = 0;
+                            }
 
-                        if (isset($_POST["assignment_uploads"]) && $tmp_uploads = clean_input($_POST["assignment_uploads"],array("trim","notags"))){
-                            $PROCESSED["assignment_uploads"] = $tmp_uploads == "allow"?0:1;
-                        } else {
-                            $PROCESSED["assignment_uploads"] = 1;
-                        }
+                            if ((isset($release_date["finish"])) && ((int) $release_date["finish"])) {
+                                $PROCESSED["release_until"] = (int) $release_date["finish"];
+                            } else {
+                                $PROCESSED["release_until"] = 0;
+                            }
 
+                            if ((isset($due_date["finish"])) && ((int) $due_date["finish"])) {
+                                $PROCESSED["due_date"] = (int) $due_date["finish"];
+                            } else {
+                                $PROCESSED["due_date"] = 0;
+                            }
 
-                        /**
-                         * Required field "event_start" / Event Date & Time Start (validated through validate_calendars function).
-                         */
-                        $release_date = validate_calendars("viewable", false, false,true);
-                        $due_date = validate_calendars("due", false, false,true);
+                            if (isset($_POST["notice_enabled"]) && $_POST["notice_enabled"]) {
+                                $notice_enabled = true;
+                                if ((isset($_POST["notice_summary"])) && ($notice_summary = strip_tags(clean_input($_POST["notice_summary"], "trim"), "<a><br><p>"))) {
+                                    $PROCESSED_NOTICE["notice_summary"] = $notice_summary;
+                                } else {
+                                    add_error("You must provide a notice summary.");
+                                }
+                                if (isset($_POST["custom_notice_display"]) && $_POST["custom_notice_display"]) {
+                                    $custom_notice_display = true;
+                                    if (isset($_POST["notice_display_start"]) && ($tmp_date = clean_input($_POST["notice_display_start"], array("trim", "notags")))) {
+                                        if (isset($_POST["notice_display_start_time"]) && ($tmp_time = clean_input($_POST["notice_display_start_time"], array("trim", "notags")))) {
+                                            $PROCESSED_NOTICE["display_from"] = strtotime($tmp_date . " " . $tmp_time);
+                                            if (!$PROCESSED_NOTICE["display_from"]) {
+                                                add_error("The custom notice display start date you have entered is not valid. Please re-enter the <strong>Notice Release Start</strong> to continue.");
+                                            }
+                                        } else {
+                                            add_error("You chose to enter a custom notice display start date, but never entered a time for the <strong>Notice Release Start</strong>. Please enter a time to continue.");
+                                        }
+                                    } else {
+                                        add_error("You chose to enter a custom notice display start date, but never entered a <strong>Notice Release Start</strong>. Please enter a date to continue.");
+                                    }
+                                    if (isset($_POST["notice_display_finish"]) && ($tmp_date = clean_input($_POST["notice_display_finish"], array("trim", "notags")))) {
+                                        if (isset($_POST["notice_display_finish_time"]) && ($tmp_time = clean_input($_POST["notice_display_finish_time"], array("trim", "notags")))) {
+                                            $PROCESSED_NOTICE["display_until"] = strtotime($tmp_date . " " . $tmp_time);
+                                            if (!$PROCESSED_NOTICE["display_until"]) {
+                                                add_error("The custom notice display finish date you have entered is not valid. Please re-enter the <strong>Notice Release Finish</strong> to continue.");
+                                            }
+                                        } else {
+                                            add_error("You chose to enter a custom notice display finish date, but never entered a time for the <strong>Notice Release Finish</strong>. Please enter a time to continue.");
+                                        }
+                                    } else {
+                                        add_error("You chose to enter a custom notice display finish date, but never entered a <strong>Notice Release Finish</strong>. Please enter a date to continue.");
+                                    }
+                                } else {
+                                    $custom_notice_display = false;
+                                    $PROCESSED_NOTICE["display_from"] = ($PROCESSED["release_date"] ? $PROCESSED["release_date"] : time());
+                                    $PROCESSED_NOTICE["display_until"] = $PROCESSED_NOTICE["display_from"] + 604800; //One week in seconds
+                                }
+                            } else {
+                                $notice_enabled = false;
+                            }
+                            if (!$ERROR){
 
-                        if ((isset($release_date["start"])) && ((int) $release_date["start"])) {
-                            $PROCESSED["release_date"] = (int) $release_date["start"];
-                        } else {
-                            $PROCESSED["release_date"] = 0;
-                        }
+                                $PROCESSED["updated_date"]	= time();
+                                $PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
+                                $PROCESSED["course_id"]		= $COURSE_ID;
+                                $PROCESSED["assignment_active"] = 1;
 
-                        if ((isset($release_date["finish"])) && ((int) $release_date["finish"])) {
-                            $PROCESSED["release_until"] = (int) $release_date["finish"];
-                        } else {
-                            $PROCESSED["release_until"] = 0;
-                        }
+                                if ($db->AutoExecute("assignments", $PROCESSED, "INSERT")) {
+                                    if ($ASSIGNMENT_ID = $db->Insert_Id()) {
 
-                        if ((isset($due_date["finish"])) && ((int) $due_date["finish"])) {
-                            $PROCESSED["due_date"] = (int) $due_date["finish"];
-                        } else {
-                            $PROCESSED["due_date"] = 0;
-                        }
-                        if (!$ERROR){
+                                        $PROCESSED["assignment_id"] = $ASSIGNMENT_ID;
+                                        $PROCESSED["proxy_id"] = $ENTRADA_USER->getID();
+                                        $PROCESSED["contact_order"] = 0;
+                                        $PROCESSED["updated_date"]	= time();
+                                        $PROCESSED["updated_by"] = $ENTRADA_USER->getID();
+                                        if ($db->AutoExecute("assignment_contacts", $PROCESSED, "INSERT")) {
+                                            if ($notice_enabled) {
+                                                $PROCESSED_NOTICE["target"] = "updated";
+                                                $PROCESSED_NOTICE["organisation_id"] = $course_details["organisation_id"];
+                                                $PROCESSED_NOTICE["updated_date"] = time();
+                                                $PROCESSED_NOTICE["updated_by"] = $ENTRADA_USER->getID();
+                                                $PROCESSED_NOTICE["created_by"] = $ENTRADA_USER->getID();
+                                                $PROCESSED_NOTICE_AUDIENCE = array();
+                                                $search = array(
+                                                    "%assignment_submission_url%",
+                                                    "%assignment_title%",
+                                                    "%course_code%",
+                                                    "%course_name%",
+                                                    "%due_date%",
+                                                    "%assignment_description%"
+                                                );
+                                                $replace = array(
+                                                    ENTRADA_URL . "/profile/gradebook/assignments?section=view&assignment_id=" . $ASSIGNMENT_ID,
+                                                    html_encode($PROCESSED["assignment_title"]),
+                                                    html_encode($course_details["course_code"]),
+                                                    html_encode($course_details["course_name"]),
+                                                    ($PROCESSED["due_date"] ? date("l, F jS, Y", $PROCESSED["due_date"]) : "No due date provided"),
+                                                    (isset($PROCESSED["assignment_description"]) && $PROCESSED["assignment_description"] ? nl2br(html_encode($PROCESSED["assignment_description"])) : "No assignment description provided")
+                                                );
+                                                $PROCESSED_NOTICE["notice_summary"] = str_replace($search, $replace, $PROCESSED_NOTICE["notice_summary"]);
+                                                $query = "SELECT * FROM `groups` WHERE `group_id` = ".$db->qstr($assessment["cohort"]);
+                                                $assessment_group = $db->GetRow($query);
+                                                if ($assessment_group) {
+                                                    $PROCESSED_NOTICE_AUDIENCE["audience_type"] = $assessment_group["group_type"];
+                                                    $PROCESSED_NOTICE_AUDIENCE["audience_value"] = $assessment_group["group_id"];
+                                                    $PROCESSED_NOTICE_AUDIENCE["updated_by"] = $ENTRADA_USER->getID();
+                                                    $PROCESSED_NOTICE_AUDIENCE["updated_date"] = time();
+                                                }
+                                                if ($db->AutoExecute("notices", $PROCESSED_NOTICE, "INSERT") && $NOTICE_ID = $db->Insert_Id()) {
+                                                    $query = "UPDATE `assignments` SET `notice_id` = ".$db->qstr($NOTICE_ID)." WHERE `assignment_id` = ".$db->qstr($ASSIGNMENT_ID);
+                                                    if (!$db->Execute($query)) {
+                                                        application_log("error", "An error was encountered while attempting to set the `notice_id` field for a new assignment [".$ASSIGNMENT_ID."] after creating a notice [".$NOTICE_ID."] for it. DB Said: ".$db->ErrorMsg());
+                                                    }
+                                                    $PROCESSED_NOTICE_AUDIENCE["notice_id"] = $NOTICE_ID;
+                                                    if (!$db->AutoExecute("notice_audience", $PROCESSED_NOTICE_AUDIENCE, "INSERT")) {
+                                                        application_log("error", "An error was encountered while attempting to create a `notice_audience` record for a new assignment [".$ASSIGNMENT_ID."] notice [".$NOTICE_ID."]. DB Said: ".$db->ErrorMsg());
+                                                    }
+                                                } else {
+                                                    application_log("error", "An error was encountered while attempting to create a `notice` record for a new assignment [".$ASSIGNMENT_ID."]. DB Said: ".$db->ErrorMsg());
+                                                }
+                                            }
+                                            if ((isset($_POST["associated_director"])) && ($associated_directors = explode(",", $_POST["associated_director"])) && (@is_array($associated_directors)) && (@count($associated_directors))) {
+                                                $order = 0;
+                                                foreach ($associated_directors as $proxy_id) {
+                                                    if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+                                                        if ($proxy_id != (int) $ENTRADA_USER->getID()){
+                                                            if (!$db->AutoExecute("assignment_contacts", array("assignment_id" => $ASSIGNMENT_ID, "proxy_id" => $proxy_id, "contact_order" => $order+1, "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getID()), "INSERT")) {
+                                                                add_error("There was an error when trying to insert a &quot;" . $module_singular_name . " Director&quot; into the system. The system administrator was informed of this error; please try again later.");
 
-                            $PROCESSED["updated_date"]	= time();
-                            $PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-                            $PROCESSED["course_id"]		= $COURSE_ID;
-                            $PROCESSED["assignment_active"] = 1;
-
-                            if ($db->AutoExecute("assignments", $PROCESSED, "INSERT")) {
-                                if ($ASSIGNMENT_ID = $db->Insert_Id()) {
-
-                                    $PROCESSED["assignment_id"] = $ASSIGNMENT_ID;
-                                    $PROCESSED["proxy_id"] = $ENTRADA_USER->getID();
-                                    $PROCESSED["contact_order"] = 0;
-                                    $PROCESSED["updated_date"]	= time();
-                                    $PROCESSED["updated_by"] = $ENTRADA_USER->getID();
-                                    if ($db->AutoExecute("assignment_contacts", $PROCESSED, "INSERT")) {
-                                        if ((isset($_POST["associated_director"])) && ($associated_directors = explode(",", $_POST["associated_director"])) && (@is_array($associated_directors)) && (@count($associated_directors))) {
-                                            $order = 0;
-                                            foreach ($associated_directors as $proxy_id) {
-                                                if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
-                                                    if ($proxy_id !== $ENTRADA_USER->getID()){
-                                                        if (!$db->AutoExecute("assignment_contacts", array("assignment_id" => $ASSIGNMENT_ID, "proxy_id" => $proxy_id, "contact_order" => $order+1, "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getID()), "INSERT")) {
-                                                            add_error("There was an error when trying to insert a &quot;" . $module_singular_name . " Director&quot; into the system. The system administrator was informed of this error; please try again later.");
-
-                                                            application_log("error", "Unable to insert a new course_contact to the database when updating an event. Database said: ".$db->ErrorMsg());
-                                                        } else {
-                                                            $order++;
+                                                                application_log("error", "Unable to insert a new course_contact to the database when updating an event. Database said: ".$db->ErrorMsg());
+                                                            } else {
+                                                                $order++;
+                                                            }
                                                         }
                                                     }
                                                 }
                                             }
+                                            application_log("success", "Successfully added assignment ID [".$ASSIGNMENT_ID."]");
+                                        } else {
+                                            application_log("error", "Unable to add you as an assignment contact. Please contact an administrator.");
                                         }
-                                        application_log("success", "Successfully added assignment ID [".$ASSIGNMENT_ID."]");
                                     } else {
-                                        application_log("error", "Unable to add you as an assignment contact. Please contact an administrator.");
+                                        application_log("error", "Unable to fetch the newly inserted assignment identifier for this assignment.");
                                     }
+
+                                    $url = ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("step" => false, "section" => "edit", "assignment_id" => $ASSIGNMENT_ID));
+                                    $msg = "You will now be redirected to the <strong>Edit Assignment Drop Box</strong> page for \"<strong>".$PROCESSED["assignment_title"] . "</strong>\"; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+
+                                    $SUCCESS++;
+                                    $SUCCESSSTR[] 	= $msg;
+                                    $ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
                                 } else {
                                     application_log("error", "Unable to fetch the newly inserted assignment identifier for this assignment.");
                                 }
-
-                                $url = ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("step" => false, "section" => "edit", "assignment_id" => $ASSIGNMENT_ID));
-                                $msg = "You will now be redirected to the <strong>Edit Assignment Drop Box</strong> page for \"<strong>".$PROCESSED["assignment_title"] . "</strong>\"; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
-
-                                $SUCCESS++;
-                                $SUCCESSSTR[] 	= $msg;
-                                $ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
-                            } else {
-                                application_log("error", "Unable to fetch the newly inserted assignment identifier for this assignment.");
                             }
-                        }
-                        if ($ERROR) {
-                            $STEP = 1;
-                        }
-                    break;
-                    case 1 :
-
-                    default :
-                        continue;
-                    break;
-                }
-
-                // Display Content
-                switch ($STEP) {
-                    case 2 :
-                        if ($SUCCESS) {
-                            echo display_success();
-                        }
-                        if ($NOTICE) {
-                            echo display_notice();
-                        }
-                        if ($ERROR) {
-                            echo display_error();
-                        }
-                    break;
-                    case 1 :
-                    default :
-                        $assignment_directors = array();
-                        $query	= "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`, `".AUTH_DATABASE."`.`organisations`.`organisation_id`
-                                    FROM `".AUTH_DATABASE."`.`user_data`
-                                    LEFT JOIN `".AUTH_DATABASE."`.`user_access`
-                                    ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
-                                    LEFT JOIN `".AUTH_DATABASE."`.`organisations`
-                                    ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
-                                    WHERE (`".AUTH_DATABASE."`.`user_access`.`group` = 'faculty' OR
-									`".AUTH_DATABASE."`.`user_access`.`group` = 'staff' OR
-									(`".AUTH_DATABASE."`.`user_access`.`group` = 'resident' AND `".AUTH_DATABASE."`.`user_access`.`role` = 'lecturer'
-									OR `".AUTH_DATABASE."`.`user_access`.`group` = 'medtech')
-                                    AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
-                                    AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
-									AND `".AUTH_DATABASE."`.`user_access`.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
-                                    ORDER BY `fullname` ASC";					
-                        $results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
-                        if ($results) {
-                            foreach ($results as $result) {
-                                $assignment_directors[$result["proxy_id"]] = array('proxy_id'=>$result["proxy_id"], 'fullname'=>$result["fullname"], 'organisation_id'=>$result['organisation_id']);
+                            if ($ERROR) {
+                                $STEP = 1;
                             }
-                            $DIRECTOR_LIST = $assignment_directors;
-                        }
-                        ?>
-                        <h1>Add Assignment Drop Box</h1>
-                        <?php
-                        if ($ERROR) {
-                            echo display_error();
-                        }
-                        ?>
-                        <form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assignments?<?php echo replace_query(array("step" => 2)); ?>" method="post" class="form-horizontal">
-                            <h2>Drop Box Details</h2>
+                        break;
+                        case 1 :
 
-                            <div class="control-group">
-                                <label class="control-label form-nrequired">Assignment Name:</label>
-                                <div class="controls">
-                                    <input type="text" name="assignment_title" value="<?php echo (isset($PROCESSED["assignment_title"]) && $PROCESSED["assignment_title"] ? $PROCESSED["assignment_title"] : "");?>"/>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label form-nrequired">Assignment Contacts:</label>
-                                <div class="controls">
-                                    <script type="text/javascript">
-                                    jQuery('#assessment-section').hide();
+                        default :
+                            continue;
+                        break;
+                    }
 
-                                    jQuery(document).ready(function(){
-                                        if (jQuery('#assessment-selector').val() == 'N'){
-                                            jQuery('#assessment-section').slideDown('slow');
-                                        } else {
-                                            jQuery('#assessment-section').slideUp('slow');
-                                        }
-                                    });
-
-                                    jQuery('#assessment-selector').bind('change',function(){
-                                        if (jQuery(this).val() == 'N'){
-                                            jQuery('#assessment-section').slideDown('slow');
-                                        } else {
-                                            jQuery('#assessment-section').slideUp('slow');
-                                        }
-                                    });
-
-                                    var sortables = new Array();
-                                    function updateOrder(type) {
-                                        $('associated_'+type).value = Sortable.sequence(type+'_list');
-                                    }
-
-                                    function addItem(type) {
-                                        if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
-                                            var li = new Element('li', {'class':'community', 'id':type+'_'+$(type+'_id').value, 'style':'cursor: move;'}).update($(type+'_name').value);
-                                            $(type+'_name').value = '';
-                                            li.insert({bottom: '<img src=\"<?php echo ENTRADA_URL; ?>/images/action-delete.gif\" class=\"list-cancel-image\" onclick=\"removeItem(\''+$(type+'_id').value+'\', \''+type+'\')\" />'});
-                                            $(type+'_id').value	= '';
-                                            $(type+'_list').appendChild(li);
-                                            sortables[type] = Sortable.destroy($(type+'_list'));
-                                            Sortable.create(type+'_list', {onUpdate : function(){updateOrder(type);}});
-                                            updateOrder(type);
-                                        } else if ($(type+'_'+$(type+'_id').value) != null) {
-                                            alert('Important: Each user may only be added once.');
-                                            $(type+'_id').value = '';
-                                            $(type+'_name').value = '';
-                                            return false;
-                                        } else if ($(type+'_name').value != '' && $(type+'_name').value != null) {
-                                            alert('Important: When you see the correct name pop-up in the list as you type, make sure you select the name with your mouse, do not press the Enter button.');
-                                            return false;
-                                        } else {
-                                            return false;
-                                        }
-                                    }
-
-                                    function addItemNoError(type) {
-                                        if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
-                                            addItem(type);
-                                        }
-                                    }
-
-                                    function copyItem(type) {
-                                        if (($(type+'_name') != null) && ($(type+'_ref') != null)) {
-                                            $(type+'_ref').value = $(type+'_name').value;
-                                        }
-
-                                        return true;
-                                    }
-
-                                    function checkItem(type) {
-                                        if (($(type+'_name') != null) && ($(type+'_ref') != null) && ($(type+'_id') != null)) {
-                                            if ($(type+'_name').value != $(type+'_ref').value) {
-                                                $(type+'_id').value = '';
-                                            }
-                                        }
-
-                                        return true;
-                                    }
-
-                                    function removeItem(id, type) {
-                                        if ($(type+'_'+id)) {
-                                            $(type+'_'+id).remove();
-                                            Sortable.destroy($(type+'_list'));
-                                            Sortable.create(type+'_list', {onUpdate : function (type) {updateOrder(type)}});
-                                            updateOrder(type);
-                                        }
-                                    }
-
-                                    function selectItem(id, type) {
-                                        if ((id != null) && ($(type+'_id') != null)) {
-                                            $(type+'_id').value = id;
-                                        }
-                                    }
-
-                                    function loadCurriculumPeriods(ctype_id) {
-                                        var updater = new Ajax.Updater('curriculum_type_periods', '<?php echo ENTRADA_URL."/api/curriculum_type_periods.api.php"; ?>',{
-                                            method:'post',
-                                            parameters: {
-                                                'ctype_id': ctype_id
-                                            },
-                                            onFailure: function(transport){
-                                                $('curriculum_type_periods').update(new Element('div', {'class':'display-error'}).update('No Periods were found for this Curriculum Category.'));
-                                            }
-                                        });
-                                    }
-                                    </script>
-                                    <input type="text" id="director_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('director')" onblur="addItemNoError('director')" />
-                                    <script type="text/javascript">
-                                        $('director_name').observe('keypress', function(event){
-                                            if (event.keyCode == Event.KEY_RETURN) {
-                                                addItem('director');
-                                                Event.stop(event);
-                                            }
-                                        });
-                                    </script>
-                                    <?php
-                                    $ONLOAD[] = "Sortable.create('director_list', {onUpdate : function() {updateOrder('director')}})";
-                                    $ONLOAD[] = "$('associated_director').value = Sortable.sequence('director_list')";
-                                    ?>
-                                    <div class="autocomplete" id="director_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('director_name', 'director_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=facultyorstaff', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'director'); copyItem('director');}});</script>
-                                    <input type="hidden" id="associated_director" name="associated_director" />
-                                    <input type="button" class="btn" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
-                                    <span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
-                                    <span class="content-small"><br><strong>Tip:</strong> You will automatically be added as a contact</span>
-                                    <ul id="director_list" class="menu" style="margin-top: 15px">
-                                        <?php
-                                        if (is_array($chosen_course_directors) && count($chosen_course_directors)) {
-                                            foreach ($chosen_course_directors as $director) {
-                                                if ((array_key_exists($director, $DIRECTOR_LIST)) && is_array($DIRECTOR_LIST[$director])) {
-                                                    ?>
-                                                        <li class="community" id="director_<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>" style="cursor: move;"><?php echo $DIRECTOR_LIST[$director]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>', 'director');"/></li>
-                                                    <?php
-                                                }
-                                            }
-                                        }
-                                        ?>
-                                    </ul>
-                                    <input type="hidden" id="director_ref" name="director_ref" value="" />
-                                    <input type="hidden" id="director_id" name="director_id" value="" />
-                                </div>
-                            </div> <!--/control-group-->
-                            <div class="control-group">
-                                <label class="control-label form-nrequired">Assignment Description:</label>
-                                <div class="controls">
-                                    <textarea id="assignment_description" name="assignment_description" style="width: 100%; height: 150px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($PROCESSED["assignment_description"], array("font")))); ?></textarea>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <label class="control-label form-nrequired">Allow Revisions:</label>
-                                <div class="controls">
-                                    <table>
-                                        <tbody>
-                                                <tr>
-                                                    <td style="vertical-align: top"><input type="radio" name="assignment_uploads" id="assignment_uploads_allow" value="allow" style="vertical-align: middle" checked="checked"></td>
-                                                    <td colspan="2" style="padding-bottom: 15px">
-                                                        <label for="assignment_uploads_allow" class="radio-group-title">Allow Submission Revision</label>
-                                                        <div class="content-small">Allow students to upload a newer version of their assignment after they have already made their submission as long as its still before the due date.</div>
-                                                    </td>
-                                                </tr>
-                                                <tr>
-                                                    <td style="vertical-align: top"><input type="radio" name="assignment_uploads" id="assignment_uploads_deny" value="deny" style="vertical-align: middle;"></td>
-                                                    <td colspan="2" style="padding-bottom: 15px">
-                                                        <label for="assignment_uploads_deny" class="radio-group-title">Do Not Allow Submission Revision</label>
-                                                        <div class="content-small">Do not allow students to upload a newer version of their assignment after initial upload.</div>
-                                                    </td>
-                                                </tr>
-
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            <div class="control-group">
-                                <table>
-                                    <tr>
-                                        <?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-                                        <?php echo generate_calendars("due", "", false, false,  0, true, false,  ((isset($PROCESSED["due_date"])) ? $PROCESSED["due_date"] : 0)); ?>
-                                    </tr>
-                                </table>
-                            </div>
-
-                            <div id="assessment-section">
-                            <h2>Assessment Details</h2>
-                            <table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Adding Assessment">
-                            <colgroup>
-                                <col style="width: 3%" />
-                                <col style="width: 22%" />
-                                <col style="width: 75%" />
-                            </colgroup>
-                            <tbody>
-                                <tr>
-                                    <td></td>
-                                    <td><label class="form-nrequired">Course Name</label></td>
-                                    <td>
-                                        <a href="<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view")); ?>"><?php echo html_encode($course_details["course_name"]); ?></a>
-                                    </td>
-                                </tr>
-                                <?php
-                                $query = "SELECT * FROM `groups` WHERE `group_type` = 'course_list' AND `group_value` = ".$db->qstr($COURSE_ID);
-                                $course_list = $db->GetRow($query);
-                                if ($course_list){
-                                    ?>
-                                <tr>
-                                    <td colspan="3">&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td><input type="radio" name="associated_audience" id="course_list" value ="<?php echo $course_list["group_id"];?>" checked="checked"/></td>
-                                    <td><label for="cohort" class="form-required">Course List</label></td>
-                                    <td>
-                                        <span class="radio-group-title">All Learners in the <?php echo $course_details["course_code"];?> Course List Group</span>
-                                        <div class="content-small">This assessment is intended for all learners that are members of the <?php echo $course_details["course_code"];?> Course List.</div>
-                                    </td>
-                                </tr>
-                                <?php
+                    // Display Content
+                    switch ($STEP) {
+                        case 2 :
+                            if ($SUCCESS) {
+                                echo display_success();
+                            }
+                            if ($NOTICE) {
+                                echo display_notice();
+                            }
+                            if ($ERROR) {
+                                echo display_error();
+                            }
+                        break;
+                        case 1 :
+                        default :
+                            $assignment_directors = array();
+                            $query	= "	SELECT `".AUTH_DATABASE."`.`user_data`.`id` AS `proxy_id`, CONCAT_WS(', ', `".AUTH_DATABASE."`.`user_data`.`lastname`, `".AUTH_DATABASE."`.`user_data`.`firstname`) AS `fullname`, `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+                                        FROM `".AUTH_DATABASE."`.`user_data`
+                                        LEFT JOIN `".AUTH_DATABASE."`.`user_access`
+                                        ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
+                                        LEFT JOIN `".AUTH_DATABASE."`.`organisations`
+                                        ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
+                                        WHERE (`".AUTH_DATABASE."`.`user_access`.`group` = 'faculty' OR
+                                        `".AUTH_DATABASE."`.`user_access`.`group` = 'staff' OR
+                                        (`".AUTH_DATABASE."`.`user_access`.`group` = 'resident' AND `".AUTH_DATABASE."`.`user_access`.`role` = 'lecturer'
+                                        OR `".AUTH_DATABASE."`.`user_access`.`group` = 'medtech')
+                                        AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
+                                        AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
+                                        AND `".AUTH_DATABASE."`.`user_access`.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
+                                        ORDER BY `fullname` ASC";
+                            $results = ((USE_CACHE) ? $db->CacheGetAll(AUTH_CACHE_TIMEOUT, $query) : $db->GetAll($query));
+                            if ($results) {
+                                foreach ($results as $result) {
+                                    $assignment_directors[$result["proxy_id"]] = array('proxy_id'=>$result["proxy_id"], 'fullname'=>$result["fullname"], 'organisation_id'=>$result['organisation_id']);
                                 }
-                                ?>
-                                <tr>
-                                    <td colspan="3">&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td><input type="radio" name="associated_audience" id="manual_select" value="manual_select"<?php echo (!$course_list?" checked=\"checked\"":"");?>/></td>
-                                    <td><label for="cohort" class="form-required">Cohort</label></td>
-                                    <td>
-                                        <select id="cohort" name="cohort" style="width: 250px">
-                                        <?php
-                                        $active_cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
-                                        if (isset($active_cohorts) && !empty($active_cohorts)) {
-                                            foreach ($active_cohorts as $cohort) {
-                                                echo "<option value=\"".$cohort["group_id"]."\"".(($PROCESSED["cohort"] == $cohort["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($cohort["group_name"])."</option>\n";
-                                            }
+                                $DIRECTOR_LIST = $assignment_directors;
+                            }
+                            /**
+                             * Load the rich text editor.
+                             */
+                            load_rte("minimal");
+                            $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.timepicker.js\"></script>\n";
+                            ?>
+                            <h1>Add Assignment Drop Box</h1>
+                            <?php
+                            if ($ERROR) {
+                                echo display_error();
+                            }
+                            ?>
+                            <script type="text/javascript">
+                                jQuery(document).ready(function() {
+                                    jQuery('.datepicker').datepicker({
+                                        dateFormat: 'yy-mm-dd'
+                                    });
+                                    jQuery(".timepicker").timepicker({
+                                        showPeriodLabels: false
+                                    });
+                                    jQuery('.add-on').on('click', function() {
+                                        if (jQuery(this).siblings('input').is(':enabled')) {
+                                            jQuery(this).siblings('input').focus();
                                         }
-                                        ?>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colspan="3">&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td></td>
-                                    <td><label for="name" class="form-required">Assessment Name</label></td>
-                                    <td><input type="text" id="name" name="name" value="<?php echo html_encode($PROCESSED["name"]); ?>" maxlength="64" style="width: 243px" /></td>
-                                </tr>
-                                <tr>
-                                    <td>&nbsp;</td>
-                                    <td style="vertical-align: top"><label for="description" class="form-nrequired">Assessment Description</label></td>
-                                    <td><textarea id="description" name="description" class="expandable" style="width: 99%; height: 150px"><?php echo html_encode($PROCESSED["description"]); ?></textarea></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="3">&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td></td>
-                                    <td><label for="grade_weighting" class="form-nrequired">Assessment Weighting</label></td>
-                                    <td>
-                                        <input type="text" id="grade_weighting" name="grade_weighting" value="<?php echo (float) html_encode($PROCESSED["grade_weighting"]); ?>" maxlength="5" style="width: 40px" autocomplete="off" />
-                                        <span class="content-small"><strong>Tip:</strong> The percentage or numeric value of the final grade this assessment is worth.</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                            <tbody id="assessment_required_options" style="display: none;">
-                                <tr>
-                                    <td>&nbsp;</td>
-                                    <td colspan="2" style="padding-top: 10px">
-                                        <label class="form-nrequired" for="assessment_required_0">Is this assessment <strong>optional</strong> or <strong>required</strong>?</label>
-                                        <div style="margin: 5px 0 0 25px">
-                                            <input type="radio" name="assessment_required" value="0" id="assessment_required_0" <?php echo (($PROCESSED["required"] == 0)) ? " checked=\"checked\"" : "" ?> /> <label class="form-nrequired" for="assessment_required_0">Optional</label><br />
-                                            <input type="radio" name="assessment_required" value="1" id="assessment_required_1" <?php echo (($PROCESSED["required"] == 1)) ? " checked=\"checked\"" : "" ?> /> <label class="form-nrequired" for="assessment_required_1">Required</label>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                            <tbody>
-                                <tr>
-                                    <td colspan="3">&nbsp;</td>
-                                </tr>
-                                <tr>
-                                    <td></td>
-                                    <td><label for="assessment_characteristic" class="form-required">Characteristic</label></td>
-                                    <td>
-                                        <select id="assessment_characteristic" name="assessment_characteristic">
-                                            <option value="">-- Select Assessment Characteristic --</option>
-                                            <?php
-                                            $query = "	SELECT *
-                                                        FROM `assessments_lu_meta`
-                                                        WHERE `organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
-                                                        AND `active` = '1'
-                                                        ORDER BY `type` ASC, `title` ASC";
-                                            $assessment_characteristics = $db->GetAll($query);
-                                            if ($assessment_characteristics) {
-                                                $type = "";
-                                                foreach ($assessment_characteristics as $key => $characteristic) {
-                                                    if ($type != $characteristic["type"]) {
-                                                        if ($key) {
-                                                            echo "</optgroup>";
-                                                        }
-                                                        echo "<optgroup label=\"".ucwords(strtolower($characteristic["type"]))."s\">";
+                                    });
+                                });
+                                var sortables = new Array();
+                                function updateOrder(type) {
+                                    $('associated_'+type).value = Sortable.sequence(type+'_list');
+                                }
+                                function addItem(type) {
+                                    if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
+                                        var li = new Element('li', {'class':'community', 'id':type+'_'+$(type+'_id').value, 'style':'cursor: move;'}).update($(type+'_name').value);
+                                        $(type+'_name').value = '';
+                                        li.insert({bottom: '<img src=\"<?php echo ENTRADA_URL; ?>/images/action-delete.gif\" class=\"list-cancel-image\" onclick=\"removeItem(\''+$(type+'_id').value+'\', \''+type+'\')\" />'});
+                                        $(type+'_id').value	= '';
+                                        $(type+'_list').appendChild(li);
+                                        sortables[type] = Sortable.destroy($(type+'_list'));
+                                        Sortable.create(type+'_list', {onUpdate : function(){updateOrder(type);}});
+                                        updateOrder(type);
+                                    } else if ($(type+'_'+$(type+'_id').value) != null) {
+                                        alert('Important: Each user may only be added once.');
+                                        $(type+'_id').value = '';
+                                        $(type+'_name').value = '';
+                                        return false;
+                                    } else if ($(type+'_name').value != '' && $(type+'_name').value != null) {
+                                        alert('Important: When you see the correct name pop-up in the list as you type, make sure you select the name with your mouse, do not press the Enter button.');
+                                        return false;
+                                    } else {
+                                        return false;
+                                    }
+                                }
 
-                                                        $type = $characteristic["type"];
-                                                    }
+                                function addItemNoError(type) {
+                                    if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
+                                        addItem(type);
+                                    }
+                                }
 
-                                                    echo "<option value=\"" . $characteristic["id"] . "\" assessmenttype=\"" . $characteristic["type"] . "\"".(($PROCESSED["characteristic_id"] == $characteristic["id"]) ? " selected=\"selected\"" : "").">".$characteristic["title"]."</option>";
+                                function copyItem(type) {
+                                    if (($(type+'_name') != null) && ($(type+'_ref') != null)) {
+                                        $(type+'_ref').value = $(type+'_name').value;
+                                    }
+
+                                    return true;
+                                }
+
+                                function checkItem(type) {
+                                    if (($(type+'_name') != null) && ($(type+'_ref') != null) && ($(type+'_id') != null)) {
+                                        if ($(type+'_name').value != $(type+'_ref').value) {
+                                            $(type+'_id').value = '';
+                                        }
+                                    }
+
+                                    return true;
+                                }
+
+                                function removeItem(id, type) {
+                                    if ($(type+'_'+id)) {
+                                        $(type+'_'+id).remove();
+                                        Sortable.destroy($(type+'_list'));
+                                        Sortable.create(type+'_list', {onUpdate : function (type) {updateOrder(type)}});
+                                        updateOrder(type);
+                                    }
+                                }
+
+                                function selectItem(id, type) {
+                                    if ((id != null) && ($(type+'_id') != null)) {
+                                        $(type+'_id').value = id;
+                                    }
+                                }
+
+                                function loadCurriculumPeriods(ctype_id) {
+                                    var updater = new Ajax.Updater('curriculum_type_periods', '<?php echo ENTRADA_URL."/api/curriculum_type_periods.api.php"; ?>',{
+                                        method:'post',
+                                        parameters: {
+                                            'ctype_id': ctype_id
+                                        },
+                                        onFailure: function(transport){
+                                            $('curriculum_type_periods').update(new Element('div', {'class':'display-error'}).update('No Periods were found for this Curriculum Category.'));
+                                        }
+                                    });
+                                }
+                            </script>
+                            <form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assignments?<?php echo replace_query(array("step" => 2)); ?>" method="post" class="form-horizontal">
+                                <h2>Drop Box Details</h2>
+                                <div class="control-group">
+                                    <label class="control-label form-required">Assignment Name:</label>
+                                    <div class="controls">
+                                        <input type="text" name="assignment_title" value="<?php echo (isset($PROCESSED["assignment_title"]) && $PROCESSED["assignment_title"] ? $PROCESSED["assignment_title"] : "");?>"/>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label form-nrequired">Assignment Contacts:</label>
+                                    <div class="controls">
+                                        <input type="text" id="director_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('director')" onblur="addItemNoError('director')" />
+                                        <script type="text/javascript">
+                                            $('director_name').observe('keypress', function(event){
+                                                if (event.keyCode == Event.KEY_RETURN) {
+                                                    addItem('director');
+                                                    Event.stop(event);
                                                 }
-                                                echo "</optgroup>";
+                                            });
+                                        </script>
+                                        <?php
+                                        $ONLOAD[] = "Sortable.create('director_list', {onUpdate : function() {updateOrder('director')}})";
+                                        $ONLOAD[] = "$('associated_director').value = Sortable.sequence('director_list')";
+                                        ?>
+                                        <div class="autocomplete" id="director_name_auto_complete"></div><script type="text/javascript">new Ajax.Autocompleter('director_name', 'director_name_auto_complete', '<?php echo ENTRADA_RELATIVE; ?>/api/personnel.api.php?type=facultyorstaff', {frequency: 0.2, minChars: 2, afterUpdateElement: function (text, li) {selectItem(li.id, 'director'); copyItem('director');}});</script>
+                                        <input type="hidden" id="associated_director" name="associated_director" />
+                                        <input type="button" class="btn" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
+                                        <span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+                                        <span class="content-small"><br><strong>Tip:</strong> You will automatically be added as a contact</span>
+                                        <ul id="director_list" class="menu" style="margin-top: 15px">
+                                            <?php
+                                            if (is_array($chosen_course_directors) && count($chosen_course_directors)) {
+                                                foreach ($chosen_course_directors as $director) {
+                                                    if ((array_key_exists($director, $DIRECTOR_LIST)) && is_array($DIRECTOR_LIST[$director])) {
+                                                        ?>
+                                                            <li class="community" id="director_<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>" style="cursor: move;"><?php echo $DIRECTOR_LIST[$director]["fullname"]; ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" class="list-cancel-image" onclick="removeItem('<?php echo $DIRECTOR_LIST[$director]["proxy_id"]; ?>', 'director');"/></li>
+                                                        <?php
+                                                    }
+                                                }
                                             }
                                             ?>
-                                        </select>
-                                    </td>
-                                </tr>
-                            </tbody>
-                            <tbody id="assessment_options" style="display: none;">
-                                <tr>
-                                    <td></td>
-                                    <td style="vertical-align: top;"><label class="form-nrequired">Extended Options:</label></td>
-                                    <td>
-                                        <?php
-                                        if ($assessment_options) {
-                                            foreach ($assessment_options as $assessment_option) {
-                                                echo "<input type=\"checkbox\" value=\"".$assessment_option["id"]."\" name=\"option[]\"" .((is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected)) ? " checked=\"checked\"" : "") . " id=\"extended_option".$assessment_option["id"]. "\" /><label for=\"extended_option".$assessment_option["id"]."\">".$assessment_option["title"]."</label><br />";
-                                            }
-                                        }
-                                        ?>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colspan="3">&nbsp;</td>
-                                </tr>
-                            </tbody>
-                            <tbody>
-                                <tr>
-                                    <td></td>
-                                    <td><label for="marking_scheme_id" class="form-required">Marking Scheme:</label></td>
-                                    <td>
-                                        <select id="marking_scheme_id" name="marking_scheme_id">
-                                        <?php
-                                        foreach ($MARKING_SCHEMES as $scheme) {
-                                            echo "<option value=\"".$scheme["id"]."\"".(($PROCESSED["marking_scheme_id"] == $scheme["id"]) ? " selected=\"selected\"" : "").">".$scheme["name"]."</option>";
-                                        }
-                                        ?>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr id="numeric_marking_scheme_details" style="display: none;">
-                                    <td></td>
-                                    <td><label for="numeric_grade_points_total" class="form-required">Maximum Points:</label></td>
-                                    <td>
-                                        <input type="text" id="numeric_grade_points_total" name="numeric_grade_points_total" value="<?php echo html_encode($PROCESSED["numeric_grade_points_total"]); ?>" maxlength="5" style="width: 50px" />
-                                        <span class="content-small"><strong>Tip:</strong> Maximum points possible for this assessment (i.e. <strong>20</strong> for &quot;X out of 20).</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td></td>
-                                    <td><label for="type" class="form-required">Assessment Type:</label></td>
-                                    <td>
-                                        <select id="type" name="type">
-                                        <?php
-                                        foreach ($ASSESSMENT_TYPES as $type) {
-                                            echo "<option value=\"".$type."\"".(($PROCESSED["type"] == $type) ? " selected=\"selected\"" : "").">".$type."</option>";
-                                        }
-                                        ?>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colspan="3">&nbsp;</td>
-                                </tr>
-                            </tbody>
-                            <tbody>
-                                <tr>
-                                    <td colspan="3"><input type="radio" name="show_learner_option" value="0" id="show_learner_option_0" <?php echo (($PROCESSED["show_learner"] == 0)) ? " checked=\"checked\"" : "" ?> style="margin-right: 5px;" /><label class="form-nrequired" for="show_learner_option_0">Don't Show this Assessment in Learner Gradebook</label></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="3"><input type="radio" name="show_learner_option" value="1" id="show_learner_option_1" <?php echo (($PROCESSED["show_learner"] == 1)) ? " checked=\"checked\"" : "" ?> style="margin-right: 5px;" /><label class="form-nrequired" for="show_learner_option_1">Show this Assessment in Learner Gradebook</label></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="3">&nbsp;</td>
-                                </tr>
-                            </tbody>
-                            <tbody id="gradebook_release_options" style="display: none;">
-                                <tr>
-                                    <td></td>
-                                    <td><?php echo generate_calendars("show", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0), true, false, " in Gradebook After", " in Gradebook Until"); ?></td>
-                                    <td></td>
-                                </tr>
-                                <tr>
-                                    <td colspan="3">&nbsp;</td>
-                                </tr>
-                            </tbody>
-                            <tbody>
-                                <tr>
-                                    <td><input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /></td>
-                                    <td colspan="2">
-                                        <label for="narrative_assessment" class="form-nrequired">This is a <strong>narrative assessment</strong>.</label>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        </div>
-                        <script type="text/javascript" charset="utf-8">
-                        jQuery(function($) {
-                            jQuery('#marking_scheme_id').change(function() {
-                                if (jQuery(':selected', this).val() == 3 || jQuery(':selected', this).text() == "Numeric") {
-                                    jQuery('#numeric_marking_scheme_details').show();
-                                } else {
-                                    jQuery('#numeric_marking_scheme_details').hide();
-                                }
-                            }).trigger('change');
+                                        </ul>
+                                        <input type="hidden" id="director_ref" name="director_ref" value="" />
+                                        <input type="hidden" id="director_id" name="director_id" value="" />
+                                    </div>
+                                </div> <!--/control-group-->
+                                <div class="control-group">
+                                    <label class="control-label form-nrequired">Assignment Description:</label>
+                                    <div class="controls">
+                                        <textarea id="assignment_description" class="expandable" name="assignment_description" style="width: 100%; height: 150px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($PROCESSED["assignment_description"], array("font")))); ?></textarea>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label form-nrequired">Allow Revisions:</label>
+                                    <div class="controls">
+                                        <table>
+                                            <tbody>
+                                                    <tr>
+                                                        <td style="vertical-align: top"><input type="radio" name="assignment_uploads" id="assignment_uploads_allow" value="allow" style="vertical-align: middle"<?php echo (!isset($PROCESSED["assignment_uploads"]) || !$PROCESSED["assignment_uploads"] ? " checked=\"checked\"" : ""); ?>></td>
+                                                        <td colspan="2" style="padding-bottom: 15px">
+                                                            <label for="assignment_uploads_allow" class="radio-group-title">Allow Submission Revision</label>
+                                                            <div class="content-small">Allow students to upload a newer version of their assignment after they have already made their submission as long as its still before the due date.</div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td style="vertical-align: top"><input type="radio" name="assignment_uploads" id="assignment_uploads_deny" value="deny" style="vertical-align: middle;"<?php echo (isset($PROCESSED["assignment_uploads"]) && $PROCESSED["assignment_uploads"] ? " checked=\"checked\"" : ""); ?>></td>
+                                                        <td colspan="2" style="padding-bottom: 15px">
+                                                            <label for="assignment_uploads_deny" class="radio-group-title">Do Not Allow Submission Revision</label>
+                                                            <div class="content-small">Do not allow students to upload a newer version of their assignment after initial upload.</div>
+                                                        </td>
+                                                    </tr>
 
-                            jQuery('#grade_weighting').keyup(function() {
-                                if (parseFloat(jQuery('#grade_weighting').val())) {
-                                    jQuery('#assessment_required_1').attr('checked', 'checked');
-                                    jQuery('#assessment_required_options').hide();
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <label class="control-label form-nrequired" for="assignment_notice">Assignment Notice:</label>
+                                    <div class="controls">
+                                        <input type="checkbox" name="notice_enabled" value="1" id="assignment_notice" onclick="jQuery('#notice-dates').toggle(this.checked)" <?php echo (isset($notice_enabled) && $notice_enabled ? "checked=\"checked\" " : "" ); ?>/> <label for="assignment_notice" class="pad-above-small content-small">Create a dashboard notice for this assignment</label>
+                                    </div>
+                                </div>
+                                <div class="control-group" id="notice-dates"<?php echo (isset($notice_enabled) && $notice_enabled ? "" : " style=\"display: none;\"" ); ?>>
+                                    <label for="notice_summary" class="form-required control-label">Notice Summary:</label>
+                                    <div class="controls">
+                                        <textarea id="notice_summary" name="notice_summary" rows="10"><?php echo ((isset($PROCESSED_NOTICE["notice_summary"])) ? html_encode(trim($PROCESSED_NOTICE["notice_summary"])) : $translate->_("assignment_notice")); ?></textarea>
+                                    </div>
+                                    <div class="content-small controls space-below large">
+                                        <strong>Available Variables:</strong> %assignment_submission_url%, %assignment_title%, %course_code%, %course_name%, %due_date%, %assignment_title%, %assignment_description%
+                                    </div>
+                                    <label class="control-label form-nrequired">Notice Release:</label>
+                                    <div class="controls">
+                                        <div class="row-fluid">
+                                            <span class="span1">
+                                                <input type="radio" value="0" name="custom_notice_display" id="notice_display_default" onclick="jQuery('#custom_notice_display_date').hide()" <?php echo (!isset($custom_notice_display) || !$custom_notice_display ? "checked=\"checked\" " : ""); ?>/>
+                                            </span>
+                                            <label class="span11" for="notice_display_default">Release notice on <strong>Viewable Start</strong> (immediately if no date set), for one week</label>
+                                        </div>
+                                        <div class="row-fluid">
+                                            <span class="span1">
+                                                <input type="radio" value="1" name="custom_notice_display" id="custom_notice_display" onclick="jQuery('#custom_notice_display_date').show()" <?php echo (isset($custom_notice_display) && $custom_notice_display ? "checked=\"checked\" " : ""); ?>/>
+                                            </span>
+                                            <label class="span11" for="custom_notice_display">Release notice on a custom defined date for a specified period of time</label>
+                                        </div>
+                                        <div id="custom_notice_display_date"<?php echo (!isset($custom_notice_display) || !$custom_notice_display ? " style=\"display: none;\"" : "" ); ?>>
+                                            <div class="row-fluid">
+                                                <label class="span3 offset1" for="notice_display_start">Notice Display Start: </label>
+                                                <span class="span8">
+                                                    <div class="input-append">
+                                                        <input type="text" class="input-small datepicker" value="<?php echo (isset($PROCESSED_NOTICE["display_from"]) && $PROCESSED_NOTICE["display_from"] ? date("Y-m-d", $PROCESSED_NOTICE["display_from"]) : ""); ?>" name="notice_display_start" id="notice_display_start" />
+                                                        <span class="add-on pointer"><i class="icon-calendar"></i></span>
+                                                    </div>
+                                                    <div class="input-append">
+                                                        <input type="text" class="input-mini timepicker" value="<?php echo (isset($PROCESSED_NOTICE["display_from"]) && $PROCESSED_NOTICE["display_from"] ? date("H:i", $PROCESSED_NOTICE["display_from"]) : ""); ?>" name="notice_display_start_time" id="notice_display_start_time" />
+                                                        <span class="add-on pointer inpage-add-on"><i class="icon-time"></i></span>
+                                                    </div>
+                                                </span>
+                                            </div>
+                                            <div class="row-fluid">
+                                                <label class="span3 offset1" for="notice_display_finish">Notice Display Finish: </label>
+                                                <span class="span8">
+                                                    <div class="input-append">
+                                                        <input type="text" class="input-small datepicker" value="<?php echo (isset($PROCESSED_NOTICE["display_until"]) && $PROCESSED_NOTICE["display_until"] ? date("Y-m-d",  $PROCESSED_NOTICE["display_until"]) : ""); ?>" name="notice_display_finish" id="notice_display_finish" />
+                                                        <span class="add-on pointer"><i class="icon-calendar"></i></span>
+                                                    </div>
+                                                    <div class="input-append">
+                                                        <input type="text" class="input-mini timepicker" value="<?php echo (isset($PROCESSED_NOTICE["display_until"]) && $PROCESSED_NOTICE["display_until"] ? date("H:i", $PROCESSED_NOTICE["display_until"]) : ""); ?>" name="notice_display_finish_time" id="notice_display_finish_time" />
+                                                        <span class="add-on pointer inpage-add-on"><i class="icon-time"></i></span>
+                                                    </div>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <table>
+                                        <?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+                                        <?php echo generate_calendars("due", "", false, false,  0, true, false,  ((isset($PROCESSED["due_date"])) ? $PROCESSED["due_date"] : 0)); ?>
+                                    </table>
+                                </div>
+                                <div style="padding-top: 25px">
+                                    <table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
+                                        <tr>
+                                            <td style="width: 25%; text-align: left">
+                                                <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view", "assessment_id" => false)); ?>'" />
+                                            </td>
+                                            <td style="width: 75%; text-align: right; vertical-align: middle">
+                                                <input type="submit" class="btn btn-primary" value="Save" />
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </form>
+                            <?php
+                        break;
+                    }
+                } else {
+                    $ERROR++;
+                    $ERRORSTR[] = "In order to add an assignment to a gradebook you must provide a valid course identifier. The provided ID does not exist in this system.";
 
-                                } else {
-                                    jQuery('#assessment_required_0').attr('checked', 'checked');
-                                    jQuery('#assessment_required_options').show();
+                    echo display_error();
 
-                                }
-                            });
-
-                            jQuery('#grade_weighting').ready(function() {
-                                if (parseFloat(jQuery('#grade_weighting').val())) {
-                                    jQuery('#assessment_required_1').attr('checked', 'checked');
-                                    jQuery('#assessment_required_options').hide();
-
-                                } else {
-                                    jQuery('#assessment_required_options').show();
-
-                                }
-                            });
-
-                            jQuery('#assessment_characteristic').change(function (){
-                                jQuery('#assessment_options input:[type=checkbox]').removeAttr('checked');
-                                var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
-                                if (assessmentType == 'exam' || assessmentType == 'quiz') {
-                                    jQuery('#assessment_options').show();
-                                } else {
-                                    jQuery('#assessment_options').hide();
-                                }
-                            });
-
-                            jQuery('#assessment_characteristic').ready(function (){
-                                var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
-                                if (assessmentType == 'exam' || assessmentType == 'quiz') {
-                                    jQuery('#assessment_options').show();
-                                } else {
-                                    jQuery('#assessment_options').hide();
-                                }
-                            });
-
-                            jQuery("input[name='show_learner_option']").change(function(){
-                                if (jQuery("input[name='show_learner_option']:checked").val() == 1) {
-                                    jQuery('#gradebook_release_options').show();
-                                }
-                                else if (jQuery("input[name='show_learner_option']:checked").val() == 0) {
-                                    jQuery('#gradebook_release_options').hide();
-                                }
-                            });
-
-                            jQuery(document).ready(function(){
-                                if (jQuery("input[name='show_learner_option']:checked").val() == 1) {
-                                    jQuery('#gradebook_release_options').show();
-                                }
-                                else if (jQuery("input[name='show_learner_option']:checked").val() == 0) {
-                                    jQuery('#gradebook_release_options').hide();
-                                }
-                            });
-                        });
-                        </script>
-                        <div style="padding-top: 25px">
-                            <table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
-                                <tr>
-                                    <td style="width: 25%; text-align: left">
-                                        <input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/gradebook?<?php echo replace_query(array("step" => false, "section" => "view", "assessment_id" => false)); ?>'" />
-                                    </td>
-                                    <td style="width: 75%; text-align: right; vertical-align: middle">
-                                        <input type="submit" class="btn btn-primary" value="Save" />
-                                    </td>
-                                </tr>
-                            </table>
-                        </div>
-                    </form>
-                    <?php
+                    application_log("notice", "Failed to provide a valid course identifier when attempting to add an assignment");
                 }
             } else {
-                $ERROR++;
-                $ERRORSTR[] = "In order to add an assignment to a gradebook you must provide a valid course identifier. The provided ID does not exist in this system.";
 
-                echo display_error();
-
-                application_log("notice", "Failed to provide a valid course identifier when attempting to add an assignment");
             }
         } else {
             echo display_error();

@@ -180,42 +180,42 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 						#draft-list_paginate a {margin:2px 5px;}
 					</style>
 					<form action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=delete&amp;step=2" method="post">
-					<table class="table table-bordered table-striped" id="draft-list" widht="100%" cellspacing="0" summary="List of Events">
-					<colgroup>
-						<col class="modified" />
-						<col class="date" />
-						<col class="title" />
-						<col class="description" />
-					</colgroup>
-					<thead>
-						<tr>
-							<th class="modified">&nbsp;</th>
-							<th class="date">Creation Date &amp; Time</th>
-							<th class="title">Draft Title</th>
-							<th class="description">Description</th>
-						</tr>
-					</thead>
-					<tbody>
-						<?php
-						foreach($results as $result) {
-							$url 	= ENTRADA_URL."/admin/events/drafts?section=edit&amp;draft_id=".$result["draft_id"];
+                        <table class="table table-bordered table-striped" id="draft-list" widht="100%" cellspacing="0" summary="List of Events">
+                            <colgroup>
+                                <col class="modified" />
+                                <col class="date" />
+                                <col class="title" />
+                                <col class="description" />
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th class="modified">&nbsp;</th>
+                                    <th class="date">Creation Date &amp; Time</th>
+                                    <th class="title">Draft Title</th>
+                                    <th class="description">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                foreach($results as $result) {
+                                    $url 	= ENTRADA_URL."/admin/events/drafts?section=edit&amp;draft_id=".$result["draft_id"];
 
-							echo "<tr id=\"draft-".$result["draft_id"]."\" class=\"event\">\n";
-							echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["draft_id"]."\" checked=\"checked\" /></td>\n";
-							echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Creation Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["created"]).(($url) ? "</a>" : "")."</td>\n";
-							echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Title: ".html_encode($result["name"])."\">" : "").html_encode($result["name"]).(($url) ? "</a>" : "")."</td>\n";
-							echo "	<td class=\"description".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Description: ".html_encode($result["description"])."\">" : "").html_encode($result["description"]).(($url) ? "</a>" : "")."</td>\n";
-							echo "</tr>\n";
-						}
-						?>
-					</tbody>
-					</table>
-					<table width="100%" style="padding-top: 10px">
-						<tr>
-							<td><input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events/drafts/';" /></td>
-							<td align="right"><input type="submit" class="btn btn-danger" value="Confirm Removal" /></td>
-						</tr>
-					</table>
+                                    echo "<tr id=\"draft-".$result["draft_id"]."\" class=\"event\">\n";
+                                    echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$result["draft_id"]."\" checked=\"checked\" /></td>\n";
+                                    echo "	<td class=\"date".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Creation Date\">" : "").date(DEFAULT_DATE_FORMAT, $result["created"]).(($url) ? "</a>" : "")."</td>\n";
+                                    echo "	<td class=\"title".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Title: ".html_encode($result["name"])."\">" : "").html_encode($result["name"]).(($url) ? "</a>" : "")."</td>\n";
+                                    echo "	<td class=\"description".((!$url) ? " np" : "")."\">".(($url) ? "<a href=\"".$url."\" title=\"Draft Description: ".html_encode($result["description"])."\">" : "").html_encode($result["description"]).(($url) ? "</a>" : "")."</td>\n";
+                                    echo "</tr>\n";
+                                }
+                                ?>
+                            </tbody>
+                        </table>
+                        <table width="100%" style="padding-top: 10px">
+                            <tr>
+                                <td><input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/events/drafts/';" /></td>
+                                <td align="right"><input type="submit" class="btn btn-danger" value="Confirm Removal" /></td>
+                            </tr>
+                        </table>
 					</form>
 					<?php
 				} else {

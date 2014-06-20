@@ -94,6 +94,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						$PROCESSED["evaluation_rubric_categories"][$index + 1] = array();
 						$PROCESSED["evaluation_rubric_categories"][$index + 1]["objective_ids"] = array();
 						$PROCESSED["evaluation_rubric_categories"][$index + 1]["category"] = $category["question_text"];
+                        $PROCESSED["evaluation_rubric_categories"][$index + 1]["category_description"] = $category["question_description"];
 						$PROCESSED["evaluation_rubric_categories"][$index + 1]["question_parent_id"] = $category["question_parent_id"];
 
 						$query = "SELECT * FROM `evaluation_question_objectives` AS a
@@ -343,6 +344,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							}
 
 							$PROCESSED["evaluation_rubric_categories"][$i]["category"] = $category;
+                            if (isset($_POST["category_description"][$i]) && ($tmp_input = clean_input($_POST["category_description"][$i], array("trim", "notags")))) {
+                                $PROCESSED["evaluation_rubric_categories"][$i]["category_description"] = $tmp_input;
+                            }
 							$PROCESSED["evaluation_rubric_categories"][$i]["category_order"] = $i;
 							$PROCESSED["evaluation_rubric_categories"][$i]["objective_ids"] = array();
 							if ((isset($_POST["objective_ids_".$i])) && (is_array($_POST["objective_ids_".$i]))) {
@@ -455,8 +459,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									$rubric_order = 1;
 									foreach ($PROCESSED["evaluation_rubric_categories"] as $index => $category) {
 										$PROCESSED_QUESTION = array("questiontype_id" => 3,
+																	"organisation_id" => $ENTRADA_USER->getActiveOrganisation(),
 																	"question_text" => $category["category"],
 																	"question_code" => $category["category"],
+																	"question_description" => (isset($category["category_description"]) && $category["category_description"] ? $category["category_description"] : NULL),
 																	"allow_comments" => $PROCESSED["allow_comments"],
 																	"question_parent_id" => (isset($category["category_parent_id"]) && (int)$category["category_parent_id"] ? (int)$category["category_parent_id"] : $QUESTION_ID));
 										$equestion_id = 0;

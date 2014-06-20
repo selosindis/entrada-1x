@@ -441,17 +441,25 @@ class Models_Evaluation {
 						</td>
 					</tr>
 					<tr>
+						<td style="padding-top: 10px;">
+							<label for="category_description_<?php echo $rownum; ?>" class="form-nrequired">Category Description</label>
+						</td>
+						<td colspan="2" style="padding: 10px 4px 0px 4px;">
+							<textarea class="expandable" id="category_description_<?php echo $rownum; ?>" name="category_description[<?php echo $rownum; ?>]" style="width: 79%"><?php echo ((isset($question_data["evaluation_rubric_categories"][$rownum]["category_description"])) ? clean_input($question_data["evaluation_rubric_categories"][$rownum]["category_description"], "encode") : ""); ?></textarea>
+						</td>
+					</tr>
+					<tr>
 						<td>
 							&nbsp;
 						</td>
 						<td colspan="2">
 							<div class="rubric_criteria_list" style="padding-right: 20px;">
-								<?php
+                            <?php
 							foreach (range(1, (isset($question_data["columns_count"]) && (int) $question_data["columns_count"] ? (int) $question_data["columns_count"] : 3)) as $colnum) {
 								?>
 								<div style="width: 100%; text-align: right; margin: 10px 0px; float: right;">
 									<div style="position: absolute;">
-										<label style="text-align: left; vertical-align: top;" class="form-required" for="category_<?php echo $rownum."_criteria_".$colnum; ?>">Column <?php echo $colnum; ?> Criteria</label>
+										<label style="text-align: left; vertical-align: top;" class="form-nrequired" for="category_<?php echo $rownum."_criteria_".$colnum; ?>">Column <?php echo $colnum; ?> Criteria</label>
 									</div>
 									<textarea class="criteria_<?php echo $rownum; ?>" style="width: 65%;" id="criteria_<?php echo $colnum; ?>" name="criteria[<?php echo $rownum."][".$colnum; ?>]"><?php echo (isset($question_data["evaluation_rubric_category_criteria"][$rownum][$colnum]["criteria"]) && $question_data["evaluation_rubric_category_criteria"][$rownum][$colnum]["criteria"] ? html_encode($question_data["evaluation_rubric_category_criteria"][$rownum][$colnum]["criteria"]) : ""); ?></textarea>
 								</div>
@@ -492,10 +500,8 @@ class Models_Evaluation {
 		}
 	}
 
-	public static function getPreceptorSelect($evaluation_id, $event_id, $evaluator_proxy_id, $preceptor_proxy_id = 0) {
+	public static function getPreceptorArray($evaluation_id, $event_id, $evaluator_proxy_id) {
 		global $db;
-
-		$output = "";
 
 		$query	= "SELECT b.`preceptor_proxy_id` FROM `evaluation_progress` AS a
 					JOIN `evaluation_progress_clerkship_events` AS b
@@ -533,8 +539,19 @@ class Models_Evaluation {
 						GROUP BY a.`id`";
 			$preceptors = $db->GetAll($query);
 		}
+
+		return ($preceptors ? $preceptors : false);
+	}
+
+	public static function getPreceptorSelect($evaluation_id, $event_id, $evaluator_proxy_id, $preceptor_proxy_id = 0) {
+		global $db;
+
+		$output = "";
+
+		$preceptors = Models_Evaluation::getPreceptorArray($evaluation_id, $event_id, $evaluator_proxy_id);
+
 		if ($preceptors) {
-			$output = "<select id=\"preceptor_proxy_id\" name=\"preceptor_proxy_id\" onchange=\"displayOtherTeacher(this.value)\">\n";
+			$output = "<select id=\"preceptor_proxy_id\" name=\"preceptor_proxy_id\" onchange=\"fetchTargetDetails(this.value)\">\n";
 			$output .= "<option value=\"0\">-- Select a preceptor --</option>\n";
 			foreach ($preceptors as $preceptor) {
 				if ($preceptor["proxy_id"]) {
@@ -800,7 +817,10 @@ class Models_Evaluation {
                                 if (!$attempt) {
                                     echo "				<img onclick=\"openDialog('".ENTRADA_URL."/admin/evaluations/forms/questions?section=api-objectives&id=".$form_id."&efquestion_id=".$question["efquestion_id"]."')\" width=\"16\" height=\"16\" class=\"question-controls cursor-pointer pull-right\" src=\"".ENTRADA_URL."/images/icon-resources-on.gif\" alt=\"Edit Question Objectives\" title=\"Edit Question Objectives\" style=\"margin-top: -15px;\" />";
                                 }
-								echo "				<div style=\"position: relative; top: 50%;\">".$question["question_text"]."</div>\n";
+								echo "				<div style=\"position: relative; top: 50%;\">\n";
+                                echo "                  <strong>".$question["question_text"]."</strong>\n";
+                                echo "                  <div class=\"space-above content-small\">".nl2br($question["question_description"])."</div>";
+                                echo "              </div>\n";
 								echo "			</div>\n";
 								echo "		</td>\n";
 								foreach ($criteriae as $criteria) {
@@ -1281,7 +1301,10 @@ class Models_Evaluation {
 								$criteria_width = floor(100 / (count($criteriae) + 1));
 								$temp_question_controls[] = "		<td style=\"width: ".$criteria_width."%\">\n";
 								$temp_question_controls[] = "			<div class=\"td-stretch\" style=\"position: relative; width: 100%; vertical-align: middle;\">\n";
-								$temp_question_controls[] = "				<div style=\"position: relative; top: 50%;\">".$question["question_text"]."</div>\n";
+                                $temp_question_controls[] = "			    <div style=\"position: relative; top: 50%;\">\n";
+                                $temp_question_controls[] = "                   <strong>".$question["question_text"]."</strong>\n";
+                                $temp_question_controls[] = "                   <div class=\"space-above content-small\">".nl2br($question["question_description"])."</div>";
+                                $temp_question_controls[] = "               </div>\n";
 								$temp_question_controls[] = "			</div>\n";
 								$temp_question_controls[] = "		</td>\n";
 								foreach ($criteriae as $criteria) {
@@ -2807,7 +2830,7 @@ class Models_Evaluation {
                             $evaluator_proxy_id = $evaluator["evaluator_value"];
 			} elseif ($evaluator["evaluator_type"] == "cgroup_id") {
                             $cgroup_id = $evaluator["evaluator_value"];
-                        }
+            }
 		}
 
 		$evaluation_targets = array();
@@ -4941,7 +4964,10 @@ class Models_Evaluation {
                             $criteria_width = floor(100 / (count($criteriae) + 1));
                             $output .= "		<td style=\"width: ".$criteria_width."%\">\n";
                             $output .= "			<div class=\"td-stretch\" style=\"position: relative; width: 100%; vertical-align: middle;\">\n";
-                            $output .= "				<div style=\"position: relative; top: 50%;\">".$question["question_text"]."</div>\n";
+                            echo "				        <div style=\"position: relative; top: 50%;\">\n";
+                            echo "                          <strong>".$question["question_text"]."</strong>\n";
+                            echo "                          <div class=\"space-above content-small\">".nl2br($question["question_description"])."</div>";
+                            echo "                      </div>\n";
                             $output .= "			</div>\n";
                             $output .= "		</td>\n";
                             $blank_lines = "\n";

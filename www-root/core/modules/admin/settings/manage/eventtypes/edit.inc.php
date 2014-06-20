@@ -44,9 +44,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
         add_error("No Event Type found with the specified ID.");
     }
     
-    if (isset($PROCESSED["eventtype_id"])) {
-        $event_type = Models_EventType::get($PROCESSED["eventtype_id"]);
+    $event_type = Models_EventType::get($PROCESSED["eventtype_id"]);
+    
+    if ($event_type) {
+        $mapped_medbiq_instructional_method = $event_type->getMappedMedbiqInstructionalMethod();
+        if ($mapped_medbiq_instructional_method) {
+            $PROCESSED["medbiq_instructional_method_id"] = $mapped_medbiq_instructional_method->getInstructionalMethodID();
+        }
     }
+    
     
 	// Error Checking
 	switch ($STEP) {
@@ -72,8 +78,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
             
             if (isset($_POST["medbiq_instructional_method_id"]) && ($tmp_input = clean_input($_POST["medbiq_instructional_method_id"], array("trim", "int")))) {
                 $PROCESSED["medbiq_instructional_method_id"] = $tmp_input;
-            } else {
-                $PROCESSED["medbiq_instructional_method_id"] = null;
             }
 			
 			if (!$ERROR) {
@@ -107,11 +111,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                             $mapped_instructional_method->delete();
                         }
                         
-                        $mapped_method = new Models_Event_MapEventsEventType(array("fk_instructional_method_id" => $PROCESSED["medbiq_instructional_method_id"], "fk_eventtype_id" => $eventtype_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()));
-                        if (!$mapped_method->insert()) {
-                            application_log("error", "An error occured while attempting to insert the medbiq instructional method " . $mapped_method->getID() . " DB said: " . $db->ErrorMsg());
-                            add_error("An error occured while attempting to save the selected medbiq instructional method");
+                        if (isset($PROCESSED["medbiq_instructional_method_id"])) {
+                            $mapped_method = new Models_Event_MapEventsEventType(array("fk_instructional_method_id" => $PROCESSED["medbiq_instructional_method_id"], "fk_eventtype_id" => $eventtype_id, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()));
+                            if (!$mapped_method->insert()) {
+                                application_log("error", "An error occured while attempting to insert the medbiq instructional method " . $mapped_method->getID() . " DB said: " . $db->ErrorMsg());
+                                add_error("An error occured while attempting to save the selected medbiq instructional method " . $db->ErrorMsg());
+                            }
                         }
+                        
                         
                         // we need a list of event_ids that are associated with this eventtype_id
                         $query = "	SELECT b.`event_id`, c.*
@@ -149,6 +156,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 			if ($ERROR) {
 				$STEP = 1;
+                $event_type = new Models_EventType($PROCESSED);
 			}
 		break;
 		case 1 :
@@ -198,13 +206,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                     <?php
                     $medbiq_instructional_method = new Models_MedbiqInstructionalMethod();
                     $medbiq_instructional_methods = $medbiq_instructional_method->fetchAllMedbiqInstructionalMethods();
-                    $mapped_instructional_method = $event_type->getMappedMedbiqInstructionalMethod();
-                    
                     if ($medbiq_instructional_methods) {
                         foreach ($medbiq_instructional_methods as $medbiq_method) { ?>
                             <div class="radio">
                                 <label for="instructional_method_<?php echo $medbiq_method->getID(); ?>">
-                                    <input type="radio" name="medbiq_instructional_method_id" id="instructional_method_<?php echo $medbiq_method->getID(); ?>" value="<?php echo $medbiq_method->getID(); ?>" <?php echo ($mapped_instructional_method && $mapped_instructional_method->getInstructionalMethodID() == $medbiq_method->getID() ? "checked=\"checked\"" : ""); ?>>
+                                    <input type="radio" name="medbiq_instructional_method_id" id="instructional_method_<?php echo $medbiq_method->getID(); ?>" value="<?php echo $medbiq_method->getID(); ?>" <?php echo (isset($PROCESSED["medbiq_instructional_method_id"]) && $PROCESSED["medbiq_instructional_method_id"] == $medbiq_method->getID() ? "checked=\"checked\"" : ""); ?>>
                                     <?php echo $medbiq_method->getInstructionalMethod(); ?>
                                 </label>
                             </div>

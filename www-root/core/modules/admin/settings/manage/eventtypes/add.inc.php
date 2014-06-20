@@ -79,10 +79,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						$params = array("eventtype_id" => $EVENTTYPE_ID, "organisation_id" => $ORGANISATION_ID);
                         $event_type_organisation = new Models_Event_EventTypeOrganisation($params);
                         
-                        $mapped_method = new Models_Event_MapEventsEventType(array("fk_instructional_method_id" => $PROCESSED["medbiq_instructional_method_id"], "fk_eventtype_id" => $EVENTTYPE_ID, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()));
-                        if (!$mapped_method->insert()) {
-                            application_log("error", "An error occured while attempting to insert the medbiq instructional method " . $mapped_method->getID() . " DB said: " . $db->ErrorMsg());
-                            add_error("An error occured while attempting to save the selected medbiq instructional method");
+                        if (isset($PROCESSED["medbiq_instructional_method_id"])) {
+                            $mapped_method = new Models_Event_MapEventsEventType(array("fk_instructional_method_id" => $PROCESSED["medbiq_instructional_method_id"], "fk_eventtype_id" => $EVENTTYPE_ID, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()));
+                            if (!$mapped_method->insert()) {
+                                application_log("error", "An error occured while attempting to insert the medbiq instructional method " . $mapped_method->getID() . " DB said: " . $db->ErrorMsg());
+                                add_error("An error occured while attempting to save the selected medbiq instructional method");
+                            }
                         }
 						
 						if(!$event_type_organisation->insert()) {
@@ -112,6 +114,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 			if ($ERROR) {
 				$STEP = 1;
+                $event_type = new Models_EventType($PROCESSED);
 			}
 		break;
 		case 1 :
@@ -161,13 +164,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                 <div class="control-group">
                     <label for="eventtype_title" class="form-required control-label">Event Type Name:</label>
                     <div class="controls">
-                        <input type="text" class="input-xlarge" id="eventtype_title" name="eventtype_title" value="<?php echo ((isset($PROCESSED["eventtype_name"])) ? html_encode($PROCESSED["eventtype_title"]) : ""); ?>" maxlength="60" />
+                        <input type="text" class="input-xlarge" id="eventtype_title" name="eventtype_title" value="<?php echo ($event_type ? html_encode($event_type->getEventTypeTitle()) : ""); ?>" maxlength="60" />
                     </div>
                 </div>
                 <div class="control-group">
                     <label for="eventtype_description" class="form-nrequired control-label">Event Type Description:</label>
                     <div class="controls">
-                        <textarea id="eventtype_description" name="eventtype_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ((isset($PROCESSED["eventtype_description"])) ? html_encode($PROCESSED["eventtype_description"]) : ""); ?></textarea>
+                        <textarea id="eventtype_description" name="eventtype_description" style="width: 98%; height: 200px" rows="20" cols="70"><?php echo ($event_type ? html_encode($event_type->getEventTypeDescription()): ""); ?></textarea>
                     </div>
                 </div>
                 <div class="control-group">

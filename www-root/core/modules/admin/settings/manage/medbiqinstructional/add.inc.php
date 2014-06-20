@@ -189,8 +189,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
                     if ($event_types) {
                         foreach($event_types as $eventtype) { ?>
                             <div class="checkbox">
-                                <label>
-                                    <input type="checkbox" name="fk_eventtype_id[]" value="<?php echo $eventtype->getID(); ?>" <?php echo (isset($PROCESSED["event_types"]) && in_array($eventtype->getID(), $PROCESSED["event_types"]) ? "checked=\"checked\"" : ""); ?> />
+                                <label for="event_type_<?php echo $eventtype->getID(); ?>">
+                                    <input type="checkbox" id="event_type_<?php echo $eventtype->getID(); ?>" name="fk_eventtype_id[]" value="<?php echo $eventtype->getID(); ?>" <?php echo (isset($PROCESSED["event_types"]) && in_array($eventtype->getID(), $PROCESSED["event_types"]) ? "checked=\"checked\"" : ""); ?> />
                                     <?php echo $eventtype->getEventTypeTitle(); ?>
                                 </label>
                             </div>

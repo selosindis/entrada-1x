@@ -50,15 +50,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	 * and open the template in the editor.
 	 */
 
-	$query = "	SELECT a.* FROM `events_lu_eventtypes` AS a 
-				LEFT JOIN `eventtype_organisation` AS b
-				ON a.`eventtype_id` = b.`eventtype_id` 
-				WHERE b.`organisation_id` = ".$db->qstr($ORGANISATION_ID)." 
-				AND a.`eventtype_active` = 1 
-				ORDER BY a.`eventtype_title` ASC";
-	
-	$results = $db->GetAll($query);
-
+	$results = Models_EventType::fetchAllByOrganisationID($ORGANISATION_ID);
 	if($results){
 	?>
 	<form action ="<?php echo ENTRADA_URL;?>/admin/settings/manage/eventtypes?section=delete&amp;org=<?php echo $ORGANISATION_ID;?>" method="post">
@@ -75,7 +67,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 		</thead>
 		<tbody>
 			<?php
-				foreach($results as $result){
+				foreach($results as $r){
+                    $result = $r->toArray();
 					echo "<tr><td><input type=\"checkbox\" name = \"remove_ids[]\" value=\"".$result["eventtype_id"]."\"/></td>";
 					echo"<td><a href=\"".ENTRADA_URL."/admin/settings/manage/eventtypes?section=edit&amp;org=".$ORGANISATION_ID."&amp;type_id=".$result["eventtype_id"]."\">".$result["eventtype_title"]."</a></td></tr>";
 				}

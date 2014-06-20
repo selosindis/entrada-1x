@@ -36,6 +36,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
+    ?>
+    <h1>Edit Medbiquitous Instructional Method</h1>
+    <?php
+    
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/medbiqinstructional?".replace_query(array("section" => "edit"))."&amp;org=".$ORGANISATION_ID, "title" => "Edit Medbiquitous Instructional Method");
 	
 	if (isset($_GET["instructional_method_id"]) && ($instructional_method_id = clean_input($_GET["instructional_method_id"], array("notags", "trim")))) {

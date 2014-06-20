@@ -36,6 +36,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] do not have access to this module [".$MODULE."]");
 } else {
 
+    ?>
+    <h1>Add Event Type</h1>
+    <?php
 
 	$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/settings/manage/eventtypes?".replace_query(array("section" => "add"))."&amp;org=".$ORGANISATION_ID, "title" => "Add Event Type");
 	

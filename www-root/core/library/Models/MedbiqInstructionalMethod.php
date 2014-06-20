@@ -75,8 +75,9 @@ class Models_MedbiqInstructionalMethod extends Models_Base {
         ));
     }
     
-    public function fetchAllMedbiqInstructionalMethods () {
-        return $this->fetchAll(array("active" => 1), "=", "AND", "instructional_method");
+    public static function fetchAllMedbiqInstructionalMethods () {
+        $self = new self();
+        return $self->fetchAll(array("active" => 1), "=", "AND", "instructional_method");
     }
     
     public function getMappedEventTypes () {

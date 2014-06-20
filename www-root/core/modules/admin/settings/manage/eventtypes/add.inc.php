@@ -180,8 +180,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                     <label class="form-nrequired control-label">Medbiquitos Instructional Method:</label>
                     <div class="controls">
                     <?php
-                    $medbiq_instructional_method = new Models_MedbiqInstructionalMethod();
-                    $medbiq_instructional_methods = $medbiq_instructional_method->fetchAllMedbiqInstructionalMethods();
+                    $medbiq_instructional_methods = Models_MedbiqInstructionalMethod::fetchAllMedbiqInstructionalMethods();
                     if ($medbiq_instructional_methods) {
                         foreach ($medbiq_instructional_methods as $medbiq_method) { ?>
                             <div class="radio">

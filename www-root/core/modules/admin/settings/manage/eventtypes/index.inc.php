@@ -37,7 +37,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	?>
 	<h1>Manage Event Types</h1>
 
-	<div class="clearfix">
+	<div class="clearfix space-below medium">
 		<div class="pull-right">
 			<a href="<?php echo ENTRADA_URL; ?>/admin/settings/manage/eventtypes?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="btn btn-primary">Add New Event Type</a>
 		</div>

@@ -22,8 +22,7 @@
  * @copyright Copyright 2014 Queen's University. All Rights Reserved.
  *
 */
-error_reporting(E_ALL);
-ini_set('display_errors', 1);
+
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -48,7 +47,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
     if (isset($PROCESSED["eventtype_id"])) {
         $event_type = Models_EventType::get($PROCESSED["eventtype_id"]);
     }
-   
+    
 	// Error Checking
 	switch ($STEP) {
 		case 2 :
@@ -211,7 +210,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
                             </div>
                         <?php
                         }
-                    }
+                    } 
                     ?>
                     </div>
                 </div>

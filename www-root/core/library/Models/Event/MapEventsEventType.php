@@ -69,6 +69,11 @@ class Models_Event_MapEventsEventType extends Models_Base {
         return $self->fetchRow(array("fk_eventtype_id" => $event_type_id));
     }
     
+    public static function fetchAllByEventTypeID ($event_type_id = null) {
+        $self = new self();
+        return $self->fetchAll(array("fk_eventtype_id" => $event_type_id));
+    }
+    
     public function getInstructionalMethod () {
         return Models_MedbiqInstructionalMethod::get($this->fk_instructional_method_id);
     }

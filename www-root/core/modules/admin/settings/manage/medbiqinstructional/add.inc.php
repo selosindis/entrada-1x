@@ -73,7 +73,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 			 * Non-required field "fk_eventtype_id" / Mapped Event Types
 			 */
 			if (isset($_POST["fk_eventtype_id"]) && is_array($_POST["fk_eventtype_id"])) {
-				$SEMI_PROCESSED["fk_eventtype_id"] = $_POST["fk_eventtype_id"];
+                foreach ($_POST["fk_eventtype_id"] as $event_type_id) {
+                    if ($tmp_input = clean_input($event_type_id, array("trim", "int"))) {
+                        $PROCESSED["event_types"][] = $tmp_input;
+                    }
+                }
 			}
 			
 			if (!$ERROR) {
@@ -83,24 +87,32 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
                 
                 $medbiq_instructional_method = new Models_MedbiqInstructionalMethod($PROCESSED);
 				if ($medbiq_instructional_method->insert()) {
-					if(isset($SEMI_PROCESSED)) {
-						// Insert keys into mapped table
-						$MAPPED_PROCESSED = array();
-						$MAPPED_PROCESSED["fk_instructional_method_id"] = $db->Insert_Id();
-						$MAPPED_PROCESSED["updated_date"] = time();
-						$MAPPED_PROCESSED["updated_by"] = $ENTRADA_USER->getID();
-						
-						foreach($SEMI_PROCESSED["fk_eventtype_id"] as $fk_eventtype_id) {
-							$MAPPED_PROCESSED["fk_eventtype_id"] = (int) $fk_eventtype_id;
+					if (isset($PROCESSED["event_types"]) && is_array($PROCESSED["event_types"])) {
+                        // Insert keys into mapped table
+                        $MAPPED_PROCESSED = array();
+                        $MAPPED_PROCESSED["fk_instructional_method_id"] = $medbiq_instructional_method->getID();
+                        $MAPPED_PROCESSED["updated_date"] = time();
+                        $MAPPED_PROCESSED["updated_by"] = $ENTRADA_USER->getID();
+
+                        foreach($PROCESSED["event_types"] as $event_type_id) {
+                            $mapped_event_types = Models_Event_MapEventsEventType::fetchAllByEventTypeID($event_type_id);
+                            if ($mapped_event_types) {
+                                foreach ($mapped_event_types as $event_type) {
+                                    if (!$event_type->delete()) {
+                                        //add_error("There was a problem mapping event types. The system administrator was informed of this error; please try again later.");
+                                        application_log("error", "There was an error editing event mapping within medbiquitous instructional resources. Database said: ".$db->ErrorMsg());
+                                    }
+                                }
+                            }
+                            
+                            $MAPPED_PROCESSED["fk_eventtype_id"] = (int) $event_type_id;
                             $mapped_event_type = new Models_Event_MapEventsEventType($MAPPED_PROCESSED);
-							if(!$mapped_event_type->insert()) {
-								$ERROR++;
-								$ERRORSTR[] = "There was a problem inserting this instructional method into the system. The system administrator was informed of this error; please try again later.";
-		
-								application_log("error", "There was an error inserting an instructional method. Database said: ".$db->ErrorMsg());
-							}
-						}
-					}
+                            if(!$mapped_event_type->insert()) {
+                                add_error("There was a problem inserting this instructional method into the system. The system administrator was informed of this error; please try again later. ".$db->ErrorMsg());
+                                application_log("error", "There was an error inserting an instructional method. Database said: ".$db->ErrorMsg());
+                            }
+                        }
+                    }
 					
 					if (!$ERROR) {
 						$url = ENTRADA_URL . "/admin/settings/manage/medbiqinstructional?org=".$ORGANISATION_ID;
@@ -176,10 +188,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
                     $event_types = Models_EventType::fetchAllByOrganisationID($ORGANISATION_ID);
                     if ($event_types) {
                         foreach($event_types as $eventtype) { ?>
-                            <label class="checkbox" style="display:block">
-                                <input type="checkbox" name="fk_eventtype_id[]" value="<?php echo $eventtype->getID(); ?>" <?php echo (isset($SEMI_PROCESSED["fk_eventtype_id"]) && in_array($eventtype->getID(), $SEMI_PROCESSED["fk_eventtype_id"]) ? "checked=\"checked\"" : ""); ?> />
-                                <?php echo $eventtype->getEventTypeTitle(); ?>
-                            </label>
+                            <div class="checkbox">
+                                <label>
+                                    <input type="checkbox" name="fk_eventtype_id[]" value="<?php echo $eventtype->getID(); ?>" <?php echo (isset($PROCESSED["event_types"]) && in_array($eventtype->getID(), $PROCESSED["event_types"]) ? "checked=\"checked\"" : ""); ?> />
+                                    <?php echo $eventtype->getEventTypeTitle(); ?>
+                                </label>
+                            </div>
                         <?php    
                         }
                     }

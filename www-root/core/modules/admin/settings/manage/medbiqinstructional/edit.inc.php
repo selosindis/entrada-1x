@@ -74,7 +74,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 			 * Non-required field "fk_eventtype_id" / Mapped Event Types
 			 */
 			if (isset($_POST["fk_eventtype_id"]) && is_array($_POST["fk_eventtype_id"])) {
-				$SEMI_PROCESSED["fk_eventtype_id"] = $_POST["fk_eventtype_id"];
+                foreach ($_POST["fk_eventtype_id"] as $event_type_id) {
+                    if ($tmp_input = clean_input($event_type_id, array("trim", "int"))) {
+                        $PROCESSED["event_types"][] = $tmp_input;
+                    }
+                }
 			}
 			
 			if (!$ERROR) {
@@ -85,48 +89,52 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
                 $medbiq_instructional_method = new Models_MedbiqInstructionalMethod($PROCESSED);
 				
 				if ($medbiq_instructional_method->update()) {
-					// Remove any existing links to the event type before updating the table
-					$mapped_event_types = Models_Event_MapEventsEventType::fetchAllByInstructionalMethodID($instructional_method_id);
-                    if ($mapped_event_types) {
-                        foreach ($mapped_event_types as $event_type) {
-                            if (!$event_type->delete()) {
-                                add_error("There was a problem mapping event types. The system administrator was informed of this error; please try again later.");
-                                application_log("error", "There was an error editing event mapping within medbiquitous instructional resources. Database said: ".$db->ErrorMsg());
+                    if (isset($PROCESSED["event_types"]) && is_array($PROCESSED["event_types"])) {
+                        // Insert keys into mapped table
+                        $MAPPED_PROCESSED = array();
+                        $MAPPED_PROCESSED["fk_instructional_method_id"] = $instructional_method_id;
+                        $MAPPED_PROCESSED["updated_date"] = time();
+                        $MAPPED_PROCESSED["updated_by"] = $ENTRADA_USER->getID();
+                        
+                        $mapped_event_types = Models_Event_MapEventsEventType::fetchAllByInstructionalMethodID($PROCESSED["instructional_method_id"]);
+                        if ($mapped_event_types) {
+                            foreach ($mapped_event_types as $mapped_event_type) {
+                                $mapped_event_type->delete();
+                            }
+                        }
+
+                        foreach($PROCESSED["event_types"] as $event_type_id) {
+                            $mapped_event_types = Models_Event_MapEventsEventType::fetchAllByEventTypeID($event_type_id);
+                            if ($mapped_event_types) {
+                                foreach ($mapped_event_types as $event_type) {
+                                    if (!$event_type->delete()) {
+                                        //add_error("There was a problem mapping event types. The system administrator was informed of this error; please try again later.");
+                                        application_log("error", "There was an error editing event mapping within medbiquitous instructional resources. Database said: ".$db->ErrorMsg());
+                                    }
+                                }
+                            }
+                            
+                            $MAPPED_PROCESSED["fk_eventtype_id"] = (int) $event_type_id;
+                            $mapped_event_type = new Models_Event_MapEventsEventType($MAPPED_PROCESSED);
+                            if(!$mapped_event_type->insert()) {
+                                add_error("There was a problem inserting this instructional method into the system. The system administrator was informed of this error; please try again later.");
+                                application_log("error", "There was an error inserting an instructional method. Database said: ".$db->ErrorMsg());
                             }
                         }
                     }
                     
 					if (!$ERROR) {
-						if (isset($SEMI_PROCESSED)) {
-							// Insert keys into mapped table
-							$MAPPED_PROCESSED = array();
-							$MAPPED_PROCESSED["fk_instructional_method_id"] = $instructional_method_id;
-							$MAPPED_PROCESSED["updated_date"] = time();
-							$MAPPED_PROCESSED["updated_by"] = $ENTRADA_USER->getID();
-							
-							foreach($SEMI_PROCESSED["fk_eventtype_id"] as $fk_eventtype_id) {
-								$MAPPED_PROCESSED["fk_eventtype_id"] = (int) $fk_eventtype_id;
-                                $mapped_event_type = new Models_Event_MapEventsEventType($MAPPED_PROCESSED);
-								if(!$mapped_event_type->insert()) {
-									add_error("There was a problem inserting this instructional method into the system. The system administrator was informed of this error; please try again later.");
-									application_log("error", "There was an error inserting an instructional method. Database said: ".$db->ErrorMsg());
-								}
-							}
-						}
-					} else {
-						$ERROR++;
-						$ERRORSTR[] = "There was a problem mapping event types. The system administrator was informed of this error; please try again later.";
-	
-						application_log("error", "There was an error editing event mapping within medbiquitous instructional resources. Database said: ".$db->ErrorMsg());
-					}
-					
-					if (!$ERROR) {				
 						$url = ENTRADA_URL . "/admin/settings/manage/medbiqinstructional?org=".$ORGANISATION_ID;
 						$SUCCESS++;
 						$SUCCESSSTR[]  = "You have successfully edited <strong>".html_decode($PROCESSED["instructional_method"])."</strong> in the system.<br /><br />You will now be redirected to the Medbiquitos Instructional Methods index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 						$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000);";
 	
 						application_log("success", "Edited Medbiquitos Instructional Method [".$instructional_method_id."] in the system.");			
+					} else {
+						$ERROR++;
+						$ERRORSTR[] = "There was a problem mapping event types. The system administrator was informed of this error; please try again later.";
+	
+						application_log("error", "There was an error editing event mapping within medbiquitous instructional resources. Database said: ".$db->ErrorMsg());
 					}
 				} else {				
 					$ERROR++;
@@ -147,7 +155,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 			$mapped_event_types = $medbiq_instructional_method->getMappedEventTypes();
             if ($mapped_event_types) {
                 foreach($mapped_event_types as $mapped_event_type) {
-					$SEMI_PROCESSED["fk_eventtype_id"][] = $mapped_event_type->getEventTypeID();
+					$PROCESSED["event_types"][] = $mapped_event_type->getEventTypeID();
 				}
             }
 		break;
@@ -203,7 +211,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
                         foreach($event_types as $eventtype) { ?>
                             <div class="checkbox">
                                 <label>
-                                    <input type="checkbox" name="fk_eventtype_id[]" value="<?php echo $eventtype->getID(); ?>" <?php echo (isset($SEMI_PROCESSED["fk_eventtype_id"]) && in_array($eventtype->getID(), $SEMI_PROCESSED["fk_eventtype_id"]) ? "checked=\"checked\"" : ""); ?> />
+                                    <input type="checkbox" name="fk_eventtype_id[]" value="<?php echo $eventtype->getID(); ?>" <?php echo (isset($PROCESSED["event_types"]) && in_array($eventtype->getID(), $PROCESSED["event_types"]) ? "checked=\"checked\"" : ""); ?> />
                                     <?php echo $eventtype->getEventTypeTitle(); ?>
                                 </label>
                             </div>

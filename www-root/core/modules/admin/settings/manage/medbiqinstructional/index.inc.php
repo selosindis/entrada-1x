@@ -37,12 +37,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 	?>
 	<h1>Manage Medbiquitos Instructional Methods</h1>
 
-	<div class="clearfix">
+	<div class="clearfix space-below medium">
 		<div class="pull-right">
 			<a href="<?php echo ENTRADA_URL; ?>/admin/settings/manage/medbiqinstructional?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="btn btn-primary">Add New Medbiquitos Instructional Method</a>
 		</div>
-
-	</div><br/>
+	</div>
 	<?php
 
 	/*

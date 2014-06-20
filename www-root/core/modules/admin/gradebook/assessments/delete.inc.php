@@ -86,46 +86,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			// Display Page
 			switch($STEP) {
 				case 2 :
-					$query = "DELETE FROM `assessments` WHERE `assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")";
-					if($db->Execute($query)) {
-						$total_removed_assessments = $db->Affected_Rows();						
-						$ONLOAD[]	= "setTimeout('window.location=\\'".$INDEX_URL."\\'', 5000)";
-
-						if($total_removed_assessments == count($ASSESSMENT_IDS)) {
-							
-							if (!$db->AutoExecute ("assignments",array("assessment_id"=>0),"UPDATE","`assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")")) {
-								application_log("error", "Successfully removed assessment ids: ".implode(", ", $ASSESSMENT_IDS), "but was unable to remove the assignments pertaining to them.");
-							}							
-							
-							$query = "DELETE FROM `assessment_grades` WHERE `assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")";							
-							if($db->Execute($query)) {							
-								application_log("success", "Successfully removed assessment ids: ".implode(", ", $ASSESSMENT_IDS));
-							} else {
-								application_log("error", "Successfully removed assessment ids: ".implode(", ", $ASSESSMENT_IDS), "but was unable to remove the grades pertaining to them.");
-							}
-							
-							$SUCCESS++;
-							$SUCCESSSTR[]  = "You have successfully removed ".$total_removed_assessments." assessment".(($total_removed_assessments != 1) ? "s" : "")." from the system.<br /><br />You will be automatically redirected to the Assessment index in 5 seconds, or you can <strong><a href=\"".$INDEX_URL."\">click here</a></strong> to go there now.";
-
-							echo display_success();
-							
-							
-						} else {
-							$ERROR++;
-							$ERRORSTR[] = "We were unable to remove the requested assessments from the system. The MEdTech Unit has been informed of this issue and will address it shortly; please try again later.";
-
-							echo display_error();
-
-							application_log("error", "Failed to remove any assessment ids: ".implode(", ", $ASSESSMENT_IDS).". Database said: ".$db->ErrorMsg());
-						}
-					} else {
-						$ERROR++;
-						$ERRORSTR[] = "We were unable to remove the requested assessments from the system. The MEdTech Unit has been informed of this issue and will address it shortly; please try again later.";
-
-						echo display_error();
-
-						application_log("error", "Failed to execute remove query for assessment ids: ".implode(", ", $ASSESSMENT_IDS).". Database said: ".$db->ErrorMsg());
-					}
+                    $total_removed_assessments = 0;
+                    foreach ($ASSESSMENT_IDS as $assessment_id) {
+                        $assessment = Models_Gradebook_Assessment::fetchRowByID($assessment_id);
+                        if ($assessment) {
+                            if ($assessment->fromArray(array("active" => 0))->update()) {
+                                $total_removed_assessments++;
+                                if (!$db->AutoExecute ("assignments", array("assessment_id" => 0), "UPDATE", "`assessment_id` = ".$assessment_id)) {
+                                    application_log("error", "Successfully removed assessment id: [".$assessment_id."] but was unable to remove the assignments pertaining to them.");
+                                }
+                            }
+                        }
+                    }
+                    
+                    if($total_removed_assessments == count($ASSESSMENT_IDS)) {
+                        add_success("You have successfully removed ".$total_removed_assessments." assessment".(($total_removed_assessments != 1) ? "s" : "")." from the system.<br /><br />You will be automatically redirected to the Assessment index in 5 seconds, or you can <strong><a href=\"".$INDEX_URL."\">click here</a></strong> to go there now.");
+                        echo display_success();
+                    } else {
+                        add_error("We were unable to remove the requested assessments from the system. The MEdTech Unit has been informed of this issue and will address it shortly; please try again later.");
+                        echo display_error();
+                        application_log("error", "Failed to execute remove query for assessment ids: ".implode(", ", $ASSESSMENT_IDS).". Database said: ".$db->ErrorMsg());
+                    }
 				break;
 				case 1 :
 				default :
@@ -136,7 +117,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								JOIN `groups` AS b
 								ON a.`cohort` = b.`group_id`
 								WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
-								AND a.`assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).") ORDER BY a.`name` ASC";
+								AND a.`active` = '1'
+								AND a.`assessment_id` IN (".implode(", ", $ASSESSMENT_IDS).")
+								ORDER BY a.`name` ASC";
 					$assessments = 	$db->GetAll($query);
 					if($assessments) {
 						echo display_notice(array("Please review the following notices to ensure that you wish to permanently delete them. This action cannot be undone."));

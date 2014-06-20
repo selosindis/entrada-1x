@@ -101,6 +101,10 @@ class Models_Course_Audience extends Models_Base {
         return Models_Group::fetchRowByID($this->audience_value)->getGroupName();
     }
     
+    public function fetchRowByCourseIDAudienceTypeAudienceValue ($course_id = null, $audience_type = null, $audience_value = null, $active = 1) {
+        return $this->fetchRow(array("course_id" => $course_id, "audience_type" => $audience_type, "audience_value" => $audience_value, "audience_active" => $active));
+    }
+    
     public function update() {
 		global $db;
 		if ($db->AutoExecute("`".$this->table_name."`", $this->toArray(), "UPDATE", "`caudience_id` = ".$db->qstr($this->getID()))) {
@@ -109,6 +113,10 @@ class Models_Course_Audience extends Models_Base {
 			return false;
 		}
 	}
+    
+    public function getCurriculumPeriod($cperiod_id = null) {
+        return Models_CurriculumPeriod::fetchRowByID($cperiod_id);
+    }
 }
 
 ?>

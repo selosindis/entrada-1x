@@ -58,7 +58,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					$question_used = 0;
 				}
 			}
-			$PROCESSED["question_parent_id"] = $QUESTION_ID;
+
+            if ($question_used) {
+                $PROCESSED["question_parent_id"] = $QUESTION_ID;
+            }
 		}
 		
 		if ($PROCESSED["questiontype_id"] == 3) {
@@ -138,7 +141,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 					$PROCESSED["categories_count"] = count($categories);
 				}
 			}
-		} elseif ($PROCESSED["questiontype_id"] == 1 || $PROCESSED["questiontype_id"] == 4) {
+		} elseif (in_array($PROCESSED["questiontype_id"], array(1, 4, 5, 6))) {
 			$query = "SELECT a.`objective_id` FROM `evaluation_question_objectives` AS a
 						JOIN `global_lu_objectives` AS b
 						ON a.`objective_id` = b.`objective_id`
@@ -219,6 +222,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						}
 					break;
 					case 1 :
+					case 5 :
+					case 6 :
 					default :
 						/**
 						 * Required field "allow_comments" / Allow Question Comments.
@@ -419,7 +424,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							if ($question_record["question_parent_id"]) {
 								$PROCESSED_RELATED_QUESTION["related_equestion_id"] = $question_record["question_parent_id"];
 							}
-							$PROCESSED["question_parent_id"] = 0;
 						}
 						if ($question_used) {
 							if ($PROCESSED["questiontype_id"] == 3) {
@@ -1037,6 +1041,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				require_once("javascript/evaluations.js.php");
 				$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js\"></script>";
 				$HEAD[]	= "<script type=\"text/javascript\"> var SITE_URL = '".ENTRADA_URL."'; </script>";
+                if (!in_array($PROCESSED["questiontype_id"], array(2, 4))) {
+                    $HEAD[]	= "
+                    <script type=\"text/javascript\">
+                        jQuery(document).ready(function() {
+                            modalDescriptorDialog = new Control.Modal($('false-link'), {
+                                position:		'center',
+                                overlayOpacity:	0.75,
+                                closeOnClick:	'overlay',
+                                className:		'modal',
+                                fade:			true,
+                                fadeDuration:	0.30,
+                                width: 455
+                            });
+                        });
+
+                        function openDescriptorDialog(response_number, erdescriptor_id) {
+                            var url = '".ENTRADA_URL."/admin/evaluations/questions?section=api-descriptors&response_number='+response_number+'&organisation_id=".$ENTRADA_USER->getActiveOrganisation()."&erdescriptor_id='+erdescriptor_id;
+                            new Ajax.Request(url, {
+                                method: 'get',
+                                onComplete: function(transport) {
+                                    loaded = [];
+                                    modalDescriptorDialog.container.update(transport.responseText);
+                                    modalDescriptorDialog.open();
+                                }
+                            });
+                        }
+                    </script>";
+                }
 				if ($PROCESSED["questiontype_id"] == 3) {
 					$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_evaluation_rubric.js\"></script>";
 					$HEAD[] = "<script type=\"text/javascript\">
@@ -1087,8 +1119,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								ON a.`questiontype_id` = b.`questiontype_id`
 								LEFT JOIN `evaluation_rubric_questions` AS c
 								ON a.`equestion_id` = c.`equestion_id`
+								LEFT JOIN `evaluations_related_questions` AS d
+								ON a.`question_parent_id` = d.`related_equestion_id`
 								WHERE (
-									a.`question_parent_id` = ".$db->qstr($PROCESSED["question_parent_id"])."
+									d.`equestion_id` = ".$db->qstr($PROCESSED["question_parent_id"])."
+								    OR a.`question_parent_id` = ".$db->qstr($PROCESSED["question_parent_id"])."
 									OR a.`equestion_id` = ".$db->qstr($PROCESSED["question_parent_id"])."
 									OR a.`equestion_id` IN (
 										SELECT d.`equestion_id` FROM `evaluation_rubric_questions` AS d
@@ -1123,15 +1158,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								fadeDuration:	0.30,
 								width: 755
 							});
-                            modalDescriptorDialog = new Control.Modal($('false-link'), {
-                                position:		'center',
-                                overlayOpacity:	0.75,
-                                closeOnClick:	'overlay',
-                                className:		'modal',
-                                fade:			true,
-                                fadeDuration:	0.30,
-                                width: 455
-                            });
 						});
 
 						function openDialog (equestion_id) {
@@ -1142,18 +1168,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								modalDialog.open();
 							}
 						}
-
-                        function openDescriptorDialog(response_number, erdescriptor_id) {
-                            var url = '".ENTRADA_URL."/admin/evaluations/questions?section=api-descriptors&response_number='+response_number+'&organisation_id=".$ENTRADA_USER->getActiveOrganisation()."&erdescriptor_id='+erdescriptor_id;
-                            new Ajax.Request(url, {
-                                method: 'get',
-                                onComplete: function(transport) {
-                                    loaded = [];
-                                    modalDescriptorDialog.container.update(transport.responseText);
-                                    modalDescriptorDialog.open();
-                                }
-                            });
-                        }
 						</script>";
 						?>
 						<div style="float: right;">

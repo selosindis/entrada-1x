@@ -15,8 +15,8 @@
 	<script type="text/javascript" src="{$sys_website_url}/javascript/jquery/jquery-ui.min.js"></script>
 	<script type="text/javascript">jQuery.noConflict();</script>
 
-	<link href="{$template_relative}/css/stylesheet.css" rel="stylesheet" type="text/css" media="all" />
 	<link href="{$template_relative}/css/bootstrap.min.css" rel="stylesheet" type="text/css" media="all" />
+	<link href="{$template_relative}/css/stylesheet.css" rel="stylesheet" type="text/css" media="all" />
 
 	<link href="{$template_relative}/css/print.css" rel="stylesheet" type="text/css" media="print" />
 

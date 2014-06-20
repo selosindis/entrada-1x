@@ -119,11 +119,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	
 	// Find the grade or assessment being modified in the system.
 	if(isset($GRADE_ID)) {
-		$query = "  SELECT a.*, b.*, c.`handler`, d.`organisation_id` FROM `assessment_grades` AS a
-					LEFT JOIN `assessments` as b on a.`assessment_id` = b.`assessment_id`
-					LEFT JOIN `assessment_marking_schemes` as c on b.`marking_scheme_id` = c.`id`
-					LEFT JOIN `courses` as d on b.`course_id` = d.`course_id`
-					
+		$query = "  SELECT a.*, b.*, c.`handler`, d.`organisation_id`
+		            FROM `assessment_grades` AS a
+                    JOIN `assessments` as b
+                    ON a.`assessment_id` = b.`assessment_id`
+                    AND b.`active` = '1'
+                    LEFT JOIN `assessment_marking_schemes` as c
+                    ON b.`marking_scheme_id` = c.`id`
+                    LEFT JOIN `courses` as d
+                    ON b.`course_id` = d.`course_id`
 					WHERE a.`grade_id` = ".$db->qstr($GRADE_ID);
 		$grade = $db->GetRow($query);
 		if(isset($grade) && is_array($grade) && (count($grade) >= 1)) {
@@ -139,10 +143,15 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	} else if(isset($PROXY_ID) && isset($ASSESSMENT_ID)) {
 		// Find a grade not by ID but by proxy_id and assessment_id pair. Redundant fallback, may not succeed
 		$query = "  SELECT a.*, b.*, c.`handler`, d.`organisation_id` FROM `assessment_grades` AS a
-					LEFT JOIN `assessments` as b on a.`assessment_id` = b.`assessment_id`
-					LEFT JOIN `assessment_marking_schemes` as c on b.`marking_scheme_id` = c.`id`
-					LEFT JOIN `courses` as d on b.`course_id` = d.`course_id`
-					WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)." AND a.`proxy_id` = ".$db->qstr($PROXY_ID);
+					JOIN `assessments` as b
+					ON a.`assessment_id` = b.`assessment_id`
+					AND b.`active` = '1'
+					LEFT JOIN `assessment_marking_schemes` as c
+					ON b.`marking_scheme_id` = c.`id`
+					LEFT JOIN `courses` as d
+					ON b.`course_id` = d.`course_id`
+					WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+					AND a.`proxy_id` = ".$db->qstr($PROXY_ID);
 		$grade = $db->GetRow($query);
 		if(isset($grade) && is_array($grade) && (count($grade) >= 1)) {
 			// Found grade without proxy ID 
@@ -161,9 +170,12 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	// If we're creating a grade assessment wont be set yet, find the assessment in the system so we know the marking scheme handler.
 	if(!isset($assessment)) {
 		$query = "  SELECT a.*, b.`handler`, c.`organisation_id` FROM `assessments` as a
-					LEFT JOIN `assessment_marking_schemes` as b on a.`marking_scheme_id` = b.`id`
-					LEFT JOIN `courses` as c on a.`course_id` = c.`course_id`
-					WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+					LEFT JOIN `assessment_marking_schemes` as b
+					ON a.`marking_scheme_id` = b.`id`
+					LEFT JOIN `courses` as c
+					ON a.`course_id` = c.`course_id`
+					WHERE a.`assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+					AND a.`active` = '1'";
 		$assessment = $db->GetRow($query);
 		if(!isset($assessment) || !is_array($assessment) || !(count($assessment) >= 1)) {
 			echo "Error! Assessment not found.";
@@ -207,7 +219,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		
 		$query = "SELECT `grade_threshold`
 				  FROM `assessments`
-				  WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID);
+				  WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
+				  AND `active` = '1'";
 		$result = $db->GetRow($query);
 
 		if ($result && $GRADE_VALUE < $result["grade_threshold"]) {

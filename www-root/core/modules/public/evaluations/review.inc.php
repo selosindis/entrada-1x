@@ -31,8 +31,8 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_PUBLIC_EVALUATIONS"))) {
 	exit;
 }
 
-if (isset($_GET["target_id"]) && clean_input($_GET["target_id"], "int")) {
-	$view_target = clean_input($_GET["target_id"], "int");
+if (isset($_GET["target_id"]) && clean_input($_GET["target_id"], "trim")) {
+	$view_target = clean_input($_GET["target_id"], "trim");
 } else {
 	$view_target = false;
 }
@@ -375,6 +375,7 @@ if ($RECORD_ID) {
 			echo "<h1>Evaluation Details</h1>";
             echo "<h2>".ucwords($content_type_name)." Results for: ".$selected_target["target_title"]."</h2>";
             echo "<h3>".$evalution_title."</h3>";
+            echo "<div id=\"evaluation-report-body\">\n";
 			$count = 0;
 			foreach ($questions as $question) {
 				$count++;
@@ -384,13 +385,13 @@ if ($RECORD_ID) {
 				echo "	<div class=\"row-fluid\">\n";
 				echo "		<span class=\"span10 row-fluid\">\n";
 				echo "			<h3 class=\"span3\">Question #".$count.":</h3>\n";
-				echo "			<span class=\"span9 space-above medium\">".$question["question_text"]."</span>\n";
+				echo "			<span class=\"span9 space-above medium question-text\">".$question["question_text"]."</span>\n";
 				echo "		</span>\n";
 				echo "	</div>\n";
 				$total_selections = 0;
 				if (isset($question["response_ids"]) && $question["response_ids"]) { 
 					echo "	<br />\n";
-					echo "	<div class=\"row-fluid\" style=\"font-weight: bold;\">\n";
+					echo "	<div class=\"row-fluid responses-text\" style=\"font-weight: bold;\">\n";
 					echo "		<span class=\"span8 border-below\">Response</span>\n";
 					echo "		<span class=\"span2 border-below\">Percent</span>\n";
 					echo "		<span class=\"span2 border-below\">Selections</span>\n";
@@ -400,7 +401,7 @@ if ($RECORD_ID) {
 					}
 					foreach ($question["response_ids"] as $response_id) {
 						$selections = (isset($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["responses"][$response_id]) ? $available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["responses"][$response_id] : 0);
-						echo "	<div class=\"row-fluid\">\n";
+						echo "	<div class=\"row-fluid responses-text\">\n";
 						echo "		<span class=\"span8\">".(array_search($response_id, $criteria_response_ids) !== false ? "<a class=\"criteria-tooltip\" id=\"tooltip-".$response_id."\" href=\"#criteria-".$response_id."\">".$responses[$response_id]["response_text"]."</a>" : $responses[$response_id]["response_text"])."</span>\n";
 						echo "		<span class=\"span2\">".(isset($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["responses"]) && count($available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["responses"]) ? round(($selections / $available_targets[$selected_target_id]["questions"][$question["equestion_id"]]["selections"] * 100), 1) : 0)."%</span>\n";
 						echo "		<span class=\"span2\">".$selections."</span>\n";
@@ -452,6 +453,7 @@ if ($RECORD_ID) {
                     echo "</div>\n";
 				}
 			}
+            echo "</div>\n";
 			if ($evaluation["show_comments"] || $permissions[0]["contact_type"] == "reviewer") {
 				$HEAD[] = "
 							<script type=\"text/javascript\">

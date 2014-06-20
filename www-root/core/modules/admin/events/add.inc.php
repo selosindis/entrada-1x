@@ -650,6 +650,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
 							$SUCCESS++;
 							$SUCCESSSTR[] = "You have successfully added <strong>".html_encode($PROCESSED["event_title"])."</strong> to the system.<br /><br />".$msg;
+                            
+                            //create history once the draft is published or if it's not draft create now
+                            if (!$is_draft) {
+                                history_log($EVENT_ID, 'created this learning event.', $ENTRADA_USER->getID());
+                            }
+                            
 							$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
 							application_log("success", "New event [".$EVENT_ID."] added to the system.");

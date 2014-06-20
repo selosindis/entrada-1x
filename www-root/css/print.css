@@ -21,3 +21,11 @@ height: 974px !important;
 #enrolment-container a[href]:after {
     content: none !important;
 }
+
+#content {
+    width: 100%;
+}
+
+#evaluation-report-body .comments-row, #evaluation-report-body .question-text, #evaluation-report-body .responses-text, #evaluation-report-body .comments, #evaluation-report-body .evaluation-statistics, #evaluation-report-body .comments-row, #evaluation-report-body .question-content {
+    font-size: 16px;
+}

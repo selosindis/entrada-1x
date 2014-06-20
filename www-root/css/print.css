@@ -10,6 +10,18 @@ display:none;
 height: 974px !important;
 }
 
+.course-members-media-list {
+    width:100%;
+}
+
+.course-members-media-list .print-black {
+    color: #000;
+}
+
+#enrolment-container a[href]:after {
+    content: none !important;
+}
+
 #content {
     width: 100%;
 }

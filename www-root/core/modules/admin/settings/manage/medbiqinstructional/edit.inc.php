@@ -89,19 +89,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
                 $medbiq_instructional_method = new Models_MedbiqInstructionalMethod($PROCESSED);
 				
 				if ($medbiq_instructional_method->update()) {
+                    $mapped_event_types = Models_Event_MapEventsEventType::fetchAllByInstructionalMethodID($PROCESSED["instructional_method_id"]);
+                    if ($mapped_event_types) {
+                        foreach ($mapped_event_types as $mapped_event_type) {
+                            $mapped_event_type->delete();
+                        }
+                    }
+                    
                     if (isset($PROCESSED["event_types"]) && is_array($PROCESSED["event_types"])) {
                         // Insert keys into mapped table
                         $MAPPED_PROCESSED = array();
                         $MAPPED_PROCESSED["fk_instructional_method_id"] = $instructional_method_id;
                         $MAPPED_PROCESSED["updated_date"] = time();
                         $MAPPED_PROCESSED["updated_by"] = $ENTRADA_USER->getID();
-                        
-                        $mapped_event_types = Models_Event_MapEventsEventType::fetchAllByInstructionalMethodID($PROCESSED["instructional_method_id"]);
-                        if ($mapped_event_types) {
-                            foreach ($mapped_event_types as $mapped_event_type) {
-                                $mapped_event_type->delete();
-                            }
-                        }
 
                         foreach($PROCESSED["event_types"] as $event_type_id) {
                             $mapped_event_types = Models_Event_MapEventsEventType::fetchAllByEventTypeID($event_type_id);

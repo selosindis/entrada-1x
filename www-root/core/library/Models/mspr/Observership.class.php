@@ -123,6 +123,31 @@ class Observership extends ModelBase {
 					$res->VALID = false;					
 				}
 			}
+            
+            
+            if (!isset($arr["activity_type"]) || trim($arr["activity_type"]) == "") {
+                add_error("<strong>Activity Type</strong> is a required field. Please ensure you've provided a value.");
+            }
+            
+            if (!isset($arr["clinical_discipline"]) || trim($arr["clinical_discipline"]) == "") {
+                add_error("<strong>Eligible Clinical Disciplines</strong> is a required field. Please ensure you've provided a value.");
+            }
+            
+            if (!isset($arr["organisation"]) || trim($arr["organisation"]) == "") {
+                add_error("<strong>Organisation</strong> is a required field. Please ensure you've provided a value.");
+            }
+            
+            if (!isset($arr["address_l1"]) || trim($arr["address_l1"]) == "") {
+                add_error("<strong>Address Line 1</strong> is a required field. Please ensure you've provided a value.");
+            }
+            
+            if (!isset($arr["city"]) || trim($arr["city"]) == "") {
+                add_error("<strong>City</strong> is a required field. Please ensure you've provided a value.");
+            }
+            
+            if (trim($arr["prov_state"]) == "0") {
+                add_error("<strong>Province</strong> is a required field. Please ensure you've provided a value.");
+            }
 
 			if($mode == "add"){
 				if(!isset($arr["read"]) || !trim($arr["read"])){
@@ -170,6 +195,7 @@ class Observership extends ModelBase {
 						"postal_code"=>array("trim","notags"),
 						"phone"=>array("trim","notags"),
 						"fax"=>array("trim","notags"),
+                        "city" => array("trim","notags"),
 						"updated_date"=>array("int"),
 						"updated_by"=>array("int")
 					);

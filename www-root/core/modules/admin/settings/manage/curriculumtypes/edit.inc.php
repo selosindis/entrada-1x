@@ -286,22 +286,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 									AND b.`org_id` = " . $PROCESSED["org_id"] . "
 								    ORDER BY a.`curriculum_level` ASC";
 						$results = $db->GetAll($query);
-
-						if ($results) { ?>
+						if ($results) {
+                            ?>
 							<option value="0">Choose a Curriculum Level</option>
-						<?php
+						    <?php
 							foreach ($results as $result) {
-						?>
-							<option value="<?php echo $result["curriculum_level_id"]; ?>" <?php echo ($result["curriculum_level_id"] == $PROCESSED["curriculum_level_id"]) ? "selected=\"selected\"" : ""; ?>>
-							<?php echo $result["curriculum_level"] ?>
-							</option>
-						<?php
+						        ?>
+							    <option value="<?php echo $result["curriculum_level_id"]; ?>" <?php echo ($result["curriculum_level_id"] == $PROCESSED["curriculum_level_id"]) ? "selected=\"selected\"" : ""; ?>>
+							    <?php echo $result["curriculum_level"]; ?>
+							    </option>
+						        <?php
 							}
-						} else { ?>
+						} else {
+                            ?>
 							<option value="0">No Curriculum Levels Exist for this Organisation</option>
-						<?php }
+						    <?php
+                        }
 						?>
-					</select>
+					    </select>
 					</td>
 				</tr>
 				<tr>
@@ -405,14 +407,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						var currentIdx = 1;
 						var numRows = 0;
 
-						jQuery(function($){
-							$(document).ready(function(){
-								$(".calendar").on('click',function(e){
-									var info = $(this).attr('id').split("_");
-									showCalendar('', document.getElementById(info[0]+'_'+info[2]), document.getElementById(info[0]+'_'+info[2]), '', 'Title', 0, 20, 1);
+						jQuery(function($) {
+							$(document).ready(function($) {
+								$("#curriculum_periods").on('click', '.calendar', function() {
+									var info = $(this).attr('id').split('_');
+									showCalendar('', document.getElementById(info[0] + '_' + info[2]), document.getElementById(info[0] + '_' + info[2]), '', 'Title', 0, 20, 1);
 								});
 
-								$('.curriculum_period').each(function(){
+								$('.curriculum_period').each(function() {
 									currentIdx++;
 									numRows++;
 								});
@@ -424,10 +426,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 									$('#curriculum_periods_table').hide();
 									$('#no_period_msg').show();
                                 }
-
 							});
 
-							$('#add_period').click(function(){
+							$('#add_period').click(function() {
                                 $('#curriculum_periods_table').show();
                                 $('#no_period_msg').hide();
 
@@ -436,17 +437,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 								var day = (today.getDate().toString().length > 1) ? today.getDate() : "0"+(today.getDate());
 								var date = today.getFullYear()+"-"+month+"-"+day;
 								var formattedRow = rowTemplate.replace(/:id/g,'add-' + currentIdx).replace(/:date/g,date);
-								$('#curriculum_periods').append(formattedRow);
 
-                                $('html, body').animate({ scrollTop: $('#period_add-' + currentIdx).offset().top }, 1000 );
+								$('#curriculum_periods').append(formattedRow);
 
                                 currentIdx++;
                                 numRows++;
 							});
 
-
-							$('#delete_selected').click(function(){
-								$('.remove_checkboxes:checked').each(function(){
+							$('#delete_selected').click(function() {
+								$('.remove_checkboxes:checked').each(function() {
 									var id = $(this).attr('value');
 									$('#period_'+id).remove();
 
@@ -459,16 +458,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 								});
 							});
 
-							$('#curriculum_form').submit(function(){
-								$('.start_date').each(function(){
+							$('#curriculum_form').submit(function() {
+								$('.start_date').each(function() {
 									$(this).removeAttr('disabled');
 								});
 
-								$('.end_date').each(function(){
+								$('.end_date').each(function() {
 									$(this).removeAttr('disabled');
 								});
 							});
-
 						});
 						</script>
 					</td>

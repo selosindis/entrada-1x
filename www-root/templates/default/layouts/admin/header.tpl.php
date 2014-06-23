@@ -6,7 +6,7 @@
     <head>
         <meta charset="<?php echo DEFAULT_CHARSET; ?>" />
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-
+        <meta http-equiv="X-Frame-Options" content="SAMEORIGIN" />
         <title>%TITLE%</title>
 
         <meta name="description" content="%DESCRIPTION%" />
@@ -23,7 +23,11 @@
 
         <link href="<?php echo $ENTRADA_TEMPLATE->relative(); ?>/images/favicon.ico" rel="shortcut icon" type="image/x-icon" />
         <link href="<?php echo ENTRADA_RELATIVE; ?>/w3c/p3p.xml" rel="P3Pv1" type="text/xml" />
-
+        <script type="text/javascript">
+            if (self !== top) {
+                top.location = self.location;
+            }
+        </script>
         <link href="<?php echo ENTRADA_RELATIVE; ?>/css/jquery/jquery-ui.css" rel="stylesheet" type="text/css" />
 
         <script type="text/javascript" src="<?php echo ENTRADA_RELATIVE; ?>/javascript/jquery/jquery.min.js?release=<?php echo html_encode(APPLICATION_VERSION); ?>"></script>

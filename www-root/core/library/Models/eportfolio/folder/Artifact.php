@@ -226,7 +226,7 @@ class Models_Eportfolio_Folder_Artifact {
 		return $is_owner;
 	}
 	
-	public function hasEntry ($pfartifact_id = null, $proxy_id = null, $active = 1) {
+	public static function hasEntry ($pfartifact_id = null, $proxy_id = null, $active = 1) {
 		global $db;
 		$has_entry = false;
 		$query = "SELECT * FROM `portfolio_entries` WHERE `pfartifact_id` = ? AND `proxy_id` = ? AND `active` = ?";
@@ -237,7 +237,7 @@ class Models_Eportfolio_Folder_Artifact {
 		return $has_entry;
 	}
 	
-	public function countEntries ($pfartifact_id = null, $proxy_id = null, $active = 1) {
+	public static function countEntries ($pfartifact_id = null, $proxy_id = null, $active = 1) {
 		global $db;
 		$count = false;
 		$query = "SELECT COUNT(*) AS `total_entries` FROM `portfolio_entries` WHERE `pfartifact_id` = ? AND `proxy_id` = ? AND `active` = ?";

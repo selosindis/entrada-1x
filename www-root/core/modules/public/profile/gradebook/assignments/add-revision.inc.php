@@ -27,7 +27,9 @@ if ($RECORD_ID) {
 	if (!$submission	= $db->GetRow($query)) {
 		header("Location: ".ENTRADA_URL."/profile/gradebook/assignments?section=submit&assignment_id=".$RECORD_ID);
 	}
-	$query			= "SELECT * FROM `assignments` WHERE `assignment_id` = ".$db->qstr($RECORD_ID)." AND `assignment_active` = '1'";
+	$query			= "SELECT * FROM `assignments`
+	                    WHERE `assignment_id` = ".$db->qstr($RECORD_ID)."
+	                    AND `assignment_active` = '1'";
 	$folder_record	= $db->GetRow($query);
 	if ($folder_record){// || true) {
 		if ($folder_record["assessment_id"] == 0) {
@@ -39,6 +41,7 @@ if ($RECORD_ID) {
 						JOIN `group_members` AS c 
 						ON b.`group_id` = c.`group_id` 
 						WHERE a.`assessment_id` = ".$db->qstr($folder_record["assessment_id"])."
+						AND a.`active` = 1
 						AND c.`proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 			$permitted = $db->GetRow($query);
 		}

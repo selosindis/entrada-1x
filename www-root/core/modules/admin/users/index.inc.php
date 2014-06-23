@@ -676,7 +676,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						<td class="username<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "username") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>" style="font-size: 12px"><?php echo admin_order_link("username", "Username"); ?></td>
 						<td class="role<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "role") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>" style="font-size: 12px"><?php echo admin_order_link("role", "Group &amp; Role"); ?></td>
 						<td class="last-login<?php echo (($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"] == "login") ? " sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]) : ""); ?>" style="font-size: 12px"><?php echo admin_order_link("login", "Last Login"); ?></td>
-					<?php endif; ?>
+					<?php endif; 
+					if ($ENTRADA_ACL->amIAllowed("masquerade", "read")) {
+						echo "<td style=\"font-size: 12px\">Login As</td>\n";
+					}                    
+                    ?>
 				</tr>
 			</thead>
 			<tfoot>
@@ -711,6 +715,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
 						echo "	<td class=\"general\">".(($url) ? "<a href=\"".$url."\" title=\"Edit Account: ".html_encode($result["fullname"])."\">" : "").html_encode($result["username"]).(($url) ? "</a>" : "")."</td>\n";
 						echo "	<td class=\"general\">".(($url) ? "<a href=\"".$url."\" title=\"Edit Account: ".html_encode($result["fullname"])."\">" : "").ucwords($result["group"])." &rarr; ".ucwords($result["role"]).(($url) ? "</a>" : "")."</td>\n";
 						echo "	<td class=\"date\">".(($url) ? "<a href=\"".$url."\" title=\"Edit Account: ".html_encode($result["fullname"])."\">" : "").(((int) $result["last_login"]) ? date(DEFAULT_DATE_FORMAT, (int) $result["last_login"]) : "Never Logged In").(($url) ? "</a>" : "")."</td>\n";
+						if ($ENTRADA_ACL->amIAllowed("masquerade", "read")) {
+							if ($result["id"] != $_SESSION["details"]["id"]) {
+								echo "	<td><a href=\"".ENTRADA_URL."/admin/users?section=masquerade&id=".$result["id"]."\">Login as</a></td>\n";
+							} else {
+								echo "	<td>&nbsp;</td>\n";
+							}
+						}
 						echo "</tr>\n";
 					} else {
 						echo "<tr class=\"user disabled\">\n";

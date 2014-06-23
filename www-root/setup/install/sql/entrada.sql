@@ -973,6 +973,7 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   `release_until` bigint(64) NOT NULL DEFAULT '0',
   `order` smallint(6) NOT NULL DEFAULT '0',
   `grade_threshold` float NOT NULL DEFAULT '0',
+  `active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`assessment_id`),
   KEY `order` (`order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -2001,6 +2002,7 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `permission` ENUM('open','closed') NOT NULL DEFAULT 'closed',
   `sync_ldap` int(1) NOT NULL DEFAULT '0',
   `sync_ldap_courses` text,
+  `sync_groups` tinyint(1) NOT NULL DEFAULT '0',
   `notifications` int(1) NOT NULL DEFAULT '1',
   `course_active` int(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`course_id`),
@@ -2022,6 +2024,7 @@ CREATE TABLE IF NOT EXISTS `course_audience` (
   `audience_type` enum('proxy_id','group_id') NOT NULL,
   `audience_value` int(11) NOT NULL,
   `cperiod_id` int(11) NOT NULL,
+  `ldap_sync_date` bigint(64) NOT NULL DEFAULT '0',
   `enroll_start` bigint(20) NOT NULL,
   `enroll_finish` bigint(20) NOT NULL,
   `audience_active` int(1) NOT NULL DEFAULT '1',
@@ -2161,8 +2164,11 @@ CREATE TABLE IF NOT EXISTS `course_objectives` (
   `importance` int(2) NOT NULL DEFAULT '1',
   `objective_type` enum('event','course') DEFAULT 'course',
   `objective_details` text,
+  `objective_start` int(12) DEFAULT NULL,
+  `objective_finish` int(12) DEFAULT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
+  `active` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`cobjective_id`),
   KEY `course_id` (`course_id`),
   KEY `objective_id` (`objective_id`)
@@ -2542,10 +2548,12 @@ CREATE TABLE IF NOT EXISTS `evaluation_targets` (
 CREATE TABLE IF NOT EXISTS `events` (
   `event_id` int(12) NOT NULL AUTO_INCREMENT,
   `parent_id` int(12) DEFAULT NULL,
-  `event_children` int(12) DEFAULT NULL,
+  `event_children` int(11) NOT NULL,
   `recurring_id` int(12) DEFAULT '0',
+  `eventtype_id` int(12) DEFAULT '0',
   `region_id` int(12) DEFAULT '0',
   `course_id` int(12) NOT NULL DEFAULT '0',
+  `course_num` varchar(32) DEFAULT NULL,
   `event_phase` varchar(12) DEFAULT NULL,
   `event_title` varchar(255) NOT NULL,
   `event_description` text,
@@ -2561,9 +2569,10 @@ CREATE TABLE IF NOT EXISTS `events` (
   `event_duration` int(64) NOT NULL,
   `release_date` bigint(64) NOT NULL,
   `release_until` bigint(64) NOT NULL,
+  `audience_visible` tinyint(1) DEFAULT 1,
+  `draft_id` int(11) DEFAULT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
-  `draft_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`event_id`),
   KEY `course_id` (`course_id`),
   KEY `region_id` (`region_id`),
@@ -4315,14 +4324,21 @@ CREATE TABLE IF NOT EXISTS `reports_aamc_ci` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `settings` (
-  `shortname` varchar(64) NOT NULL,
-  `value` text NOT NULL,
-  PRIMARY KEY (`shortname`)
+  `setting_id` int(12) NOT NULL AUTO_INCREMENT,
+  `shortname` varchar(64) CHARACTER SET utf8 NOT NULL,
+  `organisation_id` int(12) DEFAULT NULL,
+  `value` text CHARACTER SET utf8 NOT NULL,
+  PRIMARY KEY (`setting_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
-INSERT INTO `settings` (`shortname`, `value`) VALUES
-('version_db', '1605'),
-('version_entrada', '1.6.0DEV');
+INSERT INTO `settings` (`shortname`, `organisation_id`, `value`)
+  VALUES
+  ('version_db', NULL, '1610'),
+  ('version_entrada', NULL, '1.6.0DEV'),
+  ('export_weighted_grade', NULL, '1'),
+  ('export_calculated_grade', NULL, '{\"enabled\":0}'),
+  ('course_webpage_assessment_cohorts_count', NULL, '4');
+
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -5310,3 +5326,27 @@ CREATE TABLE IF NOT EXISTS `evaluation_progress_patient_encounters` (
   `encounter_complexity` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`eppencounter_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `assessment_events` (
+  `assessment_event_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `assessment_id` int(12) unsigned NOT NULL,
+  `event_id` int(12) unsigned NOT NULL,
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) unsigned NOT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`assessment_event_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `organisation_lu_restricted_days` (
+  `orday_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(12) NOT NULL,
+  `date_type` enum('specific','computed','weekly','monthly') NOT NULL DEFAULT 'specific',
+  `offset` tinyint(1) DEFAULT NULL,
+  `day` tinyint(2) DEFAULT NULL,
+  `month` tinyint(2) DEFAULT NULL,
+  `year` int(4) DEFAULT NULL,
+  `updated_date` int(12) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  `day_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`orday_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

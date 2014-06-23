@@ -76,12 +76,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 		
 		if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "read")) {			
 
-			$query = "	SELECT `assignments`.*,	`assessments`.`cohort`, `assessment_marking_schemes`.`id` AS `marking_scheme_id`, `assessment_marking_schemes`.`handler`, `assessment_marking_schemes`.`description` as `marking_scheme_description`
-						FROM `assignments`
-						LEFT JOIN `assessments`
-						ON `assignments`.`assessment_id` = `assessments`.`assessment_id`
-						LEFT JOIN `assessment_marking_schemes` ON `assessment_marking_schemes`.`id` = `assessments`.`marking_scheme_id`
-						WHERE `assignments`.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID);
+			$query = "  SELECT a.*, b.`cohort`, c.`id` AS `marking_scheme_id`, c.`handler`, c.`description` as `marking_scheme_description`
+                        FROM `assignments` AS a
+                        JOIN `assessments` AS b
+                        ON a.`assessment_id` = b.`assessment_id`
+                        LEFT JOIN `assessment_marking_schemes` AS c
+                        ON c.`id` = b.`marking_scheme_id`
+                        WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
+                        AND b.`active` = 1
+                        AND a.`assignment_active` = '1'";
 			$assignment = $db->GetRow($query);
 			if ($assignment) {				
 				$COHORT = $assignment["cohort"];
@@ -171,45 +174,48 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							AND b.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
 							JOIN `assignments` AS c
 							ON b.`assignment_id` = c.`assignment_id`
+							JOIN `assessments` AS e
+							ON e.`assessment_id` = c.`assessment_id`
 							LEFT JOIN `assessment_grades` AS d 
-							ON c.`assessment_id` = d.`assessment_id`
-							AND d.`proxy_id` = a.`id`
-							LEFT JOIN `assessments` AS e
 							ON d.`assessment_id` = e.`assessment_id`
+							AND d.`proxy_id` = a.`id`
 							LEFT JOIN `assessment_marking_schemes` AS f
 							ON e.`marking_scheme_id` = f.`id`
 							LEFT JOIN `assessment_exceptions` AS g
 							ON g.`assessment_id` = d.`assessment_id`
 							AND g.`proxy_id` = a.`id`
+							AND e.`active` = 1
+							AND c.`assignment_active` = '1'
 							ORDER BY ".$by." ".$order;			
 				$students = $db->GetAll($query);
 												
 				$query = "	SELECT * FROM `assessments` AS a
 							JOIN `assessment_marking_schemes` AS b
 							ON a.`marking_scheme_id` = b.`id`
-							WHERE a.`assessment_id` = ".$db->qstr($assignment["assessment_id"]);				
+							WHERE a.`assessment_id` = ".$db->qstr($assignment["assessment_id"])."
+							AND a.`active` = 1";
 				$assessment = $db->GetRow($query);				
 				?>
-					<div style="float: right; text-align: right; width:400px;">
-						<ul class="page-action">
-						<?php 
-						if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) { 
-						?>
-							<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "edit","assignment_id"=>$assignment["assignment_id"], "step" => false)); ?>" class="strong-green">Edit Assignment</a></li>
-							<?php 
-							if($assignment["assessment_id"]) { ?>
-								<li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit","assessment_id"=>$assignment["assessment_id"], "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
-							<?php
-							} 
-						}
-						if (isset($assessment) && $assessment) { 
-						?>
-								<li><a href="#" id="advanced-options" class="strong-green">Show Options</a></li>
-						<?php 						
-						} 
-						?>
-						</ul>
-					</div>				
+                <div style="float: right; text-align: right; width:400px;">
+                    <ul class="page-action">
+                    <?php 
+                    if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) { 
+                    ?>
+                        <li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assignments/?" . replace_query(array("section" => "edit","assignment_id"=>$assignment["assignment_id"], "step" => false)); ?>" class="strong-green">Edit Assignment</a></li>
+                        <?php 
+                        if($assignment["assessment_id"]) { ?>
+                            <li><a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE . "/assessments/?" . replace_query(array("section" => "edit","assessment_id"=>$assignment["assessment_id"], "step" => false)); ?>" class="strong-green">Edit Assessment</a></li>
+                        <?php
+                        } 
+                    }
+                    if (isset($assessment) && $assessment && isset($students) && !(empty($students))) { 
+                    ?>
+                            <li><a href="#" id="advanced-options" class="strong-green">Show Options</a></li>
+                    <?php 						
+                    } 
+                    ?>
+                    </ul>
+                </div>				
 				<div style="clear: both;"></div>
 				<?php				
 				$editable = $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update") ? "gradebook_editable" : "gradebook_not_editable";

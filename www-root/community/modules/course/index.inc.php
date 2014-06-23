@@ -1083,8 +1083,11 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                                     ON a.`course_id` = b.`course_id`
                                     WHERE a.`course_id` IN (".implode(', ',$course_ids).")
                                     AND a.`release_date` < ".$db->qstr(time())."
-                                    AND (a.`release_until` > ".$db->qstr(time())."
-                                        OR a.`release_until` = 0)";
+                                    AND (
+                                        a.`release_until` > ".$db->qstr(time())."
+                                        OR a.`release_until` = 0
+                                    )
+                                    AND a.`assignment_active`  = 1";
                         $results = $db->GetAll($query);
                         if ($results) { ?>
                         <thead>
@@ -1130,16 +1133,24 @@ if (isset($_SESSION["isAuthorized"]) && (bool) $_SESSION["isAuthorized"]) {
                             ON a.`characteristic_id` = b.`id`
                             JOIN `groups` AS c
                             ON a.`cohort` = c.`group_id`
-                            WHERE `course_id` IN (".implode("', '", $course_ids).")".
+                            WHERE `course_id` IN (".implode("', '", $course_ids).")
+                            AND a.`active` = '1'".
                             $student_sql."
-                            ORDER BY a.`cohort` DESC, a.`type`";
+                            ORDER BY c.`group_id` DESC, a.`order` ASC, a.`type`";
 
                 $assessments = $db->GetAll($query);
-
+                $cohorts_threshold = $ENTRADA_SETTINGS->fetchValueByShortname("course_webpage_assessment_cohorts_count", $ENTRADA_USER->getActiveOrganisation());
                 if ($assessments) {
                     echo "<h1>Assessments</h1>";
-
+                    $group_count = 0;
                     foreach ($assessments as $assessment) {
+                        if ($cohorts_threshold && !isset($output[$assessment["cohort"]])) {
+                            if ($group_count >= $cohorts_threshold) {
+                                break;
+                            } else {
+                                $group_count++;
+                            }
+                        }
                         $output[$assessment["cohort"]]["assessments"][$assessment["assessment_id"]]["name"] = $assessment["name"];
                         $output[$assessment["cohort"]]["assessments"][$assessment["assessment_id"]]["type"] = $assessment["type"];
                         $output[$assessment["cohort"]]["assessments"][$assessment["assessment_id"]]["characteristic"] = $assessment["characteristic"];

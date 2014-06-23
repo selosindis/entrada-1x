@@ -33,6 +33,7 @@ if ($RECORD_ID && $FILE_ID) {
 					ON a.`assignment_id` = b.`assignment_id`
 					AND a.`afile_id` = ".$db->qstr($FILE_ID)."
 					AND b.`assignment_id` = ".$db->qstr($RECORD_ID)."
+					AND b.`assignment_active` = '1'
 					AND a.`file_active` = '1'";
 	$file_record	= $db->GetRow($query);
 	if ($file_record) {

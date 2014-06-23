@@ -194,7 +194,7 @@ class Models_Course extends Models_Base {
     
     public function getMembers ($cperiod_id = null, $search_term = false) {
         $course_audience = $this->getAudience($cperiod_id);
-        $a = false;
+        $a = array();
         if ($course_audience) {
             foreach ($course_audience as $audience) {
                 if ($audience->getAudienceType() == "group_id") {
@@ -222,7 +222,7 @@ class Models_Course extends Models_Base {
 			return false;
 		}
 	}
-    
+
     public function getTeachersByDates($event_start = null, $event_finish = null) {
         global $db;
         $teachers = false;

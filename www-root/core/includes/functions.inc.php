@@ -9521,9 +9521,7 @@ function courses_subnavigation($course_details, $tab="details") {
 		echo "<li".($tab=="reports"?" class=\"active\"":"")." style=\"width:16%;\"><a href=\"".ENTRADA_RELATIVE."/admin/courses/reports?".replace_query(array("section"=>false,"assessment_id" => false, "id" => $course_details["course_id"], "step" => false))."\" >Reports</a></li>\n";
 	}
 	echo "	</ul>\n";
-
 	echo "</div>\n";
-	echo "<br />";
 }
 
 function course_fetch_course_group($cgroup_id = 0) {
@@ -10156,16 +10154,17 @@ function events_subnavigation($event_info,$tab='content'){
 	echo "<div class=\"no-printing\">\n";
 	echo "	<ul class=\"nav nav-tabs\">";
 	if ($ENTRADA_ACL->amIAllowed(new EventResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), 'update')) {
-		echo "		<li".($tab=='edit'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $event_info['event_id'], "step" => false))."\" >Event Details</a></li>";
+		echo "		<li".($tab=='edit'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "edit", "id" => $event_info['event_id'], "step" => false))."\" >Details</a></li>";
 	}
-	echo "		<li".($tab=='content'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $event_info['event_id'], "step" => false))."\" >Event Content</a></li>";
+	echo "		<li".($tab=='content'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "content", "id" => $event_info['event_id'], "step" => false))."\" >Content</a></li>";
 
-	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"],"step"=>false))."\" >Event Attendance</a></li>";
+	echo "		<li".($tab=='attendance'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "attendance", "id" => $event_info["event_id"],"step"=>false))."\" >Attendance</a></li>";
     if ($event_info["recurring_id"]) {
-	    echo "		<li".($tab=='recurring'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "recurring", "id" => $event_info["event_id"],"step"=>false))."\" >Related Recurring Events</a></li>";
+	    echo "		<li".($tab=='recurring'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "recurring", "id" => $event_info["event_id"],"step"=>false))."\" >Recurring Events</a></li>";
     }
 
-	echo "		<li".($tab=='history'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "history", "id" => $event_info["event_id"],"step"=>false))."\">Event History</a></li>";
+	echo "		<li".($tab=='history'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "history", "id" => $event_info["event_id"],"step"=>false))."\">History</a></li>";
+    echo "		<li".($tab=='statistics'?' class="active"':'')."><a href=\"".ENTRADA_URL."/admin/events?".replace_query(array("section" => "statistics", "id" => $event_info["event_id"],"step"=>false))."\">Statistics</a></li>";            
 	echo "	</ul>";
 	echo "</div>\n";
 
@@ -10958,7 +10957,7 @@ function events_output_calendar_controls_old($module_type = "") {
  * @param string $role
  * @return array Containing the default filters.
  */
-function events_filters_defaults($proxy_id = 0, $group = "", $role = "", $organisation = 0) {
+function events_filters_defaults($proxy_id = 0, $group = "", $role = "", $organisation = 0, $course_id = 0) {
 	$filters = array();
 
 	switch ($group) {
@@ -10976,6 +10975,9 @@ function events_filters_defaults($proxy_id = 0, $group = "", $role = "", $organi
 			 * Students see events they are involved with by default.
 			 */
 			$filters["student"][0] = (int) $proxy_id;
+            if ($course_id) {
+                $filters["course"][0] = (int) $course_id;
+            }
 		break;
 		case "medtech" :
 		case "staff" :
@@ -10990,7 +10992,43 @@ function events_filters_defaults($proxy_id = 0, $group = "", $role = "", $organi
 	if (!empty($filters)) {
 		ksort($filters);
 	}
+	return $filters;
+}
 
+/**
+ * Function used to create the default filter settings for Learning Events
+ *
+ * @param int $proxy_id
+ * @param string $group
+ * @param string $role
+ * @return array Containing the default filters.
+ */
+function events_filters_faculty($course_id = 0, $group = "", $role = "", $organisation = 0) {
+	$filters = array();
+
+	switch ($group) {
+		case "staff" :            
+		case "resident" :
+		case "medtech" :                    
+		case "faculty" :
+			/**
+			 * Teaching faculty see events which they are involved with by default.
+			 */
+			if (in_array($role, array("director", "lecturer", "teacher", "staff", "admin"))) {
+				$filters["course"][0] = (int) $course_id;
+			}
+		break;
+		default :
+            $first_cohort = ((int) fetch_first_cohort());
+            if ($first_cohort) {
+                $filters["group"][0] = $first_cohort;
+            }
+		break;
+	}
+
+	if (!empty($filters)) {
+		ksort($filters);
+	}
 	return $filters;
 }
 
@@ -11656,6 +11694,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
                             `events`.`event_id`,
                             `events`.`course_id`,
                             `events`.`parent_id`,
+                            `events`.`recurring_id`,
                             `events`.`event_title`,
                             `events`.`event_description`,
                             `events`.`event_duration`,
@@ -12040,6 +12079,7 @@ function events_fetch_filtered_events($proxy_id = 0, $user_group = "", $user_rol
 			$query_events = "	SELECT `events`.`event_id`,
 								`events`.`course_id`,
 								`events`.`parent_id`,
+								`events`.`recurring_id`,
 								`events`.`event_title`,
 								`events`.`event_description`,
 								`events`.`event_duration`,
@@ -17080,12 +17120,12 @@ function history_log($event, $message, $updater=0, $time=0) {
  * @param strint event field
  * @return boolean
  */
-function event_text_change($event, $field) {
+function event_text_change($event, $field, $table = 'events') {
 	global $db;
 	$ret = false;
 	if (isset($_POST["$field"])) {
 		$message_length = strlen($_POST["$field"]);
-		$result = $db->GetOne("SELECT `$field` FROM `events` WHERE `event_id` = " . $db->qstr($event));
+		$result = $db->GetOne("SELECT `$field` FROM `$table` WHERE `event_id` = " . $db->qstr($event));
 		if ($result) {
 			$result_length = strlen($result);
 			if ($message_length != $result_length) {
@@ -17097,8 +17137,78 @@ function event_text_change($event, $field) {
 			$ret = $message_length;
 		}
 	}
-	return $ret;
+    $return = array (
+        'ret' => $ret,
+        'query' => $result
+    );
+	return $return;
 }
+
+/**
+ * This function returns true if the field has changed.
+ * @global object $db
+ * @param int $id
+ * @param string $id_field_name
+ * @param string $field
+ * @param string $value
+ * @param string $table
+ * @return boolean
+ */
+function md5_change_value($id, $id_field_name, $field, $value, $table) {
+    global $db;
+    $changed = false;
+    $pattern = array('/\\r\n/', '/\\r/', '/\\n/', '/\\r\n\n/', '/\r/', '/\\&nbsp;/', '~\x{00a0}~siu');
+    $replacement = array('', '', '', '', '', ' ', ' ');
+    if (isset($value)) {
+        $value = preg_replace($pattern,$replacement,$value);
+        $result = $db->GetOne("SELECT `$field` FROM `$table` WHERE `$id_field_name` = " . $db->qstr($id));
+        if ($result) {
+            $result = preg_replace($pattern,$replacement,$result);
+        } else {
+            $result = 0;
+        }
+        
+        if (md5($value) === md5($result)){
+            $changed = false;
+        } else {
+            $changed = true;
+        }
+        
+        if ($value === "" && $result === 0) {
+            $changed = false;
+        }
+    }
+//    $array = Array(
+//        'value' => $value,
+//        'result' => $result,
+//        'changed' => $changed
+//    );
+    return $changed;
+}
+
+/**
+ * This function is used to tell if a value exists in either array
+ * 
+ * @param array $array1
+ * @param array $array2
+ * @return boolean
+ * 
+ */
+function compare_array_values($array1, $array2) {
+    $changed = false;
+    sort($array1);
+    sort($array2); 
+    //added
+    if (array_diff($array1, $array2)) {
+        $changed = true;
+    }
+    //removed
+    if (array_diff($array2, $array1)) {
+        $changed = true;
+    }
+    return $changed;
+}
+
 
 /*
  * This function recursively deactivates child objectives.
@@ -17398,6 +17508,95 @@ function fetch_department_fields($proxy_id = NULL) {
 	return $custom_fields;
 }
 
+
+//function sorts name arrays by lastname and then firstname
+function cmp_last_first($a, $b) {
+    if ($a["lastname"] == $b["lastname"]) {
+        return strcmp($a["firstname"], $b["firstname"]);
+    }
+    return strcmp($a["lastname"], $b["lastname"]);
+}
+
+
+//function sorts team array by team name
+function cmp_group_name($a, $b) {
+    return strcmp($a["group_name"], $b["group_name"]);
+}
+
+//these functions are used to sort the gradebook stats array
+
+//sorts name ASC
+function cmp_names_ASC($a, $b) {
+    if ($a["lastname"] == $b["lastname"]) {
+        return strcmp($a["firstname"], $b["firstname"]);
+    }
+    return strcmp($a["lastname"], $b["lastname"]);
+}
+
+//sorts name DESC
+function cmp_names_DESC($a, $b) {
+    if ($a["lastname"] == $b["lastname"]) {
+        return strcmp($a["firstname"], $b["firstname"]);
+    }
+    return strcmp($b["lastname"], $a["lastname"]);
+}
+
+//sorts views ASC
+function cmp_views_ASC($a, $b) {
+    return strcmp($a["views"], $b["views"]);
+}
+
+//sorts views DESC
+function cmp_views_DESC($a, $b) {
+    return strcmp($b["views"], $a["views"]);
+}
+
+//sorts first views ASC
+function cmp_first_view_ASC($a, $b) {
+    return strcmp($a["firstviewed"], $b["firstviewed"]);
+}
+
+//sorts first views DESC
+function cmp_first_view_DESC($a, $b) {
+    return strcmp($b["firstviewed"], $a["firstviewed"]);
+}
+
+//sorts first views ASC
+function cmp_last_view_ASC($a, $b) {
+    return strcmp($a["lastviewed"], $b["lastviewed"]);
+}
+
+//sorts first views DESC
+function cmp_last_view_DESC($a, $b) {
+    return strcmp($b["lastviewed"], $a["lastviewed"]);
+}
+
+//sorts by value
+function cmp_number($a, $b)
+{
+    if ($a == $b) {
+        return 0;
+    }
+    return ($a < $b) ? -1 : 1;
+}
+
+/*
+ * 
+ * Converts a string in the UNIX date format to a php formated date style
+ * Ignores dates of 0 in this case as they're empty dates, not a date from 1969
+ * 
+ * @param string $string
+ * $return string
+ */
+function unixStringtoDate($string){
+    $string = (int)$string;
+    if ($string == 0){
+        return "";
+    } else {
+        return date("m-j-Y g:ia", $string);
+    }
+}
+    
 /**
  * Load the active organisation for the user including their permissions,
  * template, system groups, etc.

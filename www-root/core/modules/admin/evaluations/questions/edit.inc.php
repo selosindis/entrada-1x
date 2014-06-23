@@ -94,6 +94,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 						$PROCESSED["evaluation_rubric_categories"][$index + 1] = array();
 						$PROCESSED["evaluation_rubric_categories"][$index + 1]["objective_ids"] = array();
 						$PROCESSED["evaluation_rubric_categories"][$index + 1]["category"] = $category["question_text"];
+                        $PROCESSED["evaluation_rubric_categories"][$index + 1]["category_description"] = $category["question_description"];
 						$PROCESSED["evaluation_rubric_categories"][$index + 1]["question_parent_id"] = $category["question_parent_id"];
 
 						$query = "SELECT * FROM `evaluation_question_objectives` AS a
@@ -343,6 +344,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 							}
 
 							$PROCESSED["evaluation_rubric_categories"][$i]["category"] = $category;
+                            if (isset($_POST["category_description"][$i]) && ($tmp_input = clean_input($_POST["category_description"][$i], array("trim", "notags")))) {
+                                $PROCESSED["evaluation_rubric_categories"][$i]["category_description"] = $tmp_input;
+                            }
 							$PROCESSED["evaluation_rubric_categories"][$i]["category_order"] = $i;
 							$PROCESSED["evaluation_rubric_categories"][$i]["objective_ids"] = array();
 							if ((isset($_POST["objective_ids_".$i])) && (is_array($_POST["objective_ids_".$i]))) {
@@ -455,8 +459,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									$rubric_order = 1;
 									foreach ($PROCESSED["evaluation_rubric_categories"] as $index => $category) {
 										$PROCESSED_QUESTION = array("questiontype_id" => 3,
+																	"organisation_id" => $ENTRADA_USER->getActiveOrganisation(),
 																	"question_text" => $category["category"],
 																	"question_code" => $category["category"],
+																	"question_description" => (isset($category["category_description"]) && $category["category_description"] ? $category["category_description"] : NULL),
 																	"allow_comments" => $PROCESSED["allow_comments"],
 																	"question_parent_id" => (isset($category["category_parent_id"]) && (int)$category["category_parent_id"] ? (int)$category["category_parent_id"] : $QUESTION_ID));
 										$equestion_id = 0;
@@ -1035,6 +1041,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				require_once("javascript/evaluations.js.php");
 				$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives.js\"></script>";
 				$HEAD[]	= "<script type=\"text/javascript\"> var SITE_URL = '".ENTRADA_URL."'; </script>";
+                if (!in_array($PROCESSED["questiontype_id"], array(2, 4))) {
+                    $HEAD[]	= "
+                    <script type=\"text/javascript\">
+                        jQuery(document).ready(function() {
+                            modalDescriptorDialog = new Control.Modal($('false-link'), {
+                                position:		'center',
+                                overlayOpacity:	0.75,
+                                closeOnClick:	'overlay',
+                                className:		'modal',
+                                fade:			true,
+                                fadeDuration:	0.30,
+                                width: 455
+                            });
+                        });
+
+                        function openDescriptorDialog(response_number, erdescriptor_id) {
+                            var url = '".ENTRADA_URL."/admin/evaluations/questions?section=api-descriptors&response_number='+response_number+'&organisation_id=".$ENTRADA_USER->getActiveOrganisation()."&erdescriptor_id='+erdescriptor_id;
+                            new Ajax.Request(url, {
+                                method: 'get',
+                                onComplete: function(transport) {
+                                    loaded = [];
+                                    modalDescriptorDialog.container.update(transport.responseText);
+                                    modalDescriptorDialog.open();
+                                }
+                            });
+                        }
+                    </script>";
+                }
 				if ($PROCESSED["questiontype_id"] == 3) {
 					$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/objectives_evaluation_rubric.js\"></script>";
 					$HEAD[] = "<script type=\"text/javascript\">
@@ -1124,15 +1158,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								fadeDuration:	0.30,
 								width: 755
 							});
-                            modalDescriptorDialog = new Control.Modal($('false-link'), {
-                                position:		'center',
-                                overlayOpacity:	0.75,
-                                closeOnClick:	'overlay',
-                                className:		'modal',
-                                fade:			true,
-                                fadeDuration:	0.30,
-                                width: 455
-                            });
 						});
 
 						function openDialog (equestion_id) {
@@ -1143,18 +1168,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 								modalDialog.open();
 							}
 						}
-
-                        function openDescriptorDialog(response_number, erdescriptor_id) {
-                            var url = '".ENTRADA_URL."/admin/evaluations/questions?section=api-descriptors&response_number='+response_number+'&organisation_id=".$ENTRADA_USER->getActiveOrganisation()."&erdescriptor_id='+erdescriptor_id;
-                            new Ajax.Request(url, {
-                                method: 'get',
-                                onComplete: function(transport) {
-                                    loaded = [];
-                                    modalDescriptorDialog.container.update(transport.responseText);
-                                    modalDescriptorDialog.open();
-                                }
-                            });
-                        }
 						</script>";
 						?>
 						<div style="float: right;">

@@ -345,7 +345,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                         </div>
                            
                         <style type="text/css">
-                            .question-text, .drag-handle {
+                            .question-group .question-text, .drag-handle {
                                 cursor:pointer;
                             }
                             .question-group {
@@ -540,8 +540,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                                             temp_qquestion_id = $(this).closest("li").data("qquestion-id");
                                         });
                                         
-                                        $("ol.questions").sortable({
-                                            handle : ".question-text", 
+                                        $("ol.question-group").sortable({
+                                            handle : ".question-text",
                                             placeholder: "sortable-placeholder", 
                                             helper: "clone", 
                                             cursor: "move", 

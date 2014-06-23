@@ -201,7 +201,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						/**
 						 * Get the next order of this question from the quiz_questions table.
 						 */
-                        $result["next_order"] = Models_Quiz_Question::fetchNextOrder($quiz_id);
+                        $result["next_order"] = Models_Quiz_Question::fetchNextOrder($quiz_record->getQuizID());
 						if ($result) {
 							$PROCESSED["question_order"] = ($result["next_order"] + 1);
 						} else {

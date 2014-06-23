@@ -107,7 +107,7 @@ class Models_Quiz_Question extends Models_Base {
         return $output;
     }
     
-    public static function fetchGroupedQuestions($quiz_id, $question_active = 1) {
+    public static function fetchGroupedQuestions($quiz_id, $qquestion_group_id, $question_active = 1) {
         global $db;
         
         $output = false;
@@ -115,10 +115,10 @@ class Models_Quiz_Question extends Models_Base {
         $query = "SELECT a.*
                     FROM `quiz_questions` AS a
                     WHERE a.`quiz_id` = ?
+                    AND a.`qquestion_group_id` = ?
                     AND a.`question_active` = ?
-                    AND a.`questiontype_id` = '1'
                     ORDER BY `question_order` ASC";
-        $results = $db->GetAll($query, array($quiz_id, $question_active));
+        $results = $db->GetAll($query, array($quiz_id, $qquestion_group_id, $question_active));
         if (!empty($results)) {
             $output = array();
             foreach ($results as $result) {

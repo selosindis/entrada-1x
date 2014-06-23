@@ -344,7 +344,7 @@ if ($RECORD_ID) {
 										}
 									}
 
-									if ($qprogress_id) {
+									if (isset($qprogress_id) && $qprogress_id) {
 										add_statistic("events", "quiz_view", "aquiz_id", $RECORD_ID);
 
 										$quiz_timeout			= (((int) $quiz_record["quiz_timeout"]) ? ($quiz_record["quiz_timeout"] * 60) : 0);
@@ -453,83 +453,62 @@ if ($RECORD_ID) {
 										<?php
 										$questions = Models_Quiz_Question::fetchAllRecords($quiz_record["quiz_id"]);
                                         if (isset($questions) && isset($quiz_record["random_order"]) && $quiz_record["random_order"] == 1) {
-											$q = array();
                                             $grouped_questions = array();
                                             $i = 0;
+                                            $questions_ordered_array = array();
+                                            $unordered_questions = array();
                                             
 											foreach ($questions as $question_key => $question) {
 												if (!is_null($question->getQquestionGroupID())) {
-                                                    if ($question->getQuestiontypeID() == "3") {
-                                                        $grouped_breaks[$question->getQquestionGroupID()][] = $question;
-                                                    } else {
-                                                        $grouped_questions[$question->getQquestionGroupID()][] = $question;
+                                                    if (!isset($grouped_questions[$question->getQquestionGroupID()])) {
+                                                        $grouped_questions[$question->getQquestionGroupID()] = array("group" => true, "questions" => array());
                                                     }
+                                                    $grouped_questions[$question->getQquestionGroupID()]["questions"][] = $question;
+                                                    $questions_ordered_array[] = NULL;
                                                     unset($questions[$question_key]);
 												} else if ($question->getQuestiontypeID() == "1") {
-                                                    $q[] = $question;
+                                                    $questions_ordered_array[] = NULL;
+                                                    $unordered_questions[] = $question;
                                                     unset($questions[$question_key]);
+                                                } else {
+                                                    $questions_ordered_array[] = $question;
                                                 }
                                                 $i++;
 											}
-                                            
-                                            foreach ($grouped_questions as $group_id => $q_group) {
-                                                $q[] = $q_group;
-                                            }
-                                            
-											shuffle($q);
 
-                                            $i = 1;
-                                            foreach ($q as $qquestion) {
-                                                if (is_array($qquestion)) {
-                                                    $g_id = 0;
-                                                    foreach ($qquestion as $grouped_question) {
-                                                        $output[] = $grouped_question;
-                                                        $g_id = $grouped_question->getQquestionGroupID();
-                                                    }
-                                                    if (isset($grouped_breaks) && !empty($grouped_breaks[$g_id])) {
-                                                        foreach ($grouped_breaks[$g_id] as $grouped_break) {
-                                                            $output[] = $grouped_break;
-                                                        }
+                                            foreach ($grouped_questions as $group_id => $q_group) {
+                                                $unordered_questions[] = $q_group;
+                                            }
+                                            shuffle($unordered_questions);
+                                            $randomized_questions = array();
+                                            foreach ($unordered_questions as $question) {
+                                                if (is_array($question) && $question["group"]) {
+                                                    foreach ($question["questions"] as $child_question) {
+                                                        $randomized_questions[] = $child_question;
                                                     }
                                                 } else {
-                                                    $output[] = $qquestion;
+                                                    $randomized_questions[] = $question;
                                                 }
-                                                $i++;
                                             }
-                                            
-                                            if (!empty($questions)) {
-                                                foreach ($questions as $q_key => $question) {
-                                                    $index = $q_key;
-                                                    $g_id = $output[$index]->getQquestionID();
-                                                    if (!is_null($g_id)) {
-                                                        for ($index; $i >= 0; $i--) {
-                                                            if ($output[$i]->getQquestionGroupID() != $g_id) {
-                                                                array_splice($output, ($q_key - $i), 0, array($question));
-                                                                break;
-                                                            }
-                                                            $g_id = $output[$i]->getQquestionGroupID();
-                                                        }
-                                                    } else {
-                                                        array_splice($output, $index, 0, array($question));
+                                            $index = 0;
+                                            foreach ($randomized_questions as $question) {
+                                                $question_added = false;
+                                                while (!$question_added) {
+                                                    if (!isset($questions_ordered_array[$index]) || is_null($questions_ordered_array[$index])) {
+                                                        $questions_ordered_array[$index] = $question;
+                                                        $question_added = true;
                                                     }
+                                                    $index++;
                                                 }
                                             }
-                                            
-                                            
-                                            if ($output[count($output) - 1]->getQuestionTypeID() != 1) {
-                                                $move = $output[count($output) - 1];
-                                                $old_group_id = $output[count($output) - 1]->getQquestionGroupID();
-                                                $index = count($output) - 1;
-                                                for ($i = $index; $i >= 0; $i--) {
-                                                    if ($output[$i]->getQquestionGroupID() != $old_group_id) {
-                                                        array_splice($output, $i + 1, 0, array($move));
-                                                        unset($output[count($output) - 1]);
-                                                        break;
-                                                    }
+                                            $questions = array();
+                                            $count = 1;
+                                            foreach ($questions_ordered_array as $question) {
+                                                if ($count < count($questions_ordered_array) || $question->getQuestiontypeID() != 3) {
+                                                    $questions[] = $question;
                                                 }
+                                                $count++;
                                             }
-                                            
-                                            $questions = $output;
 										}
                                         
 										$total_questions	= 0;
@@ -549,10 +528,10 @@ if ($RECORD_ID) {
 											.page.inactive {
                                                 display:none;
                                             }
-                                            .group {
-                                                border:1px dashed #B8B8B8;
-                                                border-radius: 10px;
-                                                padding:20px;
+                                            ol.questions {
+                                                padding-left:20px;
+                                            }
+                                            ol.group {
                                                 background:#F8F8F8;
                                             }
 										</style>
@@ -561,33 +540,35 @@ if ($RECORD_ID) {
 												$page_counter = 1;
 												$counter = 1;
 												$quiz_markup = "";
+                                                $used_qquestion_group_ids = array();
 												foreach ($questions as $question) {
-                                                    if ($question->getQuestiontypeID() == 4) {
-                                                        $quiz_markup .= "<li class=\"group\">";
-                                                        $quiz_markup .= $question->getQuestionText();
-                                                        $grouped_qquestions = Models_Quiz_Question::fetchGroupedQuestions($question->getQquestionID());
-                                                        if ($grouped_qquestions) { 
-                                                           
-                                                            $quiz_markup .= "<ol>";
-                                                            foreach ($grouped_qquestions as $question) {
-                                                                $quiz_markup .= "<li>".clean_input($question->getQuestionText(), "trim");
-                                                                $responses	= Models_Quiz_Question_Response::fetchAllRecords($question->getQquestionID());
-                                                                if ($responses) {
-                                                                    $quiz_markup .= "<ul class=\"responses\">";
-                                                                    foreach ($responses as $r) {
-                                                                        $response = $r->toArray();
-                                                                        $quiz_markup .= "<li class=\"row-fluid\">";
-                                                                        $quiz_markup .= "	<span class=\"span1\"><input type=\"radio\" id=\"response_".$question->getQquestionID()."_".$response["qqresponse_id"]."\" name=\"responses[".$question->getQquestionID()."]\" value=\"".$response["qqresponse_id"]."\"".(($ajax_load_progress[$question->getQquestionID()] == $response["qqresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question->getQquestionID()."', '".$response["qqresponse_id"]."') : false)\" /></span>";
-                                                                        $quiz_markup .= "	<label class=\"span11\" for=\"response_".$question->getQquestionID()."_".$response["qqresponse_id"]."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</label>";
-                                                                        $quiz_markup .= "</li>\n";
+                                                    if ($question->getQquestionGroupID()) {
+                                                        if (!in_array($question->getQquestionGroupID(), $used_qquestion_group_ids)) {
+                                                            $used_qquestion_group_ids[] = $question->getQquestionGroupID();
+                                                            $grouped_qquestions = Models_Quiz_Question::fetchGroupedQuestions($question->getQuizID(), $question->getQquestionGroupID());
+                                                            if ($grouped_qquestions) {
+                                                                $quiz_markup .= "</ol><ol class=\"questions group\" start=\"".$counter."\">";
+                                                                foreach ($grouped_qquestions as $question) {
+                                                                    $quiz_markup .= "<li>".clean_input($question->getQuestionText(), "trim");
+                                                                    $responses	= Models_Quiz_Question_Response::fetchAllRecords($question->getQquestionID());
+                                                                    if ($responses) {
+                                                                        $quiz_markup .= "<ul class=\"responses\">";
+                                                                        foreach ($responses as $r) {
+                                                                            $response = $r->toArray();
+                                                                            $quiz_markup .= "<li class=\"row-fluid\">";
+                                                                            $quiz_markup .= "	<span class=\"span1\"><input type=\"radio\" id=\"response_".$question->getQquestionID()."_".$response["qqresponse_id"]."\" name=\"responses[".$question->getQquestionID()."]\" value=\"".$response["qqresponse_id"]."\"".(($ajax_load_progress[$question->getQquestionID()] == $response["qqresponse_id"]) ? " checked=\"checked\"" : "")." onclick=\"((this.checked == true) ? storeResponse('".$question->getQquestionID()."', '".$response["qqresponse_id"]."') : false)\" /></span>";
+                                                                            $quiz_markup .= "	<label class=\"span11\" for=\"response_".$question->getQquestionID()."_".$response["qqresponse_id"]."\">".clean_input($response["response_text"], (($response["response_is_html"] == 1) ? "trim" : "encode"))."</label>";
+                                                                            $quiz_markup .= "</li>\n";
+                                                                        }
+                                                                        $quiz_markup .= "</ul>";
                                                                     }
-                                                                    $quiz_markup .= "</ul>";
+                                                                    $quiz_markup .= "</li>";
+                                                                    $counter ++;
                                                                 }
-                                                                $quiz_markup .= "</li>";
+                                                                $quiz_markup .= "</ol><ol class=\"questions\" start=\"".$counter."\">\n";
                                                             }
-                                                            $quiz_markup .= "</ol>";
+                                                            $quiz_markup .= "</li>";
                                                         }
-                                                        $quiz_markup .= "</li>";
                                                     } else if ($question->getQuestiontypeID() == 3) {
 														$page_counter++;
 														$break_id = $question->getQquestionID();

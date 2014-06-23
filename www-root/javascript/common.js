@@ -820,3 +820,98 @@ function display_msg(type, msg_array, target, location) {
 	}
 
 }
+
+/**
+ *  Appends a timer to the sidebar navigation based on a total number of seconds
+ *  @param minutes - the total number of minutes, defaults to 60
+ *  @param warning_threshold - the number of minutes at which the timer fades from blue to yellow, defaults to 25
+ *  @param danger_threshold - the number of minutes at which the timer fades from yellow to red, defaults to 10
+ */
+function ui_timer (message, minutes, warning_threshold, danger_threshold) {
+    var count = typeof minutes !== 'undefined' ? (minutes * 60) : 3600;
+    warning_threshold = typeof warning_threshold !== 'undefined' ? warning_threshold : 25;
+    danger_threshold = typeof danger_threshold !== 'undefined' ? danger_threshold : 10;
+    message = typeof message !== 'undefined' ? message : "You must <strong>submit</strong> the form before the timer expires.";
+    
+    add_timer(count, message, true);
+    
+    var counter = setInterval(function () { 
+        count = count - 1;
+        timer(count, warning_threshold, danger_threshold);
+        if (count == 0) {
+            clearInterval(counter);
+            return;
+        }
+    }, 1000);
+}
+
+function timer (count, warning_threshold, danger_threshold) {
+    var seconds = count % 60;
+    var minutes = Math.floor(count / 60);
+    
+    if (minutes < 10) {
+        minutes = "0" + minutes;
+    }
+
+    if (seconds < 10) {
+        seconds = "0" + seconds;
+    }
+
+    if (minutes < danger_threshold) {
+        jQuery(".timer").animate({
+            backgroundColor: "#F2DEDE", 
+            borderColor: "#EBCCD1", 
+            color: "#A94442"
+        }, "slow");
+    } else if (minutes < warning_threshold) {
+        jQuery(".timer").animate({ 
+            backgroundColor: "#FCF8E3", 
+            borderColor: "#FAEBCC", 
+            color: "#8A6D3B"
+        }, "slow");
+    }
+    
+    jQuery(".minutes").html("<strong>"+ minutes +"</strong>");
+    jQuery(".seconds").html("<strong>"+ seconds +"</strong>"); 
+}
+
+function add_timer (count, msg, affix) {
+    var seconds = count % 60;
+    var minutes = Math.floor(count / 60);
+    
+    if (minutes < 10) {
+        minutes = "0" + minutes;
+    }
+
+    if (seconds < 10) {
+        seconds = "0" + seconds;
+    }
+    
+    var container = document.createElement("div");
+    var icon_container = document.createElement("span");
+    var minute_container = document.createElement("span");
+    var colon_container = document.createElement("span");
+    var second_container = document.createElement("span");
+    var msg_container = document.createElement("p");
+    
+    jQuery(container).addClass("timer");
+    jQuery(minute_container).addClass("minutes").append("<strong>" + minutes + "</strong>");
+    jQuery(colon_container).text(":");
+    jQuery(second_container).addClass("seconds").append("<strong>" + seconds + "</strong>");
+    jQuery(msg_container).append(msg);
+    
+    jQuery(container).append(icon_container).append(minute_container).append(colon_container).append(second_container).append(msg_container);
+    jQuery(".inner-sidebar").append(container);
+    
+    var sidebar_height = jQuery("#sidebar").height();
+    var timer_height = jQuery(container).height() - 71;
+    var offset = sidebar_height - timer_height;
+    
+    if (affix) {
+        jQuery('.timer').affix({
+            offset: {
+                top: offset
+            }
+        });
+    }
+}

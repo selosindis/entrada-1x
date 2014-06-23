@@ -37,7 +37,7 @@ $loader->registerNamespace('Models_');
 
 require_once("config/settings.inc.php");
 
-header("X-Frame-Options: DENY");
+header("X-Frame-Options: SAMEORIGIN");
 
 if (defined("DEVELOPMENT_MODE") && (bool) DEVELOPMENT_MODE) {
     require_once("Entrada/adodb/adodb-exceptions.inc.php");

@@ -38,54 +38,58 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else { 
 	$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/jquery/jquery.dataTables.min.js"."\"></script>";
-	$query = "  SELECT a.*, COUNT(DISTINCT c.`qquestion_id`) AS `question_total`, IF(a.`quiz_active` = '1', 'Active', 'Disabled') AS `quiz_status`, CONCAT(d.`firstname`, ' ', d.`lastname`) AS author
-					FROM `quizzes` AS a
-					LEFT JOIN `quiz_contacts` AS b
-					ON a.`quiz_id` = b.`quiz_id`
-					LEFT JOIN `quiz_questions` AS c
-					ON a.`quiz_id` = c.`quiz_id`
-					AND c.`question_active` = 1
-					LEFT JOIN `". AUTH_DATABASE ."`.`user_data` AS d
-					ON a.`created_by` = d.`id`
-					WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-					AND a.`quiz_active` = 1
-					GROUP BY a.`quiz_id`";
-	
-	$quizzes = $db->GetAll($query);
+
+    if ($ENTRADA_USER->getActiveRole() != "admin") {
+        $quizzes = Models_Quiz::fetchAllRecordsByProxyID($ENTRADA_USER->getID());
+    } else {
+        $quizzes = Models_Quiz::fetchAllRecords();
+    }
+    
+    $i = 0;
+    foreach ($quizzes as $quiz) {
+        $quiz_data[$i]["quiz_id"]           = $quiz->getQuizID();
+        $quiz_data[$i]["quiz_title"]        = $quiz->getQuizTitle();
+        $quiz_data[$i]["question_total"]    = count($quiz->getQuizQuestions());
+        $quiz_data[$i]["quiz_status"]       = $quiz->getQuizActive() ? "Active" : "Disabled";
+        $quiz_data[$i]["quiz_author"]       = $quiz->getQuizAuthor() ? $quiz->getQuizAuthor()->getFullName(false) : "";
+        $quiz_data[$i]["updated_date"]      = $quiz->getUpdatedDate();
+        $i++;
+    }
+    
 	if (isset($_GET["ajax"]) && $_GET["ajax"] && isset($_GET["method"]) && $_GET["method"] == "list") {
 		ob_clear_open_buffers();
 		$output = array("aaData" => array());
 		$count = 0;
-		if ($quizzes) {
+		if ($quiz_data) {
 			/*
 			* Ordering
 			*/
 			if (isset($_GET["iSortCol_0"]) && in_array($_GET["iSortCol_0"], array(0, 1, 2, 3, 4))) {
 				$aColumns = array("modified", "quiz_title", "author", "question_total", "updated_date");
 				$sort_array = array();
-				foreach ($quizzes as $quiz) {
+				foreach ($quiz_data as $quiz) {
 					$quiz_array = $quiz;
 					$sort_array[] = $quiz_array[$aColumns[clean_input($_GET["iSortCol_0"], "int")]];
 				}
-				array_multisort($sort_array, (isset($_GET["sSortDir_0"]) && $_GET["sSortDir_0"] == "desc" ? SORT_DESC : SORT_ASC), (clean_input($_GET["iSortCol_0"], "int") == 3 ? SORT_NUMERIC : SORT_STRING), $quizzes);
+				array_multisort($sort_array, (isset($_GET["sSortDir_0"]) && $_GET["sSortDir_0"] == "desc" ? SORT_DESC : SORT_ASC), (clean_input($_GET["iSortCol_0"], "int") == 3 ? SORT_NUMERIC : SORT_STRING), $quiz_data);
 			}
 			if (isset($_GET["iDisplayStart"]) && isset($_GET["iDisplayLength"]) && $_GET["iDisplayLength"] != "-1" ) {
 				$start = (int)$_GET["iDisplayStart"];
 				$limit = (int)$_GET["iDisplayLength"];
 			} else {
 				$start = 0;
-				$limit = count($quizzes) - 1;
+				$limit = count($quiz_data) - 1;
 			}
 			if ($_GET["sSearch"] != "") {
 				$search_value = $_GET["sSearch"];
 			}
-			foreach ($quizzes as $quiz) {
+			foreach ($quiz_data as $quiz) {
 				if (!isset($search_value) || stripos($quiz["quiz_title"], $search_value) !== false || stripos($quiz["author"], $search_value) !== false || stripos($quiz["question_total"], $search_value) !== false || !isset($search_value) || stripos(date("Y-m-d g:ia", $quiz["updated_date"]), $search_value) !== false) {
 					if ($count >= $start && $count < ($start + $limit)) {
 						$row = array();
 						$row["modified"] = "<input class=\"delete-control\" type=\"checkbox\" name=\"delete[]\" value=\"".$quiz["quiz_id"]."\" />";
 						$row["quiz_title"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">".$quiz["quiz_title"]."</a>";
-						$row["author"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">". $quiz["author"] ."</a>";
+						$row["author"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">". $quiz["quiz_author"] ."</a>";
 						$row["question_total"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">". $quiz["question_total"] ."</a>";
 						$row["updated_date"] = "<a href=\"". ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".$quiz["quiz_id"]."\">".date("Y-m-d g:ia", $quiz["updated_date"])."</a>";
 						$row["id"] = $quiz["quiz_id"];
@@ -95,7 +99,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				}
 			}
 		}
-		$output["iTotalRecords"] = (is_array($quizzes) ? @count($quizzes) : 0);
+		$output["iTotalRecords"] = (is_array($quiz_data) ? @count($quiz_data) : 0);
 		$output["iTotalDisplayRecords"] = $count;
 		$output["sEcho"] = clean_input($_GET["sEcho"], "int");
 		if ($output && count($output)) {

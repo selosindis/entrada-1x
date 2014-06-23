@@ -42,24 +42,19 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		$calendar_start = (int) $_GET["start"];
 		$calendar_end = (int) $_GET["end"];
 		
-		$query = "	SELECT `devent_id`, `event_start`, `event_finish`, `event_title`, `event_location`, `updated_date`
-					FROM `draft_events`
-					WHERE `draft_id` = ".$db->qstr($draft_id)."
-					AND `event_start` >= ".$db->qstr($calendar_start)."
-					AND `event_finish` <= ".$db->qstr($calendar_end);
-		
-		$results = $db->GetAll($query);
+        $events = Models_Event_Draft_Event::fetchAllByDraftIDByDate($draft_id, $calendar_start, $calendar_end);
+
 		$i = 0;
-		if ($results) {
-			foreach ($results as $result) {
+		if ($events) {
+			foreach ($events as $event) {
 				$output[$i]["drid"]		= $i;
-				$output[$i]["id"]		= $result["devent_id"];
-				$output[$i]["start"]	= date("Y-m-d",$result["event_start"])."T".date("H:iP", $result["event_start"]);
-				$output[$i]["end"]		= date("Y-m-d",$result["event_finish"])."T".date("H:iP", $result["event_finish"]);
-				$output[$i]["title"]	= $result["event_title"];
-				$output[$i]["loc"]		= $result["event_location"];
+				$output[$i]["id"]		= $event->getDeventID();
+				$output[$i]["start"]	= date("Y-m-d", $event->getEventStart())."T".date("H:iP", $event->getEventStart());
+				$output[$i]["end"]		= date("Y-m-d", $event->getEventFinish())."T".date("H:iP", $event->getEventFinish());
+				$output[$i]["title"]	= $event->getEventTitle();
+				$output[$i]["loc"]		= $event->getEventLocation();
 				$output[$i]["type"]		= '1';
-				$output[$i]["updated"]	= $result["updated"];
+				$output[$i]["updated"]	= $event->getUpdatedDate();
 				$i++;
 			}
 		}
@@ -71,11 +66,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		
 	}
 	
-	$query = "	SELECT `devent_id`, `event_start`, `event_finish`, `event_title`, `event_location`, `updated_date`
-				FROM `draft_events` WHERE `draft_id` = ".$db->qstr($draft_id)." ORDER BY `event_start`";
-	
-	if ($results = $db->GetRow($query)) {
-		$start = $results["event_start"];
+	$events = Models_Event_Draft_Event::fetchAllByDraftID($draft_id);
+	if ($events) {
+		$start = $events[0]->getEventStart();
 	}
 	
 	$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.weekcalendar.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";

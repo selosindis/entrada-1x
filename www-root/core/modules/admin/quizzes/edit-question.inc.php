@@ -41,17 +41,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($RECORD_ID) {
-		$query			= "	SELECT a.`quiz_title`, a.`quiz_description`, c.*
-							FROM `quizzes` AS a
-							LEFT JOIN `quiz_questions` AS c
-							ON a.`quiz_id` = c.`quiz_id`
-							AND c.`question_active` = '1'
-							WHERE c.`qquestion_id` = ".$db->qstr($RECORD_ID)."
-							AND a.`quiz_active` = '1'";
-		$quiz_record	= $db->GetRow($query);
-		if ($quiz_record &&  $ENTRADA_ACL->amIAllowed(new QuizResource($quiz_record["quiz_id"]), "update")) {
+        $question = Models_Quiz_Question::fetchRowByID($RECORD_ID);
+		$quiz_record = Models_Quiz::fetchRowByID($question->getQuizID());
+		if ($quiz_record &&  $ENTRADA_ACL->amIAllowed(new QuizResource($quiz_record->getQuizID()), "update")) {
 			if ($ALLOW_QUESTION_MODIFICATIONS) {
-				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$quiz_record["quiz_id"], "title" => limit_chars($quiz_record["quiz_title"], 32));
+                                
+				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$quiz_record->getQuizID(), "title" => limit_chars($quiz_record->getQuizTitle(), 32));
 				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit-question&id=".$RECORD_ID, "title" => "Edit Quiz Question");
 
 				/**
@@ -67,7 +62,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						 * Currently only multile choice questions are supported, although
 						 * this is something we will be expanding on shortly.
 						 */
-						$PROCESSED["questiontype_id"] = $quiz_record["questiontype_id"];
+						$PROCESSED["questiontype_id"] = $question->getQuestionTypeID();
 
 						/**
 						 * Required field "question_text" / Quiz Question.
@@ -79,7 +74,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							$ERRORSTR[] = "The <strong>Quiz Question</strong> field is required.";
 						}
 
-						switch ($quiz_record["questiontype_id"]) {
+						switch ($question->getQuestionTypeID()) {
+                            case 4 :
 							case 3 :
 							case 2 :
 								$PROCESSED["question_points"] = 0;
@@ -197,7 +193,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						}
 
 						if (!$ERROR) {
-							if($ENTRADA_ACL->amIAllowed(new QuizQuestionResource($RECORD_ID, $quiz_record["quiz_id"]), "update")) {
+							if($ENTRADA_ACL->amIAllowed(new QuizQuestionResource($RECORD_ID, $quiz_record->getQuizID()), "update")) {
 								if ($db->AutoExecute("quiz_questions", $PROCESSED, "UPDATE", "`qquestion_id` = ".$db->qstr($RECORD_ID))) {
 
 									$query = "UPDATE `quiz_question_responses` SET `response_active` = '0' WHERE `qquestion_id` = ".$db->qstr($RECORD_ID);
@@ -222,7 +218,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 												$ERROR++;
 												$ERRORSTR[] = "There was an error while trying to attach a <strong>Question Response</strong> to this quiz question.<br /><br />The system administrator was informed of this error; please try again later.";
 
-												application_log("error", "Unable to insert a new quiz_question_responses record while adding a new quiz question [".$RECORD_ID."] to quiz_id [".$quiz_record["quiz_id"]."]. Database said: ".$db->ErrorMsg());
+												application_log("error", "Unable to insert a new quiz_question_responses record while adding a new quiz question [".$RECORD_ID."] to quiz_id [".$quiz_record->getQuizID()."]. Database said: ".$db->ErrorMsg());
 											}
 										}
 									}
@@ -230,7 +226,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									$ERROR++;
 									$ERRORSTR[] = "You do not have permission to edit this quiz question.<br /><br />The system administrator was informed of this error; please try again later.";
 
-									application_log("error", "Unable to update a quiz question [".$RECORD_ID."] to quiz_id [".$quiz_record["quiz_id"]."] due to a lack of permissions.");
+									application_log("error", "Unable to update a quiz question [".$RECORD_ID."] to quiz_id [".$quiz_record->getQuizID()."] due to a lack of permissions.");
 
 								}
 
@@ -246,21 +242,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									case "content" :
 									default :
 
-										$url = ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$quiz_record["quiz_id"];
+										$url = ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$quiz_record->getQuizID();
 										$msg	= "You will now be redirected back to the quiz; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 									break;
 								}
 
 								$SUCCESS++;
-								$SUCCESSSTR[]	= "You have successfully updated this question in your <strong>".html_encode($quiz_record["quiz_title"])."</strong> quiz.<br /><br />".$msg;
+								$SUCCESSSTR[]	= "You have successfully updated this question in your <strong>".html_encode($quiz_record->getQuizTitle())."</strong> quiz.<br /><br />".$msg;
 								$ONLOAD[]		= "setTimeout('window.location=\\'".$url."\\'', 5000)";
 
-								application_log("success", "Updated quiz question [".$RECORD_ID."] in quiz_id [".$quiz_record["quiz_id"]."].");
+								application_log("success", "Updated quiz question [".$RECORD_ID."] in quiz_id [".$quiz_record->getQuizID()."].");
 							} else {
 								$ERROR++;
 								$ERRORSTR[] = "There was a problem while attempting to update your quiz question. The system administrator was informed of this error; please try again later.";
 
-								application_log("error", "There was an error updating quiz question [".$RECORD_ID."] in quiz_id [".$quiz_record["quiz_id"]."]. Database said: ".$db->ErrorMsg());
+								application_log("error", "There was an error updating quiz question [".$RECORD_ID."] in quiz_id [".$quiz_record->getQuizID()."]. Database said: ".$db->ErrorMsg());
 							}
 						}
 
@@ -270,7 +266,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					break;
 					case 1 :
 					default :
-						$PROCESSED	= $quiz_record;
 						$PROCESSED["quiz_question_responses"] = array();
 
 						$query		= "	SELECT a.*
@@ -333,10 +328,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 							<tr>
 								<td></td>
 								<td>Quiz Title</td>
-								<td><strong><?php echo clean_input($quiz_record["quiz_title"], array("trim", "encode")); ?></strong></td>
+								<td><strong><?php echo clean_input($quiz_record->getQuizTitle(), array("trim", "encode")); ?></strong></td>
 							</tr>
 							<?php
-							if ($quiz_description = clean_input($quiz_record["quiz_description"], array("trim"))) {
+							if ($quiz_description = clean_input($quiz_record->getQuizDescription(), array("trim"))) {
 								?>
 								<tr>
 									<td></td>
@@ -359,7 +354,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 													FROM `quiz_contacts` AS a
 													LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
 													ON a.`proxy_id` = b.`id`
-													WHERE a.`quiz_id` = ".$db->qstr($quiz_record["quiz_id"])."
+													WHERE a.`quiz_id` = ".$db->qstr($quiz_record->getQuizID())."
 													ORDER BY b.`lastname` ASC, b.`firstname` ASC";
 									$results	= $db->GetAll($query);
 									if ($results) {
@@ -404,7 +399,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									<table style="width: 100%" cellspacing="0" cellpadding="0" border="0">
 									<tr>
 										<td style="width: 25%; text-align: left">
-											<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=edit&amp;id=<?php echo $quiz_record["quiz_id"]; ?>'" />
+											<input type="button" class="btn" value="Cancel" onclick="window.location='<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=edit&amp;id=<?php echo $quiz_record->getQuizID(); ?>'" />
 										</td>
 										<td style="width: 75%; text-align: right; vertical-align: middle">
 											<span class="content-small">After saving:</span>
@@ -419,7 +414,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 														<?php
 													} else {
 														foreach ($question_types as $question_type) {
-															echo "<option value=\"new".$question_type["questiontype_id"]."\"".(isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) && ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new".$question_type["questiontype_id"]) ? " selected=\"selected\"" : "").">Add ".($quiz_record["questiontype_id"] == $question_type["questiontype_id"] ? "another " : "a new ").strtolower($question_type["questiontype_title"])."</option>";
+															echo "<option value=\"new".$question_type["questiontype_id"]."\"".(isset($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"]) && ($_SESSION[APPLICATION_IDENTIFIER]["tmp"]["post_action"] == "new".$question_type["questiontype_id"]) ? " selected=\"selected\"" : "").">Add ".($question->getQuestionTypeID() == $question_type["questiontype_id"] ? "another " : "a new ").strtolower($question_type["questiontype_title"])."</option>";
 														}
 													}
 													?>
@@ -439,11 +434,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									<label for="question_text" class="form-required">Quiz Question</label>
 								</td>
 								<td>
-									<textarea id="question_text" name="question_text" style="width: 100%; height: 100px"><?php echo ((isset($PROCESSED["question_text"])) ? clean_input($PROCESSED["question_text"], "encode") : ""); ?></textarea>
+                                    <textarea id="question_text" name="question_text" style="width: 100%; height: 100px"><?php echo html_encode($question->getQuestionText()); ?></textarea>
 								</td>
 							</tr>
 							<?php
-								switch ($quiz_record["questiontype_id"]) {
+								switch ($question->getQuestionTypeID()) {
+                                    case 4 :
 									case 3 :
 									case 2 :
 									break;

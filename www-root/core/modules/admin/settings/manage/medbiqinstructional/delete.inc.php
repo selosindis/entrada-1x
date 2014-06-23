@@ -50,16 +50,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 		switch($STEP){
 			case 2:
 				foreach($_POST["remove_ids"] as $id){
-					$query = "SELECT `instructional_method` FROM `medbiq_instructional_methods` WHERE `instructional_method_id` = ".$db->qstr($id);
-					$result = $db->GetRow($query);
-					
-					$query = "UPDATE `medbiq_instructional_methods` SET `active` = '0' WHERE `instructional_method_id` = ".$db->qstr($id);
-					if($db->Execute($query)){
-						$SUCCESS++;
-						$SUCCESSSTR[] = "Successfully deactivated Medbiquitous Instructional Method [".$result["instructional_method"]."] from your organisation.<br/>";
+					$i_m = Models_MedbiqInstructionalMethod::get($id);
+					if($i_m->fromArray(array("active" => "0"))->update()) {
+						add_success("Successfully deactivated Medbiquitous Instructional Method [".$i_m->getInstructionalMethod()."] from your organisation.");
 					} else {
-						$ERROR++;
-						$ERRORSTR[] = "An error occurred while deactivating the Medbiquitous Instructional Method [".$id."] from the system. The system administrator has been notified. You will now be redirected to the Medbiquitous Instructional Method index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqinstructional/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.";
+						add_error("An error occurred while deactivating the Medbiquitous Instructional Method [".$id."] from the system. The system administrator has been notified. You will now be redirected to the Medbiquitous Instructional Method index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqinstructional/?org=".$ORGANISATION_ID."\" style=\"font-weight: bold\">click here</a> to continue.");
 						application_log("error", "An error occurred while removing the Medbiquitous Instructional Method [".$id."] from the system. ");
 					}
 				}
@@ -92,15 +87,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 						<tbody>
 							<?php 
 								foreach ($PROCESSED["remove_ids"] as $id) {
-									$query = "SELECT * FROM `medbiq_instructional_methods` WHERE `instructional_method_id` = ".$db->qstr($id);
-									$type = $db->GetRow($query);
-				
+									$t = Models_MedbiqInstructionalMethod::get($id);
+                                    if ($t) {
+                                        $type = $t->toArray();
 								?>
 							<tr>
 								<td><input type="checkbox" value="<?php echo $id;?>" name ="remove_ids[]" checked="checked"/></td>
 								<td><?php echo $type["instructional_method"];?></td>
 							</tr>
-							<?php } ?>
+							<?php 
+                                    }
+                                } ?>
 						</tbody>
 					</table>
 					<br/>

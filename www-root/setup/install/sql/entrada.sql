@@ -2321,6 +2321,7 @@ CREATE TABLE IF NOT EXISTS `evaluations_lu_questions` (
   `questiontype_id` int(12) NOT NULL,
   `question_code` varchar(48) DEFAULT NULL,
   `question_text` longtext NOT NULL,
+  `question_description` longtext DEFAULT NULL,
   `allow_comments` tinyint(1) NOT NULL DEFAULT '1',
   `question_active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`equestion_id`)
@@ -2611,6 +2612,7 @@ CREATE TABLE IF NOT EXISTS `events_lu_eventtypes` (
   `eventtype_order` int(6) NOT NULL,
   `eventtype_default_enrollment` varchar(50) DEFAULT NULL,
   `eventtype_report_calculation` varchar(100) DEFAULT NULL,
+  `medbiq_instructional_method_id` int(12) unsigned DEFAULT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
   PRIMARY KEY (`eventtype_id`),
@@ -4281,6 +4283,7 @@ CREATE TABLE IF NOT EXISTS `quiz_questions` (
   `question_text` longtext NOT NULL,
   `question_points` int(6) NOT NULL DEFAULT '0',
   `question_order` int(6) NOT NULL DEFAULT '0',
+  `qquestion_group_id` int(12) DEFAULT NULL,
   `question_active` int(1) NOT NULL DEFAULT '1',
   `randomize_responses` int(1) NOT NULL,
   PRIMARY KEY (`qquestion_id`),
@@ -4333,7 +4336,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 
 INSERT INTO `settings` (`shortname`, `organisation_id`, `value`)
   VALUES
-  ('version_db', NULL, '1610'),
+  ('version_db', NULL, '1611'),
   ('version_entrada', NULL, '1.6.0DEV'),
   ('export_weighted_grade', NULL, '1'),
   ('export_calculated_grade', NULL, '{\"enabled\":0}'),

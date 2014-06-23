@@ -37,23 +37,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 	?>
 	<h1>Manage Medbiquitos Instructional Methods</h1>
 
-	<div class="clearfix">
+	<div class="clearfix space-below medium">
 		<div class="pull-right">
 			<a href="<?php echo ENTRADA_URL; ?>/admin/settings/manage/medbiqinstructional?section=add&amp;org=<?php echo $ORGANISATION_ID;?>" class="btn btn-primary">Add New Medbiquitos Instructional Method</a>
 		</div>
-
-	</div><br/>
+	</div>
 	<?php
 
 	/*
 	 * To change this template, choose Tools | Templates
 	 * and open the template in the editor.
 	 */
-	$query = "	SELECT * FROM `medbiq_instructional_methods`				
-				WHERE `active` = '1' 
-				ORDER BY `instructional_method` ASC";
-	
-	$results = $db->GetAll($query);
+	$results = Models_MedbiqInstructionalMethod::fetchAllMedbiqInstructionalMethods();
 
 	if($results){
 	?>
@@ -71,7 +66,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_MEDBIQINSTRUCTIONAL"))) {
 		</thead>
 		<tbody>
 			<?php
-				foreach($results as $result){
+				foreach($results as $r){
+                    $result = $r->toArray();
 					echo "<tr><td><input type=\"checkbox\" name = \"remove_ids[]\" value=\"".$result["instructional_method_id"]."\"/></td>";
 					echo"<td><a href=\"".ENTRADA_URL."/admin/settings/manage/medbiqinstructional?section=edit&amp;org=".$ORGANISATION_ID."&amp;instructional_method_id=".$result["instructional_method_id"]."\">".$result["instructional_method"]."</a></td></tr>";
 				}

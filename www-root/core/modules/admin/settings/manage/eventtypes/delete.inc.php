@@ -111,15 +111,17 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 						<tbody>
 							<?php 
 								foreach ($PROCESSED["remove_ids"] as $id) {
-									$query = "SELECT * FROM `events_lu_eventtypes` WHERE `eventtype_id` = ".$db->qstr($id);
-									$type = $db->GetRow($query);
-				
+									$t = Models_EventType::get($id);
+                                    if ($t) {
+                                        $type = $t->toArray();
 								?>
 							<tr>
 								<td><input type="checkbox" value="<?php echo $id;?>" name ="remove_ids[]" checked="checked"/></td>
 								<td><?php echo $type["eventtype_title"];?></td>
 							</tr>
-							<?php } ?>
+							<?php 
+                                    }
+                                } ?>
 						</tbody>
 					</table>
 					<br />

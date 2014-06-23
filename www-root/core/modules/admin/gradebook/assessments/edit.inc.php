@@ -443,6 +443,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$PROCESSED = $assessment_details;
 						$query = "SELECT * FROM `assessment_options` WHERE `assessment_id` =" . $db->qstr($ASSESSMENT_ID);
 						$extended_options = $db->GetAll($query);
+                        $assessment_options_selected = array();
 						foreach ($extended_options as $extended_option) {
 							if ($extended_option["option_active"] == 1) {
 								$assessment_options_selected[] = $extended_option["option_id"];
@@ -778,7 +779,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											$assessment_options = $db->GetAll($query);
 											if ($assessment_options) {
 												foreach ($assessment_options as $assessment_option) {
-													echo "<label class=\"checkbox\" for=\"extended_option" . $assessment_option["id"] . "\"><input type=\"checkbox\" value=\"" . $assessment_option["id"] . "\" name=\"option[]\"" . (((in_array($assessment_option["id"], $assessment_options_selected))) ? " checked=\"checked\"" : "") . " id=\"extended_option" . $assessment_option["id"] . "\"/>" . $assessment_option["title"] . "</label><br />";
+													echo "<label class=\"checkbox\" for=\"extended_option" . $assessment_option["id"] . "\"><input type=\"checkbox\" value=\"" . $assessment_option["id"] . "\" name=\"option[]\"" . (((is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected))) ? " checked=\"checked\"" : "") . " id=\"extended_option" . $assessment_option["id"] . "\"/>" . $assessment_option["title"] . "</label><br />";
 												}
 											}
 											?>

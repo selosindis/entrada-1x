@@ -52,6 +52,7 @@ if ($COURSE_ID) {
                 JOIN `assessment_grades` AS e
                 ON b.`assessment_id` = e.`assessment_id`
 				WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
+				AND b.`active` = 1
 				AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
 				AND (b.`release_until` = '0' OR b.`release_until` >= ".$db->qstr(time()).")
 				AND b.`show_learner` = '1'
@@ -108,6 +109,7 @@ if ($COURSE_ID) {
 			<tbody>
 			<?php
 			foreach ($results as $result) {
+                add_statistic("gradebook", "view", "assessment_id", $result["assessment_id"]);
 				if (isset($result["value"])) {
 					$grade_value = format_retrieved_grade(round($result["value"], 2), $result);
 				} else {
@@ -138,6 +140,7 @@ if ($COURSE_ID) {
                                 JOIN `assessment_grades` AS e
                                 ON b.`assessment_id` = e.`assessment_id`
                                 WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
+                                AND b.`active` = 1
                                 AND (b.`release_date` = '0' OR b.`release_date` <= ".$db->qstr(time()).")
                                 AND (b.`release_until` = '0' OR b.`release_until` >= ".$db->qstr(time()).")
                                 AND b.`assessment_id` = ".$db->qstr($result["assessment_id"])."

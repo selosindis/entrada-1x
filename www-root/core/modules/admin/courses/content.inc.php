@@ -149,11 +149,21 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 
 							if (is_array($PROCESSED_OBJECTIVES)) {
 								foreach ($PROCESSED_OBJECTIVES as $objective_id => $objective) {
-									$objective_found = $db->GetOne("SELECT `objective_id` FROM `course_objectives` WHERE `objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
-									if ($objective_found) {
-										$db->AutoExecute("course_objectives", array("objective_details" => $objective, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`objective_id` = ".$db->qstr($objective_id)." AND `course_id` = ".$db->qstr($COURSE_ID));
+                                    $objective = Models_Course_Objective::fetchRowByCourseIDObjectiveID($COURSE_ID, $objective_id);
+									if ($objective) {
+                                        $objective->fromArray(array("objective_details" => $objective, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()))->update();
 									} else {
-										$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_details" => $objective, "importance" => 0, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT");
+                                        $objective = new Models_Course_Objective(array(
+                                            "course_id" => $COURSE_ID, 
+                                            "objective_id" => $objective_id, 
+                                            "objective_details" => $objective, 
+                                            "objective_start" => time(), 
+                                            "importance" => 0, 
+                                            "updated_date" => time(), 
+                                            "updated_by" => $ENTRADA_USER->getID(),
+                                            "active" => "1"
+                                        ));
+										$objective->insert();
 									}
 
 								}
@@ -636,7 +646,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					if ((@is_array($edit_ajax)) && (@count($edit_ajax))) {
 						echo "<script type=\"text/javascript\">\n";
 						foreach ($edit_ajax as $objective_id) {
-							echo "var editor_".$objective_id." = new Ajax.InPlaceEditor('objective_description_".$objective_id."', '".ENTRADA_RELATIVE."/api/objective-details.api.php', { rows: 7, cols: 62, okText: \"Save Changes\", cancelText: \"Cancel Changes\", externalControl: \"edit_mode_".$objective_id."\", submitOnBlur: \"true\", callback: function(form, value) { return 'id=".$objective_id."&cids=".$COURSE_ID."&objective_details='+escape(value) } });\n";
+							echo "var editor_".$objective_id." = new Ajax.InPlaceEditor('objective_description_".$objective_id."', '".ENTRADA_RELATIVE."/api/objective-details.api.php', { rows: 7, cols: 62, okText: \"Save Changes\", cancelText: \"Cancel Changes\", externalControl: \"edit_mode_".$objective_id."\", submitOnBlur: \"true\", callback: function(form, value) { jQuery('#clear_objective_".$objective_id."').toggle((value.length !== 0 && value.trim())); return 'id=".$objective_id."&cids=".$COURSE_ID."&objective_details='+escape(value) } });\n";
 						}
 						echo "</script>\n";
 					}

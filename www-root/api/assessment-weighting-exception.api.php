@@ -75,7 +75,8 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 					LEFT JOIN `assessment_exceptions` AS c
 					ON b.`id` = c.`proxy_id`
 					AND a.`assessment_id` = c.`assessment_id`
-					WHERE a.`assessment_id` = ".$db->qstr($assessment_id);
+					WHERE a.`assessment_id` = ".$db->qstr($assessment_id)."
+					AND a.`active` = '1'";
 		$result = $db->GetRow($query);
 		if ($result) {
 			if ($remove && isset($result["custom_weighting"]) && $result["custom_weighting"] !== NULL) {

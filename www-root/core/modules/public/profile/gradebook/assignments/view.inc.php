@@ -67,6 +67,7 @@ if ($RECORD_ID) {
 								JOIN `".AUTH_DATABASE."`.`user_data` AS c
 								ON a.`proxy_id` = c.`id`
 								WHERE `file_active` = '1'
+								AND b.`assignment_active` = '1'
 								AND a.`assignment_id` = ".$db->qstr($RECORD_ID)."
 								AND a.`proxy_id` = ".$db->qstr($USER_ID);
 				$file_record	= $db->GetRow($query);

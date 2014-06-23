@@ -61,10 +61,18 @@ if (!defined("IN_EVALUATIONS")) {
 	<?php
 	}
 	?>
-		<li>
-			<a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=student-clerkship-evaluations">Clerkship Evaluations</a><br />
-			Reports showing the students' evaluation of their clerkship teachers and/or rotations.
-		</li>
+        <li>
+            <a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=student-clerkship-evaluations">Clerkship Core Rotation Evaluations</a><br />
+            Reports showing the students' evaluation of their clerkship rotations.
+        </li>
+        <li>
+            <a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=student-clerkship-preceptor-evaluations">Clerkship Preceptor Evaluations</a><br />
+            Reports showing the students' evaluation of their clerkship preceptors.
+        </li>
+        <li>
+            <a href="<?php echo ENTRADA_URL; ?>/admin/evaluations/reports?section=evaluations-aggregated-by-objective">Learner (And Patient Encounter) Evaluations Aggregate Report</a><br />
+            Reports showing evaluations completed for learners aggregated by the objectives tagged to the questions.
+        </li>
 	</ol>
 	<?php
 }

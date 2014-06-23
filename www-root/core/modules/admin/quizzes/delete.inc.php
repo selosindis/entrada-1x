@@ -55,20 +55,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
         }
 
         if ($quiz_ids) {
-            $query = "	SELECT a.`quiz_id`, a.`quiz_title`, a.`updated_date`, CONCAT(b.`firstname`, ' ', b.`lastname`) AS author, COUNT(DISTINCT c.`qquestion_id`) AS `question_total`
-                        FROM `quizzes` AS a
-						JOIN `".AUTH_DATABASE."`.`user_data` AS b
-						ON a.`created_by` = b.id
-						LEFT JOIN `quiz_questions` AS c
-						ON a.`quiz_id` = c.`quiz_id`
-                        WHERE a.`quiz_id` IN (".implode(", ", $quiz_ids).")
-                        AND a.`quiz_active` = 1
-                        ORDER BY a.`quiz_title` ASC";
-            $results = $db->GetAll($query);
-            if ($results) {
-                foreach ($results as $result) {
-                    if ($ENTRADA_ACL->amIAllowed(new QuizResource($result["quiz_id"]), "update")) {
-                        $delete_quizzes[$result["quiz_id"]] = $result;
+            $quizzes = array();
+            foreach ($quiz_ids as $quiz_id) {
+                $quizzes[] = Models_Quiz::fetchRowByID($quiz_id);
+            }
+            if ($quizzes) {
+                foreach ($quizzes as $quiz) {
+                    $q_id = $quiz->getQuizID();
+                    if ($ENTRADA_ACL->amIAllowed(new QuizResource($q_id), "update")) {
+                        $delete_quizzes[] = $quiz;
                     }
                 }
             }
@@ -79,9 +74,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
         $total_quizzes = count($delete_quizzes);
 
         if (isset($_POST["confirmed"]) && $_POST["confirmed"]) {
-            $quiz_ids = array_keys($delete_quizzes);
-
-            if ($db->Execute("UPDATE `quizzes` SET `quiz_active` = 0 WHERE `quiz_id` IN (".implode(", ", $quiz_ids).")")) {
+            if ($delete_quizzes) {
+                foreach ($delete_quizzes as $quiz) {
+                    if (!$quiz->fromArray(array("quiz_active" => "0"))->update()) {
+                        $ERROR++;
+                    }
+                }
+            }
+            if (!$ERROR) {
 				$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 5000)";
 
                 add_success("You have successfully deleted ".($total_quizzes != 1 ? "these quizzes" : "this quiz").".<br /><br />You will now be redirected back to the quiz index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/".$MODULE."\" style=\"font-weight: bold\">click here</a> to continue.");
@@ -133,11 +133,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
                         <?php
                         foreach ($delete_quizzes as $quiz) {
                             echo "<tr>\n";
-                            echo "	<td class=\"modified\"><input class=\"delete-control\" type=\"checkbox\" name=\"delete[]\" value=\"".(int) $quiz["quiz_id"]."\" checked=\"checked\" /></td>\n";
-                            echo "	<td class=\"title\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz["quiz_id"]."\">".html_encode($quiz["quiz_title"])."</a></td>\n";
-							echo "	<td class=\"author\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz["quiz_id"]."\">".html_encode($quiz["author"])."</a></td>\n";
-							echo "	<td class=\"questions\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz["quiz_id"]."\">".$quiz["question_total"]."</a></td>\n";
-                            echo "	<td class=\"updated\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz["quiz_id"]."\">".date("Y-m-d g:ia", $quiz["updated_date"])."</a></td>\n";
+                            echo "	<td class=\"modified\"><input class=\"delete-control\" type=\"checkbox\" name=\"delete[]\" value=\"".(int) $quiz->getQuizID()."\" checked=\"checked\" /></td>\n";
+                            echo "	<td class=\"title\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz->getQuizID()."\">".html_encode($quiz->getQuizTitle())."</a></td>\n";
+							echo "	<td class=\"author\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz->getQuizID()."\">".html_encode($quiz->getQuizAuthor()->getFullname())."</a></td>\n";
+							echo "	<td class=\"questions\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz->getQuizID()."\">".count(Models_Quiz_Question::fetchAllRecords($quiz->getQuizID()))."</a></td>\n";
+                            echo "	<td class=\"updated\"><a href=\"".ENTRADA_RELATIVE."/admin/".$MODULE."?section=edit&amp;id=".(int) $quiz->getQuizID()."\">".date("Y-m-d g:ia", $quiz->getUpdatedDate())."</a></td>\n";
                             echo "</tr>\n";
                         }
                         ?>
@@ -151,13 +151,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
             <?php
         }
     } elseif ($RECORD_ID) {
-		$query = "SELECT a.*
-                    FROM `quizzes` AS a
-                    WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
-                    AND a.`quiz_active` = '1'";
-		$quiz_record = $db->GetRow($query);
-		if ($quiz_record && $ENTRADA_ACL->amIAllowed(new QuizResource($quiz_record["quiz_id"]), "update")) {
-			if ($db->AutoExecute("quizzes", array("quiz_active" => 0), "UPDATE", "`quiz_id` = ".$RECORD_ID)) {
+		$quiz = Models_Quiz::fetchRowByID($RECORD_ID);
+		if ($quiz && $ENTRADA_ACL->amIAllowed(new QuizResource($quiz->getQuizID()), "update")) {
+			if ($quiz->fromArray(array("quiz_active" => "0"))->update()) {
 				$ONLOAD[] = "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 5000)";
 
                 add_success("You have successfully deleted this quiz.<br /><br />You will now be redirected back to the quiz index; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".ENTRADA_URL."/admin/".$MODULE."\" style=\"font-weight: bold\">click here</a> to continue.");

@@ -47,7 +47,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			foreach ($_POST["order"] as $assessment_id => $order) {
 				$order = (int) $order[0];
 
-				$query = "UPDATE `assessments` SET `order` = ".$db->qstr($order)." WHERE `course_id` = ".$db->qstr($COURSE_ID)." AND `assessment_id` = ".$db->qstr((int) $assessment_id);
+				$query = "UPDATE `assessments` SET `order` = ".$db->qstr($order)."
+				            WHERE `course_id` = ".$db->qstr($COURSE_ID)."
+				            AND `assessment_id` = ".$db->qstr((int) $assessment_id);
 				if($db->Execute($query)) {
 					$error = false;
 					application_log("success", "Updated gradebook assessment [".$assessment_id."] to order [".$order."].");
@@ -125,24 +127,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 			preferences_update($MODULE, $PREFERENCES);
 
 			/**
-			 * Provide the queries with the columns to order by.
-			 */
-			switch($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["sb"]) {
-				case "name" :
-					$sort_by = "`assessments`.`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]).", `assessments`.`cohort` ASC";
-				break;
-				case "type" :
-					$sort_by = "`assessments`.`type` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
-				break;
-				case "scheme" :
-					$sort_by = "`assessment_marking_schemes`.`name` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
-				break;
-				default :
-					$sort_by = "`assessments`.`order` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["so"]);
-				break;
-			}			
-
-			/**
 			 * Check if cohort variable is set, otherwise a default is used.
 			 */
 			if (isset($_GET["cohort"]) && ((int)$_GET["cohort"])) {
@@ -166,7 +150,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
 							AND b.`group_active` = 1
 							AND b.`group_id` = " . $db->qstr($selected_cohort) . "
-							WHERE a.`course_id` = ".$db->qstr($COURSE_ID);
+							WHERE a.`course_id` = ".$db->qstr($COURSE_ID)."
+							AND a.`active` = '1'";
 				$result	= $db->GetRow($query);
 			} 
 			if ($result) {
@@ -280,21 +265,24 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							ON b.`group_id` = c.`group_id`
 							WHERE a.`course_id` =". $db->qstr($COURSE_ID)."
 							AND c.`organisation_id` = ".$db->qstr($ENTRADA_USER->getActiveOrganisation())."
+							AND a.`active` = '1'
 							GROUP BY b.`group_id`
 							ORDER BY b.`group_name`";
 				$cohorts = $db->GetAll($query);
 				
                 $output_cohort = false;
                 $cohort_found = false;
-                foreach ($cohorts as $key => $cohort) {
-                    if (!$cohort_found) {
-                        $output_cohort = $cohort;
-                        if (isset($selected_cohort) && $selected_cohort && $selected_cohort == $cohort["group_id"]) {
-                            $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"] = $selected_cohort;
-                            $cohort_found = true;
-                        }
-                        if ($key == (count($cohorts) - 1) && !$cohort_found) {
-                            $selected_cohort = $cohort["group_id"];
+                if ($cohorts) {
+                    foreach ($cohorts as $key => $cohort) {
+                        if (!$cohort_found) {
+                            $output_cohort = $cohort;
+                            if (isset($selected_cohort) && $selected_cohort && $selected_cohort == $cohort["group_id"]) {
+                                $_SESSION[APPLICATION_IDENTIFIER][$MODULE]["cohort"] = $selected_cohort;
+                                $cohort_found = true;
+                            }
+                            if ($key == (count($cohorts) - 1) && !$cohort_found) {
+                                $selected_cohort = $cohort["group_id"];
+                            }
                         }
                     }
                 }
@@ -338,9 +326,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					echo "</div>\n";
 				}
 				if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
-					echo "<form action=\"".ENTRADA_URL . "/admin/gradebook/assessments?".replace_query(array("section" => "delete", "step"=>1))."\" method=\"post\">";
+					echo "<form action=\"".ENTRADA_URL . "/admin/gradebook/assessments?".replace_query(array("section" => "delete", "step" => 1, "cohort" => (isset($selected_cohort) && $selected_cohort ? $selected_cohort : (isset($selected_classlist) && $selected_classlist ? $selected_classlist : NULL))))."\" method=\"post\">";
 				}
+
+                $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/wizard.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+                $HEAD[] = "<link href=\"".ENTRADA_URL."/css/wizard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
 				?>
+                <iframe id="upload-frame" name="upload-frame" onload="frameLoad()" style="display: none;"></iframe>
+                <a id="false-link" href="#placeholder"></a>
+                <div id="placeholder" class="modalStats" style="display: none"></div>
                 <script type="text/javascript">
                     jQuery(document).ready(function(){
                         jQuery('.edit_grade').live('click',function(e){
@@ -440,6 +434,42 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             jQuery('#delete, #export').show();
                         });
                     });                   
+                    var ajax_url = '';
+                    var modalDialog;
+                    document.observe('dom:loaded', function() {
+                        modalDialog = new Control.Modal($('false-link'), {
+                            position:		'center',
+                            overlayOpacity:	0.75,
+                            closeOnClick:	'overlay',
+                            className:		'modal',
+                            fade:			true,
+                            fadeDuration:	0.30,
+                            beforeOpen: function(request) {
+                                eval($('scripts-on-open').innerHTML);
+                            },
+                            afterClose: function() {
+                                if (uploaded == true) {
+                                                                location.reload();
+                                }
+                            }
+                        });
+                    });
+
+                    function openDialog (url) {
+                        if (url) {
+                            ajax_url = url;
+                            new Ajax.Request(ajax_url, {
+                                method: 'get',
+                                onComplete: function(transport) {
+                                    modalDialog.container.update(transport.responseText);
+                                    modalDialog.open();
+                                }
+                            });
+                        } else {
+                            $('scripts-on-open').update();
+                            modalDialog.open();
+                        }
+                    }
                 </script>
                 <br />
 				<table class="tableList" cellspacing="0" summary="List of Assessments" id="assessment_list">
@@ -468,19 +498,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							echo "<td style=\"width: 300px;\"><h3 style=\"border-bottom: 0;\">Assessment</h3></td>";
 							echo "<td><h3 style=\"border-bottom: 0;\">Grade Weighting</h3></td>";
 							echo "<td><h3 style=\"border-bottom: 0;\">Assignment</h3></td>";
+                            echo "<td class='assessment_col_5'><h3>Views</h3></td>";
 							echo "</tr>";
 
-							$query = "	SELECT `course_id`, `assessment_id`, `name`, `grade_weighting`, `order`
-										FROM `assessments`
-										WHERE `cohort` = " . $db->qstr($output_cohort["group_id"])."
-										AND `course_id` = ". $db->qstr($COURSE_ID)."
-										ORDER BY `order` ASC";
-
-							$results = $db->GetAll($query);
-							if ($results) {
+                            $assessments = Models_Gradebook_Assessment::fetchAllRecords($output_cohort["group_id"], $COURSE_ID);
+							if ($assessments) {
 								$total_grade_weight = 0;
 								$count = 0;
-								foreach ($results as $result) {
+								foreach ($assessments as $assessment) {
+                                    $result = $assessment->toArray();
 									if ($ENTRADA_ACL->amIAllowed(new AssessmentResource($course_details["course_id"], $course_details["organisation_id"], $result["assessment_id"]), "update")) {
 										//Display this row if the user is a Dropbox Contact for an assignment associated with this assessment or if they are the Course Owner.
 										$query =  "	SELECT a.`course_id`, a.`assignment_id`, a.`assignment_title` 
@@ -515,7 +541,33 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 														WHERE a.`assessment_id` = ".$db->qstr($result["assessment_id"])."
 														AND a.`assignment_active` = 1";
 											$assignment = $db->GetRow($query);	
-											
+                                            $action_field = "assessment_id";
+                                            $action = "view";//
+
+                                            $query = "SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`
+                                                        FROM `".AUTH_DATABASE."`.`user_data` AS b
+                                                        JOIN `".AUTH_DATABASE."`.`user_access` AS c
+                                                        ON c.`user_id` = b.`id`
+                                                        AND c.`app_id` IN (".AUTH_APP_IDS_STRING.")
+                                                        AND c.`account_active` = 'true'
+                                                        AND (c.`access_starts` = '0' OR c.`access_starts`<=".$db->qstr(time()).")
+                                                        AND (c.`access_expires` = '0' OR c.`access_expires`>=".$db->qstr(time()).")
+                                                        JOIN `group_members` AS c
+                                                        ON b.`id` = c.`proxy_id`
+                                                        WHERE c.`group` = 'student'
+                                                        AND c.`group_id` = ".$db->qstr($output_cohort["group_id"])."
+                                                        AND c.`member_active` = '1'
+                                                        ORDER BY b.`lastname` ASC, b.`firstname` ASC";
+                                            $students = $db->GetAll($query);
+
+											$params = array(
+                                                "module" => "gradebook",
+                                                "action" => "view",
+                                                "action_field" => "assessment_id",
+                                                "action_value" => $result["assessment_id"]
+                                            );
+                                            $assessment_views = Models_Statistic::getCountByParams($params);
+                                            
 											if ($assignment && $ENTRADA_ACL->amIAllowed(new AssignmentResource($course_details["course_id"], $course_details["organisation_id"], $assignment["assignment_id"]), "update")) {
 												$url = ENTRADA_URL."/admin/gradebook/assignments?section=grade&amp;id=".$COURSE_ID."&amp;assignment_id=".$assignment["assignment_id"];
 												echo "<td id=\"assignment-".$assignment["assignment_id"]."\">";
@@ -534,6 +586,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 												}
 												echo "</td>\n";
 											}
+                                            echo "<td class='assessment_col_5'><a href=\"#assessment-view-details\" class=\"assessment-view\" data-toggle=\"modal\" data-assessment-id=\"" . $result["assessment_id"] . "\">" . $assessment_views["views"] . "</a></td>";
 											echo "</tr>";											
 										}
 									}
@@ -573,6 +626,58 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 					?>
 					</tbody>
 				</table>
+                <?php
+                $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+                ?>
+                <script type="text/javascript">
+                    jQuery(function($) {
+                        var gradebook_views_table = $("#gradebook-views").DataTable({
+                            "bPaginate": false,
+                            "bInfo": false,
+                            "bFilter": false
+                        });
+                        $(".assessment-view").on("click", function() {
+                            var assessment_id = $(this).data("assessment-id");
+                            $.ajax({
+                                url : "<?php echo ENTRADA_URL; ?>/api/gradebook-stats.api.php",
+                                data : {assessment_id : assessment_id},
+                                success: function(data) {
+                                    var jsonResponse = JSON.parse(data);
+                                    if (jsonResponse.status == "success") {
+                                        if (jsonResponse.data.length > 0) {
+                                            gradebook_views_table.fnAddData(jsonResponse.data);
+                                        }
+                                    }
+                                }
+                            });
+                        });
+                        $("#assessment-view-details").on("hidden", function(e) {
+                            gradebook_views_table.fnClearTable();
+                        });
+                    });
+                </script>
+                <div id="assessment-view-details" class="modal hide fade">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h3>Gradebook Views</h3>
+                    </div>
+                    <div class="modal-body">
+                        <table class="table table-bordered table-striped" id="gradebook-views">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Views</th>
+                                    <th>First View</th>
+                                    <th>Last View</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                    <div class="modal-footer">
+                        <a href="#" class="btn" data-dismiss="modal" aria-hidden="true">Close</a>
+                    </div>
+                </div>
 				<div class="gradebook_edit" style="display: none;"></div>
 				<?php
 				if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {

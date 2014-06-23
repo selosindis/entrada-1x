@@ -40,7 +40,7 @@ if(!defined("PARENT_INCLUDED")) {
 } else {
 	define("IN_COURSES", true);
 	$HEAD[]	= "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/chosen.jquery.min.js\"></script>\n";
-    $HEAD[]	= "<link rel=\"stylesheet\" type=\"text/css\"  href=\"".ENTRADA_RELATIVE."/css/jquery/chosen.css\"></script>\n";
+    $HEAD[]	= "<link rel=\"stylesheet\" type=\"text/css\"  href=\"".ENTRADA_RELATIVE."/css/jquery/chosen.css\" />\n";
 
 	$module_title = $translate->_("courses");
 	$module_singular_name = $translate->_("course");

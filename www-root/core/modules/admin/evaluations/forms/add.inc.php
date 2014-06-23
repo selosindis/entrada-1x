@@ -81,7 +81,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 				$associated_authors = explode(",", $_POST["associated_author"]);
 				foreach($associated_authors as $contact_order => $proxy_id) {
 					if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
-						$PROCESSED["associated_authors"][(int) $contact_order] = $proxy_id;	
+						$PROCESSED["associated_authors"][(int) $contact_order] = $proxy_id;
 					}
 				}
 			}
@@ -92,6 +92,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			if (!in_array($ENTRADA_USER->getActiveId(), $PROCESSED["associated_authors"])) {
 				array_unshift($PROCESSED["associated_authors"], $ENTRADA_USER->getActiveId());
 			}
+
+            $authors_with_duplicates = array();
+            foreach ($PROCESSED["associated_authors"] as $author) {
+                $evaluation_forms = Models_Evaluation_Form::fetchAllByAuthorAndTitle($author, $PROCESSED["form_title"]);
+                if ($evaluation_forms) {
+                    $authors_with_duplicates[] = $author;
+                }
+            }
+
+            if (count($authors_with_duplicates) >= 1) {
+                if (count($authors_with_duplicates) == 1) {
+                    if ($authors_with_duplicates[0] == $ENTRADA_USER->getActiveId()) {
+                        add_error("The <strong>Form Title</strong> must be unique for each author. Please ensure that you use a form name which you are not an author for already.<br /><br />Please consider adding a simple identifier to the end of the form name (such as \"".date("M-Y")."\") to identify this form compared to any other existing form with the same name.");
+                    } else {
+                        $author_name = get_account_data("wholename", $authors_with_duplicates[0]);
+                        add_error("The <strong>Form Title</strong> must be unique for each author. Please ensure that you use a form name which <strong>".html_encode($author_name)."</strong> is not an author for already.<br /><br />Please consider adding a simple identifier to the end of the form name (such as \"".date("M-Y")."\") to identify this form compared to any other existing form with the same name.");
+                    }
+                } else {
+                    $error_string = "The <strong>Form Title</strong> must be unique for each author.<br /><br /> The following list of users are already an author on another form with the same name: <br />\n<ul class=\"menu\">\n";
+                    foreach ($authors_with_duplicates as $author) {
+                        $author_name = get_account_data("wholename", $author);
+                        $error_string .= "<li class=\"user\">".html_encode($author_name)."</li>";
+                    }
+                    $error_string .= "</ul>\n";
+                    $error_string .= "<br />Please consider adding a simple identifier to the end of the form name (such as \"".date("M-Y")."\") to identify this form compared to any other existing form with the same name.";
+                    add_error($error_string);
+                }
+            }
 
 			if (!$ERROR) {
 				$PROCESSED["form_parent"] = 0;
@@ -218,7 +246,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									<?php
 									if ($EVALUATION_TARGETS && is_array($EVALUATION_TARGETS) && !empty($EVALUATION_TARGETS)) {
 										foreach ($EVALUATION_TARGETS as $target) {
-											echo "<option value=\"".$target["target_id"]."\">".html_encode($target["target_title"])."</option>";
+											echo "<option value=\"".$target["target_id"]."\"".(isset($PROCESSED["target_id"]) && $PROCESSED["target_id"] == $target["target_id"] ? " selected=\"selected\"" : "").">".html_encode($target["target_title"])."</option>";
 										}
 									}
 									?>

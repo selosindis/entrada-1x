@@ -93,7 +93,8 @@ class Entrada_ACL extends ACL_Factory {
 			"group",
             "encounter_tracking",
 			"eportfolio",
-			"eportfolio-artifact"
+			"eportfolio-artifact",
+			"masquerade"
 		)
 	);
 	/**
@@ -1428,6 +1429,7 @@ class AssessmentContactAssertion implements Zend_Acl_Assert_Interface {
 						JOIN `assessments` c
 						ON c.`assessment_id` = b.`assessment_id`
 						WHERE a.`proxy_id` = " . $db->qstr($user_id) . "
+						AND c.`active` = 1
 						AND b.`assignment_active` = 1
 						AND c.`assessment_id` = " . $db->qstr($assessment_id);
 		$results	= $db->GetAll($query);
@@ -1707,7 +1709,7 @@ abstract class CommunityAssertion implements Zend_Acl_Assert_Interface {
 		return false;
 	}
 
-	static abstract function _checkCommunity($user_id, $community_id);
+	abstract public function _checkCommunity($user_id, $community_id);
 }
 
 /**
@@ -1726,7 +1728,7 @@ class CommunityOwnerAssertion extends CommunityAssertion {
 	 * @param integer $community_id The community's ID
 	 * @return boolean
 	 */
-	static function _checkCommunity ($user_id, $community_id) {
+	public function _checkCommunity ($user_id, $community_id) {
 		global $db;
 		$query	= "
 				SELECT `proxy_id` FROM `community_members`
@@ -1758,7 +1760,7 @@ class CommunityMemberAssertion extends CommunityAssertion {
 	 * @param integer $community_id The community's ID
 	 * @return boolean
 	 */
-	static function _checkCommunity($user_id, $community_id) {
+	public function _checkCommunity($user_id, $community_id) {
 		global $db, $ENTRADA_USER;
 		$query	= "
 				SELECT `proxy_id` FROM `community_members`

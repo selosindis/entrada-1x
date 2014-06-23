@@ -32,7 +32,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 } elseif (!$ENTRADA_ACL->amIAllowed('quiz', 'create', false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
+	
 	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 
 	echo display_error();
@@ -40,13 +40,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."]");
 } else {
 	if ($RECORD_ID) {
-		$query			= "	SELECT a.*
-							FROM `quizzes` AS a
-							WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
-							AND a.`quiz_active` = '1'";
-		$quiz_record	= $db->GetRow($query);
+		$quiz = Models_Quiz::fetchRowByID($RECORD_ID);
+        $quiz_record	= $quiz->toArray();
 		if ($quiz_record && $ENTRADA_ACL->amIAllowed(new QuizResource($quiz_record["quiz_id"]), 'update')) {
-			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID, "title" => limit_chars($quiz_record["quiz_title"], 32));
+            $BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID, "title" => limit_chars($quiz_record["quiz_title"], 32));
 			$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=copy&id=".$RECORD_ID, "title" => "Copying Quiz");
 
 			/**
@@ -58,111 +55,127 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				$PROCESSED["quiz_active"]		= 1;
 				$PROCESSED["updated_date"]		= time();
 				$PROCESSED["updated_by"]		= $ENTRADA_USER->getID();
-
+                $PROCESSED["created_by"]        = $ENTRADA_USER->getID();
 				if($ENTRADA_ACL->amIAllowed('quiz', 'create')) {
-					if ($db->AutoExecute("quizzes", $PROCESSED, "INSERT")) {
-						if ($new_quiz_id = $db->Insert_Id()) {
-							$query = "	INSERT INTO `quiz_contacts`
-										SELECT NULL, '".$new_quiz_id."', `proxy_id`, '".time()."', ".$db->qstr($ENTRADA_USER->getID())."
-										FROM `quiz_contacts`
-										WHERE `quiz_id` = ".$db->qstr($RECORD_ID);
-							if (($db->Execute($query)) && ($db->Affected_Rows() > 0)) {
-								$query		= "	SELECT *
-												FROM `quiz_questions`
-												WHERE `quiz_id` = ".$db->qstr($RECORD_ID)."
-												AND `question_active` = '1'";
-								$questions	= $db->GetAll($query);
-								if ($questions) {
+                    $quiz = new Models_Quiz($PROCESSED);
+					if ($quiz->insert()) {
+                        $new_quiz_id = $quiz->getQuizID();
+						if ($new_quiz_id) {
+                            
+                            $quiz_contacts = Models_Quiz_Contact::fetchAllRecords($RECORD_ID);
+                            if ($quiz_contacts) {
+                                foreach ($quiz_contacts as $q) {
+                                    $contact = $q->toArray();
+                                    unset($contact["qcontact_id"]);
+                                    $contact["quiz_id"] = $new_quiz_id;
+                                    $contact["updated_date"] = time();
+                                    $contact["updated_by"] = $ENTRADA_USER->getActiveID();
+                                    $q_c = new Models_Quiz_Contact($contact);
+                                    if (!$q_c->insert()) {
+                                        $ERROR++;
+                                    }
+                                }
+                            }
+							
+							if (!$ERROR) {
+								$questions = Models_Quiz_Question::fetchAllRecords($RECORD_ID);
+                                if ($questions) {
 									$new_qquestion_ids = array();
 
-									foreach ($questions as $question) {
+									foreach ($questions as $q) {
+                                        $question = $q->toArray();
 										$old_qquestion_id = $question["qquestion_id"];
 										unset($question["qquestion_id"]);
 										$question["quiz_id"] = $new_quiz_id;
-										if ($db->AutoExecute("quiz_questions", $question, "INSERT")) {
-											$new_qquestion_id = $db->Insert_Id();
-											if ($question["questiontype_id"] == "1") {
-												$query = "	INSERT INTO `quiz_question_responses`
-															SELECT NULL, '".$new_qquestion_id."', `response_text`, `response_order`, `response_correct`, `response_is_html`, `response_feedback`, `response_active`
-															FROM `quiz_question_responses`
-															WHERE `qquestion_id` = ".$db->qstr($old_qquestion_id);
-												if (($db->Execute($query)) && ($db->Affected_Rows() > 0)) {
-													/**
-													 * Add this new qquestion_id to the $new_qquestion_ids array.
-													 */
-													$new_qquestion_ids[] = $new_qquestion_id;
-												} else {
-													$ERROR++;
-
-													application_log("error", "Unable to insert new quiz_question_responses record when attempting to copy responses for qquestion_id [".$question["qquestion_id"]."] from quiz_id [".$RECORD_ID."]. Database said: ".$db->ErrorMsg());
-												}
+                                        $new_question = new Models_Quiz_Question($question);
+										if ($new_question->insert()) {
+											$new_qquestion_id = $new_question->getQquestionID();
+                                            
+											if ($new_question->getQuestiontypeID() == "1" || $new_question->getQuestiontypeID() == "4") {
+                                                $responses = Models_Quiz_Question_Response::fetchAllRecords($old_qquestion_id);
+												foreach ($responses as $r) {
+                                                    $response_data = $r->toArray();
+                                                    unset($response_data["qqresponse_id"]);
+                                                    $response_data["qquestion_id"] = $new_qquestion_id;
+                                                    $response = new Models_Quiz_Question_Response($response_data);
+                                                    if (!$response->insert()) {
+                                                        $ERROR++;
+                                                    }
+                                                }
 											}
 										} else {
-											$ERROR++;
-
 											application_log("error", "Unable to insert new quiz_questions record when attempting to copy quiz_id [".$RECORD_ID."]. Database said: ".$db->ErrorMsg());
-										}	
+										}
 									}
-
+                                    
 									if ($ERROR) {
 										if (count($new_qquestion_ids) > 0) {
-											$query = "DELETE FROM `quiz_question_responses` WHERE `qquestion_id` IN (".implode(", ", $new_qquestion_ids).")";
-											$db->Execute($query);
+                                            foreach ($new_qquestion_ids as $new_qquestion_id) {
+                                                $qquestion_responses = Models_Quiz_Question_Response::fetchAllRecords($new_qquestion_id);
+                                                if ($qquestion_responses) {
+                                                    foreach ($qquestion_responses as $qquestion_response) {
+                                                        $qquestion_response->delete();
+                                                    }
+                                                }
+                                            }
 										}
 
-										$query = "DELETE FROM `quiz_questions` WHERE `quiz_id` = ".$db->qstr($new_quiz_id);
-										$db->Execute($query);
+                                        $quiz_questions = Models_Quiz_Question::fetchAllRecords($new_quiz_id);
+                                        if ($quiz_questions) {
+                                            foreach ($quiz_questions as $quiz_question) {
+                                                $quiz_question->delete();
+                                            }
+                                        }
+                                        
+                                        $quiz_contacts = Models_Quiz_Contact::fetchAllRecords($new_quiz_id);
+                                        if ($quiz_contacts) {
+                                            foreach ($quiz_contacts as $quiz_contact) {
+                                                $quiz_contact->delete();
+                                            }
+                                        }
+                                        
+                                        $quiz = Models_Quiz::fetchRowByID($new_quiz_id);
+										if ($quiz) {
+                                            $quiz->delete();
+                                        }
 
-										$query = "DELETE FROM `quiz_contacts` WHERE `quiz_id` = ".$db->qstr($new_quiz_id);
-										$db->Execute($query);
-
-										$query = "DELETE FROM `quizzes` WHERE `quiz_id` = ".$db->qstr($new_quiz_id);
-										$db->Execute($query);
-
-										$ERROR++;
-										$ERRORSTR[] = "There was a problem creating the new quiz at this time. The system administrator was informed of this error; please try again later.";
+										add_error("There was a problem creating the new quiz at this time. The system administrator was informed of this error; please try again later.");
 									}
 								}
 							} else {
-								$query = "DELETE FROM `quizzes` WHERE `quiz_id` = ".$db->qstr($new_quiz_id);
-								$db->Execute($query);
-
-								$ERROR++;
-								$ERRORSTR[] = "Unable to copy the existing quiz authors from the original quiz. The system administrator was informed of this error; please try again later.";
+								$quiz = Models_Quiz::fetchRowByID($new_quiz_id);
+                                if ($quiz) {
+                                    $quiz->delete();
+                                }
+								
+								add_error("Unable to copy the existing quiz authors from the original quiz. The system administrator was informed of this error; please try again later.");
 
 								application_log("error", "Unable to copy any quiz authors when attempting to copy quiz_id [".$RECORD_ID."] authors to quiz_id [".$new_quiz_id."]. Database said: ".$db->ErrorMsg());
 							}
 						} else {
-							$ERROR++;
-							$ERRORSTR[] = "There was a problem creating the new quiz at this time. The system administrator was informed of this error; please try again later.";
+							add_error("There was a problem creating the new quiz at this time. The system administrator was informed of this error; please try again later.");
 
 							application_log("error", "There was an error inserting a copied quiz, as there was no new_quiz_id available from Insert_Id(). Database said: ".$db->ErrorMsg());
 						}
 					} else {
-						$ERROR++;
-						$ERRORSTR[] = "There was a problem creating the new quiz at this time. The system administrator was informed of this error; please try again later.";
+						add_error("There was a problem creating the new quiz at this time. The system administrator was informed of this error; please try again later.");
 
 						application_log("error", "There was an error inserting a new copied quiz. Database said: ".$db->ErrorMsg());
 					}
 				} else {
-					$ERROR++;
-					$ERRORSTR[] = "You do not have permission to create a new quiz with these parameters. ";
+					add_error("You do not have permission to create a new quiz with these parameters.");
 
 					application_log("error", "There was an error inserting a new copied quiz due to lack of permissions");
 				}
 
 			} else {
-				$ERROR++;
-				$ERRORSTR[] = "Unable to copy this quiz because the <strong>New Quiz Title</strong> field is required, and was not provided.";
+				add_error("Unable to copy this quiz because the <strong>New Quiz Title</strong> field is required, and was not provided.");
 			}
-
-
 
 			if (!$ERROR) {
 				$url = ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$new_quiz_id;
 
-				$SUCCESS++;
-				$SUCCESSSTR[] = "You have successfully created a new quiz (<strong>".html_encode($PROCESSED["quiz_title"])."</strong>) based on <strong>".html_encode($quiz_record["quiz_title"])."</strong>.<br /><br />You will now be redirected to the <strong>newly copied</strong> quiz; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+				add_success("You have successfully created a new quiz (<strong>".html_encode($PROCESSED["quiz_title"])."</strong>) based on <strong>".html_encode($quiz_record["quiz_title"])."</strong>.<br /><br />You will now be redirected to the <strong>newly copied</strong> quiz; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
 
 				application_log("success", "Original quiz_id [".$RECORD_ID."] has successfully been copied to new quiz_id [".$new_quiz_id."].");
 
@@ -170,23 +183,21 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 			} else {
 				$url = ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$quiz_record["quiz_id"];
 
-				$ERRORSTR[(count($ERRORSTR) - 1)] .= "<br /><br />You will now be redirected to the <strong>original</strong> quiz; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
+				add_error("<br /><br />You will now be redirected to the <strong>original</strong> quiz; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.");
 				
 				echo display_error();
 			}
 
 			$ONLOAD[] = "setTimeout('window.location=\\'".$url."\\'', 5000)";
 		} else {
-			$ERROR++;
-			$ERRORSTR[] = "In order to copy a quiz, you must provide a valid quiz identifier.";
+			add_error("In order to copy a quiz, you must provide a valid quiz identifier.");
 
 			echo display_error();
 
 			application_log("notice", "Failed to provide a valid quiz identifer [".$RECORD_ID."] when attempting to copy a quiz.");
 		}
 	} else {
-		$ERROR++;
-		$ERRORSTR[] = "In order to copy a quiz, you must provide a quiz identifier.";
+		add_error("In order to copy a quiz, you must provide a quiz identifier.");
 
 		echo display_error();
 

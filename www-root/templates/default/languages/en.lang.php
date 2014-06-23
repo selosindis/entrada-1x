@@ -11,9 +11,11 @@
  * @copyright Copyright 2008 University of Calgary. All Rights Reserved.
  *
 */
+
 global $AGENT_CONTACTS;
+
 return array (
-	/**
+	/*
 	 * Navigation
 	 */
 	"navigation_tabs" => array (
@@ -43,7 +45,7 @@ return array (
 		)
 	),
 
-	/**
+	/*
 	 * Global terminology used across different Entrada modules.
 	 */
     "Organisation" => "Organisation",
@@ -74,7 +76,7 @@ return array (
 		)
 	),
 
-    /**
+    /*
      * Events Module
      */
 	"events_filter_controls" => array (
@@ -112,7 +114,7 @@ return array (
 		),
 	),
 
-	/**
+	/*
 	 * Dashboard Module
 	 */
     "public_dashboard_feeds" => array (
@@ -176,7 +178,7 @@ return array (
     "public_dashboard_block_weather" => "Weather Forecast",
     "public_dashboard_block_community" => "My Communities",
 
-	/**
+	/*
 	 * Communities Module
 	 */
     "public_communities_heading_line" => "Creating a <strong>new community</strong> in the <strong>Entrada Community System</strong> gives you a <strong>place to connect</strong> on-line.",
@@ -224,7 +226,7 @@ return array (
     "community_history_move_file" => "The <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-file&id=%RECORD_ID%\">%RECORD_TITLE%</a> file was moved to a different <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-folder&id=%PARENT_ID%\">folder</a>.",
 	"community_history_move_photo" => "The <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-photo&id=%RECORD_ID%\">%RECORD_TITLE%</a> photo was moved to a different <a href=\"%SITE_COMMUNITY_URL%:%PAGE_URL%?action=view-gallery&id=%PARENT_ID%\">gallery</a>.",
 
-	/**
+	/*
 	 * MSPR Module
 	 */
 	"mspr_no_entity" => "No Entity ID provided.",
@@ -244,7 +246,7 @@ return array (
 	"mspr_too_many_critical_enquiry" => "Cannot have more than one Critical Enquiry on MSPR. Please edit the existing project or remove it before adding a new one.",
 	"mspr_too_many_community_based_project" => "Cannot have more than one Community-Based Project on MSPR. Please edit the existing project or remove it before adding a new one.",
 
-	/**
+	/*
      * Courses Module
      */
 	"course" => "Course",
@@ -263,17 +265,41 @@ return array (
 	/*
 	 * Copyright Notice
 	 */
+    "copyright_title" => "Acceptable Use Agreement",
+    "copyright_accept_label" => "<strong>I accept</strong> I will comply with this copyright policy.",
 	"copyright" => array(
-		"copyright-version" => "",    /* Latest version date */
-		"copyright-firstlogin" => "<b>USE OF COPYRIGHT MATERIALS IN ".APPLICATION_NAME."</b>
-			<br>&nbsp;<br>Copyright protects the form in which literary, artistic, musical and dramatic works are expressed. In &lt;COUNTRY&gt;, copyright exists once a work is expressed in fixed form;
-			no special registration needs to take place. Copyright usually resides with the creator of the work. Copyright exists in most work for 50 years after the death of the creator.
-			<br>&nbsp;<br>The University of Entrada encourages access to works while ensuring that the rights of creators are respected in accordance with the Copyright Act, (see...)<br>
-			It is the responsibility of each individual to ensure compliance with copyright regulations.<br>To proceed, you accept to comply with the copyright policy.",
-		"copyright-uploads" => "<b>USE OF COPYRIGHT MATERIALS IN ".APPLICATION_NAME."</b>
-			<br>&nbsp;<br>Copyright protects the form in which literary, artistic, musical and dramatic works are expressed. In &lt;COUNTRY&gt;, copyright exists once a work is expressed in fixed form;
-			no special registration needs to take place. Copyright usually resides with the creator of the work. Copyright exists in most work for 50 years after the death of the creator.
-			<br>&nbsp;<br>The University of Entrada encourages access to works while ensuring that the rights of creators are respected in accordance with the Copyright Act, (see...)<br>
-			It is the responsibility of each individual to ensure compliance with copyright regulations.<br>You agree to comply, to continue to upload this material.",
-	)
+		"copyright-version" => "", /* Latest Version Date (YYYY-MM-DD HH:MM:SS) */
+		"copyright-firstlogin" => "<strong>Use of Copyright Materials In ".APPLICATION_NAME."</strong>
+			<p>Copyright protects the form in which literary, artistic, musical and dramatic works are expressed. In COUNTRY, copyright exists once a work is expressed in fixed form; no special registration needs to take place. Copyright usually resides with the creator of the work. Copyright exists in most work for 50 years after the death of the creator.</p>
+			<p>The University of UNIVERSITY encourages access to works while ensuring that the rights of creators are respected in accordance with the Copyright Act, (see...)</p>
+			<p>It is the responsibility of each individual to ensure compliance with copyright regulations.</p>
+			<p>To proceed, you accept to comply with the copyright policy.</p>",
+		"copyright-uploads" => "<strong>Use of Copyright Materials In ".APPLICATION_NAME."</strong>
+			<p>Copyright protects the form in which literary, artistic, musical and dramatic works are expressed. In COUNTRY, copyright exists once a work is expressed in fixed form; no special registration needs to take place. Copyright usually resides with the creator of the work. Copyright exists in most work for 50 years after the death of the creator.</p>
+			<p>The University of UNIVERSITY encourages access to works while ensuring that the rights of creators are respected in accordance with the Copyright Act, (see...)</p>
+			<p>It is the responsibility of each individual to ensure compliance with copyright regulations.</p>
+			<p>To proceed, you accept to comply with the copyright policy.</p>",
+	),
+
+    /*
+     * Gradebook Module
+     */
+    "assignment_notice" => "
+    <p>
+        A new assignment [<a href=\"%assignment_submission_url%\">%assignment_title%</a>] has been released in %course_code%: %course_name%.
+    </p>
+    <p>
+        Details for this Assignment are as follows:
+    </p>
+    <p>
+        Due Date: %due_date%
+    </p>
+    <p>
+        Title: %assignment_title%
+    </p>
+    <p>
+        Description:<br />
+        %assignment_description%
+    </p>
+    ",
 );

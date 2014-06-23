@@ -103,6 +103,39 @@ class Models_Logbook {
         return $objectives;
     }
     
+    public function getAllRequiredObjectivesMobile($course_id = false) {
+        global $db;
+        
+        if (!$course_id) {
+            $course_id = $this->getCourseID();
+        }
+        
+        $objectives = array();
+        
+        $query = "SELECT `objective_id` FROM `course_objectives`
+                    ".($course_id ? "WHERE `course_id` = ".$db->qstr($course_id) : "");
+        $objective_ids = $db->GetAll($query);
+        if ($objective_ids) {
+            $objective_ids_array = $objective_ids;
+            foreach ($objective_ids as $objective_id) {
+                $objective = Models_Objective::fetchRow($objective_id["objective_id"]);
+                if ($objective) {
+                    $descendant_ids = Models_Objective::getChildIDs($objective_id["objective_id"]);
+                    foreach ($descendant_ids as $descendant_id) {
+                        $descendant = Models_Objective::fetchRow($descendant_id);
+                        if ($descendant && $descendant->getLoggable() && !(Models_Objective::getChildIDs($descendant_id))) {
+                            $objectives[$descendant->getID()] = $descendant->toArray();
+                        }
+                    }
+                    if (!$descendant_ids && $objective->getLoggable()) {
+                        $objectives[$objective->getID()] = $objective->toArray();
+                    }
+                }
+            }
+        }
+        return $objectives;
+    }
+    
     public static function getLoggingCourses () {
         global $db, $ENTRADA_ACL, $ENTRADA_USER;
         
@@ -161,7 +194,7 @@ class Models_Logbook {
     
     public static function getAgeRanges () {
         global $db;
-       echo $query = "SELECT * FROM `logbook_lu_ageranges` WHERE `agerange_active` = 1";
+        $query = "SELECT * FROM `logbook_lu_ageranges` WHERE `agerange_active` = 1";
         $ageranges = $db->GetAll($query);
         if ($ageranges) {
             return $ageranges;

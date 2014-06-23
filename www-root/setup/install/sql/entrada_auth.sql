@@ -146,7 +146,8 @@ INSERT INTO `acl_permissions` (`resource_type`, `resource_value`, `entity_type`,
 ('eportfolio-artifact-entry', NULL, 'group', 'student', 1, 1, 1, NULL, NULL, 'EportfolioArtifactSharePermitted'),
 ('eportfolio-manage', NULL, 'group:role', 'medtech:admin', 1, 1, 1, NULL, NULL, NULL),
 ('eportfolio-artifact-entry', NULL, 'group', 'faculty', 1, 1, 1, NULL, NULL, NULL),
-('eportfolio-review-interface', NULL, 'group', 'faculty', 1, 1, 1, 1, 1, NULL);
+('eportfolio-review-interface', NULL, 'group', 'faculty', 1, 1, 1, 1, 1, NULL),
+('masquerade', NULL, 'group:role', 'medtech:admin', 1, 1, 1, 1, 1, NULL);
 
 CREATE TABLE IF NOT EXISTS `departments` (
   `department_id` int(12) unsigned NOT NULL AUTO_INCREMENT,

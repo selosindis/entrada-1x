@@ -17,14 +17,8 @@ function renderDOM(jsonResponse, link) {
 				count = parseInt((jsonResponse.courses != null ? jsonResponse.courses.length : 0)) + parseInt((jsonResponse.events != null ? jsonResponse.events.length : 0));
 			}
 			var percent = count / current_total;
-			var color = "";
-			if (percent <= parseFloat(BADGE_IMPORTANT)) {
-				color = "badge badge-important";
-			} else if (percent > parseFloat(BADGE_IMPORTANT) && percent < parseFloat(BADGE_SUCCESS)) {
-				color = "badge badge-warning";
-			} else {
-				color = "badge badge-success";
-			}
+			var color = "badge";
+			
 			new_list_item.append(
 				jQuery(document.createElement("a"))
 					.addClass("objective-link")
@@ -44,22 +38,22 @@ function renderDOM(jsonResponse, link) {
 		jQuery("#objective-details").append("<p>"+jsonResponse.objective_description+"</p>");
 	}
 	if (jsonResponse.courses != null) {
-	if (jsonResponse.courses.length > 0 && COURSE == "") {
-		jQuery("#objective-details").append(jQuery(document.createElement("h2")).html("Mapped Courses"));
-		for (var i=0; i < jsonResponse.courses.length; i++) {
-			var new_course = jQuery(document.createElement("div"));
-			new_course.addClass("course-container").attr("data-id", jsonResponse.courses[i].course_id);
-			new_course.append(
-				jQuery(document.createElement("p")).append(
-					jQuery(document.createElement("a"))
-							.attr("href", SITE_URL+"/courses?id="+jsonResponse.courses[i].course_id)
-							.html("<strong>"+jsonResponse.courses[i].course_code+":</strong> " + jsonResponse.courses[i].course_name)
-				)
-			);
-			jQuery("#objective-details").append(new_course);
-		}
-		courses = true;
-	}
+        if (jsonResponse.courses.length > 0 && COURSE == "") {
+            jQuery("#objective-details").append(jQuery(document.createElement("h2")).html("Mapped Courses"));
+            for (var i=0; i < jsonResponse.courses.length; i++) {
+                var new_course = jQuery(document.createElement("div"));
+                new_course.addClass("course-container").attr("data-id", jsonResponse.courses[i].course_id);
+                new_course.append(
+                    jQuery(document.createElement("p")).append(
+                        jQuery(document.createElement("a"))
+                                .attr("href", SITE_URL+"/courses?id="+jsonResponse.courses[i].course_id)
+                                .html("<strong>"+jsonResponse.courses[i].course_code+":</strong> " + jsonResponse.courses[i].course_name)
+                    )
+                );
+                jQuery("#objective-details").append(new_course);
+            }
+            courses = true;
+        }
 	}
 
 	if (jsonResponse.events != null) {
@@ -126,4 +120,22 @@ jQuery(function(){
 		}
 		return false;
 	});
+    
+    jQuery("#course").on("change", function() {
+        var COURSE_ID = jQuery(this).val();
+        jQuery(".course-specific-objectiveset").remove();
+        jQuery.ajax({
+				url: SITE_URL + "/curriculum/explorer?mode=ajax&method=course_specific_objective_sets&course_id=" + COURSE_ID,
+				success: function(data) {
+                    var jsonResponse = JSON.parse(data);
+                    if (jsonResponse.status == "success") {
+                        jQuery.each(jsonResponse.data, function( i, v ) {
+                            var option = jQuery(document.createElement("option"));
+                            option.val(v.objective_id).html(v.objective_name).addClass("course-specific-objectiveset");
+                            jQuery("#objective-set").append(option);
+                        });
+                    }
+                }
+        });
+    });
 });

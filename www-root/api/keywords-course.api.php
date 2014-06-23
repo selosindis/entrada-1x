@@ -35,44 +35,49 @@
  */
 require_once("init.inc.php");
 
-if((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) { 
+if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
+    $keyword = "";
+    $course_id = 0;
 
-?>
-<HTML>
-    <HEAD>
-
-    </HEAD>
-    <body>
-    <div id="inserted"></div>
-    <div id="deleted"></div>
-
-    <?php
-    $keyword = preg_replace("/[^A-Za-z0-9]/", " ", $_POST['search_term']);
-    $COURSE_ID = preg_replace("/[^A-Za-z0-9]/", " ", $_POST['course_id']);
-    
-    if (strlen($keyword) >= 2 && $keyword !== ' ') {
-        $query = "SELECT DISTINCT d.`descriptor_ui`, d.`descriptor_name` 
-            FROM `mesh_descriptors` AS d 
-            JOIN `mesh_descriptor_concept` AS dc ON dc.`descriptor_ui` = d.`descriptor_ui`
-            JOIN `mesh_concept_term` AS ct ON ct.`concept_ui` = dc.`concept_ui`
-            JOIN `mesh_terms` AS t ON t.`term_ui` = ct.`term_ui`
-            WHERE NOT EXISTS (
-                SELECT ck.`keyword_id` 
-                FROM `course_keywords` AS ck where d.`descriptor_ui` = ck.`keyword_id` and ck.`course_id` = ".$db->qstr($COURSE_ID).") 
-            AND t.`term_name` LIKE ".$db->qstr("%".$keyword."%")."  
-            ORDER BY `descriptor_name`";
-        
-        echo "<ul>";
-        $results = $db->GetAll($query);
-        if ($results) {
-            foreach($results as $result) {
-                echo "<li data-dui=\"".$result['descriptor_ui']."\" id=\"keyword\" data-dname=\"". $result['descriptor_name'] ."\" onclick=\"addval(this)\"><i class=\"icon-plus-sign \"></i> ". $result['descriptor_name'] . "</li>";
-            }
-        } 
-        echo "</ul>";
+    if (isset($_POST["search_term"]) && ($tmp_input = clean_input($_POST["search_term"], "alphanumeric")) && (strlen($tmp_input) > 2)) {
+        $keyword = $tmp_input;
     }
+
+    if (isset($_POST["course_id"]) && ($tmp_input = clean_input($_POST["course_id"], "int"))) {
+        $course_id = $tmp_input;
+    }
+    ?>
+    <html>
+        <head>
+
+        </head>
+        <body>
+            <div id="inserted"></div>
+            <div id="deleted"></div>
+            <?php
+            if ($keyword) {
+                $query = "SELECT DISTINCT d.`descriptor_ui`, d.`descriptor_name`
+                    FROM `mesh_descriptors` AS d
+                    JOIN `mesh_descriptor_concept` AS dc ON dc.`descriptor_ui` = d.`descriptor_ui`
+                    JOIN `mesh_concept_term` AS ct ON ct.`concept_ui` = dc.`concept_ui`
+                    JOIN `mesh_terms` AS t ON t.`term_ui` = ct.`term_ui`
+                    WHERE NOT EXISTS (
+                        SELECT ck.`keyword_id`
+                        FROM `course_keywords` AS ck where d.`descriptor_ui` = ck.`keyword_id` and ck.`course_id` = ".$db->qstr($course_id).")
+                    AND t.`term_name` LIKE ".$db->qstr("%".$keyword."%")."
+                    ORDER BY `descriptor_name`";
+
+                echo "<ul>";
+                $results = $db->GetAll($query);
+                if ($results) {
+                    foreach($results as $result) {
+                        echo "<li data-dui=\"".$result["descriptor_ui"]."\" id=\"keyword\" data-dname=\"".$result["descriptor_name"]."\" onclick=\"addval(this)\"><i class=\"icon-plus-sign \"></i> ".$result["descriptor_name"]."</li>";
+                    }
+                }
+                echo "</ul>";
+            }
+            ?>
+        </body>
+    </html>
+    <?php
 }
-?>
-    </body>
-    
-</HTML>

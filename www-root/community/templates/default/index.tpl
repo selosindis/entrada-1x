@@ -20,15 +20,9 @@
 
 	<link href="{$template_relative}/css/print.css" rel="stylesheet" type="text/css" media="print" />
 
-	<link href='http://fonts.googleapis.com/css?family=Roboto:400,400italic,700,700italic,300,300italic' rel='stylesheet' type='text/css'>
+	<link href="{$protocol}://fonts.googleapis.com/css?family=Roboto:400,400italic,700,700italic,300,300italic" rel="stylesheet" type="text/css" />
 
 	{$page_head}
-
-	<style type="text/css">
-	#site-header {
-		background: transparent url('{$template_relative}/images/header-{$site_theme}.gif') no-repeat bottom;
-	}
-	</style>
 </head>
 <body>
 {$sys_system_navigator}

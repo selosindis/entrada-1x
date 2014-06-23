@@ -935,6 +935,7 @@ if ($COMMUNITY_URL) {
                 $smarty->assign("google_analytics_code", GOOGLE_ANALYTICS_CODE);
 
                 $smarty->assign("isAuthorized", (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] ? true : false));
+                $smarty->assign("protocol", (isset($_SERVER["HTTPS"]) ? "https" : "http"));
 
                 $smarty->assign("navigator_tabs", $navigator_tabs);
 

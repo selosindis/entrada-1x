@@ -301,6 +301,12 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_CURRICULUM"))) {
                             ?>
                             </select>
                             <?php
+                        } else {
+                            ?>
+                            <select id="objective-set" name="objective_parent" >
+                                <option value="0">Please select a course to browse mapped objective sets.</option>
+                            </select>
+                            <?php
                         }
                         ?>
 					</td>

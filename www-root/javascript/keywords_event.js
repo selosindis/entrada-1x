@@ -4,17 +4,19 @@ jQuery(document).ready(function($){
     });
     
     jQuery("input#search").keyup(function(e) {
-        // Set Timeout
+        // Remove Timeout
         clearTimeout($.data(this, 'timer'));
+        jQuery("input#search").removeClass("loading");
 
         // Set Search String
         var search_string = $(this).val();
 
         // Do Search
         if (search_string === '') {
-            jQuery("ul#results").fadeOut();
+            jQuery("div#results").fadeOut();
         }else{
-            jQuery("ul#results").fadeIn();
+            jQuery("div#results").fadeIn();
+            jQuery("input#search").addClass("loading");
             jQuery(this).data('timer', setTimeout(search, 250));
         };
     });
@@ -36,6 +38,7 @@ jQuery(document).ready(function($){
                 cache: false,
                 success: function(html){
                     $("div#results").html(html);
+                    $("input#search").removeClass("loading");
                 }
             });
         }

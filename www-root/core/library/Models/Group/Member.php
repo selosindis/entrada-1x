@@ -92,7 +92,7 @@ class Models_Group_Member extends Models_Base {
                     AND (b.`access_expires` = '0' OR b.`access_expires` > ".$db->qstr(time()).")
                     AND c.`group_id` = ?
                     AND c.`member_active` = ?
-                    ". (trim($search_term) ? " AND (CONCAT(a.`firstname`, ' ' , a.`lastname`) LIKE ".$db->qstr("%".$search_term."%")." OR CONCAT(a.`lastname`, ' ' , a.`firstname`) LIKE ".$db->qstr("%".$search_term."%") : "") ."
+                    ". (trim($search_term) ? " AND (CONCAT(a.`firstname`, ' ' , a.`lastname`) LIKE ".$db->qstr("%".$search_term."%")." OR CONCAT(a.`lastname`, ' ' , a.`firstname`) LIKE ".$db->qstr("%".$search_term."%") .")" : "") ."
                     GROUP BY a.`id`
                     ORDER BY a.`lastname` ASC, a.`firstname` ASC";
         
@@ -120,7 +120,7 @@ class Models_Group_Member extends Models_Base {
                     AND (b.`access_starts` = '0' OR b.`access_starts` <= ?)
                     AND (b.`access_expires` = '0' OR b.`access_expires` > ?)
                     AND a.`id` = ?
-                    ". (trim($search_term) ? " AND (CONCAT(a.`firstname`, ' ' , a.`lastname`) LIKE ".$db->qstr("%".$search_term."%")." OR CONCAT(a.`lastname`, ' ' , a.`firstname`) LIKE ".$db->qstr("%".$search_term."%") : "") ."
+                    ". (trim($search_term) ? " AND (CONCAT(a.`firstname`, ' ' , a.`lastname`) LIKE ".$db->qstr("%".$search_term."%")." OR CONCAT(a.`lastname`, ' ' , a.`firstname`) LIKE ".$db->qstr("%".$search_term."%"). ")" : "") ."
                     GROUP BY a.`id`
                     ORDER BY a.`lastname` ASC, a.`firstname` ASC";
         

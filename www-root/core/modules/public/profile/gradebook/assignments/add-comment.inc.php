@@ -88,6 +88,7 @@ if ($RECORD_ID) {
                     }
 
                     if (!$ERROR) {
+                        $PROCESSED["proxy_to_id"]       = $ENTRADA_USER->getID();
                         $PROCESSED["assignment_id"]		= $RECORD_ID;
                         $PROCESSED["proxy_id"]			= $ENTRADA_USER->getID();
                         $PROCESSED["comment_active"]	= 1;

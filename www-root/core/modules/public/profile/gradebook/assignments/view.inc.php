@@ -348,7 +348,8 @@ if ($RECORD_ID) {
                                   ON a.`afile_id`=c.`afile_id`
                                   LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
                                   ON a.`proxy_id`=b.`id`
-                                  WHERE a.`assignment_id`=".$RECORD_ID."
+                                  WHERE a.`assignment_id`=".$db->qstr($RECORD_ID)."
+                                  AND a.`proxy_id`=".$db->qstr($PROXY_ID)."
                                   AND a.`file_active`=1
                                   AND c.`file_type`='submission'
                                   AND a.`file_version`=
@@ -529,11 +530,12 @@ if ($RECORD_ID) {
                             <?php
                             
                             $query		= "
-                                        SELECT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `commenter_fullname`, b.`username` AS `commenter_username`
+                                        SELECT DISTINCT a.*, CONCAT_WS(' ', b.`firstname`, b.`lastname`) AS `commenter_fullname`, b.`username` AS `commenter_username`
                                         FROM `assignment_comments` AS a
                                         LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS b
                                         ON b.`id` = a.`proxy_id`
                                         WHERE a.`proxy_id` = b.`id`
+                                        AND a.`proxy_to_id` = ".$db->qstr($PROXY_ID)."
                                         AND a.`assignment_id` = ".$db->qstr($RECORD_ID)."
                                         AND a.`comment_active` = '1'
                                         ORDER BY a.`release_date` ASC";
@@ -585,11 +587,16 @@ if ($RECORD_ID) {
                                     </tbody>
                                 </table>
                                 
-                                <?php if ($ADD_COMMENT) { ?>
+                            <?php 
+                            } else {
+                                echo "<p>No comments found.</p>";
+                            }
+                            if ($ADD_COMMENT) { 
+                            ?>
                                 <a href="<?php echo ENTRADA_URL."/profile/gradebook/assignments"; ?>?section=add-comment&assignment_id=<?php echo $RECORD_ID; ?>">
                                     <button class="btn btn-default">Add Assignment Comment</button>
                                 </a>
-                                <?php } 
+                            <?php
                             }
                             ?>
                             

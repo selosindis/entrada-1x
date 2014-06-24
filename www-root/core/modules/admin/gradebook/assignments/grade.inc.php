@@ -297,6 +297,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 																	LEFT JOIN `".AUTH_DATABASE."`.`user_data` AS c
 																	ON a.`proxy_id` = c.`id` 
 																	WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)." 
+                                                                    AND a.`proxy_to_id` = ".$db->qstr($student["proxy_id"])."
 																	AND a.`comment_active` = '1'
 																	ORDER BY a.`updated_date`";
 														$comment_results = $db->GetAll($query);

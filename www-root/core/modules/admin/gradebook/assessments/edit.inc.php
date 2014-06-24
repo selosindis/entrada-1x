@@ -21,6 +21,7 @@
  * @copyright Copyright 2010 Queen's University. All Rights Reserved.
  *
  */
+
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	exit;
 } elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
@@ -43,12 +44,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 
 	application_log("notice", "Failed to provide assessment identifier when attempting to edit an assessment");
 } else {
-	$query = "	SELECT * FROM `assessments` 
-						WHERE `assessment_id` = " . $db->qstr($ASSESSMENT_ID);
-	$assessment_details = $db->GetRow($query);
+	$assessment = Models_Gradebook_Assessment::fetchRowByID($ASSESSMENT_ID);
+	$assessment_details = $assessment->toArray();
 
-	if ($assessment_details) {
+	if (!empty($assessment_details)) {
 		if ($COURSE_ID) {
+            $assessment_event = Models_Assessment_AssessmentEvent::fetchRowByAssessmentID($ASSESSMENT_ID);
+            
+            $event = false;
+            if ($assessment_event) {
+                $event = $assessment_event::getEvent($assessment_event->getEventID());
+            }
+            
 			$COURSE_ID = $assessment_details["course_id"]; // Ensure (for permissions and data congruency) that the course_id is actually that of the assessment
 			$query = "	SELECT * FROM `courses` 
 								WHERE `course_id` = " . $db->qstr($COURSE_ID) . "
@@ -207,6 +214,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						} else {
 							$PROCESSED["narrative"] = 0;
 						}
+                        
+                        if (isset($_POST["event_id"]) && $tmp_input = clean_input($_POST["event_id"], array("trim", "int"))) {
+                            $PROCESSED["event_id"] = $tmp_input;
+                            $event = Models_Event::get($PROCESSED["event_id"]);
+                        } else {
+                            $event = false;
+                        }
+                        
 						//optional/required check
 						if ((isset($_POST["assessment_required"]))) {
 							switch (clean_input($_POST["assessment_required"], array("trim", "int"))) {
@@ -269,29 +284,93 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							$PROCESSED["updated_by"] = $ENTRADA_USER->getID();
 							$PROCESSED["course_id"] = $COURSE_ID;
 
-							if ($db->AutoExecute("assessments", $PROCESSED, "UPDATE", "`assessment_id` = " . $db->qstr($assessment_details["assessment_id"]))) {
+							if ($assessment->fromArray($PROCESSED)->update()) {
+                                if ($PROCESSED["cohort"] != $assessment_details["cohort"]) {
+                                    $query = "SELECT `notice_id` FROM `assignments`
+                                                WHERE `assessment_id` = " . $db->qstr($assessment_details["assessment_id"]) . "
+                                                AND `notice_id` IS NOT NULL
+                                                AND `notice_id` != '0'";
+                                    $notice_id = $db->GetOne($query);
+                                    if ($notice_id) {
+                                        $query = "SELECT * FROM `groups` WHERE `group_id` = ".$db->qstr($PROCESSED["cohort"]);
+                                        $assessment_group = $db->GetRow($query);
+                                        if ($assessment_group) {
+                                            $query = "SELECT * FROM `notice_audience`
+                                                        WHERE `notice_id` = " . $db->qstr($notice_id) . "
+                                                        AND `audience_value` = " . $db->qstr($assessment_details["cohort"]) . "
+                                                        AND `audience_type` IN ('cohort', 'course_list')";
+                                            $notice_audience = $db->GetRow($query);
+                                            if ($notice_audience) {
+                                                $notice_audience["updated_by"] = $ENTRADA_USER->getID();
+                                                $notice_audience["updated_date"] = time();
+                                                $notice_audience["audience_value"] = $PROCESSED["cohort"];
+                                                $notice_audience["audience_type"] = $assessment_group["group_type"];
+                                                if (!$db->AutoExecute("`notice_audience`", $notice_audience, "UPDATE", "`naudience_id` = ".$db->qstr($notice_audience["naudience_id"]))) {
+                                                    application_log("error", "An error was encountered while attempting to update the `notice_audience` record for an notice [".$notice_id."]. DB Said: ".$db->ErrorMsg());
+                                                }
+                                            } else {
+                                                $notice_audience = array(
+                                                    "notice_id" => $notice_id,
+                                                    "audience_type" => $assessment_group["group_type"],
+                                                    "audience_value" => $PROCESSED["cohort"],
+                                                    "updated_by" => $ENTRADA_USER->getID(),
+                                                    "updated_date" => time()
+                                                );
+                                                if (!$db->AutoExecute("`notice_audience`", $notice_audience, "INSERT")) {
+                                                    application_log("error", "An error was encountered while attempting to update the `notice_audience` record for an notice [".$notice_id."]. DB Said: ".$db->ErrorMsg());
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
 								if ($assessment_options) {
 									$query = "SELECT `option_id`, `assessment_id`, `option_active` FROM `assessment_options` WHERE `assessment_id` = ".$db->qstr($assessment_details["assessment_id"]);
 									$current_assessment_options = $db->GetAssoc($query);
 									foreach ($assessment_options as $assessment_option) {
-										$query = "SELECT * FROM `assessments` WHERE assessment_id =" . $ASSESSMENT_ID;
-										$results = $db->GetRow($query);
-										if ($results) {
-											$PROCESSED["assessment_id"] = $results["assessment_id"];
-											$PROCESSED["option_id"] = $assessment_option["id"];
-											if (is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected)) {
-												$PROCESSED["option_active"] = 1;
-											} else {
-												$PROCESSED["option_active"] = 0;
-											}
-											if (array_key_exists($assessment_option["id"], $current_assessment_options)) {
-												$db->AutoExecute("assessment_options", $PROCESSED, "UPDATE", "`assessment_id` = " . $db->qstr($assessment_details["assessment_id"]) . "AND `option_id` = " . $db->qstr($assessment_option["id"]));
-											} else {
-												$db->AutoExecute("assessment_options", $PROCESSED, "INSERT");
-											}
-										}
+                                        $PROCESSED["assessment_id"] = $ASSESSMENT_ID;
+                                        $PROCESSED["option_id"] = $assessment_option["id"];
+                                        if (is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected)) {
+                                            $PROCESSED["option_active"] = 1;
+                                        } else {
+                                            $PROCESSED["option_active"] = 0;
+                                        }
+                                        if (array_key_exists($assessment_option["id"], $current_assessment_options)) {
+                                            $db->AutoExecute("assessment_options", $PROCESSED, "UPDATE", "`assessment_id` = " . $db->qstr($assessment_details["assessment_id"]) . "AND `option_id` = " . $db->qstr($assessment_option["id"]));
+                                        } else {
+                                            $db->AutoExecute("assessment_options", $PROCESSED, "INSERT");
+                                        }
 									}
 								}
+                                
+                                $assessment_event = Models_Assessment_AssessmentEvent::fetchRowByAssessmentID($ASSESSMENT_ID);
+                                   
+                                if ($assessment_event) {
+                                    $assessment_event->setActive("0");
+                                    if (!$assessment_event->update()) {
+                                        application_log("error", "An error occured while attempting to update assessment learning event: " . $assessment_event->getID(). " DB said: " . $db->ErrorMsg());
+                                    } else {
+                                        application_log("success", "Successfully removed learning event [".$assessment_event->getID()."] to assessment ID [".$ASSESSMENT_ID."]");
+                                    }
+                                }
+                                
+                                if (isset($PROCESSED["event_id"])) {
+                                    $assessment_event_array = array(
+                                        "assessment_id" => $ASSESSMENT_ID,
+                                        "event_id" => $PROCESSED["event_id"],
+                                        "updated_by" => $PROCESSED["updated_by"], 
+                                        "updated_date" => $PROCESSED["updated_date"],
+                                        "active" => 1
+                                    );
+
+                                    $assessment_event = new Models_Assessment_AssessmentEvent($assessment_event_array);
+
+                                    if (!$assessment_event->insert()) {
+                                        echo $db->ErrorMsg(); exit;
+                                        application_log("error", "Unable insert the attached learning event. Database said: ".$db->ErrorMsg());
+                                    } else {
+                                        application_log("success", "Successfully attached learning event [".$PROCESSED["event_id"]."] to assessment ID [".$ASSESSMENT_ID."]");
+                                    }
+                                }
 								
 								$query = "DELETE FROM `assessment_objectives` WHERE `objective_type` = 'clinical_presentation' AND `assessment_id` = ".$db->qstr($ASSESSMENT_ID);
 								if ($db->Execute($query)) {
@@ -364,6 +443,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 						$PROCESSED = $assessment_details;
 						$query = "SELECT * FROM `assessment_options` WHERE `assessment_id` =" . $db->qstr($ASSESSMENT_ID);
 						$extended_options = $db->GetAll($query);
+                        $assessment_options_selected = array();
 						foreach ($extended_options as $extended_option) {
 							if ($extended_option["option_active"] == 1) {
 								$assessment_options_selected[] = $extended_option["option_id"];
@@ -518,7 +598,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							echo display_error();
 						}
 						?>
-						<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2)); ?>" method="post">
+						<form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assessments?<?php echo replace_query(array("step" => 2)); ?>" method="post" id="assessment-form">
 							<h2>Assessment Details</h2>
 							<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Assessment">
 								<colgroup>
@@ -551,7 +631,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 												<td>
 													<span class="radio-group-title">All Learners in the <?php echo $course_details["course_code"];?> Course List Group</span>
 													<div class="content-small">This assessment is intended for all learners that are members of the <?php echo $course_details["course_code"];?> Course List.</div>
-													<input id="course_list" name="course_list" type="hidden" value="<?php echo $course_lists[0]["group_id"]; ?>">
+													<input id="course_list" class="course-list" name="course_list" type="hidden" value="<?php echo $course_lists[0]["group_id"]; ?>">
 												</td>
 											</tr>
 									<?php
@@ -560,7 +640,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											<td></td>
 											<td><label for="course_list" class="form-required">Course List:</label></td>
 											<td>
-												<select id="course_list" name="course_list" style="width: 250px">
+												<select id="course_list" class="course-list" name="course_list" style="width: 250px">
 												<?php
 													foreach ($course_lists as $course_list) {
 														echo "<option value=\"".$course_list["group_id"]."\"".(($PROCESSED["cohort"] == $course_list["group_id"]) ? " selected=\"selected\"" : "").">".html_encode($course_list["group_name"])."</option>\n";
@@ -577,7 +657,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											<td></td>
 											<td><label for="cohort" class="form-required">Cohort</label></td>
 											<td>
-												<select id="cohort" name="cohort" style="width: 250px">
+												<select id="cohort" class="course-list" name="cohort" style="width: 250px">
 													<?php
 													$active_cohorts = groups_get_all_cohorts($ENTRADA_USER->getActiveOrganisation());
 													if (isset($active_cohorts) && !empty($active_cohorts)) {
@@ -699,7 +779,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											$assessment_options = $db->GetAll($query);
 											if ($assessment_options) {
 												foreach ($assessment_options as $assessment_option) {
-													echo "<label class=\"checkbox\" for=\"extended_option" . $assessment_option["id"] . "\"><input type=\"checkbox\" value=\"" . $assessment_option["id"] . "\" name=\"option[]\"" . (((in_array($assessment_option["id"], $assessment_options_selected))) ? " checked=\"checked\"" : "") . " id=\"extended_option" . $assessment_option["id"] . "\"/>" . $assessment_option["title"] . "</label><br />";
+													echo "<label class=\"checkbox\" for=\"extended_option" . $assessment_option["id"] . "\"><input type=\"checkbox\" value=\"" . $assessment_option["id"] . "\" name=\"option[]\"" . (((is_array($assessment_options_selected) && in_array($assessment_option["id"], $assessment_options_selected))) ? " checked=\"checked\"" : "") . " id=\"extended_option" . $assessment_option["id"] . "\"/>" . $assessment_option["title"] . "</label><br />";
 												}
 											}
 											?>
@@ -888,6 +968,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											</select>
 										</td>
 									</tr>
+                                    <tr>
+                                        <td colspan="3">&nbsp;</td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td valign="top"><label class="form-nrequired">Assessment Event:</label></td>
+                                        <td>
+                                            <a id="attach-event-button" href="#event-modal" class="btn btn-success space-below <?php echo $event ? "hide" : ""; ?>" role="button" data-toggle="modal"><i class="icon-plus-sign icon-white"></i> Attach Learning Event </a>
+                                            <ul id="attached-event-list">
+                                                <li>
+                                                    <div class="well well-small content-small" id="no-learning-event">
+                                                        There are currently no learning events attached to this assessment. To attach a learning event to this assessment, use the attach event button.
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </td>
+                                    </tr>
 									<tr>
 										<td colspan="3">&nbsp;</td>
 									</tr>
@@ -923,14 +1020,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 								</tbody>
 								<tbody>
 									<tr>
-										<td><input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /></td>
-										<td colspan="2">
-											<label for="narrative_assessment" class="form-nrequired">This is a <strong>narrative assessment</strong>.</label>
-										</td>
+										<td colspan="3">
+                                            <label for="narrative_assessment" class="form-nrequired checkbox">
+                                                <input type="checkbox" id="narrative_assessment" name="narrative_assessment" value="1" <?php echo (($PROCESSED["narrative"] == 1)) ? " checked=\"checked\"" : ""?> /> This is a <strong>narrative assessment</strong>.
+                                            </label>
+                                        </td>
 									</tr>
 								</tbody>
 							</table>
 							<script type="text/javascript" charset="utf-8">
+                                var course_id = "<?php echo $COURSE_ID ?>";
                                 var modalDialog;
                                 var ajax_url = '';
                                 document.observe('dom:loaded', function() {
@@ -955,7 +1054,69 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         }
                                     });
                                 });
+                                
 								jQuery(function($) {
+                                    //var search_type = "<?php echo (isset($PREFERENCES["assessment-event-search"]) ? $PREFERENCES["assessment-event-search"] : "calendar"); ?>";
+                                    var timer;  
+                                    var done_interval = 600;
+
+                                    if ($("#assessment-event").length > 0) {
+                                        buildAttachedEventList();
+                                    }
+                                    
+                                    $("#event-title-search").keyup(function () {
+                                        var title = $(this).val();
+
+                                        clearTimeout(timer);
+                                        timer = setTimeout(function () {
+                                            getEventsByTitle(title);
+                                        }, done_interval);
+                                    });
+
+                                    $("#events-search-wrap").on("click", "#events-search-list li", function () {
+                                        if ($("#events-search-list").children().hasClass("active")) {
+                                            $("#events-search-list").children().removeClass("active");
+                                        }
+
+                                        if (!$(this).hasClass("active")) {
+                                            $(this).addClass("active");
+                                        }
+                                    });
+
+                                    $("#attach-learning-event").on("click", function (e) {
+                                        e.preventDefault();
+
+                                        if ($("#events-search-list").children().hasClass("active")) {
+                                            var event_id = $("#events-search-list").children(".active").attr("data-id");
+                                            var event_title = $("#events-search-list").children(".active").attr("data-title");
+                                            var event_date = $("#events-search-list").children(".active").attr("data-date");
+                                            var event_success_li = document.createElement("li");
+                                            var event_success_div = document.createElement("div");
+
+                                            buildEventInput(event_id, event_title, event_date);                                            
+                                            buildAttachedEventList ();
+
+                                            $(event_success_li).append(event_success_div);
+                                            $("#attached-event-list").prepend(event_success_li);
+                                            $("#attach-event-button").addClass("hide");
+                                            $("#event-modal").modal("hide");
+                                        } else {
+                                            alert("Please select a learning event to attach to this assessment. If you no longer wish to attach a learning event to this assessment, click close.");
+                                        }
+                                    });
+
+                                    $("#assessment-form").on("click", "#remove-attched-assessment-event", function () {
+                                        var event_well_li = document.createElement("li");
+                                        var event_well = document.createElement("div");
+
+                                        $(event_well).addClass("well well-small content-small").text("There are currently no learning events attached to this assessment. To attach a learning event to this assessment, use the attach event button. ");
+                                        $(event_well_li).append(event_well);
+                                        $("#attached-event-list").empty();
+                                        $("#attached-event-list").append(event_well_li);
+                                        $("#attach-event-button").removeClass("hide");
+                                        $("#assessment-event").remove();
+                                    });
+
 									jQuery('#marking_scheme_id').change(function() {
 										if(jQuery(':selected', this).val() == 3 || jQuery(':selected', this).text() == "Numeric") {
 											jQuery('#numeric_marking_scheme_details').show();
@@ -963,51 +1124,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											jQuery('#numeric_marking_scheme_details').hide();
 										}
 									}).trigger('change');
-									/*
-									 *			
-									 *  Removed as per under grad medicine request, commented out in case this functionality needs to re implemented								
-									jQuery('#grade_weighting').keyup(function() {
-										if (parseFloat(jQuery('#grade_weighting').val())) {
-											jQuery('#assessment_required_1').attr('checked', 'checked');
-											jQuery('#assessment_required_options').hide();
-														
-										} else {
-											jQuery('#assessment_required_0').attr('checked', 'checked');
-											jQuery('#assessment_required_options').show();
-														
-										}
-									});
-												
-									jQuery('#grade_weighting').ready(function() {
-										if (parseFloat(jQuery('#grade_weighting').val())) {
-											jQuery('#assessment_required_1').attr('checked', 'checked');
-											jQuery('#assessment_required_options').hide();
-														
-										} else {
-											jQuery('#assessment_required_options').show();
-														
-										}
-									});
-									*/			
-//									jQuery('#assessment_characteristic').change(function (){
-//										jQuery('#assessment_options input:[type=checkbox]').removeAttr('checked');
-//										var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
-//										if(assessmentType == 'exam' || assessmentType == 'quiz') {
-//											jQuery('#assessment_options').show();
-//										} else {
-//											jQuery('#assessment_options').hide();
-//										}
-//									});
-//												
-//									jQuery('#assessment_characteristic').ready(function (){
-//										var assessmentType = jQuery('#assessment_characteristic option:selected').attr('assessmenttype');
-//										if(assessmentType == 'exam' || assessmentType == 'quiz') {
-//											jQuery('#assessment_options').show();
-//										} else {
-//											jQuery('#assessment_options').hide();
-//											jQuery('#quiz_options').hide();
-//										}
-//									});	
+                                    
+                                    $("#close-event-modal").on("click", function (e) {
+                                        e.preventDefault();
+                                        $("#event-modal").modal("hide");
+                                    });
+
+                                    $("#event-modal").on("hide", function () {
+                                        if ($("#events-search-list").children().hasClass("active")) {
+                                            $("#events-search-list").children().removeClass("active");
+                                        }
+                                        $("#events-search-list").empty();
+                                        $("#event-title-search").val("");
+                                    });
+                                    
+                                    $("#event-modal").on("show", function () {
+                                        if (!jQuery("#event-search-msgs").children().length) {
+                                            var msg = ["To search for learning events, begin typing the title of the event you wish to find in the search box."];
+                                            display_notice(msg, "#event-search-msgs", "append");
+                                        }
+                                    });
                                     
 									jQuery('#show_quiz_option_1').ready(function (){
                                         if (jQuery('#show_quiz_option_1').is(":visible") && jQuery('#show_quiz_option_1').is(":checked")) {
@@ -1058,6 +1194,89 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     } else {
                                         alert("You must select at least one question from the quiz to associate with this assessment.");
                                     }
+                                }
+                                
+                                function getEventsByTitle (title) {
+                                    var audience = jQuery(".course-list").val();
+                                    
+                                    jQuery.ajax({
+                                        url: "<?php echo ENTRADA_URL; ?>/api/assessment-event.api.php",
+                                        data: "method=title_search&course_id=" + course_id + "&title=" + title + "&audience=" + audience,
+                                        type: "GET",
+                                        beforeSend: function () {
+                                            jQuery("#event-search-msgs").empty();
+                                            jQuery("#events-search-list").empty();
+                                            jQuery("#loading").removeClass("hide");
+                                        },
+                                        success: function(data) {
+                                            jQuery("#loading").addClass("hide");
+                                            var response = JSON.parse(data);
+                                            if (response.status == "success") {
+                                                jQuery.each(response.data, function (key, event) {
+                                                    buildEventList(event);
+                                                });
+                                            } else {
+                                                display_notice(response.data, "#event-search-msgs", "append");
+                                            }
+                                        }, 
+                                        error: function () {
+                                            jQuery("#loading").addClass("hide");
+                                        }
+                                    });
+                                }
+                               
+                                function buildEventList (event) {
+                                    var event_li = document.createElement("li");
+                                    var event_div = document.createElement("div");
+                                    var event_h3 = document.createElement("h3");
+                                    var event_span = document.createElement("span");
+
+                                    jQuery(event_h3).addClass("event-text").text(event.event_title).html();
+                                    jQuery(event_span).addClass("event-text").addClass("muted").text(event.event_start).html();
+                                    jQuery(event_div).addClass("event-container").append(event_h3).append(event_span);
+                                    jQuery(event_li).attr({"data-id": event.event_id, "data-title": event.event_title, "data-date": event.event_start}).append(event_div);
+
+                                    if (jQuery("#calendar-search-toggle").hasClass("active")) {
+                                        jQuery("#events-list").append(event_li);
+                                    } else {
+                                        jQuery("#events-search-list").append(event_li);
+                                    }
+                                }
+
+                                function buildEventInput (event_id, event_title, event_date) {
+                                    var event_input = document.createElement("input");
+
+                                    if (jQuery("#assessment-event").length) {
+                                        jQuery("#assessment-event").remove();
+                                    }
+
+                                    jQuery(event_input).attr({name: "event_id", id: "assessment-event", type: "hidden", value: event_id, "data-title": event_title, "data-date": event_date});
+                                    jQuery("#assessment-form").append(event_input);   
+                                }
+
+                                function buildAttachedEventList () {
+                                    var event_title = jQuery("#assessment-event").attr("data-title");
+                                    var event_date = jQuery("#assessment-event").attr("data-date");
+                                    var event_id = jQuery("#assessment-event").val();
+                                    var event_li = document.createElement("li");
+                                    var event_div = document.createElement("div");
+                                    var remove_icon_div = document.createElement("div");
+                                    var event_h3 = document.createElement("h3");
+                                    var event_span = document.createElement("span");
+                                    var remove_icon_span = document.createElement("span");
+                                    var event_remove_icon = document.createElement("i");
+
+                                    jQuery(remove_icon_span).attr({id: "remove-attched-assessment-event"}).addClass("label label-important");
+                                    jQuery(event_remove_icon).addClass("icon-trash icon-white");
+                                    jQuery(remove_icon_span).append(event_remove_icon);
+                                    jQuery(remove_icon_div).append(remove_icon_span).attr({id: "remove-attched-assessment-event-div"});
+                                    jQuery(event_h3).addClass("event-text").html("<a href=\"<?php echo ENTRADA_URL; ?>/events?rid=" + event_id + "\">" + event_title + "</a>");
+                                    jQuery(event_span).addClass("event-text").addClass("muted").text(event_date).html();
+                                    jQuery(event_div).append(event_h3).append(event_span);
+                                    jQuery(event_li).append(event_div);
+                                    jQuery(event_li).append(remove_icon_div).append(event_div);
+                                    jQuery("#attached-event-list").empty();
+                                    jQuery("#attached-event-list").append(event_li);
                                 }
 							</script>
                             <br />
@@ -1333,7 +1552,39 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     </tr>
                                 </table>
                             </div>
+                            <?php 
+                            if ($event) { ?>
+                                <input type="hidden" id="assessment-event" name="event_id" value="<?php echo $event->getID(); ?>" data-title="<?php echo $event->getEventTitle(); ?>" data-date="<?php echo date("D M d/y g:ia", $event->getEventStart()) ?>" />
+                            <?    
+                            }
+                            ?>
                         </form>
+                        <div id="event-modal" class="modal hide fade">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                            <h3 id="event-modal-title">Search learning events to attach to this assessment</h3>
+                        </div>
+                        <div class="modal-body">
+                            <div id="title-search">
+                                <input type="text" placeholder="Search learning events by title" id="event-title-search" />
+                                <div id="event-search-msgs">
+                                    <div class="alert alert-block">
+                                        <ul>
+                                            <li>To search for learning events, begin typing the title of the event you wish to find in the search box.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div id="events-search-wrap">
+                                    <ul id="events-search-list"></ul>
+                                </div>
+                            </div>
+                            <div id="loading" class="hide"><img src="<?php echo ENTRADA_URL ?>/images/loading.gif" /></div>
+                        </div>
+                        <div id="event-modal-footer">
+                            <a href="#" class="btn" id="close-event-modal">Close</a>
+                            <a href="#" id="attach-learning-event" class="btn btn-primary pull-right">Attach Learning event</a>
+                        </div>
+                    </div>
                         <?php
                     break;
 				}

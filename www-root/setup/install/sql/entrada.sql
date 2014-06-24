@@ -973,6 +973,7 @@ CREATE TABLE IF NOT EXISTS `assessments` (
   `release_until` bigint(64) NOT NULL DEFAULT '0',
   `order` smallint(6) NOT NULL DEFAULT '0',
   `grade_threshold` float NOT NULL DEFAULT '0',
+  `active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`assessment_id`),
   KEY `order` (`order`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -1988,34 +1989,22 @@ CREATE TABLE IF NOT EXISTS `courses` (
   `course_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
   `organisation_id` int(12) NOT NULL DEFAULT '0',
   `curriculum_type_id` int(12) unsigned NOT NULL DEFAULT '0',
-  `parent_id` int(12) DEFAULT '0',
+  `parent_id` int(12) NOT NULL DEFAULT '0',
   `pcoord_id` int(12) unsigned NOT NULL DEFAULT '0',
   `evalrep_id` int(12) unsigned NOT NULL DEFAULT '0',
   `studrep_id` int(12) unsigned NOT NULL DEFAULT '0',
   `course_name` varchar(85) NOT NULL DEFAULT '',
-  `course_code` varchar(32) NOT NULL DEFAULT '',
+  `course_code` varchar(16) NOT NULL DEFAULT '',
   `course_description` text,
   `course_objectives` text,
-  `unit_collaborator` text NOT NULL,
-  `unit_communicator` text NOT NULL,
-  `unit_health_advocate` text NOT NULL,
-  `unit_manager` text NOT NULL,
-  `unit_scholar` text NOT NULL,
-  `unit_professional` text NOT NULL,
-  `unit_medical_expert` text NOT NULL,
-  `unit_summative_assessment` text NOT NULL,
-  `unit_formative_assessment` text NOT NULL,
-  `unit_grading` text NOT NULL,
-  `resources_required` text NOT NULL,
-  `resources_optional` text NOT NULL,
   `course_url` text,
   `course_message` text NOT NULL,
-  `permission` enum('open','closed') NOT NULL DEFAULT 'open',
+  `permission` ENUM('open','closed') NOT NULL DEFAULT 'closed',
   `sync_ldap` int(1) NOT NULL DEFAULT '0',
   `sync_ldap_courses` text,
   `sync_groups` tinyint(1) NOT NULL DEFAULT '0',
   `notifications` int(1) NOT NULL DEFAULT '1',
-  `course_active` int(11) NOT NULL DEFAULT '1',
+  `course_active` int(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`course_id`),
   KEY `notifications` (`notifications`),
   KEY `pcoord_id` (`pcoord_id`),
@@ -2035,6 +2024,7 @@ CREATE TABLE IF NOT EXISTS `course_audience` (
   `audience_type` enum('proxy_id','group_id') NOT NULL,
   `audience_value` int(11) NOT NULL,
   `cperiod_id` int(11) NOT NULL,
+  `ldap_sync_date` bigint(64) NOT NULL DEFAULT '0',
   `enroll_start` bigint(20) NOT NULL,
   `enroll_finish` bigint(20) NOT NULL,
   `audience_active` int(1) NOT NULL DEFAULT '1',
@@ -2331,6 +2321,7 @@ CREATE TABLE IF NOT EXISTS `evaluations_lu_questions` (
   `questiontype_id` int(12) NOT NULL,
   `question_code` varchar(48) DEFAULT NULL,
   `question_text` longtext NOT NULL,
+  `question_description` longtext DEFAULT NULL,
   `allow_comments` tinyint(1) NOT NULL DEFAULT '1',
   `question_active` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`equestion_id`)
@@ -2558,16 +2549,20 @@ CREATE TABLE IF NOT EXISTS `evaluation_targets` (
 CREATE TABLE IF NOT EXISTS `events` (
   `event_id` int(12) NOT NULL AUTO_INCREMENT,
   `parent_id` int(12) DEFAULT NULL,
-  `event_children` int(12) DEFAULT NULL,
+  `event_children` int(11) NOT NULL,
   `recurring_id` int(12) DEFAULT '0',
+  `eventtype_id` int(12) DEFAULT '0',
   `region_id` int(12) DEFAULT '0',
   `course_id` int(12) NOT NULL DEFAULT '0',
+  `course_num` varchar(32) DEFAULT NULL,
   `event_phase` varchar(12) DEFAULT NULL,
   `event_title` varchar(255) NOT NULL,
   `event_description` text,
   `include_parent_description` tinyint(1) NOT NULL DEFAULT '1',
   `event_goals` text,
   `event_objectives` text,
+  `keywords_hidden` int(1) DEFAULT '0',
+  `keywords_release_date` bigint(64) DEFAULT '0',
   `objectives_release_date` bigint(64) DEFAULT '0',
   `event_message` text,
   `include_parent_message` tinyint(1) NOT NULL DEFAULT '1',
@@ -2577,9 +2572,10 @@ CREATE TABLE IF NOT EXISTS `events` (
   `event_duration` int(64) NOT NULL,
   `release_date` bigint(64) NOT NULL,
   `release_until` bigint(64) NOT NULL,
+  `audience_visible` tinyint(1) DEFAULT 1,
+  `draft_id` int(11) DEFAULT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
-  `draft_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`event_id`),
   KEY `course_id` (`course_id`),
   KEY `region_id` (`region_id`),
@@ -2618,6 +2614,7 @@ CREATE TABLE IF NOT EXISTS `events_lu_eventtypes` (
   `eventtype_order` int(6) NOT NULL,
   `eventtype_default_enrollment` varchar(50) DEFAULT NULL,
   `eventtype_report_calculation` varchar(100) DEFAULT NULL,
+  `medbiq_instructional_method_id` int(12) unsigned DEFAULT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
   PRIMARY KEY (`eventtype_id`),
@@ -4288,6 +4285,7 @@ CREATE TABLE IF NOT EXISTS `quiz_questions` (
   `question_text` longtext NOT NULL,
   `question_points` int(6) NOT NULL DEFAULT '0',
   `question_order` int(6) NOT NULL DEFAULT '0',
+  `qquestion_group_id` int(12) DEFAULT NULL,
   `question_active` int(1) NOT NULL DEFAULT '1',
   `randomize_responses` int(1) NOT NULL,
   PRIMARY KEY (`qquestion_id`),
@@ -4340,10 +4338,12 @@ CREATE TABLE IF NOT EXISTS `settings` (
 
 INSERT INTO `settings` (`shortname`, `organisation_id`, `value`)
   VALUES
-  ('version_db', NULL, '1606'),
+  ('version_db', NULL, '1611'),
   ('version_entrada', NULL, '1.6.0DEV'),
   ('export_weighted_grade', NULL, '1'),
-  ('export_calculated_grade', NULL, '{\"enabled\":0}');
+  ('export_calculated_grade', NULL, '{\"enabled\":0}'),
+  ('course_webpage_assessment_cohorts_count', NULL, '4');
+
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,
@@ -4504,19 +4504,45 @@ CREATE TABLE IF NOT EXISTS `student_mspr_class` (
 CREATE TABLE IF NOT EXISTS `student_observerships` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `student_id` int(11) NOT NULL,
-  `title` varchar(256) NOT NULL,
-  `location` varchar(256) NOT NULL,
-  `site` varchar(256) NOT NULL,
-  `start` int(11) NOT NULL,
-  `end` int(11) DEFAULT NULL,
+  `title` varchar(256) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+  `location` varchar(256) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT '',
+  `city` varchar(32) DEFAULT NULL,
+  `prov` varchar(32) DEFAULT NULL,
+  `country` varchar(32) DEFAULT NULL,
+  `postal_code` varchar(12) DEFAULT NULL,
+  `address_l1` varchar(64) DEFAULT NULL,
+  `observership_details` text,
+  `address_l2` varchar(64) DEFAULT NULL,
+  `site` varchar(256) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT '',
+  `activity_type` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `clinical_discipline` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `organisation` varchar(32) DEFAULT NULL,
   `preceptor_prefix` varchar(4) DEFAULT NULL,
   `preceptor_firstname` varchar(256) DEFAULT NULL,
   `preceptor_lastname` varchar(256) DEFAULT NULL,
   `preceptor_proxy_id` int(12) unsigned DEFAULT NULL,
   `preceptor_email` varchar(255) DEFAULT NULL,
-  `status` enum('UNCONFIRMED','CONFIRMED','REJECTED') NOT NULL DEFAULT 'UNCONFIRMED',
+  `status` enum('pending','approved','rejected','confirmed','denied') DEFAULT NULL,
   `unique_id` varchar(64) DEFAULT NULL,
-  `notice_sent` int(11) NOT NULL DEFAULT '0',
+  `notice_sent` int(11) DEFAULT NULL,
+  `start` int(11) NOT NULL,
+  `end` int(11) DEFAULT NULL,
+  `order` int(3) DEFAULT '0',
+  `reflection_id` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `observership_reflections` (
+  `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
+  `observership_id` int(11) NOT NULL,
+  `physicians_role` text NOT NULL,
+  `physician_reflection` text NOT NULL,
+  `role_practice` text,
+  `observership_challenge` text NOT NULL,
+  `discipline_reflection` text NOT NULL,
+  `challenge_predictions` text,
+  `questions` text,
+  `career` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -5305,3 +5331,27 @@ CREATE TABLE IF NOT EXISTS `evaluation_progress_patient_encounters` (
   `encounter_complexity` tinyint(1) NOT NULL DEFAULT '1',
   PRIMARY KEY (`eppencounter_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `assessment_events` (
+  `assessment_event_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `assessment_id` int(12) unsigned NOT NULL,
+  `event_id` int(12) unsigned NOT NULL,
+  `updated_date` bigint(64) NOT NULL DEFAULT '0',
+  `updated_by` int(12) unsigned NOT NULL,
+  `active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`assessment_event_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `organisation_lu_restricted_days` (
+  `orday_id` int(12) unsigned NOT NULL AUTO_INCREMENT,
+  `organisation_id` int(12) NOT NULL,
+  `date_type` enum('specific','computed','weekly','monthly') NOT NULL DEFAULT 'specific',
+  `offset` tinyint(1) DEFAULT NULL,
+  `day` tinyint(2) DEFAULT NULL,
+  `month` tinyint(2) DEFAULT NULL,
+  `year` int(4) DEFAULT NULL,
+  `updated_date` int(12) NOT NULL,
+  `updated_by` int(12) NOT NULL,
+  `day_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`orday_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -107,55 +107,40 @@ if ($RECORD_ID) {
 											ORDER BY `updated_date` ASC";
 					$progress_record	= $db->GetRow($query);
 					if ($progress_record) {
-						$quiz_progress_array	= array (
-													"updated_date" => time(),
-													"updated_by" => $ENTRADA_USER->getID()
-												);
+                        if ((isset($_POST["qid"])) && ($tmp_input = clean_input($_POST["qid"], "int"))) {
+                            $qquestion_id = $tmp_input;
 
-						if ($db->AutoExecute("quiz_progress", $quiz_progress_array, "UPDATE", "`qprogress_id` = ".$db->qstr($progress_record["qprogress_id"]))) {
-							if ((isset($_POST["qid"])) && ($tmp_input = clean_input($_POST["qid"], "int"))) {
-								$qquestion_id = $tmp_input;
+                            if ((isset($_POST["rid"])) && ($tmp_input = clean_input($_POST["rid"], "int"))) {
+                                $qqresponse_id = $tmp_input;
 
-								if ((isset($_POST["rid"])) && ($tmp_input = clean_input($_POST["rid"], "int"))) {
-									$qqresponse_id = $tmp_input;
+                            if (quiz_save_response($progress_record["qprogress_id"], $progress_record["aquiz_id"], $progress_record["content_id"], $progress_record["quiz_id"], $qquestion_id, $qqresponse_id, $QUIZ_TYPE)) {
+                                    echo 200;
+                                    exit;
+                                } else {
+                                    /**
+                                     * @exception 409: Unable to record a response to a question.
+                                     */
+                                    echo 409;
+                                    exit;
+                                }
+                            } else {
+                                application_log("error", "A rid variable was not provided when attempting to submit a response to a question.");
 
-								if (quiz_save_response($progress_record["qprogress_id"], $progress_record["aquiz_id"], $progress_record["content_id"], $progress_record["quiz_id"], $qquestion_id, $qqresponse_id, $QUIZ_TYPE)) {
-										echo 200;
-										exit;
-									} else {
-										/**
-										 * @exception 409: Unable to record a response to a question.
-										 */
-										echo 409;
-										exit;
-									}
-								} else {
-									application_log("error", "A rid variable was not provided when attempting to submit a response to a question.");
+                                /**
+                                 * @exception 408: Quiz Question Response ID was not provided.
+                                 */
+                                echo 408;
+                                exit;
+                            }
+                        } else {
+                            application_log("error", "A qid variable was not provided when attempting to submit a response to a question.");
 
-									/**
-									 * @exception 408: Quiz Question Response ID was not provided.
-									 */
-									echo 408;
-									exit;
-								}
-							} else {
-								application_log("error", "A qid variable was not provided when attempting to submit a response to a question.");
-
-								/**
-								 * @exception 407: Quiz Question ID was not provided.
-								 */
-								echo 407;
-								exit;
-							}
-						} else {
-							application_log("error", "Unable to update the quiz_progress.updated_date field when attempting to submit a question response for qprogress_id [".$progress_record["qprogress_id"]."] when attempting to continue with a quiz. Database said: ".$db->ErrorMsg());
-
-							/**
-							 * @exception 406: Unable to update the quiz_progress.updated_date field to the current timestamp.
-							 */
-							echo 406;
-							exit;
-						}
+                            /**
+                             * @exception 407: Quiz Question ID was not provided.
+                             */
+                            echo 407;
+                            exit;
+                        }
 					} else {
 						$query	= "	SELECT *
 									FROM `quiz_progress`

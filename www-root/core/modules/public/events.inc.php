@@ -64,6 +64,7 @@ if (!defined("PARENT_INCLUDED")) {
 		$transverse = false;
 	}
 
+    $event = Models_Event::get($EVENT_ID);
 
 	/**
 	 * Check for groups which have access to the administrative side of this module
@@ -186,7 +187,8 @@ if (!defined("PARENT_INCLUDED")) {
 					add_statistic($MODULE, "view", "event_id", $EVENT_ID);
 
 					$event_contacts = events_fetch_event_contacts($EVENT_ID);
-					$event_audience = events_fetch_event_audience($EVENT_ID);
+                    
+                    $event_audience = $event->getEventAudience();
 
 					$associated_cohorts = array("all");
 					$associated_cohorts_string = "";
@@ -507,6 +509,7 @@ if (!defined("PARENT_INCLUDED")) {
                                     <tr class="spacer">
                                         <td colspan="2"><hr></td>
                                     </tr>
+                                    <?php if (($ENTRADA_USER->getActiveGroup() == "student" && $event->getAudienceVisible()) || $ENTRADA_USER->getActiveGroup() != "student") { ?>
                                     <tr>
                                         <th>Audience</th>
                                         <td>
@@ -514,23 +517,72 @@ if (!defined("PARENT_INCLUDED")) {
                                             if ($event_audience) {
                                                 ?>
                                                 <ul class="menu">
-                                                <?php
-                                                foreach ($event_audience as $audience_type => $results) {
-                                                    if ($audience_type == "proxy_id") {
-                                                        $css_class = "user";
-                                                    } else {
-                                                        $css_class = "group";
-                                                    }
-
-                                                    if (is_array($results)) {
-                                                        foreach ($results as $audience) {
-                                                            echo "<li class=\"".$css_class."\">".($audience["link"] ? "<a href=\"".$audience["link"]."\">" : "").$audience["title"].($audience["link"] ? "</a>" : "")."</li>";
+                                                    <?php foreach ($event_audience as $audience) { 
+                                                        $a = $audience->getAudience();
+                                                        if (is_array($a->getAudienceMembers())) {
+                                                        $link = false;
+                                                        switch ($audience->getAudienceType()) {
+                                                            case "proxy_id" :
+                                                                $css_class = "user";
+                                                            break;
+                                                            case "course_id" :
+                                                            case "group_id" :
+                                                            case "cohort" :
+                                                                if ($ENTRADA_USER->getActiveGroup() == "student") {
+                                                                    if (in_array($ENTRADA_USER->getActiveID(), array_keys($a->getAudienceMembers()))) {
+                                                                        $link = true;
+                                                                    }
+                                                                } else {
+                                                                    if (count($a->getAudienceMembers()) > 0) {
+                                                                        $link = true;
+                                                                    }
+                                                                }
+                                                                $css_class = "group";
+                                                            break;
+                                                            default:
+                                                                $css_class = "group";
+                                                            break;
                                                         }
-                                                    } elseif (isset($results["title"])) {
-                                                        echo "<li class=\"".$css_class."\">".($results["link"] ? "<a href=\"".$results["link"]."\">" : "").$results["title"].($results["link"] ? "</a>" : "")."</li>";
-                                                    }
-                                                }
-                                                ?>
+                                                        if ($a) {
+                                                    ?>
+                                                        <li class="<?php echo $css_class; ?>"><?php if ($link) { ?><a href="#audience-<?php echo $audience->getEventAudienceID(); ?>" data-toggle="modal"><?php } echo $a->getAudienceName(); if ($link) { ?></a><?php } ?>
+                                                        <? if ($a && $link && count($a->getAudienceMembers() > 0)) { ?>
+                                                            <div id="audience-<?php echo $audience->getEventAudienceID(); ?>" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                                                                <div class="modal-header">
+                                                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                                                                    <h3 id="myModalLabel"><?php echo $a->getAudienceName(); ?> Group Members</h3>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <div class="row-fluid">
+                                                                    <?php 
+                                                                        $count = round(count($a->getAudienceMembers()) / 3);
+                                                                        $i = 0;
+                                                                        
+                                                                        echo "<div class=\"span4\"><ul class=\"menu\">\n";
+                                                                        foreach ($a->getAudienceMembers() as $member) {
+                                                                            if (($i == $count || $i == $count * 2) && $count != 0) {
+                                                                                echo "</ul></div><div class=\"span4\"><ul class=\"menu\">\n";
+                                                                            }
+                                                                            echo "<li class=\"user\">".$member["firstname"] . " " . $member["lastname"]."</li>\n";
+                                                                            $i++;
+                                                                        } 
+                                                                        echo "</ul></div>\n"
+                                                                    ?>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+                                                                </div>
+                                                            </div>
+                                                        <?php } ?>
+                                                        </li>
+                                                    <?php }
+                                                        } else {
+                                                            ?>
+                                                        <li><?php echo $a->getAudienceName(); ?></li>
+                                                            <?php
+                                                        }
+                                                    } ?>
                                                 </ul>
                                                 <?php
                                             }
@@ -540,6 +592,7 @@ if (!defined("PARENT_INCLUDED")) {
                                     <tr class="spacer">
                                         <td colspan="2"><hr></td>
                                     </tr>
+                                    <?php } ?>
                                     <?php
                                     /**
                                      * @todo simpson This needs to be fixed as $event_audience_type is no longer for grad_year.
@@ -579,6 +632,34 @@ if (!defined("PARENT_INCLUDED")) {
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                    <div>
+                        <?php
+                        $query = "  SELECT ek.`keyword_id`, d.`descriptor_name` 
+                                    FROM `event_keywords` AS ek
+                                    JOIN `mesh_descriptors` AS d 
+                                    ON ek.`keyword_id` = d.`descriptor_ui`
+                                    AND ek.`event_id` = " . $db->qstr($EVENT_ID) . "
+                                    ORDER BY `descriptor_name`";
+
+                        $results = $db->GetAll($query);
+                        if ($results && (!$event_info['keywords_hidden'] || $ENTRADA_USER->getActiveGroup() != "student") && (int)$event_info['keywords_release_date'] <= time()) {
+                            $include_keywords = true;
+                            ?>
+                            <a name="event-keywords-section"></a>
+                            <h2 title="Event Keywords Section">Event Keywords</h2>
+                            <div id="event-keywords-section">
+                                <ul>
+                                    <?php
+                                    foreach($results as $result) {
+                                        echo "<li data-dui=\"" . $result['keyword_id'] . "\" data-dname=\"" . $result['descriptor_name'] . "\" id=\"tagged_keyword\">" . $result['descriptor_name'] . "</li>";
+                                    }
+                                    ?>
+                                </ul>
+                            </div>
+                            <?php
+                        }
+                        ?>
                     </div>
                     <div>
                         <?php
@@ -1219,6 +1300,10 @@ if (!defined("PARENT_INCLUDED")) {
 					if ($include_details) {
 						$sidebar_html .= "	<li class=\"link\"><a href=\"#event-details-section\" onclick=\"$('event-details-section').scrollTo(); return false;\" title=\"Event Details\">Event Details</a></li>\n";
 					}
+                    
+                    if ($include_keywords) {
+                        $sidebar_html .= "  <li class=\"link\"><a href=\"#event-keywords-section\" onclick=\"$('event-keywords-section').scrollTo(); return false;\" title=\"Event Keywords\">Event Keywords</a></li>\n";
+                    }
 
 					if ($include_objectives) {
 						$sidebar_html .= "	<li class=\"link\"><a href=\"#event-objectives-section\" onclick=\"$('event-objectives-section').scrollTo(); return false;\" title=\"Event Objectives\">Event Objectives</a></li>\n";

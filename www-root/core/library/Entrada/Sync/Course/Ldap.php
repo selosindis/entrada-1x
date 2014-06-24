@@ -40,8 +40,22 @@ class Entrada_Sync_Course_Ldap {
      * @global type $db
      * @param int $course_id
      */
-    public function __construct($course_id) {
+    public function __construct($course_id = null, $cperiod_id = null) {
         global $db;
+        
+        $course = Models_Course::get($course_id);
+        if ($course) {
+            $audience = $course->getAudience($cperiod_id);
+            if ($audience) {
+                $ldap_sync_date = time();
+                foreach ($audience as $a) {
+                    $a->setLdapSyncDate($ldap_sync_date);
+                    if (!$a->update()) {
+                        application_log("error", "Unable to update ldap_sync_date for caudience_id ". $a->getID() .".");
+                    }
+                }
+            }
+        }
         
         $this->ldap_connection = NewADOConnection("ldap");
         $this->ldap_connection->SetFetchMode(ADODB_FETCH_ASSOC);

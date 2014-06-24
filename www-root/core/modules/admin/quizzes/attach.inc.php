@@ -33,7 +33,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 } elseif (!$ENTRADA_ACL->amIAllowed('quiz', 'update', false)) {
 	$ONLOAD[]	= "setTimeout('window.location=\\'".ENTRADA_URL."/admin/".$MODULE."\\'', 15000)";
 
-	$ERROR++;
+	
 	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
 
 	echo display_error();
@@ -42,11 +42,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 } else {
 	if ($QUIZ_TYPE == "event") {
 		if ($RECORD_ID) {
-			$query			= "	SELECT a.*
-								FROM `quizzes` AS a
-								WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
-								AND a.`quiz_active` = '1'";
-			$quiz_record	= $db->GetRow($query);
+			$quiz = Models_Quiz::fetchRowByID($RECORD_ID);
+			$quiz_record	= $quiz->toArray();
 			if ($quiz_record && $ENTRADA_ACL->amIAllowed(new QuizResource($quiz_record["quiz_id"]), 'update')) {
 				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID, "title" => limit_chars($quiz_record["quiz_title"], 32));
 				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=attach&id=".$RECORD_ID, "title" => "Attach To Learning Event");
@@ -98,20 +95,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				}
 
 				$quiz_types_record = array();
-				$query		= "SELECT * FROM `quizzes_lu_quiztypes` WHERE `quiztype_active` = '1' ORDER BY `quiztype_order` ASC";
-				$results	= $db->Execute($query);
-				if ($results) {
-					foreach ($results as $result) {
-						$quiz_types_record[$result["quiztype_id"]] = array("quiztype_title" => $result["quiztype_title"], "quiztype_description" => $result["quiztype_description"], "quiztype_order" => $result["quiztype_order"]);
+                $quiz_types = Models_Quiz_QuizType::fetchAllRecords();
+                if ($quiz_types) {
+					foreach ($quiz_types as $quiz_type) {
+						$quiz_types_record[$quiz_type->getQuizTypeID()] = array("quiztype_title" => $quiz_type->getQuizTypeTitle(), "quiztype_description" => $quiz_type->getQuizTypeDescription(), "quiztype_order" => $quiz_type->getQuizTypeOrder());
 					}
 				}
 
 				$existing_event_relationship = array();
-				$query		= "SELECT `content_id` FROM `attached_quizzes` WHERE `quiz_id` = ".$db->qstr($RECORD_ID)." AND `content_type` = 'event'";
-				$results	= $db->GetAll($query);
-				if ($results) {
-					foreach ($results as $result) {
-						$existing_event_relationship[] = $result["content_id"];
+                $attached_events = Models_Quiz_Attached_Event::fetchAllByQuizID($RECORD_ID);
+				if ($attached_events) {
+					foreach ($attached_events as $attached_event) {
+						$existing_event_relationship[] = $attached_event->getEventID();
 					}
 				}
 
@@ -148,8 +143,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						 * Ensure there are valid event_ids provided.
 						 */
 						if (count($PROCESSED["event_ids"]) < 1) {
-							$ERROR++;
-							$ERRORSTR[] = "To attach a quiz to a learning event, select a learning event you are involved with from the list below.";
+							add_error("To attach a quiz to a learning event, select a learning event you are involved with from the list below.");
 						}
 
 						/**
@@ -158,8 +152,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						if ((isset($_POST["quiz_title"])) && ($tmp_input = clean_input($_POST["quiz_title"], array("notags", "trim")))) {
 							$PROCESSED["quiz_title"] = $tmp_input;
 						} else {
-							$ERROR++;
-							$ERRORSTR[] = "The <strong>Attached Quiz Title</strong> field is required.";
+							add_error("The <strong>Attached Quiz Title</strong> field is required.");
 						}
 
 						/**
@@ -195,8 +188,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						if ((isset($_POST["quiztype_id"])) && (array_key_exists($_POST["quiztype_id"], $quiz_types_record)) && ($tmp_input = clean_input($_POST["quiztype_id"], "int"))) {
 							$PROCESSED["quiztype_id"] = $tmp_input;
 						} else {
-							$ERROR++;
-							$ERRORSTR[]	= "Please select a proper quiz type when asked what type of quiz this should be considered.";
+							add_error("Please select a proper quiz type when asked what type of quiz this should be considered.");
 						}
 
 						/**
@@ -273,9 +265,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						}
 
                         if (isset($PROCESSED["quiztype_id"]) && $PROCESSED["quiztype_id"]) {
-                            $query = "SELECT `quiztype_code` FROM `quizzes_lu_quiztypes` WHERE `quiztype_id` = ".$db->qstr($PROCESSED["quiztype_id"]);
-                            $quiztype = $db->GetOne($query);
-                            if ($quiztype == "delayed") {
+                            $quiztype = Models_Quiz_QuizType::fetchRowByID($PROCESSED["quiztype_id"]);
+                            if ($quiztype->getQuizTypeCode() == "delayed") {
                                 $require_finish = true;
                             }
                         }
@@ -304,16 +295,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 								$PROCESSED["content_id"] = $event_id;
 								$PROCESSED["content_type"] = "event";
 
-								if ($db->AutoExecute("attached_quizzes", $PROCESSED, "INSERT")) {
-
-									$SUCCESS++;
-									$SUCCESSSTR[]	= "You have successfully attached <strong>".html_encode($quiz_record["quiz_title"])."</strong> as <strong>".html_encode($PROCESSED["quiz_title"])."</strong> to <strong>".html_encode($selected_learning_events[$PROCESSED["event_id"]]["event_title"])."</strong>.";
+                                $attached_quiz = new Models_Quiz_Attached($PROCESSED);
+                                
+								if ($attached_quiz->insert()) {
+									add_success("You have successfully attached <strong>".html_encode($quiz_record["quiz_title"])."</strong> as <strong>".html_encode($PROCESSED["quiz_title"])."</strong> to <strong>".html_encode($selected_learning_events[$PROCESSED["event_id"]]["event_title"])."</strong>.");
 
 									application_log("success", "Quiz [".$RECORD_ID."] was successfully attached to Event [".$PROCESSED["event_id"]."].");
 
 								} else {
-									$ERROR++;
-									$ERRORSTR[] = "There was a problem attaching this quiz to <strong>".html_encode($selected_learning_events[$PROCESSED["event_id"]]["event_title"])."</strong>. The system administrator was informed of this error; please try again later.";
+									add_error("There was a problem attaching this quiz to <strong>".html_encode($selected_learning_events[$PROCESSED["event_id"]]["event_title"])."</strong>. The system administrator was informed of this error; please try again later.");
 
 									application_log("error", "There was an error attaching quiz [".$RECORD_ID."] to event [".$PROCESSED["event_id"]."]. Database said: ".$db->ErrorMsg());
 								}
@@ -336,7 +326,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						 * Ensure there are valid event_ids provided.
 						 */
 						if (count($PROCESSED["event_ids"]) < 1) {
-							$ERROR++;
+							
 							$ERRORSTR[] = "To attach a quiz to a learning event, select a learning event you are involved with from the list below.";
 						}
 
@@ -836,7 +826,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					break;
 				}
 			} else {
-				$ERROR++;
+				
 				$ERRORSTR[] = "In order to attach this quiz to a learning event, you must provide a valid quiz identifier.";
 
 				echo display_error();
@@ -844,7 +834,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				application_log("notice", "Failed to provide a valid quiz identifer [".$RECORD_ID."] when attempting to attach a quiz to a learning event.");
 			}
 		} else {
-			$ERROR++;
+			
 			$ERRORSTR[] = "In order to attach this quiz to a learning event, you must provide a quiz identifier.";
 
 			echo display_error();
@@ -853,11 +843,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 		}
 	} else {
 		if ($RECORD_ID) {
-			$query			= "	SELECT a.*
-								FROM `quizzes` AS a
-								WHERE a.`quiz_id` = ".$db->qstr($RECORD_ID)."
-								AND a.`quiz_active` = '1'";
-			$quiz_record	= $db->GetRow($query);
+			$quiz = Models_Quiz::fetchRowByID($RECORD_ID);
+			$quiz_record	= $quiz->toArray();
 			if ($quiz_record && $ENTRADA_ACL->amIAllowed(new QuizResource($quiz_record["quiz_id"]), 'update')) {
 				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=edit&id=".$RECORD_ID, "title" => limit_chars($quiz_record["quiz_title"], 32));
 				$BREADCRUMB[]	= array("url" => ENTRADA_URL."/admin/".$MODULE."?section=attach&id=".$RECORD_ID, "title" => "Attach To Community Page");
@@ -905,21 +892,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					}
 				}
 
+				
 				$quiz_types_record = array();
-				$query		= "SELECT * FROM `quizzes_lu_quiztypes` WHERE `quiztype_active` = '1' ORDER BY `quiztype_order` ASC";
-				$results	= $db->Execute($query);
-				if ($results) {
-					foreach ($results as $result) {
-						$quiz_types_record[$result["quiztype_id"]] = array("quiztype_title" => $result["quiztype_title"], "quiztype_description" => $result["quiztype_description"], "quiztype_order" => $result["quiztype_order"]);
+                $quiz_types = Models_Quiz_QuizType::fetchAllRecords();
+				if ($quiz_types) {
+					foreach ($quiz_types as $quiz_type) {
+						$quiz_types_record[$quiz_type->getQuizTypeID()] = array("quiztype_title" => $quiz_type->getQuizTypeTitle(), "quiztype_description" => $quiz_type->getQuizTypeDescription(), "quiztype_order" => $quiz_type->getQuizTypeOrder());
 					}
 				}
 
 				$existing_page_relationship = array();
-				$query		= "SELECT `content_id` FROM `attached_quizzes` WHERE `quiz_id` = ".$db->qstr($RECORD_ID)." AND `content_type` = 'community_page'";
-				$results	= $db->GetAll($query);
-				if ($results) {
-					foreach ($results as $result) {
-						$existing_page_relationship[] = $result["content_id"];
+                $attached_pages = Models_Quiz_Attached_CommunityPage::fetchAllByQuizID($RECORD_ID);
+				if ($attached_events) {
+					foreach ($attached_pages as $attached_page) {
+						$existing_page_relationship[] = $attached_page->getCommunityID();
 					}
 				}
 
@@ -952,7 +938,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						 * Ensure there are valid event_ids provided.
 						 */
 						if (count($PROCESSED["page_ids"]) < 1) {
-							$ERROR++;
+							
 							$ERRORSTR[] = "To attach a quiz to a community page, select a community page you are involved with from the list below.";
 						}
 
@@ -962,7 +948,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						if ((isset($_POST["quiz_title"])) && ($tmp_input = clean_input($_POST["quiz_title"], array("notags", "trim")))) {
 							$PROCESSED["quiz_title"] = $tmp_input;
 						} else {
-							$ERROR++;
+							
 							$ERRORSTR[] = "The <strong>Attached Quiz Title</strong> field is required.";
 						}
 
@@ -999,7 +985,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						if ((isset($_POST["quiztype_id"])) && (array_key_exists($_POST["quiztype_id"], $quiz_types_record)) && ($tmp_input = clean_input($_POST["quiztype_id"], "int"))) {
 							$PROCESSED["quiztype_id"] = $tmp_input;
 						} else {
-							$ERROR++;
 							$ERRORSTR[]	= "Please select a proper quiz type when asked what type of quiz this should be considered.";
 						}
 
@@ -1114,7 +1099,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 									application_log("success", "Quiz [".$RECORD_ID."] was successfully attached to Community Page [".$PROCESSED["cpage_id"]."].");
 
 								} else {
-									$ERROR++;
+									
 									$ERRORSTR[] = "There was a problem attaching this quiz to <strong>".html_encode($selected_community_pages[$PROCESSED["cpage_id"]]["page_title"])."</strong>. The system administrator was informed of this error; please try again later.";
 
 									application_log("error", "There was an error attaching quiz [".$RECORD_ID."] to community page [".$PROCESSED["cpage_id"]."]. Database said: ".$db->ErrorMsg());
@@ -1140,7 +1125,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 						 * Ensure there are valid event_ids provided.
 						 */
 						if (count($PROCESSED["page_ids"]) < 1) {
-							$ERROR++;
+							
 							$ERRORSTR[] = "To attach a quiz to a community page, select a community page you are involved with from the list below.";
 						}
 
@@ -1525,7 +1510,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 					break;
 				}
 			} else {
-				$ERROR++;
+				
 				$ERRORSTR[] = "In order to attach this quiz to a community page, you must provide a valid quiz identifier.";
 
 				echo display_error();
@@ -1533,7 +1518,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_QUIZZES"))) {
 				application_log("notice", "Failed to provide a valid quiz identifer [".$RECORD_ID."] when attempting to attach a quiz to a community page.");
 			}
 		} else {
-			$ERROR++;
+			
 			$ERRORSTR[] = "In order to attach this quiz to a community page, you must provide a quiz identifier.";
 
 			echo display_error();

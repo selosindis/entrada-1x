@@ -39,17 +39,10 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 		#draft-list_paginate a {margin:2px 5px;}
 	</style>
 	<h1>My Draft Learning Event Schedules</h1>
-	<div  class="row-fluid"><a class="btn btn-primary pull-right" href="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=create-draft">Create New Draft</a></div>
+    <div  class="row-fluid"><a class="btn btn-primary pull-right" href="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=create-draft">Create New Draft</a></div>
 	<br />
 	<?php
-	// fetch the list of draft ids for the user
-	$query = "	SELECT a.*
-                FROM `drafts` AS a
-                JOIN `draft_creators` AS b
-                ON b.`draft_id` = a.`draft_id`
-				WHERE b.`proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())."
-                AND a.`status` <> 'closed'";
-	$drafts = $db->GetArray($query);
+    $drafts = Models_Event_Draft::fetchAllByProxyID($ENTRADA_USER->getActiveID());
 	if ($drafts) {
 		add_notice("<p>You currently have <strong>".count($drafts)."</strong> draft".((count($drafts) > 1) ? "s" : "")." on the go.</p><p>When you are finished working on your draft event schedule you can click <strong>Publish Drafts</strong> to schedule them to be imported.</p>");
 		echo display_notice();
@@ -70,11 +63,11 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				$count_modified = 0;
 
 				foreach ($drafts as $draft) {
-					echo "<tr id=\"draft-".$draft["draft_id"]."\" rel=\"".$draft["draft_id"]."\" class=\"draft".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
-					echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$draft["draft_id"]."\" /></td>\n";
-					echo "	<td class=\"title\">".(($draft["status"] == "open") ? "<a href=\"".$url."?section=edit&draft_id=".$draft["draft_id"]."\" title=\"Draft Name\">" : "") .$draft["name"].(($draft["status"] == "open") ? "</a>" : "" )."</td>\n";
-					echo "	<td class=\"date\">".(($draft["status"] == "open") ? "<a href=\"".$url."?section=edit&draft_id=".$draft["draft_id"]."\" title=\"Duration\">" : "").date("Y-m-d", $draft["created"]).(($draft["status"] == "open") ? "</a>" : "")."</td>\n";
-					echo "	<td class=\"status\">".(($draft["status"] == "open") ? "<a href=\"".$url."?section=edit&draft_id=".$draft["draft_id"]."\" title=\"Draft Status\">" : "").$draft["status"].(($draft["status"] == "open") ? "</a>" : "")."</td>\n";
+					echo "<tr id=\"draft-".$draft->getDraftID()."\" rel=\"".$draft->getDraftID()."\" class=\"draft".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
+					echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$draft->getDraftID()."\" /></td>\n";
+					echo "	<td class=\"title\">".(($draft->getStatus() == "open") ? "<a href=\"".$url."?section=edit&draft_id=".$draft->getDraftID()."\" title=\"Draft Name\">" : "") .$draft->getName().(($draft->getStatus() == "open") ? "</a>" : "" )."</td>\n";
+					echo "	<td class=\"date\">".(($draft->getStatus() == "open") ? "<a href=\"".$url."?section=edit&draft_id=".$draft->getDraftID()."\" title=\"Duration\">" : "").date("Y-m-d", $draft->getCreated()).(($draft->getStatus() == "open") ? "</a>" : "")."</td>\n";
+					echo "	<td class=\"status\">".(($draft->getStatus() == "open") ? "<a href=\"".$url."?section=edit&draft_id=".$draft->getDraftID()."\" title=\"Draft Status\">" : "").$draft->getStatus().(($draft->getStatus() == "open") ? "</a>" : "")."</td>\n";
 					echo "</tr>\n";
 				}
 				?>

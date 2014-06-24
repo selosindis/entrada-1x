@@ -49,7 +49,7 @@ if((!defined("PARENT_INCLUDED")) || (!defined("IN_OBSERVERSHIPS_ADMIN"))) {
 		/*
 		 * Admins adding observerships are approved automatically. 
 		 */
-		$observership_array["status"] = "confirmed";
+		
 		$OBSERVERSHIP = Observership::fromArray($observership_array, "add", $student_id);
 		if (!$OBSERVERSHIP->isValid()){
 			add_error("<strong>Invalid data entered</strong>. Please confirm everything and try again.");

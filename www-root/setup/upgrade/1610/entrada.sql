@@ -1,5 +1,5 @@
-ALTER TABLE `course_objectives` ADD `objective_start` INT(12) DEFAULT NULL AFTER `objective_details`;
-ALTER TABLE `course_objectives` ADD `objective_finish` INT(12) DEFAULT NULL AFTER `objective_start`;
-ALTER TABLE `course_objectives` ADD `active` TINYINT(1) NOT NULL DEFAULT '1' AFTER `updated_by`;
+INSERT INTO `settings` (`shortname`, `organisation_id`, `value`)
+  VALUES
+	('course_webpage_assessment_cohorts_count', NULL, '4');
  
 UPDATE `settings` SET `value` = '1610' WHERE `shortname` = 'version_db';

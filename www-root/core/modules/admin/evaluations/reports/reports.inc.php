@@ -101,7 +101,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 		}
 
 		echo	"<div>";
-		echo	"<table width=\"100%\" summary=\"Evaluation Reports\">";
+		echo	"<table width=\"100%\" id=\"evaluation-report-body\" summary=\"Evaluation Reports\">";
 		echo	"	<colgroup>
 						<col style=\"width: 18%\" />
 						<col style=\"width: 42%\" />
@@ -212,7 +212,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 			if ($results) {
 				echo "<tr>\n";
 				echo "	<td colspan=\"4\">\n";
-				echo "		<table width=\"80%\" summary=\"Question Statistics\">";
+				echo "		<table width=\"80%\" class=\"evaluation-statistics\" summary=\"Question Statistics\">";
 				echo "			<tr>\n";
 				echo "				<td style=\"width: 34%\"></td>";
 				echo "				<td align=\"left\" style=\"width: 22%\">Frequency</td>";

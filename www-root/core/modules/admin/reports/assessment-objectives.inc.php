@@ -204,6 +204,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_REPORTS"))) {
 						ON a.`characteristic_id` = b.`id`
 						WHERE `cohort` = " . $db->qstr($PROCESSED["cohort"])."
 						AND `course_id` = ". $db->qstr($course_id)."
+						AND a.`active` = 1
 						ORDER BY a.`order` ASC";
 					
 			$results = $db->CacheGetAll(LONG_CACHE_TIMEOUT, $query);

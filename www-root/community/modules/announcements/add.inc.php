@@ -175,7 +175,7 @@ switch($STEP) {
 			if (COMMUNITY_NOTIFICATIONS_ACTIVE) {
 				?>
 				<tr>
-					<td><input type="checkbox" name="notify_members" /></td>
+					<td><input type="checkbox" name="notify_members" id="notify_members" /></td>
 					<td colspan="2"><label for="notify_members" class="form-nrequired">Notify Community Members of Announcement</label></td>
 				</tr>
 				<?php

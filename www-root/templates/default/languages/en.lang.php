@@ -266,9 +266,9 @@ return array (
 	 * Copyright Notice
 	 */
     "copyright_title" => "Acceptable Use Agreement",
-    "copyright_accept_label" => "<strong>I accept</strong> I will comply with this copyright policy.",
+    "copyright_accept_label" => "I will comply with this copyright policy.",
 	"copyright" => array(
-		"copyright-version" => "", /* Latest Version Date (YYYY-MM-DD HH:MM:SS) */
+		"copyright-version" => "", // Latest copyright version date time stamp (YYYY-MM-DD HH:MM:SS). You can also leave this empty to disable the acceptable use feature.
 		"copyright-firstlogin" => "<strong>Use of Copyright Materials In ".APPLICATION_NAME."</strong>
 			<p>Copyright protects the form in which literary, artistic, musical and dramatic works are expressed. In COUNTRY, copyright exists once a work is expressed in fixed form; no special registration needs to take place. Copyright usually resides with the creator of the work. Copyright exists in most work for 50 years after the death of the creator.</p>
 			<p>The University of UNIVERSITY encourages access to works while ensuring that the rights of creators are respected in accordance with the Copyright Act, (see...)</p>

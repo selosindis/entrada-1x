@@ -354,7 +354,7 @@ if ($RECORD_ID) {
 					</div>
 					<div style="clear: both"></div>
 					
-					<form id="upload-photo-form" action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-photo&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post" enctype="multipart/form-data" accept="<?php echo ((@is_array($VALID_MIME_TYPES)) ? implode(",", array_keys($VALID_MIME_TYPES)) : ""); ?>">
+					<form id="upload-photo-form" action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-photo&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post" enctype="multipart/form-data" accept="<?php echo ((@is_array($VALID_MIME_TYPES)) ? implode(",", array_keys($VALID_MIME_TYPES)) : ""); ?>" onsubmit="uploadPhotos()">
 					<input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo $VALID_MAX_FILESIZE; ?>" />
 					<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Upload Photo">
 					<colgroup>
@@ -366,7 +366,7 @@ if ($RECORD_ID) {
 						<tr>
 							<td colspan="3" style="padding-top: 15px; text-align: right">
 								<div id="display-upload-button">
-									<input type="button" class="btn btn-primary" id="upload-button" value="Upload" onclick="uploadPhotos()"  <?php echo $COPYRIGHT?"disabled":"";?>/>
+									<input type="submit" class="btn btn-primary" id="upload-button" value="Upload" <?php echo ($COPYRIGHT ? " disabled=\"disabled\"" : "");?> />
 								</div>
 							</td>
 						</tr>
@@ -479,7 +479,23 @@ if ($RECORD_ID) {
 						<tr>
 							<td colspan="3"><h2>Time Release Options</h2></td>
 						</tr>
-						<?php echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
+						<?php
+                        echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0));
+
+                        if ($COPYRIGHT) {
+                            ?>
+                            <tr>
+                                <td colspan="3">
+                                    <h2><?php echo $translate->_("copyright_title"); ?></h2>
+                                    <?php echo $copyright_settings["copyright-uploads"]; ?>
+                                    <label class="checkbox">
+                                        <input type="checkbox" value="1" onchange="acceptButton(this)"> <?php echo $translate->_("copyright_accept_label"); ?>
+                                    </label>
+                                </td>
+                            </tr>
+                            <?php
+                        }
+                        ?>
 					</tbody>
 					</table>
 					</form>
@@ -493,14 +509,6 @@ if ($RECORD_ID) {
 						</div>
 					</div>
 					<?php
-                    if ($COPYRIGHT) {
-                        ?>
-                        <div class="row-fluid space-above"><br /><hr>
-                            <?php echo $copyright_settings["copyright-uploads"]; ?>
-                            <div  style="text-align: right">Accept&nbsp;<input type="checkbox" value="1" onchange="acceptButton(this)"></div>
-                        </div>
-                    <?php
-                    }
 				break;
 			}
 		} else {

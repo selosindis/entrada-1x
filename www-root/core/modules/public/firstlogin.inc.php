@@ -31,6 +31,10 @@ if (!defined("PARENT_INCLUDED")) {
 } else {
     $value = "";
 
+    /*
+     * Determine what needs to be updated with regards to the profile.
+     * @todo This is technical debt, please find a more efficient way of doing this.
+     */
     if (!(int) $_SESSION["details"]["privacy_level"]) {
         if ($COPYRIGHT) {
             if ($_SESSION["details"]["google_id"] == "opt-in") {
@@ -92,13 +96,13 @@ if (!defined("PARENT_INCLUDED")) {
                 </tr>
                 <tr>
                     <td colspan="2" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-                        <input type="submit" class="btn btn-primary" id="proceed-button" value="Proceed" <?php echo ($COPYRIGHT ? "disabled=\"disabled\"" : ""); ?> />
+                        <input type="submit" class="btn btn-primary" id="proceed-button" value="Proceed"<?php echo ($COPYRIGHT ? " disabled=\"disabled\"" : ""); ?> />
                     </td>
                 </tr>
             </tfoot>
             <tbody>
             <?php
-            /**
+            /*
              * Google Hosted Apps Account
              */
             if ($_SESSION["details"]["google_id"] == "opt-in") {
@@ -128,7 +132,7 @@ if (!defined("PARENT_INCLUDED")) {
                 <?php
             }
 
-            /**
+            /*
              * Privacy Level Settings
              */
             if (!(int) $_SESSION["details"]["privacy_level"]) {
@@ -192,8 +196,8 @@ if (!defined("PARENT_INCLUDED")) {
                 <?php
             }
 
-            /**
-             * Copyright check
+            /*
+             * Copyright
              */
             if ($COPYRIGHT) {
                 ?>

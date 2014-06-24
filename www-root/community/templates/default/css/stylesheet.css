@@ -1,90 +1,82 @@
-/* General Styles */
+/* General Styles 
+================================================================*/
 body {
 	background: #e9e7e7;
 	margin: 0;
 }
-
 body,p,td {
 	color: #000;
 	font-family: 'Roboto', sans-serif;
 	font-weight: 400;
 	font-size: 13px;
 }
-
 h1, h2, h3, h4, h5, h6 {
 	font-family: 'Roboto', sans-serif;
 	font-weight: 700;
 	color: #333;
 }
-
 a {
 	color: #006ccc;
 	font-family: 'Roboto', sans-serif;
 	font-weight: 400;
 	font-size: 13px;
 }
-
 a:hover, a:focus {
 	color: #333;
 	text-decoration: none;
 }
-
 hr {
 	margin: 10px 0;
 }
-
 [class^="icon-"], [class*=" icon-"], i {
 	display: none;
 }
 
-/* Custom Spans */
+/* Custom Spans 
+================================================================*/
 .span2-5 {
 	width: 180px;
 }
-
 .span6-5 {
 	width: 500px;
 }
-
 .span9-5 {
 	width: 740px;
 }
-
 .container {
 	background: #232222;
 }
 
+/* Table Styles 
+================================================================*/
 .table {
-  display: table;
-  height: 100%;
-  width: 100%;
-  margin-bottom: 0;
-  vertical-align: top;
-  background: transparent !important;
+	display: table;
+	height: 100%;
+	width: 100%;
+	margin-bottom: 0;
+	vertical-align: top;
+	background-color: transparent !important;
 } 
-
 .table-row {
-  display: table-row;
-  height: 100%;
-  width: auto;
+	display: table-row;
+	height: 100%;
+	width: auto;
 }
-
 .table-cell {
-  display: table-cell;
-  height: 100%;
-  width: auto;
-  vertical-align: top;
+	display: table-cell;
+	height: 100%;
+	width: auto;
+	vertical-align: top;
 }
-
 .table-cell-full-width {
-  width: 100%;
+	width: 100%;
 }
-
 .middle {
-  vertical-align: middle;
+	vertical-align: middle;
 }
 
-/* Navigation Styles */
+/* Navigation Styles 
+================================================================*/
 .navbar {
 	background: #232222;
 	margin: 0;
@@ -95,54 +87,45 @@ hr {
 .nav {
 	margin-bottom: 0;
 }
-
 .nav li {
 	float: none !important;
 }
-
 .navbar .nav {
 	margin: 25px 0 0 0;
 	width: 180px;
 }
-
 .navbar .nav > li > a {
 	text-shadow: none;
 	color: #999;
 }
-
 .navbar .nav > li > a:hover {
 	background: #141414;
 	color: #999;
 }
-
 .navbar .nav > li.selected a {
 	background-color: #528a2e;
 	color: #f6f4f4;
 }
-
 .navbar .nav > li.selected a:hover {
 	background-color: #528a2e;
 	color: #f6f4f4;
 }
-
+.sub-pages {
+	border: none !important;
+}
 .sub-pages a {	
 	font-size: 12px;
-	background: #2c2b2b;
-	border-left: 10px solid #999;
+	background: #232222;
+	padding-left: 25px !important;
 }
 
-.nav .sub-pages:last-child {
-	border-bottom: 3px solid #fff;
-}
-
-/* Child Navigation Styles */
-
+/* Child Navigation Styles 
+================================================================*/
 ul.child-nav {
 	list-style-type: none;
 	margin: 0 0 10px;
 	padding: 0;
 }
-
 ul.child-nav li {
 	border-bottom: 1px #eee solid;
 	margin-left: 0;
@@ -151,48 +134,39 @@ ul.child-nav li {
 	float: left;
 	padding: 4px 10px;
 }
-
 ul.child-nav li.live {
 	background-color: #fff;
 	border-bottom: 1px #eee solid;
 }
 
-a.toc:hover {
-	color: #fff !important;
-}
-
-/* Page Styles */
+/* Page Styles 
+================================================================*/
 h2,h2.history,.content-subheading {
 	font-family: 'Roboto', sans-serif;
 	font-size:16px;
 	color:#333;
 	border-bottom:1px #eee solid;
 }
-
 h3 {
 	border-bottom:1px #eee solid;
 	margin-bottom:3px;
 }
-
 .header {
-	margin-left: -20px !important;
+	margin-left: -20px;
 	padding: 25px 0 20px 20px;
-	background-image: url(../images/header-pattern.png) !important;
+	background-image: url(../images/header-pattern.png);
 	border-bottom: 3px solid #528a2e;
 }
-
 .header-icon {
 	background: url(../images/community-header-icon.png) no-repeat center left;
 	width: 98px;
 	height: 103px;
 }
-
 .content-container {
-	margin-left: 0 !important;
-	padding-left: 20px !important;
+	margin-left: 0;
+	padding-left: 20px;
 	background: #fff;
 }
-
 .community-title {
 	font-family: 'Roboto', sans-serif;
 	font-size: 34px;
@@ -202,43 +176,38 @@ h3 {
 	padding-left: 20px;
 	padding-right: 20px;
 }
-
 .content-area {
 	margin-top: 22px;
 }
 .footer {
 	padding: 15px 40px 15px 20px;
-	margin-left: -20px !important;
+	margin-left: -20px;
 	background: #f9f7f7;
 }
-
 .content-copyright {
 	font-family: 'Roboto', sans-serif;
 	font-size: 11px;
 	font-style: normal;
 	color: #999;
 }
-
 div.bread-crumb-trail {
 	margin-bottom: 5px;
 	border-bottom: 1px #eee solid;
 	padding: 2px 2px 2px 5px;
 }
-
 div.bread-crumb-trail ul {
 	list-style: none;
 	list-style-type: none;
 	margin: 0;
 	padding: 4px 0 0;
 }
-
 div.bread-crumb-trail ul li {
 	display: inline;
 	list-style-type: none;
 }
 
-/* Discussion Styles */
-
+/* Discussion Styles 
+================================================================*/
 table.discussions.posts thead tr td {
 	text-align: left;
 	vertical-align: middle;
@@ -250,22 +219,21 @@ table.discussions.posts thead tr td {
 	background-image: none;
 	padding: 5px 15px;
 }
-
 table.discussions.posts tbody tr td {
-	height: 16px!important;
+	height: 16px;
 	text-align: left;
 	font-size: 11px;
 	background-color: #fff;
 	border: 1px solid #eee;
 	padding: 8px;
 }
-
 table.discussions.posts tbody tr td.content {
-font-size:12px;
-padding:13px;
+	font-size: 12px;
+	padding: 13px;
 }
 
-/* Sidebar */
+/* Sidebar 
+================================================================*/
 .inner-sidebar ul.menu {
 	padding-right: 25px;
 }
@@ -273,22 +241,20 @@ padding:13px;
 	border-bottom: 1px #eee solid;
 	margin-top: 4px;
 }
-
 .inner-sidebar ul.menu li:last-child {
 	border-bottom: none;
 }
-
 .panel {
 	border: none !important;
 	background-color: #fff !important;
 }
 
-/* Button Styles */
+/* Button Styles 
+================================================================*/
 .btn:focus {
 	outline: 0;
 	outline-offset: 0;
 }
-
 .btn, input[type="submit"].btn, .btn-primary {
 	text-shadow: none;
 	background-image: none;
@@ -299,12 +265,10 @@ padding:13px;
 	background: #006dcc;
 	color: #fff;
 }
-
 .btn:hover, input[type="submit"].btn:hover, .btn-primary:hover {
 	background: #0162b6;
 	color: #fff;
 }
-
 .btn-success {
 	color: #fff;
 	text-shadow: none;
@@ -318,34 +282,30 @@ padding:13px;
 	background: #5d990e;
 	color: #fff;
 }
-
 input[type="submit"].btn-danger {
 	background: #e4381c;
 	color: #fff;
 }
-
 input[type="submit"].btn-danger:hover {
 	background: #c72f17;
 	color: #fff;
 }
 
-/* List Icons */
+/* List Icons 
+================================================================*/
 ul.menu li {
 	font-size:10px;
 	padding-bottom:4px;
 	padding-left:20px;
 }
-
 ul.menu li.admin {
 	background:transparent url(../images/list-admin.png) no-repeat;
 	background-position: 0 4px;
 }
-
 ul.menu li.nav {
 	background:transparent url(../images/nav_arrow.png) no-repeat;
 	background-position: 0 6px;
 }
-
 div.tutorial ul li {
 	background:transparent url(../images/nav_arrow.png) no-repeat scroll 0 0;
 	font-size:14px;
@@ -357,12 +317,10 @@ ul.menu li.community {
 	background:transparent url(../images/list-community.png) no-repeat;
 	background-position: 0 4px;
 }
-
 ul.menu li.on {
 	background:transparent url(../images/checkbox-on.png) no-repeat;
 	background-position: 0 3px;
 }
-
 .page-action li {
 	display:inline;
 	background:transparent url(../images/btn_add.png) no-repeat center left;
@@ -372,93 +330,72 @@ table.memberList tr td.sortedDESC a {
 	background:transparent url(../images/sort_desc.png) no-repeat scroll right top;
 	background-position: 0 3px;
 }
-
 table.memberList tr td.sortedASC a {
 	background:transparent url(../images/sort_asc.png) no-repeat scroll right top;
 	background-position: 0 3px;
 }
-
 table.discussions thead tr td.sortedASC .noLink,table.permissions thead tr td.sortedASC .noLink,table.discussions thead tr td.sortedASC a,table.permissions thead tr td.sortedASC a {
-	background:transparent url(../images/sort_asc.png) top right no-repeat;
-	background-position: 0 3px;
+	background:transparent url(../images/sort_asc.png) center right no-repeat;
 }
 
 table.discussions thead tr td.sortedDESC a,table.permissions thead tr td.sortedDESC a,table.discussions thead tr td.sortedDESC .noLink,table.permissions thead tr td.sortedDESC .noLink {
-	background:transparent url(../images/sort_desc.png) top right no-repeat;
-	background-position: 0 3px;
+	background:transparent url(../images/sort_desc.png) center right no-repeat;
 }
-
 a.feeds.rss {
 	background:transparent url(../images/rss-enabled.gif) no-repeat center left;
 }
-
 a.feeds.ics {
 	background:transparent url(../images/ics-enabled.png) no-repeat center left;
 	background-position: 0 4px;
 }
-
 ul.menu li.status-online {
 	background: transparent url(../images/list-status-online.png) no-repeat;
 }
-
 ul.menu li.status-away {
 	background: transparent url(../images/list-status-away.png) no-repeat;
 }
-
 ul.menu li.status-offline {
 	background: transparent url(../images/list-status-offline.png) no-repeat;
 }
-
 ul.menu li a {
 	font-size: 12px;
 	text-decoration: none;
 }
-
 ul.menu li.off {
 	background:transparent url(../images/checkbox-off.gif) no-repeat;
 }
-
 ul.menu li.checkmark {
 	background:transparent url(../images/checkbox-checkmark.gif) no-repeat;
 }
-
 ul.menu li.link {
 	background:transparent url(../images/list-link.gif) no-repeat;
 }
-
 ul.menu li.item {
 	background:transparent url(../images/list-item.gif) no-repeat;
 }
-
 ul.menu li.email-on {
 	background:transparent url(../../../../images/email-on.gif) no-repeat;
 }
-
 ul.menu li.email-off {
 	background:transparent url(../../../../images/email-off.gif) no-repeat;
 }
-
 ul.menu li.rss {
 	background:transparent url(../images/rss-enabled.gif) no-repeat;
 }
-
 a.feeds {
 	font-size: 11px;
 	color: #999;
 	text-decoration: none;
 	padding: 2px 10px 2px 16px;
 }
-
 #notifications-toggle span {
 	color: #999;
 	font-size: 11px;
 }
-
 #notifications-toggle span img {
 	margin-top: -3px;
 	margin-right: 2px;
 }
-
 .page-action li.top {
 	display:inline;
 	background:transparent url(../images/list-anchor.png) no-repeat center left;
@@ -467,7 +404,8 @@ a.feeds {
 	padding:0 16px;
 }
 
-/* Table Stylea */
+/* Table Stylea 
+================================================================*/
 table.tableList thead tr td {
 	height: 30px;
 	vertical-align: middle;
@@ -478,7 +416,6 @@ table.tableList thead tr td {
 	font-weight: 700;
 	padding: 0 5px 0 10px;
 }
-
 table.memberList thead tr td {
 	height: 30px;
 	vertical-align: middle;
@@ -489,19 +426,16 @@ table.memberList thead tr td {
 	font-weight: 700;
 	padding: 0 5px 0 10px;
 }
-
 table.memberList thead tr td a,table.memberList thead tr td a:hover,table.tableList thead tr td a,table.tableList thead tr td a:hover {
 	display: block;
 	font-size: 11px;
-	width: auto !important;
-	color: #eee !important;
+	width: auto;
+	color: #eee;
 	text-decoration: none;
 }
-
 table.discussions thead tr td.sortedASC,table.discussions thead tr td.sortedDESC,table.permissions thead tr td.sortedASC,table.permissions thead tr td.sortedDESC,table.memberList tr td.sortedDESC,table.memberList tr td.sortedASC {
 	background: #141414;
 }
-
 table.discussions thead tr td,table.permissions thead tr td,table.page-options thead tr td {
 	height: 30px;
 	vertical-align: middle;
@@ -512,16 +446,16 @@ table.discussions thead tr td,table.permissions thead tr td,table.page-options t
 	font-weight: 700;
 	padding: 0 5px 0 10px;
 }
-
 table.discussions thead tr td a,table.discussions thead tr td a:hover,table.permissions thead tr td a,table.page-options thead tr td a,table.permissions thead tr td a:hover,table.page-options thead tr td a:hover {
 	font-size: 11px;
 	display: block;
-	width: auto !important;
-	color: #eee !important;
+	width: auto;
+	color: #eee;
 	text-decoration: none;
 }
 
-/* Old Styles */
+/* Old Styles 
+================================================================*/
 #module-header {
 position:relative;
 margin-bottom:0;

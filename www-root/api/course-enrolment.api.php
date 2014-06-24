@@ -138,12 +138,24 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                         if ($audience_type == "groups") {
                                             foreach ($audience_type_members as $group_name => $audience) {
                                                 foreach ($audience as $audience_member) {
-                                                    $enrolment["groups"][$group_name][] = $audience_member->toArray();
+                                                    $enrolment["groups"][$group_name][] = array(
+                                                        "firstname" => $audience_member->getFirstName(),
+                                                        "lastname" => $audience_member->getLastName(),
+                                                        "number" => $audience_member->getNumber(),
+                                                        "username" => $audience_member->getUsername(),
+                                                        "email" => $audience_member->getEmail()
+                                                    );
                                                 }
                                             }
                                         } else if ($audience_type == "individuals") {
                                             foreach ($audience_type_members as $audience_member) {
-                                                $enrolment["individuals"][] = $audience_member->toArray();
+                                                $enrolment["individuals"][] =  array(
+                                                    "firstname" => $audience_member->getFirstName(),
+                                                    "lastname" => $audience_member->getLastName(),
+                                                    "number" => $audience_member->getNumber(),
+                                                    "username" => $audience_member->getUsername(),
+                                                    "email" => $audience_member->getEmail()
+                                                );;
                                             }
                                         }
                                     }

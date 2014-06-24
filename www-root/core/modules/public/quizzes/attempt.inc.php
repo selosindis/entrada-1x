@@ -531,9 +531,6 @@ if ($RECORD_ID) {
                                             ol.questions {
                                                 padding-left:20px;
                                             }
-                                            ol.group {
-                                                background:#F8F8F8;
-                                            }
 										</style>
 											<?php
                                                 $problem_pages = array();

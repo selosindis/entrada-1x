@@ -4985,3 +4985,10 @@ span.minutes {
     float:left;
     height:80px;
 }
+
+/* Gives a small loading spinner to text fields */
+input[type="text"].loading {
+    background-image: url('../images/loading_small.gif');
+    background-position: 98% center;
+    background-repeat: no-repeat;
+}

@@ -98,7 +98,12 @@ class Models_Course_Audience extends Models_Base {
     }
     
     public function getGroupName() {
-        return Models_Group::fetchRowByID($this->audience_value)->getGroupName();
+        $group = Models_Group::fetchRowByID($this->audience_value);
+        if ($group) {
+            return $group->getGroupName();
+        } else {
+            return false;
+        }
     }
     
     public function fetchRowByCourseIDAudienceTypeAudienceValue ($course_id = null, $audience_type = null, $audience_value = null, $active = 1) {

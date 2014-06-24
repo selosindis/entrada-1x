@@ -544,7 +544,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											<td>
 												<span class="radio-group-title">All Learners in the <?php echo $course_details["course_code"];?> Course List Group</span>
 												<div class="content-small">This assessment is intended for all learners that are members of the <?php echo $course_details["course_code"];?> Course List.</div>
-												<input id="course_list" name="course_list" type="hidden" value="<?php echo $course_lists[0]["group_id"]; ?>">
+												<input id="course_list" class="course-list" name="course_list" type="hidden" value="<?php echo $course_lists[0]["group_id"]; ?>">
 											</td>
 										</tr>
 								<?php
@@ -834,6 +834,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                 $(event_well_li).append(event_well);
                                 $("#attached-event-list").empty();
                                 $("#attached-event-list").append(event_well_li);
+                                $("#attach-event-button").removeClass("hide");
                                 $("#assessment-event").remove();
                             });
                             

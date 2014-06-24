@@ -66,6 +66,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
             } else {
                 $recurring_events = false;
             }
+            $PROCESSED["keywords_hidden"] = $event_info["keywords_hidden"];
+			$PROCESSED["keywords_release_date"] = $event_info["keywords_release_date"];
 			$PROCESSED["objectives_release_date"] = $event_info["objectives_release_date"];
 			$COURSE_ID = $event_info["course_id"];
 			if (!$ENTRADA_ACL->amIAllowed(new EventContentResource($event_info["event_id"], $event_info["course_id"], $event_info["organisation_id"]), "update")) {
@@ -290,6 +292,26 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				if (isset($_POST["type"])) {
 					switch ($_POST["type"]) {
 						case "content" :
+                            
+                            /**
+                             * Event keywords hidden from students
+                             */
+                            $PROCESSED["keywords_hidden"] = 0;
+                            if (isset($_POST["keywords_hidden"]) && $tmp_input = clean_input($_POST["keywords_hidden"], array("int"))) {
+                                $PROCESSED["keywords_hidden"] = (int) $tmp_input;
+                            }
+                            
+                            /**
+                             * Event keyword release date
+                             */
+                            $PROCESSED["keywords_release_date"] = 0;
+                            if (isset($_POST["delay_release_keywords"]) && $tmp_input = clean_input($_POST["delay_release_keywords"], array("int"))) {
+                                $PROCESSED["delay_release_keywords"] = $tmp_input;
+                                $release_date = validate_calendar("Delay release until", "delay_release_keywords_option", true, true);
+                                if (!$ERROR) {
+                                    $PROCESSED["keywords_release_date"] = (int) $release_date;
+                                }
+                            }
 
                             /**
                             * Event objective release date
@@ -299,11 +321,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 $PROCESSED["delay_release"] = $tmp_input;
                                 $release_date = validate_calendar("Delay release until", "delay_release_option", true, true);
                                 if (!$ERROR) {
-                                    if ($release_date >= time()) {
-                                        $PROCESSED["objectives_release_date"] = (int) $release_date;
-                                    } else {
-                                        add_error("<strong>Objective release date</strong> must on or after the current date and time.");
-                                    }
+                                    $PROCESSED["objectives_release_date"] = (int) $release_date;
                                 }
                             }
 
@@ -374,7 +392,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                                 /**
                                  * Update base Learning Event.
                                  */
-                                if ($db->AutoExecute("events", array("event_objectives" => $event_objectives, "objectives_release_date" => $PROCESSED["objectives_release_date"] , "event_description" => $event_description, "event_message" => $event_message, "event_finish" => $event_finish, "event_duration" => $event_duration, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
+                                if ($db->AutoExecute("events", array("event_objectives" => $event_objectives, "keywords_hidden" => $PROCESSED["keywords_hidden"], "keywords_release_date" => $PROCESSED["keywords_release_date"], "objectives_release_date" => $PROCESSED["objectives_release_date"] , "event_description" => $event_description, "event_message" => $event_message, "event_finish" => $event_finish, "event_duration" => $event_duration, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "UPDATE", "`event_id` = ".$db->qstr($EVENT_ID))) {
                                     $SUCCESS++;
                                     $SUCCESSSTR[] = "You have successfully updated the event details for this learning event.";
 
@@ -936,6 +954,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                 });
                     
                 jQuery(document).ready(function () {
+                    jQuery("#delay_release_keywords_option_date").css("margin", "0");
+                    jQuery("#delay_release_keywords").is(":checked") ? jQuery("#delay_release_keywords_controls").show() : jQuery("#delay_release_keywords_controls").hide();
+                    jQuery("#delay_release_keywords").on("click", function() {
+                        jQuery("#delay_release_keywords_controls").toggle(this.checked);
+                    });
+                    
                     jQuery("#delay_release_option_date").css("margin", "0");
                     jQuery("#delay_release").is(":checked") ? jQuery("#delay_release_controls").show() : jQuery("#delay_release_controls").hide();
                     jQuery("#delay_release").on("click", function() {
@@ -1226,7 +1250,27 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                         ?>
                         <a name="course-keywords-section"></a>
                         <h2 title="Course Keywords Section">Event Keywords</h2>
-                        <div id="course-keywords-section">
+                        <div id="event-keywords-section">
+                            <div class="row-fluid">
+                                <label class="checkbox" for="keywords_hidden">
+                                    <input type="checkbox" id="keywords_hidden" name="keywords_hidden" value="1" 
+                                        <?php echo ($PROCESSED["keywords_hidden"] != 0 ? " checked=\"checked\"" : "") ?>
+                                    />
+                                    Hide all keywords from students
+                                </label>
+                            </div>
+                            <div class="row-fluid">
+                                <label class="checkbox" for="delay_release_keywords">
+                                    <input type="checkbox" id="delay_release_keywords" name="delay_release_keywords" value="1" 
+                                        <?php echo ($event_info["keywords_release_date"] != 0 || isset($PROCESSED["delay_release_keywords"]) ? " checked=\"checked\"" : "") ?> 
+                                    />
+                                    Delay the release of all keywords
+                                </label>
+                                <div id="delay_release_keywords_controls" class="space-below">
+                                    <?php echo generate_calendar("delay_release_keywords_option", "Delay release until", true, $PROCESSED["keywords_release_date"], true, false, false, false, false); ?>
+                                </div>
+                            </div>
+                            
                             <div class="keywords half left">
                                 <h3>Keyword Search</h3>
                                 <div>Search MeSH Keywords

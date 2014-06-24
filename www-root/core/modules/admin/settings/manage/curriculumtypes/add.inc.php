@@ -368,7 +368,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 									}
 								});
 
-								$('#add_period').click(function(){										
+								$('#add_period').click(function(e){										
                                		$('#curriculum_periods_table').show();
                                 	$('#no_period_msg').hide();
 
@@ -382,6 +382,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_CONFIGURATION"))) {
 
 									currentIdx++;
 									numRows++;
+                                    e.preventDefault();
 								});
 
 								$('#delete_selected').click(function(){

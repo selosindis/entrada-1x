@@ -1631,7 +1631,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                             $period_data = $db->GetRow($query);
                                             ?>
                                             <div class="period_item" id="period_item_<?php echo $key;?>" style="margin-top:20px;">
-                                                <div class="clearfix">
+                                                <div class="clearfix clear_both">
                                                     <i class="icon-minus-sign remove_period" id="remove_period_<?php echo $key;?>"></i>&nbsp;<strong><?php echo (($period_data["curriculum_period_title"]) ? $period_data["curriculum_period_title"] . " - " : ""); ?></strong><span class="content-small"><?php echo date("F jS, Y",$period_data["start_date"])." to ".date("F jS, Y",$period_data["finish_date"]); ?></span><a href="javascript:void(0)" class="enrollment-toggle strong-green pull-right" id="add_audience_<?php echo $key;?>">Add Audience</a>
                                                 </div>
                                                 <div class="audience_selector span12 pull-left" id="audience_type_select_<?php echo $key;?>" style="display: none; margin-top: 20px;">

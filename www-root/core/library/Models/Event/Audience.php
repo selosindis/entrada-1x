@@ -101,7 +101,7 @@ class Models_Event_Audience {
         global $db;
         
         $audience = false;
-        
+
         switch ($this->audience_type) {
             case "proxy_id" :
                 $query = "SELECT `id`, `firstname`, `lastname` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ?";
@@ -158,40 +158,43 @@ class Models_Event_Audience {
             break;
             case "course_id" :
                 $query = "SELECT * FROM `course_audience` WHERE `course_id` = ?";
-                $course_audience = $db->GetRow($query, array($this->audience_value));
+                $course_audiences = $db->GetAll($query, array($this->audience_value));
                 
-                if ($course_audience && $course_audience["audience_type"] == "group_id") {
-                    $query = "SELECT `cgroup_id`, `group_name` FROM `course_groups` WHERE `cgroup_id` = ?";
-                    $result = $db->GetRow($query, array($course_audience["audience_value"]));
+                if ($course_audiences) {
+                    
+                    $query = "SELECT `course_name` FROM `courses` WHERE `course_id` = ?";
+                    $result = $db->GetRow($query, array($this->audience_value));
                     if ($result) {
-                        $audience_data["audience_name"] = $result["group_name"];
+                        $audience_data["audience_name"] = $result["course_name"];
                         $audience_data["audience_type"] = $this->audience_type;
-                        $query = "SELECT b.`id`, b.`firstname`, b.`lastname` 
-                                    FROM `course_group_audience` AS a
-                                    JOIN `".AUTH_DATABASE."`.`user_data` AS b
-                                    ON a.`proxy_id` = b.`id`
-                                    WHERE a.`cgroup_id` = ?
-                                    AND a.`active` = '1'";
-                        $results = $db->GetAssoc($query, array($course_audience["audience_value"]));
-                        if ($results) {
-                            $audience_data["audience_members"] = $results;
-                        }
-
-                        if (!empty($audience_data)) {
-                            $audience = new Models_Audience($audience_data);
-                        }
-                    } else {
-                        $query = "SELECT `course_name` FROM `courses` WHERE `course_id` = ?";
-                        $result = $db->GetRow($query, array($this->audience_value));
-                        if ($result) {
-                            $audience_data["audience_name"] = $result["course_name"];
-                            $audience_data["audience_type"] = $this->audience_type;
-                            
-                            if (!empty($audience_data)) {
-                                $audience = new Models_Audience($audience_data);
+                    }
+                    
+                    $members = array();
+                    foreach ($course_audiences as $course_audience) {
+                        if ($course_audience && $course_audience["audience_type"] == "group_id") {
+                            $query = "SELECT `cgroup_id`, `group_name` FROM `course_groups` WHERE `cgroup_id` = ?";
+                            $result = $db->GetRow($query, array($course_audience["audience_value"]));
+                            if ($result) {
+                                $query = "SELECT b.`id`, b.`firstname`, b.`lastname` 
+                                            FROM `course_group_audience` AS a
+                                            JOIN `".AUTH_DATABASE."`.`user_data` AS b
+                                            ON a.`proxy_id` = b.`id`
+                                            WHERE a.`cgroup_id` = ?
+                                            AND a.`active` = '1'";
+                                $results = $db->GetAssoc($query, array($course_audience["audience_value"]));
+                                if ($results) {
+                                    $members = array_merge($members, $results);
+                                }
                             }
                         }
                     }
+                    
+                    $audience_data["audience_members"] = $members;
+                    
+                    if (!empty($audience_data)) {
+                        $audience = new Models_Audience($audience_data);
+                    }
+                    
                 }
             break;
             default:

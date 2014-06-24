@@ -15,6 +15,7 @@
 
 @set_time_limit(0);
 @set_include_path(implode(PATH_SEPARATOR, array(
+					dirname(__FILE__) . "/../",
 					dirname(__FILE__) . "/../core",
 					dirname(__FILE__) . "/../core/includes",
 					dirname(__FILE__) . "/../core/library",
@@ -25,17 +26,15 @@
  * Include the Entrada init code.
  */
 require_once("init.inc.php");
-
-require_once(ENTRADA_CORE."/library/Models/mspr/Observership.class.php");
-
 /*
  * Fetch the unconfirmed observerships whose preceptors have not been notified. 
  */
 $query = "	SELECT *
 			FROM `student_observerships` 
 			WHERE ((FROM_UNIXTIME(`start`) <= NOW() AND FROM_UNIXTIME(`end`) <= NOW()) OR (FROM_UNIXTIME(`start`) <= NOW() AND `end` IS NULL))
-				AND (`notice_sent` = '0' OR DATEDIFF(NOW(), FROM_UNIXTIME(`notice_sent`)) >= '7')
-				AND `status` = 'UNCONFIRMED'";
+				AND (`notice_sent` = '0' OR `notice_sent` IS NULL OR DATEDIFF(NOW(), FROM_UNIXTIME(`notice_sent`)) >= '7')
+				AND `status` = 'approved'
+				AND (`reflection_id` IS NOT NULL AND `reflection_id` <> 0)";
 
 $results = $db->GetAll($query);
 
@@ -44,87 +43,68 @@ if ($results) {
 		/*
 		 * Create the observership object, send the notification, and update it with the new time.
 		 */
-		$obs = Observership::fromArray($result);
-
-		$result["notice_sent"] = time();
-
-		if (sendNotification($obs)) {
-			$obs->update($result);
-		};
+		sendNotification($result);
 	}
 }
 
-function sendNotification($obs) {
-	global $AGENT_CONTACTS;
-	if ($obs instanceof Observership) {
+function sendNotification($result) {
+	global $AGENT_CONTACTS, $db;
 		
-		$observer = User::get($obs->getStudentID());
-		
-		if (($preceptor = $obs->getPreceptor()) && $preceptor instanceof User) {
-			$preceptor_email = $preceptor->getEmail();
-			$preceptor_name = ($preceptor->getPrefix() ? $preceptor->getPrefix()." " : "") . $preceptor->getFirstname() . " " . $preceptor->getLastname();
-		} else {
-			$preceptor_email = $obs->getPreceptorEmail();
-			$preceptor_name = ($obs->getPreceptorPrefix() ? $obs->getPreceptorPrefix()." " : "") . $obs->getPreceptorFirstname() . " " . $obs->getPreceptorLastname();
-		}
-
-		if ($preceptor_email) {
-		
-			$message[] = $preceptor_name.",<br /><br />";
-			$message[] = "This automated message is being sent to confirm the following observership:<br /><br />\n";
-			$message[] = "<table width=\"60%\" border=\"1\">\n";
-
-			$message[] = "\t<tr>\n";
-			$message[] = "\t\t<td>Observer:</td>\n";
-			$message[] = "\t\t<td>".$obs->getUser()->getFullname(false)."</td>\n";
-			$message[] = "\t</tr>\n";
-
-			$message[] = "\t<tr>\n";
-			$message[] = "\t\t<td>Title</td>\n";
-			$message[] = "\t\t<td>".$obs->getTitle()."</td>\n";
-			$message[] = "\t</tr>\n";
-
-			$message[] = "\t<tr>\n";
-			$message[] = "\t\t<td>Site</td>\n";
-			$message[] = "\t\t<td>".$obs->getSite()."</td>\n";
-			$message[] = "\t</tr>\n";
-
-			$message[] = "\t<tr>\n";
-			$message[] = "\t\t<td>Location</td>\n";
-			$message[] = "\t\t<td>".$obs->getLocation()."</td>\n";
-			$message[] = "\t</tr>\n";
-
-			$message[] = "\t<tr>\n";
-			$message[] = "\t\t<td>Period</td>\n";
-			$message[] = "\t\t<td>".$obs->getPeriod()."</td>\n";
-			$message[] = "\t</tr>\n";
-
-			$message[] = "</table><br />\n";
-			$message[] = "Please confirm or reject the observership with this link:<br /><br />\n";
-			$message[] = "<a href=\"" . ENTRADA_URL . "/confirm_observership?unique_id=" . $obs->getUniqueID() . "\">" . ENTRADA_URL . "/confirm_observership?unique_id=" . $obs->getUniqueID() ."</a>.<br /><br />\n";
-			$message[] = "A reminder notice will be sent in 7 days.<br /><br />\n";
-			$message[] = "Thank you,";
-
-			$mail = new Zend_Mail();
-			$mail->addHeader("X-Section", "Observership Confirmation", true);
-			$mail->setFrom($AGENT_CONTACTS["general-contact"]["email"], $AGENT_CONTACTS["general-contact"]["name"]);
-			$mail->setSubject("Observership Confirmation");
-			$mail->setBodyHtml(implode($message));
-			$mail->addTo($preceptor_email, $preceptor_name);
-
-			if ($mail->send()) {
-				return true;
-			} else {
-				add_error("Failed to send confirmation request.");
-				application_log("error", "Unable to send observership [observership_id: ".$obs->getID()."] confirmation request.");
-				return false;
-			}
-		
-		}
-		
+	if ($result["preceptor_proxy_id"] != 0) {
+		$query = "SELECT `prefix`, `firstname`, `lastname`, `email` FROM `".AUTH_DATABASE."`.`user_data` WHERE `id` = ".$db->qstr($result["preceptor_proxy_id"]);
+		$preceptor = $db->GetRow($query);
+		$preceptor_email = $preceptor["email"];
+		$preceptor_name = (!empty($preceptor["prefix"]) ? $preceptor["prefix"]. " " : "").$preceptor["firstname"]. " " . $preceptor["lastname"];
 	} else {
-		application_log("error", "Non-observership object passed to sendNotification function, unable to send observership confirmation request.");
-		return false;
+		$preceptor_email = $result["preceptor_email"];
+		$preceptor_name = $result["preceptor_firstname"]. " " .$result["preceptor_lastname"];
+	}
+	
+	if ($preceptor_email) {
+
+		$ENTRADA_USER = User::get($result["student_id"]);
+		
+		$message	= $preceptor_name.",\n\n";
+		$message   .= "You have been indicated as the preceptor on an Observership:\n".
+					  "======================================================\n".
+
+					  "Submitted at: ".date("Y-m-d H:i", time())."\n".
+					  "Submitted by: ".$ENTRADA_USER->getFullname(false)."\n".
+					  "E-Mail Address: ".$ENTRADA_USER->getEmail()."\n".
+
+					  "Observership details:\n".
+					  "---------------------\n".
+					  "Title: ".$result["title"]."\n".
+					  "Activity Type: ".$result["activity_type"]."\n".
+					  ($result["activity_type"] == "ipobservership" ? "IP Observership Details: ".$result["activity_type"]."\n" : "").
+					  "Clinical Discipline: ".$result["clinical_discipline"]."\n".
+					  "Organisation: ".$result["organisation"]."\n".
+					  "Address: ".$result["address_l1"]."\n".
+					  "Preceptor: ".$preceptor_name ."\n".
+					  "Start date: ".date("Y-m-d", $result["start"])."\n".
+					  "End date: ".date("Y-m-d", $result["end"])."\n\n".
+
+					  "The observership request can be approved or rejected at the following address:\n".
+					  ENTRADA_URL."/confirm_observership?unique_id=".$result["unique_id"];
+
+		$mail = new Zend_Mail();
+		$mail->addHeader("X-Section", "Observership Confirmation", true);
+		$mail->setFrom($AGENT_CONTACTS["general-contact"]["email"], $AGENT_CONTACTS["general-contact"]["name"]);
+		$mail->setSubject("Observership Confirmation");
+		$mail->setBodyText($message);
+		$mail->addTo($preceptor_email, $preceptor_name);
+
+		if ($mail->send()) {
+			$query = "UPDATE `student_observerships` SET `notice_sent` = ".$db->qstr(time())." WHERE `id` = ".$db->qstr($result["id"]);
+			if ($db->Execute($query)) {
+				return true;
+				application_log("success", "Sent observership notification to [".$preceptor_email."] for observership_id [".$result["id"]."].");
+			}
+		} else {
+			application_log("error", "Unable to send observership [observership_id: ".$result["id"]."] confirmation request.");
+			return false;
+		}
+
 	}
 }
 

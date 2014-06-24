@@ -232,29 +232,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							}
 						}
 					} 
-		?>
-					<div class="span12 clearfix">
-						<h2 class="pull-left"><?php echo $output_cohort["group_name"];?></h2>
-						<form class="pull-right form-horizontal" style="margin-bottom:0;">
-							<div class="control-group">
-								<label for="course_list-quick-select" class="control-label content-small">
-									Target Audience:
-								</label>
-								<div class="controls">
-									<select id="course_list-quick-select" name="course_list-quick-select" onchange="window.location='<?php echo ENTRADA_URL;?>/admin/gradebook?section=view&id=<?php echo $COURSE_ID;?>&course_list='+this.options[this.selectedIndex].value">
-										<?php
-										foreach ($course_lists as $key => $course_list) { ?>
-											<option value="<?php echo $course_list["group_id"];?>" <?php echo (($course_list["group_id"] == $selected_classlist) ? "selected=\"selected\"" : "");?>>
-												<?php echo $course_list["group_name"];?>
-											</option>
-										<?php
-										} ?>
-									</select>
-								</div>
-							</div>
-						</form>
-					</div>
-		<?php
+                    if (!empty($course_lists)) {
+                        ?>
+                        <div class="span12 clearfix">
+                            <h2 class="pull-left"><?php echo $output_cohort["group_name"];?></h2>
+                            <form class="pull-right form-horizontal" style="margin-bottom:0;">
+                                <div class="control-group">
+                                    <label for="course_list-quick-select" class="control-label content-small">
+                                        Target Audience:
+                                    </label>
+                                    <div class="controls">
+                                        <select id="course_list-quick-select" name="course_list-quick-select" onchange="window.location='<?php echo ENTRADA_URL;?>/admin/gradebook?section=view&id=<?php echo $COURSE_ID;?>&course_list='+this.options[this.selectedIndex].value">
+                                            <?php
+                                            foreach ($course_lists as $key => $course_list) { ?>
+                                                <option value="<?php echo $course_list["group_id"];?>" <?php echo (($course_list["group_id"] == $selected_classlist) ? "selected=\"selected\"" : "");?>>
+                                                    <?php echo $course_list["group_name"];?>
+                                                </option>
+                                            <?php
+                                            } ?>
+                                        </select>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <?php
+                    }
 				}
 			} else {
 				$query =  "SELECT a.`course_id`, b.`group_name`, b.`group_id` 
@@ -269,7 +271,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							GROUP BY b.`group_id`
 							ORDER BY b.`group_name`";
 				$cohorts = $db->GetAll($query);
-				
+
                 $output_cohort = false;
                 $cohort_found = false;
                 if ($cohorts) {
@@ -286,29 +288,31 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         }
                     }
                 }
-                ?>
-                <div class="span12 clearfix">
-					<h2 class="pull-left"><?php echo $output_cohort["group_name"];?></h2>
-            		<form class="pull-right form-horizontal" style="margin-bottom:0;">
-						<div class="control-group">
-                			<label for="cohort-quick-select" class="control-label content-small">
-                				Target Audience:
-                			</label>
-                			<div class="controls">
-								<select id="cohort-quick-select" name="cohort-quick-select" onchange="window.location='<?php echo ENTRADA_URL;?>/admin/gradebook?section=view&id=<?php echo $COURSE_ID;?>&cohort='+this.options[this.selectedIndex].value">
-                                    <?php
-                                    foreach ($cohorts as $key => $cohort) { ?>
-                                        <option value="<?php echo $cohort["group_id"];?>" <?php echo (($cohort["group_id"] == $selected_cohort) ? "selected=\"selected\"" : "");?>>
-                                            <?php echo $cohort["group_name"];?>
-                                        </option>
-                                    <?php
-                                    } ?>
-                				</select>
-                			</div>
-                		</div>
-                	</form>
-                </div>
-                <?php
+                if (!empty($cohorts)) {
+                    ?>
+                    <div class="span12 clearfix">
+                        <h2 class="pull-left"><?php echo $output_cohort["group_name"];?></h2>
+                        <form class="pull-right form-horizontal" style="margin-bottom:0;">
+                            <div class="control-group">
+                                <label for="cohort-quick-select" class="control-label content-small">
+                                    Target Audience:
+                                </label>
+                                <div class="controls">
+                                    <select id="cohort-quick-select" name="cohort-quick-select" onchange="window.location='<?php echo ENTRADA_URL;?>/admin/gradebook?section=view&id=<?php echo $COURSE_ID;?>&cohort='+this.options[this.selectedIndex].value">
+                                        <?php
+                                        foreach ($cohorts as $key => $cohort) { ?>
+                                            <option value="<?php echo $cohort["group_id"];?>" <?php echo (($cohort["group_id"] == $selected_cohort) ? "selected=\"selected\"" : "");?>>
+                                                <?php echo $cohort["group_name"];?>
+                                            </option>
+                                        <?php
+                                        } ?>
+                                    </select>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <?php
+                }
             }
             echo "  </div>\n";
             if ($ENTRADA_ACL->amIAllowed("gradebook", "create", false) && $ENTRADA_ACL->amIAllowed(new CourseContentResource($COURSE_ID, $course_details["organisation_id"]), "update")) { 

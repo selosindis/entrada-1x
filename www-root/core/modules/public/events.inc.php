@@ -635,6 +635,34 @@ if (!defined("PARENT_INCLUDED")) {
                     </div>
                     <div>
                         <?php
+                        $query = "  SELECT ek.`keyword_id`, d.`descriptor_name` 
+                                    FROM `event_keywords` AS ek
+                                    JOIN `mesh_descriptors` AS d 
+                                    ON ek.`keyword_id` = d.`descriptor_ui`
+                                    AND ek.`event_id` = " . $db->qstr($EVENT_ID) . "
+                                    ORDER BY `descriptor_name`";
+
+                        $results = $db->GetAll($query);
+                        if ($results && (!$event_info['keywords_hidden'] || $ENTRADA_USER->getActiveGroup() != "student") && (int)$event_info['keywords_release_date'] <= time()) {
+                            $include_keywords = true;
+                            ?>
+                            <a name="event-keywords-section"></a>
+                            <h2 title="Event Keywords Section">Event Keywords</h2>
+                            <div id="event-keywords-section">
+                                <ul>
+                                    <?php
+                                    foreach($results as $result) {
+                                        echo "<li data-dui=\"" . $result['keyword_id'] . "\" data-dname=\"" . $result['descriptor_name'] . "\" id=\"tagged_keyword\">" . $result['descriptor_name'] . "</li>";
+                                    }
+                                    ?>
+                                </ul>
+                            </div>
+                            <?php
+                        }
+                        ?>
+                    </div>
+                    <div>
+                        <?php
                         $query = "SELECT b.`objective_id`, b.`objective_name`
                                     FROM `event_objectives` AS a
                                     LEFT JOIN `global_lu_objectives` AS b
@@ -1272,6 +1300,10 @@ if (!defined("PARENT_INCLUDED")) {
 					if ($include_details) {
 						$sidebar_html .= "	<li class=\"link\"><a href=\"#event-details-section\" onclick=\"$('event-details-section').scrollTo(); return false;\" title=\"Event Details\">Event Details</a></li>\n";
 					}
+                    
+                    if ($include_keywords) {
+                        $sidebar_html .= "  <li class=\"link\"><a href=\"#event-keywords-section\" onclick=\"$('event-keywords-section').scrollTo(); return false;\" title=\"Event Keywords\">Event Keywords</a></li>\n";
+                    }
 
 					if ($include_objectives) {
 						$sidebar_html .= "	<li class=\"link\"><a href=\"#event-objectives-section\" onclick=\"$('event-objectives-section').scrollTo(); return false;\" title=\"Event Objectives\">Event Objectives</a></li>\n";

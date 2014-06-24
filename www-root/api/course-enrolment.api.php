@@ -141,7 +141,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                                     $enrolment["groups"][$group_name][] = array(
                                                         "firstname" => $audience_member->getFirstName(),
                                                         "lastname" => $audience_member->getLastName(),
-                                                        "number" => $audience_member->getLastName(),
+                                                        "number" => $audience_member->getNumber(),
                                                         "username" => $audience_member->getUsername(),
                                                         "email" => $audience_member->getEmail()
                                                     );
@@ -152,7 +152,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                                 $enrolment["individuals"][] =  array(
                                                     "firstname" => $audience_member->getFirstName(),
                                                     "lastname" => $audience_member->getLastName(),
-                                                    "number" => $audience_member->getLastName(),
+                                                    "number" => $audience_member->getNumber(),
                                                     "username" => $audience_member->getUsername(),
                                                     "email" => $audience_member->getEmail()
                                                 );;

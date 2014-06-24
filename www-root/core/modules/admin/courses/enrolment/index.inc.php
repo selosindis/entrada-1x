@@ -96,7 +96,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                     var timer;  
                     var done_interval = 600;
                     var course_id = "<?php echo $course->getID(); ?>";
-                    var enrolment_view = "<?php echo (isset($PREFERENCES["enrolment_view"]) ? $PREFERENCES["enrolment_view"] : "grid"); ?>";
+                    var enrolment_view = "<?php echo (isset($PREFERENCES["enrolment_view"]) ? $PREFERENCES["enrolment_view"] : "table"); ?>";
 
                     getSyncDate(course_id);
 
@@ -421,8 +421,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                                 </ul>
                             </div>
                             <div class="btn-group" data-toggle="buttons-radio">
-                                <a href="#" title="Toggle grid view" data-view="grid" class="btn course-enrolment-button view-toggle"><i class="icon-th-large"></i></a>
                                 <a href="#" title="Toggle table view" data-view="table" class="btn course-enrolment-button view-toggle"><i class=" icon-align-justify"></i></a>
+                                <a href="#" title="Toggle grid view" data-view="grid" class="btn course-enrolment-button view-toggle"><i class="icon-th-large"></i></a>
                             </div>
                         </div>
                         <p class="text-success pull-right" id="sync-date"></p>

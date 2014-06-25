@@ -310,6 +310,11 @@ if (!defined("PARENT_INCLUDED")) {
 													$(entry_controls).append(review_btn);
 													
 													$(entry_row).append(entry_controls);
+                                                    
+                                                    if (v.entry.updated_date.length > 0) {
+                                                        $(entry_row).append("<div class=\"content-small space-above\" style=\"text-align:right;\"><strong>Submitted: </strong>" + v.entry.updated_date + "</div>");
+                                                    }
+                                                    
 													$(entries).append(entry_row);
 												}
 											});
@@ -1214,7 +1219,7 @@ if (!defined("PARENT_INCLUDED")) {
 						$eportfolio_advisors = Models_Eportfolio_Advisor::fetchAll($ENTRADA_USER->getActiveOrganisation());
 						if ($eportfolio_advisors) {
 							foreach ($eportfolio_advisors as $advisor) {
-								?><li><a href="#" data-id="<?php echo $advisor->getProxyID(); ?>" class="advisor"><?php echo $advisor->getFirstName() . " " . $advisor->getLastName(); ?></a></li><?php
+								?><li><a href="#" data-id="<?php echo $advisor->getProxyID(); ?>" class="advisor"><?php echo $advisor->getLastName() . ", " . $advisor->getFirstName(); ?></a></li><?php
 							}
 						}
 						?>

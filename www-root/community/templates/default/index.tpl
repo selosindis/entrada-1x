@@ -12,8 +12,10 @@
 
 	<link href="{$sys_website_url}/css/jquery/jquery-ui.css" rel="stylesheet" type="text/css" />
 	<script type="text/javascript" src="{$sys_website_url}/javascript/jquery/jquery.min.js"></script>
+    <script type="text/javascript">var COMMUNITY_ID = "{$community_id}";</script>
 	<script type="text/javascript" src="{$sys_website_url}/javascript/jquery/jquery-ui.min.js"></script>
 	<script type="text/javascript">jQuery.noConflict();</script>
+    <script src="{$template_relative}/js/collapse-menu.js"></script>
 
 	<link href="{$template_relative}/css/bootstrap.min.css" rel="stylesheet" type="text/css" media="all" />
 	<link href="{$template_relative}/css/stylesheet.css" rel="stylesheet" type="text/css" media="all" />
@@ -47,7 +49,11 @@
 				</div>
 			</div>
 			<div class="row">
+                <div id="community-nav-collapse">
+                    <a id="community-nav-collapse-toggle" href="#" class=""><span class="menu-icon" id="community-nav-menu-icon"></span></a>
+                </div>
 				<div class="span6-5 content-area">
+                    
 					{$site_breadcrumb_trail}
 					{$child_nav}
 					<div class="content">
@@ -67,8 +73,16 @@
 						</div>
 					{/if}
 				</div>
-				<div class="span3">
-					{$page_sidebar}
+				<div id="right-community-nav" class="span3 right-community-nav-expanded">
+                    <div class="inner-sidebar no-printing">
+                        {if $is_logged_in && $user_is_admin}
+                            {include file="sidebar-blocks/admin_block.tpl"}
+                        {/if}
+                        {include file="sidebar-blocks/entrada_block.tpl"}
+                        {if $is_logged_in && $user_is_member}
+                            {include file="sidebar-blocks/community_block.tpl"}
+                        {/if}
+                    </div>
 				</div>
 			</div>
 			<div class="footer span9">

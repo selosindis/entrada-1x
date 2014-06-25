@@ -899,6 +899,7 @@ padding:15px 15px 15px 40px;
 div.content {
 overflow:hidden;
 clear:both;
+padding-right:10px;
 }
 
 .sortable-list {
@@ -1621,4 +1622,34 @@ button.close {
   background: transparent;
   border: 0;
   -webkit-appearance: none;
+}
+
+#community-nav-collapse {
+    position: relative;
+}
+
+#community-nav-collapse-toggle {
+    background: #efefef;
+    padding: 6px 7px;
+    position:absolute;
+    right:10px;
+    top:14px;
+}
+
+#community-nav-collapse-toggle.active {
+    background: #006CCC;
+}
+
+.menu-icon {
+    background:url(../images/menu-icon.png);
+    display: inline-block;
+    height:17px;
+    width:18px;
+}
+
+.menu-icon.active {
+    background:url(../images/menu-icon-active.png);
+    display: inline-block;
+    height:17px;
+    width:18px;
 }

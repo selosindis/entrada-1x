@@ -202,10 +202,14 @@ if ($LOGGED_IN && $ENTRADA_USER) {
  * Setup Smarty template engine.
  */
 $smarty = new Smarty();
-$smarty->template_dir = COMMUNITY_ABSOLUTE."/templates/".$COMMUNITY_TEMPLATE;
+
+$template_dir = COMMUNITY_ABSOLUTE."/templates/".$COMMUNITY_TEMPLATE;
+$smarty->template_dir = $template_dir;
 $smarty->compile_dir = CACHE_DIRECTORY;
-$smarty->compile_id = md5($smarty->template_dir);
+$smarty->compile_id = md5($template_dir);
 $smarty->cache_dir = CACHE_DIRECTORY;
+
+$is_sequential_nav = false;
 
 /**
  * Check if the community url has been set by the above code.
@@ -409,8 +413,10 @@ if ($COMMUNITY_URL) {
 				 */
 				if ((isset($community_details["community_template"])) && (is_dir(ENTRADA_ABSOLUTE."/community/templates/".$community_details["community_template"]))) {
 					$COMMUNITY_TEMPLATE = $community_details["community_template"];
-					$smarty->template_dir = COMMUNITY_ABSOLUTE."/templates/".$COMMUNITY_TEMPLATE;
-					$smarty->compile_id = md5($smarty->template_dir);
+                    $template_dir = COMMUNITY_ABSOLUTE."/templates/".$COMMUNITY_TEMPLATE;
+
+					$smarty->template_dir = $template_dir;
+					$smarty->compile_id = md5($template_dir);
 				}
                 $COMMUNITY_LOCKED_PAGE_IDS = array();
                 $COMMUNITY_TYPE_OPTIONS = array();
@@ -437,7 +443,6 @@ if ($COMMUNITY_URL) {
                     }
 					if (isset($COMMUNITY_TYPE_OPTIONS["sequential_navigation"]) && $COMMUNITY_TYPE_OPTIONS["sequential_navigation"] == "1" && $COMMUNITY_MODULE != "pages") {
 						$is_sequential_nav = true;
-						$smarty->assign("is_sequential_nav", $is_sequential_nav);
 
 						$result = get_next_community_page($COMMUNITY_ID, $PAGE_ID, $PARENT_ID, $PAGE_ORDER);
 
@@ -891,10 +896,19 @@ if ($COMMUNITY_URL) {
                     $sys_profile_evaluations = "";
 
 				}
+
+                if (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"]) {
+                    $navigator_tabs = navigator_tabs();
+                } else {
+                    $navigator_tabs = "";
+                }
+
 				$date_joined = "Joined: ".date("Y-m-d", $COMMUNITY_MEMBER_SINCE);
 
                 $smarty->assign("sys_profile_photo", $sys_profile_photo);
                 $smarty->assign("sys_profile_evaluations", $sys_profile_evaluations);
+
+                $smarty->assign("is_sequential_nav", $is_sequential_nav);
 
 				$smarty->assign("template_relative", COMMUNITY_RELATIVE."/templates/".$COMMUNITY_TEMPLATE);
 				$smarty->assign("sys_community_relative", COMMUNITY_RELATIVE);
@@ -915,6 +929,18 @@ if ($COMMUNITY_URL) {
 
 				$smarty->assign("site_total_members", communities_count_members());
 				$smarty->assign("site_total_admins", communities_count_members(1));
+
+                $smarty->assign("copyright_string", COPYRIGHT_STRING);
+                $smarty->assign("development_mode", DEVELOPMENT_MODE);
+                $smarty->assign("google_analytics_code", GOOGLE_ANALYTICS_CODE);
+
+                $smarty->assign("isAuthorized", (isset($_SESSION["isAuthorized"]) && $_SESSION["isAuthorized"] ? true : false));
+                $smarty->assign("protocol", (isset($_SERVER["HTTPS"]) ? "https" : "http"));
+
+                $smarty->assign("navigator_tabs", $navigator_tabs);
+
+                $smarty->assign("application_name", APPLICATION_NAME);
+                $smarty->assign("application_version", APPLICATION_VERSION);
 
 				$query = "	SELECT a.`course_id`, a.`course_code`
 									FROM `courses` AS a

@@ -240,6 +240,7 @@ if (!$OBSERVERSHIP){
 						  <option value="Palliative Medicine">Palliative Medicine</option>
 						  <option value="Pediatric Cardiology">Pediatric Cardiology</option>
 						  <option value="Pediatric Emergency Medicine">Pediatric Emergency Medicine</option>
+                          <option value="Pediatric Gastroenterology">Pediatric Gastroenterology</option>
 						  <option value="Pediatric General Surgery">Pediatric General Surgery</option>
 						  <option value="Pediatric Hemotology/Oncology">Pediatric Hemotology/Oncology</option>
 						  <option value="Pediatric Neurology">Pediatric Neurology</option>

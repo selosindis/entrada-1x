@@ -91,8 +91,7 @@ if ($ASSIGNMENT_ID) {
                         $zip->close();
                         $download_file = $zipname;
                         if (file_exists($download_file) && is_readable($download_file)) {
-                            @ob_end_clean();
-                            @ob_end_clean();
+                            ob_clear_open_buffers();
                             
                             header("Pragma: public");
                             header("Expires: 0");
@@ -138,11 +137,7 @@ if ($ASSIGNMENT_ID) {
                         if (($file_version) && (is_array($file_version))) {
                             if ((file_exists($download_file = FILE_STORAGE_PATH."/A".$file_version["afversion_id"])) && (is_readable($download_file))) {
 
-                                /**
-                                 * This must be done twice in order to close both of the open buffers.
-                                 */
-                                @ob_end_clean();
-                                @ob_end_clean();
+                                ob_clear_open_buffers();
 
                                 /**
                                  * Determine method that the file should be accessed (downloaded or viewed)

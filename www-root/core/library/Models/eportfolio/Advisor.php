@@ -97,7 +97,8 @@ class Models_Eportfolio_Advisor {
 					JOIN `".AUTH_DATABASE."`.`user_access` AS c
 					ON a.`proxy_id` = c.`user_id`
 					AND c.`organisation_id` = ".$db->qstr($organisation_id)."
-					GROUP BY a.`proxy_id`";
+					GROUP BY a.`proxy_id`
+                    ORDER BY b.`lastname`, b.`firstname`";
 		$results = $db->GetAll($query);
 		if ($results) {
 			$advisors = array();
@@ -250,7 +251,7 @@ class Models_Eportfolio_Advisor {
 	public static function addRelation($advisor_id, $student_id) {
 		global $db;
 		$query = "INSERT INTO `".AUTH_DATABASE."`.`user_relations` (`from`, `to`, `type`) VALUES (".$db->qstr($advisor_id).", ".$db->qstr($student_id).", '1')";
-		$results = $db->Execute($query);
+		$result = $db->Execute($query);
 		if ($result) {
 			return true;
 		} else {

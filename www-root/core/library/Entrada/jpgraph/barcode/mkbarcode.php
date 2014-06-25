@@ -171,7 +171,7 @@ class ParseArgs {
             'BOOKLAND' => ENCODING_BOOKLAND,
         );
         $barcode = strtoupper($barcode);
-        if( key_exists($barcode,$barcodes) ) {
+        if( array_key_exists($barcode,$barcodes) ) {
         	$barcode = $barcodes[$barcode];
         }
         else {

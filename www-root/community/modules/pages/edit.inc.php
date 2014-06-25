@@ -99,7 +99,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 		/**
 		 * If these options are not already records in the database, insert them so they can be updated.
 		 */
-		if (!key_exists("show_announcements", $page_options)) {
+		if (!array_key_exists("show_announcements", $page_options)) {
 			$db->Execute("INSERT INTO `community_page_options` 
 				(`community_id`, `cpage_id`, `option_title`, `option_value`)
 				VALUES (".$db->qstr($COMMUNITY_ID).", ".$db->qstr($PAGE_ID).", 'show_announcements', 0)");
@@ -112,7 +112,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 												   'updated_date'	=> 0
 												  );
 		}
-		if (!key_exists("show_events", $page_options)) {
+		if (!array_key_exists("show_events", $page_options)) {
 			$db->Execute("INSERT INTO `community_page_options` 
 				(`community_id`, `cpage_id`, `option_title`, `option_value`)
 				VALUES (".$db->qstr($COMMUNITY_ID).", ".$db->qstr($PAGE_ID).", 'show_events', 0)");
@@ -125,7 +125,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 												   'updated_date'	=> 0
 												  );
 		}
-		if (!key_exists("show_history", $page_options)) {
+		if (!array_key_exists("show_history", $page_options)) {
 			$db->Execute("INSERT INTO `community_page_options` 
 				(`community_id`, `cpage_id`, `option_title`, `option_value`)
 				VALUES (".$db->qstr($COMMUNITY_ID).", ".$db->qstr($PAGE_ID).", 'show_history', 0)");
@@ -161,7 +161,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 		}
 	} else {
 		if ($PAGE_TYPE == "announcements" || $PAGE_TYPE == "events") {
-			if (!key_exists('allow_member_posts', $page_options)) {
+			if (!array_key_exists('allow_member_posts', $page_options)) {
 			$db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'allow_member_posts', `option_value` = '0'");
 			$page_options["allow_member_posts"] = Array ('cpoption_id' 	=> $db->insert_id(),
 														 'community_id' => $COMMUNITY_ID,
@@ -173,7 +173,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 														);
 			}
 
-			if (!key_exists('allow_troll_posts', $page_options)) {
+			if (!array_key_exists('allow_troll_posts', $page_options)) {
 				$db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'allow_troll_posts', `option_value` = '0'");
 				$page_options["allow_troll_posts"] = Array ('cpoption_id' 	=> $db->insert_id(),
 															 'community_id' => $COMMUNITY_ID,
@@ -185,7 +185,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 															);
 			}
 
-			if (!key_exists('moderate_posts', $page_options)) {
+			if (!array_key_exists('moderate_posts', $page_options)) {
 				$db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'moderate_posts', `option_value` = '0'");
 				$page_options["moderate_posts"] = Array ('cpoption_id' 	=> $db->insert_id(),
 															 'community_id' => $COMMUNITY_ID,
@@ -204,7 +204,7 @@ if (($LOGGED_IN) && (!$COMMUNITY_MEMBER)) {
 							$page_options[$result["option_title"]] = $result;
 				}
 			}
-			if (!key_exists('new_window', $page_options)) {
+			if (!array_key_exists('new_window', $page_options)) {
 				$db->Execute("INSERT INTO `community_page_options` SET `community_id` = ".$db->qstr($COMMUNITY_ID).", `cpage_id` = ".$db->qstr($PAGE_ID).", `option_title` = 'new_window', `option_value` = '0'");
 				$page_options["moderate_posts"] = Array ('cpoption_id' 	=> $db->insert_id(),
 															 'community_id' => $COMMUNITY_ID,

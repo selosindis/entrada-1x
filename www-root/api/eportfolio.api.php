@@ -555,22 +555,29 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 						add_error("Invalid student id");
 					}
 					
-					if(isset(${$request_var}["advisor_id"]) && $tmp_input = clean_input(${$request_var}["advisor_id"], "int")) {
+                    if(isset(${$request_var}["advisor_id"]) && $tmp_input = clean_input(${$request_var}["advisor_id"], "int")) {
 						$PROCESSED["advisor_id"] = $tmp_input;
 					} else {
 						add_error("Invalid advisor id");
 					}
+                    
 					if (!$ERROR) {
 						$i = 0;
 						foreach ($s as $student_id) {
-							Models_Eportfolio_Advisor::addRelation($PROCESSED["advisor_id"], $student_id);
-							$tmp_student = User::get($student_id);
-							$students[$i]["advisor"]	= $PROCESSED["advisor_id"];
-							$students[$i]["id"]			= $student_id;
-							$students[$i]["firstname"]	= $tmp_student->getFirstname();
-							$students[$i]["lastname"]	= $tmp_student->getLastname();
+							if (Models_Eportfolio_Advisor::addRelation($PROCESSED["advisor_id"], $student_id)) {
+                                $tmp_student = User::get($student_id);
+                                $students[$i]["advisor"]	= $PROCESSED["advisor_id"];
+                                $students[$i]["id"]			= $student_id;
+                                $students[$i]["firstname"]	= $tmp_student->getFirstname();
+                                $students[$i]["lastname"]	= $tmp_student->getLastname();
+                                $i++;
+                            }
 						}
-						echo json_encode(array("status" => "success", "data" => $students));
+                        if ($students) {
+                            echo json_encode(array("status" => "success", "data" => $students));
+                        } else {
+                            echo json_encode(array("status" => "error", "data" => array("Failed to add students")));
+                        }
 					}
 				break;
 				case "add-advisors" :

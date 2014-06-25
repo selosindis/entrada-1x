@@ -24,7 +24,7 @@ class Models_Logbook {
         if (!$logged_objectives) {
             $logged_objectives = array();
             foreach ($this->logbook_entries as $entry) {
-                if (!key_exists($entry->getCourseID(), $logged_objectives)) {
+                if (!array_key_exists($entry->getCourseID(), $logged_objectives)) {
                     $logged_objectives[$entry->getCourseID()] = array();
                 }
                 if (@count($entry->getObjectives())) {
@@ -44,10 +44,10 @@ class Models_Logbook {
             foreach ($course_objectives as $course_objective) {
                 $objective = Models_Objective::fetchRow($course_objective["objective_id"]);
                 if ($objective && $objective->getLoggable()) {
-                    if (!key_exists($course_objective["course_id"], $required_objectives)) {
+                    if (!array_key_exists($course_objective["course_id"], $required_objectives)) {
                         $required_objectives[$course_objective["course_id"]] = array();
                     }
-                    if (!key_exists($course_objective["course_id"], $logged_objectives) || !key_exists($objective->getID(), $logged_objectives[$course_objective["course_id"]])) {
+                    if (!array_key_exists($course_objective["course_id"], $logged_objectives) || !array_key_exists($objective->getID(), $logged_objectives[$course_objective["course_id"]])) {
                         $required_objectives[$course_objective["course_id"]][$objective->getID()] = $objective;
                     }
                 }

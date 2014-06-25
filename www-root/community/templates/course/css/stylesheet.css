@@ -197,11 +197,8 @@ padding:0;
 }
 
 div.bread-crumb-trail ul li {
-display:inline;
-list-style-type:none;
-/*padding-left:15px;*/
-vertical-align:middle;
-/*background:transparent url(../images/record-next-on.gif) no-repeat center left;*/
+display: inline;
+list-style-type: none;
 }
 
 div.details {

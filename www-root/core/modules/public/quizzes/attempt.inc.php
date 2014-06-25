@@ -577,7 +577,7 @@ if ($RECORD_ID) {
 														$quiz_markup .= "<div class=\"display-generic\">".$question->getQuestionText()."</div>";
 														$quiz_markup .= "<ol class=\"questions\" start=\"".$counter."\">";
 													} else {
-                                                        if (in_array($question->getQquestionID(), $problem_questions) && !key_exists($page_counter, $problem_pages)) {
+                                                        if (in_array($question->getQquestionID(), $problem_questions) && !array_key_exists($page_counter, $problem_pages)) {
                                                             $problem_pages[$page_counter] = true;
                                                         }
 														$quiz_markup .= "<li id=\"question_".$question->getQquestionID()."\"".((in_array($question->getQquestionID(), $problem_questions)) ? " class=\"notice\"" : "")." data-page=\"".$page_counter."\">";
@@ -617,7 +617,7 @@ if ($RECORD_ID) {
 															<li><a href="#" class="prev">&laquo;</a></li>
 															<?php 
 															for ($i = 1; $i <= $page_counter; $i++) {
-																echo "<li".($i == 1 ? " class=\"active\"" : "")."><a href=\"#".$i."\" id=\"page-selector-top-".$i."\" data-id=\"".$i."\"".((key_exists($i, $problem_pages)) && $problem_pages[$i] ? " class=\"notice\"" : "").">".$i."</a></li>";
+																echo "<li".($i == 1 ? " class=\"active\"" : "")."><a href=\"#".$i."\" id=\"page-selector-top-".$i."\" data-id=\"".$i."\"".((array_key_exists($i, $problem_pages)) && $problem_pages[$i] ? " class=\"notice\"" : "").">".$i."</a></li>";
 															} 
 															?>
 															<li><a href="#" class="next">&raquo;</a></li>
@@ -640,7 +640,7 @@ if ($RECORD_ID) {
 															<li><a href="#" class="prev">&laquo;</a></li>
 															<?php 
 															for ($i = 1; $i <= $page_counter; $i++) {
-																echo "<li".($i == 1 ? " class=\"active\"" : "")."><a href=\"#".$i."\" id=\"page-selector-bottom-".$i."\" data-id=\"".$i."\"".((key_exists($i, $problem_pages)) && $problem_pages[$i] ? " class=\"notice\"" : "").">".$i."</a></li>";
+																echo "<li".($i == 1 ? " class=\"active\"" : "")."><a href=\"#".$i."\" id=\"page-selector-bottom-".$i."\" data-id=\"".$i."\"".((array_key_exists($i, $problem_pages)) && $problem_pages[$i] ? " class=\"notice\"" : "").">".$i."</a></li>";
 															} 
 															?>
 															<li><a href="#" class="next">&raquo;</a></li>

@@ -40,7 +40,7 @@ if ($RECORD_ID) {
 	
 				$file_uploads = array();
 
-                if ((array_count_values($copyright_settings = (array) $translate->_("copyright")) > 1) && strlen($copyright_settings["copyright-uploads"])) {
+                if ((array_count_values($copyright_settings = (array) $translate->_("copyright")) > 1) && isset($copyright_settings["copyright-uploads"]) && strlen($copyright_settings["copyright-uploads"])) {
                     $COPYRIGHT = true;
                 } else {
                     $COPYRIGHT = false;
@@ -354,6 +354,36 @@ if ($RECORD_ID) {
                                     <col style="width: 20%" />
                                     <col style="width: 77%" />
                                 </colgroup>
+	                            <tfoot>
+	                            <?php if ($COPYRIGHT) {
+		                            ?>
+		                            <tr><td colspan="3">&nbsp;<hr></td></tr>
+		                            <tr>
+			                            <td colspan="3">
+				                            <h2><?php echo $translate->_("copyright_title"); ?></h2>
+			                            </td>
+		                            </tr>
+		                            <tr>
+			                            <td />
+			                            <td colspan="2">
+				                            <div class="display-generic">
+				                                <?php echo $copyright_settings["copyright-uploads"]; ?>
+				                                <label class="checkbox">
+					                                <input type="checkbox" value="1" onchange="acceptButton(this)"> <?php echo $translate->_("copyright_accept_label"); ?>
+				                                </label>
+				                            </div>
+			                            </td>
+		                            </tr>
+	                            <?php
+	                            } ?>
+	                            <tr>
+		                            <td colspan="3" style="padding-top: 1px; text-align: right">
+			                            <div id="display-upload-button" style="padding-top: 15px; text-align: right">
+				                            <input type="submit" class="btn btn-primary" id="upload-button" value="Upload File(s)" <?php echo ($COPYRIGHT ? " disabled=\"disabled\"" : ""); ?> />
+			                            </div>
+		                            </td>
+	                            </tr>
+	                            </tfoot>
                                 <tbody>
                                     <tr>
                                         <td colspan="3">
@@ -432,26 +462,9 @@ if ($RECORD_ID) {
                                     </tr>
                                     <?php
                                     echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0));
-
-                                    if ($COPYRIGHT) {
-                                        ?>
-                                        <tr>
-                                            <td colspan="3">
-                                                <h2><?php echo $translate->_("copyright_title"); ?></h2>
-                                                <?php echo $copyright_settings["copyright-uploads"]; ?>
-                                                <label class="checkbox">
-                                                    <input type="checkbox" value="1" onchange="acceptButton(this)"> <?php echo $translate->_("copyright_accept_label"); ?>
-                                                </label>
-                                            </td>
-                                        </tr>
-                                        <?php
-                                    }
                                     ?>
                                 </tbody>
                             </table>
-                            <div id="display-upload-button" style="padding-top: 15px; text-align: right">
-                                <input type="submit" class="btn btn-primary" id="upload-button" value="Upload File(s)" <?php echo ($COPYRIGHT ? " disabled=\"disabled\"" : ""); ?> />
-                            </div>
 					    </form>
 						<div id="display-upload-status" style="display: none">
 							<div style="text-align: left; background-color: #EEEEEE; border: 1px #666666 solid; padding: 10px">

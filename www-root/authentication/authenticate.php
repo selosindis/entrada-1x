@@ -366,45 +366,24 @@ if (!$ERROR) {
  * Validate the users' application level access.
  */
 if (!$ERROR) {
-	$query	= "SELECT * FROM `user_access` WHERE `user_id` = ".$db->qstr($user_data["id"])." AND `app_id` = ".$db->qstr($application["id"]);
+	$query	= " SELECT * FROM `user_access` 
+                WHERE `user_id` = ".$db->qstr($user_data["id"])." 
+                AND `app_id` = ".$db->qstr($application["id"]) . " 
+                AND `account_active` = 'true' 
+                AND (`access_starts` = '0' OR `access_starts` < ". $db->qstr(time()) .") 
+                AND (`access_expires` = '0' OR `access_expires` > ". $db->qstr(time()) .")";
+    
 	$result	= $db->GetRow($query);
 	if ($result) {
-		if ($result["account_active"] == "true") {
-			if (($result["access_starts"] == 0) || ($result["access_starts"] < time())) {
-				if (($result["access_expires"] == 0) || ($result["access_expires"] > time())) {
-					/**
-					 * The users application access is considered valid.
-					 */
-					$user_access = $result;
-				} else {
-					$ERROR++;
-
-					echo "\t\t<status>".encrypt("failed", $auth_password)."</status>\n";
-					echo "\t\t<message>".encrypt("Your account has expired for this application. Please contact a system administrator if you require further assistance.", $auth_password)."</message>\n";
-
-					application_log("auth_notice", "Username [".$user_username."] attempted to log into an expired account under application_id [".$auth_app_id."].");
-				}
-			} else {
-				$ERROR++;
-
-				echo "\t\t<status>".encrypt("failed", $auth_password)."</status>\n";
-				echo "\t\t<message>".encrypt("Your account is not yet active for this application.", $auth_password)."</message>\n";
-
-				application_log("auth_notice", "Username [".$user_username."] attempted to log into an account that is not yet active under application_id [".$auth_app_id."].");
-			}
-		} else {
-			$ERROR++;
-
-			echo "\t\t<status>".encrypt("failed", $auth_password)."</status>\n";
-			echo "\t\t<message>".encrypt("Your account is not currently active for this application. Please contact a system administrator if you require further assistance.", $auth_password)."</message>\n";
-
-			application_log("auth_notice", "Username [".$user_username."] attempted to log into an account was marked inactive under application_id [".$auth_app_id."].");
-		}
+        /**
+         * The users application access is considered valid.
+         */
+        $user_access = $result;
 	} else {
 		$ERROR++;
 
 		echo "\t\t<status>".encrypt("failed", $auth_password)."</status>\n";
-		echo "\t\t<message>".encrypt("Your account has not yet been setup for access to this application. Please contact a system administrator if you require further assistance.", $auth_password)."</message>\n";
+		echo "\t\t<message>".encrypt("Your account is not currently set up for access to this application. Please contact a system administrator if you require further assistance.", $auth_password)."</message>\n";
 
 		application_log("auth_notice", "Username [".$user_username."] attempted to log into application_id [".$auth_app_id."], and their account has not yet been provisioned.");
 	}

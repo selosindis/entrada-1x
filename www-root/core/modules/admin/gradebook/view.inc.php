@@ -502,7 +502,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							echo "<td style=\"width: 300px;\"><h3 style=\"border-bottom: 0;\">Assessment</h3></td>";
 							echo "<td><h3 style=\"border-bottom: 0;\">Grade Weighting</h3></td>";
 							echo "<td><h3 style=\"border-bottom: 0;\">Assignment</h3></td>";
-                            echo "<td class='assessment_col_5'><h3>Views</h3></td>";
+                            echo "<td class=\"assessment_col_5\"><h3>Views</h3></td>";
 							echo "</tr>";
 
                             $assessments = Models_Gradebook_Assessment::fetchAllRecords($output_cohort["group_id"], $COURSE_ID);
@@ -528,15 +528,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											$url = ENTRADA_URL."/admin/gradebook/assessments?section=grade&amp;id=".$COURSE_ID."&amp;assessment_id=".$result["assessment_id"];
 											echo "<tr id=\"assessment-".$result["assessment_id"]."\" class=\"assessment\">";
 											if ($ENTRADA_ACL->amIAllowed("gradebook", "delete", false)) {
-												echo "	<td class=\"modified\"><input type=\"hidden\" name=\"order[".$result['assessment_id']."][]\" value=\"".$result["order"]."\" class=\"order\" /><input class=\"delete\" type=\"checkbox\" name=\"delete[]\" value=\"".$result["assessment_id"]."\" /></td>\n";
+												echo "	<td class=\"modified\"><input type=\"hidden\" name=\"order[".$result["assessment_id"]."][]\" value=\"".$result["order"]."\" class=\"order\" /><input class=\"delete\" type=\"checkbox\" name=\"delete[]\" value=\"".$result["assessment_id"]."\" /></td>\n";
 											} else {
 												echo "	<td class=\"modified\" width=\"20\"><input type=\"hidden\" name=\"order[".$result["assessment_id"]."][]\" value=\"sortorder\" class=\"order\" /><img src=\"".ENTRADA_URL."/images/pixel.gif\" width=\"19\" height=\"19\" alt=\"\" title=\"\" /></td>";
 											}
 											if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-												echo "<td><a href=\"$url\">".$result["name"]."</a></td>";
+												echo "<td><a href=\"$url\">".html_encode($result["name"])."</a></td>";
 												echo "<td><a href=\"$url\">".$result["grade_weighting"]. "%</a></td>";
 											} else {
-												echo "<td>".$result["name"]."</td>";
+												echo "<td>".html_encode($result["name"])."</td>";
 												echo "<td>".$result["grade_weighting"]. "%</td>";
 											}
 											
@@ -546,7 +546,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 														AND a.`assignment_active` = 1";
 											$assignment = $db->GetRow($query);	
                                             $action_field = "assessment_id";
-                                            $action = "view";//
+                                            $action = "view";
 
                                             $query = "SELECT b.`id` AS `proxy_id`, CONCAT_WS(', ', b.`lastname`, b.`firstname`) AS `fullname`, b.`number`
                                                         FROM `".AUTH_DATABASE."`.`user_data` AS b
@@ -575,22 +575,22 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 											if ($assignment && $ENTRADA_ACL->amIAllowed(new AssignmentResource($course_details["course_id"], $course_details["organisation_id"], $assignment["assignment_id"]), "update")) {
 												$url = ENTRADA_URL."/admin/gradebook/assignments?section=grade&amp;id=".$COURSE_ID."&amp;assignment_id=".$assignment["assignment_id"];
 												echo "<td id=\"assignment-".$assignment["assignment_id"]."\">";
-												echo "<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=download-submissions&assignment_id=".$assignment["assignment_id"]."&id=" . $COURSE_ID . "\"><i class=\"icon-download-alt\"></i></a>";
+												echo "  <a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=download-submissions&assignment_id=".$assignment["assignment_id"]."&id=" . $COURSE_ID . "\"><i class=\"icon-download-alt\"></i></a>";
 												if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-													echo "&nbsp;<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=delete&id=".$COURSE_ID."&delete=".$assignment["assignment_id"]."\"><i class=\"icon-minus-sign\"></i></a>";
+													echo "<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=delete&id=".$COURSE_ID."&delete=".$assignment["assignment_id"]."\"><i class=\"icon-minus-sign\"></i></a>";
 												}
-												echo "&nbsp;<a href=\"".$url."\">".$assignment["assignment_title"]."</a>";																						
+												echo "  <a href=\"".$url."\">".html_encode($assignment["assignment_title"])."</a>";
 												echo "</td>";
 											} else {
 												echo "<td>\n";
 												if ($ENTRADA_ACL->amIAllowed(new CourseContentResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
 													echo "<a href=\"".ENTRADA_URL."/admin/gradebook/assignments?section=add&id=".$COURSE_ID."&assessment_id=".$result["assessment_id"]."\"><i class=\"icon-plus-sign\"></i> Add New Assignment</a>";
 												} else {
-													echo "Not a Dropbox Contact";
+													echo "&nbsp;";
 												}
 												echo "</td>\n";
 											}
-                                            echo "<td class='assessment_col_5'><a href=\"#assessment-view-details\" class=\"assessment-view\" data-toggle=\"modal\" data-assessment-id=\"" . $result["assessment_id"] . "\">" . $assessment_views["views"] . "</a></td>";
+                                            echo "  <td class=\"assessment_col_5\"><a href=\"#assessment-view-details\" class=\"assessment-view\" data-toggle=\"modal\" data-assessment-id=\"" . $result["assessment_id"] . "\">" . (int) $assessment_views["views"] . "</a></td>";
 											echo "</tr>";											
 										}
 									}

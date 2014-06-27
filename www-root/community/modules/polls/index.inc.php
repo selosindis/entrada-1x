@@ -215,11 +215,7 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 						$show_results = true;
 					}
 					$allow_main_load = true;
-				}
-				else if (($COMMUNITY_MEMBER && (int)$result['allow_member_results'] == 1)
-				|| (!(int) $community_details["community_protected"] && (int)$result['allow_public_results'] == 1)
-				|| (!(int) $community_details["community_registration"] && (int)$result['allow_troll_results'] == 1))
-				{
+				} elseif (($COMMUNITY_MEMBER && (int)$result["allow_member_results"] == 1) || (!(int) $community_details["community_protected"] && (int)$result["allow_public_results"] == 1) || (!(int) $community_details["community_registration"] && (int)$result["allow_troll_results"] == 1)) {
 					if ((count($specificMembers) == 0) || (is_array($specificMembers) && in_array($ENTRADA_USER->getActiveId(), $specificMembers)))
 					{
 						$allow_main_load = true;
@@ -227,25 +223,15 @@ if (communities_module_access($COMMUNITY_ID, $MODULE_ID, "delete-poll")) {
 							$show_results = true;
 						}
 					} 
-				}
-				else if (($COMMUNITY_MEMBER && (int)$result['allow_member_results_after'] == 1)
-				|| (!(int) $community_details["community_protected"] && (int)$result['allow_public_results_after'] == 1)
-				|| (!(int) $community_details["community_registration"] && (int)$result['allow_troll_results_after'] == 1))
-				{
-					if (((count($specificMembers) == 0) || (is_array($specificMembers) && in_array($ENTRADA_USER->getActiveId(), $specificMembers))))
-					{
+				} elseif (($COMMUNITY_MEMBER && (int)$result["allow_member_results_after"] == 1) || (!(int) $community_details["community_protected"] && (int)$result["allow_public_results_after"] == 1) || (!(int) $community_details["community_registration"] && (int)$result["allow_troll_results_after"] == 1)) {
+					if (((count($specificMembers) == 0) || (is_array($specificMembers) && in_array($ENTRADA_USER->getActiveId(), $specificMembers)))) {
 						$allow_main_load = true;
-						if (isset($vote_record["votes"]) && (int)$vote_record["votes"] > 0) {
+						if (isset($vote_record["votes"]) && (int) $vote_record["votes"] > 0) {
 							$show_results = true;
 						}
 					}
-				}
-				else if (($COMMUNITY_MEMBER && (int)$result['allow_member_read'] == 1)
-				|| (!(int) $community_details["community_protected"] && (int)$result['allow_public_read'] == 1)
-				|| (!(int) $community_details["community_registration"] && (int)$result['allow_troll_read'] == 1))
-				{
-					if ((count($specificMembers) == 0) || (is_array($specificMembers) && in_array($ENTRADA_USER->getActiveId(), $specificMembers)))
-					{
+				} elseif (($COMMUNITY_MEMBER && (int)$result["allow_member_read"] == 1) || (!(int) $community_details["community_protected"] && (int) $result["allow_public_read"] == 1) || (!(int) $community_details["community_registration"] && (int) $result["allow_troll_read"] == 1)) {
+					if ((count($specificMembers) == 0) || (is_array($specificMembers) && in_array($ENTRADA_USER->getActiveId(), $specificMembers))) {
 						$allow_main_load = true;
 					}
 				}

@@ -284,22 +284,9 @@ return array (
     /*
      * Gradebook Module
      */
-    "assignment_notice" => "
-    <p>
-        A new assignment [<a href=\"%assignment_submission_url%\">%assignment_title%</a>] has been released in %course_code%: %course_name%.
-    </p>
-    <p>
-        Details for this Assignment are as follows:
-    </p>
-    <p>
-        Due Date: %due_date%
-    </p>
-    <p>
-        Title: %assignment_title%
-    </p>
-    <p>
-        Description:<br />
-        %assignment_description%
-    </p>
-    ",
+    "assignment_notice" => "<p>A new assignment [<a href=\"%assignment_submission_url%\">%assignment_title%</a>] has been released in %course_code%: %course_name%.</p>
+        <p>The details provided for this assignment are as follows:</p>
+        <p>Due Date: %due_date%</p>
+        <p>Title: %assignment_title%</p>
+        <p>Description:<br />%assignment_description%</p>",
 );

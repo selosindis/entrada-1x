@@ -44,7 +44,7 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 
 			$USER_ID = (int)$_POST["uid"];
 			$PROCESSED["assignment_id"] = (int)$_POST["assignment_id"];
-
+            $PROCESSED["proxy_to_id"] = $USER_ID;
 
 			$query = "SELECT * FROM `assignment_contacts` WHERE `assignment_id` = ".$db->qstr($PROCESSED["assignment_id"])." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 			$result = $db->GetRow($query);
@@ -53,20 +53,12 @@ if ((isset($_SESSION["isAuthorized"])) && ((bool) $_SESSION["isAuthorized"])) {
 				echo htmlspecialchars(json_encode(array('error'=>'You are not authorized to comment on this submission.')), ENT_NOQUOTES);
 				exit;		
 			}
-
-			$query = "SELECT `afile_id` FROM `assignment_files` WHERE `assignment_id` = ".$db->qstr($PROCESSED["assignment_id"])." AND `proxy_id` = ".$db->qstr($USER_ID);
-			$PROCESSED["afile_id"] = $db->GetOne($query);
-
-			if(!$PROCESSED["afile_id"]){
-				application_log("error", "Error finding file id for submission.");
-				echo htmlspecialchars(json_encode(array('error'=>'Error finding file id for submission.')), ENT_NOQUOTES);
-				exit;				
-			}
+            
 			$COMMENT_TABLE = "assignment_comments";
-				break;
+            break;
 		default:
 			$COMMENT_TABLE = false;
-				break;
+			break;
 	}	
 	
 	if($COMMENT_TABLE){

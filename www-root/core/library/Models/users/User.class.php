@@ -726,8 +726,11 @@ class User {
                             JOIN `" . AUTH_DATABASE . "`.`user_access` AS b
                             ON a.`id` = b.`user_id`
                             AND b.`app_id` = ?
-                            WHERE a.`id` = ?";
-                $result = $db->GetRow($query, array(AUTH_APP_ID, $proxy_id));
+                            WHERE a.`id` = ?
+                            AND b.`account_active` = 'true'
+                            AND (b.`access_starts` = '0' OR b.`access_starts` < ?)
+                            AND (b.`access_expires` = '0' OR b.`access_expires` >= ?)";
+                $result = $db->GetRow($query, array(AUTH_APP_ID, $proxy_id, time(), time()));
                 if ($result) {
                     $user = self::fromArray($result, $user);
                 }
@@ -766,6 +769,9 @@ class User {
                                 WHERE a.`user_id` = " . $db->qstr($user->getID()) . "
                                 AND a.`organisation_id` = " . $db->qstr($user->getActiveOrganisation()) . "
                                 AND a.`app_id` = " . $db->qstr(AUTH_APP_ID) . "
+                                AND a.`account_active` = 'true'
+                                AND (a.`access_starts` = '0' OR a.`access_starts` < ".$db->qstr(time()).")
+                                AND (a.`access_expires` = '0' OR a.`access_expires` >= ".$db->qstr(time()).")
                                 ORDER BY a.`id` ASC";
                     $result = $db->GetRow($query);
                     if ($result) {

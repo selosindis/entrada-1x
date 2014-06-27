@@ -85,11 +85,7 @@ if ($ASSIGNMENT_ID) {
 			if (($file_version) && (is_array($file_version))) {
 				$download_file = $zipname;
 				if (file_exists($download_file) && is_readable($download_file)) {
-				    /**
-					 * This must be done twice in order to close both of the open buffers.
-					 */
-					@ob_end_clean();
-					@ob_end_clean();
+                    ob_clear_open_buffers();
 
 					/**
 					 * Determine method that the file should be accessed (downloaded or viewed)
@@ -138,4 +134,3 @@ if ($ASSIGNMENT_ID) {
 	
 	exit;
 }
-?>

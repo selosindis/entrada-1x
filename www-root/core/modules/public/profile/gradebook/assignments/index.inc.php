@@ -70,21 +70,21 @@ if (isset($_GET["so"])) {
  */
 switch ($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["sb"]) {
 	case "title" :
-		$sort_by = "e.`assignment_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"]);
+		$sort_by = "a.`assignment_title` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"]);
 	break;
 	case "code" :
-		$sort_by = "c.`course_code` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"]);
+		$sort_by = "b.`course_code` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"]);
 	break;
 	case "date" :
 	default :
-		$sort_by = "e.`due_date` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"]);
+		$sort_by = "a.`due_date` ".strtoupper($_SESSION[APPLICATION_IDENTIFIER][$MODULE]["assignments"]["so"]);
 	break;
 }
 	$group_ids = groups_get_enrolled_group_ids($ENTRADA_USER->getId());
 	$group_ids_string = implode(', ',$group_ids);
 
 	$courses = groups_get_enrolled_course_ids($ENTRADA_USER->getID());
-	$query = "SELECT c.`course_code`, a.`assignment_id`, a.`assignment_title`, a.`due_date`, d.`grade_id` AS `grade_id`, d.`value` AS `grade_value`, e.`grade_weighting` AS `submitted_date`, c.`show_learner`
+	$query = "SELECT b.`course_code`, a.`assignment_id`, a.`assignment_title`, a.`due_date`, d.`grade_id` AS `grade_id`, d.`value` AS `grade_value`, e.`grade_weighting` AS `submitted_date`, c.`show_learner`
 						FROM `assignments` AS a
 						JOIN `courses` AS b
 						ON a.`course_id` = b.`course_id`

@@ -30,16 +30,13 @@ if (isset($_GET["cid"]) && $tmp_cmt = clean_input($_GET["cid"],"int")){
 
 if ($RECORD_ID && $ASSIGNMENT_ID) {
 	$query			= "
-					SELECT a.*, b.`file_title`, b.`proxy_id` AS `file_owner`, c.`assignment_title`, c.`course_id`
+					SELECT a.*, a.`proxy_id` AS `file_owner`, c.`assignment_title`, c.`course_id`
 					FROM `assignment_comments` AS a
-					JOIN `assignment_files` AS b
-					ON a.`afile_id` = b.`afile_id`
 					JOIN `assignments` AS c
 					ON a.`assignment_id` = c.`assignment_id`
 					WHERE a.`assignment_id` = ".$db->qstr($ASSIGNMENT_ID)."
 					AND a.`acomment_id` = ".$db->qstr($RECORD_ID)."
 					AND a.`comment_active` = '1'
-					AND b.`file_active` = '1'
 					AND c.`assignment_active` = '1'";
 	$comment_record	= $db->GetRow($query);
 	if ($comment_record) {
@@ -57,12 +54,12 @@ if ($RECORD_ID && $ASSIGNMENT_ID) {
 					$BREADCRUMB = array();
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook", "title" => "Gradebooks");
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook?".replace_query(array("section" => "view", "id" => $comment_record["course_id"])), "title" => "Assignments");
-					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("section" => "grade", "id" => $comment_record["course_id"], "assignment_id"=>$comment_record["assignment_id"], "step" => false)), "title" => $file_record["assignment_title"]);
+					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("section" => "grade", "id" => $comment_record["course_id"], "assignment_id"=>$comment_record["assignment_id"], "step" => false)), "title" => $comment_record["assignment_title"]);
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?".replace_query(array("section" => "view", "id" => $ASSIGNMENT_ID, "pid"=>$comment_record["file_owner"], "step" => false)), "title" => $user_name."'s Submission");
 					$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("section" => "edit-comment", "id" => $ASSIGNMENT_ID, "cid"=>$RECORD_ID, "step" => false)), "title" => "Edit Comment");
 				} else {
-					$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$ASSIGNMENT_ID.(isset($assignment_contact) && $assignment_contact?"&amp;pid=".$comment_record["file_owner"]:""), "title" => limit_chars($comment_record["file_title"], 32));
-					$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=edit-comment&amp;assignment_id=".$ASSIGNMENT_ID."&amp;cid=".$RECORD_ID, "title" => "Edit File Comment");
+					$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$ASSIGNMENT_ID.(isset($assignment_contact) && $assignment_contact?"&amp;pid=".$comment_record["file_owner"]:""), "title" => limit_chars($comment_record["assignment_title"], 32));
+					$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=edit-comment&amp;assignment_id=".$ASSIGNMENT_ID."&amp;cid=".$RECORD_ID, "title" => "Edit Comment");
 				}							
 
 				communities_load_rte();
@@ -234,4 +231,3 @@ if ($RECORD_ID && $ASSIGNMENT_ID) {
 
 	application_log("error", "No comment id was provided to edit. (Edit Comment)");
 }
-?>

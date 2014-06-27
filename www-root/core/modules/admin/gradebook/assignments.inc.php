@@ -56,7 +56,7 @@ if(!defined("PARENT_INCLUDED")) {
 			$ASSIGNMENT_ID = $tmp_input;
 		} else {
 			$ASSIGNMENT_ID = 0;
-		}		
+		}
 		//Display this assignment if the user is a Dropbox Contact for an assignment associated with this assessment or if they are the Course Owner.
 		$query =  "	SELECT a.`course_id`, a.`assignment_id`, a.`assignment_title` 
 					FROM `assignments` a

@@ -311,7 +311,7 @@ if ($ACTION == "login") {
 		 * if no errors have been encountered before trying to authenticate.
 		 */
 		if ($ERROR == 0) {
-			$remaining_attempts = (AUTH_MAX_LOGIN_ATTEMPTS - $LOGIN_ATTEMPTS);
+			$remaining_attempts = (AUTH_MAX_LOGIN_ATTEMPTS - (isset($LOGIN_ATTEMPTS) && ((int)$LOGIN_ATTEMPTS) ? $LOGIN_ATTEMPTS : 0));
 
 			$ERROR++;
 			$ERRORSTR[$ERROR] = $result["MESSAGE"];

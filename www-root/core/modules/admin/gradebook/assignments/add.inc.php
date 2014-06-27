@@ -256,7 +256,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         application_log("error", "Unable to fetch the newly inserted assignment identifier for this assignment.");
                                     }
 
-                                    $url = ENTRADA_URL."/admin/gradebook?".replace_query(array("step" => false, "section" => "view", "assignment_id" => false));
+                                    $url = ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("section" => "grade", "assignment_id" => $ASSIGNMENT_ID, "step" => false, "assessment_id" => false));
                                     $msg = "You will now be redirected to the <strong>Edit Assignment Drop Box</strong> page for \"<strong>".$PROCESSED["assignment_title"] . "</strong>\"; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
                                     $SUCCESS++;
@@ -299,10 +299,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         ON `".AUTH_DATABASE."`.`user_access`.`user_id` = `".AUTH_DATABASE."`.`user_data`.`id`
                                         LEFT JOIN `".AUTH_DATABASE."`.`organisations`
                                         ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
-                                        WHERE (`".AUTH_DATABASE."`.`user_access`.`group` = 'faculty' OR
-                                        `".AUTH_DATABASE."`.`user_access`.`group` = 'staff' OR
-                                        (`".AUTH_DATABASE."`.`user_access`.`group` = 'resident' AND `".AUTH_DATABASE."`.`user_access`.`role` = 'lecturer')
-                                        OR `".AUTH_DATABASE."`.`user_access`.`group` = 'medtech')
+                                        WHERE
+                                        (
+                                            `".AUTH_DATABASE."`.`user_access`.`group` = 'faculty' OR
+                                            `".AUTH_DATABASE."`.`user_access`.`group` = 'staff' OR
+                                            (
+                                                `".AUTH_DATABASE."`.`user_access`.`group` = 'resident'
+                                                AND `".AUTH_DATABASE."`.`user_access`.`role` = 'lecturer'
+                                            )
+                                            OR `".AUTH_DATABASE."`.`user_access`.`group` = 'medtech'
+                                        )
                                         AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
                                         AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
                                         AND `".AUTH_DATABASE."`.`user_access`.`organisation_id` = " . $db->qstr($ENTRADA_USER->getActiveOrganisation()) . "
@@ -314,6 +320,20 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                 }
                                 $DIRECTOR_LIST = $assignment_directors;
                             }
+
+                            /**
+                             * Non-required field "associated_faculty" / Associated Faculty (array of proxy ids).
+                             * This is actually accomplished after the event is inserted below.
+                             */
+                            if ((isset($_POST["associated_director"]))) {
+                                $associated_director = explode(',', $_POST["associated_director"]);
+                                foreach($associated_director as $contact_order => $proxy_id) {
+                                    if ($proxy_id = clean_input($proxy_id, array("trim", "int")) && array_key_exists($proxy_id, $DIRECTOR_LIST)) {
+                                        $chosen_course_directors[(int) $contact_order] = $proxy_id;
+                                    }
+                                }
+                            }
+
                             /**
                              * Load the rich text editor.
                              */
@@ -432,7 +452,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                 <div class="control-group">
                                     <label class="control-label form-nrequired">Assignment Description:</label>
                                     <div class="controls">
-                                        <textarea id="assignment_description" class="span10 expandable" name="assignment_description"><?php echo html_encode(trim(strip_selected_tags($PROCESSED["assignment_description"], array("font")))); ?></textarea>
+                                        <textarea id="assignment_description" class="span10 expandable" name="assignment_description"><?php echo (isset($PROCESSED["assignment_description"]) && $PROCESSED["assignment_description"] ? html_encode(trim(strip_selected_tags($PROCESSED["assignment_description"], array("font")))) : ""); ?></textarea>
                                     </div>
                                 </div>
 
@@ -458,7 +478,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         <span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
                                         <ul id="director_list" class="menu" style="margin: 15px 0 0 0">
                                             <?php
-                                            if (is_array($chosen_course_directors) && count($chosen_course_directors)) {
+                                            if (isset($chosen_course_directors) && @count($chosen_course_directors)) {
                                                 foreach ($chosen_course_directors as $director) {
                                                     if ((array_key_exists($director, $DIRECTOR_LIST)) && is_array($DIRECTOR_LIST[$director])) {
                                                         ?>

@@ -355,7 +355,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                 break;
                             }
 
-                            $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "assignment_id"=>$PROCESSED["assignment_id"],"step" => false)), "title" => $PROCESSED["assignment_title"]);
+                            $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("section" => "grade", "id" => $COURSE_ID, "assignment_id"=>$PROCESSED["assignment_id"],"step" => false)), "title" => $assignment_record["assignment_title"]);
                             $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "edit", "id" => $COURSE_ID, "step" => false)), "title" => "Edit Assignment Drop Box");
 
                             // Display Content
@@ -403,7 +403,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                     if ((isset($_POST["associated_director"]))) {
                                         $associated_director = explode(',', $_POST["associated_director"]);
                                         foreach($associated_director as $contact_order => $proxy_id) {
-                                            if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+                                            if ($proxy_id = clean_input($proxy_id, array("trim", "int")) && array_key_exists($proxy_id, $DIRECTOR_LIST)) {
                                                 $chosen_course_directors[(int) $contact_order] = $proxy_id;
                                             }
                                         }

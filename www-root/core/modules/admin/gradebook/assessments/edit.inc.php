@@ -518,7 +518,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 									 FROM `course_objectives` AS a
 									 JOIN `global_lu_objectives` AS b
 									 ON a.`objective_id` = b.`objective_id`
-                                     AND b.`active` = '1'
+                                     AND b.`objective_active` = '1'
 									 WHERE a.`course_id` = ".$COURSE_ID."
 									 AND a.`objective_type` = 'event'";
 						

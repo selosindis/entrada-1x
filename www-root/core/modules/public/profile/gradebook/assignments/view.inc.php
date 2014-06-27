@@ -19,7 +19,7 @@ if (!$RECORD_ID) {
 		$RECORD_ID = $tmp;
 	}
 }
-if (!$DOWNLOAD) {
+if (!isset($DOWNLOAD) || !$DOWNLOAD) {
 	if (isset($_GET["download"]) && $tmp = clean_input($_GET["download"], array("trim","notags"))) {
 		$DOWNLOAD = $tmp;
 	}
@@ -127,39 +127,16 @@ if ($RECORD_ID) {
 						if (($file_version) && (is_array($file_version))) {
 							$download_file = FILE_STORAGE_PATH."/A".$file_version["afversion_id"];
 							if ((file_exists($download_file)) && (is_readable($download_file))) {
-								/**
-								 * This must be done twice in order to close both of the open buffers.
-								 */
-								@ob_end_clean();
-								@ob_end_clean();
-
-								/**
-								 * Determine method that the file should be accessed (downloaded or viewed)
-								 * and send the proper headers to the client.
-								 */
-								switch($file_record["access_method"]) {
-									case 1 :
-										header("Pragma: public");
-										header("Expires: 0");
-										header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-										header("Content-Type: ".$file_version["file_mimetype"]);
-										header("Content-Disposition: inline; filename=\"".$file_version["file_filename"]."\"");
-										header("Content-Length: ".@filesize($download_file));
-										header("Content-Transfer-Encoding: binary\n");
-									break;
-									case 0 :
-									default :
-										header("Pragma: public");
-										header("Expires: 0");
-										header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
-										header("Content-Type: application/force-download");
-										header("Content-Type: application/octet-stream");
-										header("Content-Type: ".$file_version["file_mimetype"]);
-										header("Content-Disposition: attachment; filename=\"".$file_version["file_filename"]."\"");
-										header("Content-Length: ".@filesize($download_file));
-										header("Content-Transfer-Encoding: binary\n");
-									break;
-								}
+								ob_clear_open_buffers();
+                                header("Pragma: public");
+                                header("Expires: 0");
+                                header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
+                                header("Content-Type: application/force-download");
+                                header("Content-Type: application/octet-stream");
+                                header("Content-Type: ".$file_version["file_mimetype"]);
+                                header("Content-Disposition: attachment; filename=\"".$file_version["file_filename"]."\"");
+                                header("Content-Length: ".@filesize($download_file));
+                                header("Content-Transfer-Encoding: binary\n");
 								add_statistic("community:".$COMMUNITY_ID.":shares", "file_download", "csfile_id", $RECORD_ID);
 								echo @file_get_contents($download_file, FILE_BINARY);
 								exit;
@@ -190,7 +167,7 @@ if ($RECORD_ID) {
 							$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("section" => "grade", "id" => $file_record["course_id"], "assignment_id"=>$file_record["assignment_id"], "step" => false)), "title" => $file_record["assignment_title"]);
 							$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("section" => "grade", "id" => $file_record["course_id"], "assignment_id"=>$file_record["assignment_id"], "step" => false)), "title" => $user_name."'s Submission");
 						} else {								
-							$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=view-file&assignment_id=".$RECORD_ID, "title" => limit_chars($file_record["assignment_title"], 32));
+							$BREADCRUMB[] = array("url" => ENTRADA_URL."/profile/gradebook/assignments?section=view&assignment_id=".$RECORD_ID, "title" => limit_chars($file_record["assignment_title"], 32));
 						}
 						$ADD_COMMENT	= true;//shares_module_access($file_record["cshare_id"], "add-comment");
 						$ADD_REVISION	= $assignment["assignment_uploads"]==1?false:true;//shares_file_module_access($file_record["csfile_id"], "add-revision");
@@ -391,7 +368,7 @@ if ($RECORD_ID) {
                                         echo "		<td style=\"vertical-align: top\"><a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;file_id=".$file_record["afile_id"]."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=latest\"><img src=\"".ENTRADA_URL."/templates/default/images/btn_save.gif\" width=\"32\" height=\"32\" alt=\"Save Latest Version\" title=\"Save Latest Version\" align=\"left\" style=\"margin-right: 15px; border: 0px\" /></a></td>";
                                         echo "		<td style=\"vertical-align: top\">\n";
                                         echo "			<div id=\"file-download-latest\">\n";
-                                        echo "				<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$file_record["afile_id"]."&amp;download=latest\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "").">".(((int) $file_record["access_method"]) ? " View" : "Download")." Latest (v".$results[0]["file_version"].")</a>\n";
+                                        echo "				<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$file_record["afile_id"]."&amp;download=latest\" target=\"_blank\">Download Latest (v".$results[0]["file_version"].")</a>\n";
                                         echo "				<div class=\"content-small\">\n";
                                         echo "					Filename: <span id=\"file-version-".$results[0]["csfversion_id"]."-title\">".html_encode($results[0]["file_filename"])." (v".$results[0]["file_version"].")</span> ".readable_size($results[0]["file_filesize"]);
                                         if ($total_releases > 1 && $results[0]["proxy_id"] == $ENTRADA_USER->getID()) {
@@ -413,7 +390,7 @@ if ($RECORD_ID) {
                                             foreach($results as $progress => $result) {
                                                 if ((int) $progress > 0) { // Because I don't want to display the first file again.
                                                     echo "		<li>\n";
-                                                    echo "			<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=".$result["file_version"]."\" style=\"vertical-align: middle\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "")."><span id=\"file-version-".$result["afversion_id"]."-title\">".html_encode($result["file_filename"])." (v".$result["file_version"].")</span></a> <span class=\"content-small\" style=\"vertical-align: middle\">".readable_size($result["file_filesize"])."</span>\n";
+                                                    echo "			<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=".$result["file_version"]."\" style=\"vertical-align: middle\" target=\"_blank\"><span id=\"file-version-".$result["afversion_id"]."-title\">".html_encode($result["file_filename"])." (v".$result["file_version"].")</span></a> <span class=\"content-small\" style=\"vertical-align: middle\">".readable_size($result["file_filesize"])."</span>\n";
                                                     if($result["proxy_id"] == $ENTRADA_USER->getID()){
                                                         echo "			(<a class=\"action delete-version\" id=\"delete_".$result["afversion_id"]."\" href=\"javascript:void(0)\">delete</a>)";
                                                     }
@@ -462,7 +439,7 @@ if ($RECORD_ID) {
                                         echo "		<td style=\"vertical-align: top\"><a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$TEACHER_FILE_RECORD."&amp;download=latest\"><img src=\"".ENTRADA_URL."/templates/default/images/btn_save.gif\" width=\"32\" height=\"32\" alt=\"Save Latest Version\" title=\"Save Latest Version\" align=\"left\" style=\"margin-right: 15px; border: 0px\" /></a></td>";
                                         echo "		<td style=\"vertical-align: top\">\n";
                                         echo "			<div id=\"file-download-latest\">\n";
-                                        echo "				<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$TEACHER_FILE_RECORD."&amp;download=latest\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "").">".(((int) $file_record["access_method"]) ? " View" : "Download")." Latest (v".$results[0]["file_version"].")</a>\n";
+                                        echo "				<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."file_id=".$TEACHER_FILE_RECORD."&amp;download=latest\" target=\"_blank\">Download Latest (v".$results[0]["file_version"].")</a>\n";
                                         echo "				<div class=\"content-small\">\n";
                                         echo "					Filename: <span id=\"file-version-".$results[0]["afversion_id"]."-title\">".html_encode($results[0]["file_filename"])." (v".$results[0]["file_version"].")</span> ".readable_size($results[0]["file_filesize"]);
                                         if ($results[0]["proxy_id"] == $ENTRADA_USER->getID()) {
@@ -484,7 +461,7 @@ if ($RECORD_ID) {
                                             foreach($results as $progress => $result) {
                                                 if ((int) $progress > 0) { // Because I don't want to display the first file again.
                                                     echo "		<li>\n";
-                                                    echo "			<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;file_id=".$TEACHER_FILE_RECORD."&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=".$result["file_version"]."\" style=\"vertical-align: middle\"".(((int) $file_record["access_method"]) ? " target=\"_blank\"" : "")."><span id=\"file-version-".$result["afversion_id"]."-title\">".html_encode($result["file_filename"])." (v".$result["file_version"].")</span></a> <span class=\"content-small\" style=\"vertical-align: middle\">".readable_size($result["file_filesize"])."</span>\n";
+                                                    echo "			<a href=\"".ENTRADA_URL."/profile/gradebook/assignments?section=view&amp;file_id=".$TEACHER_FILE_RECORD."&amp;assignment_id=".$RECORD_ID."&amp;".(isset($iscontact) && $iscontact?"pid=".$USER_ID."&amp;":"")."download=".$result["file_version"]."\" style=\"vertical-align: middle\" target=\"_blank\"><span id=\"file-version-".$result["afversion_id"]."-title\">".html_encode($result["file_filename"])." (v".$result["file_version"].")</span></a> <span class=\"content-small\" style=\"vertical-align: middle\">".readable_size($result["file_filesize"])."</span>\n";
                                                     if($result["proxy_id"] == $ENTRADA_USER->getID()){
                                                         echo "			(<a class=\"action delete-version\" id=\"delete_".$result["afversion_id"]."\" href=\"javascript:void(0)\">delete</a>)";
                                                     }

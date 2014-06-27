@@ -148,7 +148,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 	
 	//Check for any assignement dropbox contacts for this user.
 	$query = "	SELECT count(*) AS `total_rows`
-				FROM `assignement_contacts` a
+				FROM `assignment_contacts` a
 				WHERE a.`proxy_id` = " . $db->qstr($ENTRADA_USER->getActiveId());
 	$dropbox_result = $db->getRow($query);
 	

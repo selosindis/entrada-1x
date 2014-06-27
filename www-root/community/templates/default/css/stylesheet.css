@@ -115,8 +115,9 @@ hr {
 }
 .sub-pages a {	
 	font-size: 12px;
-	background: #232222;
-	padding-left: 25px !important;
+	background-color: #2c2b2b;
+    border-left: 10px solid #999;
+	padding-left: 20px !important;
 }
 
 /* Child Navigation Styles 
@@ -1011,7 +1012,6 @@ color:#A0A0A0;
 
 div.tutorial {
 font-family: 'Roboto', sans-serif;
-padding-top:20px;
 font-size:16px;
 color:#444;
 }

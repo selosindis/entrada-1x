@@ -68,20 +68,22 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 		}
 	}
 </script>
-<div style="float: right; margin-bottom: 5px">
-    <ul class="page-action">
-        <li><a href="<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Create New Quiz</a></li>
-        <li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?type=community_page&action=add&id=<?php echo $PAGE_ID; ?>')" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Attach Existing Quiz</a></li>
-    </ul>
-</div>
-<div class="clear"></div>
+<?php
+if ($COMMUNITY_ADMIN) {
+    ?>
+    <div style="float: right; margin-bottom: 5px">
+        <ul class="page-action">
+            <li><a href="<?php echo ENTRADA_URL; ?>/admin/quizzes?section=add" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Create New Quiz</a></li>
+            <li><a href="#" onclick="openDialog('<?php echo ENTRADA_URL; ?>/api/quiz-wizard.api.php?type=community_page&action=add&id=<?php echo $PAGE_ID; ?>')" class="btn btn-success"><i class="icon-plus-sign icon-white"></i> Attach Existing Quiz</a></li>
+        </ul>
+    </div>
+    <div class="clear"></div>
+    <?php
+}
+?>
 <div style="padding-top: 10px; clear: both">
-	<?php
-	if ($COMMUNITY_ADMIN && $ENTRADA_ACL->amIAllowed($MODULES["quizzes"]["resource"], $MODULES["quizzes"]["permission"], false)) {
-		?>
-
-		<?php
-	}
+    <div class="section-holder">
+    <?php
 	/**
 	 * This query will retrieve all of the quizzes associated with this evevnt.
 	 */
@@ -94,31 +96,30 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 				GROUP BY a.`aquiz_id`
 				ORDER BY a.`required` DESC, a.`quiz_title` ASC, a.`release_until` ASC";
 	$quizzes = $db->GetAll($query);
-	echo "	<div class=\"section-holder\">\n";
-	echo "		<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Attached Quizzes\">\n";
-	echo "		<colgroup>\n";
-	echo "			<col class=\"modified\" />\n";
-	echo "			<col class=\"title\" />\n";
-	echo "			<col class=\"date\" />\n";
-	echo "		</colgroup>\n";
-	echo "		<thead>\n";
-	echo "			<tr>\n";
-	echo "				<td class=\"modified\">&nbsp;</td>\n";
-	echo "				<td class=\"title sortedASC\"><div class=\"noLink\">Quiz Title</div></td>\n";
-	echo "				<td class=\"date\">Quiz Expires</td>\n";
-	echo "			</tr>\n";
-	echo "		</thead>\n";
-	echo "		<tbody>\n";
-
 	if ($quizzes) {
+        echo "<table class=\"tableList\" cellspacing=\"0\" summary=\"List of Attached Quizzes\">\n";
+        echo "  <colgroup>\n";
+        echo "		<col class=\"modified\" />\n";
+        echo "		<col class=\"title\" />\n";
+        echo "		<col class=\"date\" />\n";
+        echo "	</colgroup>\n";
+        echo "	<thead>\n";
+        echo "		<tr>\n";
+        echo "			<td class=\"modified\">&nbsp;</td>\n";
+        echo "			<td class=\"title sortedASC\"><div class=\"noLink\">Quiz Title</div></td>\n";
+        echo "			<td class=\"date\">Quiz Expires</td>\n";
+        echo "		</tr>\n";
+        echo "	</thead>\n";
+        echo "	<tbody>\n";
+
 		foreach ($quizzes as $quiz_record) {
 			$quiz_attempts		= 0;
 			$total_questions	= quiz_count_questions($quiz_record["quiz_id"]);
 			if ($LOGGED_IN) {
-				$query				= "	SELECT *
-								FROM `quiz_progress`
-								WHERE `aquiz_id` = ".$db->qstr($quiz_record["aquiz_id"])."
-								AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
+				$query = "	SELECT *
+							FROM `quiz_progress`
+							WHERE `aquiz_id` = ".$db->qstr($quiz_record["aquiz_id"])."
+							AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getID());
 				$progress_records	= $db->GetAll($query);
 				if ($progress_records) {
 					$quiz_attempts = count($progress_records);
@@ -145,15 +146,15 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 			echo "		<td class=\"modified\" style=\"vertical-align: top\">".(isset($quiz_record["last_visited"]) && ((int) $quiz_record["last_visited"]) ? (((int) $quiz_record["last_visited"] >= (int) $quiz_record["updated_date"]) ? "<img src=\"".ENTRADA_URL."/images/checkmark.gif\" width=\"20\" height=\"20\" alt=\"You have previously completed this quiz.\" title=\"You have previously completed this quiz.\" style=\"vertical-align: middle\" />" : "<img src=\"".ENTRADA_URL."/images/exclamation.gif\" width=\"20\" height=\"20\" alt=\"This attached quiz has been updated since you last completed it.\" title=\"This attached quiz has been updated since you last completed it.\" style=\"vertical-align: middle\" />") : "")."</td>\n";
 			echo "		<td class=\"title\" style=\"vertical-align: top; white-space: normal; overflow: visible\">\n";
 			if ($COMMUNITY_ADMIN && $_SESSION["details"]["group"] != "student") {
-				echo "	<a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($quiz_record["quiz_title"])."\" title=\"View results of ".html_encode($quiz_record["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
+				echo "	    <a href=\"".ENTRADA_URL."/admin/quizzes?section=results&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\"><img src=\"".ENTRADA_URL."/images/view-stats.gif\" width=\"16\" height=\"16\" alt=\"View results of ".html_encode($quiz_record["quiz_title"])."\" title=\"View results of ".html_encode($quiz_record["quiz_title"])."\" style=\"vertical-align: middle\" border=\"0\" /></a>\n";
 			}
 			if ($COMMUNITY_ADMIN && $_SESSION["details"]["group"] != "student") {
 				echo "		<a href=\"#\" onclick=\"openDialog('".ENTRADA_URL."/api/quiz-wizard.api.php?action=edit&type=community_page&id=".$PAGE_ID."&qid=".$quiz_record["aquiz_id"]."')\" title=\"Click to edit ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold; cursor: pointer;\">".html_encode($quiz_record["quiz_title"])."</a>";
 			} else {
 				if ($allow_attempt) {
-					echo "		<a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?section=attempt&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";
+					echo "	<a href=\"".ENTRADA_URL."/community".$COMMUNITY_URL.":".$PAGE_URL."?section=attempt&amp;community=true&amp;id=".$quiz_record["aquiz_id"]."\" title=\"Take ".html_encode($quiz_record["quiz_title"])."\" style=\"font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</a>";
 				} else {
-					echo "		<span style=\"color: #666666; font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</span>";
+					echo "	<span style=\"color: #666666; font-weight: bold\">".html_encode($quiz_record["quiz_title"])."</span>";
 				}
 			}
 
@@ -221,15 +222,11 @@ $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascrip
 			echo "		<td class=\"date\" style=\"vertical-align: top\">".(((int) $quiz_record["release_until"]) ? date(DEFAULT_DATE_FORMAT, $quiz_record["release_until"]) : "No Expiration")."</td>\n";
 			echo "	</tr>\n";
 		}
+        echo "		</tbody>\n";
+        echo "		</table>\n";
 	} else {
-		echo "		<tr>\n";
-		echo "			<td colspan=\"3\">\n";
-		echo "				<div class=\"content-small\" style=\"margin-top: 3px; margin-bottom: 5px\">There are no online quizzes currently attached to this page.</div>\n";
-		echo "			</td>\n";
-		echo "		</tr>\n";
+        echo display_generic("There are currently no online quizzes available on this page.");
 	}
-	echo "		</tbody>\n";
-	echo "		</table>\n";
-	echo "	</div>\n";
 	?>
+    </div>
 </div>

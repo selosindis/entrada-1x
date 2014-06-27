@@ -36,9 +36,11 @@ if ($result) {
 	if ($result["page_type"] == "url") {
 		echo display_success();
 	} else {
-		echo "<div class=\"community-page-content\">";
-		echo 	$result["page_content"];
-		echo "</div>";
+        if ($result["page_content"]) {
+            echo "<div class=\"community-page-content\">";
+            echo 	$result["page_content"];
+            echo "</div>";
+        }
 	}
 
     $history_messages = "";
@@ -250,9 +252,9 @@ if ($result) {
 		if ((!$community_announcements) && (!$community_events) && (!$history_messages) && ((isset($result["page_content"]) && trim($result["page_content"]) == "") || (!isset($result["page_content"])))) {
 			if ($COMMUNITY_ADMIN) {
 				echo "	<div class=\"tutorial\">
-							Welcome to your new community! This is where users will first view your community when 
+							<p class=\"lead\">Welcome to your new community! This is where users will first view your community when
 							joining or browsing from ".APPLICATION_NAME.". This message is displayed because no content
-							is currently being displayed on this page - this can be remedied by in a few different ways:<br /><br />
+							is currently being displayed on this page - this can be remedied by in a few different ways:</p>
 							<ul>
 								<li>Creating announcements or events within the appropriate pages which will display on this page.<br /><br /></li>
 								<li>Browsing to the 'Manage Pages' link found to the upper-right of the page, and creating a blurb which all users will see they first come to the community.<br /><br /></li>
@@ -260,11 +262,9 @@ if ($result) {
 							</ul>
 						</div>";
 			} else {
-				echo "<div class=\"display-generic\">";
+				echo "<p class=\"lead\">";
 				echo "	Welcome to our new <strong>".APPLICATION_NAME." Community</strong>. We appear to be just getting things setup and underway now, but we hope to be in full operation shortly.";
-				echo "	<br /><br />";
-				echo "	To keep up to date, why not subscribe to our community RSS feed?";
-				echo "</div>";
+				echo "</p>";
 			}
 		}
 	}

@@ -218,7 +218,6 @@ padding:0 4px;
 
 div.bread-crumb-trail {
 margin-bottom:5px;
-border-bottom:1px #999 dotted;
 padding:2px 2px 2px 5px;
 }
 
@@ -915,9 +914,12 @@ td.hidden-page a {
 color:#A0A0A0;
 }
 
+div.alert > button {
+    display:none;
+}
+
 div.tutorial {
 font-family:"Lucida Grande", Geneva, Verdana, Arial, Helvetica, sans-serif;
-padding-top:20px;
 font-size:16px;
 color:#444;
 }

@@ -1111,14 +1111,16 @@ CREATE TABLE IF NOT EXISTS `assignments` (
   `assignment_id` int(11) NOT NULL AUTO_INCREMENT,
   `course_id` int(11) NOT NULL,
   `assessment_id` int(11) NOT NULL,
+  `notice_id` int(11) DEFAULT NULL,
   `assignment_title` varchar(40) NOT NULL,
   `assignment_description` text NOT NULL,
-  `assignment_active` int(11) NOT NULL,
   `required` int(1) NOT NULL,
   `due_date` bigint(64) NOT NULL DEFAULT '0',
   `assignment_uploads` int(11) NOT NULL DEFAULT '0',
+  `max_file_uploads` int(11) NOT NULL DEFAULT '1',
   `release_date` bigint(64) NOT NULL DEFAULT '0',
   `release_until` bigint(64) NOT NULL DEFAULT '0',
+  `assignment_active` int(11) NOT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(11) NOT NULL,
   PRIMARY KEY (`assignment_id`)
@@ -1165,7 +1167,7 @@ CREATE TABLE IF NOT EXISTS `assignment_contacts` (
 
 CREATE TABLE IF NOT EXISTS `assignment_comments` (
   `acomment_id` int(12) NOT NULL AUTO_INCREMENT,
-  `afile_id` int(12) NOT NULL DEFAULT '0',
+  `proxy_to_id` int(12) NOT NULL DEFAULT '0',
   `assignment_id` int(12) NOT NULL DEFAULT '0',
   `proxy_id` int(12) NOT NULL DEFAULT '0',
   `comment_title` varchar(128) NOT NULL,
@@ -1177,7 +1179,7 @@ CREATE TABLE IF NOT EXISTS `assignment_comments` (
   `notify` int(1) NOT NULL DEFAULT '0',
   PRIMARY KEY (`acomment_id`),
   KEY `assignment_id` (`assignment_id`,`proxy_id`,`comment_active`,`updated_date`,`updated_by`),
-  KEY `afile_id` (`afile_id`),
+  KEY `afile_id` (`proxy_to_id`),
   KEY `release_date` (`release_date`),
   FULLTEXT KEY `comment_title` (`comment_title`,`comment_description`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
@@ -4338,7 +4340,7 @@ CREATE TABLE IF NOT EXISTS `settings` (
 
 INSERT INTO `settings` (`shortname`, `organisation_id`, `value`)
   VALUES
-  ('version_db', NULL, '1611'),
+  ('version_db', NULL, '1627'),
   ('version_entrada', NULL, '1.6.0DEV'),
   ('export_weighted_grade', NULL, '1'),
   ('export_calculated_grade', NULL, '{\"enabled\":0}'),

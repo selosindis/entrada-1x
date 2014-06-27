@@ -285,7 +285,7 @@ if ($ACTION == "login") {
          * If the users e-mail address hasn't been verified in the last 365 days,
          * set a flag that indicates this should be done.
          */
-        if (!$_SESSION["details"]["email_updated"] || (($_SESSION["details"]["email_updated"] - mktime()) / 86400 >= 365)) {
+        if (!$_SESSION["details"]["email_updated"] || (($_SESSION["details"]["email_updated"] - time()) / 86400 >= 365)) {
             $_SESSION["details"]["email_updated"] = false;
         } else {
             $_SESSION["details"]["email_updated"] = true;
@@ -311,7 +311,7 @@ if ($ACTION == "login") {
 		 * if no errors have been encountered before trying to authenticate.
 		 */
 		if ($ERROR == 0) {
-			$remaining_attempts = (AUTH_MAX_LOGIN_ATTEMPTS - $LOGIN_ATTEMPTS);
+			$remaining_attempts = (AUTH_MAX_LOGIN_ATTEMPTS - (isset($LOGIN_ATTEMPTS) && ((int)$LOGIN_ATTEMPTS) ? $LOGIN_ATTEMPTS : 0));
 
 			$ERROR++;
 			$ERRORSTR[$ERROR] = $result["MESSAGE"];

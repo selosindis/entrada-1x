@@ -42,27 +42,34 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
         $PROCESSED = array();
         $PROCESSED_NOTICE = array();
 
-		$BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("step" => false)), "title" => "Add Assignment");
+		$BREADCRUMB[] = array("url" => "", "title" => "Add Assignment Drop Box");
 
-        if (isset($_GET["assessment_id"]) && $tmp_ass = clean_input($_GET["assessment_id"],array("trim","int"))){
-            $assessment_object = Models_Gradebook_Assessment::fetchRowByID($tmp_ass);
+        if ((isset($_GET["assessment_id"])) && ($tmp_input = clean_input($_GET["assessment_id"], array("nows", "int")))) {
+            $ASSESSMENT_ID = $tmp_input;
+        } else {
+            $ASSESSMENT_ID = 0;
+        }
+
+        if ($ASSESSMENT_ID) {
+            $assessment_object = Models_Gradebook_Assessment::fetchRowByID($ASSESSMENT_ID);
             $assessment = $assessment_object->toArray();
             if ($assessment) {
                 $query = "SELECT * FROM `assignments`
-                            WHERE `assessment_id` = ".$db->qstr($tmp_ass)."
+                            WHERE `assessment_id` = ".$db->qstr($ASSESSMENT_ID)."
                             AND `assignment_active` = 1";
                 $assignment = $db->GetRow($query);
                 if ($assignment) {
-                    add_error("In order to add an assignment to a gradebook you must provide a valid assessment identifier. The provided assessment ID is already associated with an assignment.");
+                    add_error("In order to add an Assignment to a Gradebook Assessment you must provide a valid assessment identifier. The provided assessment identifier is already has an assignment.");
                 } else {
                     $PROCESSED["assessment_id"] = $assessment["assessment_id"];
                 }
             } else {
-                add_error("In order to add an assignment to a gradebook you must provide a valid assessment identifier. The provided ID does not exist in this system.");
+                add_error("In order to add an Assignment to a Gradebook Assessment you must provide a valid assessment identifier. The provided assessment identifier does not exist.");
             }
         } else {
-            add_error("In order to add an assignment to a gradebook you must provide a valid assessment identifier.");
+            add_error("In order to add an Assignment to a Gradebook Assessment you must provide a valid assessment identifier.");
         }
+
         if ($PROCESSED["assessment_id"]) {
             $query = "	SELECT * FROM `courses`
                         WHERE `course_id` = ".$db->qstr($COURSE_ID)."
@@ -70,8 +77,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
             $course_details	= $db->GetRow($query);
             if ($course_details) {
                 if ($course_details && $ENTRADA_ACL->amIAllowed(new GradebookResource($course_details["course_id"], $course_details["organisation_id"]), "update")) {
-                    $BREADCRUMB[] = array("url" => ENTRADA_URL."/admin/".$MODULE."?".replace_query(array("section" => "add", "id" => $COURSE_ID, "step" => false)), "title" => "Add Assignment Drop Box");
-
                     // Error Checking
                     switch($STEP) {
                         case 2 :
@@ -95,7 +100,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             }
                         
                             if (isset($_POST["allow_multiple_files"]) && $_POST["allow_multiple_files"]
-                                    && isset($_POST["num_files_allowed"]) && ($max_file_uploads = (int)$_POST["num_files_allowed"]) > 0) {
+                                    && isset($_POST["num_files_allowed"]) && ($max_file_uploads = (int) $_POST["num_files_allowed"]) > 0) {
                                 $PROCESSED["max_file_uploads"] = $max_file_uploads;
                             } else {
                                 $PROCESSED["max_file_uploads"] = 1;
@@ -168,9 +173,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                             }
                             if (!$ERROR){
 
-                                $PROCESSED["updated_date"]	= time();
-                                $PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
-                                $PROCESSED["course_id"]		= $COURSE_ID;
+                                $PROCESSED["updated_date"] = time();
+                                $PROCESSED["updated_by"] = $ENTRADA_USER->getID();
+                                $PROCESSED["course_id"] = $COURSE_ID;
                                 $PROCESSED["assignment_active"] = 1;
 
                                 if ($db->AutoExecute("assignments", $PROCESSED, "INSERT")) {
@@ -205,7 +210,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                     ($PROCESSED["due_date"] ? date("l, F jS, Y", $PROCESSED["due_date"]) : "No due date provided"),
                                                     (isset($PROCESSED["assignment_description"]) && $PROCESSED["assignment_description"] ? nl2br(html_encode($PROCESSED["assignment_description"])) : "No assignment description provided")
                                                 );
-                                                $PROCESSED_NOTICE["notice_summary"] = str_replace($search, $replace, $PROCESSED_NOTICE["notice_summary"]);
+                                                $PROCESSED_NOTICE["notice_summary"] = str_ireplace($search, $replace, $PROCESSED_NOTICE["notice_summary"]);
                                                 $query = "SELECT * FROM `groups` WHERE `group_id` = ".$db->qstr($assessment["cohort"]);
                                                 $assessment_group = $db->GetRow($query);
                                                 if ($assessment_group) {
@@ -231,7 +236,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                 $order = 0;
                                                 foreach ($associated_directors as $proxy_id) {
                                                     if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
-                                                        if ($proxy_id != (int) $ENTRADA_USER->getID()){
+                                                        if ($proxy_id != $ENTRADA_USER->getID()){
                                                             if (!$db->AutoExecute("assignment_contacts", array("assignment_id" => $ASSIGNMENT_ID, "proxy_id" => $proxy_id, "contact_order" => $order+1, "updated_date"=>time(),"updated_by"=>$ENTRADA_USER->getID()), "INSERT")) {
                                                                 add_error("There was an error when trying to insert a &quot;" . $module_singular_name . " Director&quot; into the system. The system administrator was informed of this error; please try again later.");
 
@@ -243,15 +248,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                     }
                                                 }
                                             }
-                                            application_log("success", "Successfully added assignment ID [".$ASSIGNMENT_ID."]");
+                                            application_log("success", "Successfully added assignment ID [".$ASSIGNMENT_ID."].");
                                         } else {
-                                            application_log("error", "Unable to add you as an assignment contact. Please contact an administrator.");
+                                            application_log("error", "Unable to add you as an assignment contact. Please contact a system administrator.");
                                         }
                                     } else {
                                         application_log("error", "Unable to fetch the newly inserted assignment identifier for this assignment.");
                                     }
 
-                                    $url = ENTRADA_URL."/admin/gradebook/assignments?".replace_query(array("step" => false, "section" => "edit", "assignment_id" => $ASSIGNMENT_ID));
+                                    $url = ENTRADA_URL."/admin/gradebook?".replace_query(array("step" => false, "section" => "view", "assignment_id" => false));
                                     $msg = "You will now be redirected to the <strong>Edit Assignment Drop Box</strong> page for \"<strong>".$PROCESSED["assignment_title"] . "</strong>\"; this will happen <strong>automatically</strong> in 5 seconds or <a href=\"".$url."\" style=\"font-weight: bold\">click here</a> to continue.";
 
                                     $SUCCESS++;
@@ -296,7 +301,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         ON `".AUTH_DATABASE."`.`user_data`.`organisation_id` = `".AUTH_DATABASE."`.`organisations`.`organisation_id`
                                         WHERE (`".AUTH_DATABASE."`.`user_access`.`group` = 'faculty' OR
                                         `".AUTH_DATABASE."`.`user_access`.`group` = 'staff' OR
-                                        (`".AUTH_DATABASE."`.`user_access`.`group` = 'resident' AND `".AUTH_DATABASE."`.`user_access`.`role` = 'lecturer'
+                                        (`".AUTH_DATABASE."`.`user_access`.`group` = 'resident' AND `".AUTH_DATABASE."`.`user_access`.`role` = 'lecturer')
                                         OR `".AUTH_DATABASE."`.`user_access`.`group` = 'medtech')
                                         AND `".AUTH_DATABASE."`.`user_access`.`app_id` = '".AUTH_APP_ID."'
                                         AND `".AUTH_DATABASE."`.`user_access`.`account_active` = 'true'
@@ -335,10 +340,12 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         }
                                     });
                                 });
+
                                 var sortables = new Array();
                                 function updateOrder(type) {
                                     $('associated_'+type).value = Sortable.sequence(type+'_list');
                                 }
+
                                 function addItem(type) {
                                     if (($(type+'_id') != null) && ($(type+'_id').value != '') && ($(type+'_'+$(type+'_id').value) == null)) {
                                         var li = new Element('li', {'class':'community', 'id':type+'_'+$(type+'_id').value, 'style':'cursor: move;'}).update($(type+'_name').value);
@@ -414,15 +421,23 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                 }
                             </script>
                             <form action="<?php echo ENTRADA_URL; ?>/admin/gradebook/assignments?<?php echo replace_query(array("step" => 2)); ?>" method="post" class="form-horizontal">
-                                <h2>Drop Box Details</h2>
+                                <h2>Assignment Drop Box</h2>
                                 <div class="control-group">
                                     <label class="control-label form-required">Assignment Name:</label>
                                     <div class="controls">
-                                        <input type="text" name="assignment_title" value="<?php echo (isset($PROCESSED["assignment_title"]) && $PROCESSED["assignment_title"] ? $PROCESSED["assignment_title"] : "");?>"/>
+                                        <input type="text" name="assignment_title" class="span10" value="<?php echo (isset($PROCESSED["assignment_title"]) && $PROCESSED["assignment_title"] ? $PROCESSED["assignment_title"] : "");?>" />
                                     </div>
                                 </div>
+
                                 <div class="control-group">
-                                    <label class="control-label form-nrequired">Assignment Contacts:</label>
+                                    <label class="control-label form-nrequired">Assignment Description:</label>
+                                    <div class="controls">
+                                        <textarea id="assignment_description" class="span10 expandable" name="assignment_description"><?php echo html_encode(trim(strip_selected_tags($PROCESSED["assignment_description"], array("font")))); ?></textarea>
+                                    </div>
+                                </div>
+
+                                <div class="control-group">
+                                    <label class="control-label form-nrequired">Additional Instructors:</label>
                                     <div class="controls">
                                         <input type="text" id="director_name" name="fullname" size="30" autocomplete="off" style="width: 203px; vertical-align: middle" onkeyup="checkItem('director')" onblur="addItemNoError('director')" />
                                         <script type="text/javascript">
@@ -441,8 +456,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         <input type="hidden" id="associated_director" name="associated_director" />
                                         <input type="button" class="btn" onclick="addItem('director');" value="Add" style="vertical-align: middle" />
                                         <span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
-                                        <span class="content-small"><br><strong>Tip:</strong> You will automatically be added as a contact</span>
-                                        <ul id="director_list" class="menu" style="margin-top: 15px">
+                                        <ul id="director_list" class="menu" style="margin: 15px 0 0 0">
                                             <?php
                                             if (is_array($chosen_course_directors) && count($chosen_course_directors)) {
                                                 foreach ($chosen_course_directors as $director) {
@@ -458,88 +472,59 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                         <input type="hidden" id="director_ref" name="director_ref" value="" />
                                         <input type="hidden" id="director_id" name="director_id" value="" />
                                     </div>
-                                </div> <!--/control-group-->
-                                <div class="control-group">
-                                    <label class="control-label form-nrequired">Assignment Description:</label>
-                                    <div class="controls">
-                                        <textarea id="assignment_description" class="expandable" name="assignment_description" style="width: 100%; height: 150px" cols="70" rows="10"><?php echo html_encode(trim(strip_selected_tags($PROCESSED["assignment_description"], array("font")))); ?></textarea>
-                                    </div>
                                 </div>
-                                <div class="control-group">
-                                    <label class="control-label form-nrequired">Allow Revisions:</label>
-                                    <div class="controls">
-                                        <table>
-                                            <tbody>
-                                                    <tr>
-                                                        <td style="vertical-align: top"><input type="radio" name="assignment_uploads" id="assignment_uploads_allow" value="allow" style="vertical-align: middle"<?php echo (!isset($PROCESSED["assignment_uploads"]) || !$PROCESSED["assignment_uploads"] ? " checked=\"checked\"" : ""); ?>></td>
-                                                        <td colspan="2" style="padding-bottom: 15px">
-                                                            <label for="assignment_uploads_allow" class="radio-group-title">Allow Submission Revision</label>
-                                                            <div class="content-small">Allow students to upload a newer version of their assignment after they have already made their submission as long as its still before the due date.</div>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td style="vertical-align: top"><input type="radio" name="assignment_uploads" id="assignment_uploads_deny" value="deny" style="vertical-align: middle;"<?php echo (isset($PROCESSED["assignment_uploads"]) && $PROCESSED["assignment_uploads"] ? " checked=\"checked\"" : ""); ?>></td>
-                                                        <td colspan="2" style="padding-bottom: 15px">
-                                                            <label for="assignment_uploads_deny" class="radio-group-title">Do Not Allow Submission Revision</label>
-                                                            <div class="content-small">Do not allow students to upload a newer version of their assignment after initial upload.</div>
-                                                        </td>
-                                                    </tr>
 
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
                                 <div class="control-group">
-                                    <label class="control-label form-nrequired">File Uploads:</label>
+                                    <label class="control-label form-nrequired">Assignment Options:</label>
                                     <div class="controls">
-                                        <input type="checkbox" name="allow_multiple_files" id="allow_multiple_files" style="vertical-align: middle"
-                                               <?php echo isset($_POST["allow_multiple_files"]) ? "checked=\"checked\" " : ""; ?>/>
-                                        <label for="allow_multiple_files" class="radio-group-title">Allow Multiple Files</label>
-                                        <div class="content-small" style="padding-bottom: 15px">Allow users to upload more than one file for this assignment.</div>
-
-                                        <div id="num_files_allowed_wrapper" <?php echo isset($_POST["allow_multiple_files"]) ? "" : "style=\"display: none\" "; ?>>
-                                            <input type="text" name="num_files_allowed" id="num_files_allowed"
-                                                   value="<?php echo isset($PROCESSED["max_file_uploads"]) ? $PROCESSED["max_file_uploads"] : 3; ?>"/>
-                                            <label for="num_file_allowed">Max Files Allowed</label>
-                                        </div>
+                                        <input type="checkbox" name="allow_multiple_files" value="1" id="allow_multiple_files"<?php echo isset($_POST["allow_multiple_files"]) ? " checked=\"checked\"" : ""; ?>/> <label for="allow_multiple_files" class="pad-above-small">Allow learners to upload <strong>more than one file</strong> when submitting this assignment.</label><br />
+                                        <input type="checkbox" name="notice_enabled" value="1" id="notice_enabled"<?php echo (isset($notice_enabled) && $notice_enabled ? " checked=\"checked\"" : "" ); ?>/> <label for="notice_enabled" class="pad-above-small">Add a <strong>dashboard notice</strong> for learners who are required to submit this assignment.</label><br />
+                                        <input type="checkbox" name="assignment_uploads" value="1" id="assignment_uploads"<?php echo (!isset($PROCESSED["assignment_uploads"]) || !$PROCESSED["assignment_uploads"] ? " checked=\"checked\"" : ""); ?>/> <label for="assignment_uploads" class="pad-above-small">Allow learners to upload <strong>new revisions</strong> of the assignment after their initial upload.</label><br />
                                     </div>
                                 </div>
-                                <script type="text/javascript">   
-                                jQuery('#allow_multiple_files').change(function() {
-                                    jQuery('#num_files_allowed_wrapper').toggle(this.checked);
-                                });
+
+                                <script type="text/javascript">
+                                    jQuery('#allow_multiple_files').change(function() {
+                                        jQuery('#num_files_allowed_wrapper').toggle(this.checked);
+                                    });
+
+                                    jQuery('#notice_enabled').change(function() {
+                                        jQuery('#notice-dates').toggle(this.checked);
+                                    });
                                 </script>
-                                <div class="control-group">
-                                    <label class="control-label form-nrequired" for="assignment_notice">Assignment Notice:</label>
+
+                                <div class="control-group" id="num_files_allowed_wrapper"<?php echo isset($_POST["allow_multiple_files"]) ? "" : " style=\"display: none\""; ?>>
+                                    <label for="num_file_allowed" class="form-required control-label">Max Files Allowed:</label>
                                     <div class="controls">
-                                        <input type="checkbox" name="notice_enabled" value="1" id="assignment_notice" onclick="jQuery('#notice-dates').toggle(this.checked)" <?php echo (isset($notice_enabled) && $notice_enabled ? "checked=\"checked\" " : "" ); ?>/> <label for="assignment_notice" class="pad-above-small content-small">Create a dashboard notice for this assignment</label>
+                                        <input type="text" name="num_files_allowed" id="num_files_allowed" value="<?php echo isset($PROCESSED["max_file_uploads"]) ? (int) $PROCESSED["max_file_uploads"] : 3; ?>" class="span1" maxlength="3" />
+                                        <span class="help-inline content-small">The maximum number of files a learner can upload.</span>
                                     </div>
                                 </div>
+
                                 <div class="control-group" id="notice-dates"<?php echo (isset($notice_enabled) && $notice_enabled ? "" : " style=\"display: none;\"" ); ?>>
-                                    <label for="notice_summary" class="form-required control-label">Notice Summary:</label>
+                                    <label for="notice_summary" class="form-required control-label">Dashboard Notice:</label>
                                     <div class="controls">
                                         <textarea id="notice_summary" name="notice_summary" rows="10"><?php echo ((isset($PROCESSED_NOTICE["notice_summary"])) ? html_encode(trim($PROCESSED_NOTICE["notice_summary"])) : $translate->_("assignment_notice")); ?></textarea>
                                     </div>
-                                    <div class="content-small controls space-below large">
+                                    <div class="content-small controls space-below">
                                         <strong>Available Variables:</strong> %assignment_submission_url%, %assignment_title%, %course_code%, %course_name%, %due_date%, %assignment_title%, %assignment_description%
                                     </div>
-                                    <label class="control-label form-nrequired">Notice Release:</label>
+
+                                    <label class="control-label form-nrequired">Release Dates:</label>
                                     <div class="controls">
-                                        <div class="row-fluid">
-                                            <span class="span1">
-                                                <input type="radio" value="0" name="custom_notice_display" id="notice_display_default" onclick="jQuery('#custom_notice_display_date').hide()" <?php echo (!isset($custom_notice_display) || !$custom_notice_display ? "checked=\"checked\" " : ""); ?>/>
-                                            </span>
-                                            <label class="span11" for="notice_display_default">Release notice on <strong>Viewable Start</strong> (immediately if no date set), for one week</label>
-                                        </div>
-                                        <div class="row-fluid">
-                                            <span class="span1">
-                                                <input type="radio" value="1" name="custom_notice_display" id="custom_notice_display" onclick="jQuery('#custom_notice_display_date').show()" <?php echo (isset($custom_notice_display) && $custom_notice_display ? "checked=\"checked\" " : ""); ?>/>
-                                            </span>
-                                            <label class="span11" for="custom_notice_display">Release notice on a custom defined date for a specified period of time</label>
-                                        </div>
+                                        <label class="radio" for="notice_display_default">
+                                            <input type="radio" value="0" name="custom_notice_display" id="notice_display_default" onclick="jQuery('#custom_notice_display_date').hide()" <?php echo (!isset($custom_notice_display) || !$custom_notice_display ? "checked=\"checked\" " : ""); ?>/>
+                                            Release notice on <strong>Viewable Start</strong> (immediately if no date set), for one week.
+                                        </label>
+
+                                        <label class="radio" for="custom_notice_display">
+                                            <input type="radio" value="1" name="custom_notice_display" id="custom_notice_display" onclick="jQuery('#custom_notice_display_date').show()" <?php echo (isset($custom_notice_display) && $custom_notice_display ? "checked=\"checked\" " : ""); ?>/>
+                                            Release notice on a custom defined date for a specified period of time.
+                                        </label>
+
                                         <div id="custom_notice_display_date"<?php echo (!isset($custom_notice_display) || !$custom_notice_display ? " style=\"display: none;\"" : "" ); ?>>
                                             <div class="row-fluid">
-                                                <label class="span3 offset1" for="notice_display_start">Notice Display Start: </label>
+                                                <label class="span3 offset1" for="notice_display_start">Notice Display Start:</label>
                                                 <span class="span8">
                                                     <div class="input-append">
                                                         <input type="text" class="input-small datepicker" value="<?php echo (isset($PROCESSED_NOTICE["display_from"]) && $PROCESSED_NOTICE["display_from"] ? date("Y-m-d", $PROCESSED_NOTICE["display_from"]) : ""); ?>" name="notice_display_start" id="notice_display_start" />
@@ -552,7 +537,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                                 </span>
                                             </div>
                                             <div class="row-fluid">
-                                                <label class="span3 offset1" for="notice_display_finish">Notice Display Finish: </label>
+                                                <label class="span3 offset1" for="notice_display_finish">Notice Display Finish:</label>
                                                 <span class="span8">
                                                     <div class="input-append">
                                                         <input type="text" class="input-small datepicker" value="<?php echo (isset($PROCESSED_NOTICE["display_until"]) && $PROCESSED_NOTICE["display_until"] ? date("Y-m-d",  $PROCESSED_NOTICE["display_until"]) : ""); ?>" name="notice_display_finish" id="notice_display_finish" />
@@ -569,8 +554,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                                 </div>
                                 <div class="control-group">
                                     <table>
+                                        <?php echo generate_calendars("due", "Assignment Due Date", false, false, 0, true, true, ((isset($PROCESSED["due_date"])) ? $PROCESSED["due_date"] : 0), true, false, "", ""); ?>
+                                    </table>
+                                </div>
+
+                                <div class="control-group">
+                                    <h2>Time Release Options</h2>
+                                    <table>
                                         <?php echo generate_calendars("viewable", "", true, false, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : 0), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0)); ?>
-                                        <?php echo generate_calendars("due", "", false, false,  0, true, false,  ((isset($PROCESSED["due_date"])) ? $PROCESSED["due_date"] : 0)); ?>
                                     </table>
                                 </div>
                                 <div style="padding-top: 25px">

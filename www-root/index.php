@@ -151,6 +151,7 @@ if ($ACTION == "login") {
 				"access_expires",
 				"last_login",
 				"privacy_level",
+				"copyright",
 				"notifications",
 				"private_hash",
 				"private-allow_podcasting",
@@ -226,6 +227,7 @@ if ($ACTION == "login") {
 			$_SESSION["details"]["expires"] = $result["ACCESS_EXPIRES"];
 			$_SESSION["details"]["lastlogin"] = $result["LAST_LOGIN"];
 			$_SESSION["details"]["privacy_level"] = $result["PRIVACY_LEVEL"];
+			$_SESSION["details"]["copyright"] = $result["COPYRIGHT"];
 			$_SESSION["details"]["notifications"] = $result["NOTIFICATIONS"];
 			$_SESSION["details"]["private_hash"] = $result["PRIVATE_HASH"];
 			$_SESSION["details"]["allow_podcasting"] = false;
@@ -291,7 +293,19 @@ if ($ACTION == "login") {
             $_SESSION["details"]["email_updated"] = true;
         }
 
-		if ((!(int) $_SESSION["details"]["privacy_level"]) || (((bool) $GOOGLE_APPS["active"]) && (in_array($_SESSION["details"]["group"], $GOOGLE_APPS["groups"])) && (!$_SESSION["details"]["google_id"]))) {
+		/**
+		 * Test for Copyright compliance and if Copyright notice has been updated
+		 */
+		$COPYRIGHT = false;
+		if ((array_count_values($copyright_settings = (array) $translate->_("copyright")) > 1) && strlen($copyright_settings["copyright-version"])) {
+			if (!(($lastupdated = strtotime($copyright_settings["copyright-version"])) === false)) {
+				if ((!(int) $_SESSION["details"]["copyright"]) || ($lastupdated > (int) $_SESSION["details"]["copyright"])) {
+					$COPYRIGHT = true;
+				}
+			}
+		}
+
+		if ((!(int) $_SESSION["details"]["privacy_level"]) || $COPYRIGHT ||  (((bool) $GOOGLE_APPS["active"]) && (in_array($_SESSION["details"]["group"], $GOOGLE_APPS["groups"])) && (!$_SESSION["details"]["google_id"]))) {
 			/**
 			 * They need to be re-directed to the firstlogin module.
 			 */

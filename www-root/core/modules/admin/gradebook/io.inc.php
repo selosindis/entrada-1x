@@ -72,7 +72,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							AND a.`active` = '1'
                             AND a.`course_id` = ".$db->qstr($COURSE_ID)."
                             AND (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).")
-                            AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time()).")";
+                            AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time()).")
+                            ORDER BY a.`order`";
 			} else {
 				$query = "	SELECT a.*,b.`id` as `marking_scheme_id`, b.`handler`
 							FROM `assessments` AS a
@@ -82,7 +83,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
 							AND a.`active` = '1'
                             AND a.`course_id` = ".$db->qstr($COURSE_ID)."
                             AND (a.`release_date` = '0' OR a.`release_date` <= ".$db->qstr(time()).")
-                            AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time()).")";
+                            AND (a.`release_until` = '0' OR a.`release_until` > ".$db->qstr(time()).")
+                            ORDER BY a.`order`";
 			}
 			$assessments = $db->GetAll($query);
 			if ($assessments) {

@@ -230,11 +230,8 @@ padding:4px 0 0;
 }
 
 div.bread-crumb-trail ul li {
-display:inline;
-list-style-type:none;
-padding-left:13px;
-vertical-align:middle;
-background:transparent url(../images/breadcrumb-arrow.gif) no-repeat center left;
+display: inline;
+list-style-type: none;
 }
 
 div.photo-upload table {

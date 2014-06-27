@@ -40,7 +40,9 @@ if ($result) {
 		echo 	$result["page_content"];
 		echo "</div>";
 	}
-	
+
+    $history_messages = "";
+
 	if ($result["page_url"] == "") {
 		
 		/**

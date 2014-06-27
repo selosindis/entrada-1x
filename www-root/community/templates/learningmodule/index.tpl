@@ -86,9 +86,19 @@
 		</div>
 
     <footer class="span-24">
-		<p>{php}echo COPYRIGHT_STRING;{/php}</p>
+		<p>{$copyright_string}</p>
     </footer>
   </div> <!--! end of #container -->
+    {if !$development_mode && $google_analytics_code}
+        <script type="text/javascript">
+            var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");
+            document.write(unescape("%3Cscript src='" + gaJsHost + "google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E"));
+        </script>
+        <script type="text/javascript">
+            var pageTracker = _gat._getTracker("{$google_analytics_code}");
+            pageTracker._initData();
+            pageTracker._trackPageview();
+        </script>
+    {/if}
 </body>
-
 </html>

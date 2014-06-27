@@ -196,7 +196,7 @@ class Zend_InfoCard
     public function removeCertificatePair($key_id)
     {
 
-        if(!key_exists($key_id, $this->_keyPairs)) {
+        if(!array_key_exists($key_id, $this->_keyPairs)) {
             require_once 'Zend/InfoCard/Exception.php';
             throw new Zend_InfoCard_Exception("Attempted to remove unknown key id: $key_id");
         }
@@ -231,7 +231,7 @@ class Zend_InfoCard
 
         $key_id = md5($private_key_file.$public_key_file);
 
-        if(key_exists($key_id, $this->_keyPairs)) {
+        if(array_key_exists($key_id, $this->_keyPairs)) {
             require_once 'Zend/InfoCard/Exception.php';
             throw new Zend_InfoCard_Exception("Attempted to add previously existing certificate pair: $private_key_file, $public_key_file");
         }
@@ -267,7 +267,7 @@ class Zend_InfoCard
      */
     public function getCertificatePair($key_id)
     {
-        if(key_exists($key_id, $this->_keyPairs)) {
+        if(array_key_exists($key_id, $this->_keyPairs)) {
             return $this->_keyPairs[$key_id];
         }
 

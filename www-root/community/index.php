@@ -749,17 +749,17 @@ if ($COMMUNITY_URL) {
 
 							echo display_error();
 						}
-					}  elseif ($COMMUNITY_MODULE == "ltiProvider") {
+					}  elseif ($COMMUNITY_MODULE == "lticonsumer") {
 						$query  = "SELECT `page_title`, `page_content` FROM `community_pages` WHERE `cpage_id` = " . $db->qstr($PAGE_ID);
 						$result = $db->GetRow($query);
 
-						if($result) {
-							if(trim($result["page_title"]) != "") {
+						if ($result) {
+							if (trim($result["page_title"]) != "") {
 								echo "<h1>".html_encode($result["page_title"])."</h1>";
 							}
 
-							if(!empty($result["page_content"])) {
-								$ltiSettings = json_decode($result["page_content"]);
+							if (!empty($result["page_content"])) {
+								$lti_settings = json_decode($result["page_content"]);
 
 								$parameters = array(
 					                "resource_link_id" => $PAGE_ID,
@@ -785,47 +785,46 @@ if ($COMMUNITY_URL) {
 					                "launch_presentation_css_url" => ""
 					            );
 
-					                $paramsList = explode(";", $ltiSettings->lti_params);
-					                if ($paramsList && count($paramsList) > 0) {
-					                    foreach ($paramsList as $param) {
-					                        $parts = explode("=", $param);
-					                        if ($parts && (count($parts) == 2)) {
-					                            $key = clean_input($parts[0], array("trim", "notags"));
-					                            $value = clean_input($parts[1], array("trim", "notags"));
+                                $paramsList = explode(";", $lti_settings->lti_params);
+                                if ($paramsList && count($paramsList) > 0) {
+                                    foreach ($paramsList as $param) {
+                                        $parts = explode("=", $param);
+                                        if ($parts && (count($parts) == 2)) {
+                                            $key = clean_input($parts[0], array("trim", "notags"));
+                                            $value = clean_input($parts[1], array("trim", "notags"));
 
-					                            if ($key) {
-					                                $parameters["custom_".$key] = $value;
-					                            }
-					                        }
-					                    }
-					                }
+                                            if ($key) {
+                                                $parameters["custom_".$key] = $value;
+                                            }
+                                        }
+                                    }
+                                }
 
 					            $ltiConsumer = new LTIConsumer();
-					            $signedParams = $ltiConsumer->sign($parameters, $ltiSettings->lti_url, "POST", $ltiSettings->lti_key, $ltiSettings->lti_secret);
+					            $signedParams = $ltiConsumer->sign($parameters, $lti_settings->lti_url, "POST", $lti_settings->lti_key, $lti_settings->lti_secret);
 					            ?>
-					                <iframe name="ltiTestFrame" id="ltiTestFrame" src="" width="100%" height="700px" scrolling="auto" style="border: 1px solid rgba(0, 0, 0, 0.075);" transparency=""></iframe>
-					                <form id="ltiSubmitForm" name="ltiSubmitForm" method="POST" action="<?php echo html_encode($ltiSettings->lti_url); ?>" target="ltiTestFrame" enctype="application/x-www-form-urlencoded">
-					                    <?php
-					                    if ($signedParams && count($signedParams) > 0) {
-					                        foreach ($signedParams as $key => $value) {
-					                            $key = htmlspecialchars($key);
-					                            $value = htmlspecialchars($value);
+                                <iframe name="ltiTestFrame" id="ltiTestFrame" src="" width="100%" height="700px" scrolling="auto" style="border: 1px solid rgba(0, 0, 0, 0.075);" transparency=""></iframe>
+                                <form id="ltiSubmitForm" name="ltiSubmitForm" method="POST" action="<?php echo html_encode($lti_settings->lti_url); ?>" target="ltiTestFrame" enctype="application/x-www-form-urlencoded">
+                                    <?php
+                                    if ($signedParams && count($signedParams) > 0) {
+                                        foreach ($signedParams as $key => $value) {
+                                            $key = htmlspecialchars($key);
+                                            $value = htmlspecialchars($value);
 
-					                            echo "<input type=\"hidden\" name=\"" . $key . "\" value=\"" . $value . "\"/>";
-					                        }
-					                    }
-					                    ?>
-					                    <input id="ltiSubmitBtn" type="submit" style="display: none;"/>
-					                </form>
-					                <script>
-					                	window.onload = function(){
-											document.forms['ltiSubmitForm'].submit();
-										};
-					                </script>
+                                            echo "<input type=\"hidden\" name=\"" . $key . "\" value=\"" . $value . "\"/>";
+                                        }
+                                    }
+                                    ?>
+                                    <input id="ltiSubmitBtn" type="submit" style="display: none;"/>
+                                </form>
+                                <script>
+                                    window.onload = function(){
+                                        document.forms['ltiSubmitForm'].submit();
+                                    };
+                                </script>
 					            <?php
 							}
-						} 
-						
+						}
 					} else {
 						$url		= COMMUNITY_URL.$COMMUNITY_URL;
 						$ONLOAD[]	= "setTimeout('window.location=\\'".$url."\\'', 5000)";
@@ -859,8 +858,8 @@ if ($COMMUNITY_URL) {
 							$page_text .= $result["page_content"]."\n<br /><br />\n";
 						}
 					}
-					$PAGE_CONTENT	= $page_text.$PAGE_CONTENT;
 
+					$PAGE_CONTENT = $page_text.$PAGE_CONTENT;
 				}
 
 				$PAGE_META["title"] = $community_details["community_title"];

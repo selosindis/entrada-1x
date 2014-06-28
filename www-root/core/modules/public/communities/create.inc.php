@@ -1017,7 +1017,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COMMUNITIES"))) {
                 <?php
                 if ($MAILING_LISTS["active"]) {
                     ?>
-                    <h3>Community Mailing List</h2>
+                    <h3>Community Mailing List</h3>
                     <div class="control-group">
                         <label class="control-label form-nrequired">Community Mailing List:</label>
                         <div class="controls">

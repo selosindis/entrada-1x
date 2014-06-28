@@ -4341,11 +4341,10 @@ CREATE TABLE IF NOT EXISTS `settings` (
 INSERT INTO `settings` (`shortname`, `organisation_id`, `value`)
   VALUES
   ('version_db', NULL, '1627'),
-  ('version_entrada', NULL, '1.6.0DEV'),
+  ('version_entrada', NULL, '1.6.0'),
   ('export_weighted_grade', NULL, '1'),
   ('export_calculated_grade', NULL, '{\"enabled\":0}'),
   ('course_webpage_assessment_cohorts_count', NULL, '4');
-
 
 CREATE TABLE IF NOT EXISTS `statistics` (
   `statistic_id` int(12) NOT NULL AUTO_INCREMENT,

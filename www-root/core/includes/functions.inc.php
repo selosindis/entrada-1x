@@ -5235,16 +5235,16 @@ function communities_module_access_generic($module_id = 0, $action = "index") {
  * @return bool
  */
 function communities_module_access_unique($community_id = 0, $module_id = 0, $action = "index") {
-	global $db, $COMMUNITY_MEMBER, $COMMUNITY_ADMIN;
+	global $db, $COMMUNITY_ADMIN;
 
 	$allow_to_load = false;
 
-	if(($community_id = (int) $community_id) && ($module_id = (int) $module_id)) {
-		$query		= "SELECT * FROM `community_permissions` WHERE `community_id` = ".$db->qstr($community_id)." AND `module_id` = ".$db->qstr($module_id)." AND (`action` = 'all' OR `action` = ".$db->qstr($action).")";
-		$results	= $db->GetAll($query);
-		if($results) {
+	if (($community_id = (int) $community_id) && ($module_id = (int) $module_id)) {
+		$query = "SELECT * FROM `community_permissions` WHERE `community_id` = ".$db->qstr($community_id)." AND `module_id` = ".$db->qstr($module_id)." AND (`action` = 'all' OR `action` = ".$db->qstr($action).")";
+		$results = $db->GetAll($query);
+		if ($results) {
 			foreach ($results as $result) {
-				if(($action == "index") || ((bool) $COMMUNITY_ADMIN) || ((int) $result["level"] === 0)) {
+				if (($action == "index") || ((bool) $COMMUNITY_ADMIN) || ((int) $result["level"] === 0)) {
 					$allow_to_load = true;
 					break;
 				}
@@ -5263,41 +5263,29 @@ function communities_module_access_unique($community_id = 0, $module_id = 0, $ac
  * @return bool
  */
 function communities_module_activate($community_id = 0, $module_id = 0) {
-	global $db, $ENTRADA_USER;
+	global $db;
 
-	if(($community_id = (int) $community_id) && ($module_id = (int) $module_id)) {
-	/**
-	 * Check that the requested module is present and active.
-	 */
-		$query			= "SELECT * FROM `communities_modules` WHERE `module_id` = ".$db->qstr($module_id)." AND `module_active` = '1'";
-		$module_info	= $db->GetRow($query);
-		if($module_info) {
+	if (($community_id = (int) $community_id) && ($module_id = (int) $module_id)) {
+        /*
+         * Check that the requested module is present and active.
+         */
+		$query = "SELECT * FROM `communities_modules` WHERE `module_id` = ".$db->qstr($module_id)." AND `module_active` = '1'";
+		$module_info = $db->GetRow($query);
+		if ($module_info) {
 			$query	= "SELECT * FROM `community_modules` WHERE `community_id` = ".$db->qstr($community_id)." AND `module_id` = ".$db->qstr($module_id);
 			$result	= $db->GetRow($query);
-			if($result) {
-			/**
-			 * If it is not already active, active it.
-			 */
-				if(!(int) $result["module_active"]) {
-					if(!$db->AutoExecute("community_modules", array("module_active" => 1), "UPDATE", "`community_id` = ".$db->qstr($community_id)." AND `module_id` = ".$db->qstr($module_id))) {
-						application_log("error", "Unable to active module ".(int) $module_id." (updating existing record) for updated community id ".(int) $COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
+			if ($result) {
+                /*
+                 * If it is not already active, active it.
+                 */
+				if (!(int) $result["module_active"]) {
+					if (!$db->AutoExecute("community_modules", array("module_active" => 1), "UPDATE", "`community_id` = ".$db->qstr($community_id)." AND `module_id` = ".$db->qstr($module_id))) {
+						application_log("error", "Unable to active module ".(int) $module_id." (updating existing record) for updated community id ".(int) $community_id.". Database said: ".$db->ErrorMsg());
 					}
 				}
 			} else {
-				if(!$db->AutoExecute("community_modules", array("community_id" => $community_id, "module_id" => $module_id, "module_active" => 1), "INSERT")) {
-					application_log("error", "Unable to active module ".(int) $module_id." (inserting new record) for updated community id ".(int) $COMMUNITY_ID.". Database said: ".$db->ErrorMsg());
-				}
-			}
-
-			$query	= "SELECT * FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND `page_active` = '1' AND `page_type` = ".$db->qstr($module_info["module_shortname"]);
-			$result	= $db->GetRow($query);
-			if(!$result) {
-				$query		= "SELECT (MAX(`page_order`) + 1) as `order` FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND `page_active` = '1' AND `parent_id` = '0' AND `page_url` != ''";
-				$result		= $db->GetRow($query);
-				if($result) {
-					$page_order = (int) $result["order"];
-				} else {
-					$page_order = 0;
+				if (!$db->AutoExecute("community_modules", array("community_id" => $community_id, "module_id" => $module_id, "module_active" => 1), "INSERT")) {
+					application_log("error", "Unable to active module ".(int) $module_id." (inserting new record) for updated community id ".(int) $community_id.". Database said: ".$db->ErrorMsg());
 				}
 			}
 		} else {
@@ -5407,28 +5395,41 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 		" `allow_public_view` = 1 ",
 		" `allow_troll_view` = 1 ",
 		" `allow_member_view` = 1 ",
-		" 1 ");
+		" 1 "
+    );
+
+    /*
+     * These are default modules which are always enabled.
+     */
+    $module_enabled = array(
+        "default" => true,
+        "url" => true,
+        "lticonsumer" => true,
+        "course" => true,
+    );
 
 	$community_access = 1;
 	if ($user_access < 2) {
 		$community_access = (int) $db->GetOne("SELECT `community_registration` from `communities` WHERE `community_id` =".$db->qstr($community_id)." AND `community_protected` = '1'");
 	}
+
 	if ($user_access == 1 && ((int) $db->GetOne("SELECT `community_registration` from `communities` WHERE `community_id` =".$db->qstr($community_id)." AND `community_protected` = '0'"))) {
 		$user_access = 0;
 	}
 
-	$module_availability = $db->GetAll("SELECT a.*, b.`module_shortname` FROM `community_modules` AS a LEFT JOIN `communities_modules` AS b ON b.`module_id` = a.`module_id` WHERE a.`community_id` = ".$db->qstr($community_id));
+    $query = "SELECT a.*, b.`module_shortname`
+                FROM `community_modules` AS a
+                LEFT JOIN `communities_modules` AS b
+                ON b.`module_id` = a.`module_id`
+                WHERE a.`community_id` = ".$db->qstr($community_id);
+	$module_availability = $db->GetAll($query);
 	if ($module_availability) {
 		foreach ($module_availability as $module_record) {
 			$module_enabled[$module_record["module_shortname"]] = (((int) $module_record["module_active"]) == 1 ? true : false);
 		}
 	}
 
-	$module_enabled["default"] = true;
-	$module_enabled["url"] = true;
-	$module_enabled["course"] = true;
-
-	if(($community_id = (int) $community_id) && ($community_access < 4 || $user_access > 1)) {
+	if (($community_id = (int) $community_id) && ($community_access < 4 || $user_access > 1)) {
 
 		$query = "SELECT * FROM `community_pages`
 					WHERE `page_url` = ''
@@ -5458,27 +5459,38 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 			}
 		}
 
-		$full_query		= "SELECT `cpage_id`, `page_url`, `menu_title`, `page_order`, `page_type` FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND `page_url` != '' AND `page_active` = '1' ORDER BY `page_order` ASC";
-		$full_results	= $db->GetAll($full_query);
-		if($full_results) {
-			foreach ($full_results as $result) {
-				$exists[$result["page_url"]] = $result["menu_title"];
-			}
-		}
-		$available_query		= "SELECT `cpage_id`, `page_url`, `menu_title`, `page_order`, `page_type` FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND ".$access_query_condition[$user_access]." AND `page_url` != '' AND `page_active` = '1' ORDER BY `page_order` ASC";
-		$available_results	= $db->GetAll($available_query);
-		if($full_results) {
-			foreach ($full_results as $result) {
-				$available[$result["page_url"]]		= $result["menu_title"];
-				$available_ids[$result["page_url"]]	= $result["cpage_id"];
-				$details[$result["page_url"]]		= $result;
-			}
-		}
+//		$full_query = "SELECT `cpage_id`, `page_url`, `menu_title`, `page_order`, `page_type` FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND `page_url` != '' AND `page_active` = '1' ORDER BY `page_order` ASC";
+//		$full_results = $db->GetAll($full_query);
+//		if ($full_results) {
+//			foreach ($full_results as $result) {
+//				$exists[$result["page_url"]] = $result["menu_title"];
+//			}
+//		}
+//
+//		$available_query = "SELECT `cpage_id`, `page_url`, `menu_title`, `page_order`, `page_type` FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND ".$access_query_condition[$user_access]." AND `page_url` != '' AND `page_active` = '1' ORDER BY `page_order` ASC";
+//		$available_results = $db->GetAll($available_query);
+//		if ($full_results) {
+//			foreach ($full_results as $result) {
+//				$available[$result["page_url"]] = $result["menu_title"];
+//				$available_ids[$result["page_url"]]	= $result["cpage_id"];
+//				$details[$result["page_url"]] = $result;
+//			}
+//		}
 
-		$navigation_query	= "SELECT `cpage_id`, `page_url`, `menu_title`, `page_order`, `page_type`, `page_content`, `page_visible` FROM `community_pages` WHERE `parent_id` = '0' AND `community_id` =".$db->qstr($community_id)." AND ".$access_query_condition[$user_access]." AND `page_url` != '' AND `page_active` = '1' ORDER BY `page_order` ASC";
+        $full_query = "SELECT `cpage_id`, `page_url`, `menu_title`, `page_order`, `page_type` FROM `community_pages` WHERE `community_id` = ".$db->qstr($community_id)." AND `page_url` != '' AND `page_active` = '1' ORDER BY `page_order` ASC";
+        $full_results = $db->GetAll($full_query);
+        if ($full_results) {
+            foreach ($full_results as $result) {
+                $exists[$result["page_url"]] = $result["menu_title"];
+                $available[$result["page_url"]] = $result["menu_title"];
+                $available_ids[$result["page_url"]]	= $result["cpage_id"];
+                $details[$result["page_url"]] = $result;
+            }
+        }
+
+		$navigation_query = "SELECT `cpage_id`, `page_url`, `menu_title`, `page_order`, `page_type`, `page_content`, `page_visible` FROM `community_pages` WHERE `parent_id` = '0' AND `community_id` =".$db->qstr($community_id)." AND ".$access_query_condition[$user_access]." AND `page_url` != '' AND `page_active` = '1' ORDER BY `page_order` ASC";
 		$navigation_results	= $db->GetAll($navigation_query);
-		if($navigation_results) {
-			$i = 1;
+		if ($navigation_results) {
 			foreach ($navigation_results as $result) {
 				if ($module_enabled[$result["page_type"]]) {
 					if (((int)$result["page_visible"]) == 1) {
@@ -5488,21 +5500,24 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 						} else {
 							$new_window = false;
 						}
-						$navigation[$result["cpage_id"]]	= array(
-													"cpage_id" => $result["cpage_id"],
-													"link_order"	=> (int) $result["page_order"],
-													"link_parent"	=> 0,
-													"link_url"		=> ":".$result["page_url"],
-													"link_title"	=> $result["menu_title"],
-													"link_selected" => ($result["page_url"] == $PAGE_URL ? true : false),
-													"link_new_window" => ($new_window ? true : false),
-													"link_type"		=> $result["page_type"],
-													"link_children" => array()
-												);
+
+						$navigation[$result["cpage_id"]] = array(
+                            "cpage_id" => $result["cpage_id"],
+                            "link_order" => (int) $result["page_order"],
+                            "link_parent" => 0,
+                            "link_url" => ":".$result["page_url"],
+                            "link_title" => $result["menu_title"],
+                            "link_selected" => ($result["page_url"] == $PAGE_URL ? true : false),
+                            "link_new_window" => ($new_window ? true : false),
+                            "link_type" => $result["page_type"],
+                            "link_children" => array()
+                        );
+
 						$visible = true;
 					} else {
 						$visible = false;
 					}
+
 					if (communities_page_has_children($result["cpage_id"], $access_query_condition[$user_access], $community_id) && $visible) {
 						$navigation[$result["cpage_id"]]["link_children"] = communities_fetch_child_pages($result["cpage_id"], $access_query_condition[$user_access], $community_id);
 						if ($navigation[$result["cpage_id"]]["link_children"]) {
@@ -5513,7 +5528,6 @@ function communities_fetch_pages($community_id = 0, $user_access = 0) {
 							}
 						}
 					}
-					$i++;
 				}
 			}
 		}

@@ -110,7 +110,7 @@
                                 <p> <a href="{$next_page_url}"> Next >></a></p>
                             {elseif $next_page_url == "#" && $previous_page_url != "#"}
                                 <p> <a href="{$previous_page_url}"><< Previous</a> </p>
-                            {else $next_page_url == "#" && $previous_page_url == "#"}
+                            {elseif $next_page_url == "#" && $previous_page_url == "#"}
                                 <p> </p>
                             {/if}
                         </div>

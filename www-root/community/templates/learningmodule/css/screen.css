@@ -477,15 +477,6 @@ div.bread-crumb-trail {
 	font-style:italic;
 	font-size:0.9em;
 }
-nav.breadcrumb li {
-	background: url("../images/bullet.jpg") no-repeat center left;
-	font-size:1em !important;
-	padding-left:12px;
-}
-nav.breadcrumb li:first-child {
-	background:none;
-	padding-left:0;
-}
 nav.article-navigation {
 	margin-top:1.5em;
 	background-color:#f6f6f6;
@@ -949,14 +940,15 @@ ul.page-action li:last-child {
 .content ul.community-page-list li a {
 	font-weight:normal !important;
 }
+
 div.community-page-list.home {
-	border-bottom:1px dotted #eee;
-	margin-left: 25px;
-	padding-left: 15px;
+    border-bottom: 1px dotted #eee;
+    margin-left: 29px;
+    padding-left: 15px;
 }
 
 /*From buttons*/
-.button {
+input[type=submit],input[type=button],.button {
 	background: #59574E;
 	border:none;
 	color:#FFF;
@@ -965,8 +957,9 @@ div.community-page-list.home {
 	-moz-border-radius: 5px;
 	-webkit-border-radius: 5px;
 	border-radius: 5px;
+    margin: 1px;
 }
-.button:hover {
+input[type=submit]:hover,input[type=button]:hover,.button:hover {
 	background: #484640;
 }
 
@@ -1160,6 +1153,10 @@ h3.announcement-date {
   -webkit-border-radius: 4px;
      -moz-border-radius: 4px;
           border-radius: 4px;
+}
+
+.alert ul {
+    list-style: none outside none;
 }
 
 .alert-heading {

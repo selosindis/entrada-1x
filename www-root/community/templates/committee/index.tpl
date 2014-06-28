@@ -18,6 +18,7 @@
 
     <link href="{$sys_website_url}/css/jquery/jquery-ui.css" rel="stylesheet" type="text/css" />
 	<script type="text/javascript" src="{$sys_website_url}/javascript/jquery/jquery.min.js"></script>
+    <script type="text/javascript">var COMMUNITY_ID = "{$community_id}";</script>
 	<script type="text/javascript" src="{$sys_website_url}/javascript/jquery/jquery-ui.min.js"></script>
 	<script type="text/javascript">jQuery.noConflict();</script>
 
@@ -76,7 +77,7 @@
 						<p> <a href="{$next_page_url}"> Next >></a></p>
 					{elseif $next_page_url == "#" && $previous_page_url != "#"}
 						<p> <a href="{$previous_page_url}"><< Previous</a> </p>
-					{else $next_page_url == "#" && $previous_page_url == "#"}
+					{elseif $next_page_url == "#" && $previous_page_url == "#"}
 						<p> </p>
 					{/if}
 				</section>

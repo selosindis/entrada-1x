@@ -77,3 +77,15 @@ function updateFolderIcon(folder_number) {
 
 	return;
 }
+
+function acceptButton(cb) {
+    if(cb.checked)
+    {
+        $('upload-button').disabled = false;
+    }
+    else
+    {
+        $('upload-button').disabled = true;
+    }
+    return;
+}

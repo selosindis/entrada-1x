@@ -29,7 +29,7 @@ if ($RECORD_ID) {
 	$query			= "SELECT * FROM `community_shares` WHERE `cshare_id` = ".$db->qstr($RECORD_ID)." AND `cpage_id` = ".$db->qstr($PAGE_ID)." AND `community_id` = ".$db->qstr($COMMUNITY_ID);
 	$folder_record	= $db->GetRow($query);
 	if ($folder_record) {
-		
+
 		$query = "SELECT COUNT(*) FROM `community_share_files` WHERE `cshare_id` = ".$db->qstr($RECORD_ID)." AND `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())." AND `file_active` = 1";
 		
 		
@@ -39,6 +39,13 @@ if ($RECORD_ID) {
 				$BREADCRUMB[] = array("url" => COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL."?section=add-file&id=".$RECORD_ID, "title" => "Upload File");
 	
 				$file_uploads = array();
+
+                if ((array_count_values($copyright_settings = (array) $translate->_("copyright")) > 1) && isset($copyright_settings["copyright-uploads"]) && strlen($copyright_settings["copyright-uploads"])) {
+                    $COPYRIGHT = true;
+                } else {
+                    $COPYRIGHT = false;
+                }
+
 				// Error Checking
 				switch($STEP) {
 					case 2 :
@@ -339,105 +346,126 @@ if ($RECORD_ID) {
 							</ul>
 						</div>
 						
-						<form id="upload-file-form" action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-file&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post" enctype="multipart/form-data">
-						<input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo $VALID_MAX_FILESIZE; ?>" />
-						<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Upload File">
-						<colgroup>
-							<col style="width: 3%" />
-							<col style="width: 20%" />
-							<col style="width: 77%" />
-						</colgroup>
-						<tbody>
-							<tr>
-								<td colspan="3">
-									<div id="file_list">
-										<?php foreach($file_uploads as $tmp_file_id=>$file_upload){
-											if($file_uplaod["success"]){
-												
-											}
-											else{
-											?>	
-												<div id="file_<?php echo $tmp_file_id;?>" class="file-upload">
-												<table>
-													<tr>
-														<td colspan="3"><h2>File <?php echo $tmp_file_id+1;?> Details</h2></td>
-													</tr>
-													<tr>
-														<td colspan="2" style="vertical-align: top"><label for="uploaded_file" class="form-required">Select Local File</label></td>
-														<td style="vertical-align: top">
-															<input type="file" id="uploaded_file_<?php echo $tmp_file_id;?>" name="uploaded_file[<?php echo $tmp_file_id;?>]" onchange="fetchFilename(<?php echo $tmp_file_id;?>)" />
-															<div class="content-small" style="margin-top: 5px">
-																<strong>Notice:</strong> You may upload files under <?php echo readable_size($VALID_MAX_FILESIZE); ?>.
-															</div>
-														</td>
-													</tr>
-													<tr>
-														<td colspan="3">&nbsp;</td>
-													</tr>
-													<tr>
-														<td colspan="2"><label for="file_title" class="form-required">File Title</label></td>
-														<td><input type="text" id="file_<?php echo $tmp_file_id;?>_title" name="file_title[<?php echo $tmp_file_id;?>]" value="<?php echo ((isset($file_upload["file_title"])) ? html_encode($file_upload["file_title"]) : ""); ?>" maxlength="64" style="width: 95%" /></td>
-													</tr>
-													<tr>
-														<td colspan="2" style="vertical-align: top"><label for="file_description" class="form-nrequired">File Description</label></td>
-														<td style="vertical-align: top">
-															<textarea id="file_<?php echo $tmp_file_id;?>_description" name="file_description[<?php echo $tmp_file_id;?>]" style="width: 95%; height: 60px;max-width: 300px;min-width: 300px;" cols="50" rows="5"><?php echo ((isset($file_upload["file_description"])) ? html_encode($file_upload["file_description"]) : ""); ?></textarea>
-														</td>
-													</tr>
-													<tr>
-														<td colspan="3">&nbsp;</td>
-													</tr>
-													<script>
-													if(is_admin){
-														document.write(     '			<tr>'+
-																			'				<td colspan="2" style="vertical-align: top"><label for="access_method" class="form-nrequired">Access Method</label></td>'+
-																			'				<td>'+
-																			'					<input type="radio" id="access_method_0_<?php echo $tmp_file_id;?>" name="access_method[<?php echo $tmp_file_id;?>]" value="0" style="vertical-align: middle" checked/> <label for="access_method_0" style="vertical-align: middle" class="content-small">Download this file to their computer first, then open it.</label><br />'+
-																			'					<input type="radio" id="access_method_1_<?php echo $tmp_file_id;?>" name="access_method[<?php echo $tmp_file_id;?>]" value="1" style="vertical-align: middle"<?php echo (((isset($file_upload["access_method"])) && ((int) $file_upload["access_method"]) == 1) ? " checked" : ""); ?> /> <label for="access_method_1" style="vertical-align: middle" class="content-small">Attempt to view it directly in the web-browser.</label><br />'+
-																			'				</td>'+
-																			'			</tr>');
-													}
-													</script>
-												</table>
-												</div>
-											
-									<?php	}
-										}
-										?>
-									</div>							
-								</td>
-							</tr>
-							<tr>
-								<td colspan="3"><h2>Batch File Permissions*</h2></td>
-							</tr>
-							<tr>
-								<td><input type="checkbox" id="allow_member_revision" name="allow_member_revision[]" value="1"<?php echo (((isset($PROCESSED["allow_member_revision"])) && ($PROCESSED["allow_member_revision"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-								<td colspan="2"><label for="allow_member_revision" class="form-nrequired">Allow <strong>other community members</strong> to upload newer versions of this file.</label></td>
-							</tr>
-							<?php if (!(int) $community_details["community_registration"]) :  ?>
-							<tr>
-								<td><input type="checkbox" id="allow_troll_revision" name="allow_troll_revision[]" value="1"<?php echo (((isset($PROCESSED["allow_troll_revision"])) && ($PROCESSED["allow_troll_revision"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
-								<td colspan="2"><label for="allow_troll_revision" class="form-nrequired">Allow <strong>non-community members</strong> to upload newer versions of this file.</label></td>
-							</tr>
-							<?php endif; ?>
-							<tr>
-								<td colspan="3"><h2>Batch Time Release Options*</h2></td>
-							</tr>
-							<?php
-							echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0));
+						<form id="upload-file-form" action="<?php echo COMMUNITY_URL.$COMMUNITY_URL.":".$PAGE_URL; ?>?section=add-file&amp;id=<?php echo $RECORD_ID; ?>&amp;step=2" method="post" enctype="multipart/form-data" onsubmit="uploadFile()">
+                            <input type="hidden" name="MAX_UPLOAD_FILESIZE" value="<?php echo $VALID_MAX_FILESIZE; ?>" />
+                            <table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Upload File">
+                                <colgroup>
+                                    <col style="width: 3%" />
+                                    <col style="width: 20%" />
+                                    <col style="width: 77%" />
+                                </colgroup>
+	                            <tfoot>
+	                            <?php if ($COPYRIGHT) {
+		                            ?>
+		                            <tr><td colspan="3">&nbsp;<hr></td></tr>
+		                            <tr>
+			                            <td colspan="3">
+				                            <h2><?php echo $translate->_("copyright_title"); ?></h2>
+			                            </td>
+		                            </tr>
+		                            <tr>
+			                            <td />
+			                            <td colspan="2">
+				                            <div class="display-generic">
+				                                <?php echo $copyright_settings["copyright-uploads"]; ?>
+				                                <label class="checkbox">
+					                                <input type="checkbox" value="1" onchange="acceptButton(this)"> <?php echo $translate->_("copyright_accept_label"); ?>
+				                                </label>
+				                            </div>
+			                            </td>
+		                            </tr>
+	                            <?php
+	                            } ?>
+	                            <tr>
+		                            <td colspan="3" style="padding-top: 1px; text-align: right">
+			                            <div id="display-upload-button" style="padding-top: 15px; text-align: right">
+				                            <input type="submit" class="btn btn-primary" id="upload-button" value="Upload File(s)" <?php echo ($COPYRIGHT ? " disabled=\"disabled\"" : ""); ?> />
+			                            </div>
+		                            </td>
+	                            </tr>
+	                            </tfoot>
+                                <tbody>
+                                    <tr>
+                                        <td colspan="3">
+                                            <div id="file_list">
+                                                <?php foreach($file_uploads as $tmp_file_id=>$file_upload){
+                                                    if($file_upload["success"]){
 
-						?>
-							<tr>
-								<td colspan="3" style="font-style:italic;font-size:12px;">* these settings will be applied to all files chosen to be uploaded</td>
-							</tr>
-					</tbody>
-					</table>
-					<div class="row-fluid space-above">
-						<div id="display-upload-button" class="pull-right">
-							<input type="button" class="btn btn-primary" value="Upload File(s)" onclick ="uploadFile()" />
-						</div>
-					</div>
-					</form>
+                                                    }
+                                                    else{
+                                                    ?>
+                                                        <div id="file_<?php echo $tmp_file_id;?>" class="file-upload">
+                                                        <table>
+                                                            <tr>
+                                                                <td colspan="3"><h2>File <?php echo $tmp_file_id+1;?> Details</h2></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan="2" style="vertical-align: top"><label for="uploaded_file" class="form-required">Select Local File</label></td>
+                                                                <td style="vertical-align: top">
+                                                                    <input type="file" id="uploaded_file_<?php echo $tmp_file_id;?>" name="uploaded_file[<?php echo $tmp_file_id;?>]" onchange="fetchFilename(<?php echo $tmp_file_id;?>)" />
+                                                                    <div class="content-small" style="margin-top: 5px">
+                                                                        <strong>Notice:</strong> You may upload files under <?php echo readable_size($VALID_MAX_FILESIZE); ?>.
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan="3">&nbsp;</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan="2"><label for="file_title" class="form-required">File Title</label></td>
+                                                                <td><input type="text" id="file_<?php echo $tmp_file_id;?>_title" name="file_title[<?php echo $tmp_file_id;?>]" value="<?php echo ((isset($file_upload["file_title"])) ? html_encode($file_upload["file_title"]) : ""); ?>" maxlength="64" style="width: 95%" /></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan="2" style="vertical-align: top"><label for="file_description" class="form-nrequired">File Description</label></td>
+                                                                <td style="vertical-align: top">
+                                                                    <textarea id="file_<?php echo $tmp_file_id;?>_description" name="file_description[<?php echo $tmp_file_id;?>]" style="width: 95%; height: 60px;max-width: 300px;min-width: 300px;" cols="50" rows="5"><?php echo ((isset($file_upload["file_description"])) ? html_encode($file_upload["file_description"]) : ""); ?></textarea>
+                                                                </td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td colspan="3">&nbsp;</td>
+                                                            </tr>
+                                                            <script>
+                                                            if (is_admin) {
+                                                                document.write(     '			<tr>'+
+                                                                                    '				<td colspan="2" style="vertical-align: top"><label for="access_method" class="form-nrequired">Access Method</label></td>'+
+                                                                                    '				<td>'+
+                                                                                    '					<input type="radio" id="access_method_0_<?php echo $tmp_file_id;?>" name="access_method[<?php echo $tmp_file_id;?>]" value="0" style="vertical-align: middle" checked/> <label for="access_method_0" style="vertical-align: middle" class="content-small">Download this file to their computer first, then open it.</label><br />'+
+                                                                                    '					<input type="radio" id="access_method_1_<?php echo $tmp_file_id;?>" name="access_method[<?php echo $tmp_file_id;?>]" value="1" style="vertical-align: middle"<?php echo (((isset($file_upload["access_method"])) && ((int) $file_upload["access_method"]) == 1) ? " checked" : ""); ?> /> <label for="access_method_1" style="vertical-align: middle" class="content-small">Attempt to view it directly in the web-browser.</label><br />'+
+                                                                                    '				</td>'+
+                                                                                    '			</tr>');
+                                                            }
+                                                            </script>
+                                                        </table>
+                                                        </div>
+
+                                            <?php	}
+                                                }
+                                                ?>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="3"><h2>Batch File Permissions</h2></td>
+                                    </tr>
+                                    <tr>
+                                        <td><input type="checkbox" id="allow_member_revision" name="allow_member_revision[]" value="1"<?php echo (((isset($PROCESSED["allow_member_revision"])) && ($PROCESSED["allow_member_revision"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
+                                        <td colspan="2"><label for="allow_member_revision" class="form-nrequired">Allow <strong>other community members</strong> to upload newer versions of this file.</label></td>
+                                    </tr>
+                                    <?php if (!(int) $community_details["community_registration"]) :  ?>
+                                    <tr>
+                                        <td><input type="checkbox" id="allow_troll_revision" name="allow_troll_revision[]" value="1"<?php echo (((isset($PROCESSED["allow_troll_revision"])) && ($PROCESSED["allow_troll_revision"] == 1)) ? " checked=\"checked\"" : ""); ?> /></td>
+                                        <td colspan="2"><label for="allow_troll_revision" class="form-nrequired">Allow <strong>non-community members</strong> to upload newer versions of this file.</label></td>
+                                    </tr>
+                                    <?php endif; ?>
+                                    <tr>
+                                        <td colspan="3"><h2>Batch Time Release Options</h2></td>
+                                    </tr>
+                                    <?php
+                                    echo generate_calendars("release", "", true, true, ((isset($PROCESSED["release_date"])) ? $PROCESSED["release_date"] : time()), true, false, ((isset($PROCESSED["release_until"])) ? $PROCESSED["release_until"] : 0));
+                                    ?>
+                                </tbody>
+                            </table>
+					    </form>
 						<div id="display-upload-status" style="display: none">
 							<div style="text-align: left; background-color: #EEEEEE; border: 1px #666666 solid; padding: 10px">
 								<div style="color: #003366; font-size: 18px; font-weight: bold">
@@ -447,7 +475,7 @@ if ($RECORD_ID) {
 								This can take time depending on your connection speed and the filesize.
 							</div>
 						</div>
-						<?php
+                        <?php
 					break;
 				}
 			} else {

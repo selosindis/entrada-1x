@@ -75,7 +75,19 @@ if (!defined("PARENT_INCLUDED")) {
 					break;
 					case "assistant-remove" :
 						profile_remove_assistant();
-					break;
+						break;
+					case "privacy-copyright-google-update" :
+						profile_copyright_update_google_privacy();
+						break;
+					case "privacy-copyright-update" :
+						profile_copyright_update();
+						break;
+					case "copyright-google-update" :
+						copyright_update_google_privacy();
+						break;
+					case "copyright-update" :
+						copyright_update();
+						break;
 				}
 			}
 			add_profile_sidebar();
@@ -651,4 +663,160 @@ function profile_update_notifications() {
 	}
 }
 
+function profile_copyright_update_google_privacy() {
+	global $db, $GOOGLE_APPS, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_USER;
+
+	if ((bool) $GOOGLE_APPS["active"]) {
+		/**
+		 * This actually creates a Google Hosted Apps account associated with their profile.
+		 * Note: The sessions variable ($_SESSION["details"]["google_id"]) is being
+		 * changed in index.php on line 242 to opt-in, which is merely used in the logic
+		 * of the first-login page, but only if the user has no google id and hasn't opted out.
+		 */
+		if (isset($_POST["google_account"])) {
+			if ((int) trim($_POST["google_account"])) {
+				if (google_create_id()) {
+					$SUCCESS++;
+					$SUCCESSSTR[] = "<strong>Your new ".$GOOGLE_APPS["domain"]."</strong> account has been created!</strong><br /><br />An e-mail will be sent to ".$_SESSION["details"]["email"]." shortly, containing further instructions regarding account activation.";
+				}
+			} else {
+				$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `google_id` = 'opt-out' WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()));
+			}
+		}
+	}
+
+	if (isset($_POST["copyright"])) {
+		if (!$db->AutoExecute(AUTH_DATABASE.".user_data", array("copyright" => time()), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+			$ERROR++;
+			$ERRORSTR[] = "We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.";
+
+			application_log("error", "Unable to update copyright setting. Database said: ".$db->ErrorMsg());
+		}
+	}
+
+	/**
+	 * This actually changes the privacy settings in their profile.
+	 * Note: The sessions variable ($_SESSION["details"]["privacy_level"]) is actually being
+	 * changed in index.php on line 268, so that the proper tabs are displayed.
+	 */
+	if ((isset($_POST["privacy_level"])) && ($privacy_level = (int) trim($_POST["privacy_level"]))) {
+		if ($privacy_level > MAX_PRIVACY_LEVEL) {
+			$privacy_level = MAX_PRIVACY_LEVEL;
+		}
+		if (!$db->AutoExecute(AUTH_DATABASE.".user_data", array("privacy_level" => $privacy_level), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))){
+			$ERROR++;
+			$ERRORSTR[] = "We were unfortunately unable to update your privacy settings at this time. The system administrator has been informed of the error, please try again later.";
+
+			application_log("error", "Unable to update privacy setting. Database said: ".$db->ErrorMsg());
+		}
+	}
+}
+
+function profile_copyright_update() {
+	/**
+	 * This actually changes the privacy settings in their profile.
+	 * Note: The sessions variable ($_SESSION["details"]["privacy_level"]) is actually being
+	 * changed in index.php on line 268, so that the proper tabs are displayed.
+	 */
+	global $db, $ERROR, $ERRORSTR, $ENTRADA_USER;
+
+	if (isset($_POST["copyright"])) {
+		if (!$db->AutoExecute(AUTH_DATABASE.".user_data", array("copyright" => time()), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+			$ERROR++;
+			$ERRORSTR[] = "We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.";
+
+			application_log("error", "Unable to update copyright setting. Database said: ".$db->ErrorMsg());
+		}
+	}
+
+	if ((isset($_POST["privacy_level"])) && ($privacy_level = (int) trim($_POST["privacy_level"]))) {
+		if ($privacy_level > MAX_PRIVACY_LEVEL) {
+			$privacy_level = MAX_PRIVACY_LEVEL;
+		}
+		if ($db->AutoExecute(AUTH_DATABASE.".user_data", array("privacy_level" => $privacy_level), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+			if ((isset($_POST["redirect"])) && (trim($_POST["redirect"]) != "")) {
+				header("Location: ".((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input(rawurldecode($_POST["redirect"]), array("nows", "url")));
+				exit;
+			} else {
+				header("Location: ".ENTRADA_URL);
+				exit;
+			}
+		} else {
+			$ERROR++;
+			$ERRORSTR[] = "We were unfortunately unable to update your privacy settings at this time. The system administrator has been informed of the error, please try again later.";
+
+			application_log("error", "Unable to update privacy setting. Database said: ".$db->ErrorMsg());
+		}
+
+	}
+}
+
+function copyright_update_google_privacy() {
+	/**
+	 * This actually changes the copyright setting.
+	 */
+	global $db, $GOOGLE_APPS, $ERROR, $ERRORSTR, $SUCCESS, $SUCCESSSTR, $ENTRADA_USER;
+
+	if ((bool) $GOOGLE_APPS["active"]) {
+		/**
+		 * This actually creates a Google Hosted Apps account associated with their profile.
+		 * Note: The sessions variable ($_SESSION["details"]["google_id"]) is being
+		 * changed in index.php on line 242 to opt-in, which is merely used in the logic
+		 * of the first-login page, but only if the user has no google id and hasn't opted out.
+		 */
+		if (isset($_POST["google_account"])) {
+			if ((int) trim($_POST["google_account"])) {
+				if (google_create_id()) {
+					$SUCCESS++;
+					$SUCCESSSTR[] = "<strong>Your new ".$GOOGLE_APPS["domain"]."</strong> account has been created!</strong><br /><br />An e-mail will be sent to ".$_SESSION["details"]["email"]." shortly, containing further instructions regarding account activation.";
+				}
+			} else {
+				$db->Execute("UPDATE `".AUTH_DATABASE."`.`user_data` SET `google_id` = 'opt-out' WHERE `id` = ".$db->qstr($ENTRADA_USER->getID()));
+			}
+		}
+	}
+
+	if (isset($_POST["copyright"])) {
+		if ($db->AutoExecute(AUTH_DATABASE.".user_data", array("copyright" => time()), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+			if ((isset($_POST["redirect"])) && (trim($_POST["redirect"]) != "")) {
+				header("Location: ".((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input(rawurldecode($_POST["redirect"]), array("nows", "url")));
+				exit;
+			} else {
+				header("Location: ".ENTRADA_URL);
+				exit;
+			}
+		} else {
+			$ERROR++;
+			$ERRORSTR[] = "We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.";
+
+			application_log("error", "Unable to update copyright setting. Database said: ".$db->ErrorMsg());
+		}
+
+	}
+}
+
+function copyright_update() {
+	/**
+	 * This actually changes the copyright setting in their profile.
+	 */
+	global $db, $ERROR, $ERRORSTR, $ENTRADA_USER;
+
+	if (isset($_POST["copyright"])) {
+		if ($db->AutoExecute(AUTH_DATABASE.".user_data", array("copyright" => time()), "UPDATE", "`id` = ".$db->qstr($ENTRADA_USER->getID()))) {
+			if ((isset($_POST["redirect"])) && (trim($_POST["redirect"]) != "")) {
+				header("Location: ".((isset($_SERVER["HTTPS"])) ? "https" : "http")."://".$_SERVER["HTTP_HOST"].clean_input(rawurldecode($_POST["redirect"]), array("nows", "url")));
+				exit;
+			} else {
+				header("Location: ".ENTRADA_URL);
+				exit;
+			}
+		} else {
+			$ERROR++;
+			$ERRORSTR[] = "We were unfortunately unable to update your copyright setting at this time. The system administrator has been informed of the error, please try again later.";
+
+			application_log("error", "Unable to update copyright setting. Database said: ".$db->ErrorMsg());
+		}
+
+	}
+}
 ?>

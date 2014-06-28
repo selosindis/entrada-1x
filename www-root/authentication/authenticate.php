@@ -469,6 +469,9 @@ if (!$ERROR) {
 						case "privacy_level" :
 							echo "\t\t<".$value.">".encrypt($user_data["privacy_level"], $auth_password)."</".$value.">\n";
 						break;
+						case "copyright" :
+							echo "\t\t<".$value.">".encrypt($user_data["copyright"], $auth_password)."</".$value.">\n";
+						break;
 						case "notifications" :
 							echo "\t\t<".$value.">".encrypt($user_data["notifications"], $auth_password)."</".$value.">\n";
 						break;

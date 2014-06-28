@@ -19,38 +19,7 @@ if ((!defined("COMMUNITY_INCLUDED")) || (!defined("IN_SHARES"))) {
 }
 $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/wizard.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 $HEAD[] = "<link href=\"".ENTRADA_URL."/css/wizard.css?release=".html_encode(APPLICATION_VERSION)."\" rel=\"stylesheet\" type=\"text/css\" media=\"all\" />";
-?>
-<script type="text/javascript">
-    /*var ajax_url = '';
-    var modalDialog;
-    document.observe('dom:loaded', function() {
-    modalDialog = new Control.Modal($('false-link'), {
-            position:        'center',
-            overlayOpacity:    0.75,
-            closeOnClick:    'overlay',
-            className:        'modal',
-            fade:            true,
-            fadeDuration:    0.30
-        });  
-    });                                            
-    function openDialog (url) {
-    if (url) {
-            ajax_url = url;
-            new Ajax.Request(ajax_url, {
-                    method: 'get',
-                    onComplete: function(transport) {
-                            modalDialog.container.update(transport.responseText);
-                            modalDialog.open();
-                    }
-            });
-    } else {
-            modalDialog.open();
-    }
-}   */
-
-
-</script>
-<?php
+$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
 
 if ($RECORD_ID) {
 	$query			= "SELECT * FROM `community_shares` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `cshare_id` = ".$db->qstr($RECORD_ID);
@@ -358,12 +327,11 @@ if ($RECORD_ID) {
 							<td<?php echo (($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["sb"] == "date") ? " class=\"sorted".strtoupper($_SESSION[APPLICATION_IDENTIFIER]["cid_".$COMMUNITY_ID][$PAGE_URL]["so"])."\"" : ""); ?> style="border-left: none"><?php echo communities_order_link("date", "Last Updated"); ?></td>
                             <?php
                             if ($COMMUNITY_ADMIN) {
-                            ?>                                                            
-                                <td>Views</td>
-                            <?php
+                                ?>
+                                <td style="border-left: none">Views</td>
+                                <?php
                             }
                             ?>
-
 						</tr>
 					</thead>
 					<tbody>
@@ -485,18 +453,7 @@ if ($RECORD_ID) {
                             text-align:left;
                         }
                     </style>
-                    <?php
-                    $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-                    ?>
-                    <script type="text/javascript">
-                        jQuery(function($) {
-                            var file_views_table = $("#file-views-table").DataTable({
-                                "bPaginate": false,
-                                "bInfo": false,
-                                "bFilter": false
-                            });
-                        });
-                    </script>
+
                     <div id="file-views" style="display:none;">
                         <table class="table table-bordered table-striped" id="file-views-table" cellspacing="0">
                             <thead>
@@ -512,11 +469,11 @@ if ($RECORD_ID) {
                             if ($file_views) {
                                 foreach ($file_views as $file_view) {
                                     ?>
-                                <tr>
-                                    <td><?php echo $file_view["lastname"] . ", " . $file_view["firstname"]; ?></td>
-                                    <td class="centered"><?php echo $file_view["views"]; ?></td>
-                                    <td><?php echo date("Y-m-d H:i", $file_view["last_viewed_time"]); ?></td>
-                                </tr>
+                                    <tr>
+                                        <td><?php echo $file_view["lastname"] . ", " . $file_view["firstname"]; ?></td>
+                                        <td class="centered"><?php echo $file_view["views"]; ?></td>
+                                        <td><?php echo date("Y-m-d H:i", $file_view["last_viewed_time"]); ?></td>
+                                    </tr>
                                     <?php
                                 }
                             } else {
@@ -526,9 +483,24 @@ if ($RECORD_ID) {
                                 </tr>
                                 <?php
                             }
-                        ?>
+                            ?>
                             </tbody>
                         </table>
+                        <?php
+                        if ($file_views) {
+                            ?>
+                            <script type="text/javascript">
+                                jQuery(function($) {
+                                    var file_views_table = $("#file-views-table").DataTable({
+                                        "bPaginate": false,
+                                        "bInfo": false,
+                                        "bFilter": false
+                                    });
+                                });
+                            </script>
+                            <?php
+                        }
+                        ?>
                     </div>
 					<?php
 				} else {

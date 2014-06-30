@@ -3114,7 +3114,7 @@ function clean_input($string, $rules = array()) {
 						gc_enable();
 					}
 					gc_collect_cycles();
-					require_once("Entrada/htmlpurifier/HTMLPurifier.auto.php");
+					require_once("Entrada/htmlpurifier/HTMLPurifier.standalone.php");
 
 					$html = new HTMLPurifier();
 
@@ -3122,11 +3122,22 @@ function clean_input($string, $rules = array()) {
 					$config->set("Cache.SerializerPath", CACHE_DIRECTORY);
 					$config->set("Core.Encoding", DEFAULT_CHARSET);
 					$config->set("Core.EscapeNonASCIICharacters", true);
+                    $config->set("HTML.TidyLevel", "medium");
+					$config->set("HTML.SafeIframe", true);
+					$config->set("HTML.FlashAllowFullScreen", true);
+                    $config->set("URI.SafeIframeRegexp", "%^(http://|https://|//)(www.youtube.com/embed/|player.vimeo.com/video/)%");
 					$config->set("HTML.SafeObject", true);
 					$config->set("Output.FlashCompat", true);
-					$config->set("HTML.TidyLevel", "medium");
 					$config->set("Test.ForceNoIconv", true);
 					$config->set("Attr.AllowedFrameTargets", array("_blank", "_self", "_parent", "_top"));
+					$config->set("Attr.EnableID", true);
+					$config->set("Attr.IDPrefix", "user_");
+
+                    $def = $config->getHTMLDefinition(true);
+                    $def->addAttribute("iframe", "allowfullscreen", 'Text');
+                    $def->addAttribute("iframe", "webkitallowfullscreen", 'Text');
+                    $def->addAttribute("iframe", "mozallowfullscreen", 'Text');
+
 					$string = $html->purify($string, $config);
 				break;
 				default :				// Unknown rule, log notice.
@@ -4372,22 +4383,20 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
             case "communitybasic" :
             case "advanced" :
                 $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard", "spellchecker")),
+                    array("name" => "clipboard", "groups" => array("mode", "clipboard", "spellchecker")),
                     array("name" => "links"),
                     array("name" => "insert", "groups" => array("mediaembed", "insert")),
                     array("name" => "styles"),
                     array("name" => "basicstyles", "groups" => array("basicstyles", "cleanup")),
                     array("name" => "paragraph", "groups" => array("colors", "list", "indent", "blocks", "align")),
-                    array("name" => "mode"),
                 );
             break;
             case "community" :
                 $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard", "spellchecker")),
+                    array("name" => "clipboard", "groups" => array("mode", "clipboard", "spellchecker")),
                     array("name" => "links"),
 					array("name" => "insert", "groups" => array("mediaembed", "insert")),
                     array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
-                    array("name" => "mode")
                 );
 			break;
             case "mspr" :
@@ -4395,10 +4404,9 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
             case "basic" :
             default :
                 $toolbar_groups = array (
-                    array("name" => "clipboard", "groups" => array("clipboard", "spellchecker")),
+                    array("name" => "clipboard", "groups" => array("mode", "clipboard", "spellchecker")),
                     array("name" => "links"),
                     array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
-                    array("name" => "mode"),
                 );
             break;
         }
@@ -4413,7 +4421,6 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
     $output .= "    config.forcePasteAsPlainText = true;\n";
     $output .= "    config.autoParagraph = false;\n";
     $output .= "    config.toolbarGroups = ".json_encode($toolbar_groups).";\n";
-    $output .= "    config.skin = 'bootstrapck';\n";    
     $output .= "}\n";
 
 	$output .= "window.onload = function() {\n";

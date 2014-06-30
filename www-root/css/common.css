@@ -1064,8 +1064,7 @@ background:transparent url(../images/list-status-offline.gif) no-repeat;
 }
 
 td.inner-content-box-body div {
-vertical-align:middle;
-padding:1px 0 1px 3px;
+padding:1px 0 1px 2px;
 }
 
 td.inner-content-box-body img {
@@ -1075,10 +1074,13 @@ border:0;
 margin-right:3px;
 }
 
-td.inner-content-box-body a {
+td.inner-content-box-body a, div.inner-content-box-body a {
 vertical-align:middle;
 font-size:10px;
 text-decoration:none;
+display:block;
+padding-left: 19px;
+background:transparent url(../images/checkbox-on.gif) no-repeat left center;
 }
 
 table.quizResults tbody tr td {
@@ -1654,8 +1656,6 @@ padding:3px;
 	padding: 1ex 0 1ex 1em;
 	margin:1ex 0 1ex 1em;
 }
-
-
 
 div.section-holder {
 padding-left:25px;
@@ -2892,25 +2892,52 @@ table.form-question tbody tr td,table.quiz-question tbody tr td,table.profile-ca
 vertical-align:top;
 }
 
-td.sidebar-head,td.inner-content-box-head {
-height:20px;
-vertical-align:middle;
-border:1px solid #999;
-color:#333;
-background-color:#EBEBEB;
-font-size:11px;
-font-weight:700;
-background-image:url(../images/list-header.gif);
-padding:0 4px 0 2px;
+div.inner-content-box {
+margin-bottom: 20px;
 }
 
-td.sidebar-body,td.inner-content-box-body {
-height:16px!important;
+div.inner-content-box #filter-list-resize-handle {
+margin:0px -6px -6px -7px;
+}
+
+div.inner-content-box #filter-list-resize {
+height:60px;
+overflow:auto;
+padding:0px 6px 6px 6px;
+}
+
+div.inner-content-box #filter-list-resize > div {
+margin: 2px 0px 10px 3px;
+}
+
+td.sidebar-head,td.inner-content-box-head,div.inner-content-box-head {
+background-color:#f5f5f5;
+background-image:linear-gradient(to bottom, #ffffff, #e6e6e6);
+background-repeat:repeat-x;
+border-color:#CCC #CCC #b3b3b3;
+border-image:none;
+border-radius:3px 3px 0 0;
+border-style:solid;
+border-width:1px;
+color:#333;
+font-size:12px;
+line-height:20px;
+margin-bottom:0;
+padding:4px 5px;
+text-shadow:0 1px 1px rgba(255, 255, 255, 0.75);
+vertical-align:middle;
+}
+
+td.sidebar-body,td.inner-content-box-body,div.inner-content-box-body {
 font-size:11px;
 overflow:hidden;
 text-overflow:ellipsis;
-border:1px solid #999;
-border-top:none;
+border-color:#CCC #CCC #b3b3b3;
+border-image:none;
+border-radius:0;
+border-style:solid;
+border-width:1px;
+border-top:0;
 padding:5px;
 }
 

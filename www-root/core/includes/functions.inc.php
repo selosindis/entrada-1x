@@ -10486,7 +10486,6 @@ function tracking_output_filter_controls($module_type = "") {
 							foreach ($filter_contents as $filter_key => $filter_value) {
 								echo "	<div id=\"".$filter_type."_".$filter_key."\">";
 								echo "		<a href=\"".ENTRADA_URL.$module_type."/communities/reports?community=".$COMMUNITY_ID."&action=filter_remove&amp;filter=".$filter_type."_".$filter_key."\" title=\"Remove this filter\">";
-								echo "		<img src=\"".ENTRADA_URL."/images/checkbox-on.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" />";
 								switch ($filter_type) {
 									case "members" :
 									case "student" :
@@ -10703,25 +10702,20 @@ function events_output_filter_controls($module_type = "") {
 			<td style="width: 47%; vertical-align: top">
 				<?php
 				if ((is_array($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"])) && (count($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"]))) {
-					echo "<table class=\"inner-content-box\" id=\"filter-list\" cellspacing=\"0\" summary=\"Selected Filter List\">\n";
-					echo "<thead>\n";
-					echo "	<tr>\n";
-					echo "		<td class=\"inner-content-box-head\">Showing Events That Include:</td>\n";
-					echo "	</tr>\n";
-					echo "</thead>\n";
-					echo "<tbody>\n";
-					echo "	<tr>\n";
-					echo "		<td class=\"inner-content-box-body\">";
-					echo "		<div id=\"filter-list-resize-handle\" style=\"margin:0px -6px -6px -7px;\">";
-					echo "		<div id=\"filter-list-resize\" style=\"height: 60px; overflow: auto;  padding: 0px 6px 6px 6px;\">\n";
+                    echo "<div summary=\"Selected Filter List\" id=\"filter-list\" class=\"inner-content-box\">\n";
+                    echo "    <div class=\"inner-content-box-head\">\n";
+                    echo "        Showing Events That Include:\n";
+                    echo "    </div>\n";
+                    echo "    <div class=\"clearfix inner-content-box-body\">\n";
+					echo "        <div id=\"filter-list-resize-handle\">";
+					echo "		      <div id=\"filter-list-resize\">\n";
 					foreach ($_SESSION[APPLICATION_IDENTIFIER]["events"]["filters"] as $filter_type => $filter_contents) {
 						if (is_array($filter_contents)) {
 							echo 	$filter_name = filter_name($filter_type);
-							echo "	<div style=\"margin: 2px 0px 10px 3px\">\n";
+							echo "	      <div>\n";
 							foreach ($filter_contents as $filter_key => $filter_value) {
-								echo "	<div id=\"".$filter_type."_".$filter_key."\">";
-								echo "		<a href=\"".ENTRADA_URL.$module_type."/events?action=filter_remove&amp;filter=".$filter_type."_".$filter_key."\" title=\"Remove this filter\">";
-								echo "		<img src=\"".ENTRADA_URL."/images/checkbox-on.gif\" width=\"14\" height=\"14\" alt=\"\" title=\"\" />";
+								echo "	      <div id=\"".$filter_type."_".$filter_key."\">";
+								echo "		      <a href=\"".ENTRADA_URL.$module_type."/events?action=filter_remove&amp;filter=".$filter_type."_".$filter_key."\" title=\"Remove this filter\">";
 								switch ($filter_type) {
 									case "teacher" :
 									case "student" :
@@ -10754,19 +10748,17 @@ function events_output_filter_controls($module_type = "") {
 										echo strtoupper($filter_value);
 									break;
 								}
-								echo "		</a>";
-								echo "	</div>\n";
+								echo "            </a>";
+								echo "        </div>\n";
 							}
-							echo "	</div>\n";
+							echo "        </div>\n";
 						}
 					}
-					echo "		</div>\n";
-					echo "		</div>\n";
-					echo "		</td>\n";
-					echo "	</tr>\n";
-					echo "</tbody>\n";
-					echo "</table>\n";
-					echo "<br />\n";
+					echo "            </div>\n";
+					echo "        </div>\n";
+					echo "    </div>\n";
+					echo "</div>\n";
+
 					echo "<script type=\"text/javascript\">";
 					echo "	new ElementResizer($('filter-list-resize'), {handleElement: $('filter-list-resize-handle'), min: 40});";
 					echo "</script>";

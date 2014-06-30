@@ -25,8 +25,19 @@ $query	= "	SELECT *
 			AND `page_active` = '1'";
 $result	= $db->GetRow($query);
 if ($result) {
+    
+    $query	= "SELECT * FROM `community_members` WHERE `community_id` = ".$db->qstr($COMMUNITY_ID)." AND `proxy_id` = ".$db->qstr($ENTRADA_USER->getActiveId())." AND `member_active` = '1'";
+    $member = $db->GetRow($query);
+
+    $community_member = false;
+    $community_admin = false;
+
+    if ($member) {
+        $community_member = true;
+        $community_admin = true;
+    }
 	if (isset($result["page_title"]) && trim($result["page_title"]) != "") {
-		echo "<h1>".html_encode($result["page_title"])."</h1>\n";
+		echo "<h1>".html_encode($result["page_title"]).(($community_member) && ($community_admin) ? "<a id=\"community-edit-button\" href=\"". COMMUNITY_URL.$COMMUNITY_URL .":pages?action=edit&step=1&page=". ($result["page_url"] != "" ? $result["cpage_id"] : "home") ."\" class=\"btn pull-right\">Edit Page</a>" : "")."</h1>\n";
 	}
 	
 	if ($ERROR) {

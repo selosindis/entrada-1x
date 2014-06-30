@@ -50,7 +50,7 @@
 			</div>
 			<div class="row">
                 <div id="community-nav-collapse">
-                    <a id="community-nav-collapse-toggle" href="#" class=""><span class="menu-icon" id="community-nav-menu-icon" title="Administrative Navigation"></span></a>
+                    <a id="community-nav-collapse-toggle" href="#"><span class="menu-icon" id="community-nav-menu-icon" title="Administrative Navigation"></span></a>
                 </div>
 				<div class="span6-5 content-area">
                     

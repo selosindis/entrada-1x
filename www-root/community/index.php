@@ -851,7 +851,7 @@ if ($COMMUNITY_URL) {
 					$result	= $db->GetRow($query);
 					if ($result) {
 						if (trim($result["page_title"]) != "") {
-							$page_text .= "<h1>".html_encode($result["page_title"])."</h1>";
+							$page_text .= "<h1>".html_encode($result["page_title"]).(($LOGGED_IN) && ($COMMUNITY_ADMIN) ? "<a id=\"community-edit-button\" href=\"". COMMUNITY_URL.$COMMUNITY_URL .":pages?action=edit&step=1&page=". $result["cpage_id"] ."\" class=\"btn pull-right\">Edit Page</a>" : "")."</h1>";
 						}
 
 						if (trim($result["page_content"]) != "") {

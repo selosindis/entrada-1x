@@ -46,33 +46,31 @@ function setPreference () {
 }
 
 function collapseMenu () {
+    jQuery(".toggle a").removeClass("off");
+    jQuery(".right-nav").addClass("collapsed").css("display", "none");
+    
     if (jQuery(".content").hasClass("span-18")) {
-        jQuery(".toggle a").removeClass("off");
-        jQuery(".right-nav").addClass("collapsed").css("display", "none");
         if (jQuery(".left-nav").length == 0) {
             jQuery(".content").addClass("span-23");
         } else {
              jQuery(".content").removeClass("span-13").addClass("span-18");
         }
     } else {
-        jQuery(".toggle a").removeClass("off");
-        jQuery(".right-nav").addClass("collapsed").css("display", "none");
         jQuery(".content").removeClass("span-13").addClass("span-18");
     }
 }
 
 function expandMenu () {
+    jQuery(".toggle a").addClass("off");
+    jQuery(".right-nav").removeClass("collapsed").css("display", "block");
+        
     if (jQuery(".content").hasClass("span-23")) {
-        jQuery(".toggle a").addClass("off");
-        jQuery(".right-nav").removeClass("collapsed").css("display", "block");
         jQuery(".content").removeClass("span-23").addClass("span-18");
     } else {
-        jQuery(".toggle a").addClass("off");
         if (jQuery(".left-nav").length == 0) {
             jQuery(".content").removeClass("span-23").addClass("span-18");
         } else {
             jQuery(".content").removeClass("span-18").addClass("span-13");
         }
-        jQuery(".right-nav").removeClass("collapsed").css("display", "block");
     }
 }

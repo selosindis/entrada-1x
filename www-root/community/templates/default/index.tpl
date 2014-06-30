@@ -30,7 +30,7 @@
 {$sys_system_navigator}
 <div class="container">
 	<div class="row">
-		<div class="span2-5">
+		<div class="span2-5 left-nav">
 			{include file="navigation_primary.tpl" site_primary_navigation=$site_primary_navigation}
 		</div>
 		<div class="span9-5 content-container">
@@ -85,14 +85,19 @@
                     </div>
 				</div>
 			</div>
-			<div class="footer span9">
-				<div class="content-copyright">
-                    {$copyright_string}
-				</div>
-			</div>
 		</div>
 	</div>
 </div>
+<div class="container">
+    <div class="row">
+        <div class="footer span12">
+            <div class="content-copyright">
+                {$copyright_string}
+            </div>
+        </div>
+    </div>
+</div>
+
 {if !$development_mode && $google_analytics_code}
     <script type="text/javascript">
         var gaJsHost = (("https:" == document.location.protocol) ? "https://ssl." : "http://www.");

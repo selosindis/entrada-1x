@@ -44,7 +44,11 @@ hr {
 	width: 740px;
 }
 .container {
-	background: #232222;
+	background: #fff;
+}
+
+.left-nav {
+    background: #232222;
 }
 
 /* Table Styles 
@@ -181,9 +185,9 @@ h3 {
 	margin-top: 22px;
 }
 .footer {
-	padding: 15px 40px 15px 20px;
-	margin-left: -20px;
-	background: #f9f7f7;
+    background: #e9e7e7;
+    padding: 20px 0;
+    text-align:center;
 }
 .content-copyright {
 	font-family: 'Roboto', sans-serif;

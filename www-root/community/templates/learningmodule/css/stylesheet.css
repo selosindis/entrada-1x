@@ -1477,3 +1477,37 @@ float: right;
 content: url(../../../../images/plus.gif);
 clear: both;
 }
+
+.pull-right {
+    float: right;
+}
+
+.edit-community-page-btn {
+    background: none repeat scroll 0 0 #59574e;
+    border: medium none;
+    color: #fff;
+    filter: none;
+    padding: 5px 10px;
+    text-shadow: none;
+    border-image: none;
+    border-radius: 4px;
+    border-width: 1px;
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.2) inset, 0 1px 2px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    display: inline-block;
+    font-size: 12px;
+    line-height: 20px;
+    margin-bottom: 0;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.edit-community-page-btn:hover {
+    background: none repeat scroll 0 0 #484640;
+    color: #fff;
+    text-decoration: none;
+}
+
+.edit-community-page-btn:active {
+    color:#fff;
+}

@@ -1,4 +1,9 @@
 jQuery(document).ready(function () {
+    
+    var height = jQuery("#default-community-container").height();
+    jQuery("#default-community-leftnav").height(height);
+    jQuery("#default-community-content").height(height);
+    
     getPreference();
     jQuery("#community-nav-collapse-toggle").on("click", function (e) {
         setPreference();

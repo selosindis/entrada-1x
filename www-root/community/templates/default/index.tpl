@@ -28,12 +28,12 @@
 </head>
 <body>
 {$sys_system_navigator}
-<div class="container">
+<div class="container" id="default-community-container">
 	<div class="row">
-		<div class="span2-5 left-nav">
+		<div class="span2-5" id="default-community-leftnav">
 			{include file="navigation_primary.tpl" site_primary_navigation=$site_primary_navigation}
 		</div>
-		<div class="span9-5 content-container">
+		<div class="span9-5 content-container" id="default-community-content">
 			<div class="row">
 				<div class="span9-5">
 					<div class="header table">

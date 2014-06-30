@@ -44,7 +44,8 @@ hr {
 	width: 740px;
 }
 .container {
-	background: #232222;
+	background: #fff;
+    background: url("../images/default-bg.png");
 }
 
 /* Table Styles 

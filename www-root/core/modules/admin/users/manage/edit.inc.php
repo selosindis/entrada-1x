@@ -1192,7 +1192,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_USERS"))) {
                                                         </ol>
                                                     </td>
                                                 </tr>
-                                            </tfoot>
+                                            </tbody>
                                         </table>
                                     </div>
                                 </div>

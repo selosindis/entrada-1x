@@ -1049,7 +1049,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                     </table>
                 </div>
                 <div class="control-group">
-                    <a class="btn" href="<?php echo ENTRADA_RELATIVE; ?>/admin/events">Cancel</a>
+                    <?php
+                    if ($draft_id) {
+                        $url = ENTRADA_RELATIVE."/admin/events/drafts?section=edit&draft_id=".$draft_id;
+                    } else {
+                        $url = ENTRADA_RELATIVE."/admin/events";
+                    }
+                    ?>
+                    <a class="btn" href="<?php echo $url; ?>">Cancel</a>
+
                     <div class="pull-right">
                         <?php
                         if (isset($is_draft) && $is_draft) {

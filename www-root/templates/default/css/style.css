@@ -30,7 +30,7 @@ h2{
   margin-bottom:5px;
 }
 label{
-  display:inline-block;
+  /*display:inline-block; Matt did this 20140701. Did it break something? It seems odd to me. */
 }
 .alert ul{
   margin-bottom:0;

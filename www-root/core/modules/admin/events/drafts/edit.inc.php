@@ -21,29 +21,24 @@
 
 if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 	exit;
-} else if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
+} elseif ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 		header("Location: ".ENTRADA_URL);
 		exit;
-} else if (!$ENTRADA_ACL->amIAllowed('eventcontent', 'update', false)) {
-	$ERROR++;
-	$ERRORSTR[]	= "Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.";
+} elseif (!$ENTRADA_ACL->amIAllowed('eventcontent', 'update', false)) {
+	add_error("Your account does not have the permissions required to use this feature of this module.<br /><br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
 
 	echo display_error();
 
 	application_log("error", "Group [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["group"]."] and role [".$_SESSION["permissions"][$ENTRADA_USER->getAccessId()]["role"]."] does not have access to this module [".$MODULE."].");
 } else {
-    
 	$draft_id = (int) $_GET["draft_id"];
     $draft = Models_Event_Draft::fetchRowByID($draft_id);
     
-	/**
-	* Load the rich text editor.
-	*/
-	load_rte();
 	// Error Checking
 	switch ($STEP) {
 		case 2 :
-			
+            $PROCESSED["associated_proxy_ids"] = array();
+
 			$i = 0;
             if (isset($_POST["options"]) && !empty($_POST["options"])) {
                 foreach ($_POST["options"] as $option => $value) {
@@ -75,14 +70,16 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 			* Required field "associated_proxy_ids" / Draft Authors (array of proxy ids).
 			* This is actually accomplished after the draft is inserted below.
 			*/
-			if((isset($_POST["associated_proxy_ids"]))) {
+			if ((isset($_POST["associated_proxy_ids"]))) {
 				$associated_proxy_ids = explode(",", $_POST["associated_proxy_ids"]);
-				foreach($associated_proxy_ids as $contact_order => $proxy_id) {
-					if($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
+				foreach ($associated_proxy_ids as $contact_order => $proxy_id) {
+					if ($proxy_id = clean_input($proxy_id, array("trim", "int"))) {
 						$PROCESSED["associated_proxy_ids"][(int) $contact_order] = $proxy_id;
 					}
 				}
-			}
+			} else {
+                add_error("There were no <strong>Draft Authors</strong> provided.");
+            }
 
 			/**
 			* The current draft author must be in the draft author list.
@@ -132,297 +129,276 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 				}
 			}
 		break;
+        default :
+            continue;
+        break;
 	}
 
 	if ($draft && $draft->getStatus() == "open") {
+        $BREADCRUMB[] = array("url" => "", "title" => "Edit ".$draft->getName());
 
-	$BREADCRUMB[]	= array("url" => "", "title" => "Edit ".$draft->getName());
-
-    $options = Models_Event_Draft_Option::fetchAllByDraftID($draft_id);
-    if ($options) {
-        foreach ($options as $option) {
-            $draft_options[$option->getOption()] = true; 
+        $options = Models_Event_Draft_Option::fetchAllByDraftID($draft_id);
+        if ($options) {
+            foreach ($options as $option) {
+                $draft_options[$option->getOption()] = true;
+            }
         }
-    }
-    
-    $current_creators = array();
-    $creators = Models_Event_Draft_Creator::fetchAllByDraftID($draft_id);
-    if (!empty($creators)) {
-        foreach ($creators as $creator) {
-            $PROCESSED["associated_proxy_ids"][] = $creator->getProxyID();
+
+        $current_creators = array();
+        $creators = Models_Event_Draft_Creator::fetchAllByDraftID($draft_id);
+        if (!empty($creators)) {
+            foreach ($creators as $creator) {
+                $PROCESSED["associated_proxy_ids"][] = $creator->getProxyID();
+            }
         }
-    }
 
-	if (!in_array($ENTRADA_USER->getID(), $PROCESSED["associated_proxy_ids"])) {
-		add_notice("Your account is not approved to work on this draft schedule.<br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
-		echo display_notice();
-	} else {
-		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/elementresizer.js\"></script>\n";
-		$HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
-		?>
+        if (!in_array($ENTRADA_USER->getID(), $PROCESSED["associated_proxy_ids"])) {
+            add_notice("Your account is not approved to work on this draft schedule.<br />If you believe you are receiving this message in error please contact <a href=\"mailto:".html_encode($AGENT_CONTACTS["administrator"]["email"])."\">".html_encode($AGENT_CONTACTS["administrator"]["name"])."</a> for assistance.");
+            echo display_notice();
+        } else {
+            $HEAD[] = "<script type=\"text/javascript\" src=\"".ENTRADA_URL."/javascript/AutoCompleteList.js?release=".html_encode(APPLICATION_VERSION)."\"></script>";
+            ?>
+            <h1><?php echo html_encode($draft->getName()); ?></h1>
+            <?php
+            if (has_success()) {
+                fade_element("out", "display-success-box");
+                echo display_success();
+            }
 
-		<form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>/drafts/?section=edit&draft_id=<?php echo $draft_id; ?>" method="post" id="editDraftForm" onsubmit="picklist_select('proxy_id')">
-			<input type="hidden" name="step" value="2" />
-			<table style="width: 100%" cellspacing="0" cellpadding="2" border="0" summary="Editing Draft">
-				<thead>
-					<tr>
-						<td colspan="3">
-							<a name="draft_information_section"></a><h2 id="draft_information_section" title="Draft Information">Draft Information</h2>
-							<?php
-							if ($SUCCESS) {
-								fade_element("out", "display-success-box");
-								echo display_success();
-							}
+            if (has_notice()) {
+                fade_element("out", "display-notice-box", 100, 15000);
+                echo display_notice();
+            }
 
-							if ($NOTICE) {
-								fade_element("out", "display-notice-box", 100, 15000);
-								echo display_notice();
-							}
+            if (has_error()) {
+                echo display_error();
+            }
+            ?>
 
-							if ($ERROR) {
-								echo display_error();
-							}
-							?>
-						</td>
-					</tr>
-				</thead>
-				<tbody id="draft-information">
-					<tr>
-						<td></td>
-						<td><label for="draft_title" class="form-required">Draft Title</label></td>
-						<td><input type="text" id="draft_name" name="draft_name" value="<?php echo html_encode($draft->getName()); ?>" maxlength="64" style="width: 96%" /></td>
-					</tr>
-					<tr>
-						<td></td>
-						<td style="vertical-align: top">
-							<label for="draft_description" class="form-nrequired">Draft Description</label>
-						</td>
-						<td>
-							<textarea id="draft_description" name="draft_description" class="expandable" style="width: 96%;"><?php echo clean_input($draft->getDescription(), array("trim", "encode")); ?></textarea>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">&nbsp;</td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td style="vertical-align: top">
-							<label for="associated_proxy_ids" class="form-required">Draft Authors</label>
-							<div class="content-small" style="margin-top: 15px">
-								<strong>Tip:</strong> Select any other individuals you would like to give access to assigning or modifying this draft.
-							</div>
-						</td>
-						<td style="vertical-align: top">
-							<input type="text" id="author_name" name="fullname" size="30" autocomplete="off" style="width: 203px" />
-							<?php
-							$ONLOAD[] = "author_list = new AutoCompleteList({ type: 'author', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=coordinator', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
-							?>
-							<div class="autocomplete" id="author_name_auto_complete"></div>
-							<input type="hidden" id="associated_author" name="associated_proxy_ids" value="" />
-							<input type="button" class="btn" id="add_associated_author" value="Add" style="vertical-align: middle" />
-							<span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
-							<ul id="author_list" class="menu" style="margin-top: 15px">
-								<?php
-								if (is_array($creators) && !empty($creators)) {
-									
-									foreach ($creators as $creator) {
-										?>
+            <h2 class="collapsable collapsed" title="Draft Information Section">Draft Information</h2>
+            <div id="draft-information-section">
+                <form action="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>/drafts/?section=edit&draft_id=<?php echo $draft_id; ?>" method="post" id="editDraftForm" onSubmit="picklist_select('proxy_id')" class="form-horizontal">
+                    <input type="hidden" name="step" value="2" />
+
+                    <div class="control-group">
+                        <label class="control-label form-required" for="draft_name">Draft Name</label>
+                        <div class="controls">
+                            <input type="text" id="draft_name" name="draft_name" value="<?php echo html_encode($draft->getName()); ?>"  maxlength="255" placeholder="Example: <?php echo date("Y"); ?> Draft Teaching Schedule" class="span10" />
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label form-nrequired" for="draft_description">Optional Description</label>
+                        <div class="controls">
+                            <textarea type="text" name="draft_description" id="draft_description" class="span10 expandable"><?php echo clean_input($draft->getDescription(), array("trim", "encode")); ?></textarea>
+                        </div>
+                    </div>
+
+
+                    <div class="control-group">
+                        <label class="control-label form-required" for="associated_proxy_ids">Draft Authors</label>
+                        <div class="controls">
+                            <input type="text" id="author_name" name="fullname" size="30" autocomplete="off" style="width: 203px" />
+                            <?php
+                            $ONLOAD[] = "author_list = new AutoCompleteList({ type: 'author', url: '". ENTRADA_RELATIVE ."/api/personnel.api.php?type=coordinator', remove_image: '". ENTRADA_RELATIVE ."/images/action-delete.gif'})";
+                            ?>
+                            <div class="autocomplete" id="author_name_auto_complete"></div>
+                            <input type="hidden" id="associated_author" name="associated_proxy_ids" value="" />
+                            <input type="button" class="btn" id="add_associated_author" value="Add" style="vertical-align: middle" />
+                            <span class="content-small">(<strong>Example:</strong> <?php echo html_encode($_SESSION["details"]["lastname"].", ".$_SESSION["details"]["firstname"]); ?>)</span>
+                            <ul id="author_list" class="menu" style="margin-top: 15px">
+                                <?php
+                                if (is_array($creators) && !empty($creators)) {
+                                    foreach ($creators as $creator) {
+                                        ?>
                                         <li class="community" id="author_<?php echo $creator->getProxyID(); ?>" style="cursor: move;"><?php echo $creator->getCreator()->getFullName(); ?><img src="<?php echo ENTRADA_URL; ?>/images/action-delete.gif" onclick="author_list.removeItem('<?php echo $creator->getProxyID(); ?>');" class="list-cancel-image" /></li>
-										<?php
-									}
-								}
-								?>
-							</ul>
-							<input type="hidden" id="author_ref" name="author_ref" value="" />
-							<input type="hidden" id="author_id" name="author_id" value="" />
-						</td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td colspan="2">
-							<div class="content-small" style="margin-top: 15px">
-								<strong>Copy Resources:</strong><br />
-								<span class="content-small">Selecting the following options will copy the content from the previous instance of the event.</span>
-							</div>
-						</td>
-					</tr>
-					<tr>
-						<td>&nbsp;</td>
-						<td style="vertical-align: top" colspan="2">
-							<table width="100%" cellpadding="0" cellspacing="0">
-								<colgroup>
-									<col style="width: 3%" />
-									<col style="width: 3%" />
-									<col style="width: 94%" />
-								</colgroup>
-								<tr>
-									<td>&nbsp;</td>
-									<td><input type="checkbox" <?php echo ($draft_options["files"] ? "checked=\"checked\"" : ""); ?> name="options[files]" /></td>
-									<td>Copy files <span class="content-small">- Excluding podcasts</span></td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><input type="checkbox" <?php echo ($draft_options["links"] ? "checked=\"checked\"" : ""); ?> name="options[links]" /></td>
-									<td>Copy links</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><input type="checkbox" <?php echo ($draft_options["objectives"] ? "checked=\"checked\"" : ""); ?> name="options[objectives]" /></td>
-									<td>Copy objectives</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><input type="checkbox" <?php echo ($draft_options["topics"] ? "checked=\"checked\"" : ""); ?> name="options[topics]" /></td>
-									<td>Copy hot topics</td>
-								</tr>
-								<tr>
-									<td>&nbsp;</td>
-									<td><input type="checkbox" <?php echo ($draft_options["quizzes"] ? "checked=\"checked\"" : ""); ?> name="options[quizzes]" /></td>
-									<td>Copy quizzes</td>
-								</tr>
-							</table>
-						</td>
-					</tr>
-					<tr>
-						<td colspan="3">
-							<div style="float: right; text-align: right">
-								<input type="submit" class="btn btn-primary" value="Save Changes" />
-							</div>
-							<div class="clear"></div>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</form>
-		<?php
-		$draft_events = Models_Event_Draft_Event::fetchAllByDraftID($draft_id);
-		?>
-		<script type="text/javascript">
-			jQuery(function($){
-                $("#import-button").on("click", function() {
-                    $("#csv-form").submit();
-                });
-			});
-		</script>
-		<style type="text/css">
-			#draftEvents_length {padding:5px 4px 0 0;}
-			#draftEvents_filter {-moz-border-radius:10px 10px 0px 0px;-webkit-border-top-left-radius: 10px;-webkit-border-top-right-radius: 10px;border-radius: 10px 10px 0px 0px; border: 1px solid #9D9D9D;border-bottom:none;background-color:#FAFAFA;font-size: 0.9em;padding:3px;}
-			#draftEvents_paginate a {margin:2px 5px;}
-			#import-csv {display:none;}
-		</style>
-		<div style="clear:both;"></div>
-		<h2>Learning Events in Draft</h2>
-		<?php
-		$JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
-		if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
-			?>
-			<div class="row-fluid space-below">
-				<div class="pull-right">
-					<a href="#import-csv" class="btn btn-small btn-success" data-toggle="modal"><i class="icon-plus-sign icon-white"></i> Import CSV</a>
-					<a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add&mode=draft&draft_id=<?php echo $draft_id; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add New Event</a>
-				</div>
-			</div>
-			<?php
-		}
-		?>
-        <div class="modal hide fade" id="import-csv">
-            <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                <h3>Import CSV</h3>
-            </div>
-            <div class="modal-body">
-                <?php echo display_notice("Upon uploading a CSV you will be prompted to confirm the association between column headings and their data points."); ?>
-                <form id="csv-form" action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=csv-import&draft_id=<?php echo $draft_id; ?>" enctype="multipart/form-data" method="POST">
-                    <input type="hidden" name="draft_id" value="<?php echo $draft_id; ?>" />
-                    <input type="file" name="csv_file" />
+                                        <?php
+                                    }
+                                }
+                                ?>
+                            </ul>
+                            <input type="hidden" id="author_ref" name="author_ref" value="" />
+                            <input type="hidden" id="author_id" name="author_id" value="" />
+                        </div>
+                    </div>
+
+                    <div class="control-group">
+                        <label class="control-label form-nrequired">Copying Learning Resources</label>
+                        <div class="controls">
+                            <div class="alert alert-info">
+                                <strong>Did you know:</strong> When you copy learning events forward you can select what learning resources are copied along with each event?
+                            </div>
+
+                            <label class="checkbox">
+                                <input type="checkbox" name="options[files]"<?php echo ($draft_options["files"] ? " checked=\"checked\"" : ""); ?> />
+                                Copy all <strong>attached files</strong>.
+                            </label>
+
+                            <label class="checkbox">
+                                <input type="checkbox" name="options[links]"<?php echo ($draft_options["links"] ? " checked=\"checked\"" : ""); ?> />
+                                Copy all <strong>attached links</strong>.
+                            </label>
+
+                            <label class="checkbox">
+                                <input type="checkbox" name="options[objectives]"<?php echo ($draft_options["objectives"] ? " checked=\"checked\"" : ""); ?> />
+                                Copy all <strong>attached learning objectives</strong>.
+                            </label>
+
+                            <label class="checkbox">
+                                <input type="checkbox" name="options[topics]"<?php echo ($draft_options["topics"] ? " checked=\"checked\"" : ""); ?> />
+                                Copy all <strong>attached hot topics</strong>.
+                            </label>
+
+                            <label class="checkbox">
+                                <input type="checkbox" name="options[quizzes]"<?php echo ($draft_options["quizzes"] ? " checked=\"checked\"" : ""); ?> />
+                                Copy all <strong>attached quizzes</strong>.
+                            </label>
+                        </div>
+                    </div>
+
+                    <input type="submit" class="btn btn-primary pull-right" value="Save Changes" />
                 </form>
             </div>
-            <div class="modal-footer">
-                <a href="#" class="btn">Close</a>
-                <a href="#" class="btn btn-primary" id="import-button">Import</a>
-            </div>
-        </div>
-		<form name="frmSelect" action="<?php echo ENTRADA_URL; ?>/admin/events?section=delete&mode=draft&draft_id=<?php echo $draft_id; ?>" method="post">
-			<table class="table table-striped table-bordered" id="draftEvents" cellspacing="0" cellpadding="1" summary="List of Events" style="margin-bottom:5px;">
-				<colgroup>
-					<col class="modified" />
-					<col class="date-smallest" />
-					<col class="accesses" />
-					<col class="general" />
-					<col class="title" />
-				</colgroup>
-				<thead>
-					<tr>
-						<th class="modified" width="5%">&nbsp;</th>
-						<th class="date-smallest" width="12%">Date</th>
-						<th class="accesses" width="7%">Time</th>
-						<th class="general">Duration</th>
-						<th class="title">Event Title</th>
-					</tr>
-				</thead>
-				<?php if ($ENTRADA_ACL->amIAllowed("event", "delete", false) or $ENTRADA_ACL->amIAllowed("event", "create", false)) : ?>
-				<?php endif; ?>
-				<tbody>
-				<?php
 
-				$count_modified = 0;
-                if (!empty($draft_events)) {
-                    foreach ($draft_events as $draft_event) {
-                        $url = "";
-                        $accessible = true;
+            <?php
+            $draft_events = Models_Event_Draft_Event::fetchAllByDraftID($draft_id);
+            ?>
+            <script type="text/javascript">
+                jQuery(function($){
+                    $("#import-button").on("click", function() {
+                        $("#csv-form").submit();
+                    });
+                });
+            </script>
+            <style type="text/css">
+                #draftEvents_length {padding:5px 4px 0 0;}
+                #draftEvents_filter {-moz-border-radius:10px 10px 0px 0px;-webkit-border-top-left-radius: 10px;-webkit-border-top-right-radius: 10px;border-radius: 10px 10px 0px 0px; border: 1px solid #9D9D9D;border-bottom:none;background-color:#FAFAFA;font-size: 0.9em;padding:3px;}
+                #draftEvents_paginate a {margin:2px 5px;}
+                #import-csv {display:none;}
+            </style>
 
-                        $url = ENTRADA_URL."/admin/events?section=edit&mode=draft&id=".$draft_event->getDeventID();
-
-                        if ((($draft_event->getReleaseDate()) && ($draft_event->getReleaseDate() > time())) || (($draft_event->getReleaseUntil()) && ($draft_event->getReleaseUntil() < time()))) {
-                            $accessible = false;
-                        }
-
-                        echo "<tr id=\"event-".$draft_event->getEventID()."\" rel=\"".$draft_event->getDeventID()."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
-                        echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$draft_event->getDeventID()."\" /></td>\n";
-                        echo "	<td class=\"date-smallest\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\" class=\"date\">" : "").date("Y-m-d", $draft_event->getEventStart()).(($url) ? "</a>" : "")."</td>\n";
-                        echo "	<td class=\"accesses\">".(($url) ? "<a href=\"".$url."\" title=\"Event Time\" class=\"time\">" : "").date("H:i", $draft_event->getEventStart()).(($url) ? "</a>" : "")."</td>\n";
-                        echo "	<td class=\"general\">".(($url) ? "<a href=\"".$url."\" title=\"Duration\">" : "").$draft_event->getEventDuration().(($url) ? " minutes</a>" : "")."</td>\n";
-                        echo "	<td class=\"title\">".(($url) ? "<a href=\"".$url."\" title=\"Event Title: ".html_encode($draft_event->getEventTitle())."\" class=\"title\">" : "").html_encode($draft_event->getEventTitle()).(($url) ? "</a>" : "")."</td>\n";
-                        echo "</tr>\n";
-                    }
-                } else {
+            <h2 class="collapsable" title="Learning Events Section">Learning Events in <?php echo html_encode($draft->getName()); ?></h2>
+            <div id="learning-events-section">
+                <?php
+                $JQUERY[] = "<script type=\"text/javascript\" src=\"".ENTRADA_RELATIVE."/javascript/jquery/jquery.dataTables.min.js?release=".html_encode(APPLICATION_VERSION)."\"></script>\n";
+                if ($ENTRADA_ACL->amIAllowed("event", "create", false)) {
                     ?>
-                    <tr>
-                        <td colspan="5">There are currently no events in this draft. Please use the Import CSV button or the Add New Event button above to create some.</td>
-                    </tr>
+                    <div class="row-fluid space-below">
+                        <div class="pull-right">
+                            <a href="#import-csv" class="btn btn-small btn-success" data-toggle="modal"><i class="icon-plus-sign icon-white"></i> Import CSV</a>
+                            <a href="<?php echo ENTRADA_URL; ?>/admin/<?php echo $MODULE; ?>?section=add&mode=draft&draft_id=<?php echo $draft_id; ?>" class="btn btn-small btn-success"><i class="icon-plus-sign icon-white"></i> Add New Event</a>
+                        </div>
+                    </div>
                     <?php
                 }
-				?>
-				</tbody>
-			</table>
-			<table width="100%">
-				<tr>
-					<td></td>
-					<td style="padding-top: 10px">
-						<?php
-						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
-							?>
-							<input type="button" class="btn btn-danger" onclick="document.frmSelect.submit()" value="Delete Selected" />
-							<?php
-						}
-						?>
-					</td>
-					<td style="padding-top: 10px; text-align: right">
-						<input class="btn" type="button" value="Calendar Preview" id="calendar_preview" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/drafts?section=preview&draft_id=".$draft_id; ?>';" />
-						<?php
-						if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
-							?>
-							<input class="btn btn-primary" type="button" value="Publish Draft" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/drafts?section=status&action=approve&draft_id=".$draft_id; ?>';" />
-							<?php
-						}
-						?>
-					</td>
-				</tr>
-			</table>
-		</form>
-	<?php }
+                ?>
+                <div class="modal hide fade" id="import-csv">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                        <h3>Import CSV</h3>
+                    </div>
+                    <div class="modal-body">
+                        <?php echo display_notice("Upon uploading a CSV you will be prompted to confirm the association between column headings and their data points."); ?>
+                        <form id="csv-form" action="<?php echo ENTRADA_URL; ?>/admin/events/drafts?section=csv-import&draft_id=<?php echo $draft_id; ?>" enctype="multipart/form-data" method="POST">
+                            <input type="hidden" name="draft_id" value="<?php echo $draft_id; ?>" />
+                            <input type="file" name="csv_file" />
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button data-dismiss="modal" class="btn">Close</button>
+                        <a href="#" class="btn btn-primary" id="import-button">Import</a>
+                    </div>
+                </div>
+                <?php
+                $count_modified = 0;
+                if (!empty($draft_events)) {
+                    ?>
+                    <form name="frmSelect" id="draft_events_form" action="<?php echo ENTRADA_URL; ?>/admin/events?section=delete&mode=draft&draft_id=<?php echo $draft_id; ?>" method="post">
+                        <table class="table table-striped table-bordered" id="draftEvents" cellspacing="0" cellpadding="1" summary="List of Events" style="margin-bottom:5px;">
+                            <colgroup>
+                                <col class="modified" />
+                                <col class="date-smallest" />
+                                <col class="accesses" />
+                                <col class="general" />
+                                <col class="title" />
+                            </colgroup>
+                            <thead>
+                            <tr>
+                                <th class="modified" width="5%"><input type="checkbox" id="check_all" /></th>
+                                <th class="date-smallest" width="12%">Date</th>
+                                <th class="accesses" width="7%">Time</th>
+                                <th class="general">Duration</th>
+                                <th class="title">Event Title</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <?php
+                            foreach ($draft_events as $draft_event) {
+                                $url = "";
+                                $accessible = true;
+
+                                $url = ENTRADA_URL."/admin/events?section=edit&mode=draft&id=".$draft_event->getDeventID();
+
+                                if ((($draft_event->getReleaseDate()) && ($draft_event->getReleaseDate() > time())) || (($draft_event->getReleaseUntil()) && ($draft_event->getReleaseUntil() < time()))) {
+                                    $accessible = false;
+                                }
+
+                                echo "<tr id=\"event-".$draft_event->getEventID()."\" rel=\"".$draft_event->getDeventID()."\" class=\"event".((!$url) ? " np" : ((!$accessible) ? " na" : ""))."\">\n";
+                                echo "	<td class=\"modified\"><input type=\"checkbox\" name=\"checked[]\" value=\"".$draft_event->getDeventID()."\" /></td>\n";
+                                echo "	<td class=\"date-smallest\">".(($url) ? "<a href=\"".$url."\" title=\"Event Date\" class=\"date\">" : "").date("Y-m-d", $draft_event->getEventStart()).(($url) ? "</a>" : "")."</td>\n";
+                                echo "	<td class=\"accesses\">".(($url) ? "<a href=\"".$url."\" title=\"Event Time\" class=\"time\">" : "").date("H:i", $draft_event->getEventStart()).(($url) ? "</a>" : "")."</td>\n";
+                                echo "	<td class=\"general\">".(($url) ? "<a href=\"".$url."\" title=\"Duration\">" : "").$draft_event->getEventDuration().(($url) ? " minutes</a>" : "")."</td>\n";
+                                echo "	<td class=\"title\">".(($url) ? "<a href=\"".$url."\" title=\"Event Title: ".html_encode($draft_event->getEventTitle())."\" class=\"title\">" : "").html_encode($draft_event->getEventTitle()).(($url) ? "</a>" : "")."</td>\n";
+                                echo "</tr>\n";
+                            }
+                            ?>
+                            </tbody>
+                        </table>
+                        <table width="100%">
+                            <tr>
+                                <td></td>
+                                <td style="padding-top: 10px">
+                                    <?php
+                                    if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
+                                        ?>
+                                        <input type="button" class="btn btn-danger" onclick="document.frmSelect.submit()" value="Delete Selected" />
+                                    <?php
+                                    }
+                                    ?>
+                                </td>
+                                <td style="padding-top: 10px; text-align: right">
+                                    <input class="btn" type="button" value="Calendar Preview" id="calendar_preview" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/drafts?section=preview&draft_id=".$draft_id; ?>';" />
+                                    <?php
+                                    if ($ENTRADA_ACL->amIAllowed("event", "delete", false)) {
+                                        ?>
+                                        <input class="btn btn-primary" type="button" value="Publish Draft" onclick="window.location='<?php echo ENTRADA_URL . "/admin/events/drafts?section=status&action=approve&draft_id=".$draft_id; ?>';" />
+                                    <?php
+                                    }
+                                    ?>
+                                </td>
+                            </tr>
+                        </table>
+                    </form>
+                    <script>
+                        jQuery('#check_all').on('click', function() {
+                            jQuery('#draft_events_form input[type=checkbox]').prop('checked', this.checked);
+                        });
+                    </script>
+                    <?php
+                } else {
+                    ?>
+                    <div class="alert alert-info">
+                        <strong>There are currently no Learning Events in this draft.</strong>
+                        <p>To add Learning Events you can click the <strong>Import CSV</strong> or <strong>Add New Event</strong> buttons to begin.</p>
+                    </div>
+                    <?php
+                }
+                ?>
+            </div>
+            <?php
+        }
 	} else {
 		add_error("This draft has been approved and can no longer be edited.");
 		echo display_error();
 	}
-} ?>
+}

@@ -94,11 +94,11 @@ if ((@is_dir(CACHE_DIRECTORY)) && (@is_writable(CACHE_DIRECTORY))) {
 								if (empty($event["event_children"])) {
 									$event["event_children"] = 0;
 								}
-								echo $event["parent_id"]."-";
+
 								if (isset($event["parent_id"]) && in_array($event["parent_id"], $old_events[$event["parent_id"]])) {
 									$event["parent_id"] = $old_events[$event["parent_id"]]["new_event_id"];
 								}
-								echo $event["parent_id"]."\n";
+
 								if ($db->AutoExecute("`events`", $event, 'INSERT')) {
 									$event_id = $db->Insert_ID();
 

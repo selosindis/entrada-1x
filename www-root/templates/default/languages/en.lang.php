@@ -57,6 +57,8 @@ return array (
     "global_button_save" => "Save",
     "global_button_cancel" => "Cancel",
     "global_button_proceed" => "Proceed",
+    "login" => "Login",
+    "logout" => "Logout",
 
 	"global_feedback_widget" => array(
 		"global" => array(

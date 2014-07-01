@@ -1,7 +1,7 @@
 <section>
 	<h1>Entrada<span class="corner"></span></h1>
 	<ul>
-		{if $is_logged_in && $user_is_member}
+		{if $is_logged_in}
         <li><a href="{$sys_website_url}/dashboard">Dashboard</a></li>
         <li><a href="{$sys_website_url}/communities">Communities</a></li>
         <li><a href="{$sys_website_url}/courses">Courses</a></li>

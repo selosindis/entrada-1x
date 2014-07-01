@@ -7011,6 +7011,44 @@ function communities_polls_votes_cast_by_member($cpolls_id = 0, $proxy_id = 0) {
 }
 
 /**
+ * This function takes the HTML from the navigator_tabs() function, and transforms it so it can be used
+ * as sidebar navigation in Bootstrap enabled Community Templates.
+ * @param string $navigator_tabs
+ * @return mixed|string
+ */
+function communities_entrada_navigation($navigator_tabs = "") {
+    global $translate;
+
+    /*
+     * Transform a bit of the navigator_tabs() HTML.
+     */
+    $search = array(
+        "<ul class=\"nav\">",
+        "class=\"dropdown\"",
+        " <b class=\"caret\"></b>",
+    );
+    $replace = array(
+        "<ul class=\"nav nav-list\">",
+        "class=\"dropdown-submenu pull-left\"",
+        "",
+    );
+
+    $navigator_tabs = str_ireplace($search, $replace, $navigator_tabs);
+
+    /*
+     * Remove the last </ul>.
+     */
+    $navigator_tabs = substr($navigator_tabs, 0, -5);
+
+    /*
+     * Add a log out link.
+     */
+    $navigator_tabs .= "<li><a href=\"".ENTRADA_RELATIVE."?action=logout\">".$translate->_("logout")."</li></ul>";
+
+    return $navigator_tabs;
+}
+
+/**
  * These are functions related to the scorm module.
  */
 

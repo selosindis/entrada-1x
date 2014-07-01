@@ -937,6 +937,7 @@ if ($COMMUNITY_URL) {
                 $smarty->assign("protocol", (isset($_SERVER["HTTPS"]) ? "https" : "http"));
 
                 $smarty->assign("navigator_tabs", $navigator_tabs);
+                $smarty->assign("entrada_navigation", communities_entrada_navigation($navigator_tabs));
 
                 $smarty->assign("application_name", APPLICATION_NAME);
                 $smarty->assign("application_version", APPLICATION_VERSION);

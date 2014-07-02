@@ -190,9 +190,19 @@ class Models_Course_Objective {
         return $output;
     }
     
-    public static function fetchAllByCourseID($course_id) {
+    public static function fetchAllByCourseID($course_id, $objective_type = NULL) {
         $self = new self();
-        return $self->fetchAll(array("course_id" => $course_id, "active" => "1"));
+        
+        $params = array(
+            "course_id" => $course_id, 
+            "active" => "1"
+        );
+        
+        if (!is_null($objective_type) && ($objective_type == "course" || $objective_type == "event")) {
+            $params["objective_type"] = $objective_type; 
+        }
+        
+        return $self->fetchAll($params);
     }
     
     public static function fetchRowByID($cobjective_id) {

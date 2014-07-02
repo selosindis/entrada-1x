@@ -494,14 +494,13 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							}
 
                             $all_objectives = array_merge($PRIMARY_OBJECTIVES, $SECONDARY_OBJECTIVES, $TERTIARY_OBJECTIVES);
-                            $active_objectives = Models_Course_Objective::fetchAllByCourseID($COURSE_ID);
+                            $active_objectives = Models_Course_Objective::fetchAllByCourseID($COURSE_ID, "course");
                             if ($active_objectives) {
                                 // deactivate the objectives that have been removed.
                                 foreach ($active_objectives as $objective) {
                                     if (!in_array($objective->getObjectiveID(), $all_objectives)) {
                                         $objective->fromArray(array("active" => "0", "objective_finish" => time()))->update();
                                     }
-                                    unset($all_objectives[array_search($objective->getObjectiveID(), $all_objectives)]);
                                 }
                             }
                             
@@ -1381,7 +1380,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                                 ON a.`objective_parent` = c.`objective_id`
                                                 WHERE a.`objective_active` = '1'
                                                 AND c.`objective_active` = '1'
-                                                AND b.`objective_active` = '1'
+                                                AND b.`active` = '1'
                                                 GROUP BY a.`objective_id`
                                                 ORDER BY b.`importance` ASC";
                                     $mapped_objectives = $db->GetAll($query);

@@ -73,7 +73,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 							ORDER BY a.`objective_order` ASC";
 				$result = $db->GetRow($query);
 				if ($result) {
-					$clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
+                    $clinical_presentations[$objective_id] = $clinical_presentations_list[$objective_id];
 				}
 			}
 		}
@@ -181,7 +181,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 			$posted_objectives = array();
 
 			$PRIMARY_OBJECTIVES = array();
-			if ((isset($_POST["primary_objectives"])) && ($objectives = $_POST["primary_objectives"]) && (count($objectives))) {
+            if ((isset($_POST["primary_objectives"])) && ($objectives = $_POST["primary_objectives"]) && (count($objectives))) {
 				foreach ($objectives as $objective_key => $objective) {
 					$PRIMARY_OBJECTIVES[] = clean_input($objective, "int");
                     $objective_importance[$objective] = "1";
@@ -332,7 +332,8 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						 */
 						if ((is_array($clinical_presentations)) && (count($clinical_presentations))) {
 							foreach ($clinical_presentations as $objective_id => $presentation_name) {
-								if (!$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_type" => "event", "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
+                                $objective_type = "event";
+                                if (!$db->AutoExecute("course_objectives", array("course_id" => $COURSE_ID, "objective_id" => $objective_id, "objective_type" => $objective_type, "updated_date" => time(), "updated_by" => $ENTRADA_USER->getID()), "INSERT")) {
 									add_error("There was an error when trying to insert a &quot;clinical presentation&quot; into the system. System administrators have been informed of this error; please try again later.");
 
 									application_log("error", "Unable to insert a new clinical presentation to the database when adding a new event. Database said: ".$db->ErrorMsg());

@@ -52,10 +52,13 @@ select{
 .nav-tabs > li > a {
   text-align:center;
 }
+.table th, .table td.borderless,.borderless,.noborder {
+border:none;
+}
 .well{
   background-color:#FAFAFA;
   border:1px solid #DDD;
-   border: 1px solid rgba(0, 0, 0, 0.075);
+  border: 1px solid rgba(0, 0, 0, 0.075);
   -moz-box-shadow:0 2px 0 rgba(0, 0, 0, 0.03);
   -webkit-box-shadow:0 2px 0 rgba(0, 0, 0, 0.03);
   box-shadow:0 2px 0 rgba(0, 0, 0, 0.03);

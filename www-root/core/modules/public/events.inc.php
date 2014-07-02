@@ -633,6 +633,7 @@ if (!defined("PARENT_INCLUDED")) {
                             </table>
                         </div>
                     </div>
+
                     <div>
                         <?php
                         $query = "  SELECT ek.`keyword_id`, d.`descriptor_name` 
@@ -661,6 +662,7 @@ if (!defined("PARENT_INCLUDED")) {
                         }
                         ?>
                     </div>
+
                     <div>
                         <?php
                         $query = "SELECT b.`objective_id`, b.`objective_name`
@@ -765,78 +767,78 @@ if (!defined("PARENT_INCLUDED")) {
 									echo "</div>\n";
 								}
 							}
-						}
-						$query = "	SELECT a.*, COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description`, COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`,
-								b.`importance`,c.`objective_details`, COALESCE(c.`eobjective_id`,0) AS `mapped`,
-								COALESCE(b.`cobjective_id`,0) AS `mapped_to_course`
-								FROM `global_lu_objectives` a
-								LEFT JOIN `course_objectives` b
-								ON a.`objective_id` = b.`objective_id`
-								AND b.`course_id` = ".$db->qstr($COURSE_ID)."
-                                AND b.`active` = '1'
-								LEFT JOIN `event_objectives` c
-								ON c.`objective_id` = a.`objective_id`
-								AND c.`event_id` = ".$db->qstr($EVENT_ID)."
-								WHERE a.`objective_active` = '1'
-								AND (c.`event_id` = ".$db->qstr($EVENT_ID)." OR b.`course_id` = ".$db->qstr($COURSE_ID).")
-								GROUP BY a.`objective_id`
-								ORDER BY a.`objective_id` ASC";
-						$mapped_objectives = $db->GetAll($query);
 
-						$explicit_event_objectives = false;
-						if ($mapped_objectives) {
-							foreach ($mapped_objectives as $objective) {
-								//if its mapped to the event, but not the course, then it belongs in the event objective list
-								if ($objective["mapped"] && !$objective["mapped_to_course"]) {
-									if (!event_objective_parent_mapped_course($objective["objective_id"],$EVENT_ID)) {
-										$explicit_event_objectives[] = $objective;
-									}
-								}
-							}
-						}
-						?>
-						<div class="section-holder">
-							<div id="mapped_objectives">
-								<div id="event-list-wrapper" <?php echo ($explicit_event_objectives)?'':' style="display:none;"';?>>
-									<a name="event-objective-list"></a>
-									<h2 id="event-toggle"  title="Event Objective List" class="list-heading">Event Specific Objectives</h2>
-									<div id="event-objective-list">
-										<ul class="objective-list mapped-list" id="mapped_event_objectives" data-importance="event">
-											<?php
-											if ($explicit_event_objectives) {
-												foreach ($explicit_event_objectives as $objective) {
-													$title = ($objective["objective_code"] ? $objective["objective_code"] . ': ' . $objective["objective_name"] : $objective["objective_name"]);
-													?>
-													<li class = "mapped-objective"
-														id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
-														data-id = "<?php echo $objective["objective_id"]; ?>"
-														data-title="<?php echo $title;?>"
-														data-description="<?php echo htmlentities($objective["objective_description"]);?>"
-														data-mapped="<?php echo $objective["mapped_to_course"]?1:0;?>">
-														<strong><?php echo $title; ?></strong>
-														<div class="objective-description">
-															<?php
-															$set = fetch_objective_set_for_objective_id($objective["objective_id"]);
-															if ($set) {
-																echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
-															}
+                            $query = "	SELECT a.*, COALESCE(b.`objective_details`,a.`objective_description`) AS `objective_description`, COALESCE(b.`objective_type`,c.`objective_type`) AS `objective_type`,
+                                    b.`importance`,c.`objective_details`, COALESCE(c.`eobjective_id`,0) AS `mapped`,
+                                    COALESCE(b.`cobjective_id`,0) AS `mapped_to_course`
+                                    FROM `global_lu_objectives` a
+                                    LEFT JOIN `course_objectives` b
+                                    ON a.`objective_id` = b.`objective_id`
+                                    AND b.`course_id` = ".$db->qstr($COURSE_ID)."
+                                    AND b.`active` = '1'
+                                    LEFT JOIN `event_objectives` c
+                                    ON c.`objective_id` = a.`objective_id`
+                                    AND c.`event_id` = ".$db->qstr($EVENT_ID)."
+                                    WHERE a.`objective_active` = '1'
+                                    AND (c.`event_id` = ".$db->qstr($EVENT_ID)." OR b.`course_id` = ".$db->qstr($COURSE_ID).")
+                                    GROUP BY a.`objective_id`
+                                    ORDER BY a.`objective_id` ASC";
+                            $mapped_objectives = $db->GetAll($query);
 
-															echo $objective["objective_description"];
-															?>
-														</div>
-													</li>
-													<?php
-												}
-											}
-											?>
-										</ul>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-						<?php
-                        $query = "SELECT a.`topic_id`,a.`topic_name`, e.`topic_coverage`, e.`topic_time`
+                            $explicit_event_objectives = false;
+                            if ($mapped_objectives) {
+                                foreach ($mapped_objectives as $objective) {
+                                    //if its mapped to the event, but not the course, then it belongs in the event objective list
+                                    if ($objective["mapped"] && !$objective["mapped_to_course"]) {
+                                        if (!event_objective_parent_mapped_course($objective["objective_id"],$EVENT_ID)) {
+                                            $explicit_event_objectives[] = $objective;
+                                        }
+                                    }
+                                }
+                            }
+                            ?>
+                            <div class="section-holder">
+                                <div id="mapped_objectives">
+                                    <div id="event-list-wrapper" <?php echo ($explicit_event_objectives)?'':' style="display:none;"';?>>
+                                        <a name="event-objective-list"></a>
+                                        <h2 id="event-toggle"  title="Event Objective List" class="list-heading">Event Specific Objectives</h2>
+                                        <div id="event-objective-list">
+                                            <ul class="objective-list mapped-list" id="mapped_event_objectives" data-importance="event">
+                                                <?php
+                                                if ($explicit_event_objectives) {
+                                                    foreach ($explicit_event_objectives as $objective) {
+                                                        $title = ($objective["objective_code"] ? $objective["objective_code"] . ': ' . $objective["objective_name"] : $objective["objective_name"]);
+                                                        ?>
+                                                        <li class = "mapped-objective"
+                                                            id = "mapped_objective_<?php echo $objective["objective_id"]; ?>"
+                                                            data-id = "<?php echo $objective["objective_id"]; ?>"
+                                                            data-title="<?php echo $title;?>"
+                                                            data-description="<?php echo htmlentities($objective["objective_description"]);?>"
+                                                            data-mapped="<?php echo $objective["mapped_to_course"]?1:0;?>">
+                                                            <strong><?php echo $title; ?></strong>
+                                                            <div class="objective-description">
+                                                                <?php
+                                                                $set = fetch_objective_set_for_objective_id($objective["objective_id"]);
+                                                                if ($set) {
+                                                                    echo "From the Objective Set: <strong>".$set["objective_name"]."</strong><br/>";
+                                                                }
+
+                                                                echo $objective["objective_description"];
+                                                                ?>
+                                                            </div>
+                                                        </li>
+                                                        <?php
+                                                    }
+                                                }
+                                                ?>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <?php
+                            $query = "SELECT a.`topic_id`,a.`topic_name`, e.`topic_coverage`, e.`topic_time`
                                     FROM `events_lu_topics` AS a
                                     LEFT JOIN `topic_organisation` AS b
                                     ON a.`topic_id` = b.`topic_id`
@@ -848,27 +850,27 @@ if (!defined("PARENT_INCLUDED")) {
                                     ON d.`event_id` = e.`event_id`
                                     AND a.`topic_id` = e.`topic_id`
                                     WHERE d.`event_id` = ".$db->qstr($EVENT_ID);
-                        $topic_results = $db->GetAll($query);
-                        if ($topic_results) {
-                            ?>
-                            <table style="width: 100%" cellspacing="0">
-                                <colgroup>
-                                    <col style="width: 80%" />
-                                    <col style="width: 10%" />
-                                    <col style="width: 10%" />
-                                </colgroup>
-                                <tr>
-                                    <td colspan="3">
-                                        <h2>Event Topics</h2>
-                                        <div class="content-small" style="padding-bottom: 10px">These topics will be covered in this learning event.</div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
-                                    <td><span style="font-weight: bold; color: #003366;">Major</span></td>
-                                    <td><span style="font-weight: bold; color: #003366;">Minor</span></td>
-                                </tr>
-                                <?php
+                            $topic_results = $db->GetAll($query);
+                            if ($topic_results) {
+                                ?>
+                                <table style="width: 100%" cellspacing="0">
+                                    <colgroup>
+                                        <col style="width: 80%" />
+                                        <col style="width: 10%" />
+                                        <col style="width: 10%" />
+                                    </colgroup>
+                                    <tr>
+                                        <td colspan="3">
+                                            <h2>Event Topics</h2>
+                                            <div class="content-small" style="padding-bottom: 10px">These topics will be covered in this learning event.</div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><span style="font-weight: bold; color: #003366;">Hot Topic</span></td>
+                                        <td><span style="font-weight: bold; color: #003366;">Major</span></td>
+                                        <td><span style="font-weight: bold; color: #003366;">Minor</span></td>
+                                    </tr>
+                                    <?php
                                     foreach ($topic_results as $topic_result) {
                                         echo "<tr>\n";
                                         echo "	<td>".html_encode($topic_result["topic_name"])."</td>\n";
@@ -877,11 +879,16 @@ if (!defined("PARENT_INCLUDED")) {
                                         echo "</tr>\n";
                                     }
                                     echo "<tr><td colspan=\"2\">&nbsp;</td></tr>";
-                                ?>
-                            </table>
-                            <?php
+                                    ?>
+                                </table>
+                                <?php
+                            }
                         }
+                        ?>
+					</div>
 
+                    <div>
+                        <?php
                         echo "<a name=\"event-resources-section\"></a>";
                         echo "<h2 title=\"Event Resources Section\">Event Resources</h2>\n";
                         echo "<div id=\"event-resources-section\">\n";

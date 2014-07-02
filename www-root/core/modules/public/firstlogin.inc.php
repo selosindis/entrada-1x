@@ -164,21 +164,21 @@ if (!defined("PARENT_INCLUDED")) {
                                             <tr>
                                                 <td style="vertical-align: top"><input type="radio" id="privacy_level_3" name="privacy_level" value="3" /></td>
                                                 <td style="vertical-align: top">
-                                                    <label for="privacy_level_3"><strong>Complete Profile</strong>: show the information I choose to provide.</label><br />
+                                                    <label for="privacy_level_3"><strong>Complete Profile</strong>: show the information I choose to provide.</label>
                                                     <span class="content-small">This means that normal logged in users will be able to view any information you provide in the <strong>My Profile</strong> section. You can provide as much or as little information as you would like; however, whatever you provide will be displayed.</span>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td style="vertical-align: top"><input type="radio" id="privacy_level_2" name="privacy_level" value="2" checked="checked" /></td>
                                                 <td style="vertical-align: top">
-                                                    <label for="privacy_level_2"><strong>Typical Profile</strong>: show basic information about me.</label><br />
+                                                    <label for="privacy_level_2"><strong>Typical Profile</strong>: show basic information about me.</label>
                                                     <span class="content-small">This means that normal logged in users will only be able to view your name, email address, role, official photo and uploaded photo if you have added one, regardless of how much information you provide in the <strong>My Profile</strong> section.</span>
                                                 </td>
                                             </tr>
                                             <tr>
                                                 <td style="vertical-align: top"><input type="radio" id="privacy_level_1" name="privacy_level" value="1" /></td>
                                                 <td style="vertical-align: top">
-                                                    <label for="privacy_level_1"><strong>Minimal Profile</strong>: show minimal information about me.</label><br />
+                                                    <label for="privacy_level_1"><strong>Minimal Profile</strong>: show minimal information about me.</label>
                                                     <span class="content-small">This means that normal logged in users will only be able to view your name and role. In other words, people will not be able to get your e-mail address or other contact information.</span>
                                                 </td>
                                             </tr>

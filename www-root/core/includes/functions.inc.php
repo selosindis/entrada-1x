@@ -7043,8 +7043,8 @@ function communities_entrada_navigation($navigator_tabs = "") {
     /*
      * Add a log out link.
      */
-    $navigator_tabs .= "<li><a href=\"".ENTRADA_RELATIVE."?action=logout\">".$translate->_("logout")."</li></ul>";
-
+    $navigator_tabs .= "<li><a href=\"".ENTRADA_RELATIVE."?action=logout\">".$translate->_("logout")."</a></li></ul>";
+    
     return $navigator_tabs;
 }
 

@@ -52,7 +52,7 @@ select{
 .nav-tabs > li > a {
   text-align:center;
 }
-.table th, .table td.borderless,.borderless,.noborder {
+.table th.borderless, .table td.borderless,.borderless,.noborder {
 border:none;
 }
 .well{

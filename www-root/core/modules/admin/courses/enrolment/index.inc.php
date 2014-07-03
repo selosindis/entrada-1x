@@ -436,7 +436,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
         <?php
         } else { ?>
             <div class="alert alert-warning">
-                This course currently has no curriculum periods associated with it.
+                This course currently has no curriculum periods associated with it. This is because there are no Active Periods setup in the Course Details section.
             </div>
         <?php    
         }

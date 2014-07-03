@@ -4836,11 +4836,18 @@ span.minutes {
 }
 
 .course-enrolment-button {
-    padding:7px 16px
+    padding:7px 16px;
 }
 
 .course-enrolment-dropdown {
     padding:7px 10px
+}
+
+#course-enrolment-search-message {
+    color: #777;
+    font-size: 18px;
+    margin-top: 55px;
+    text-align: center;
 }
 
 .icon-loading {

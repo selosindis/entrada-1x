@@ -161,7 +161,9 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSE_ENROLMENT"))) {
                                     break;
                                 }   
                             } else {
-                                display_notice(jsonResponse.data, "#enrolment-container", "append");
+                                var message_p = document.createElement("p");
+                                jQuery(message_p).html(jsonResponse.data).attr({id: "course-enrolment-search-message"});
+                                jQuery("#enrolment-container").append(message_p);
                             }
                         }
                     });

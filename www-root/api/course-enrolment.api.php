@@ -165,7 +165,7 @@ if ((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
                                     }
                                     echo json_encode(array("status" => "success", "data" => $enrolment));
                                 } else {
-                                    echo json_encode(array("status" => "error", "data" => array("No enrolments found.")));
+                                    echo json_encode(array("status" => "error", "data" => "Sorry, unable to find any learners by that name. Please try your search again."));
                                 }
                             } else {
                                echo json_encode(array("status" => "error", "data" => array("No course found with the provided ID."))); 

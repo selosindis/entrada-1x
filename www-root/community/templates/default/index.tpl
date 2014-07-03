@@ -82,6 +82,9 @@
                         {if $is_logged_in && $user_is_member}
                             {include file="sidebar-blocks/community_block.tpl"}
                         {/if}
+                        {if $allow_membership}
+                            {include file="sidebar-blocks/community_join_block.tpl"}
+                        {/if}
                     </div>
 				</div>
 			</div>

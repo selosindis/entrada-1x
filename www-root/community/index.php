@@ -70,6 +70,7 @@ $COMMUNITY_MEMBER = false;			// Users are not members by defalt.
 $COMMUNITY_ADMIN = false;			// Users are not community administrators by default.
 
 $PROCEED_TO = ((isset($_GET["url"])) ? trim($_GET["url"]) : ((isset($_SERVER["REQUEST_URI"])) ? trim($_SERVER["REQUEST_URI"]) : false));
+$ALLOW_MEMBERSHIP = false;
 
 /**
  * For backwards compatibility so pre-1.0 links still work properly.
@@ -906,6 +907,7 @@ if ($COMMUNITY_URL) {
 
                 $smarty->assign("sys_profile_photo", $sys_profile_photo);
                 $smarty->assign("sys_profile_evaluations", $sys_profile_evaluations);
+                $smarty->assign("allow_membership", $ALLOW_MEMBERSHIP);
 
                 $smarty->assign("is_sequential_nav", $is_sequential_nav);
 

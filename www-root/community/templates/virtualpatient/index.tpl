@@ -55,13 +55,16 @@
 			{$page_content}
 		</section>
 		<aside class="span-5 last right-nav collapsed">
-				{if $is_logged_in && $user_is_admin}
-					{include file="sidebar-blocks/admin_block.tpl"}
-				{/if}
-				{include file="sidebar-blocks/entrada_block.tpl"}
-				{if $is_logged_in && $user_is_member}
-					{include file="sidebar-blocks/community_block.tpl"}
-				{/if}
+            {if $is_logged_in && $user_is_admin}
+                {include file="sidebar-blocks/admin_block.tpl"}
+            {/if}
+            {include file="sidebar-blocks/entrada_block.tpl"}
+            {if $is_logged_in && $user_is_member}
+                {include file="sidebar-blocks/community_block.tpl"}
+            {/if}
+            {if $allow_membership}
+                {include file="sidebar-blocks/community_join_block.tpl"}
+            {/if}
 		</aside>
 		{if $is_sequential_nav}
 			<section style="text-align:right;" class="span-23">

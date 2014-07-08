@@ -2909,6 +2909,10 @@ div.inner-content-box #filter-list-resize > div {
 margin: 2px 0px 10px 3px;
 }
 
+#cke_140_textarea {
+height:140px;
+}
+
 td.sidebar-head,td.inner-content-box-head,div.inner-content-box-head {
 background-color:#f5f5f5;
 background-image:linear-gradient(to bottom, #ffffff, #e6e6e6);

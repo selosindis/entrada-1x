@@ -4386,9 +4386,10 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
                     array("name" => "clipboard", "groups" => array("mode", "clipboard", "spellchecker")),
                     array("name" => "links"),
                     array("name" => "insert", "groups" => array("mediaembed", "insert")),
+                    array("name" => "list", "groups" => array("list", "indent", "blocks")),
                     array("name" => "styles"),
                     array("name" => "basicstyles", "groups" => array("basicstyles", "cleanup")),
-                    array("name" => "paragraph", "groups" => array("colors", "list", "indent", "blocks", "align")),
+                    array("name" => "paragraph", "groups" => array("colors", "align")),
                 );
             break;
             case "community" :
@@ -4405,8 +4406,8 @@ function load_rte($toolbar_groups = array(), $plugins = array(), $other_options 
             default :
                 $toolbar_groups = array (
                     array("name" => "clipboard", "groups" => array("mode", "clipboard", "spellchecker")),
-                    array("name" => "links"),
-                    array("name" => "paragraph", "groups" => array("list", "indent", "blocks", "align")),
+                    array("name" => "links", "groups" => array("mediaembed", "links")),
+                    array("name" => "paragraph", "groups" => array("basicstyles", "list", "indent")),
                 );
             break;
         }

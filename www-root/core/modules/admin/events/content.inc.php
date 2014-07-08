@@ -1120,15 +1120,15 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
                             </tfoot>
                             <tbody>
                                 <tr>
-                                    <td>Event Date &amp; Time:</td>
+                                    <td>Event Date &amp; Time</td>
                                     <td><?php echo date(DEFAULT_DATE_FORMAT, $event_info["event_start"]); ?></td>
                                 </tr>
                                 <tr>
-                                    <td>Event Duration:</td>
+                                    <td>Event Duration</td>
                                     <td><?php echo (($event_info["event_duration"]) ? $event_info["event_duration"]." minutes" : "To Be Announced"); ?></td>
                                 </tr>
                                 <tr>
-                                    <td>Event Location:</td>
+                                    <td>Event Location</td>
                                     <td><?php echo (($event_info["event_location"]) ? $event_info["event_location"] : "To Be Announced"); ?></td>
                                 </tr>
                                 <?php

@@ -143,7 +143,7 @@ class Entrada_Event_Draft_CsvImporter {
 		}
 
         $course_id = 0;
-        $organisation_id = 0;
+        $organisation_id = $ENTRADA_USER->getActiveOrganisation();
         $course_permission = false;
 
 		// verify the course code

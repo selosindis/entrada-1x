@@ -264,7 +264,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						$group_members = explode(",",$group_member_string);
 						if ($group_members) {
 							foreach ($group_members as $member) {
-								$group_list[$period_id][] = $member["audience_value"];
+								$group_list[$period_id][] = $member;
 								$PROCESSED["periods"][$period_id][] = array("audience_type"=>'group_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
 							}
 						}
@@ -274,7 +274,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 						$individual_members = explode(",",$individual_member_string);
 						if ($individual_members) {
 							foreach ($individual_members as $member) {
-								$individual_list[$period_id][] = $member["audience_value"];
+                                $individual_list[$period_id][] = $member;
 								$PROCESSED["periods"][$period_id][]=array("audience_type"=>'proxy_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
 							}
 						}

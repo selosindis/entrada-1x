@@ -274,7 +274,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								$group_members = explode(",",$group_member_string);
 								if ($group_members) {
 									foreach ($group_members as $member) {
-										$group_list[$period_id][] = $member["audience_value"];
+										$group_list[$period_id][] = $member;
 										$PROCESSED["periods"][$period_id][] = array("audience_type"=>'group_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
 									}
 								}
@@ -284,7 +284,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 								$individual_members = explode(",",$individual_member_string);
 								if ($individual_members) {
 									foreach ($individual_members as $member) {
-										$individual_list[$period_id][] = $member["audience_value"];
+										$individual_list[$period_id][] = $member;
 										$PROCESSED["periods"][$period_id][]=array("audience_type"=>'proxy_id',"audience_value"=>$member,"cperiod_id"=>$period_id,"audience_active"=>1);
 									}
 								}
@@ -332,6 +332,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
 					}
 
 					if (!has_error()) {
+                        
 						$PROCESSED["updated_date"]	= time();
 						$PROCESSED["updated_by"]	= $ENTRADA_USER->getID();
 
@@ -512,7 +513,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                         "objective_id"      => $objective_id,
                                         "importance"        => $objective_importance[$objective_id],
                                         "objective_type"    => "course",
-                                        "objective_details" => $objective_details[$objective_id],
+                                        "objective_details" => $objective_details[$objective_id]["details"],
                                         "objective_start"   => time(),
                                         "objective_finish"  => NULL,
                                         "updated_date"      => time(),
@@ -524,7 +525,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_COURSES"))) {
                                     }
                                 }
                             }
-
+                            
 							if (isset($PROCESSED["course_report_ids"]) && count($PROCESSED["course_report_ids"]) > 0) {
 								//remove existing course_reports for this course before adding the new set of course reports.
 								$query = "DELETE FROM `course_reports` WHERE `course_id` = ".$db->qstr($COURSE_ID);

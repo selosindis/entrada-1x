@@ -213,7 +213,6 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVENTS"))) {
 
                     application_log("error", "Error occurred when creating a new Learning Event draft. Database said: ".$db->ErrorMsg());
                 }
-$db->debug = false;
                 if (has_error()) {
                     $STEP = 1;
                 } else {

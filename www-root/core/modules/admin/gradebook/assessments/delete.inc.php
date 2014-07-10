@@ -92,7 +92,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_GRADEBOOK"))) {
                         if ($assessment) {
                             if ($assessment->fromArray(array("active" => 0))->update()) {
                                 $total_removed_assessments++;
-                                if (!$db->AutoExecute ("assignments", array("assessment_id" => 0), "UPDATE", "`assessment_id` = ".$assessment_id)) {
+                                if (!$db->AutoExecute ("assignments", array("assignment_active" => 0), "UPDATE", "`assessment_id` = ".$assessment_id)) {
                                     application_log("error", "Successfully removed assessment id: [".$assessment_id."] but was unable to remove the assignments pertaining to them.");
                                 }
                             }

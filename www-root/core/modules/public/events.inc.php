@@ -517,7 +517,8 @@ if (!defined("PARENT_INCLUDED")) {
                                             if ($event_audience) {
                                                 ?>
                                                 <ul class="menu">
-                                                    <?php foreach ($event_audience as $audience) { 
+                                                    <?php
+                                                    foreach ($event_audience as $audience) {
                                                         $a = $audience->getAudience();
                                                         if (is_array($a->getAudienceMembers())) {
                                                         $link = false;
@@ -546,7 +547,9 @@ if (!defined("PARENT_INCLUDED")) {
                                                         if ($a) {
                                                     ?>
                                                         <li class="<?php echo $css_class; ?>"><?php if ($link) { ?><a href="#audience-<?php echo $audience->getEventAudienceID(); ?>" data-toggle="modal"><?php } echo $a->getAudienceName(); if ($link) { ?></a><?php } ?>
-                                                        <? if ($a && $link && count($a->getAudienceMembers() > 0)) { ?>
+                                                        <?php
+                                                        if ($a && $link && count($a->getAudienceMembers() > 0)) {
+                                                            ?>
                                                             <div id="audience-<?php echo $audience->getEventAudienceID(); ?>" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
                                                                 <div class="modal-header">
                                                                     <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
@@ -574,15 +577,19 @@ if (!defined("PARENT_INCLUDED")) {
                                                                     <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
                                                                 </div>
                                                             </div>
-                                                        <?php } ?>
+                                                                        <?php
+                                                                    }
+                                                                    ?>
                                                         </li>
-                                                    <?php }
+                                                                <?php
+                                                            }
                                                         } else {
                                                             ?>
                                                         <li><?php echo $a->getAudienceName(); ?></li>
                                                             <?php
                                                         }
-                                                    } ?>
+                                                    }
+                                                    ?>
                                                 </ul>
                                                 <?php
                                             }

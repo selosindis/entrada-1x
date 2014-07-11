@@ -341,5 +341,12 @@ ALTER TABLE `assignments` ADD COLUMN `notice_id` int(11) DEFAULT NULL AFTER `ass
 
 ALTER TABLE `event_topics` CHANGE `topic_id` `topic_id` INT(12) NOT NULL DEFAULT '0';
 
+INSERT INTO `evaluations_lu_response_descriptors` (`organisation_id`, `descriptor`, `reportable`, `order`, `updated_date`, `updated_by`, `active`)
+VALUES
+  (1, 'Opportunities for Growth', 1, 1, 0, 3499, 1),
+  (1, 'Developing', 1, 2, 0, 3499, 1),
+  (1, 'Achieving', 1, 3, 0, 3499, 1),
+  (1, 'Not Applicable', 0, 4, 0, 3499, 1);
+
 UPDATE `settings` SET `value` = '1600' WHERE `shortname` = 'version_db';
 UPDATE `settings` SET `value` = '1.6.0' WHERE `shortname` = 'version_entrada';

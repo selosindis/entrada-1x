@@ -1,4 +1,0 @@
-UPDATE `acl_permissions` SET `assertion` = 'ResourceOrganisation' WHERE `resource_type` = 'evaluation' AND `update` = 1 AND `entity_value` = 'staff:admin';
-UPDATE `acl_permissions` SET `assertion` = 'ResourceOrganisation' WHERE `resource_type` = 'evaluationquestion' AND `update` = 1 AND `entity_value` = 'staff:admin';
-UPDATE `acl_permissions` SET `assertion` = 'ResourceOrganisation' WHERE `resource_type` = 'evaluationform' AND `update` = 1 AND `entity_value` = 'staff:admin';
-UPDATE `acl_permissions` SET `assertion` = 'EvaluationFormAuthor&ResourceOrganisation' WHERE `resource_type` = 'evaluationform' AND `update` = 1 AND `entity_value` = 'faculty';

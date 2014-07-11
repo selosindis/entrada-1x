@@ -62,18 +62,18 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 
     if ($RESPONSE_NUMBER && $ORGANISATION_ID) {
         $descriptors = Models_Evaluation_ResponseDescriptor::fetchAllByOrganisation($ORGANISATION_ID);
+        ?>
+        <div class="pull-right cursor-pointer close" style="margin-top: -15px;" onclick="modalDescriptorDialog.close()">&times;</div>
+        <div class="row-fluid">
+            <span class="span1 offset1">&nbsp;</span
+            <span class="span10">
+                <strong>
+                    Descriptors
+                </strong>
+            </span>
+        </div>
+        <?php
         if ($descriptors && @count($descriptors)) {
-            ?>
-            <div class="pull-right cursor-pointer close" style="margin-top: -15px;" onclick="modalDescriptorDialog.close()">&times;</div>
-            <div class="row-fluid">
-                <span class="span1 offset1">&nbsp;</span
-                <span class="span10">
-                    <strong>
-                        Descriptors
-                    </strong>
-                </span>
-            </div>
-            <?php
             foreach ($descriptors as $descriptor) {
                 ?>
                 <div class="row-fluid">
@@ -90,12 +90,14 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
                 </div>
                 <?php
             }
-            ?>
-            <div class="pull-right space-above">
-                <a class="btn btn-small btn-primary" onclick="modalDescriptorDialog.close()">Close</a>
-            </div>
-            <?php
+        } else {
+            echo display_notice("No evaluation response descriptors were found in the system.");
         }
+        ?>
+        <div class="pull-right space-above">
+            <a class="btn btn-small btn-primary" onclick="modalDescriptorDialog.close()">Close</a>
+        </div>
+        <?php
     } else {
         /**
          * @exception 400: Cannot fetch descriptors because no id was provided.

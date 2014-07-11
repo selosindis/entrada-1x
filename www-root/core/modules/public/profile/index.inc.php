@@ -328,7 +328,7 @@ if (!defined("IN_PROFILE")) {
 
 		<h1>My <?php echo APPLICATION_NAME; ?> Profile</h1>
 		<div id="msgs"></div>
-		This section allows you to update your <?php echo APPLICATION_NAME; ?> user profile information. Please note that this information does not necessarily reflect any information stored at the main University. <span style="background-color: #FFFFCC; padding-left: 5px; padding-right: 5px">This is not your official university contact information.</span>
+		This section allows you to update your <?php echo APPLICATION_NAME; ?> user profile information. Please note that this information does not necessarily reflect any information stored at the main University. <span style="background-color: #FFFFCC; padding-left: 5px; padding-right: 5px">This is not your official institutional contact information.</span>
 		<br /><br />
 		<div id="profile-wrapper">
 		<script src="<?php echo ENTRADA_URL; ?>/javascript/jquery/jquery.imgareaselect.min.js" type="text/javascript"></script>

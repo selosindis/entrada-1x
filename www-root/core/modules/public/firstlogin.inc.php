@@ -83,156 +83,100 @@ if (!defined("PARENT_INCLUDED")) {
         echo "<input type=\"hidden\" name=\"action\" value=\"".$value."\" />\n";
         echo (($PROCEED_TO) ? "<input type=\"hidden\" name=\"redirect\" value=\"".rawurlencode($PROCEED_TO)."\" />\n" : "");
         ?>
-        <h1>Welcome to <?php echo APPLICATION_NAME; ?>!</h1>
-        This is your first time logging in and we need to collect a bit of information to fully provision your account.
-        <table style="width: 100%" cellspacing="4" cellpadding="2" border="0">
-            <colgroup>
-                <col style="width: 3%" />
-                <col style="width: 97%" />
-            </colgroup>
-            <tfoot>
-                <tr>
-                    <td colspan="2">&nbsp;</td>
-                </tr>
-                <tr>
-                    <td colspan="2" style="border-top: 2px #CCCCCC solid; padding-top: 5px; text-align: right">
-                        <input type="submit" class="btn btn-primary" id="proceed-button" value="Proceed"<?php echo ($COPYRIGHT ? " disabled=\"disabled\"" : ""); ?> />
-                    </td>
-                </tr>
-            </tfoot>
-            <tbody>
-            <?php
-            /*
-             * Google Hosted Apps Account
-             */
-            if ($_SESSION["details"]["google_id"] == "opt-in") {
-                ?>
-                <tr>
-                    <td colspan="2">
-                        <h2>Create Your <strong><?php echo $GOOGLE_APPS["domain"]; ?></strong> Google Account</h2>
-                        <div class="display-generic">
-                            Would you like to create a <strong><?php echo $GOOGLE_APPS["domain"]; ?></strong> account, powered by Google? This exciting new ability gives you your own personal <?php echo $GOOGLE_APPS["quota"]; ?> e-mail address @<?php echo $GOOGLE_APPS["domain"]; ?> that you can keep <em>indefinitely</em>! In addition to e-mail, you also have access to your own personal calendar space, and a powerful suite of online document tools.
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="vertical-align: top"><input type="radio" id="google_account_1" name="google_account" value="1" checked="checked" /></td>
-                    <td style="vertical-align: top">
-                        <label for="google_account_1"><strong>Yes Please!</strong>: create my <?php echo $GOOGLE_APPS["domain"]; ?> account</strong>.</label><br />
-                        <span class="content-small">Your account will be automatically created, and activation information will be sent to <strong><?php echo $_SESSION["details"]["email"]; ?></strong>.</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="vertical-align: top"><input type="radio" id="google_account_0" name="google_account" value="0" /></td>
-                    <td style="vertical-align: top">
-                        <label for="google_account_0"><strong>No Thank-you</strong>: please do not create me an account at this time.</label><br />
-                        <span class="content-small">If you decide you would like one in the future, simply contact the system administrator.</span>
-                    </td>
-                </tr>
-                <?php
-            }
 
-            /*
-             * Privacy Level Settings
-             */
-            if (!(int) $_SESSION["details"]["privacy_level"]) {
-                ?>
-                <tr>
-                    <td colspan="2">
-                        <table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="My <?php echo APPLICATION_NAME;?> Profile Privacy">
-                            <colgroup>
-                                <col style="width: 25%" />
-                                <col style="width: 75%" />
-                            </colgroup>
-                            <tbody>
-                                <tr>
-                                    <td colspan="2">
-                                        <h2>Privacy Level Setting</h2>
-                                        <div class="display-generic">
-                                            <?php echo APPLICATION_NAME; ?> contains a <strong>People Search</strong> tab, which acts a directory of people associated with your institution. You can lookup people using a simple name search or by browsing through groups. Please tell us how much information you wish to reveal about yourself when other students, faculty, or staff associated with the school use People Search (i.e. after they log in).
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2">
-                                        <table style="width: 100%" cellspacing="4" cellpadding="2" border="0">
-                                        <colgroup>
-                                            <col style="width: 3%" />
-                                            <col style="width: 97%" />
-                                        </colgroup>
-                                        <tbody>
-                                            <tr>
-                                                <td style="vertical-align: top"><input type="radio" id="privacy_level_3" name="privacy_level" value="3" /></td>
-                                                <td style="vertical-align: top">
-                                                    <label for="privacy_level_3"><strong>Complete Profile</strong>: show the information I choose to provide.</label>
-                                                    <span class="content-small">This means that normal logged in users will be able to view any information you provide in the <strong>My Profile</strong> section. You can provide as much or as little information as you would like; however, whatever you provide will be displayed.</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="vertical-align: top"><input type="radio" id="privacy_level_2" name="privacy_level" value="2" checked="checked" /></td>
-                                                <td style="vertical-align: top">
-                                                    <label for="privacy_level_2"><strong>Typical Profile</strong>: show basic information about me.</label>
-                                                    <span class="content-small">This means that normal logged in users will only be able to view your name, email address, role, official photo and uploaded photo if you have added one, regardless of how much information you provide in the <strong>My Profile</strong> section.</span>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td style="vertical-align: top"><input type="radio" id="privacy_level_1" name="privacy_level" value="1" /></td>
-                                                <td style="vertical-align: top">
-                                                    <label for="privacy_level_1"><strong>Minimal Profile</strong>: show minimal information about me.</label>
-                                                    <span class="content-small">This means that normal logged in users will only be able to view your name and role. In other words, people will not be able to get your e-mail address or other contact information.</span>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                        </table>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2">&nbsp;</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </td>
-                </tr>
-                <?php
-            }
+        <div class="page-header">
+            <h1>Welcome to <?php echo APPLICATION_NAME; ?>,</h1>
+            <p class="lead">Our integrated online teaching and learning platform. Since this is likely your first time logging in, we just need to collect a bit of information to finish provisioning your account.</p>
+        </div>
 
-            /*
-             * Copyright
-             */
-            if ($COPYRIGHT) {
-                ?>
-                <tr>
-                    <td colspan="2">
-                    <table style="width: 100%" cellspacing="1" cellpadding="1" border="0" summary="My <?php echo APPLICATION_NAME;?> Copyright">
-                        <colgroup>
-                            <col style="width: 25%" />
-                            <col style="width: 75%" />
-                        </colgroup>
-                        <tbody>
-                        <tr>
-                            <td colspan="2">
-                                <h2><?php echo $translate->_("copyright_title"); ?></h2>
-                                <div class="display-generic">
-                                    <?php echo $copyright_settings["copyright-firstlogin"]; ?>
-                                    <div style="margin-top: 15px">
-                                        <label class="checkbox">
-                                            <input type="checkbox" value="1" onchange="acceptButton(this)"> <?php echo $translate->_("copyright_accept_label"); ?>
-                                        </label>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    </td>
-                </tr>
-                <?php
-                echo "<input type=\"hidden\" name=\"copyright\" value=\"1\" />\n";
-            }
+        <?php
+        /*
+         * Google Hosted Apps Account
+         */
+        if ($_SESSION["details"]["google_id"] == "opt-in") {
             ?>
+            <h2>Create Your <strong><?php echo $GOOGLE_APPS["domain"]; ?></strong> Google Account</h2>
+            <div class="alert alert-info">
+                Would you like to create a <strong><?php echo $GOOGLE_APPS["domain"]; ?></strong> account, powered by Google? This exciting new ability gives you your own personal <?php echo $GOOGLE_APPS["quota"]; ?> e-mail address @<?php echo $GOOGLE_APPS["domain"]; ?> that you can keep <em>indefinitely</em>! In addition to e-mail, you also have access to your own personal calendar space, and a powerful suite of online document tools.
+            </div>
 
-            </tbody>
-        </table>
+            <label class="radio">
+                <input type="radio" id="google_account_1" name="google_account" value="1" checked="checked" />
+                <strong>Yes Please!</strong>: create my <?php echo $GOOGLE_APPS["domain"]; ?> account</strong>.
+                <div class="content-small">
+                    Your account will be automatically created, and activation information will be sent to <strong><?php echo $_SESSION["details"]["email"]; ?></strong>.
+                </div>
+            </label>
+
+            <label class="radio">
+                <input type="radio" id="google_account_0" name="google_account" value="0" />
+                <strong>No Thank-you</strong>: please do not create me an account at this time.
+                <div class="content-small">
+                    If you decide you would like one in the future, simply contact the system administrator.
+                </div>
+            </label>
+
+            <?php
+        }
+
+        /*
+         * Privacy Level Settings
+         */
+        if (!(int) $_SESSION["details"]["privacy_level"]) {
+            ?>
+            <h2>Privacy Level Setting</h2>
+            <div class="alert alert-info">
+                <?php echo APPLICATION_NAME; ?> contains a <strong>People Search</strong> tab, which acts a directory of people associated with your institution. You can lookup people using a simple name search or by browsing through groups. Please tell us how much information you wish to reveal about yourself when other students use People Search.
+            </div>
+
+            <label class="radio">
+                <input type="radio" id="privacy_level_3" name="privacy_level" value="3" />
+                <strong>Complete Profile</strong>: show the information I choose to provide.
+                <div class="content-small">
+                    This means that normal logged in users will be able to view any information you provide in the <strong>My Profile</strong> section. You can provide as much or as little information as you would like; however, whatever you provide will be displayed.
+                </div>
+            </label>
+
+            <label class="radio">
+                <input type="radio" id="privacy_level_2" name="privacy_level" value="2" checked="checked" />
+                <strong>Typical Profile</strong>: show basic information about me.
+                <div class="content-small">
+                    This means that normal logged in users will only be able to view your name, email address, role, official photo and uploaded photo if you have added one, regardless of how much information you provide in the <strong>My Profile</strong> section.
+                </div>
+            </label>
+
+
+            <label class="radio">
+                <input type="radio" id="privacy_level_1" name="privacy_level" value="1" />
+                <strong>Minimal Profile</strong>: show minimal information about me.
+                <div class="content-small">
+                    This means that normal logged in users will only be able to view your name and role. In other words, people will not be able to get your e-mail address or other contact information.
+                </div>
+            </label>
+
+            <?php
+        }
+
+        /*
+         * Copyright
+         */
+        if ($COPYRIGHT) {
+            ?>
+            <h2><?php echo $translate->_("copyright_title"); ?></h2>
+
+            <div class="alert alert-info">
+                <?php echo $copyright_settings["copyright-firstlogin"]; ?>
+
+                <label class="checkbox space-above">
+                    <input type="checkbox" value="1" onchange="acceptButton(this)"> <?php echo $translate->_("copyright_accept_label"); ?>
+                </label>
+            </div>
+            <?php
+            echo "<input type=\"hidden\" name=\"copyright\" value=\"1\" />\n";
+        }
+        ?>
+
+        <input type="submit" class="btn btn-primary pull-right" id="proceed-button" value="Proceed"<?php echo ($COPYRIGHT ? " disabled=\"disabled\"" : ""); ?> />
 	</form>
 	<?php
 }

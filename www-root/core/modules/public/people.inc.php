@@ -864,20 +864,22 @@ if (!defined("PARENT_INCLUDED")) {
 				if (($result["privacy_level"] > 2 || $is_administrator)) {
 					if ($result["telephone"]) {
 						echo "Telephone: \n";
-						echo html_encode($result["telephone"]). "\n";
+						echo html_encode($result["telephone"]). "\n<br />";
 					}
 					if ($result["fax"]) {
 						echo "Fax:\n";
-						echo html_encode($result["fax"])."\n";
+						echo html_encode($result["fax"])."\n<br />";
 					}
 					if ($result["address"] && $result["city"]) {
-						echo "<br />Address:\n";
-						echo "<br />".html_encode($result["address"])."\n";
-						echo "<br />".html_encode($result["city"].($result["city"] && $result["province"] ? ", ".$result["province"] : ""))."\n";
-						echo "<br />".html_encode($result["country"].($result["country"] && $result["postcode"] ? ", ".$result["postcode"] : ""))."\n";
+						echo "Address:\n";
+						echo "<address>";
+                        echo    html_encode($result["address"])."<br />\n";
+						echo    html_encode($result["city"].($result["city"] && $result["province"] ? ", ".$result["province"] : ""))."<br />\n";
+						echo    html_encode($result["country"].($result["country"] && $result["postcode"] ? ", ".$result["postcode"] : ""))."\n";
+                        echo "</address>";
 					}
 					if ($result["office_hours"]) {
-						echo "<br />Office Hours:\n";
+						echo "Office Hours:\n";
 						echo nl2br(html_encode($result["office_hours"]))."\n";
 					}
 				}

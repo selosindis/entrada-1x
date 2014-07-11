@@ -2364,12 +2364,12 @@ vertical-align:middle;
 }
 
 #form-content-questions-holder, #evaluations-questions-holder {
-border:2px #EEE solid;
-padding:2px;
+/*border:2px #EEE solid;*/
+/*padding:2px;*/
 }
 
 #form-questions-list {
-padding-left:25px;
+/*padding-left:25px;*/
 }
 
 #form-questions-list > li {

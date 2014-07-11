@@ -17,7 +17,7 @@ h2{
   color:#c94d21;
 }
 h1{
-  font-size:26px;
+  /*font-size:26px;*/
   font-weight:500;
   letter-spacing:-0.5px;
 /*  margin-bottom:28px;*/
@@ -30,7 +30,10 @@ h2{
   margin-bottom:5px;
 }
 label{
-  /*display:inline-block; Matt did this 20140701. Did it break something? It seems odd to me. */
+display:inline-block;
+}
+label.checkbox, label.radio {
+display:block;
 }
 .alert ul{
   margin-bottom:0;

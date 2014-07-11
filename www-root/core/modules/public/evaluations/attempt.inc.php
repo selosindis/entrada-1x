@@ -116,12 +116,12 @@ if ($RECORD_ID) {
 						GROUP BY cr.`eprogress_id`";
 	$evaluation_record	= $db->GetRow($query);
 	if ($evaluation_record) {
-		if ($evaluation_record["allow_target_request"] && (!isset($evaluation_request) || !$evaluation_request)) {
+		if ($evaluation_record["allow_target_request"] && !$evaluation_record["require_request_code"] && (!isset($evaluation_request) || !$evaluation_request)) {
             $evaluation_requests = Models_Evaluation::getEvaluationRequests($RECORD_ID, $ENTRADA_USER->getID());
             if ($evaluation_requests && count($evaluation_requests)) {
                 $evaluation_request = $evaluation_requests[0];
-            } else {
-                $evaluation_record = null;
+            } elseif ($evaluation_record["require_requests"]) {
+                $evaluation_record = NULL;
             }
         }
     }

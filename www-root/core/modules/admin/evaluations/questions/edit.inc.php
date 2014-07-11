@@ -459,7 +459,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									$rubric_order = 1;
 									foreach ($PROCESSED["evaluation_rubric_categories"] as $index => $category) {
 										$PROCESSED_QUESTION = array("questiontype_id" => 3,
-																	"organisation_id" => $ENTRADA_USER->getActiveOrganisation(),
+																	"organisation_id" => $PROCESSED["organisation_id"],
 																	"question_text" => $category["category"],
 																	"question_code" => $category["category"],
 																	"question_description" => (isset($category["category_description"]) && $category["category_description"] ? $category["category_description"] : NULL),
@@ -735,6 +735,7 @@ if ((!defined("PARENT_INCLUDED")) || (!defined("IN_EVALUATIONS"))) {
 									$rubric_order = 1;
 									foreach ($PROCESSED["evaluation_rubric_categories"] as $index => $category) {
 										$PROCESSED_QUESTION = array("questiontype_id" => 3,
+																	"organisation_id" => $PROCESSED["organisation_id"],
 																	"question_text" => $category["category"],
 																	"question_code" => $category["category"],
 																	"allow_comments" => $PROCESSED["allow_comments"],

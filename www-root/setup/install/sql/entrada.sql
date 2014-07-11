@@ -5325,6 +5325,13 @@ CREATE TABLE IF NOT EXISTS `evaluation_question_response_descriptors` (
   PRIMARY KEY (`eqrdescriptor_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+INSERT INTO `evaluations_lu_response_descriptors` (`organisation_id`, `descriptor`, `reportable`, `order`, `updated_date`, `updated_by`, `active`)
+VALUES
+	(1, 'Opportunities for Growth', 1, 1, 1397670512, 3499, 1),
+	(1, 'Developing', 1, 2, 1397670525, 3499, 1),
+	(1, 'Achieving', 1, 3, 1397670545, 3499, 1),
+	(1, 'Not Applicable', 0, 4, 1397670555, 3499, 1);
+
 CREATE TABLE IF NOT EXISTS `evaluation_progress_patient_encounters` (
   `eppencounter_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
   `encounter_name` varchar(255) DEFAULT NULL,

@@ -135,9 +135,11 @@ $SIDEBAR = array();
 $PAGE_META = array();
 
 //declare some global variables meant to be always available to javascript.
-$HEAD[] = "<script type=\"text/javascript\">
-                var default_org_id = '".$ENTRADA_USER->getActiveOrganisation()."';
-            </script>";
+if ($ENTRADA_USER) {
+    $HEAD[] = "<script type=\"text/javascript\">
+                    var default_org_id = '".$ENTRADA_USER->getActiveOrganisation()."';
+                </script>";
+}
 
 $CAS_AUTHENTICATED = false;
 

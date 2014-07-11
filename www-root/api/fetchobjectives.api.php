@@ -38,7 +38,7 @@ if((!isset($_SESSION["isAuthorized"])) || (!$_SESSION["isAuthorized"])) {
 	$course_id		= (int) (isset($_GET["course_id"]) ? $_GET["course_id"] : false);
 	$event_id		= (int) (isset($_GET["event_id"]) ? $_GET["event_id"] : false);
 	$assessment_id	= (int) (isset($_GET["assessment_id"]) ? $_GET["assessment_id"] : false);
-	$org_id         = (int) (isset($_GET["org_id"]) ? $_GET["org_id"] : false);
+	$org_id         = (int) (isset($_GET["org_id"]) ? $_GET["org_id"] : (isset($ENTRADA_USER) && $ENTRADA_USER->getActiveOrganisation() ? $ENTRADA_USER->getActiveOrganisation() : false));
 	$objective_ids_string = "";
 	if (isset($_GET["objective_ids"]) && ($objective_ids = explode(",", $_GET["objective_ids"])) && @count($objective_ids)) {
 		foreach ($objective_ids as $objective_id) {

@@ -274,7 +274,7 @@ VALUES
   ('export_weighted_grade', NULL, '1'),
   ('export_calculated_grade', NULL, '{\"enabled\":0}');
 
-ALTER TABLE `courses` ADD COLUMN `sync_groups` tinyint(1) DEFAULT NULL AFTER `sync_ldap_courses`;
+ALTER TABLE `courses` ADD COLUMN `sync_groups` tinyint(1) NOT NULL DEFAULT '0' AFTER `sync_ldap_courses`;
 
 ALTER TABLE `course_objectives` ADD `objective_start` INT(12) DEFAULT NULL AFTER `objective_details`;
 ALTER TABLE `course_objectives` ADD `objective_finish` INT(12) DEFAULT NULL AFTER `objective_start`;
@@ -318,8 +318,12 @@ ALTER TABLE `student_observerships` ADD `observership_details` text DEFAULT NULL
 ALTER TABLE `student_observerships` ADD `activity_type` varchar(32) DEFAULT NULL AFTER `observership_details`;
 ALTER TABLE `student_observerships` ADD `clinical_discipline` varchar(32) DEFAULT NULL AFTER `activity_type`;
 ALTER TABLE `student_observerships` ADD `organisation` varchar(32) DEFAULT NULL AFTER `clinical_discipline`;
-ALTER TABLE `student_observerships` ADD `order` int(3) DEFAULT NULL AFTER `organisation`;
+ALTER TABLE `student_observerships` ADD `order` int(3) DEFAULT '0' AFTER `organisation`;
 ALTER TABLE `student_observerships` ADD `reflection_id` int(11) DEFAULT NULL AFTER `order`;
+ALTER TABLE `student_observerships` CHANGE `status` `status` ENUM('pending','approved','rejected','confirmed','denied') DEFAULT NULL;
+
+ALTER TABLE `student_observerships` CHANGE `location` `location` VARCHAR(256) NOT NULL DEFAULT '';
+ALTER TABLE `student_observerships` CHANGE `site` `site` VARCHAR(256) NOT NULL DEFAULT '';
 
 CREATE TABLE IF NOT EXISTS `observership_reflections` (
   `id` int(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -343,10 +347,12 @@ ALTER TABLE `event_topics` CHANGE `topic_id` `topic_id` INT(12) NOT NULL DEFAULT
 
 INSERT INTO `evaluations_lu_response_descriptors` (`organisation_id`, `descriptor`, `reportable`, `order`, `updated_date`, `updated_by`, `active`)
 VALUES
-  (1, 'Opportunities for Growth', 1, 1, 0, 3499, 1),
-  (1, 'Developing', 1, 2, 0, 3499, 1),
-  (1, 'Achieving', 1, 3, 0, 3499, 1),
-  (1, 'Not Applicable', 0, 4, 0, 3499, 1);
+  (1, 'Opportunities for Growth', 1, 1, UNIX_TIMESTAMP(), 1, 1),
+  (1, 'Developing', 1, 2, UNIX_TIMESTAMP(), 1, 1),
+  (1, 'Achieving', 1, 3, UNIX_TIMESTAMP(), 1, 1),
+  (1, 'Not Applicable', 0, 4, UNIX_TIMESTAMP(), 1, 1);
+
+ALTER TABLE `events` MODIFY COLUMN `draft_id` INT(11) DEFAULT NULL AFTER `audience_visible`;
 
 UPDATE `settings` SET `value` = '1600' WHERE `shortname` = 'version_db';
 UPDATE `settings` SET `value` = '1.6.0' WHERE `shortname` = 'version_entrada';

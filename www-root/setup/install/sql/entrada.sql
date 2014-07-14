@@ -1114,13 +1114,13 @@ CREATE TABLE IF NOT EXISTS `assignments` (
   `notice_id` int(11) DEFAULT NULL,
   `assignment_title` varchar(40) NOT NULL,
   `assignment_description` text NOT NULL,
+  `assignment_active` int(11) NOT NULL,
   `required` int(1) NOT NULL,
   `due_date` bigint(64) NOT NULL DEFAULT '0',
   `assignment_uploads` int(11) NOT NULL DEFAULT '0',
   `max_file_uploads` int(11) NOT NULL DEFAULT '1',
   `release_date` bigint(64) NOT NULL DEFAULT '0',
   `release_until` bigint(64) NOT NULL DEFAULT '0',
-  `assignment_active` int(11) NOT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(11) NOT NULL,
   PRIMARY KEY (`assignment_id`)
@@ -2260,7 +2260,7 @@ INSERT INTO `curriculum_lu_types` (`curriculum_type_id`, `parent_id`, `curriculu
 CREATE TABLE IF NOT EXISTS `curriculum_periods`(
 	`cperiod_id` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
 	`curriculum_type_id` INT NOT NULL,
-	`curriculum_period_title` VARCHAR(200) default NULL,
+	`curriculum_period_title` VARCHAR(200) default '',
 	`start_date` BIGINT(64) NOT NULL,
 	`finish_date` BIGINT(64) NOT NULL,
 	`active` INT(1) NOT NULL DEFAULT 1
@@ -2614,7 +2614,6 @@ CREATE TABLE IF NOT EXISTS `events_lu_eventtypes` (
   `eventtype_order` int(6) NOT NULL,
   `eventtype_default_enrollment` varchar(50) DEFAULT NULL,
   `eventtype_report_calculation` varchar(100) DEFAULT NULL,
-  `medbiq_instructional_method_id` int(12) unsigned DEFAULT NULL,
   `updated_date` bigint(64) NOT NULL,
   `updated_by` int(12) NOT NULL,
   PRIMARY KEY (`eventtype_id`),
@@ -4504,19 +4503,23 @@ CREATE TABLE IF NOT EXISTS `student_mspr_class` (
 CREATE TABLE IF NOT EXISTS `student_observerships` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `student_id` int(11) NOT NULL,
-  `title` varchar(256) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
-  `location` varchar(256) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT '',
+  `title` varchar(256) NOT NULL,
+  `location` varchar(256) NOT NULL DEFAULT '',
   `city` varchar(32) DEFAULT NULL,
   `prov` varchar(32) DEFAULT NULL,
   `country` varchar(32) DEFAULT NULL,
   `postal_code` varchar(12) DEFAULT NULL,
   `address_l1` varchar(64) DEFAULT NULL,
-  `observership_details` text,
   `address_l2` varchar(64) DEFAULT NULL,
-  `site` varchar(256) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT '',
-  `activity_type` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
-  `clinical_discipline` varchar(32) CHARACTER SET utf8 COLLATE utf8_general_ci DEFAULT NULL,
+  `observership_details` text,
+  `activity_type` varchar(32) DEFAULT NULL,
+  `clinical_discipline` varchar(32) DEFAULT NULL,
   `organisation` varchar(32) DEFAULT NULL,
+  `order` int(3) DEFAULT '0',
+  `reflection_id` int(11) DEFAULT NULL,
+  `site` varchar(256) NOT NULL DEFAULT '',
+  `start` int(11) NOT NULL,
+  `end` int(11) DEFAULT NULL,
   `preceptor_prefix` varchar(4) DEFAULT NULL,
   `preceptor_firstname` varchar(256) DEFAULT NULL,
   `preceptor_lastname` varchar(256) DEFAULT NULL,
@@ -4524,11 +4527,7 @@ CREATE TABLE IF NOT EXISTS `student_observerships` (
   `preceptor_email` varchar(255) DEFAULT NULL,
   `status` enum('pending','approved','rejected','confirmed','denied') DEFAULT NULL,
   `unique_id` varchar(64) DEFAULT NULL,
-  `notice_sent` int(11) DEFAULT NULL,
-  `start` int(11) NOT NULL,
-  `end` int(11) DEFAULT NULL,
-  `order` int(3) DEFAULT '0',
-  `reflection_id` int(11) DEFAULT NULL,
+  `notice_sent` int(11) NOT NULL DEFAULT '0',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -5327,10 +5326,10 @@ CREATE TABLE IF NOT EXISTS `evaluation_question_response_descriptors` (
 
 INSERT INTO `evaluations_lu_response_descriptors` (`organisation_id`, `descriptor`, `reportable`, `order`, `updated_date`, `updated_by`, `active`)
 VALUES
-	(1, 'Opportunities for Growth', 1, 1, 1397670512, 3499, 1),
-	(1, 'Developing', 1, 2, 1397670525, 3499, 1),
-	(1, 'Achieving', 1, 3, 1397670545, 3499, 1),
-	(1, 'Not Applicable', 0, 4, 1397670555, 3499, 1);
+	(1, 'Opportunities for Growth', 1, 1, UNIX_TIMESTAMP(), 1, 1),
+	(1, 'Developing', 1, 2, UNIX_TIMESTAMP(), 1, 1),
+	(1, 'Achieving', 1, 3, UNIX_TIMESTAMP(), 1, 1),
+	(1, 'Not Applicable', 0, 4, UNIX_TIMESTAMP(), 1, 1);
 
 CREATE TABLE IF NOT EXISTS `evaluation_progress_patient_encounters` (
   `eppencounter_id` int(11) unsigned NOT NULL AUTO_INCREMENT,
